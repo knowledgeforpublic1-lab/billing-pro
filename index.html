@@ -1352,7 +1352,7 @@
             color: var(--primary);
             text-align: center;
             padding: 7px 14px;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             border-bottom: 1px solid var(--border-subtle);
         }
@@ -1486,7 +1486,7 @@
             padding: 8px 14px;
             text-align: center;
             font-weight: 800;
-            font-size: 13px;
+            font-size: 11px;
             color: var(--text-main);
         }
 
@@ -2393,10 +2393,10 @@
 
                     <!-- Receiver Details Block -->
                     <div class="inv-receiver-block">
-                        <div style="font-weight: 800; font-size: 13.5px;">
+                        <div style="font-weight: 800; font-size: 11.5px;">
                             <span>To :- </span>
                             <input type="text" v-model="invoiceData.clientName" class="inv-input-clean"
-                                style="font-weight: 800; width: 90%; font-size: 13.5px;" @change="saveToStorage">
+                                style="font-weight: 800; width: 90%; font-size: 11.5px;" @change="saveToStorage">
                         </div>
                         <div style="margin-top: 3px;">
                             <input type="text" v-model="invoiceData.clientAddress" class="inv-input-clean"
@@ -2639,8 +2639,8 @@
                         <!-- Row 5: Grand Total -->
                         <tr>
                             <td colspan="2"></td>
-                            <td style="font-weight: 800; font-size: 14px; text-align: right; border-top: 2px solid var(--border-strong);">Total Amount</td>
-                            <td style="font-weight: 800; font-size: 14px; text-align: right; border-top: 2px solid var(--border-strong);" class="font-mono">
+                            <td style="font-weight: 800; font-size: 11px; text-align: right; border-top: 2px solid var(--border-strong);">Total Amount</td>
+                            <td style="font-weight: 800; font-size: 11px; text-align: right; border-top: 2px solid var(--border-strong);" class="font-mono">
                                 {{ formatCurrency(calculatedInvoiceGrandTotal) }}
                             </td>
                         </tr>
@@ -14318,21 +14318,22 @@
                     workbook.creator = 'Billing Pro Studio';
                     workbook.created = new Date();
                     const ws = workbook.addWorksheet('SAP Material Mapping Master', {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                        top: { style: 'thin', color: { argb: 'FF888888' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
                     ws.mergeCells('A1:I1');
                     const r1 = ws.getCell('A1');
                     r1.value = 'LK ELECTRICALS - SAP ERP MATERIAL CODE & WORK ORDER ACTIVITY MAPPING MASTER';
-                    r1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 30;
@@ -14341,7 +14342,7 @@
                     row2.height = 26;
                     row2.eachCell(cell => {
                         cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.border = thinBorder;
                     });
@@ -14401,16 +14402,17 @@
                     workbook.creator = 'Billing Pro Studio';
                     workbook.created = new Date();
                     const ws = workbook.addWorksheet('Reconciliation Sheet', {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                        top: { style: 'thin', color: { argb: 'FF888888' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
                     
                     const pData = this.pivotReconciliationData;
@@ -14419,8 +14421,8 @@
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
-                    r1.value = `${this.getContractorDisplayName()} MATERIAL RECONCILIATION SHEET`;
-                    r1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 30;
@@ -14432,7 +14434,7 @@
                     row2.height = 26;
                     row2.eachCell((cell, colNum) => {
                         cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.border = thinBorder;
                     });
@@ -14991,7 +14993,8 @@
                 // EXCELJS WORKBOOK BUILDER: TAX INVOICE SHEET
                 addStyledTaxInvoiceToWorkbook(workbook) {
                     const ws = workbook.addWorksheet('Tax Invoice', {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
                     const borderThin = {
@@ -15020,15 +15023,15 @@
                     // Row 3,4,5: Client Details
                     ws.mergeCells('A3:E3');
                     ws.getCell('A3').value = `To :- ${this.invoiceData.clientName}`;
-                    ws.getCell('A3').font = { name: 'Arial', size: 10.5, bold: true };
+                    ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true };
 
                     ws.mergeCells('A4:E4');
                     ws.getCell('A4').value = `${this.invoiceData.clientAddress}`;
-                    ws.getCell('A4').font = { name: 'Arial', size: 10 };
+                    ws.getCell('A4').font = { name: 'Arial', size: 11 };
 
                     ws.mergeCells('A5:E5');
                     ws.getCell('A5').value = `GSTIN : ${this.invoiceData.clientGstin}`;
-                    ws.getCell('A5').font = { name: 'Arial', size: 10.5, bold: true };
+                    ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true };
 
                     // Row 6: Contractor Name Banner
                     ws.mergeCells('A6:E6');
@@ -15053,20 +15056,20 @@
                         row.height = 22;
 
                         row.getCell(1).value = mr[0];
-                        row.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        row.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         row.getCell(2).value = mr[1];
-                        row.getCell(2).font = { name: 'Arial', size: 10 };
+                        row.getCell(2).font = { name: 'Arial', size: 11 };
                         row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         row.getCell(3).value = mr[2];
-                        row.getCell(3).font = { name: 'Arial', size: 10, bold: true };
+                        row.getCell(3).font = { name: 'Arial', size: 11, bold: true };
                         row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         ws.mergeCells(curRow, 4, curRow, 5);
                         row.getCell(4).value = mr[3];
-                        row.getCell(4).font = { name: 'Arial', size: 10 };
+                        row.getCell(4).font = { name: 'Arial', size: 11 };
                         row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         curRow++;
@@ -15076,7 +15079,7 @@
                     const itemHeaderRow = ws.getRow(curRow);
                     itemHeaderRow.values = ['Sr. No.', 'Description of Goods', 'Unit', 'Qty', 'Amount'];
                     itemHeaderRow.eachCell(c => {
-                        c.font = { name: 'Arial', size: 10.5, bold: true };
+                        c.font = { name: 'Arial', size: 11, bold: true };
                         c.alignment = { horizontal: 'center', vertical: 'middle' };
                     });
                     itemHeaderRow.height = 24;
@@ -15097,7 +15100,7 @@
                         row.getCell(5).value = Number(it.amount) || 0;
                         row.getCell(5).numFmt = '#,##0.00';
                         row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(5).font = { name: 'Arial', size: 10, bold: true };
+                        row.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         row.height = 30;
                         curRow++;
                     });
@@ -15108,9 +15111,9 @@
                     const rErect = ws.getRow(curRow);
                     ws.mergeCells(curRow, 1, curRow, 3);
                     rErect.getCell(4).value = 'Total Erection Amount';
-                    rErect.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+                    rErect.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                     rErect.getCell(5).value = { formula: `SUM(E${itemsStartRow}:E${itemsEndRow})`, result: this.calculatedInvoiceBasic };
-                    rErect.getCell(5).font = { name: 'Arial', size: 10.5, bold: true };
+                    rErect.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                     rErect.getCell(5).numFmt = '#,##0.00';
                     rErect.getCell(5).alignment = { horizontal: 'right' };
                     const basicRowIdx = curRow;
@@ -15119,14 +15122,14 @@
                     // Bank Account / Basic Amount Row
                     const rBank1 = ws.getRow(curRow);
                     rBank1.getCell(1).value = 'Name of Account:';
-                    rBank1.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                    rBank1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                     ws.mergeCells(curRow, 2, curRow, 3);
                     rBank1.getCell(2).value = this.invoiceData.bankAccountName;
-                    rBank1.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                    rBank1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                     rBank1.getCell(4).value = 'Basic Amount';
-                    rBank1.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+                    rBank1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                     rBank1.getCell(5).value = { formula: `E${basicRowIdx}`, result: this.calculatedInvoiceBasic };
-                    rBank1.getCell(5).font = { name: 'Arial', size: 10.5, bold: true };
+                    rBank1.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                     rBank1.getCell(5).numFmt = '#,##0.00';
                     rBank1.getCell(5).alignment = { horizontal: 'right' };
                     curRow++;
@@ -15135,14 +15138,14 @@
                         // Bank A/C / CGST 9% Row
                         const rBank2 = ws.getRow(curRow);
                         rBank2.getCell(1).value = 'Bank A/C:';
-                        rBank2.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
-                        rBank2.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(4).value = 'CGST @ 9%';
-                        rBank2.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).value = { formula: `E${basicRowIdx}*0.09`, result: this.calculatedInvoiceCgst };
-                        rBank2.getCell(5).font = { name: 'Arial', size: 10.5, bold: true };
+                        rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).numFmt = '#,##0.00';
                         rBank2.getCell(5).alignment = { horizontal: 'right' };
                         const cgstRowIdx = curRow;
@@ -15151,14 +15154,14 @@
                         // Bank IFSC / SGST 9% Row
                         const rBank3 = ws.getRow(curRow);
                         rBank3.getCell(1).value = 'Bank IFSC:';
-                        rBank3.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank3.getCell(2).value = this.invoiceData.bankIfsc;
-                        rBank3.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(4).value = 'SGST @ 9%';
-                        rBank3.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+                        rBank3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(5).value = { formula: `E${basicRowIdx}*0.09`, result: this.calculatedInvoiceSgst };
-                        rBank3.getCell(5).font = { name: 'Arial', size: 10.5, bold: true };
+                        rBank3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(5).numFmt = '#,##0.00';
                         rBank3.getCell(5).alignment = { horizontal: 'right' };
                         const sgstRowIdx = curRow;
@@ -15167,10 +15170,10 @@
                         // Bank Name / Grand Total Row
                         const rBank4 = ws.getRow(curRow);
                         rBank4.getCell(1).value = 'Bank Name :';
-                        rBank4.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank4.getCell(2).value = this.invoiceData.bankName;
-                        rBank4.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(4).value = 'Total Amount';
                         rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${cgstRowIdx}+E${sgstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
@@ -15182,14 +15185,14 @@
                         // Bank A/C / IGST Row
                         const rBank2 = ws.getRow(curRow);
                         rBank2.getCell(1).value = 'Bank A/C:';
-                        rBank2.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
-                        rBank2.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(4).value = 'IGST @ 18%';
-                        rBank2.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+                        rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).value = { formula: `E${basicRowIdx}*0.18`, result: this.calculatedInvoiceIgst };
-                        rBank2.getCell(5).font = { name: 'Arial', size: 10.5, bold: true };
+                        rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).numFmt = '#,##0.00';
                         rBank2.getCell(5).alignment = { horizontal: 'right' };
                         const gstRowIdx = curRow;
@@ -15198,19 +15201,19 @@
                         // Bank IFSC Row
                         const rBank3 = ws.getRow(curRow);
                         rBank3.getCell(1).value = 'Bank IFSC:';
-                        rBank3.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank3.getCell(2).value = this.invoiceData.bankIfsc;
-                        rBank3.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         curRow++;
 
                         // Bank Name / Grand Total Row
                         const rBank4 = ws.getRow(curRow);
                         rBank4.getCell(1).value = 'Bank Name :';
-                        rBank4.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+                        rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
                         rBank4.getCell(2).value = this.invoiceData.bankName;
-                        rBank4.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+                        rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(4).value = 'Total Amount';
                         rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${gstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
@@ -15224,7 +15227,7 @@
                     ws.mergeCells(curRow, 1, curRow, 5);
                     const rWords = ws.getCell(`A${curRow}`);
                     rWords.value = `Amount in Words :  ${this.amountInWordsIndian(this.calculatedInvoiceGrandTotal)}`;
-                    rWords.font = { name: 'Arial', size: 10, bold: true };
+                    rWords.font = { name: 'Arial', size: 11, bold: true };
                     curRow++;
 
                     // Declaration & Signatures
@@ -15236,11 +15239,11 @@
 
                     ws.mergeCells(curRow, 4, curRow, 5);
                     ws.getCell(`D${curRow}`).value = `For, ${this.getContractorDisplayName()}`;
-                    ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 10.5, bold: true };
+                    ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true };
 
                     ws.mergeCells(curRow + 4, 4, curRow + 4, 5);
                     ws.getCell(`D${curRow + 4}`).value = 'Proprietor';
-                    ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 10.5, bold: true };
+                    ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 11, bold: true };
                     ws.getCell(`D${curRow + 4}`).alignment = { horizontal: 'right' };
 
                     const totalEndRow = curRow + 4;
@@ -15330,16 +15333,17 @@
 
                 addReconciliationToWorkbook(workbook, actKeys) {
                     const ws = workbook.addWorksheet('Reconciliation', {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                        top: { style: 'thin', color: { argb: 'FF888888' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
 
                     const columns = actKeys.slice().sort((a, b) => parseInt(a) - parseInt(b));
@@ -15347,8 +15351,8 @@
 
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
-                    r1.value = `${this.getContractorDisplayName()} MATERIAL RECONCILIATION SHEET`;
-                    r1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 30;
@@ -15359,7 +15363,7 @@
                     row2.height = 26;
                     row2.eachCell((cell) => {
                         cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.border = thinBorder;
                     });
@@ -15451,26 +15455,27 @@
 
                 addStyledMasterAbstractToWorkbook(workbook) {
                     const ws = workbook.addWorksheet('Master Abstract', {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
-                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF404040' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
 
                     const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                        top: { style: 'thin', color: { argb: 'FF888888' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
 
                     ws.mergeCells('A1:I1');
                     const r1 = ws.getCell('A1');
                     r1.value = `PROJECT: ${this.projectMeta.projectName.toUpperCase()} - MASTER BILLING ABSTRACT`;
-                    r1.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 32;
@@ -15478,7 +15483,7 @@
                     ws.mergeCells('A2:I2');
                     const r2 = ws.getCell('A2');
                     r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
-                    r2.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+                    r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FFFFFFFF' } };
                     r2.fill = subFill;
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(2).height = 22;
@@ -15533,13 +15538,13 @@
                         row.height = 24;
 
                         row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
+                        row.getCell(1).font = { name: 'Calibri', size: 11, bold: true };
 
                         row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(2).font = { name: 'Calibri', size: 10 };
+                        row.getCell(2).font = { name: 'Calibri', size: 11 };
 
                         row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(3).font = { name: 'Calibri', size: 10 };
+                        row.getCell(3).font = { name: 'Calibri', size: 11 };
 
                         row.getCell(4).numFmt = '#,##0.00';
                         row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
@@ -15549,19 +15554,19 @@
 
                         row.getCell(6).numFmt = '#,##0.00';
                         row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(6).font = { name: 'Calibri', size: 10, bold: true };
+                        row.getCell(6).font = { name: 'Calibri', size: 11, bold: true };
 
                         row.getCell(7).numFmt = '#,##0.00';
                         row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(7).font = { name: 'Calibri', size: 10, color: { argb: 'FF059669' } };
+                        row.getCell(7).font = { name: 'Calibri', size: 11, bold: true };
 
                         row.getCell(8).numFmt = '#,##0.00';
                         row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(8).font = { name: 'Calibri', size: 10, color: { argb: 'FFD97706' } };
+                        row.getCell(8).font = { name: 'Calibri', size: 11 };
 
                         row.getCell(9).numFmt = '#,##0.00';
                         row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(9).font = { name: 'Calibri', size: 10, color: { argb: 'FF4F46E5' } };
+                        row.getCell(9).font = { name: 'Calibri', size: 11 };
 
                         row.eachCell((cell) => {
                             cell.border = thinBorder;
@@ -15585,12 +15590,12 @@
 
                     totalRow.eachCell((cell, colNum) => {
                         cell.fill = totalFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.border = {
-                            top: { style: 'medium', color: { argb: 'FF1E293B' } },
-                            bottom: { style: 'double', color: { argb: 'FF1E293B' } },
-                            left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                            right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                            top: { style: 'medium', color: { argb: 'FF222222' } },
+                            bottom: { style: 'double', color: { argb: 'FF222222' } },
+                            left: { style: 'thin', color: { argb: 'FF888888' } },
+                            right: { style: 'thin', color: { argb: 'FF888888' } }
                         };
                         if (colNum >= 6) {
                             cell.numFmt = '#,##0.00';
@@ -15618,7 +15623,8 @@
 
                     const safeSheetName = `Act ${actKey}`.substring(0, 31);
                     const ws = workbook.addWorksheet(safeSheetName, {
-                        views: [{ showGridLines: true }]
+                        views: [{ showGridLines: true }],
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
                     const numLocs = this.locations.length;
@@ -15640,54 +15646,79 @@
                     const amt10Let = getColLetter(amt10Col);
                     const amt5Let = getColLetter(amt5Col);
 
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
-                    const locFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF404040' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const locFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF555555' } };
+                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
 
                     const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                        top: { style: 'thin', color: { argb: 'FF888888' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
 
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
-                    r1.value = `${this.projectMeta.projectName.toUpperCase()} - ACTIVITY ${actKey} DETAILED BILLING`;
-                    r1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+                    const companyObj = this.companiesList.find(c => c.id === this.selectedCompanyId);
+                    const companyName = companyObj ? companyObj.name : '';
+                    r1.value = companyName;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 30;
 
-                    ws.mergeCells(2, 1, 2, totalCols);
-                    const r2 = ws.getCell(2, 1);
-                    r2.value = act.title;
-                    r2.font = { name: 'Calibri', size: 9.5, italic: true, color: { argb: 'FFFFFFFF' } };
-                    r2.fill = subFill;
-                    r2.alignment = { horizontal: 'center', vertical: 'middle' };
-                    ws.getRow(2).height = 22;
+                    const metaLabelFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } };
+                    const metaLabelFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF111111' } };
 
-                    ws.getRow(3).height = 10;
+                    const metaStartRow = 2;
+                    const metaRows = [
+                        { label: 'Name of Contractor :-', value: this.getContractorDisplayName() },
+                        { label: 'Name of Feeder:', value: this.invoiceData.feederName || '' },
+                        { label: 'RA BILL NO.-', value: this.invoiceData.invoiceNo || '' }
+                    ];
+
+                    metaRows.forEach((m, i) => {
+                        const r = metaStartRow + i;
+                        ws.mergeCells(r, 1, r, totalCols);
+                        const labelCell = ws.getCell(r, 1);
+                        labelCell.value = `${m.label} ${m.value}`;
+                        labelCell.font = metaLabelFont;
+                        labelCell.fill = metaLabelFill;
+                        labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                        labelCell.border = thinBorder;
+                        ws.getRow(r).height = 22;
+                    });
+
+                    const r5 = ws.getCell(5, 1);
+                    ws.mergeCells(5, 1, 5, totalCols);
+                    r5.value = act.title;
+                    r5.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF111111' } };
+                    r5.fill = metaLabelFill;
+                    r5.alignment = { horizontal: 'left', vertical: 'middle' };
+                    r5.border = thinBorder;
+                    ws.getRow(5).height = 22;
+
+                    ws.getRow(6).height = 10;
 
                     let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
                     this.locations.forEach(l => headerValues.push(l.name));
                     headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
 
-                    const row4 = ws.getRow(4);
-                    row4.values = headerValues;
-                    row4.height = 28;
-                    row4.eachCell((cell, colIdx) => {
+                    const rowH = ws.getRow(7);
+                    rowH.values = headerValues;
+                    rowH.height = 28;
+                    rowH.eachCell((cell, colIdx) => {
                         cell.fill = (colIdx >= 4 && colIdx <= locEndCol) ? locFill : headerFill;
-                        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                         cell.border = thinBorder;
                     });
 
-                    let rowIdx = 5;
-                    const startRow = 5;
+                    let rowIdx = 8;
+                    const startRow = 8;
                     const qMatrix = this.activityQuantities[actKey] || [];
                     const s1Factor = this.pctStage1 / 100;
                     const s2Factor = this.pctStage2 / 100;
@@ -15732,10 +15763,10 @@
                             row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
                         }
 
-                        row.getCell(amt100Col).font = { bold: true };
-                        row.getCell(amt85Col).font = { color: { argb: 'FF059669' } };
-                        row.getCell(amt10Col).font = { color: { argb: 'FFD97706' } };
-                        row.getCell(amt5Col).font = { color: { argb: 'FF4F46E5' } };
+                        row.getCell(amt100Col).font = { name: 'Calibri', size: 11, bold: true };
+                        row.getCell(amt85Col).font = { name: 'Calibri', size: 11, bold: true };
+                        row.getCell(amt10Col).font = { name: 'Calibri', size: 11 };
+                        row.getCell(amt5Col).font = { name: 'Calibri', size: 11 };
 
                         row.eachCell(cell => {
                             cell.border = thinBorder;
@@ -15761,12 +15792,12 @@
 
                     totalRow.eachCell((cell, colNum) => {
                         cell.fill = totalFill;
-                        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.border = {
-                            top: { style: 'medium', color: { argb: 'FF1E293B' } },
-                            bottom: { style: 'double', color: { argb: 'FF1E293B' } },
-                            left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                            right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                            top: { style: 'medium', color: { argb: 'FF222222' } },
+                            bottom: { style: 'double', color: { argb: 'FF222222' } },
+                            left: { style: 'thin', color: { argb: 'FF888888' } },
+                            right: { style: 'thin', color: { argb: 'FF888888' } }
                         };
                         if (colNum >= amt100Col) {
                             cell.numFmt = '#,##0.00';
