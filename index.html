@@ -292,11 +292,98 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.15s ease;
         }
 
         .btn-icon:hover {
             background: var(--bg-hover);
             color: var(--primary);
+        }
+
+        /* Glass Panel Card (Reconciliation view) */
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Abstract & Mapping Card */
+        .abstract-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Amount Highlight Columns */
+        .highlight-100 {
+            background: rgba(37, 99, 235, 0.06);
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .highlight-85 {
+            background: rgba(16, 185, 129, 0.08);
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+        .highlight-10 {
+            background: rgba(245, 158, 11, 0.06);
+            color: var(--accent-amber);
+            font-weight: 600;
+        }
+        .highlight-5 {
+            background: rgba(99, 102, 241, 0.06);
+            color: var(--accent-indigo);
+            font-weight: 600;
+        }
+
+        /* View Section & Animation */
+        .view-section {
+            width: 100%;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            pointer-events: auto;
+            animation: toastSlide 0.3s ease-out;
+            backdrop-filter: blur(8px);
+        }
+        @keyframes toastSlide {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .btn-danger {
@@ -1440,19 +1527,7 @@
         .modal-body {
             padding: 1.25rem;
         }
-        .btn-icon {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: var(--text-muted);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .btn-icon:hover {
-            background: var(--bg-hover);
-            color: var(--text-main);
-        }
+        /* .btn-icon - defined in main CSS section */
         .form-group {
             margin-bottom: 0.75rem;
         }
@@ -1803,7 +1878,7 @@
                         <span>Auto Save: Active</span>
                     </div>
                 </div>
-                    </aside>
+                </aside>
 
             <!-- MAIN AREA -->
             <div class="main-area">
@@ -2025,11 +2100,7 @@
                                         <input type="number" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
-                                    <td class="text-right">
-                                        <input type="number" step="any" min="0" v-model.number="item.rate" class="editable-cell text-right font-mono" style="width: 65px;"
-                                            @focus="$event.target.select()" @input="saveToStorage"
-                                            @change="saveToStorage">
-                                    </td>
+                                    <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
                                     <td class="text-right highlight-100">{{ formatCurrency(calculateItemAmount(item.origIndex, 1)) }}</td>
                                     <td class="text-right highlight-85">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage1 / 100)) }}</td>
                                     <td class="text-right highlight-10">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage2 / 100)) }}</td>
@@ -2080,11 +2151,7 @@
                                         <input type="number" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
-                                    <td class="text-right">
-                                        <input type="number" step="any" min="0" v-model.number="item.rate" class="editable-cell text-right font-mono" style="width: 65px;"
-                                            @focus="$event.target.select()" @input="saveToStorage"
-                                            @change="saveToStorage">
-                                    </td>
+                                    <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
                                     <td class="text-right highlight-100">{{ formatCurrency(calculateItemAmount(item.origIndex, 1)) }}</td>
                                     <td class="text-right highlight-85">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage1 / 100)) }}</td>
                                     <td class="text-right highlight-10">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage2 / 100)) }}</td>
@@ -2224,14 +2291,7 @@
                                             @input="saveToStorage" @change="saveToStorage">
                                     </td>
                                     <td class="text-right font-mono">
-                                        <input type="number" step="any" min="0" v-model.number="act.rate"
-                                            class="editable-cell text-right font-mono" style="width: 110px;"
-                                            :data-abs-row="actIdx" :data-abs-col="'rate'"
-                                            @focus="$event.target.select()"
-                                            @keydown.enter.prevent="handleAbstractKeyNav($event, actIdx, 'rate', 'down')"
-                                            @keydown.down.prevent="handleAbstractKeyNav($event, actIdx, 'rate', 'down')"
-                                            @keydown.up.prevent="handleAbstractKeyNav($event, actIdx, 'rate', 'up')"
-                                            @input="saveToStorage" @change="saveToStorage">
+                                        <span class="text-right font-mono font-semibold" style="width: 110px; display: inline-block;">{{ formatCurrency(act.rate) }}</span>
                                     </td>
                                     <td class="text-right font-semibold font-mono">{{ formatCurrency(act.qty * act.rate)
                                         }}</td>
@@ -2699,7 +2759,7 @@
         </div>
 
         <!-- VIEW 5: RECONCILIATION SHEET -->
-        <div class="view-section animate-fade-in" v-show="currentView === 'reconciliation'">
+        <div class="view-section animate-fade-in" v-if="currentView === 'reconciliation'">
 
             <div class="glass-panel">
                 <div class="table-responsive">
@@ -2713,7 +2773,7 @@
                             <tr>
                                 <th style="width: 36px;" class="text-center">SR NO.</th>
                                 <th style="width: 75px;" class="text-center">Row Labels</th>
-                                <th style="min-width: 180px;">ITEMS DISCRIPTION</th>
+                                <th style="min-width: 180px;">ITEMS DESCRIPTION</th>
                                 <th style="width: 45px;" class="text-center">UNIT</th>
                                 <th style="width: 60px;" class="text-right">ISSUE</th>
                                 <th v-for="col in pivotReconciliationData.columns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
@@ -2878,12 +2938,11 @@
                     <div class="form-group">
                         <label>Item Code (SAP)</label>
                         <div style="position: relative;">
-                            <input type="text" v-model="newMaterial.codeSearch" @input="onExtraItemCodeSearch" @focus="onExtraItemCodeSearch" placeholder="Type item code or description..." style="width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem;">
+                            <input type="text" v-model="newMaterial.codeSearch" @input="onExtraItemCodeSearch" @focus="onExtraItemCodeSearch" placeholder="Search material description (from Activity 11)..." style="width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem;">
                             <div v-if="extraItemSuggestions.length && newMaterial.codeSearch" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 6px; box-shadow: var(--shadow-lg); max-height: 180px; overflow-y: auto; z-index: 10;">
-                                <div v-for="sap in extraItemSuggestions" :key="sap.code" @click="selectExtraItemCode(sap)" style="padding: 6px 10px; cursor: pointer; font-size: 0.78rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-weight: 700; color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace;">{{ sap.code }}</span>
-                                    <span style="flex: 1; margin-left: 8px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ sap.desc }}</span>
-                                    <span style="color: var(--text-dim); font-size: 0.7rem; margin-left: 6px;">{{ sap.uom }}</span>
+                                <div v-for="mat in extraItemSuggestions" :key="mat.desc" @click="selectExtraItemCode(mat)" style="padding: 6px 10px; cursor: pointer; font-size: 0.78rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="flex: 1; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ mat.desc }}</span>
+                                    <span style="color: var(--accent-green); font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-left: 8px;">{{ formatCurrency(mat.rate) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -2947,7 +3006,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.weight }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">
+                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.weight * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -3017,7 +3076,7 @@
                                     <td style="text-align: center; font-family: 'JetBrains Mono', monospace;">{{ selectedAugerRadius }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h).toFixed(3) }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.poles" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">
+                                        <input type="number" v-model.number="item.poles" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h * (item.poles || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -3046,7 +3105,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.vol }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">
+                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.vol * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -3206,7 +3265,7 @@
                             </div>
 
                             <div
-                                style="font-weight: 700; font-size: 0.85rem; margin: 0.75rem 0 0.5rem; color: var(--text-main); border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                                style="font-weight: 700; font-size: 0.85rem; margin: 0.75rem 0 0.5rem; color: var(--text-main); border-top: 1px solid var(--border-strong); padding-top: 0.75rem;">
                                 🏦 Bank Account Details
                             </div>
                             <div class="form-row">
@@ -3236,7 +3295,7 @@
                             </div>
 
                             <div
-                                style="font-weight: 700; font-size: 0.85rem; margin: 0.75rem 0 0.5rem; color: var(--text-main); border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                                style="font-weight: 700; font-size: 0.85rem; margin: 0.75rem 0 0.5rem; color: var(--text-main); border-top: 1px solid var(--border-strong); padding-top: 0.75rem;">
                                 📑 Work Order & Division Defaults (Optional)
                             </div>
                             <div class="form-row">
@@ -3268,7 +3327,7 @@
                             </div>
 
                             <div
-                                style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                                style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; border-top: 1px solid var(--border-strong); padding-top: 1rem;">
                                 <button type="button" class="btn btn-secondary"
                                     @click="contractorModalMode = 'list'">Cancel</button>
                                 <button type="submit" class="btn btn-primary" style="font-weight: 700;">
@@ -13291,45 +13350,45 @@
                     showConcretingModal: false,
                     selectedAugerSize: 22,
                     nutBoltData: [
-                        { size: '16×65', unit: 'nos', weight: 0.164, qty: 1 },
-                        { size: '16×35', unit: 'nos', weight: 0.119, qty: 1 },
-                        { size: '16×75', unit: 'nos', weight: 0.180, qty: 1 },
-                        { size: '16×150', unit: 'nos', weight: 0.299, qty: 1 },
-                        { size: '6×75', unit: 'nos', weight: 0.022, qty: 1 },
-                        { size: '6×50', unit: 'nos', weight: 0.014, qty: 1 },
-                        { size: '8×50', unit: 'nos', weight: 0.900, qty: 1 },
-                        { size: '12×140', unit: 'nos', weight: 0.173, qty: 1 },
-                        { size: '12×100', unit: 'nos', weight: 0.120, qty: 1 },
-                        { size: '12×35', unit: 'nos', weight: 0.049, qty: 1 },
-                        { size: '12×65', unit: 'nos', weight: 0.085, qty: 1 },
-                        { size: '12×150', unit: 'nos', weight: 0.173, qty: 1 },
-                        { size: '12×175', unit: 'nos', weight: 0.203, qty: 1 },
-                        { size: '12×190', unit: 'nos', weight: 0.170, qty: 1 },
-                        { size: '12×125', unit: 'nos', weight: 0.148, qty: 1 },
-                        { size: '12×225', unit: 'nos', weight: 0.159, qty: 1 },
-                        { size: '12×35', unit: 'nos', weight: 0.119, qty: 1 }
+                        { size: '16×65', unit: 'nos', weight: 0.164, qty: 0 },
+                        { size: '16×35', unit: 'nos', weight: 0.119, qty: 0 },
+                        { size: '16×75', unit: 'nos', weight: 0.180, qty: 0 },
+                        { size: '16×150', unit: 'nos', weight: 0.299, qty: 0 },
+                        { size: '6×75', unit: 'nos', weight: 0.022, qty: 0 },
+                        { size: '6×50', unit: 'nos', weight: 0.014, qty: 0 },
+                        { size: '8×50', unit: 'nos', weight: 0.900, qty: 0 },
+                        { size: '12×140', unit: 'nos', weight: 0.173, qty: 0 },
+                        { size: '12×100', unit: 'nos', weight: 0.120, qty: 0 },
+                        { size: '12×35', unit: 'nos', weight: 0.049, qty: 0 },
+                        { size: '12×65', unit: 'nos', weight: 0.085, qty: 0 },
+                        { size: '12×150', unit: 'nos', weight: 0.173, qty: 0 },
+                        { size: '12×175', unit: 'nos', weight: 0.203, qty: 0 },
+                        { size: '12×190', unit: 'nos', weight: 0.170, qty: 0 },
+                        { size: '12×125', unit: 'nos', weight: 0.148, qty: 0 },
+                        { size: '12×225', unit: 'nos', weight: 0.159, qty: 0 },
+                        { size: '12×35', unit: 'nos', weight: 0.119, qty: 0 }
                     ],
                     concretePoleData: [
-                        { poleMtr: 8.0, h: 1.33, poles: 1 },
-                        { poleMtr: 9.0, h: 1.50, poles: 1 },
-                        { poleMtr: 10.0, h: 1.67, poles: 1 },
-                        { poleMtr: 11.0, h: 1.83, poles: 1 },
-                        { poleMtr: 13.0, h: 2.17, poles: 1 }
+                        { poleMtr: 8.0, h: 1.33, poles: 0 },
+                        { poleMtr: 9.0, h: 1.50, poles: 0 },
+                        { poleMtr: 10.0, h: 1.67, poles: 0 },
+                        { poleMtr: 11.0, h: 1.83, poles: 0 },
+                        { poleMtr: 13.0, h: 2.17, poles: 0 }
                     ],
                     concreteMuffingData: [
-                        { desc: 'HT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 8, qty: 1 },
-                        { desc: 'LT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 7, qty: 1 },
-                        { desc: 'Muffing 450×450 DP And DTC', unit: 'CMT', vol: 0.091, qty: 1 },
-                        { desc: 'Muffing 300×300 Pole', unit: 'CMT', vol: 0.027, qty: 1 },
-                        { desc: 'Muffing 400×400 Pole', unit: 'CMT', vol: 0.048, qty: 1 },
-                        { desc: 'Stay Concreting', unit: 'CMT', vol: 0.125, qty: 1 },
-                        { desc: 'G.I.Wire 8 SWG / 6 SWG for Pole Earthing', unit: 'Kg.', vol: 1.35, qty: 1 },
-                        { desc: 'G.I.Wire 8 SWG / 6 SWG for DTC Earthing', unit: 'Kg.', vol: 6.75, qty: 1 },
-                        { desc: 'Tree Cutting', unit: 'km', vol: 0.02, qty: 1 },
-                        { desc: 'Barbed Wire', unit: 'Kg.', vol: 3.5, qty: 1 },
-                        { desc: 'Guarding HT', unit: 'Kg./mtr', vol: 0.099, qty: 1 },
-                        { desc: 'Guarding LT', unit: 'Kg./mtr', vol: 0.099, qty: 1 },
-                        { desc: 'Jumpering', unit: 'Rmt', vol: 4.5, qty: 1 }
+                        { desc: 'HT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 8, qty: 0 },
+                        { desc: 'LT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 7, qty: 0 },
+                        { desc: 'Muffing 450×450 DP And DTC', unit: 'CMT', vol: 0.091, qty: 0 },
+                        { desc: 'Muffing 300×300 Pole', unit: 'CMT', vol: 0.027, qty: 0 },
+                        { desc: 'Muffing 400×400 Pole', unit: 'CMT', vol: 0.048, qty: 0 },
+                        { desc: 'Stay Concreting', unit: 'CMT', vol: 0.125, qty: 0 },
+                        { desc: 'G.I.Wire 8 SWG / 6 SWG for Pole Earthing', unit: 'Kg.', vol: 1.35, qty: 0 },
+                        { desc: 'G.I.Wire 8 SWG / 6 SWG for DTC Earthing', unit: 'Kg.', vol: 6.75, qty: 0 },
+                        { desc: 'Tree Cutting', unit: 'km', vol: 0.02, qty: 0 },
+                        { desc: 'Barbed Wire', unit: 'Kg.', vol: 3.5, qty: 0 },
+                        { desc: 'Guarding HT', unit: 'Kg./mtr', vol: 0.099, qty: 0 },
+                        { desc: 'Guarding LT', unit: 'Kg./mtr', vol: 0.099, qty: 0 },
+                        { desc: 'Jumpering', unit: 'Rmt', vol: 4.5, qty: 0 }
                     ],
                     editingContractorId: null,
                     contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
@@ -13655,9 +13714,10 @@
                 extraItemSuggestions() {
                     if (!this.newMaterial.codeSearch || this.newMaterial.codeSearch.length < 1) return [];
                     const q = this.newMaterial.codeSearch.toLowerCase();
-                    return this.sapMaterialsMaster.filter(s =>
-                        (s.code && s.code.toLowerCase().includes(q)) ||
-                        (s.desc && s.desc.toLowerCase().includes(q))
+                    const act11 = this.activities['907'];
+                    if (!act11 || !act11.materials) return [];
+                    return act11.materials.filter(m =>
+                        (m.desc && m.desc.toLowerCase().includes(q))
                     ).slice(0, 10);
                 }
             },
@@ -13864,44 +13924,21 @@
                     this.showConcretingModal = true;
                 },
                 resetNutBolt() {
-                    this.nutBoltData.forEach(item => item.qty = 1);
+                    this.nutBoltData.forEach(item => item.qty = 0);
                 },
                 resetConcrete() {
-                    this.concretePoleData.forEach(item => item.poles = 1);
-                    this.concreteMuffingData.forEach(item => item.qty = 1);
+                    this.concretePoleData.forEach(item => item.poles = 0);
+                    this.concreteMuffingData.forEach(item => item.qty = 0);
                 },
                 onExtraItemCodeSearch() {
                     // suggestions are handled by computed extraItemSuggestions
                 },
-                selectExtraItemCode(sap) {
-                    this.newMaterial.desc = sap.desc;
-                    this.newMaterial.unit = sap.uom || 'No';
-                    this.newMaterial.sapCode = sap.code;
-                    this.newMaterial.codeSearch = sap.code + ' - ' + sap.desc;
-                    // Collect all rates for this SAP code from ALL activities
-                    const rateMap = {};
-                    for (const actKey in this.activities) {
-                        const act = this.activities[actKey];
-                        if (act && act.materials) {
-                            for (const m of act.materials) {
-                                if (m.itemCode === sap.code && m.rate && m.rate > 0) {
-                                    rateMap[m.rate] = (rateMap[m.rate] || 0) + 1;
-                                }
-                            }
-                        }
-                    }
-                    // Pick the rate that appears most frequently
-                    let bestRate = 0;
-                    let bestCount = 0;
-                    for (const rate in rateMap) {
-                        if (rateMap[rate] > bestCount) {
-                            bestCount = rateMap[rate];
-                            bestRate = Number(rate);
-                        }
-                    }
-                    if (bestRate > 0) {
-                        this.newMaterial.rate = bestRate;
-                    }
+                selectExtraItemCode(mat) {
+                    this.newMaterial.desc = mat.desc;
+                    this.newMaterial.unit = mat.unit || 'No';
+                    this.newMaterial.rate = mat.rate || 0;
+                    this.newMaterial.sapCode = mat.itemCode || '';
+                    this.newMaterial.codeSearch = mat.desc;
                 },
                 toggleContractorDropdown() {
                     if (this.isFinalized) return;
@@ -14390,7 +14427,7 @@
                     
                     // Header Row
                     const row2 = ws.getRow(2);
-                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DISCRIPTION', 'UNIT', 'ISSUE', ...pData.columns];
+                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', ...pData.columns];
                     row2.values = headers;
                     row2.height = 26;
                     row2.eachCell((cell, colNum) => {
@@ -15317,7 +15354,7 @@
                     ws.getRow(1).height = 30;
 
                     const row2 = ws.getRow(2);
-                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DISCRIPTION', 'UNIT', 'TOTAL QTY', ...columns];
+                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'TOTAL QTY', ...columns];
                     row2.values = headers;
                     row2.height = 26;
                     row2.eachCell((cell) => {
