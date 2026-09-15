@@ -7423,6 +7423,62 @@
             "docHeader": "0031007467"
           }
         ]
+      },
+      {
+        "no": "15",
+        "desc": "11KV A.B. Swtch, 400 A",
+        "unit": "Set",
+        "rate": 1800.0,
+        "isExtra": true
+      },
+      {
+        "no": "16",
+        "desc": "MS Channel Top Channel (100x50x6 mm)",
+        "unit": "No",
+        "rate": 125.0,
+        "isExtra": true
+      },
+      {
+        "no": "17",
+        "desc": "M.S.Channel AB switch (75x40x6 mm)",
+        "unit": "No",
+        "rate": 125.0,
+        "isExtra": true
+      },
+      {
+        "no": "18",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 600.0,
+        "isExtra": true
+      },
+      {
+        "no": "19",
+        "desc": "Strain Hardware forWeasel/Squirrel",
+        "unit": "Set",
+        "rate": 10.0,
+        "isExtra": true
+      },
+      {
+        "no": "20",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No",
+        "rate": 35.0,
+        "isExtra": true
+      },
+      {
+        "no": "21",
+        "desc": "RSJ 116x100, 9 m long",
+        "unit": "No",
+        "rate": 2100.0,
+        "isExtra": true
+      },
+      {
+        "no": "22",
+        "desc": "Concreting ration 1:3 6",
+        "unit": "CMT",
+        "rate": 2700.0,
+        "isExtra": true
       }
     ]
   },
@@ -14883,6 +14939,13 @@
                             invoiceData: this.invoiceData
                         };
                         localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
+                          try {
+                              fetch('/api/billing', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(dataToSave)
+                              }).catch(err => console.error("API Save Error:", err));
+                          } catch(err) { console.error("Fetch failed", err); }
                     } catch (e) {
                         console.error('Failed to apply history state', e);
                     } finally {
@@ -14928,9 +14991,20 @@
                         console.error('Save error', e);
                     }
                 },
-                loadFromStorage() {
-                    const raw = localStorage.getItem('lk_billing_app_state_v10');
-                    if (raw) {
+                async loadFromStorage() {
+                      let raw = null;
+                      try {
+                          const res = await fetch('/api/billing');
+                          const json = await res.json();
+                          if (json && json.success && json.data) {
+                              raw = JSON.stringify(json.data);
+                          }
+                      } catch (err) {
+                          console.error('Failed to load from MongoDB API:', err);
+                          // Fallback to local storage
+                          raw = localStorage.getItem('lk_billing_app_state_v10');
+                      }
+                      if (raw) {
                         try {
                             const parsed = JSON.parse(raw);
                             if (parsed.isFinalized !== undefined) this.isFinalized = parsed.isFinalized;
@@ -15004,19 +15078,27 @@
                         right: { style: 'thin', color: { argb: 'FF000000' } }
                     };
 
+                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
+                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                    const metaLabelFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } };
+                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
+
                     // Row 1: Title
                     ws.mergeCells('A1:E1');
                     const r1 = ws.getCell('A1');
                     r1.value = 'Tax Invoice';
-                    r1.font = { name: 'Arial', size: 16, bold: true };
+                    r1.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 28;
 
                     // Row 2: Project Name
                     ws.mergeCells('A2:E2');
                     const r2 = ws.getCell('A2');
-                    r2.value = `Project Name : ${this.projectMeta.projectName}`;
-                    r2.font = { name: 'Arial', size: 11, bold: true };
+                    r2.value = `Project Name : ${this.projectMeta.projectName}`.toUpperCase();
+                    r2.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r2.fill = titleFill;
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(2).height = 22;
 
@@ -15024,20 +15106,24 @@
                     ws.mergeCells('A3:E3');
                     ws.getCell('A3').value = `To :- ${this.invoiceData.clientName}`;
                     ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true };
+                    ws.getCell('A3').fill = metaLabelFill;
 
                     ws.mergeCells('A4:E4');
                     ws.getCell('A4').value = `${this.invoiceData.clientAddress}`;
-                    ws.getCell('A4').font = { name: 'Arial', size: 11 };
+                    ws.getCell('A4').font = { name: 'Arial', size: 11, bold: true };
+                    ws.getCell('A4').fill = metaLabelFill;
 
                     ws.mergeCells('A5:E5');
                     ws.getCell('A5').value = `GSTIN : ${this.invoiceData.clientGstin}`;
                     ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true };
+                    ws.getCell('A5').fill = metaLabelFill;
 
                     // Row 6: Contractor Name Banner
                     ws.mergeCells('A6:E6');
                     const r6 = ws.getCell('A6');
                     r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}`;
-                    r6.font = { name: 'Arial', size: 11, bold: true };
+                    r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r6.fill = headerFill;
                     r6.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(6).height = 22;
 
@@ -15057,6 +15143,7 @@
 
                         row.getCell(1).value = mr[0];
                         row.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+                        row.getCell(1).fill = metaLabelFill;
                         row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         row.getCell(2).value = mr[1];
@@ -15065,6 +15152,7 @@
 
                         row.getCell(3).value = mr[2];
                         row.getCell(3).font = { name: 'Arial', size: 11, bold: true };
+                        row.getCell(3).fill = metaLabelFill;
                         row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         ws.mergeCells(curRow, 4, curRow, 5);
@@ -15079,14 +15167,15 @@
                     const itemHeaderRow = ws.getRow(curRow);
                     itemHeaderRow.values = ['Sr. No.', 'Description of Goods', 'Unit', 'Qty', 'Amount'];
                     itemHeaderRow.eachCell(c => {
-                        c.font = { name: 'Arial', size: 11, bold: true };
+                        c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        c.fill = headerFill;
                         c.alignment = { horizontal: 'center', vertical: 'middle' };
                     });
                     itemHeaderRow.height = 24;
                     curRow++;
 
                     const itemsStartRow = curRow;
-                    this.invoiceData.items.forEach(it => {
+                    this.invoiceData.items.forEach((it, idx) => {
                         const row = ws.getRow(curRow);
                         row.getCell(1).value = Number(it.srNo) || it.srNo;
                         row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
@@ -15101,6 +15190,13 @@
                         row.getCell(5).numFmt = '#,##0.00';
                         row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
                         row.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+                        
+                        if (idx % 2 !== 0) {
+                            for (let c = 1; c <= 5; c++) {
+                                row.getCell(c).fill = zebraFill;
+                            }
+                        }
+                        
                         row.height = 30;
                         curRow++;
                     });
@@ -15223,6 +15319,14 @@
                         curRow++;
                     }
 
+                    // Apply totalFill to summary rows (Rows itemsEndRow+1 to curRow-1)
+                    for (let r = itemsEndRow + 1; r < curRow; r++) {
+                        const row = ws.getRow(r);
+                        for (let c = 1; c <= 5; c++) {
+                            row.getCell(c).fill = totalFill;
+                        }
+                    }
+
                     // Amount in words row
                     ws.mergeCells(curRow, 1, curRow, 5);
                     const rWords = ws.getCell(`A${curRow}`);
@@ -15248,11 +15352,20 @@
 
                     const totalEndRow = curRow + 4;
 
-                    // Apply Borders Across all table cells
+                    // Apply Borders Across all table cells, correctly handling merged cells
                     for (let r = 1; r <= totalEndRow; r++) {
                         const row = ws.getRow(r);
                         for (let c = 1; c <= 5; c++) {
-                            row.getCell(c).border = borderThin;
+                            const cell = row.getCell(c);
+                            if (cell.isMerged && cell.master !== cell) {
+                                // Inherit fill from master cell so merged cell background is fully solid
+                                if (cell.master.fill) {
+                                    cell.fill = cell.master.fill;
+                                }
+                                // Skip border for inner merged cells to prevent lines from appearing inside merged regions
+                                continue;
+                            }
+                            cell.border = borderThin;
                         }
                     }
 
@@ -15703,108 +15816,131 @@
 
                     ws.getRow(6).height = 10;
 
-                    let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                    this.locations.forEach(l => headerValues.push(l.name));
-                    headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
-
-                    const rowH = ws.getRow(7);
-                    rowH.values = headerValues;
-                    rowH.height = 28;
-                    rowH.eachCell((cell, colIdx) => {
-                        cell.fill = (colIdx >= 4 && colIdx <= locEndCol) ? locFill : headerFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                        cell.border = thinBorder;
-                    });
-
-                    let rowIdx = 8;
-                    const startRow = 8;
                     const qMatrix = this.activityQuantities[actKey] || [];
                     const s1Factor = this.pctStage1 / 100;
                     const s2Factor = this.pctStage2 / 100;
                     const s3Factor = this.pctStage3 / 100;
 
-                    act.materials.forEach((mat, matIdx) => {
-                        const row = ws.getRow(rowIdx);
-                        row.getCell(1).value = mat.no;
-                        row.getCell(2).value = mat.desc;
-                        row.getCell(3).value = mat.unit;
+                    const regularMats = [];
+                    const extraMats = [];
+                    act.materials.forEach((mat, idx) => {
+                        if (mat.isExtra) extraMats.push({ mat, idx, rowNo: extraMats.length + 1 });
+                        else regularMats.push({ mat, idx, rowNo: regularMats.length + 1 });
+                    });
 
-                        let itemTotalQty = 0;
-                        for (let locIdx = 0; locIdx < numLocs; locIdx++) {
-                            const val = (qMatrix[locIdx] && qMatrix[locIdx][matIdx] !== undefined && qMatrix[locIdx][matIdx] !== '')
-                                ? parseFloat(qMatrix[locIdx][matIdx])
-                                : 0;
-                            row.getCell(locStartCol + locIdx).value = val;
-                            if (!isNaN(val)) itemTotalQty += val;
-                        }
+                    let rowIdx = 7;
 
-                        const rateVal = Number(mat.rate) || 0;
-                        row.getCell(rateCol).value = rateVal;
+                    const renderTable = (itemsList, isExtra) => {
+                        if (itemsList.length === 0) return;
 
-                        const est100 = itemTotalQty * rateVal;
-                        const sumLocFormula = numLocs === 1
-                            ? `${locStartLet}${rowIdx}`
-                            : `SUM(${locStartLet}${rowIdx}:${locEndLet}${rowIdx})`;
+                        let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
+                        this.locations.forEach(l => headerValues.push(isExtra ? 'Erected Qty.' : l.name));
+                        headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
 
-                        row.getCell(amt100Col).value = { formula: `(${sumLocFormula})*${rateLet}${rowIdx}`, result: est100 };
-                        row.getCell(amt85Col).value = { formula: `${amt100Let}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
-                        row.getCell(amt10Col).value = { formula: `${amt100Let}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
-                        row.getCell(amt5Col).value = { formula: `${amt100Let}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
-
-                        row.height = 22;
-
-                        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-
-                        for (let c = 4; c <= totalCols; c++) {
-                            row.getCell(c).numFmt = '#,##0.00';
-                            row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
-                        }
-
-                        row.getCell(amt100Col).font = { name: 'Calibri', size: 11, bold: true };
-                        row.getCell(amt85Col).font = { name: 'Calibri', size: 11, bold: true };
-                        row.getCell(amt10Col).font = { name: 'Calibri', size: 11 };
-                        row.getCell(amt5Col).font = { name: 'Calibri', size: 11 };
-
-                        row.eachCell(cell => {
+                        const rowH = ws.getRow(rowIdx);
+                        rowH.values = headerValues;
+                        rowH.height = 28;
+                        rowH.eachCell((cell, colIdx) => {
+                            cell.fill = (colIdx >= 4 && colIdx <= locEndCol) ? locFill : headerFill;
+                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                             cell.border = thinBorder;
-                            if (matIdx % 2 === 1) cell.fill = zebraFill;
+                        });
+                        rowIdx++;
+
+                        const startRow = rowIdx;
+
+                        itemsList.forEach((itemObj, listIdx) => {
+                            const { mat, idx, rowNo } = itemObj;
+                            const row = ws.getRow(rowIdx);
+                            row.getCell(1).value = rowNo;
+                            row.getCell(2).value = mat.desc;
+                            row.getCell(3).value = mat.unit;
+
+                            let itemTotalQty = 0;
+                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                                const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
+                                    ? parseFloat(qMatrix[locIdx][idx])
+                                    : 0;
+                                row.getCell(locStartCol + locIdx).value = val;
+                                if (!isNaN(val)) itemTotalQty += val;
+                            }
+
+                            const rateVal = Number(mat.rate) || 0;
+                            row.getCell(rateCol).value = rateVal;
+
+                            const est100 = itemTotalQty * rateVal;
+                            const sumLocFormula = numLocs === 1
+                                ? `${locStartLet}${rowIdx}`
+                                : `SUM(${locStartLet}${rowIdx}:${locEndLet}${rowIdx})`;
+
+                            row.getCell(amt100Col).value = { formula: `(${sumLocFormula})*${rateLet}${rowIdx}`, result: est100 };
+                            row.getCell(amt85Col).value = { formula: `${amt100Let}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
+                            row.getCell(amt10Col).value = { formula: `${amt100Let}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
+                            row.getCell(amt5Col).value = { formula: `${amt100Let}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
+
+                            row.height = 22;
+
+                            row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+                            row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+                            row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+
+                            for (let c = 4; c <= totalCols; c++) {
+                                row.getCell(c).numFmt = '#,##0.00';
+                                row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
+                            }
+
+                            row.getCell(amt100Col).font = { name: 'Calibri', size: 11, bold: true };
+                            row.getCell(amt85Col).font = { name: 'Calibri', size: 11, bold: true };
+                            row.getCell(amt10Col).font = { name: 'Calibri', size: 11 };
+                            row.getCell(amt5Col).font = { name: 'Calibri', size: 11 };
+
+                            row.eachCell(cell => {
+                                cell.border = thinBorder;
+                                if (listIdx % 2 === 1) cell.fill = zebraFill;
+                            });
+
+                            rowIdx++;
                         });
 
+                        const endRow = rowIdx - 1;
+
+                        const totalRow = ws.getRow(rowIdx);
+                        ws.mergeCells(rowIdx, 1, rowIdx, rateCol);
+                        totalRow.getCell(1).value = isExtra ? 'Total =' : 'ACTIVITY TOTAL';
+
+                        const subAmt100 = itemsList.reduce((sum, it) => sum + (it.mat.rate * (qMatrix.reduce((qsum, loc) => qsum + (parseFloat(loc[it.idx]) || 0), 0))), 0);
+                        totalRow.getCell(amt100Col).value = { formula: `SUM(${amt100Let}${startRow}:${amt100Let}${endRow})`, result: subAmt100 };
+                        totalRow.getCell(amt85Col).value = { formula: `SUM(${amt85Let}${startRow}:${amt85Let}${endRow})`, result: subAmt100 * s1Factor };
+                        totalRow.getCell(amt10Col).value = { formula: `SUM(${amt10Let}${startRow}:${amt10Let}${endRow})`, result: subAmt100 * s2Factor };
+                        totalRow.getCell(amt5Col).value = { formula: `SUM(${amt5Let}${startRow}:${amt5Let}${endRow})`, result: subAmt100 * s3Factor };
+
+                        totalRow.height = 26;
+
+                        totalRow.eachCell((cell, colNum) => {
+                            cell.fill = totalFill;
+                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                            cell.border = {
+                                top: { style: 'medium', color: { argb: 'FF222222' } },
+                                bottom: { style: 'double', color: { argb: 'FF222222' } },
+                                left: { style: 'thin', color: { argb: 'FF888888' } },
+                                right: { style: 'thin', color: { argb: 'FF888888' } }
+                            };
+                            if (colNum >= amt100Col) {
+                                cell.numFmt = '#,##0.00';
+                                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                            }
+                        });
+                        totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
                         rowIdx++;
-                    });
+                    };
 
-                    const endRow = rowIdx - 1;
+                    renderTable(regularMats, false);
 
-                    const totalRow = ws.getRow(rowIdx);
-                    ws.mergeCells(rowIdx, 1, rowIdx, rateCol);
-                    totalRow.getCell(1).value = 'ACTIVITY TOTAL';
-
-                    const actTotals = this.getActivityTotals(actKey);
-                    totalRow.getCell(amt100Col).value = { formula: `SUM(${amt100Let}${startRow}:${amt100Let}${endRow})`, result: actTotals.amt100 };
-                    totalRow.getCell(amt85Col).value = { formula: `SUM(${amt85Let}${startRow}:${amt85Let}${endRow})`, result: actTotals.amtStage1 };
-                    totalRow.getCell(amt10Col).value = { formula: `SUM(${amt10Let}${startRow}:${amt10Let}${endRow})`, result: actTotals.amtStage2 };
-                    totalRow.getCell(amt5Col).value = { formula: `SUM(${amt5Let}${startRow}:${amt5Let}${endRow})`, result: actTotals.amtStage3 };
-
-                    totalRow.height = 26;
-
-                    totalRow.eachCell((cell, colNum) => {
-                        cell.fill = totalFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.border = {
-                            top: { style: 'medium', color: { argb: 'FF222222' } },
-                            bottom: { style: 'double', color: { argb: 'FF222222' } },
-                            left: { style: 'thin', color: { argb: 'FF888888' } },
-                            right: { style: 'thin', color: { argb: 'FF888888' } }
-                        };
-                        if (colNum >= amt100Col) {
-                            cell.numFmt = '#,##0.00';
-                            cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                        }
-                    });
-                    totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
+                    if (extraMats.length > 0) {
+                        rowIdx++; // Empty row gap between tables
+                        renderTable(extraMats, true);
+                    }
 
                     let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
                     this.locations.forEach(() => widths.push({ width: 16 }));
@@ -15892,3 +16028,5 @@
 </body>
 
 </html>
+
+

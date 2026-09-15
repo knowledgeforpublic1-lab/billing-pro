@@ -1,6 +1,6 @@
 node_modules/
-package-lock.json
-*.xlsx
-*.pdf
-*.zip
-index.zip
+.env
+Start_Billing_App.bat
+patch.js
+patch_vercel.js
+Deploy_To_Vercel.bat
