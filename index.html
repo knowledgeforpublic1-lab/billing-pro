@@ -14995,9 +14995,12 @@
                       let raw = null;
                       try {
                           const res = await fetch('/api/billing');
+                          if (!res.ok) throw new Error('API Error: ' + res.status);
                           const json = await res.json();
                           if (json && json.success && json.data) {
                               raw = JSON.stringify(json.data);
+                          } else {
+                              raw = localStorage.getItem('lk_billing_app_state_v10');
                           }
                       } catch (err) {
                           console.error('Failed to load from MongoDB API:', err);
