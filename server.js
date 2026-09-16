@@ -16,6 +16,8 @@ app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.s
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 // Alag mobile page — desktop index.html ko haath lagaye bina
 app.get(['/mobile', '/mobile.html'], (req, res) => res.sendFile(path.join(__dirname, 'mobile.html')));
+// Alag-alag asset files (style.css, aage app.js) — sirf safe naam, poora folder nahi
+app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Billing Pro local: http://localhost:${PORT}`));
