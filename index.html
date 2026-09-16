@@ -1069,7 +1069,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, idx) in pivotReconciliationData.rows" :key="row.code">
+                            <tr v-for="(row, idx) in reconRows" :key="row.code">
                                 <td class="text-center">{{ idx + 1 }}</td>
                                 <td class="text-center font-mono font-bold" style="color: var(--primary);">{{ row.code }}</td>
                                 <td>
@@ -1090,9 +1090,10 @@
                                 </td>
                                 </template>
                             </tr>
-                            <tr v-if="pivotReconciliationData.rows.length === 0">
+                            <tr v-if="reconRows.length === 0">
                                 <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
-                                    No SAP Materials mapped with quantities yet.
+                                    <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
+                                    <span v-else>📭 Invoice wali activity me koi material mapped nahi — pehle Mapping me SAP item jodo.</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -11977,6 +11978,25 @@
                 },
                 reconColCount() {
                     return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
+                },
+                // ↩️ Reverse rows: invoice wali activity me jude (add kiye) material hi — poora master nahi
+                reverseShownCodes() {
+                    const set = [];
+                    const self = this;
+                    this.reverseInvoiceActKeys.forEach(actKey => {
+                        const act = self.activities[actKey];
+                        if (act && act.materials) act.materials.forEach(m => {
+                            if (m.sapItems) m.sapItems.forEach(s => {
+                                if (s.code && set.indexOf(s.code) === -1) set.push(s.code);
+                            });
+                        });
+                    });
+                    return set;
+                },
+                reconRows() {
+                    if (!this.reverseEntry) return this.pivotReconciliationData.rows;
+                    const codes = this.reverseShownCodes;
+                    return this.pivotReconciliationData.rows.filter(r => codes.indexOf(r.code) > -1);
                 },
                 canUndo() {
                     return this.historyIndex > 0;
