@@ -1029,16 +1029,21 @@
                         {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
                     </button>
                 </div>
-                <div class="filter-col" v-if="reverseEntry" style="min-width: 180px; flex: unset;">
-                    <label>Khali row ki qty jayegi (Location)</label>
-                    <select v-model.number="reverseLocIdx" class="filter-select" title="Jis item/location me pehle se kuch nahi hai, uski entry is location me jayegi">
-                        <option v-for="(loc, i) in locations" :key="i" :value="i">{{ loc.name }}</option>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 220px; flex: unset;">
+                    <label>Material Filter (item chuno)</label>
+                    <select v-model="reverseMatFilter" class="filter-select" title="Sirf chuna hua material dikhega — entry aasan">
+                        <option value="ALL">Sab material dikhao</option>
+                        <option v-for="r in pivotReconciliationData.rows" :key="'f_'+r.code" :value="r.code">[{{ r.code }}] {{ (r.desc || '').substring(0, 40) }}</option>
                     </select>
+                </div>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 150px; flex: unset;">
+                    <label>Location</label>
+                    <button @click="addLocation" :disabled="isFinalized" class="btn-filter-add" title="Nayi location jodo — har activity me naya column banega">📍 + Location</button>
                 </div>
                 <div class="filter-col" style="flex: 1; justify-content: flex-end;">
                     <label>&nbsp;</label>
                     <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                        {{ reverseEntry ? '✏️ Activity column me qty likho — mapping ke hisaab se activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                        {{ reverseEntry ? '✏️ Activity × Location column me qty likho — mapping ke hisaab se activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
                     </div>
                 </div>
             </div>
@@ -1048,7 +1053,7 @@
                     <table class="billing-table">
                         <thead>
                             <tr>
-                                <th :colspan="5 + pivotReconciliationData.columns.length" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
+                                <th :colspan="5 + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
                                 </th>
                             </tr>
@@ -1058,13 +1063,21 @@
                                 <th style="min-width: 180px;">ITEMS DESCRIPTION</th>
                                 <th style="width: 45px;" class="text-center">UNIT</th>
                                 <th style="width: 60px;" class="text-right">ISSUE</th>
+                                <template v-if="!reverseEntry">
                                 <th v-for="col in pivotReconciliationData.columns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
                                     {{ col }}
                                 </th>
+                                </template>
+                                <template v-else>
+                                <th v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center" style="min-width: 86px; font-size: 0.72rem; padding: 0.25rem 0.2rem; background: rgba(163, 113, 247, 0.12);">
+                                    <div style="font-weight: 800;">{{ rcol.actKey }}</div>
+                                    <input :value="locations[rcol.locIdx] ? locations[rcol.locIdx].name : ''" @change="renameReverseLocation(rcol.locIdx, $event.target.value)" :disabled="isFinalized" title="Location ka naam yahin likho" style="width: 100%; margin-top: 2px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-main); border-radius: 4px; padding: 1px 3px; font-size: 0.68rem; text-align: center; outline: none;">
+                                </th>
+                                </template>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, idx) in pivotReconciliationData.rows" :key="row.code">
+                            <tr v-for="(row, idx) in reconDisplayRows" :key="row.code">
                                 <td class="text-center">{{ idx + 1 }}</td>
                                 <td class="text-center font-mono font-bold" style="color: var(--primary);">{{ row.code }}</td>
                                 <td>
@@ -1074,14 +1087,21 @@
                                 <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.08);">
                                     {{ row.totalQty > 0 ? row.totalQty : '' }}
                                 </td>
+                                <template v-if="!reverseEntry">
                                 <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono">
-                                    <span v-if="!reverseEntry">{{ row.activities[col] > 0 ? row.activities[col] : '' }}</span>
-                                    <input v-else type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="row.activities[col] > 0 ? row.activities[col] : ''" placeholder="0" @change="applyReverseEntry(row.code, col, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + col + ' me mapping ke hisaab se bategi'">
+                                    {{ row.activities[col] > 0 ? row.activities[col] : '' }}
                                 </td>
+                                </template>
+                                <template v-else>
+                                <td v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center font-mono">
+                                    <input type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLocValue(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (locations[rcol.locIdx] ? locations[rcol.locIdx].name : '') + ' me jayegi'">
+                                </td>
+                                </template>
                             </tr>
-                            <tr v-if="pivotReconciliationData.rows.length === 0">
-                                <td :colspan="5 + pivotReconciliationData.columns.length" class="text-center" style="padding: 2rem; color: var(--text-muted);">
-                                    No SAP Materials mapped with quantities yet.
+                            <tr v-if="reconDisplayRows.length === 0">
+                                <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                                    <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
+                                    <span v-else>🔍 Is filter me kuch nahi — "Sab material dikhao" chuno.</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -11691,7 +11711,7 @@
                     selectedLocationIdx: 'ALL',
                     // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
                     reverseEntry: false,
-                    reverseLocIdx: 0,
+                    reverseMatFilter: 'ALL',
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11935,8 +11955,28 @@
                         // Reverse entry ON ho to zero wali row bhi dikhao (pehli entry ke liye); OFF = purana behavior
                         .filter(row => this.reverseEntry ? true : row.totalQty > 0)
                         .sort((a, b) => a.code.localeCompare(b.code));
-                    
+
                     return { columns, rows };
+                },
+                // ↩️ Reverse mode: har activity har location ke sath — jaise 907 me 2 location to 907 do baar
+                reverseReconColumns() {
+                    if (!this.reverseEntry) return [];
+                    const out = [];
+                    this.pivotReconciliationData.columns.forEach(actKey => {
+                        this.locations.forEach((loc, locIdx) => {
+                            out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
+                        });
+                    });
+                    return out;
+                },
+                // ↩️ Reverse mode rows: material filter lagao (ALL = sab)
+                reconDisplayRows() {
+                    const base = this.pivotReconciliationData.rows;
+                    if (!this.reverseEntry || !this.reverseMatFilter || this.reverseMatFilter === 'ALL') return base;
+                    return base.filter(r => r.code === this.reverseMatFilter);
+                },
+                reconColCount() {
+                    return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
                 },
                 canUndo() {
                     return this.historyIndex > 0;
@@ -12673,14 +12713,45 @@
                     this.reverseEntry = !this.reverseEntry;
                     this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
                 },
-                // ↩️ Reverse entry: reconciliation cell (sapCode × activity) → activity quantities me wapas banto
-                // Rule: 1 item se juda ho to seedha; kai item ho to pehle wale anupaat me; location bhi purane ratio me (khali ho to chuni location me)
-                applyReverseEntry(sapCode, actKey, targetVal) {
+                renameReverseLocation(locIdx, name) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const nm = String(name || '').trim();
+                    if (!nm) { this.showToast('⚠️ Naam khali nahi ho sakta', '⛔'); return; }
+                    if (!this.locations[locIdx]) return;
+                    this.locations[locIdx].name = nm;
+                    this.saveToStorage();
+                    this.showToast('📍 Location naam: ' + nm, '✅');
+                },
+                // ↩️ Cell value: is SAP row × (activity × location) me abhi kitni qty hai
+                reconCellLocValue(sapCode, rcol) {
+                    const act = this.activities[rcol.actKey];
+                    if (!act || !act.materials) return 0;
+                    const qMatrix = this.activityQuantities[rcol.actKey] || [];
+                    const locArr = qMatrix[rcol.locIdx] || [];
+                    let total = 0;
+                    act.materials.forEach((m, mIdx) => {
+                        if (!m.sapItems) return;
+                        m.sapItems.forEach(s => {
+                            if (!s.code || s.code !== sapCode) return;
+                            const mq = Number(s.qty);
+                            const factor = isNaN(mq) ? 1 : mq;
+                            if (factor === 0) return;
+                            const raw = locArr[mIdx];
+                            const v = (raw === '' || raw === null || raw === undefined) ? 0 : parseFloat(raw);
+                            if (!isNaN(v)) total += v * factor;
+                        });
+                    });
+                    return Math.round(total * 100) / 100;
+                },
+                // ↩️ Reverse entry: reconciliation cell (sapCode × activity × location) → usi location me wapas likho
+                // Rule: 1 item se juda ho to seedha; kai item ho to us location ke purane anupaat me (sab khali ho to barabar)
+                applyReverseEntryLoc(sapCode, actKey, locIdx, targetVal) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     const t = parseFloat(targetVal);
                     if (isNaN(t) || t < 0) { this.showToast('⚠️ Sahi qty likho (0 ya zyada)', '⛔'); return; }
                     const act = this.activities[actKey];
                     if (!act || !act.materials || !act.materials.length) return;
+                    if (locIdx < 0 || locIdx >= this.locations.length) return;
                     // Is activity me ye SAP code kin item se juda hai (factor 0 = not-required → bahar)
                     const mapped = [];
                     act.materials.forEach((m, mIdx) => {
@@ -12692,59 +12763,42 @@
                         });
                     });
                     if (!mapped.length) { this.showToast('ℹ️ Mapping qty 0 hai — pehle mapping me qty dalo', 'ℹ️'); return; }
-                    const nLoc = this.locations.length;
                     const qMatrix = this.activityQuantities[actKey] || [];
-                    const contribs = mapped.map(mp => {
-                        const locVals = [];
-                        let sum = 0;
-                        for (let l = 0; l < nLoc; l++) {
-                            const raw = (qMatrix[l] && qMatrix[l][mp.mIdx] !== undefined) ? qMatrix[l][mp.mIdx] : '';
-                            if (typeof raw === 'string' && (raw.trim().startsWith('=') || raw.trim().startsWith('+'))) {
-                                locVals.push({ formula: true, v: 0 });
-                            } else {
-                                const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
-                                const vv = isNaN(v) ? 0 : v;
-                                locVals.push({ formula: false, v: vv });
-                                sum += vv;
-                            }
+                    const locArr = qMatrix[locIdx] || [];
+                    // Sirf isi location ke cell dekho — formula ho to ruko
+                    const cur = mapped.map(mp => {
+                        const raw = (locArr[mp.mIdx] !== undefined) ? locArr[mp.mIdx] : '';
+                        if (typeof raw === 'string' && (raw.trim().startsWith('=') || raw.trim().startsWith('+'))) {
+                            return { mp, formula: true, v: 0, contrib: 0 };
                         }
-                        return { mp, locVals, actQty: sum, contrib: sum * mp.factor };
+                        const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
+                        const vv = isNaN(v) ? 0 : v;
+                        return { mp, formula: false, v: vv, contrib: vv * mp.factor };
                     });
-                    // Formula wala cell beech me ho to ruko — pehle activity me formula hatao
-                    if (contribs.some(c => c.locVals.some(lv => lv.formula))) {
-                        this.showToast('⚠️ Beech me formula wala cell hai — pehle Activity me formula hatao, phir likho', '⛔');
+                    if (cur.some(c => c.formula)) {
+                        this.showToast('⚠️ Is cell me formula hai — pehle Activity me formula hatao, phir likho', '⛔');
                         return;
                     }
-                    const totalContrib = contribs.reduce((a, c) => a + c.contrib, 0);
+                    const totalContrib = cur.reduce((a, c) => a + c.contrib, 0);
                     let shares;
                     if (totalContrib > 0) {
-                        shares = contribs.map(c => t * (c.contrib / totalContrib));
-                    } else if (contribs.length === 1) {
+                        shares = cur.map(c => t * (c.contrib / totalContrib));
+                    } else if (cur.length === 1) {
                         shares = [t];
                     } else {
-                        shares = contribs.map(() => t / contribs.length);
-                        this.showToast('ℹ️ ' + contribs.length + ' item me barabar banta (pehle se kuch nahi tha)', 'ℹ️');
+                        shares = cur.map(() => t / cur.length);
+                        this.showToast('ℹ️ ' + cur.length + ' item me barabar banta (is location me pehle kuch nahi tha)', 'ℹ️');
                     }
-                    // Matrix pakka karo (desktop wala init), phir likho
+                    // Matrix pakka karo (desktop wala init), sirf isi location me likho — baaki location ko haath nahi
                     this.initQuantitiesForActivity(actKey);
                     const m2 = this.activityQuantities[actKey];
-                    contribs.forEach((c, i) => {
+                    cur.forEach((c, i) => {
                         const want = shares[i] / c.mp.factor;
-                        const locSum = c.locVals.reduce((a, lv) => a + lv.v, 0);
-                        if (locSum > 0) {
-                            for (let l = 0; l < nLoc; l++) {
-                                const pv = want * (c.locVals[l].v / locSum);
-                                m2[l][c.mp.mIdx] = (pv === 0) ? '' : (Math.round(pv * 100) / 100);
-                            }
-                        } else {
-                            const li = Math.min(Number(this.reverseLocIdx) || 0, nLoc - 1);
-                            for (let l = 0; l < nLoc; l++) {
-                                m2[l][c.mp.mIdx] = (l === li) ? ((want === 0) ? '' : (Math.round(want * 100) / 100)) : '';
-                            }
-                        }
+                        m2[locIdx][c.mp.mIdx] = (want === 0) ? '' : (Math.round(want * 100) / 100);
                     });
                     this.saveToStorage(); // invoice auto-sync isi se judta hai
-                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' update (invoice bhi)', '✅');
+                    const locName = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
+                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' / ' + locName + ' (invoice bhi)', '✅');
                 },
                 onMappingRateChange(item) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
