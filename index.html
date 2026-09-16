@@ -1021,6 +1021,28 @@
         <!-- VIEW 5: RECONCILIATION SHEET -->
         <div class="view-section animate-fade-in" v-if="currentView === 'reconciliation'">
 
+            <!-- ↩️ Two-way control bar (print me nahi aayegi) — OFF = purana system -->
+            <div class="filter-bar-card no-print" style="border-color: var(--accent-indigo);">
+                <div class="filter-col" style="min-width: 200px; flex: unset;">
+                    <label>Entry Mode</label>
+                    <button @click="toggleReverseEntry" :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo);">
+                        {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
+                    </button>
+                </div>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 180px; flex: unset;">
+                    <label>Khali row ki qty jayegi (Location)</label>
+                    <select v-model.number="reverseLocIdx" class="filter-select" title="Jis item/location me pehle se kuch nahi hai, uski entry is location me jayegi">
+                        <option v-for="(loc, i) in locations" :key="i" :value="i">{{ loc.name }}</option>
+                    </select>
+                </div>
+                <div class="filter-col" style="flex: 1; justify-content: flex-end;">
+                    <label>&nbsp;</label>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                        {{ reverseEntry ? '✏️ Activity column me qty likho — mapping ke hisaab se activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                    </div>
+                </div>
+            </div>
+
             <div class="glass-panel">
                 <div class="table-responsive">
                     <table class="billing-table">
@@ -1053,7 +1075,8 @@
                                     {{ row.totalQty > 0 ? row.totalQty : '' }}
                                 </td>
                                 <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono">
-                                    {{ row.activities[col] > 0 ? row.activities[col] : '' }}
+                                    <span v-if="!reverseEntry">{{ row.activities[col] > 0 ? row.activities[col] : '' }}</span>
+                                    <input v-else type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="row.activities[col] > 0 ? row.activities[col] : ''" placeholder="0" @change="applyReverseEntry(row.code, col, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + col + ' me mapping ke hisaab se bategi'">
                                 </td>
                             </tr>
                             <tr v-if="pivotReconciliationData.rows.length === 0">
@@ -11666,6 +11689,9 @@
                     selectedActivityKey: '1220',
                     searchQuery: '',
                     selectedLocationIdx: 'ALL',
+                    // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
+                    reverseEntry: false,
+                    reverseLocIdx: 0,
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11906,7 +11932,8 @@
                     
                     const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                     const rows = Object.values(sapMap)
-                        .filter(row => row.totalQty > 0)
+                        // Reverse entry ON ho to zero wali row bhi dikhao (pehli entry ke liye); OFF = purana behavior
+                        .filter(row => this.reverseEntry ? true : row.totalQty > 0)
                         .sort((a, b) => a.code.localeCompare(b.code));
                     
                     return { columns, rows };
@@ -12640,6 +12667,84 @@
                     this.persistMappingLocks();
                     this.saveToStorage();
                     this.showToast('🔒 Sab lock ho gaya — Rate, Item, Qty fix', '🔒');
+                },
+                toggleReverseEntry() {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    this.reverseEntry = !this.reverseEntry;
+                    this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
+                },
+                // ↩️ Reverse entry: reconciliation cell (sapCode × activity) → activity quantities me wapas banto
+                // Rule: 1 item se juda ho to seedha; kai item ho to pehle wale anupaat me; location bhi purane ratio me (khali ho to chuni location me)
+                applyReverseEntry(sapCode, actKey, targetVal) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const t = parseFloat(targetVal);
+                    if (isNaN(t) || t < 0) { this.showToast('⚠️ Sahi qty likho (0 ya zyada)', '⛔'); return; }
+                    const act = this.activities[actKey];
+                    if (!act || !act.materials || !act.materials.length) return;
+                    // Is activity me ye SAP code kin item se juda hai (factor 0 = not-required → bahar)
+                    const mapped = [];
+                    act.materials.forEach((m, mIdx) => {
+                        if (m.sapItems) m.sapItems.forEach(s => {
+                            if (!s.code || s.code !== sapCode) return;
+                            const mq = Number(s.qty);
+                            const factor = isNaN(mq) ? 1 : mq;
+                            if (factor !== 0) mapped.push({ mIdx, factor });
+                        });
+                    });
+                    if (!mapped.length) { this.showToast('ℹ️ Mapping qty 0 hai — pehle mapping me qty dalo', 'ℹ️'); return; }
+                    const nLoc = this.locations.length;
+                    const qMatrix = this.activityQuantities[actKey] || [];
+                    const contribs = mapped.map(mp => {
+                        const locVals = [];
+                        let sum = 0;
+                        for (let l = 0; l < nLoc; l++) {
+                            const raw = (qMatrix[l] && qMatrix[l][mp.mIdx] !== undefined) ? qMatrix[l][mp.mIdx] : '';
+                            if (typeof raw === 'string' && (raw.trim().startsWith('=') || raw.trim().startsWith('+'))) {
+                                locVals.push({ formula: true, v: 0 });
+                            } else {
+                                const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
+                                const vv = isNaN(v) ? 0 : v;
+                                locVals.push({ formula: false, v: vv });
+                                sum += vv;
+                            }
+                        }
+                        return { mp, locVals, actQty: sum, contrib: sum * mp.factor };
+                    });
+                    // Formula wala cell beech me ho to ruko — pehle activity me formula hatao
+                    if (contribs.some(c => c.locVals.some(lv => lv.formula))) {
+                        this.showToast('⚠️ Beech me formula wala cell hai — pehle Activity me formula hatao, phir likho', '⛔');
+                        return;
+                    }
+                    const totalContrib = contribs.reduce((a, c) => a + c.contrib, 0);
+                    let shares;
+                    if (totalContrib > 0) {
+                        shares = contribs.map(c => t * (c.contrib / totalContrib));
+                    } else if (contribs.length === 1) {
+                        shares = [t];
+                    } else {
+                        shares = contribs.map(() => t / contribs.length);
+                        this.showToast('ℹ️ ' + contribs.length + ' item me barabar banta (pehle se kuch nahi tha)', 'ℹ️');
+                    }
+                    // Matrix pakka karo (desktop wala init), phir likho
+                    this.initQuantitiesForActivity(actKey);
+                    const m2 = this.activityQuantities[actKey];
+                    contribs.forEach((c, i) => {
+                        const want = shares[i] / c.mp.factor;
+                        const locSum = c.locVals.reduce((a, lv) => a + lv.v, 0);
+                        if (locSum > 0) {
+                            for (let l = 0; l < nLoc; l++) {
+                                const pv = want * (c.locVals[l].v / locSum);
+                                m2[l][c.mp.mIdx] = (pv === 0) ? '' : (Math.round(pv * 100) / 100);
+                            }
+                        } else {
+                            const li = Math.min(Number(this.reverseLocIdx) || 0, nLoc - 1);
+                            for (let l = 0; l < nLoc; l++) {
+                                m2[l][c.mp.mIdx] = (l === li) ? ((want === 0) ? '' : (Math.round(want * 100) / 100)) : '';
+                            }
+                        }
+                    });
+                    this.saveToStorage(); // invoice auto-sync isi se judta hai
+                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' update (invoice bhi)', '✅');
                 },
                 onMappingRateChange(item) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
