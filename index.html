@@ -1030,11 +1030,12 @@
                     </button>
                 </div>
                 <div class="filter-col" v-if="reverseEntry" style="min-width: 220px; flex: unset;">
-                    <label>Material Filter (item chuno)</label>
-                    <select v-model="reverseMatFilter" class="filter-select" title="Sirf chuna hua material dikhega — entry aasan">
-                        <option value="ALL">Sab material dikhao</option>
-                        <option v-for="r in pivotReconciliationData.rows" :key="'f_'+r.code" :value="r.code">[{{ r.code }}] {{ (r.desc || '').substring(0, 40) }}</option>
-                    </select>
+                    <label>Material Filter (likho + chuno)</label>
+                    <input v-model="reverseMatSearch" list="revMatList" class="filter-select" placeholder="🔍 All Material — naam/code likho..." @change="onReverseMatPick" title="Naam ya code likho — list me se chuno, ya Enter dabao (text search)">
+                    <datalist id="revMatList">
+                        <option value="All Material"></option>
+                        <option v-for="r in pivotReconciliationData.rows" :key="'f_'+r.code" :value="'[' + r.code + '] ' + (r.desc || '')"></option>
+                    </datalist>
                 </div>
                 <div class="filter-col" v-if="reverseEntry" style="min-width: 150px; flex: unset;">
                     <label>Location</label>
@@ -11712,6 +11713,7 @@
                     // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
                     reverseEntry: false,
                     reverseMatFilter: 'ALL',
+                    reverseMatSearch: '',
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11969,11 +11971,18 @@
                     });
                     return out;
                 },
-                // ↩️ Reverse mode rows: material filter lagao (ALL = sab)
+                // ↩️ Reverse mode rows: All Material ya chuna item + free-text search
                 reconDisplayRows() {
                     const base = this.pivotReconciliationData.rows;
-                    if (!this.reverseEntry || !this.reverseMatFilter || this.reverseMatFilter === 'ALL') return base;
-                    return base.filter(r => r.code === this.reverseMatFilter);
+                    if (!this.reverseEntry) return base;
+                    if (this.reverseMatFilter && this.reverseMatFilter !== 'ALL') {
+                        return base.filter(r => r.code === this.reverseMatFilter);
+                    }
+                    const q = String(this.reverseMatSearch || '').trim().toLowerCase();
+                    if (q) {
+                        return base.filter(r => (r.code && String(r.code).toLowerCase().indexOf(q) > -1) || (r.desc && String(r.desc).toLowerCase().indexOf(q) > -1));
+                    }
+                    return base;
                 },
                 reconColCount() {
                     return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
@@ -12712,6 +12721,30 @@
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     this.reverseEntry = !this.reverseEntry;
                     this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
+                },
+                // ↩️ Search box se chunna: [CODE] naam / exact code / All Material / free text
+                onReverseMatPick() {
+                    const txt = String(this.reverseMatSearch || '').trim();
+                    if (!txt || txt.toLowerCase() === 'all material') {
+                        this.reverseMatFilter = 'ALL';
+                        this.reverseMatSearch = '';
+                        return;
+                    }
+                    const rows = this.pivotReconciliationData.rows;
+                    const m = txt.match(/^\[(.+?)\]/);
+                    if (m && rows.some(r => r.code === m[1])) {
+                        this.reverseMatFilter = m[1];
+                        this.reverseMatSearch = '';
+                        return;
+                    }
+                    const exact = rows.find(r => String(r.code).toUpperCase() === txt.toUpperCase());
+                    if (exact) {
+                        this.reverseMatFilter = exact.code;
+                        this.reverseMatSearch = '';
+                        return;
+                    }
+                    // free text — substring search ke liye rakho
+                    this.reverseMatFilter = 'ALL';
                 },
                 renameReverseLocation(locIdx, name) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
