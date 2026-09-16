@@ -13,6 +13,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #0d1117; color: #e6edf3;
     min-height: 100vh;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   header {
     position: sticky; top: 0; z-index: 100;
@@ -43,7 +45,7 @@
     margin-bottom: 0.75rem;
   }
   label.lbl { display: block; font-size: 0.72rem; font-weight: 700; color: #8b949e; margin: 0.6rem 0 0.3rem; text-transform: uppercase; }
-  select, input[type="search"] {
+  select, input[type="search"], input[type="password"] {
     width: 100%; font-size: 16px; padding: 0.7rem 0.8rem;
     border: 1.5px solid #484f58; border-radius: 10px;
     background: #0d1117; color: #e6edf3; outline: none;
@@ -97,11 +99,25 @@
   #totalBar {
     position: fixed; left: 0; right: 0; bottom: 76px; z-index: 200;
     background: #161b22; border-top: 1px solid #30363d;
-    padding: 0.55rem 1rem; display: flex; justify-content: space-between; align-items: center;
+    padding: 0.55rem 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
   }
-  #totalBar .t-lbl { font-size: 0.72rem; color: #8b949e; font-weight: 700; }
-  #totalBar .t-val { font-size: 1.05rem; font-weight: 800; color: #3fb950; }
-  #totalBar .t-qty { font-size: 0.8rem; color: #8b949e; font-weight: 700; }
+  #totalBar .t-lbl { font-size: 0.66rem; color: #8b949e; font-weight: 700; white-space: nowrap; }
+  #totalBar .t-val { font-size: 1.0rem; font-weight: 800; color: #3fb950; white-space: nowrap; }
+  #totalBar .t-val.inv { color: #79c0ff; }
+  #totalBar .t-qty { font-size: 0.78rem; color: #8b949e; font-weight: 700; white-space: nowrap; }
+  .settings { background: #161b22; border: 1px solid #30363d; border-radius: 12px; margin-top: 0.7rem; overflow: hidden; }
+  .settings summary { padding: 0.65rem 0.85rem; font-size: 0.82rem; font-weight: 800; cursor: pointer; list-style: none; }
+  .settings summary::-webkit-details-marker { display: none; }
+  .settings .s-body { padding: 0 0.85rem 0.85rem; }
+  .settings .s-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .settings .s-row input { flex: 1; min-width: 0; }
+  .s-btn { border: 1px solid #484f58; border-radius: 10px; background: #21262d; color: #e6edf3; font-weight: 800; font-size: 0.8rem; padding: 0 0.9rem; min-height: 48px; cursor: pointer; white-space: nowrap; }
+  .s-btn:active { background: #30363d; }
+  .s-btn.primary { background: linear-gradient(135deg, #2563eb, #38bdf8); border: none; color: #fff; }
+  .s-status { font-size: 0.75rem; color: #8b949e; margin-top: 0.5rem; line-height: 1.5; }
+  .s-status b { color: #e6edf3; }
+  .retry-btn { display: inline-block; margin-top: 0.8rem; border: 1px solid #484f58; border-radius: 10px; background: #21262d; color: #e6edf3; font-weight: 800; font-size: 0.85rem; padding: 0.7rem 1.4rem; cursor: pointer; }
+  .retry-btn:active { background: #30363d; }
   #actionBar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
     display: flex; gap: 0.5rem;
@@ -125,6 +141,14 @@
     display: none; max-width: 92%; text-align: center;
   }
   .desk-link { display: block; text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #58a6ff; }
+  @media (max-width: 380px) {
+    #totalBar { padding: 0.5rem 0.6rem; gap: 0.35rem; }
+    #totalBar .t-val { font-size: 0.88rem; }
+    #totalBar .t-lbl { font-size: 0.6rem; }
+    .step-btn { width: 44px; }
+    .qty-box { width: 70px; }
+    .wrap { padding-left: 0.55rem; padding-right: 0.55rem; }
+  }
 </style>
 </head>
 <body>
@@ -144,8 +168,25 @@
   <label class="lbl" for="actSel">Activity</label>
   <select id="actSel"></select>
 
+  <label class="lbl" for="locSel">Location</label>
+  <select id="locSel"></select>
+
   <label class="lbl" for="search">Khojo</label>
-  <input type="search" id="search" placeholder="🔍 Item naam ya number..." autocomplete="off">
+  <input type="search" id="search" placeholder="🔍 Item naam, number ya SAP code..." autocomplete="off">
+
+  <details class="settings" id="settingsBox">
+    <summary>⚙️ Settings &amp; Sync <span style="font-weight:400;color:#8b949e;font-size:0.72rem;" id="setSumState"></span></summary>
+    <div class="s-body">
+      <label class="lbl" for="apiKey" style="margin-top:0.2rem;">API Key (desktop jaisi — ek baar dalo)</label>
+      <div class="s-row">
+        <input type="password" id="apiKey" placeholder="API key yahan paste karo" autocomplete="off">
+        <button class="s-btn primary" id="btnKeySave">Save</button>
+        <button class="s-btn" id="btnKeyTest">Test</button>
+      </div>
+      <div class="s-status" id="keyStatus"></div>
+      <div class="s-status">🔄 Server se naya data har <b>20 second</b> me khud aa jayega (jab tak tum kuch likh nahi rahe). Desktop par Save/Sync karte hi yahan update dikhega.</div>
+    </div>
+  </details>
 
   <p class="meta-line" id="metaLine"></p>
   <div id="cards"></div>
@@ -154,7 +195,8 @@
 </div>
 
 <div id="totalBar">
-  <div><div class="t-lbl">ACTIVITY TOTAL (100%)</div><div class="t-val" id="totAmt">0.00</div></div>
+  <div><div class="t-lbl">TOTAL (100%)</div><div class="t-val" id="totAmt">0.00</div></div>
+  <div><div class="t-lbl" id="invLbl">INVOICE (85%)</div><div class="t-val inv" id="totInv">0.00</div></div>
   <div class="t-qty" id="totQty">Qty: 0</div>
 </div>
 
@@ -175,8 +217,8 @@
     'locations', 'activities', 'masterAbstractList', 'activityQuantities',
     'invoiceData', 'mappingLocks'];
 
-  var S = null, actKey = '', searchQ = '';
-  var syncTimer = null, lastHash = '';
+  var S = null, actKey = '', searchQ = '', locFilter = 'ALL';
+  var syncTimer = null, lastHash = '', dirty = false, pollTimer = null, updatedAt = '';
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -205,6 +247,30 @@
   }
 
   function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+  function stage1Pct() {
+    var p = S ? Number(S.pctStage1) : 85;
+    return (isNaN(p) || p <= 0) ? 85 : p;
+  }
+
+  // Desktop jaisa location scope: loc.acts khali/gayab = sab activity me; warna sirf listed me
+  function isLocVisible(aKey, locIdx) {
+    var loc = S.locations[locIdx];
+    if (!loc || !aKey) return true;
+    if (!loc.acts || !loc.acts.length) return true;
+    return loc.acts.indexOf(aKey) > -1;
+  }
+  function visibleLocIdx(aKey) {
+    var out = [];
+    for (var i = 0; i < S.locations.length; i++) {
+      if (isLocVisible(aKey, i)) out.push(i);
+    }
+    if (locFilter !== 'ALL') {
+      var lf = parseInt(locFilter, 10);
+      out = out.filter(function (i) { return i === lf; });
+    }
+    return out.length ? out : (S.locations.length ? [0] : []);
+  }
 
   // Desktop jaisa matrix ensure: [locIdx][matIdx], '' = khali
   function ensureMatrix(key) {
@@ -269,6 +335,7 @@
         if (res.status === 401) { setSync('error', 'key?'); toast('API key chahiye — desktop se set karo'); return; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         lastHash = hash;
+        dirty = false;
         try {
           var t = new Date();
           setSync('synced', ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2));
@@ -298,9 +365,19 @@
     var raw = null;
     try { raw = localStorage.getItem(LS_KEY); } catch (e) {}
     if (raw) {
-      try { applyState(JSON.parse(raw), false); return; } catch (e) {}
+      try { applyState(JSON.parse(raw), false); renderKeyStatus('📱 Phone memory se purana data dikh raha hai — net aate hi server se sync hoga.'); return; } catch (e) {}
     }
-    toast('Koi data nahi mila — pehle desktop par bill kholo');
+    render();
+    renderKeyStatus('📭 Koi data nahi mila.<br>1️⃣ Pehle <b>desktop par bill kholo</b> (1 baar Save/Sync dabao taaki server par chadh jaye).<br>2️⃣ Agar API key lagi hai to neeche <b>⚙️ Settings</b> me wahi key dalo, phir <b>🔄</b> dabao.');
+    var box = $('cards');
+    if (box) {
+      box.innerHTML = '<div class="empty">📭 Abhi koi data nahi hai.<br><br>1️⃣ Desktop par bill kholo + Save/Sync dabao<br>2️⃣ API key ho to ⚙️ Settings me dalo<br><br><button class="retry-btn" id="btnEmptyRetry">🔄 Dobara try karo</button></div>';
+      var rb = $('btnEmptyRetry');
+      if (rb) rb.addEventListener('click', function () { loadState(); });
+      $('totAmt').textContent = '0.00';
+      var ti0 = $('totInv'); if (ti0) ti0.textContent = '0.00';
+      $('totQty').textContent = 'Qty: 0';
+    }
     setSync('error', 'empty');
   }
 
@@ -330,7 +407,15 @@
       }
     } catch (e) {}
     setSync(fromMongo ? 'synced' : '', fromMongo ? 'synced' : 'local');
+    if (fromMongo) {
+      try {
+        var t2 = new Date();
+        updatedAt = ('0' + t2.getHours()).slice(-2) + ':' + ('0' + t2.getMinutes()).slice(-2);
+      } catch (e2) { updatedAt = ''; }
+    }
+    dirty = false;
     render();
+    renderKeyStatus('');
   }
 
   function renderLock(force) {
@@ -351,13 +436,34 @@
       var o = document.createElement('option');
       o.value = k;
       var t = (S.activities[k] && S.activities[k].title) || k;
-      o.textContent = k + ' — ' + String(t).substring(0, 40);
+      var n = (S.activities[k] && S.activities[k].materials) ? S.activities[k].materials.length : 0;
+      o.textContent = k + ' — ' + String(t).substring(0, 32) + ' (' + n + ')';
       sel.appendChild(o);
     });
     if (keys.indexOf(actKey) === -1) actKey = keys.length ? keys[0] : '';
     sel.value = actKey;
 
-    $('metaLine').textContent = S.locations.length + ' locations • Rate change mobile se nahi hoga';
+    var ls = $('locSel');
+    if (ls) {
+      ls.innerHTML = '';
+      var all = document.createElement('option');
+      all.value = 'ALL';
+      all.textContent = 'All Locations (' + S.locations.length + ')';
+      ls.appendChild(all);
+      S.locations.forEach(function (loc, i) {
+        var o = document.createElement('option');
+        o.value = String(i);
+        o.textContent = (loc && loc.name) || ('Loc ' + (i + 1));
+        ls.appendChild(o);
+      });
+      if (locFilter !== 'ALL' && !S.locations[parseInt(locFilter, 10)]) locFilter = 'ALL';
+      ls.value = locFilter;
+    }
+
+    var p1 = stage1Pct();
+    $('invLbl').textContent = 'INVOICE (' + p1 + '%)';
+    var upd = updatedAt ? ' • ⏱ ' + updatedAt : '';
+    $('metaLine').textContent = S.locations.length + ' locations • Rate change mobile se nahi hoga' + upd;
     renderCards(locked);
   }
 
@@ -365,7 +471,8 @@
     if (!searchQ) return true;
     var q = searchQ.toLowerCase();
     return (m.desc && String(m.desc).toLowerCase().indexOf(q) > -1) ||
-      String(m.no).toLowerCase().indexOf(q) > -1;
+      String(m.no).toLowerCase().indexOf(q) > -1 ||
+      (m.itemCode && String(m.itemCode).toLowerCase().indexOf(q) > -1);
   }
 
   function renderCards(locked) {
@@ -373,10 +480,11 @@
     var act = S.activities[actKey];
     if (!act || !act.materials || !act.materials.length) {
       box.innerHTML = '<div class="empty">Is activity me koi item nahi hai.</div>';
-      $('totAmt').textContent = '0.00'; $('totQty').textContent = 'Qty: 0';
+      $('totAmt').textContent = '0.00'; $('totInv').textContent = '0.00'; $('totQty').textContent = 'Qty: 0';
       return;
     }
     ensureMatrix(actKey);
+    var locs = visibleLocIdx(actKey);
     var mats = act.materials.map(function (m, idx) {
       var c = {}; for (var k in m) c[k] = m[k];
       c.origIndex = idx; return c;
@@ -393,7 +501,8 @@
         '<div class="item-desc">' + esc(m.desc) + '</div>' +
         '<div class="item-sub">Unit: <b>' + esc(m.unit || 'No') + '</b> • Rate: <b>₹' + fmt(m.rate) + '</b>' +
         (m.itemCode ? ' • SAP: ' + esc(m.itemCode) : '') + '</div>';
-      for (var l = 0; l < S.locations.length; l++) {
+      for (var li = 0; li < locs.length; li++) {
+        var l = locs[li];
         var locName = (S.locations[l] && S.locations[l].name) || ('Loc ' + (l + 1));
         var v = (S.activityQuantities[actKey][l] && S.activityQuantities[actKey][l][m.origIndex] !== undefined)
           ? S.activityQuantities[actKey][l][m.origIndex] : '';
@@ -409,7 +518,12 @@
     });
     if (!mats.length) html = '<div class="empty">🔍 Kuch nahi mila — kuch aur likh kar dekho.</div>';
     box.innerHTML = html;
+    showTotals(grand, grandQty);
+  }
+
+  function showTotals(grand, grandQty) {
     $('totAmt').textContent = fmt(grand);
+    $('totInv').textContent = fmt(grand * stage1Pct() / 100);
     $('totQty').textContent = 'Qty: ' + (Math.round(grandQty * 100) / 100);
   }
 
@@ -421,8 +535,7 @@
       var q = itemQty(actKey, i);
       grandQty += q; grand += q * num(act.materials[i].rate);
     }
-    $('totAmt').textContent = fmt(grand);
-    $('totQty').textContent = 'Qty: ' + (Math.round(grandQty * 100) / 100);
+    showTotals(grand, grandQty);
   }
 
   function refreshCardTotal(input) {
@@ -445,9 +558,56 @@
       if (isNaN(n) || n < 0) return;
       S.activityQuantities[actKey][loc][mat] = n;
     }
+    dirty = true;
     saveLocal(); scheduleSync();
     refreshTotals();
     if (input) refreshCardTotal(input);
+  }
+
+  // ---- Settings / key / polling ----
+  function savedKey() {
+    try { return localStorage.getItem(API_LS) || ''; } catch (e) { return ''; }
+  }
+  function renderKeyStatus(extra) {
+    var el = $('keyStatus');
+    if (!el) return;
+    if (extra) { el.innerHTML = extra; return; }
+    var k = savedKey();
+    var masked = k ? ('<b>API key:</b> ' + esc(k.slice(0, 3)) + '•••• (' + k.length + ' chars)') : '<b>API key:</b> nahi dali (server par key nahi hai to zaroorat nahi)';
+    var upd = updatedAt ? ('<br><b>Last server data:</b> ' + esc(updatedAt)) : '';
+    el.innerHTML = masked + upd;
+    var ss = $('setSumState');
+    if (ss) ss.textContent = k ? '• key saved' : '';
+  }
+
+  // Chup-chaap naya data lao — sirf tab jab user kuch likh nahi raha (dirty/peding sync nahi)
+  function pullQuiet() {
+    if (!S || dirty || syncTimer) return;
+    fetch('/api/billing', { headers: apiHeaders(false) })
+      .then(function (res) {
+        if (res.status === 401) { setSync('error', 'key?'); return null; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (j) {
+        if (!j || !j.success || !j.data) return;
+        var raw;
+        try { raw = JSON.stringify(j.data); } catch (e) { return; }
+        var h = 0;
+        for (var i = 0; i < raw.length; i += 97) { h = ((h * 31) + raw.charCodeAt(i)) >>> 0; }
+        var hash = raw.length + ':' + h;
+        if (hash === lastHash || dirty || syncTimer) return;
+        var keepAct = actKey, keepQ = searchQ, keepLoc = locFilter;
+        applyState(j.data, true);
+        actKey = (S.activities && S.activities[keepAct]) ? keepAct : actKey;
+        searchQ = keepQ; locFilter = keepLoc;
+        render();
+      })
+      .catch(function () {});
+  }
+  function startPoll() {
+    if (pollTimer) return;
+    pollTimer = setInterval(pullQuiet, 20000);
   }
 
   // Events (delegation — tez + simple)
@@ -479,6 +639,11 @@
     renderCards(renderLock(false));
   });
 
+  $('locSel').addEventListener('change', function (e) {
+    locFilter = e.target.value;
+    renderCards(renderLock(false));
+  });
+
   var searchH = null;
   $('search').addEventListener('input', function (e) {
     clearTimeout(searchH);
@@ -493,15 +658,48 @@
     toast('💾 Save ho gaya');
     syncNow();
   });
-  $('btnRefresh').addEventListener('click', function () { loadState(); toast('🔄 Naya data la rahe hain...'); });
+  $('btnRefresh').addEventListener('click', function () { dirty = false; loadState(); toast('🔄 Naya data la rahe hain...'); });
+  $('btnKeySave').addEventListener('click', function () {
+    var v = ($('apiKey').value || '').trim();
+    try {
+      if (v) localStorage.setItem(API_LS, v);
+      else localStorage.removeItem(API_LS);
+    } catch (e) {}
+    renderKeyStatus('');
+    toast(v ? '🔑 Key save ho gayi' : '🔑 Key hata di');
+    dirty = false; loadState();
+  });
+  $('btnKeyTest').addEventListener('click', function () {
+    var v = ($('apiKey').value || '').trim();
+    if (v) { try { localStorage.setItem(API_LS, v); } catch (e) {} }
+    renderKeyStatus('⏳ Test kar rahe hain...');
+    fetch('/api/billing', { headers: apiHeaders(false) })
+      .then(function (res) {
+        if (res.status === 401) { renderKeyStatus('❌ Key galat hai — desktop wali key se milao.'); return; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (j) {
+        if (!j) return;
+        renderKeyStatus('✅ <b>Server mil gaya!</b> Data load ho raha hai...');
+        dirty = false; loadState();
+      })
+      .catch(function () { renderKeyStatus('❌ Server nahi mila — net check karo ya desktop par server/Vercel dekho.'); });
+  });
+  window.addEventListener('online', function () { toast('🌐 Net wapas — sync kar rahe hain'); syncNow(); dirty = false; loadState(); });
   $('deskLink').addEventListener('click', function (e) {
     e.preventDefault();
     try { localStorage.setItem('billing_pref_desktop', '1'); } catch (x) {}
     location.href = 'index.html?view=desktop';
   });
 
-  document.addEventListener('DOMContentLoaded', loadState);
+  document.addEventListener('DOMContentLoaded', function () { loadState(); startPoll(); });
+  try {
+    var _k = savedKey();
+    if (_k && $('apiKey')) $('apiKey').value = _k;
+  } catch (e) {}
   loadState();
+  startPoll();
 })();
 </script>
 </body>

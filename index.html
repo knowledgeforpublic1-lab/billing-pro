@@ -1023,21 +1023,65 @@
 
             <!-- ↩️ Two-way control bar (print me nahi aayegi) — OFF = purana system -->
             <div class="filter-bar-card no-print" style="border-color: var(--accent-indigo);">
-                <div class="filter-col" style="min-width: 200px; flex: unset;">
+                <div class="filter-col" style="min-width: 200px; flex: unset; order: 1;">
                     <label>Entry Mode</label>
                     <button @click="toggleReverseEntry" :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo);">
                         {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
                     </button>
                 </div>
-                <div class="filter-col" style="flex: 1; justify-content: flex-end;">
+                <div class="filter-col" style="flex: 1; justify-content: flex-end; order: 3;">
                     <label>&nbsp;</label>
                     <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                        {{ reverseEntry ? '✏️ Sirf invoice wali activity dikhengi — apni location me qty likho, activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                        {{ reverseEntry ? '✏️ Sirf invoice wali activity dikhengi — apni location me qty likho, activity + invoice update hoga • 🔩 Bolt nos me likho, activity me kg banega' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                    </div>
+                </div>
+                <div v-if="reverseEntry" class="filter-col no-print" style="min-width: 150px; flex: unset; position: relative; order: 2;" v-click-outside="closeReverseAddMenu">
+                    <label>Item</label>
+                    <button @click="showReverseAddMenu = !showReverseAddMenu" :disabled="isFinalized || reverseInvoiceActKeys.length === 0" :title="isFinalized ? 'Bill locked hai' : 'Pehli qty jodo ya naya SAP item — zero wali row chhupi rehti hai'" style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; border: none; background: linear-gradient(135deg, #2563eb, #38bdf8); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3);">
+                        ➕ Item ▾
+                    </button>
+                    <div v-if="showReverseAddMenu" style="position: absolute; top: calc(100% + 6px); right: 0; width: 330px; max-height: 340px; overflow-y: auto; background: var(--bg-card); border: 1.5px solid var(--border-strong); border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 200;">
+                        <div style="padding: 6px 8px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
+                            <input type="text" v-model="reverseAddSearch" placeholder="🔍 code ya naam se khojo..." @focus="$event.target.select()" style="width: 100%; padding: 0.35rem 0.55rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.78rem; outline: none;">
+                        </div>
+                        <div v-for="r in reverseSapMenuList" :key="r.code" @click="pickReverseSap(r.code)" style="padding: 6px 10px; cursor: pointer; font-size: 0.78rem; font-weight: 600; border-bottom: 1px solid var(--border-subtle);">
+                            <div><span class="font-mono" style="color: var(--primary); font-weight: 800;">{{ r.code }}</span> — {{ String(r.desc || '').substring(0, 38) }}
+                                <span style="color: var(--accent-green); font-weight: 800;" v-if="r.total > 0"> • {{ r.total }}</span>
+                                <span style="color: var(--accent-amber);" v-else> • zero</span>
+                            </div>
+                            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 1px;">{{ r.uom }}<span v-if="r.acts.length" style="color: var(--accent-indigo); font-weight: 700;"> → {{ r.acts.join(', ') }}</span><span v-else style="color: var(--accent-amber);"> • invoice me nahi</span></div>
+                        </div>
+                        <div v-if="!reverseSapMenuList.length" style="padding: 1rem; text-align: center; font-size: 0.78rem; color: var(--text-muted);">Kuch nahi mila</div>
                     </div>
                 </div>
             </div>
             <div v-if="reverseEntry && reverseInvoiceActKeys.length === 0" class="filter-bar-card no-print" style="border-color: var(--accent-amber);">
                 <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber);">📝 Pehle Tax Invoice me activity add karo — wahi activity yahan dikhegi.</div>
+            </div>
+
+            <!-- ↩️ Dropdown se chuna reconciliation item: activity + location + qty likho (zero row chhupi hai, isliye entry yahin se) -->
+            <div v-if="reverseEntry && reverseAddSelCode" class="filter-bar-card no-print" style="border-color: var(--accent-green);">
+                <div v-if="reverseAddExtraMode" style="flex-basis: 100%; font-size: 0.78rem; font-weight: 700; color: var(--accent-green);">✏️ Ye item activity me nahi hai — Activity rate sheet ke <b>Extra Item</b> me judega (rate wahan dalna, qty yahin jayegi)</div>
+                <div class="filter-col" style="min-width: 200px; flex: 2;">
+                    <label class="font-mono">{{ reverseAddSelCode }} — {{ reverseSelCodeDesc }}</label>
+                    <select v-model="reverseAddAct" class="filter-select" style="width: 100%;">
+                        <option v-for="k in reverseSelCodeActs" :key="k" :value="k">Activity {{ k }}: {{ (activities[k] && activities[k].title) ? activities[k].title.substring(0, 40) : '' }}</option>
+                    </select>
+                </div>
+                <div class="filter-col" style="min-width: 130px; flex: unset;">
+                    <label>Location</label>
+                    <select v-model.number="reverseAddLoc" class="filter-select" style="width: 100%;">
+                        <option v-for="li in reverseSelCodeLocs" :key="li" :value="li">{{ locations[li] ? locations[li].name : ('Loc ' + (li + 1)) }}</option>
+                    </select>
+                </div>
+                <div class="filter-col" style="min-width: 95px; flex: unset;">
+                    <label>Qty</label>
+                    <input type="number" inputmode="decimal" step="any" min="0" v-model.number="reverseAddQty" @keydown.enter="submitReverseSapQty" placeholder="0" class="filter-input" style="width: 100%;">
+                </div>
+                <div class="filter-actions" style="align-self: flex-end;">
+                    <button class="btn-filter-add" @click="submitReverseSapQty">✅ Jodo</button>
+                    <button class="btn-filter-reset" @click="reverseAddSelCode = ''; reverseAddExtraMode = false">✕</button>
+                </div>
             </div>
 
             <div class="glass-panel">
@@ -1086,14 +1130,15 @@
                                 </template>
                                 <template v-else>
                                 <td v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center font-mono">
-                                    <input type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLoc(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (locations[rcol.locIdx] ? locations[rcol.locIdx].name : '') + ' me jayegi'">
+                                    <input type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLoc(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (locations[rcol.locIdx] ? locations[rcol.locIdx].name : '') + ' me jayegi'">
                                 </td>
                                 </template>
                             </tr>
                             <tr v-if="reconRows.length === 0">
                                 <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
                                     <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
-                                    <span v-else>📭 Invoice wali activity me koi material mapped nahi — pehle Mapping me SAP item jodo.</span>
+                                    <span v-else-if="!reverseShownCodes.length">📭 Invoice wali activity me koi material mapped nahi — upar ➕ Item ▾ se jodo.</span>
+                                    <span v-else>📭 Abhi koi entry nahi — upar ➕ Item ▾ se pehli qty jodo (zero wali row chhupi rehti hai).</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -1316,7 +1361,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.weight }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.weight * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -1386,7 +1431,7 @@
                                     <td style="text-align: center; font-family: 'JetBrains Mono', monospace;">{{ selectedAugerRadius }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h).toFixed(3) }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.poles" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="number" v-model.number="item.poles" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h * (item.poles || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -1415,7 +1460,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.vol }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.vol * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -11702,7 +11747,16 @@
                     searchQuery: '',
                     selectedLocationIdx: 'ALL',
                     // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
-                    reverseEntry: false,
+                    // (choice localStorage me yaad rehti hai; Mongo sync me nahi jati — sirf UI mode hai)
+                    reverseEntry: (function() { try { return localStorage.getItem('lk_billing_reverse_entry') === '1'; } catch(e) { return false; } })(),
+                    // ↩️ Reverse view ka "➕ Item ▾" dropdown + inline entry (reconciliation material)
+                    showReverseAddMenu: false,
+                    reverseAddSearch: '',
+                    reverseAddSelCode: '',
+                    reverseAddExtraMode: false, // true = item activity me nahi hai → Extra Item banega
+                    reverseAddAct: '',
+                    reverseAddQty: 1,
+                    reverseAddLoc: 0,
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11731,45 +11785,45 @@
                     showConcretingModal: false,
                     selectedAugerSize: 22,
                     nutBoltData: [
-                        { size: '16×65', unit: 'nos', weight: 0.164, qty: 0 },
-                        { size: '16×35', unit: 'nos', weight: 0.119, qty: 0 },
-                        { size: '16×75', unit: 'nos', weight: 0.180, qty: 0 },
-                        { size: '16×150', unit: 'nos', weight: 0.299, qty: 0 },
-                        { size: '6×75', unit: 'nos', weight: 0.022, qty: 0 },
-                        { size: '6×50', unit: 'nos', weight: 0.014, qty: 0 },
-                        { size: '8×50', unit: 'nos', weight: 0.900, qty: 0 },
-                        { size: '12×140', unit: 'nos', weight: 0.173, qty: 0 },
-                        { size: '12×100', unit: 'nos', weight: 0.120, qty: 0 },
-                        { size: '12×35', unit: 'nos', weight: 0.049, qty: 0 },
-                        { size: '12×65', unit: 'nos', weight: 0.085, qty: 0 },
-                        { size: '12×150', unit: 'nos', weight: 0.173, qty: 0 },
-                        { size: '12×175', unit: 'nos', weight: 0.203, qty: 0 },
-                        { size: '12×190', unit: 'nos', weight: 0.170, qty: 0 },
-                        { size: '12×125', unit: 'nos', weight: 0.148, qty: 0 },
-                        { size: '12×225', unit: 'nos', weight: 0.159, qty: 0 },
-                        { size: '12×35', unit: 'nos', weight: 0.119, qty: 0 }
+                        { size: '16×65', unit: 'nos', weight: 0.164, qty: '' },
+                        { size: '16×35', unit: 'nos', weight: 0.119, qty: '' },
+                        { size: '16×75', unit: 'nos', weight: 0.180, qty: '' },
+                        { size: '16×150', unit: 'nos', weight: 0.299, qty: '' },
+                        { size: '6×75', unit: 'nos', weight: 0.022, qty: '' },
+                        { size: '6×50', unit: 'nos', weight: 0.014, qty: '' },
+                        { size: '8×50', unit: 'nos', weight: 0.900, qty: '' },
+                        { size: '12×140', unit: 'nos', weight: 0.173, qty: '' },
+                        { size: '12×100', unit: 'nos', weight: 0.120, qty: '' },
+                        { size: '12×35', unit: 'nos', weight: 0.049, qty: '' },
+                        { size: '12×65', unit: 'nos', weight: 0.085, qty: '' },
+                        { size: '12×150', unit: 'nos', weight: 0.173, qty: '' },
+                        { size: '12×175', unit: 'nos', weight: 0.203, qty: '' },
+                        { size: '12×190', unit: 'nos', weight: 0.170, qty: '' },
+                        { size: '12×125', unit: 'nos', weight: 0.148, qty: '' },
+                        { size: '12×225', unit: 'nos', weight: 0.159, qty: '' },
+                        { size: '12×35', unit: 'nos', weight: 0.119, qty: '' }
                     ],
                     concretePoleData: [
-                        { poleMtr: 8.0, h: 1.33, poles: 0 },
-                        { poleMtr: 9.0, h: 1.50, poles: 0 },
-                        { poleMtr: 10.0, h: 1.67, poles: 0 },
-                        { poleMtr: 11.0, h: 1.83, poles: 0 },
-                        { poleMtr: 13.0, h: 2.17, poles: 0 }
+                        { poleMtr: 8.0, h: 1.33, poles: '' },
+                        { poleMtr: 9.0, h: 1.50, poles: '' },
+                        { poleMtr: 10.0, h: 1.67, poles: '' },
+                        { poleMtr: 11.0, h: 1.83, poles: '' },
+                        { poleMtr: 13.0, h: 2.17, poles: '' }
                     ],
                     concreteMuffingData: [
-                        { desc: 'HT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 8, qty: 0 },
-                        { desc: 'LT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 7, qty: 0 },
-                        { desc: 'Muffing 450×450 DP And DTC', unit: 'CMT', vol: 0.091, qty: 0 },
-                        { desc: 'Muffing 300×300 Pole', unit: 'CMT', vol: 0.027, qty: 0 },
-                        { desc: 'Muffing 400×400 Pole', unit: 'CMT', vol: 0.048, qty: 0 },
-                        { desc: 'Stay Concreting', unit: 'CMT', vol: 0.125, qty: 0 },
-                        { desc: 'G.I.Wire 8 SWG / 6 SWG for Pole Earthing', unit: 'Kg.', vol: 1.35, qty: 0 },
-                        { desc: 'G.I.Wire 8 SWG / 6 SWG for DTC Earthing', unit: 'Kg.', vol: 6.75, qty: 0 },
-                        { desc: 'Tree Cutting', unit: 'km', vol: 0.02, qty: 0 },
-                        { desc: 'Barbed Wire', unit: 'Kg.', vol: 3.5, qty: 0 },
-                        { desc: 'Guarding HT', unit: 'Kg./mtr', vol: 0.099, qty: 0 },
-                        { desc: 'Guarding LT', unit: 'Kg./mtr', vol: 0.099, qty: 0 },
-                        { desc: 'Jumpering', unit: 'Rmt', vol: 4.5, qty: 0 }
+                        { desc: 'HT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 8, qty: '' },
+                        { desc: 'LT G.I.Stay Wire 7/3.15mm (10SWG)', unit: 'Kg.', vol: 7, qty: '' },
+                        { desc: 'Muffing 450×450 DP And DTC', unit: 'CMT', vol: 0.091, qty: '' },
+                        { desc: 'Muffing 300×300 Pole', unit: 'CMT', vol: 0.027, qty: '' },
+                        { desc: 'Muffing 400×400 Pole', unit: 'CMT', vol: 0.048, qty: '' },
+                        { desc: 'Stay Concreting', unit: 'CMT', vol: 0.125, qty: '' },
+                        { desc: 'G.I.Wire 8 SWG / 6 SWG for Pole Earthing', unit: 'Kg.', vol: 1.35, qty: '' },
+                        { desc: 'G.I.Wire 8 SWG / 6 SWG for DTC Earthing', unit: 'Kg.', vol: 6.75, qty: '' },
+                        { desc: 'Tree Cutting', unit: 'km', vol: 0.02, qty: '' },
+                        { desc: 'Barbed Wire', unit: 'Kg.', vol: 3.5, qty: '' },
+                        { desc: 'Guarding HT', unit: 'Kg./mtr', vol: 0.099, qty: '' },
+                        { desc: 'Guarding LT', unit: 'Kg./mtr', vol: 0.099, qty: '' },
+                        { desc: 'Jumpering', unit: 'Rmt', vol: 4.5, qty: '' }
                     ],
                     editingContractorId: null,
                     contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
@@ -11927,7 +11981,10 @@
                                         // Qty 0 ka matlab 0 hi hai (not-required), blank/NaN ka matlab 1
                                         let _mq = Number(s.qty);
                                         const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
-                                        const finalQty = activitySheetQty * mappingSheetQty;
+                                        // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
+                                        const _bw = this.nutBoltWeightForCode(s.code);
+                                        const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
+                                        const finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
                                         
                                         sapMap[s.code].totalQty += finalQty;
                                         
@@ -11966,13 +12023,14 @@
                     return out;
                 },
                 // ↩️ Reverse columns: invoice wali activity × uski locations (907 me 2 location to 907 do baar)
+                // 📍 Location scope ka samman — sirf wahi location jo is activity me dikhti hai
                 reverseReconColumns() {
                     if (!this.reverseEntry) return [];
                     const out = [];
                     const self = this;
                     this.reverseInvoiceActKeys.forEach(actKey => {
                         self.locations.forEach((loc, locIdx) => {
-                            out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
+                            if (self.isLocVisible(actKey, locIdx)) out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
                         });
                     });
                     return out;
@@ -12002,7 +12060,46 @@
                 reconRows() {
                     if (!this.reverseEntry) return this.pivotReconciliationData.rows;
                     const codes = this.reverseShownCodes;
-                    return this.pivotReconciliationData.rows.filter(r => codes.indexOf(r.code) > -1);
+                    const cols = this.reverseReconColumns;
+                    // Sirf value wali row dikhao — zero wali chhupi (entry ➕ Item ▾ dropdown se)
+                    return this.pivotReconciliationData.rows.filter(r => {
+                        if (codes.indexOf(r.code) === -1) return false;
+                        let t = 0;
+                        for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
+                        return t > 0;
+                    });
+                },
+                // ↩️ "➕ Item ▾" dropdown: reconciliation wale SAP material (code + desc), search ke sath
+                reverseSapMenuList() {
+                    const q = String(this.reverseAddSearch || '').trim().toLowerCase();
+                    return this.pivotReconciliationData.rows
+                        .filter(r => {
+                            if (!q) return true;
+                            return String(r.code || '').toLowerCase().includes(q) ||
+                                String(r.desc || '').toLowerCase().includes(q);
+                        })
+                        .map(r => ({ code: r.code, desc: r.desc, uom: r.uom, total: Math.round((Number(r.totalQty) || 0) * 100) / 100, acts: this.reverseActsForCode(r.code) }))
+                        .sort((a, b) => String(a.code).localeCompare(String(b.code)));
+                },
+                // Dropdown se chuna SAP code: uski row, invoice activities, location
+                reverseSelCodeDesc() {
+                    if (!this.reverseAddSelCode) return '';
+                    const r = this.pivotReconciliationData.rows.find(x => x.code === this.reverseAddSelCode);
+                    return r ? String(r.desc || '').substring(0, 50) : '';
+                },
+                reverseSelCodeActs() {
+                    if (!this.reverseAddSelCode) return [];
+                    // Extra mode: koi bhi invoice activity chun sakte ho (wahan Extra Item banega)
+                    if (this.reverseAddExtraMode) return this.reverseInvoiceActKeys.slice();
+                    return this.reverseActsForCode(this.reverseAddSelCode);
+                },
+                reverseSelCodeLocs() {
+                    if (!this.reverseAddAct) return [];
+                    const out = [];
+                    for (let i = 0; i < this.locations.length; i++) {
+                        if (this.isLocVisible(this.reverseAddAct, i)) out.push(i);
+                    }
+                    return out.length ? out : (this.locations.length ? [0] : []);
                 },
                 canUndo() {
                     return this.historyIndex > 0;
@@ -12380,11 +12477,11 @@
                     this.showConcretingModal = true;
                 },
                 resetNutBolt() {
-                    this.nutBoltData.forEach(item => item.qty = 0);
+                    this.nutBoltData.forEach(item => item.qty = '');
                 },
                 resetConcrete() {
-                    this.concretePoleData.forEach(item => item.poles = 0);
-                    this.concreteMuffingData.forEach(item => item.qty = 0);
+                    this.concretePoleData.forEach(item => item.poles = '');
+                    this.concreteMuffingData.forEach(item => item.qty = '');
                 },
                 onExtraItemCodeSearch() {
                     // suggestions are handled by computed extraItemSuggestions
@@ -12737,7 +12834,120 @@
                 toggleReverseEntry() {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     this.reverseEntry = !this.reverseEntry;
+                    try { localStorage.setItem('lk_billing_reverse_entry', this.reverseEntry ? '1' : '0'); } catch(e) {}
                     this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
+                },
+                // ↩️ Reverse view: ➕ Item ▾ dropdown (reconciliation material) se qty entry
+                closeReverseAddMenu() {
+                    this.showReverseAddMenu = false;
+                },
+                // Ye SAP code invoice wali kin activity me mapped hai (factor 0 = bahar)
+                reverseActsForCode(sapCode) {
+                    const out = [];
+                    this.reverseInvoiceActKeys.forEach(actKey => {
+                        const act = this.activities ? this.activities[actKey] : null;
+                        if (!act || !act.materials) return;
+                        const hit = act.materials.some(m => (m.sapItems || []).some(s => {
+                            if (!s.code || s.code !== sapCode) return false;
+                            const mq = Number(s.qty);
+                            return isNaN(mq) ? true : mq !== 0;
+                        }));
+                        if (hit) out.push(actKey);
+                    });
+                    return out;
+                },
+                pickReverseSap(sapCode) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const acts = this.reverseActsForCode(sapCode);
+                    this.reverseAddSelCode = sapCode;
+                    this.reverseAddQty = 1;
+                    if (!acts.length) {
+                        // Item activity me nahi hai → Extra Item mode (activity chun kar jodo)
+                        if (!this.reverseInvoiceActKeys.length) { this.showToast('📝 Pehle Tax Invoice me activity add karo', 'ℹ️'); this.reverseAddSelCode = ''; return; }
+                        this.reverseAddExtraMode = true;
+                        this.reverseAddAct = this.reverseInvoiceActKeys[0];
+                    } else {
+                        this.reverseAddExtraMode = false;
+                        this.reverseAddAct = acts[0];
+                    }
+                    const locs = this.reverseSelCodeLocs;
+                    this.reverseAddLoc = locs.length ? locs[0] : 0;
+                    this.showReverseAddMenu = false;
+                },
+                submitReverseSapQty() {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const code = this.reverseAddSelCode;
+                    if (!code) return;
+                    const q = Number(this.reverseAddQty);
+                    if (isNaN(q) || q <= 0) { this.showToast('⚠️ Qty 0 se zyada likho', '⛔'); return; }
+                    if (this.reverseAddLoc < 0 || this.reverseAddLoc >= this.locations.length) { this.showToast('⚠️ Location chuno', '⛔'); return; }
+                    // ✏️ EXTRA MODE: item activity me nahi hai → rate sheet ke Extra Item me jodo
+                    if (this.reverseAddExtraMode) {
+                        if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — jodne ke liye Mapping me 🔓 Item dabao', '🔒'); return; }
+                        if (this.reverseInvoiceActKeys.indexOf(this.reverseAddAct) === -1) { this.showToast('⚠️ Activity chuno', '⛔'); return; }
+                        const act = this.activities[this.reverseAddAct];
+                        if (!act || !act.materials) return;
+                        const row = this.pivotReconciliationData.rows.find(x => x.code === code) || {};
+                        const mf = (this.sapMaterialsMaster || []).find(x => x.code === code) || {};
+                        let maxNo = act.materials.length;
+                        act.materials.forEach(mm => { const n = parseInt(mm.no, 10); if (!isNaN(n) && n > maxNo) maxNo = n; });
+                        const newMat = {
+                            no: String(maxNo + 1),
+                            desc: row.desc || mf.desc || code,
+                            unit: row.uom || mf.uom || 'No',
+                            rate: 0,
+                            itemCode: code,
+                            sapDescription: row.desc || mf.desc || code,
+                            sapUom: row.uom || mf.uom || '',
+                            docHeader: mf.docHeader || '0031006347',
+                            sapItems: [{ code: code, desc: row.desc || mf.desc || code, uom: row.uom || mf.uom || '', qty: 1, docHeader: mf.docHeader || '0031006347' }],
+                            isExtra: true
+                        };
+                        act.materials.push(newMat);
+                        this.initQuantitiesForActivity(this.reverseAddAct);
+                        this.activityQuantities[this.reverseAddAct][this.reverseAddLoc][act.materials.length - 1] = q;
+                        this.saveToStorage();
+                        this.showToast('✅ ' + code + ' → Activity ' + this.reverseAddAct + ' ke Extra Item me jud gaya (No. ' + newMat.no + ') — rate activity sheet me dalo', '➕');
+                        this.reverseAddSelCode = '';
+                        this.reverseAddExtraMode = false;
+                        return;
+                    }
+                    if (this.reverseActsForCode(code).indexOf(this.reverseAddAct) === -1) { this.showToast('⚠️ Activity chuno', '⛔'); return; }
+                    // Qty usi location me likho (row me value aate hi table me dikhegi)
+                    this.applyReverseEntryLoc(code, this.reverseAddAct, this.reverseAddLoc, q);
+                    this.reverseAddSelCode = '';
+                    this.reverseAddExtraMode = false;
+                },
+                // 🔩 Bolt size (M12X150) → nut-bolt calculator ka wazan kg/pc; na mile to 0 (phir purana hisaab)
+                nutBoltWeightForCode(sapCode) {
+                    if (!sapCode || !this.nutBoltData) return 0;
+                    let desc = '';
+                    const acts = this.activities || {};
+                    outer: for (const ak in acts) {
+                        const act = acts[ak];
+                        if (!act || !act.materials) continue;
+                        for (const m of act.materials) {
+                            if (!m.sapItems) continue;
+                            for (const s of m.sapItems) {
+                                if (s.code === sapCode && s.desc) { desc = s.desc; break outer; }
+                            }
+                        }
+                    }
+                    if (!desc) {
+                        const f = (this.sapMaterialsMaster || []).find(x => x.code === sapCode);
+                        if (f) desc = f.desc;
+                    }
+                    if (!desc) return 0;
+                    const mm = String(desc).toUpperCase().match(/M(\d+)\s*X\s*(\d+)/);
+                    if (!mm) return 0;
+                    const key = parseInt(mm[1], 10) + 'x' + parseInt(mm[2], 10);
+                    const hit = this.nutBoltData.find(n => String(n.size || '').toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '') === key);
+                    const w = hit ? Number(hit.weight) : 0;
+                    return (w > 0) ? w : 0;
+                },
+                // Material kg me tolta hai to hi convert (Kg./Kt. wagairah)
+                nutBoltTargetUnitKg(mat) {
+                    return !!mat && /kg/i.test(String(mat.unit || ''));
                 },
                 // ↩️ Cell value: is SAP row × (activity × location) me abhi kitni qty hai
                 reconCellLoc(sapCode, rcol) {
@@ -12748,6 +12958,9 @@
                     let total = 0;
                     act.materials.forEach((m, mIdx) => {
                         if (!m.sapItems) return;
+                        // 🔩 kg-material + wazan mila to cell (kg) ko nos me dikhao
+                        const _bw = this.nutBoltWeightForCode(sapCode);
+                        const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                         m.sapItems.forEach(s => {
                             if (!s.code || s.code !== sapCode) return;
                             const mq = Number(s.qty);
@@ -12755,7 +12968,7 @@
                             if (factor === 0) return;
                             const raw = locArr[mIdx];
                             const v = (raw === '' || raw === null || raw === undefined) ? 0 : parseFloat(raw);
-                            if (!isNaN(v)) total += v * factor;
+                            if (!isNaN(v)) total += _conv ? (v * factor / _conv) : (v * factor);
                         });
                     });
                     return Math.round(total * 100) / 100;
@@ -12776,7 +12989,11 @@
                             if (!s.code || s.code !== sapCode) return;
                             const mq = Number(s.qty);
                             const factor = isNaN(mq) ? 1 : mq;
-                            if (factor !== 0) mapped.push({ mIdx, factor });
+                            if (factor !== 0) {
+                                // 🔩 kg-material + wazan mila to nos → kg convert hoga
+                                const _bw = this.nutBoltWeightForCode(sapCode);
+                                mapped.push({ mIdx, factor, mat: m, w: (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0 });
+                            }
                         });
                     });
                     if (!mapped.length) { this.showToast('ℹ️ Mapping qty 0 hai — pehle mapping me qty dalo', 'ℹ️'); return; }
@@ -12790,7 +13007,8 @@
                         }
                         const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
                         const vv = isNaN(v) ? 0 : v;
-                        return { mp, formula: false, v: vv, contrib: vv * mp.factor };
+                        // 🔩 hissa SAP unit (nos) me naapo taaki baant sahi ho
+                        return { mp, formula: false, v: vv, contrib: vv * mp.factor / (mp.w || 1) };
                     });
                     if (cur.some(c => c.formula)) {
                         this.showToast('⚠️ Is cell me formula hai — pehle Activity me formula hatao, phir likho', '⛔');
@@ -12809,13 +13027,15 @@
                     // Matrix pakka karo, sirf isi location me likho — baaki location ko haath nahi
                     this.initQuantitiesForActivity(actKey);
                     const m2 = this.activityQuantities[actKey];
+                    const converted = cur.some(c => c.mp.w);
                     cur.forEach((c, i) => {
-                        const want = shares[i] / c.mp.factor;
+                        // 🔩 nos → kg (wazan se); warna seedha factor se
+                        const want = shares[i] / c.mp.factor * (c.mp.w || 1);
                         m2[locIdx][c.mp.mIdx] = (want === 0) ? '' : (Math.round(want * 100) / 100);
                     });
                     this.saveToStorage(); // invoice auto-sync isi se judta hai
                     const locName = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
-                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' / ' + locName + ' (invoice bhi)', '✅');
+                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' / ' + locName + (converted ? ' (🔩 kg me gaya)' : '') + ' (invoice bhi)', '✅');
                 },
                 onMappingRateChange(item) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
@@ -13044,7 +13264,14 @@
                     };
                     
                     const pData = this.pivotReconciliationData;
-                    const totalCols = 5 + pData.columns.length;
+                    // ↩️ Reverse ON ho to screen wali sheet export karo (invoice-activity × location columns, filtered rows)
+                    const revOn = !!this.reverseEntry;
+                    const rcols = revOn ? this.reverseReconColumns : [];
+                    const expRows = revOn ? this.reconRows : pData.rows;
+                    const expHeaders = revOn
+                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.locations[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
+                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(pData.columns);
+                    const totalCols = 5 + (revOn ? rcols.length : pData.columns.length);
                     
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
@@ -13057,7 +13284,7 @@
                     
                     // Header Row
                     const row2 = ws.getRow(2);
-                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', ...pData.columns];
+                    const headers = expHeaders;
                     row2.values = headers;
                     row2.height = 26;
                     row2.eachCell((cell, colNum) => {
@@ -13069,17 +13296,23 @@
                     
                     // Data Rows
                     let rowIdx = 3;
-                    pData.rows.forEach((rowObj, idx) => {
+                    expRows.forEach((rowObj, idx) => {
                         const row = ws.getRow(rowIdx);
                         row.getCell(1).value = idx + 1;
                         row.getCell(2).value = rowObj.code;
                         row.getCell(3).value = rowObj.desc;
                         row.getCell(4).value = rowObj.uom;
                         row.getCell(5).value = rowObj.totalQty || '';
-                        
-                        pData.columns.forEach((col, cIdx) => {
-                            row.getCell(6 + cIdx).value = rowObj.activities[col] || '';
-                        });
+
+                        if (revOn) {
+                            rcols.forEach((rc, cIdx) => {
+                                row.getCell(6 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
+                            });
+                        } else {
+                            pData.columns.forEach((col, cIdx) => {
+                                row.getCell(6 + cIdx).value = rowObj.activities[col] || '';
+                            });
+                        }
                         
                         row.eachCell((c, colNum) => {
                             c.border = thinBorder;
@@ -13104,7 +13337,7 @@
                     const cols = [
                         { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 10 }
                     ];
-                    pData.columns.forEach(() => cols.push({ width: 10 }));
+                    (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 14 }));
                     ws.columns = cols;
                     
                     const buffer = await workbook.xlsx.writeBuffer();
@@ -13117,7 +13350,7 @@
                     a.click();
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
-                    this.showToast('Pivot Reconciliation Excel downloaded! 🎉', '📊');
+                    this.showToast(revOn ? 'Reverse Reconciliation Excel downloaded! 🎉' : 'Pivot Reconciliation Excel downloaded! 🎉', '📊');
                 },
                 addSpecificActivityToInvoice(actKey) {
                     if (this.isFinalized) {
