@@ -11630,12 +11630,12 @@
             contractorName: 'M/s Ranjeet Singh',
             contractorGstin: '08CTZPS1380P1ZF',
             contractorPan: 'CTZPS1380P',
-            invoiceNo: 'RSL/RA/01',
-            workOrderNo: '31006345',
-            workOrderDate: '29.08.25',
-            invoiceDate: new Date().toISOString().split('T')[0],
-            divisionName: 'ALLAPALLI',
-            subDivName: 'Chamorshi',
+            invoiceNo: '',
+            workOrderNo: '',
+            workOrderDate: '',
+            invoiceDate: '',
+            divisionName: '',
+            subDivName: '',
             locationName: '',
             feederName: '11 KV Yenapur, Gogaon',
             bankAccountName: 'M/s Ranjeet Singh',
@@ -12266,11 +12266,12 @@
                         this.invoiceData.bankAccountNo = firm.bankAccountNo || '';
                         this.invoiceData.bankIfsc = firm.bankIfsc || '';
                         this.invoiceData.bankName = firm.bankName || '';
-                        if (firm.workOrderNo) this.invoiceData.workOrderNo = firm.workOrderNo;
-                        if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
-                        if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
-                        if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
-                        if (firm.feederName) this.invoiceData.feederName = firm.feederName;
+                        // Manual suraksha: haath se bhare field ko contractor badalne par overwrite MAT karo — sirf khali ho to bharo
+                        if (firm.workOrderNo && !this.invoiceData.workOrderNo) this.invoiceData.workOrderNo = firm.workOrderNo;
+                        if (firm.workOrderDate && !this.invoiceData.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
+                        if (firm.divisionName && !this.invoiceData.divisionName) this.invoiceData.divisionName = firm.divisionName;
+                        if (firm.subDivName && !this.invoiceData.subDivName) this.invoiceData.subDivName = firm.subDivName;
+                        if (firm.feederName && !this.invoiceData.feederName) this.invoiceData.feederName = firm.feederName;
 
                         this.projectMeta.contractorName = firmName;
                         this.checkAndApplyAutoGstRule();
@@ -13950,7 +13951,25 @@
                 },
 
                 // EXCELJS RICH FORMATTED TAX INVOICE EXPORT (WITH ALL ADDED ACTIVITIES AS SEPARATE SHEETS)
+                // Khali meta field par Tax Invoice Excel rok — pehle haath se bharo
+                getMissingInvoiceMeta() {
+                    const missing = [];
+                    const v = this.invoiceData || {};
+                    if (!String(v.invoiceNo || '').trim()) missing.push('Invoice No');
+                    if (!String(v.workOrderNo || '').trim()) missing.push('Work Order No');
+                    if (!String(v.workOrderDate || '').trim()) missing.push('WO Dt');
+                    if (!String(v.invoiceDate || '').trim()) missing.push('Invoice Date');
+                    if (!String(v.divisionName || '').trim()) missing.push('Name of Division');
+                    if (!String(v.subDivName || '').trim()) missing.push('Name of Sub-Div');
+                    return missing;
+                },
                 async exportTaxInvoiceExcel() {
+                    const missing = this.getMissingInvoiceMeta();
+                    if (missing.length) {
+                        this.showToast('⚠️ Pehle ye bharo: ' + missing.join(', '), '⛔');
+                        alert('Excel export ruk gaya.\n\nPehle Tax Invoice me ye field haath se bharo:\n• ' + missing.join('\n• '));
+                        return;
+                    }
                     this.showToast('Generating Tax Invoice & Added Activity Sheets...', '⏳');
 
                     const workbook = new ExcelJS.Workbook();
