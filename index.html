@@ -7,7 +7,7 @@
     <script>
     /* Phone ko alag mobile page par bhejo — desktop view bilkul same rehta hai.
        Wapas aana ho to mobile page par "Desktop version" dabao (?view=desktop). */
-    try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('/mobile.html');}})();}catch(e){}
+    try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('mobile.html');}})();}catch(e){}
     </script>
     <title>Billing Pro | Activity Billing Studio & Tax Invoice Exporter</title>
     <!-- Vue 3 -->
@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="style.css">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
