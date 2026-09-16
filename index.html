@@ -11958,7 +11958,8 @@
                         if (it.actKey && this.activities[it.actKey] && out.indexOf(it.actKey) === -1) {
                             out.push(it.actKey);
                         } else if (it.desc) {
-                            const k = actKeys.find(k => it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' ') || it.desc.indexOf(k) > -1);
+                            // Sakht match: "907: ..." ya "907 ..." se shuru ho tabhi (beech me number mile to nahi)
+                            const k = actKeys.find(k => it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' '));
                             if (k && out.indexOf(k) === -1) out.push(k);
                         }
                     });
@@ -11978,6 +11979,11 @@
                 },
                 reconColCount() {
                     return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
+                },
+                // Detail view: chuni activity me dikhne wali locations (global idx ke sath)
+                visibleDetailLocs() {
+                    const self = this;
+                    return this.visibleLocIdxList(this.selectedActivityKey).map(i => ({ loc: self.locations[i], idx: i }));
                 },
                 // ↩️ Reverse rows: invoice wali activity me jude (add kiye) material hi — poora master nahi
                 reverseShownCodes() {
@@ -13363,7 +13369,8 @@
                         return;
                     }
                     const locName = `Location ${this.locations.length + 1}`;
-                    this.locations.push({ name: locName });
+                    // 📍 Nayi location sirf isi activity ki (dusri me tabhi dikhegi jab wahan add karoge)
+                    this.locations.push({ name: locName, acts: [this.selectedActivityKey] });
                     Object.keys(this.activities).forEach(actKey => {
                         const matCount = this.activities[actKey].materials.length;
                         if (!this.activityQuantities[actKey]) {
@@ -13372,7 +13379,36 @@
                         this.activityQuantities[actKey].push(new Array(matCount).fill(''));
                     });
                     this.saveToStorage();
-                    this.showToast(`Added location "${locName}"`, '📍');
+                    this.showToast(`Added location "${locName}" (sirf ${this.selectedActivityKey} me)`, '📍');
+                },
+                // 📍 Location scope toggle: sirf is activity ↔ sab activity
+                toggleLocScope(locIdx) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const loc = this.locations[locIdx];
+                    if (!loc) return;
+                    if (!loc.acts || !loc.acts.length) {
+                        loc.acts = [this.selectedActivityKey];
+                        this.showToast(`📍 "${loc.name}" ab sirf ${this.selectedActivityKey} me dikhegi`, '📍');
+                    } else {
+                        loc.acts = [];
+                        this.showToast(`🌍 "${loc.name}" ab sab activity me dikhegi`, '🌍');
+                    }
+                    this.saveToStorage();
+                },
+                // 📍 Location kis activity me dikhegi (acts khali = sab me, purana data wese hi)
+                isLocVisible(actKey, locIdx) {
+                    const loc = this.locations[locIdx];
+                    if (!loc || !actKey) return true;
+                    if (!loc.acts || !loc.acts.length) return true;
+                    return loc.acts.indexOf(actKey) > -1;
+                },
+                visibleLocIdxList(actKey) {
+                    const out = [];
+                    for (let i = 0; i < this.locations.length; i++) {
+                        if (this.isLocVisible(actKey, i)) out.push(i);
+                    }
+                    // Kuch na dikhe to pehli location (hamesha entry ke liye 1 column)
+                    return out.length ? out : (this.locations.length ? [0] : []);
                 },
                 removeLocation(index) {
                     if (this.isFinalized) {
