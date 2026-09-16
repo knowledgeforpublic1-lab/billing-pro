@@ -1119,7 +1119,8 @@
                             <tr v-if="reconDisplayRows.length === 0">
                                 <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
                                     <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
-                                    <span v-else>🔍 Is filter me kuch nahi — "Sab material dikhao" chuno.</span>
+                                    <span v-else-if="reverseMatFilter !== 'ALL' || String(reverseMatSearch || '').trim()">🔍 Is filter me kuch nahi — kuch aur likh kar dekho.</span>
+                                    <span v-else>📭 Abhi koi value nahi — upar material chuno ya 📍 location jodo, tab entry hogi.</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -11734,6 +11735,7 @@
                     reverseMatSearch: '',
                     reverseNewLocName: '',
                     reverseNewLocAct: 'ALL',
+                    reverseFreshLocs: [],
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11982,23 +11984,29 @@
                     return { columns, rows };
                 },
                 // ↩️ Reverse mode: har activity har location ke sath — jaise 907 me 2 location to 907 do baar
+                // Value wala column hi dikhega; naya joda ya material chuna/khoja ho to zero wala bhi (pehli entry ke liye)
                 reverseReconColumns() {
                     if (!this.reverseEntry) return [];
-                    const out = [];
                     const self = this;
                     let keys = this.pivotReconciliationData.columns;
                     // Jo activity chuni, wahi dikhegi (ALL = sab)
                     if (this.reverseActKey && this.reverseActKey !== 'ALL') {
                         keys = keys.filter(k => k === this.reverseActKey);
                     }
+                    const intent = (this.reverseMatFilter && this.reverseMatFilter !== 'ALL') || String(this.reverseMatSearch || '').trim();
+                    const out = [];
                     keys.forEach(actKey => {
                         self.visibleLocIdxList(actKey).forEach(locIdx => {
-                            out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
+                            if (intent) { out.push({ key: actKey + '__' + locIdx, actKey, locIdx }); return; }
+                            if (self.reverseFreshLocs.indexOf(locIdx) > -1) { out.push({ key: actKey + '__' + locIdx, actKey, locIdx }); return; }
+                            const arr = ((self.activityQuantities[actKey] || [])[locIdx]) || [];
+                            const hasVal = arr.some(v => parseFloat(v) > 0);
+                            if (hasVal) out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
                         });
                     });
                     return out;
                 },
-                // ↩️ Reverse mode rows: All Material ya chuna item + free-text search
+                // ↩️ Reverse mode rows: value wali dikhao; chuni/khoji ho to wahi (zero ho tab bhi)
                 reconDisplayRows() {
                     const base = this.pivotReconciliationData.rows;
                     if (!this.reverseEntry) return base;
@@ -12009,7 +12017,7 @@
                     if (q) {
                         return base.filter(r => (r.code && String(r.code).toLowerCase().indexOf(q) > -1) || (r.desc && String(r.desc).toLowerCase().indexOf(q) > -1));
                     }
-                    return base;
+                    return base.filter(r => (Number(r.totalQty) || 0) > 0);
                 },
                 reconColCount() {
                     return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
@@ -12802,6 +12810,7 @@
                     const nm = String(this.reverseNewLocName || '').trim();
                     if (!nm) { this.showToast('⚠️ Pehle location ka naam likho', '⛔'); return; }
                     const act = this.reverseNewLocAct || 'ALL';
+                    const newIdx = this.locations.length;
                     this.locations.push({ name: nm, acts: act === 'ALL' ? [] : [act] });
                     Object.keys(this.activities).forEach(actKey => {
                         const matCount = this.activities[actKey].materials.length;
@@ -12811,6 +12820,7 @@
                         this.activityQuantities[actKey].push(new Array(matCount).fill(''));
                     });
                     this.reverseNewLocName = '';
+                    if (this.reverseFreshLocs.indexOf(newIdx) === -1) this.reverseFreshLocs.push(newIdx);
                     this.saveToStorage();
                     this.showToast(act === 'ALL' ? ('📍 Location judi (sab activity): ' + nm) : ('📍 Location judi (' + act + ' me): ' + nm), '✅');
                 },
@@ -12819,6 +12829,8 @@
                     const nm = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
                     if (!confirm('Location "' + nm + '" hatana hai?\n\nIski sari qty (sab activity se) hat jayegi.')) return;
                     this.removeLocation(locIdx);
+                    // Fresh list ke index theek karo (delete se aage wale khisak jate hain)
+                    this.reverseFreshLocs = this.reverseFreshLocs.filter(i => i !== locIdx).map(i => i > locIdx ? i - 1 : i);
                 },
                 renameReverseLocation(locIdx, name) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
