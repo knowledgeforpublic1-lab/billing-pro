@@ -1,7 +1,13 @@
 node_modules/
 .env
+.env.local
 Start_Billing_App.bat
 patch.js
 patch_vercel.js
 Deploy_To_Vercel.bat
 App_Important_Links_And_Credentials.txt
+# Contractor PII / exports — kabhi git me mat dalo (pehle track hue the, rm --cached se hataya)
+*.xlsx
+*.xls
+contractor_data.json
+*.pdf

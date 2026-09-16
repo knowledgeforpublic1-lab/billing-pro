@@ -1874,8 +1874,8 @@
 
                 <div class="sidebar-footer">
                     <div class="sidebar-autosave">
-                        <div class="sidebar-autosave-dot"></div>
-                        <span>Auto Save: Active</span>
+                        <div class="sidebar-autosave-dot" :style="syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;'))"></div>
+                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : (syncStatus === 'error' ? '⚠️ Offline (local only)' : '💾 Local only')) }}</span>
                     </div>
                 </div>
                 </aside>
@@ -2415,6 +2415,13 @@
                                 style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 11px; font-weight: 700; padding: 2px 8px; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; margin-left: 8px;">
                                 {{ gstStatusBadge.text }}
                             </span>
+                            <span class="no-print" style="margin-left: 8px; font-size: 11px; font-weight: 700;">
+                                <select v-model="invoiceData.gstType" @change="onGstTypeManualChange" :disabled="isFinalized" title="GST type — hath se badlo to Manual lock ho jayega" style="padding: 2px 6px; border-radius: 4px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); font-weight: 700; font-size: 11px;">
+                                    <option value="CGST_SGST">CGST 9% + SGST 9%</option>
+                                    <option value="IGST">IGST 18%</option>
+                                </select>
+                                <button @click="toggleGstMode" :title="invoiceData.gstManual ? '✏️ Manual — auto-rule band hai. Auto par wapas karne ke liye click karo' : '🔄 Auto — GSTIN se auto set hota hai. Manual lock ke liye click karo'" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border-strong); background: var(--bg-surface); cursor: pointer;">{{ invoiceData.gstManual ? '✏️ Manual' : '🔄 Auto' }}</button>
+                            </span>
                         </div>
                     </div>
 
@@ -2514,28 +2521,31 @@
                                 <td>
                                     <input type="text" v-model="it.desc" class="inv-input-clean"
                                         placeholder="Activity or Work Description"
-                                        style="width: 100%; font-weight: 600;" @change="saveToStorage">
+                                        style="width: 100%; font-weight: 600;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
                                     <div v-if="(it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) && getActivity907AaacTotalRmt() > 0"
                                         style="font-size: 0.72rem; color: var(--primary); font-weight: 600; margin-top: 2px;">
-                                        ⚡ AAAC: {{ getActivity907AaacTotalRmt().toLocaleString() }} Rmt ÷ 3150 = {{ it.qty }} KM
+                                        ⚡ AAAC: {{ getActivity907AaacTotalRmt().toLocaleString() }} Rmt ÷ {{ projectMeta.aaacDivisor }} = {{ it.qty }} KM
                                     </div>
                                 </td>
                                 <td class="text-center">
                                     <input type="text" v-model="it.unit" class="inv-input-clean text-center"
-                                        style="width: 100%;" @change="saveToStorage">
+                                        style="width: 100%;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
                                 </td>
                                 <td class="text-right">
                                     <input type="text" step="any" v-model.number="it.qty"
                                         class="inv-input-clean text-right font-mono" style="width: 100%;"
-                                        @focus="$event.target.select()" @blur="handleItemFormulaBlur(it, 'qty', $event)" @change="saveToStorage">
+                                        @focus="$event.target.select(); editingInvoiceRow = it;" @blur="onInvoiceFieldBlur(it, 'qty', $event)" @change="onInvoiceRowEdit(it)">
                                 </td>
                                 <td class="text-right font-mono" style="font-weight: 700;">
                                     <input type="text" step="any" v-model.number="it.amount"
                                         class="inv-input-clean text-right font-mono"
-                                        style="width: 100%; font-weight: 700;" @focus="$event.target.select()"
-                                        @blur="handleItemFormulaBlur(it, 'amount', $event)" @change="saveToStorage">
+                                        style="width: 100%; font-weight: 700;" @focus="$event.target.select(); editingInvoiceRow = it;"
+                                        @blur="onInvoiceFieldBlur(it, 'amount', $event)" @change="onInvoiceRowEdit(it)">
                                 </td>
-                                <td class="no-print text-center">
+                                <td class="no-print text-center" style="white-space: nowrap;">
+                                    <button @click="toggleInvoiceRowMode(it)" :title="it.manual ? '✏️ Manual row — auto-sync overwrite nahi karega. Auto par wapas karne ke liye click karo' : '🔄 Auto row — billing se sync hota hai. Manual lock ke liye click karo'" style="padding: 1px 5px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-strong); background: var(--bg-surface); cursor: pointer;">
+                                        {{ it.manual ? '✏️' : '🔄' }}
+                                    </button>
                                     <button class="btn-danger" style="padding: 1px 5px; font-size: 0.75rem;"
                                         @click="removeInvoiceItem(idx)" title="Remove item">✕</button>
                                 </td>
@@ -2681,6 +2691,7 @@
                                     Activity {{ key }} : {{ act.title.substring(0, 45) }}...
                                 </option>
                             </select>
+                            <input type="text" v-model="mappingSearchQuery" placeholder="🔍 Search material / SAP code..." style="padding: 4px 10px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); outline: none; min-width: 200px;">
                         </div>
                         <div class="table-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <button class="btn btn-secondary" @click="toggleMappingLock('rate')" :title="mappingLocks.rate ? 'Rate locked hai — edit ke liye click karke unlock karo' : 'Rate unlocked hai — click karke lock karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-style: solid;" :style="mappingLocks.rate ? '' : 'border-color: var(--accent-amber); color: var(--accent-amber);'">
@@ -2725,7 +2736,7 @@
                                     </td>
                                     <td class="text-center font-mono">{{ (row && row.item) ? row.item.unit : '' }}</td>
                                     <td class="text-right font-mono">
-                                        <span v-if="mappingLocks.rate" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
+                                        <span v-if="mappingLocks.rate || isFinalized" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
                                         <input v-else type="number" step="any" min="0" v-model.number="row.item.rate" @change="onMappingRateChange(row.item)" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
                                     </td>
                                     <td style="padding: 0.6rem;" v-if="row && row.item">
@@ -2737,8 +2748,8 @@
                                                 </span>
                                                 <!-- Searchable Datalist for SAP Item -->
                                                 <div style="flex: 1; display: flex; flex-direction: column;">
-                                                    <input type="text" :list="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap" :readonly="mappingLocks.sap" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked' : 'Search SAP Code or Type...'">
-                                                    <datalist :id="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx">
+                                                    <input type="text" :list="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @focus="editingSapKey = row.actKey + '_' + row.item.no + '_' + sIdx" @blur="editingSapKey = null" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked' : 'Search SAP Code or Type...'">
+                                                    <datalist v-if="editingSapKey === row.actKey + '_' + row.item.no + '_' + sIdx" :id="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx">
                                                         <option v-for="sap in sapMaterialsMaster" :key="sap.code" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
                                                     </datalist>
                                                     <span style="font-size: 0.75rem; color: var(--text-main); margin-top:2px; font-weight:600;">{{ sItem.desc }}</span>
@@ -2746,19 +2757,19 @@
                                                 <!-- Qty Input -->
                                                 <div style="display: flex; align-items: center; gap: 4px;">
                                                     <span style="font-size: 0.75rem; color: var(--text-muted);">Qty{{ mappingLocks.qty ? ' 🔒' : '' }}:</span>
-                                                    <input type="number" step="any" min="0" v-model.number="sItem.qty" @change="onMappingQtyChange(sItem)" :disabled="mappingLocks.qty" :readonly="mappingLocks.qty" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
+                                                    <input type="number" step="any" min="0" v-model.number="sItem.qty" @change="onMappingQtyChange(sItem)" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
                                                 </span>
-                                                <button v-if="!mappingLocks.sap" class="btn-danger" style="padding: 2px 6px; font-size: 0.75rem; border-radius: 4px;" @click="removeSapItemFromActivityMaterial(row.item, sIdx)" title="Remove this SAP item from mapping">
+                                                <button v-if="!mappingLocks.sap && !isFinalized" class="btn-danger" style="padding: 2px 6px; font-size: 0.75rem; border-radius: 4px;" @click="removeSapItemFromActivityMaterial(row.item, sIdx)" title="Remove this SAP item from mapping">
                                                     ✕
                                                 </button>
                                             </div>
 
                                             <!-- Button to Add Another SAP Material (for composite sets like Cut Point Set, DP Set, etc.) -->
                                             <div style="display: flex; justify-content: flex-start; margin-top: 2px;">
-                                                <button v-if="!mappingLocks.sap" type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; font-weight: 700; border-style: dashed; color: var(--primary); border-color: var(--primary);" @click="addSapItemToActivityMaterial(row.item)" title="Add another SAP Material component to this work order item (for items having multiple materials)">
+                                                <button v-if="!mappingLocks.sap && !isFinalized" type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; font-weight: 700; border-style: dashed; color: var(--primary); border-color: var(--primary);" @click="addSapItemToActivityMaterial(row.item)" title="Add another SAP Material component to this work order item (for items having multiple materials)">
                                                     ➕ Add Another SAP Material Component
                                                 </button>
                                                 <span v-else style="font-size: 0.72rem; color: var(--text-muted);">🔒 Locked — edit ke liye upar 🔓 Item dabao</span>
@@ -2923,7 +2934,7 @@
                 </div>
                 <div class="prog-info">
                     <div class="prog-title">Billed vs Contract</div>
-                    <div class="prog-detail">Target: {{ formatCurrency(48550000) }}</div>
+                    <div class="prog-detail">Target: {{ formatCurrency(Number(projectMeta.contractValue) || 0) }}</div>
                     <div class="prog-bar-full">
                         <div class="fill" :style="{ width: overallProgressPct + '%' }"></div>
                     </div>
@@ -2936,6 +2947,21 @@
                     <div class="m-title">Audit Ready</div>
                     <p class="m-desc">All activity formulas strictly match client audit guidelines. Ready to export.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Project Settings Card -->
+        <div class="rs-card no-print">
+            <div class="rs-card-title">
+                <span>⚙️</span> Project Settings
+            </div>
+            <div class="bs-row">
+                <span class="bs-label">Contract Value ₹</span>
+                <input type="number" min="0" step="any" v-model.number="projectMeta.contractValue" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
+            </div>
+            <div class="bs-row">
+                <span class="bs-label" title="907 invoice qty = AAAC Rmt ÷ divisor">AAAC ÷ divisor</span>
+                <input type="number" min="1" step="any" v-model.number="projectMeta.aaacDivisor" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="907 invoice qty = AAAC Rmt ÷ divisor">
             </div>
         </div>
     </aside>
@@ -13384,6 +13410,7 @@
             bankIfsc: 'BKID0007465',
             bankName: 'Bank of India',
             gstType: 'CGST_SGST', // CGST_SGST (separate rows: CGST 9% + SGST 9%) or IGST (18%)
+            gstManual: false, // true = user ne hath se GST type lock kiya, auto-rule skip hoga
             autoSync: true, // Auto-accumulate 85% of all billed activities into invoice
             items: [
                 {
@@ -13416,6 +13443,10 @@
                         } catch(e) {}
                         return { rate: true, sap: true, qty: true };
                     })(),
+                    // ☁️ Mongo sync status (kam space kharch ho isliye debounce + change-check ke sath)
+                    syncStatus: 'local',
+                    lastSyncAt: '',
+                    lastSentHash: '',
                     sapMaterialsMaster: typeof defaultSapMaterialsMaster !== 'undefined' ? defaultSapMaterialsMaster : [],
                     pctStage1: 85,
                     pctStage2: 10,
@@ -13494,7 +13525,9 @@
                         projectName: 'RDSS T-10 GADCHIROLI',
                         contractorName: 'M/s Ranjeet Singh',
                         billNo: 'RSL/RA/02',
-                        billDate: '2026-01-23'
+                        billDate: '2026-01-23',
+                        contractValue: 48550000,
+                        aaacDivisor: 3150
                     },
                     locations: [
                         { name: 'Ra-09 Bodhali' },
@@ -13505,6 +13538,8 @@
                     masterAbstractList: JSON.parse(JSON.stringify(defaultMasterAbstract)),
                     activityQuantities: {},
                     invoiceData: JSON.parse(JSON.stringify(defaultInvoiceData)),
+                    editingInvoiceRow: null, // jis invoice row me user type kar raha hai — sync isko skip karega
+                    editingSapKey: null, // mapping me jis SAP input par focus hai — sirf uska datalist render hoga (perf)
                     quickSelectedActivityKey: '',
                     selectedColumnLocIdx: null,
                     historyStack: [],
@@ -13721,7 +13756,7 @@
                     return this.calculatedInvoiceBasic + this.calculatedInvoiceGst;
                 },
                 overallProgressPct() {
-                    const contractValue = 48550000;
+                    const contractValue = Number(this.projectMeta.contractValue) || 0;
                     const billed = this.calculatedInvoiceGrandTotal;
                     return contractValue > 0 ? Math.min(100, Math.round((billed / contractValue) * 1000) / 10) : 0;
                 },
@@ -14027,6 +14062,28 @@
                     this.newMaterial.sapCode = mat.itemCode || '';
                     this.newMaterial.codeSearch = mat.desc;
                 },
+                // 🏦 Bank data safai — bankName me ghuse account no / IFSC ko sahi field me daalo (ek baar, khali field me hi)
+                normalizeAllContractorBanks() {
+                    if (!Array.isArray(this.contractorsList)) return;
+                    let fixed = 0;
+                    this.contractorsList.forEach(c => {
+                        if (!c || typeof c.bankName !== 'string' || c.bankName.indexOf('\n') === -1) return;
+                        const lines = c.bankName.split('\n').map(s => (s || '').trim()).filter(Boolean);
+                        let acc = '', ifsc = '';
+                        const nameParts = [];
+                        lines.forEach(ln => {
+                            const mIfsc = ln.match(/\b[A-Z]{4}0[A-Z0-9]{6}\b/);
+                            const digits = ln.replace(/\D/g, '');
+                            if (mIfsc && !c.bankIfsc) { ifsc = mIfsc[0]; return; }
+                            if (!mIfsc && digits.length >= 9 && digits.length <= 22 && !c.bankAccountNo) { acc = digits; return; }
+                            nameParts.push(ln);
+                        });
+                        if (acc) { c.bankAccountNo = acc; fixed++; }
+                        if (ifsc) { c.bankIfsc = ifsc; fixed++; }
+                        if (nameParts.length > 0) c.bankName = nameParts.join(' ');
+                    });
+                    if (fixed > 0) { this.saveToStorage(); this.showToast(`🏦 ${fixed} bank field saaf kiye`, '🏦'); }
+                },
                 toggleContractorDropdown() {
                     if (this.isFinalized) return;
                     this.contractorDropdownOpen = !this.contractorDropdownOpen;
@@ -14069,6 +14126,7 @@
                     }
                 },
                 checkAndApplyAutoGstRule() {
+                    if (this.invoiceData.gstManual) return; // ✏️ Manual lock — auto-rule haath nahi lagayega
                     const contractorGstin = (this.invoiceData.contractorGstin || '').trim().toUpperCase();
                     const clientGstin = (this.invoiceData.clientGstin || '').trim().toUpperCase();
                     const contractorState = contractorGstin.substring(0, 2);
@@ -14093,6 +14151,19 @@
                             this.invoiceData.gstType = 'IGST';
                         }
                     }
+                },
+                onGstTypeManualChange() {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    this.invoiceData.gstManual = true;
+                    this.saveToStorage();
+                    this.showToast('✏️ GST type manual lock — ab auto-rule nahi badlega', '✏️');
+                },
+                toggleGstMode() {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    this.invoiceData.gstManual = !this.invoiceData.gstManual;
+                    if (!this.invoiceData.gstManual) this.checkAndApplyAutoGstRule();
+                    this.saveToStorage();
+                    this.showToast(this.invoiceData.gstManual ? '✏️ GST manual lock — fix rahega' : '🔄 GST auto mode — GSTIN se set hoga', this.invoiceData.gstManual ? '✏️' : '🔄');
                 },
                 showToast(msg, icon = '✅') {
                     const toast = { msg, icon };
@@ -14255,8 +14326,9 @@
                 },
                 getActivity907InvoiceQty() {
                     const rmt = this.getActivity907AaacTotalRmt();
+                    const div = Number(this.projectMeta.aaacDivisor) || 3150;
                     if (rmt > 0) {
-                        return Math.round((rmt / 3150) * 1000) / 1000;
+                        return Math.round((rmt / div) * 1000) / 1000;
                     }
                     return 0;
                 },
@@ -14321,6 +14393,7 @@
                     this.showToast('🔒 Sab lock ho gaya — Rate, Item, Qty fix', '🔒');
                 },
                 onMappingRateChange(item) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     if (this.mappingLocks && this.mappingLocks.rate) { this.showToast('🔒 Rate locked hai — edit ke liye 🔓 Rate dabao', '🔒'); return; }
                     let v = Number(item.rate);
                     if (isNaN(v) || v < 0) { v = 0; item.rate = 0; }
@@ -14329,6 +14402,7 @@
                     this.showToast(`✅ Rate update: ₹${v}`, '💰');
                 },
                 onMappingQtyChange(sItem) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     if (this.mappingLocks && this.mappingLocks.qty) { this.showToast('🔒 Qty locked hai — edit ke liye 🔓 Qty dabao', '🔒'); return; }
                     let v = Number(sItem.qty);
                     if (isNaN(v) || v < 0) { v = 0; sItem.qty = 0; }
@@ -14382,6 +14456,7 @@
                     }
                 },
                 addSapItemToActivityMaterial(mat) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — add ke liye 🔓 Item dabao', '🔒'); return; }
                     if (!mat.sapItems) mat.sapItems = [];
                     // Blank row jodo taaki galat material (SAND RIVER) auto-save na ho
@@ -14396,6 +14471,7 @@
                     this.showToast('Added new SAP Material component. Select from dropdown to map.', '➕');
                 },
                 removeSapItemFromActivityMaterial(mat, sIdx) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — remove ke liye 🔓 Item dabao', '🔒'); return; }
                     if (mat.sapItems && mat.sapItems.length > 0) {
                         mat.sapItems.splice(sIdx, 1);
@@ -14412,6 +14488,7 @@
                     }
                 },
                 onSapItemDropdownChange(mat, sItem, event) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
                     if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — edit ke liye 🔓 Item dabao', '🔒'); if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
                     let rawVal = event ? event.target.value : sItem.code;
                     let newCode = String(rawVal == null ? '' : rawVal).trim();
@@ -14673,49 +14750,89 @@
                         this.quickSelectedActivityKey = '';
                     }
                 },
+                // 🧾 Invoice row manual-lock — hath se badli row ko auto-sync overwrite nahi karega
+                onInvoiceFieldBlur(it, field, event) {
+                    this.handleItemFormulaBlur(it, field, event);
+                    if (this.editingInvoiceRow === it) this.editingInvoiceRow = null;
+                },
+                onInvoiceRowEdit(it) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    if (this.editingInvoiceRow === it) this.editingInvoiceRow = null;
+                    if (it && it.actKey && !it.manual) {
+                        it.manual = true;
+                        this.showToast('✏️ Row manual ho gayi — auto-sync ab isko overwrite nahi karega', '✏️');
+                    }
+                    this.saveToStorage();
+                },
+                toggleInvoiceRowMode(it) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    it.manual = !it.manual;
+                    if (!it.manual && it.actKey) {
+                        this.updateSyncTaxInvoiceFromActivities();
+                    }
+                    this.saveToStorage();
+                    this.showToast(it.manual ? '✏️ Manual lock — ye row fix rahegi' : '🔄 Auto sync on — billing se refresh ho gayi', it.manual ? '✏️' : '🔄');
+                },
                 updateSyncTaxInvoiceFromActivities() {
                     if (!this.invoiceData.autoSync) return;
                     if (!this.invoiceData.excludedActKeys) {
                         this.invoiceData.excludedActKeys = [];
                     }
 
-                    const billedItems = [];
-                    let sr = 1;
-
-                    // Check all activities for billed 85% amount > 0 (excluding manually removed ones)
-                    Object.keys(this.activities).forEach(actKey => {
-                        if (this.invoiceData.excludedActKeys && this.invoiceData.excludedActKeys.includes(actKey)) {
-                            return;
+                    // In-place sync — same row objects rakho taaki type karte waqt input/focus na toote
+                    const keyOf = (it) => it.actKey || ((it.desc && /^[A-Za-z0-9]+:/.test(it.desc)) ? it.desc.split(':')[0] : '');
+                    const excluded = this.invoiceData.excludedActKeys || [];
+                    const billedKeys = Object.keys(this.activities).filter(k => !excluded.includes(k) && this.getActivityBilled85Amount(k) > 0);
+                    const billedSet = new Set(billedKeys);
+                    const qtyFor = (k) => {
+                        if (k === '907') { const q = this.getActivity907InvoiceQty(); return q > 0 ? q : 1.00; }
+                        return 1.00;
+                    };
+                    const seen = new Set();
+                    const newItems = [];
+                    this.invoiceData.items.forEach(it => {
+                        const k = keyOf(it);
+                        if (k && billedSet.has(k) && !seen.has(k)) {
+                            seen.add(k);
+                            if (it === this.editingInvoiceRow) { newItems.push(it); return; } // user type kar raha hai — haath mat lagao
+                            if (it.manual) { it.actKey = k; newItems.push(it); return; } // ✏️ manual — same rahegi
+                            // 🔄 auto — billing se refresh, same object me (input/focus nahi tootega)
+                            it.actKey = k;
+                            it.desc = `${k}: ${this.activities[k].title}`;
+                            it.unit = this.getActivityUom(k);
+                            it.qty = qtyFor(k);
+                            it.amount = Math.round(this.getActivityBilled85Amount(k) * 100) / 100;
+                            it.manual = false;
+                            newItems.push(it);
+                        } else if (k && this.activities[k] && it.manual && !seen.has(k)) {
+                            // manual row jiski activity ab unbilled — user ne lock ki thi, rakho
+                            seen.add(k);
+                            newItems.push(it);
+                        } else if (!k || !this.activities[k]) {
+                            // custom / blank row — rakho (Add Blank Row gayab nahi hogi)
+                            newItems.push(it);
                         }
-                        const amt85 = this.getActivityBilled85Amount(actKey);
-                        if (amt85 > 0) {
-                            const actTitle = this.activities[actKey].title;
-                            let actQty = 1.00;
-                            if (actKey === '907') {
-                                const q907 = this.getActivity907InvoiceQty();
-                                actQty = q907 > 0 ? q907 : 1.00;
-                            }
-                            billedItems.push({
-                                srNo: sr.toString(),
-                                actKey: actKey,
-                                desc: `${actKey}: ${actTitle}`,
-                                unit: this.getActivityUom(actKey),
-                                qty: actQty,
-                                amount: Math.round(amt85 * 100) / 100
+                        // else: auto row (unbilled/excluded/duplicate key) — hatao
+                    });
+                    billedKeys.forEach(k => {
+                        if (!seen.has(k)) {
+                            seen.add(k);
+                            newItems.push({
+                                srNo: '',
+                                actKey: k,
+                                desc: `${k}: ${this.activities[k].title}`,
+                                unit: this.getActivityUom(k),
+                                qty: qtyFor(k),
+                                amount: Math.round(this.getActivityBilled85Amount(k) * 100) / 100,
+                                manual: false
                             });
-                            sr++;
                         }
                     });
+                    newItems.forEach((it, idx) => { it.srNo = (idx + 1).toString(); });
 
-                    // Keep manual custom rows (that are not linked to an activity key)
-                    const manualRows = this.invoiceData.items.filter(it => !it.actKey && it.desc && !Object.keys(this.activities).some(k => it.desc.startsWith(k + ':')));
-
-                    if (billedItems.length > 0 || manualRows.length > 0) {
-                        let combined = [...billedItems, ...manualRows];
-                        combined.forEach((it, idx) => {
-                            it.srNo = (idx + 1).toString();
-                        });
-                        this.invoiceData.items = combined;
+                    if (newItems.length > 0) {
+                        const same = newItems.length === this.invoiceData.items.length && newItems.every((it, i) => it === this.invoiceData.items[i]);
+                        if (!same) this.invoiceData.items = newItems;
                     } else if (this.invoiceData.items.length === 0) {
                         this.invoiceData.items = [
                             {
@@ -14723,7 +14840,8 @@
                                 desc: '',
                                 unit: 'Nos',
                                 qty: 1,
-                                amount: 0
+                                amount: 0,
+                                manual: true
                             }
                         ];
                     }
@@ -14739,7 +14857,8 @@
                         desc: '',
                         unit: 'Nos',
                         qty: 1,
-                        amount: 0
+                        amount: 0,
+                        manual: true
                     });
                     this.saveToStorage();
                     this.showToast('Added new blank item row to invoice', '➕');
@@ -14787,6 +14906,8 @@
                     if (this.invoiceData.excludedActKeys) {
                         this.invoiceData.excludedActKeys = [];
                     }
+                    // Force sync — linked rows ka manual lock khol do taaki fresh billing se refresh ho
+                    this.invoiceData.items.forEach(it => { if (it.actKey) it.manual = false; });
                     this.updateSyncTaxInvoiceFromActivities();
                     this.saveToStorage();
                     this.showToast('Tax Invoice updated with all active billed activities (85%)!', '🧾');
@@ -15015,7 +15136,7 @@
                           try {
                               fetch('/api/billing', {
                                   method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
+                                  headers: (() => { const h = { 'Content-Type': 'application/json' }; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })(),
                                   body: JSON.stringify(dataToSave)
                               }).catch(err => console.error("API Save Error:", err));
                           } catch(err) { console.error("Fetch failed", err); }
@@ -15027,6 +15148,68 @@
                         });
                     }
                 },
+                // ☁️ Mongo sync — space bachane ke liye: sirf 1 doc, debounce, change hone par hi POST, size guard
+                buildSyncPayload() {
+                    return {
+                        isFinalized: this.isFinalized,
+                        projectMeta: this.projectMeta,
+                        selectedCompanyId: this.selectedCompanyId,
+                        contractorsList: this.contractorsList,
+                        selectedContractorId: this.selectedContractorId,
+                        pctStage1: this.pctStage1,
+                        pctStage2: this.pctStage2,
+                        pctStage3: this.pctStage3,
+                        locations: this.locations,
+                        activities: this.activities,
+                        masterAbstractList: this.masterAbstractList,
+                        activityQuantities: this.activityQuantities,
+                        invoiceData: this.invoiceData,
+                        mappingLocks: this.mappingLocks
+                    };
+                },
+                scheduleRemoteSync() {
+                    if (this._syncTimer) clearTimeout(this._syncTimer);
+                    this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 2500);
+                },
+                async syncToMongoNow() {
+                    try {
+                        const payload = this.buildSyncPayload();
+                        const json = JSON.stringify(payload);
+                        // ~800KB se bada payload auto-push mat karo — Mongo me kachra / fail se bachao
+                        if (json.length > 800 * 1024) {
+                            this.syncStatus = 'error';
+                            console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
+                            return;
+                        }
+                        // Simple change-check: same data dobara mat bhejo (hash = length + short checksum)
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        const hash = json.length + ':' + h;
+                        if (hash === this.lastSentHash) return;
+                        this.syncStatus = 'syncing';
+                        const res = await fetch('/api/billing', {
+                            method: 'POST',
+                            headers: (() => { const h = { 'Content-Type': 'application/json' }; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })(),
+                            body: json
+                        });
+                        if (res.status === 423) {
+                            this.lastSentHash = hash;
+                            this.syncStatus = 'local';
+                            console.info('Mongo: bill locked hai, local copy safe hai');
+                            return;
+                        }
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        this.lastSentHash = hash;
+                        this.syncStatus = 'synced';
+                        try {
+                            const t = new Date();
+                            this.lastSyncAt = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
+                        } catch(e) {}
+                    } catch (err) {
+                        this.syncStatus = 'error';
+                        console.error('Mongo sync failed (local copy safe hai):', err);
+                    }
+                },
                 saveToStorage() {
                     try {
                         if (this.invoiceData && this.invoiceData.autoSync) {
@@ -15036,7 +15219,7 @@
                             if (q907 > 0) {
                                 this.invoiceData.items.forEach(it => {
                                     if (it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) {
-                                        it.qty = q907;
+                                        if (!it.manual) it.qty = q907;
                                     }
                                 });
                             }
@@ -15062,18 +15245,23 @@
                         if (!this.isPerformingHistoryAction) {
                             this.takeSnapshot();
                         }
+                        this.scheduleRemoteSync();
                     } catch (e) {
                         console.error('Save error', e);
                     }
                 },
                 async loadFromStorage() {
                       let raw = null;
+                      let fromMongo = false;
                       try {
-                          const res = await fetch('/api/billing');
+                          const res = await fetch('/api/billing', {
+                              headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                          });
                           if (!res.ok) throw new Error('API Error: ' + res.status);
                           const json = await res.json();
                           if (json && json.success && json.data) {
                               raw = JSON.stringify(json.data);
+                              fromMongo = true;
                           } else {
                               raw = localStorage.getItem('lk_billing_app_state_v10');
                           }
@@ -15082,11 +15270,23 @@
                           // Fallback to local storage
                           raw = localStorage.getItem('lk_billing_app_state_v10');
                       }
+                      this.syncStatus = fromMongo ? 'synced' : 'local';
+                      if (fromMongo && raw) {
+                          try {
+                              let h = 0;
+                              for (let i = 0; i < raw.length; i += 97) { h = ((h * 31) + raw.charCodeAt(i)) >>> 0; }
+                              this.lastSentHash = raw.length + ':' + h;
+                          } catch(e) {}
+                      }
                       if (raw) {
                         try {
                             const parsed = JSON.parse(raw);
                             if (parsed.isFinalized !== undefined) this.isFinalized = parsed.isFinalized;
-                            if (parsed.projectMeta) this.projectMeta = parsed.projectMeta;
+                            if (parsed.projectMeta) {
+                                this.projectMeta = parsed.projectMeta;
+                                if (!this.projectMeta.contractValue) this.projectMeta.contractValue = 48550000;
+                                if (!this.projectMeta.aaacDivisor) this.projectMeta.aaacDivisor = 3150;
+                            }
                             if (parsed.selectedCompanyId) this.selectedCompanyId = parsed.selectedCompanyId;
                             if (parsed.contractorsList && Array.isArray(parsed.contractorsList) && parsed.contractorsList.length > 0) {
                                 this.contractorsList = parsed.contractorsList;
@@ -15134,6 +15334,7 @@
                         }
                     }
                     this.initDefaultSampleQuantities();
+                    this.normalizeAllContractorBanks();
                     this.checkAndApplyAutoGstRule();
                     if (this.invoiceData && this.invoiceData.autoSync) {
                         this.updateSyncTaxInvoiceFromActivities();
