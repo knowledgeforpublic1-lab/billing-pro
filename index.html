@@ -260,17 +260,17 @@
                                     <th style="width: 82px;" class="text-center" rowspan="2">SAP Item Code</th>
                                     <th style="width: 44px;" class="text-center" rowspan="2">Unit</th>
 
-                                    <th v-for="(loc, locIdx) in locations" :key="locIdx"
+                                    <th v-for="lp in visibleDetailLocs" :key="lp.idx"
                                         class="th-location text-center">
                                         <div class="loc-header-box">
                                             <div
                                                 style="display: flex; width: 100%; gap: 4px; align-items: center; justify-content: center;">
-                                                <input type="text" v-model="loc.name" class="loc-header-input"
+                                                <input type="text" v-model="lp.loc.name" class="loc-header-input"
                                                     placeholder="Location Name" @focus="$event.target.select()"
                                                     @change="saveToStorage">
-                                                <button v-if="locations.length > 1" class="btn-danger"
+                                                <button v-if="visibleDetailLocs.length > 1" class="btn-danger"
                                                     style="padding: 2px 5px; font-size: 0.7rem; border-radius: 4px;"
-                                                    @click="removeLocation(locIdx)" title="Remove Location">✕</button>
+                                                    @click="removeLocation(lp.idx)" title="Remove Location">✕</button>
                                             </div>
                                         </div>
                                     </th>
@@ -309,15 +309,15 @@
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
                                             @change="saveToStorage">
                                     </td>
-                                    <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
+                                    <td v-for="lp in visibleDetailLocs" :key="lp.idx" class="text-right">
                                         <input type="number" inputmode="decimal" step="any" min="0"
-                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
-                                            class="qty-input" :data-row="itemIdx" :data-loc="locIdx" placeholder="0"
+                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][lp.idx]"
+                                            v-model.number="activityQuantities[selectedActivityKey][lp.idx][item.origIndex]"
+                                            class="qty-input" :data-row="itemIdx" :data-loc="lp.idx" placeholder="0"
                                             @focus="$event.target.select()"
-                                            @keydown.enter.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
-                                            @keydown.down.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
-                                            @keydown.up.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'up')"
+                                            @keydown.enter.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'down')"
+                                            @keydown.down.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'down')"
+                                            @keydown.up.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'up')"
                                             @input="saveToStorage" @change="saveToStorage">
                                         <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
@@ -335,7 +335,7 @@
 
                                 <!-- Extra Items Heading -->
                                 <tr v-if="extraMaterials.length > 0">
-                                    <td :colspan="5 + locations.length" style="background: linear-gradient(90deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%); padding: 6px 12px; border-top: 2px solid var(--accent-indigo); border-bottom: 2px solid var(--accent-indigo);">
+                                    <td :colspan="5 + visibleDetailLocs.length" style="background: linear-gradient(90deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%); padding: 6px 12px; border-top: 2px solid var(--accent-indigo); border-bottom: 2px solid var(--accent-indigo);">
                                         <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-indigo);">✏️ Extra Items</span>
                                         <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 8px;">({{ extraMaterials.length }} items added separately)</span>
                                     </td>
@@ -363,10 +363,10 @@
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
                                             @change="saveToStorage">
                                     </td>
-                                    <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
+                                    <td v-for="lp in visibleDetailLocs" :key="lp.idx" class="text-right">
                                         <input type="number" inputmode="decimal" step="any" min="0"
-                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
+                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][lp.idx]"
+                                            v-model.number="activityQuantities[selectedActivityKey][lp.idx][item.origIndex]"
                                             class="qty-input" placeholder="0"
                                             @focus="$event.target.select()"
                                             @input="saveToStorage" @change="saveToStorage">
@@ -386,7 +386,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th :colspan="4 + locations.length + 1" class="text-right">ACTIVITY TOTAL</th>
+                                    <th :colspan="4 + visibleDetailLocs.length + 1" class="text-right">ACTIVITY TOTAL</th>
                                     <th class="text-right font-mono">{{ formatCurrency(activeTotals.amt100) }}</th>
                                     <th class="text-right font-mono" style="color: var(--accent-green)">{{
                                         formatCurrency(activeTotals.amtStage1) }}</th>
@@ -1037,9 +1037,16 @@
                         <option v-for="r in pivotReconciliationData.rows" :key="'f_'+r.code" :value="'[' + r.code + '] ' + (r.desc || '')"></option>
                     </datalist>
                 </div>
-                <div class="filter-col" v-if="reverseEntry" style="min-width: 150px; flex: unset;">
-                    <label>Location</label>
-                    <button @click="addLocation" :disabled="isFinalized" class="btn-filter-add" title="Nayi location jodo — har activity me naya column banega">📍 + Location</button>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 280px;">
+                    <label>Location jodo (naam + activity chuno)</label>
+                    <div style="display: flex; gap: 0.4rem;">
+                        <input v-model="reverseNewLocName" class="filter-select" placeholder="📍 Naam likho..." style="flex: 1; min-width: 0;" :disabled="isFinalized" title="Nayi location ka naam">
+                        <select v-model="reverseNewLocAct" class="filter-select" style="flex: 1; min-width: 0;" :disabled="isFinalized" title="Kis activity me jodni hai?">
+                            <option value="ALL">Sab activity</option>
+                            <option v-for="k in Object.keys(activities).sort((a,b) => parseInt(a)-parseInt(b))" :key="'la_'+k" :value="k">{{ k }}</option>
+                        </select>
+                        <button @click="addReverseLocation" :disabled="isFinalized" class="btn-filter-add" title="Location jodo">＋</button>
+                    </div>
                 </div>
                 <div class="filter-col" style="flex: 1; justify-content: flex-end;">
                     <label>&nbsp;</label>
@@ -1071,7 +1078,10 @@
                                 </template>
                                 <template v-else>
                                 <th v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center" style="min-width: 86px; font-size: 0.72rem; padding: 0.25rem 0.2rem; background: rgba(163, 113, 247, 0.12);">
-                                    <div style="font-weight: 800;">{{ rcol.actKey }}</div>
+                                    <div style="font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                        <span>{{ rcol.actKey }}</span>
+                                        <button @click="confirmRemoveReverseLocation(rcol.locIdx)" :disabled="isFinalized" title="Ye location hatao (delete)" style="border: 1px solid var(--accent-red); background: transparent; color: var(--accent-red); border-radius: 4px; font-size: 0.62rem; font-weight: 800; cursor: pointer; padding: 0 4px; line-height: 1.4;">✕</button>
+                                    </div>
                                     <input :value="locations[rcol.locIdx] ? locations[rcol.locIdx].name : ''" @change="renameReverseLocation(rcol.locIdx, $event.target.value)" :disabled="isFinalized" title="Location ka naam yahin likho" style="width: 100%; margin-top: 2px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-main); border-radius: 4px; padding: 1px 3px; font-size: 0.68rem; text-align: center; outline: none;">
                                 </th>
                                 </template>
@@ -11714,6 +11724,8 @@
                     reverseEntry: false,
                     reverseMatFilter: 'ALL',
                     reverseMatSearch: '',
+                    reverseNewLocName: '',
+                    reverseNewLocAct: 'ALL',
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11914,6 +11926,7 @@
                                 const qMatrix = this.activityQuantities[actKey] || [];
                                 const numLocs = this.locations ? this.locations.length : 3;
                                 for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                                    if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar location mat gino
                                     const val = (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '')
                                         ? parseFloat(qMatrix[locIdx][mIdx])
                                         : 0;
@@ -11964,8 +11977,9 @@
                 reverseReconColumns() {
                     if (!this.reverseEntry) return [];
                     const out = [];
+                    const self = this;
                     this.pivotReconciliationData.columns.forEach(actKey => {
-                        this.locations.forEach((loc, locIdx) => {
+                        self.visibleLocIdxList(actKey).forEach(locIdx => {
                             out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
                         });
                     });
@@ -11986,6 +12000,11 @@
                 },
                 reconColCount() {
                     return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
+                },
+                // Detail view: chuni activity me dikhne wali locations (global idx ke sath)
+                visibleDetailLocs() {
+                    const self = this;
+                    return this.visibleLocIdxList(this.selectedActivityKey).map(i => ({ loc: self.locations[i], idx: i }));
                 },
                 canUndo() {
                     return this.historyIndex > 0;
@@ -12569,6 +12588,7 @@
                         for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
                             let itemQty = 0;
                             for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
+                                if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar mat gino
                                 if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
                                     const v = parseFloat(qMatrix[locIdx][mIdx]);
                                     if (!isNaN(v)) itemQty += v;
@@ -12594,6 +12614,7 @@
                         for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
                             let itemQty = 0;
                             for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
+                                if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar mat gino
                                 if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
                                     const v = parseFloat(qMatrix[locIdx][mIdx]);
                                     if (!isNaN(v)) itemQty += v;
@@ -12641,6 +12662,7 @@
                     const qMatrix = this.activityQuantities ? this.activityQuantities['907'] : null;
                     if (qMatrix && Array.isArray(qMatrix)) {
                         for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
+                            if (!this.isLocVisible('907', locIdx)) continue; // 📍 scope-bahar mat gino
                             if (qMatrix[locIdx] && qMatrix[locIdx][matIdx] !== undefined && qMatrix[locIdx][matIdx] !== '') {
                                 const val = parseFloat(qMatrix[locIdx][matIdx]);
                                 if (!isNaN(val)) totalAaacRmt += val;
@@ -12745,6 +12767,45 @@
                     }
                     // free text — substring search ke liye rakho
                     this.reverseMatFilter = 'ALL';
+                },
+                // 📍 Location scope — location kis activity me dikhegi (acts khali = sab me, purana data wese hi)
+                isLocVisible(actKey, locIdx) {
+                    const loc = this.locations[locIdx];
+                    if (!loc || !actKey) return true;
+                    if (!loc.acts || !loc.acts.length) return true;
+                    return loc.acts.indexOf(actKey) > -1;
+                },
+                visibleLocIdxList(actKey) {
+                    const out = [];
+                    for (let i = 0; i < this.locations.length; i++) {
+                        if (this.isLocVisible(actKey, i)) out.push(i);
+                    }
+                    // Galti se sab band ho to sab dikhao (total zero hone se bachao)
+                    return out.length ? out : this.locations.map((_, i) => i);
+                },
+                // 📍 Location jodo — naam + activity poochho (ALL = sab me, purana tarika)
+                addReverseLocation() {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const nm = String(this.reverseNewLocName || '').trim();
+                    if (!nm) { this.showToast('⚠️ Pehle location ka naam likho', '⛔'); return; }
+                    const act = this.reverseNewLocAct || 'ALL';
+                    this.locations.push({ name: nm, acts: act === 'ALL' ? [] : [act] });
+                    Object.keys(this.activities).forEach(actKey => {
+                        const matCount = this.activities[actKey].materials.length;
+                        if (!this.activityQuantities[actKey]) {
+                            this.activityQuantities[actKey] = [];
+                        }
+                        this.activityQuantities[actKey].push(new Array(matCount).fill(''));
+                    });
+                    this.reverseNewLocName = '';
+                    this.saveToStorage();
+                    this.showToast(act === 'ALL' ? ('📍 Location judi (sab activity): ' + nm) : ('📍 Location judi (' + act + ' me): ' + nm), '✅');
+                },
+                confirmRemoveReverseLocation(locIdx) {
+                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    const nm = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
+                    if (!confirm('Location "' + nm + '" hatana hai?\n\nIski sari qty (sab activity se) hat jayegi.')) return;
+                    this.removeLocation(locIdx);
                 },
                 renameReverseLocation(locIdx, name) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
@@ -13417,6 +13478,7 @@
                     if (!qMatrix) return 0;
                     let total = 0;
                     for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
+                        if (!this.isLocVisible(this.selectedActivityKey, locIdx)) continue; // 📍 scope-bahar mat gino
                         if (qMatrix[locIdx] && qMatrix[locIdx][itemIndex] !== undefined) {
                             const val = parseFloat(qMatrix[locIdx][itemIndex]);
                             if (!isNaN(val)) total += val;
@@ -14521,7 +14583,8 @@
                         pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
-                    const numLocs = this.locations.length;
+                    const visLocIdx = this.visibleLocIdxList(actKey); // 📍 sirf is activity ki locations
+                    const numLocs = visLocIdx.length;
                     const totalCols = 3 + numLocs + 5;
 
                     const locStartCol = 4;
@@ -14615,7 +14678,7 @@
                         if (itemsList.length === 0) return;
 
                         let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                        this.locations.forEach(l => headerValues.push(isExtra ? 'Erected Qty.' : l.name));
+                        visLocIdx.forEach(li => headerValues.push(isExtra ? 'Erected Qty.' : this.locations[li].name));
                         headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
 
                         const rowH = ws.getRow(rowIdx);
@@ -14639,11 +14702,12 @@
                             row.getCell(3).value = mat.unit;
 
                             let itemTotalQty = 0;
-                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                            for (let li = 0; li < numLocs; li++) {
+                                const locIdx = visLocIdx[li]; // 📍 global row
                                 const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
                                     ? parseFloat(qMatrix[locIdx][idx])
                                     : 0;
-                                row.getCell(locStartCol + locIdx).value = val;
+                                row.getCell(locStartCol + li).value = val;
                                 if (!isNaN(val)) itemTotalQty += val;
                             }
 
