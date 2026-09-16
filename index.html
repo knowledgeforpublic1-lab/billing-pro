@@ -1239,11 +1239,39 @@
         }
         @media (max-width: 640px) {
             .left-sidebar { display: none; }
-            .tabs-export-group { display: none; }
+            /* Export buttons phone par gayab MAT karo — neeche fixed action bar banao */
+            .tabs-export-group {
+                display: flex !important;
+                position: fixed;
+                left: 0; right: 0; bottom: 0;
+                z-index: 500;
+                gap: 0.5rem;
+                padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+                background: var(--bg-surface);
+                border-top: 1px solid var(--border-strong);
+                box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+                margin: 0;
+            }
+            .tabs-export-group .btn {
+                flex: 1;
+                justify-content: center;
+                min-height: 48px;
+                font-size: 0.85rem !important;
+                padding: 0.7rem 0.5rem !important;
+            }
+            /* Fixed bar ke peeche content na chhupe */
+            .center-content { padding: 0.35rem 0.35rem 5.5rem 0.35rem; }
+            .toast-container { bottom: 6rem; }
+            /* iPhone auto-zoom band: focus par font 16px se chhota nahi */
+            input, select, textarea { font-size: 16px !important; }
+            /* Ungli se dabane layak bade nishane */
+            .qty-input, .editable-cell { min-height: 42px; padding: 0.5rem 0.4rem !important; }
+            .btn-icon { min-width: 44px; min-height: 44px; }
+            table.billing-table td { padding: 0.4rem 0.35rem; }
+            .tab-item { min-height: 44px; }
             .project-header-bar { padding: 0.35rem 0.5rem; }
             .project-name-block h3 { font-size: 0.8rem; }
             .project-name-block p { display: none; }
-            .center-content { padding: 0.35rem; }
             .filter-bar-card { padding: 0.4rem; margin-bottom: 0.5rem; }
             .invoice-toolbar { padding: 0.4rem; }
             .inv-tool-item { min-width: 100%; }
@@ -2088,7 +2116,7 @@
                                             @change="saveToStorage">
                                     </td>
                                     <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
-                                        <input type="number" step="any" min="0"
+                                        <input type="number" inputmode="decimal" step="any" min="0"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
                                             v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" :data-row="itemIdx" :data-loc="locIdx" placeholder="0"
@@ -2097,7 +2125,7 @@
                                             @keydown.down.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
                                             @keydown.up.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'up')"
                                             @input="saveToStorage" @change="saveToStorage">
-                                        <input type="number" step="any" min="0" v-else class="qty-input" placeholder="0"
+                                        <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
@@ -2142,13 +2170,13 @@
                                             @change="saveToStorage">
                                     </td>
                                     <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
-                                        <input type="number" step="any" min="0"
+                                        <input type="number" inputmode="decimal" step="any" min="0"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
                                             v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" placeholder="0"
                                             @focus="$event.target.select()"
                                             @input="saveToStorage" @change="saveToStorage">
-                                        <input type="number" step="any" min="0" v-else class="qty-input" placeholder="0"
+                                        <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
@@ -2282,7 +2310,7 @@
                                     <td>{{ act.desc }}</td>
                                     <td class="text-center font-mono">{{ act.uom }}</td>
                                     <td class="text-right font-mono">
-                                        <input type="number" step="any" min="0" v-model.number="act.qty"
+                                        <input type="number" inputmode="decimal" step="any" min="0" v-model.number="act.qty"
                                             class="editable-cell text-right font-mono" style="width: 80px;"
                                             :data-abs-row="actIdx" :data-abs-col="'qty'" @focus="$event.target.select()"
                                             @keydown.enter.prevent="handleAbstractKeyNav($event, actIdx, 'qty', 'down')"
@@ -2737,7 +2765,7 @@
                                     <td class="text-center font-mono">{{ (row && row.item) ? row.item.unit : '' }}</td>
                                     <td class="text-right font-mono">
                                         <span v-if="mappingLocks.rate || isFinalized" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
-                                        <input v-else type="number" step="any" min="0" v-model.number="row.item.rate" @change="onMappingRateChange(row.item)" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
+                                        <input v-else type="number" inputmode="decimal" step="any" min="0" v-model.number="row.item.rate" @change="onMappingRateChange(row.item)" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
                                     </td>
                                     <td style="padding: 0.6rem;" v-if="row && row.item">
                                         <!-- List of attached SAP items for this material -->
@@ -2757,7 +2785,7 @@
                                                 <!-- Qty Input -->
                                                 <div style="display: flex; align-items: center; gap: 4px;">
                                                     <span style="font-size: 0.75rem; color: var(--text-muted);">Qty{{ mappingLocks.qty ? ' 🔒' : '' }}:</span>
-                                                    <input type="number" step="any" min="0" v-model.number="sItem.qty" @change="onMappingQtyChange(sItem)" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
+                                                    <input type="number" inputmode="decimal" step="any" min="0" v-model.number="sItem.qty" @change="onMappingQtyChange(sItem)" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
@@ -2957,7 +2985,7 @@
             </div>
             <div class="bs-row">
                 <span class="bs-label">Contract Value ₹</span>
-                <input type="number" min="0" step="any" v-model.number="projectMeta.contractValue" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
+                <input type="number" inputmode="decimal" min="0" step="any" v-model.number="projectMeta.contractValue" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
             </div>
             <div class="bs-row">
                 <span class="bs-label" title="907 invoice qty = AAAC Rmt ÷ divisor">AAAC ÷ divisor</span>
@@ -3004,7 +3032,7 @@
                         </div>
                         <div class="form-group">
                             <label>Unit Rate</label>
-                            <input type="number" step="any" v-model.number="newMaterial.rate" placeholder="0.00">
+                            <input type="number" inputmode="decimal" step="any" v-model.number="newMaterial.rate" placeholder="0.00">
                         </div>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
