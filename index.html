@@ -4,6 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+    /* Phone ko alag mobile page par bhejo — desktop view bilkul same rehta hai.
+       Wapas aana ho to mobile page par "Desktop version" dabao (?view=desktop). */
+    try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('/mobile.html');}})();}catch(e){}
+    </script>
     <title>Billing Pro | Activity Billing Studio & Tax Invoice Exporter</title>
     <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>

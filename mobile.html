@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Billing Pro Mobile — Qty Entry</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0d1117; color: #e6edf3;
+    min-height: 100vh;
+  }
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: #161b22; border-bottom: 1px solid #30363d;
+    padding: 0.7rem 1rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; color: #fff;
+  }
+  .h-title { font-size: 1rem; font-weight: 800; line-height: 1.2; }
+  .h-sub { font-size: 0.7rem; color: #8b949e; }
+  .sync-dot {
+    margin-left: auto; display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.72rem; font-weight: 700; color: #8b949e; white-space: nowrap;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #6e7681; }
+  .dot.synced { background: #3fb950; box-shadow: 0 0 6px rgba(63,185,80,.6); }
+  .dot.syncing { background: #d29922; }
+  .dot.error { background: #f85149; }
+  .wrap { padding: 0.75rem 0.75rem 11rem 0.75rem; max-width: 640px; margin: 0 auto; }
+  .lock-bar {
+    background: rgba(248,81,73,.12); border: 1px solid #f85149; color: #ffa198;
+    padding: 0.7rem 0.9rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  label.lbl { display: block; font-size: 0.72rem; font-weight: 700; color: #8b949e; margin: 0.6rem 0 0.3rem; text-transform: uppercase; }
+  select, input[type="search"] {
+    width: 100%; font-size: 16px; padding: 0.7rem 0.8rem;
+    border: 1.5px solid #484f58; border-radius: 10px;
+    background: #0d1117; color: #e6edf3; outline: none;
+  }
+  select:focus, input:focus { border-color: #58a6ff; }
+  .meta-line { font-size: 0.75rem; color: #8b949e; margin: 0.5rem 0 0; }
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 14px;
+    padding: 0.8rem; margin-top: 0.7rem;
+  }
+  .card.extra { border-color: #a371f7; }
+  .sec-head { font-weight: 800; font-size: 0.85rem; color: #a371f7; margin: 1rem 0 -0.2rem; }
+  .item-no {
+    display: inline-block; font-size: 0.7rem; font-weight: 800; color: #8b949e;
+    background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+    padding: 1px 7px; margin-bottom: 0.3rem;
+  }
+  .item-desc { font-size: 0.92rem; font-weight: 700; line-height: 1.35; }
+  .item-sub { font-size: 0.75rem; color: #8b949e; margin-top: 0.25rem; }
+  .item-sub b { color: #79c0ff; }
+  .loc-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-top: 0.55rem; background: #0d1117;
+    border: 1px solid #30363d; border-radius: 10px; padding: 0.4rem 0.5rem;
+  }
+  .loc-name { flex: 1; font-size: 0.8rem; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .step-btn {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border: 1px solid #484f58; border-radius: 10px;
+    background: #21262d; color: #e6edf3;
+    font-size: 1.4rem; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  }
+  .step-btn:active { background: #30363d; }
+  .step-btn:disabled { opacity: 0.35; }
+  .qty-box {
+    width: 84px; flex-shrink: 0; height: 48px;
+    font-size: 16px; font-weight: 700; text-align: center;
+    border: 1.5px solid #3fb950; border-radius: 10px;
+    background: #0d1117; color: #e6edf3; outline: none; padding: 0 4px;
+  }
+  .qty-box:focus { border-color: #58a6ff; }
+  .qty-box:disabled { opacity: 0.5; border-color: #484f58; }
+  .line-total {
+    margin-top: 0.55rem; display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8rem; color: #8b949e;
+  }
+  .line-total b { color: #3fb950; font-size: 0.95rem; }
+  .empty { text-align: center; color: #8b949e; padding: 2rem 1rem; font-size: 0.9rem; }
+  #totalBar {
+    position: fixed; left: 0; right: 0; bottom: 76px; z-index: 200;
+    background: #161b22; border-top: 1px solid #30363d;
+    padding: 0.55rem 1rem; display: flex; justify-content: space-between; align-items: center;
+  }
+  #totalBar .t-lbl { font-size: 0.72rem; color: #8b949e; font-weight: 700; }
+  #totalBar .t-val { font-size: 1.05rem; font-weight: 800; color: #3fb950; }
+  #totalBar .t-qty { font-size: 0.8rem; color: #8b949e; font-weight: 700; }
+  #actionBar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+    display: flex; gap: 0.5rem;
+    padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+    background: #161b22; border-top: 1px solid #484f58;
+  }
+  .abtn {
+    flex: 1; min-height: 52px; border: none; border-radius: 12px;
+    font-size: 0.9rem; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+    touch-action: manipulation;
+  }
+  .abtn:active { transform: scale(0.98); }
+  .abtn-save { background: linear-gradient(135deg, #2563eb, #38bdf8); color: #fff; }
+  .abtn-ghost { background: #21262d; color: #e6edf3; border: 1px solid #484f58; flex: 0.7; }
+  #toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: 150px; z-index: 999;
+    background: #21262d; border: 1px solid #484f58; color: #e6edf3;
+    padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700;
+    display: none; max-width: 92%; text-align: center;
+  }
+  .desk-link { display: block; text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #58a6ff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">B</div>
+  <div>
+    <div class="h-title" id="projName">Billing Pro</div>
+    <div class="h-sub">📱 Mobile Qty Entry</div>
+  </div>
+  <div class="sync-dot"><span class="dot" id="syncDot"></span><span id="syncTxt">local</span></div>
+</header>
+
+<div class="wrap">
+  <div class="lock-bar" id="lockBar" hidden>🔒 Bill finalized/locked hai — qty change nahi hogi. Unlock desktop se karo.</div>
+
+  <label class="lbl" for="actSel">Activity</label>
+  <select id="actSel"></select>
+
+  <label class="lbl" for="search">Khojo</label>
+  <input type="search" id="search" placeholder="🔍 Item naam ya number..." autocomplete="off">
+
+  <p class="meta-line" id="metaLine"></p>
+  <div id="cards"></div>
+
+  <a class="desk-link" href="#" id="deskLink">🖥️ Poora Desktop version kholo (Export/Print ke liye)</a>
+</div>
+
+<div id="totalBar">
+  <div><div class="t-lbl">ACTIVITY TOTAL (100%)</div><div class="t-val" id="totAmt">0.00</div></div>
+  <div class="t-qty" id="totQty">Qty: 0</div>
+</div>
+
+<div id="actionBar">
+  <button class="abtn abtn-save" id="btnSave">💾 Save / Sync</button>
+  <button class="abtn abtn-ghost" id="btnRefresh">🔄</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var LS_KEY = 'lk_billing_app_state_v10';
+  var API_LS = 'billing_api_key';
+  var SAVE_KEYS = ['isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
+    'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
+    'locations', 'activities', 'masterAbstractList', 'activityQuantities',
+    'invoiceData', 'mappingLocks'];
+
+  var S = null, actKey = '', searchQ = '';
+  var syncTimer = null, lastHash = '';
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmt(n) {
+    if (n === undefined || n === null || isNaN(n)) return '0.00';
+    return Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.style.display = 'block';
+    clearTimeout(t._h); t._h = setTimeout(function () { t.style.display = 'none'; }, 2600);
+  }
+  function setSync(st, txt) {
+    var d = $('syncDot');
+    d.className = 'dot' + (st ? ' ' + st : '');
+    $('syncTxt').textContent = txt || st || 'local';
+  }
+  function apiHeaders(json) {
+    var h = {};
+    if (json) h['Content-Type'] = 'application/json';
+    try { var k = localStorage.getItem(API_LS); if (k) h['x-api-key'] = k; } catch (e) {}
+    return h;
+  }
+
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+  // Desktop jaisa matrix ensure: [locIdx][matIdx], '' = khali
+  function ensureMatrix(key) {
+    var mats = (S.activities[key] && S.activities[key].materials) || [];
+    var nLoc = S.locations.length, nMat = mats.length;
+    if (!S.activityQuantities[key] || !Array.isArray(S.activityQuantities[key])) {
+      S.activityQuantities[key] = [];
+    }
+    var m = S.activityQuantities[key];
+    while (m.length < nLoc) m.push(new Array(nMat).fill(''));
+    for (var i = 0; i < m.length; i++) {
+      if (!Array.isArray(m[i])) m[i] = new Array(nMat).fill('');
+      while (m[i].length < nMat) m[i].push('');
+    }
+  }
+
+  function itemQty(key, matIdx) {
+    var m = S.activityQuantities[key];
+    if (!m) return 0;
+    var t = 0;
+    for (var l = 0; l < S.locations.length; l++) {
+      if (m[l] && m[l][matIdx] !== undefined && m[l][matIdx] !== '') t += num(m[l][matIdx]);
+    }
+    return t;
+  }
+
+  function buildPayload() {
+    var o = {};
+    for (var i = 0; i < SAVE_KEYS.length; i++) {
+      var k = SAVE_KEYS[i];
+      if (S[k] !== undefined) o[k] = S[k];
+    }
+    return o;
+  }
+
+  function saveLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(buildPayload())); } catch (e) {}
+  }
+
+  function scheduleSync() {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncNow, 2000);
+  }
+
+  function syncNow() {
+    syncTimer = null;
+    var json;
+    try { json = JSON.stringify(buildPayload()); } catch (e) { return; }
+    if (json.length > 800 * 1024) { setSync('error', 'too big'); return; }
+    var h = 0;
+    for (var i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+    var hash = json.length + ':' + h;
+    if (hash === lastHash) { setSync('synced', 'synced'); return; }
+    setSync('syncing', 'syncing...');
+    fetch('/api/billing', { method: 'POST', headers: apiHeaders(true), body: json })
+      .then(function (res) {
+        if (res.status === 423) {
+          lastHash = hash; setSync('local', 'locked');
+          renderLock(true); toast('🔒 Bill locked hai');
+          return;
+        }
+        if (res.status === 401) { setSync('error', 'key?'); toast('API key chahiye — desktop se set karo'); return; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        lastHash = hash;
+        try {
+          var t = new Date();
+          setSync('synced', ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2));
+        } catch (e) { setSync('synced', 'synced'); }
+      })
+      .catch(function () { setSync('error', 'offline'); });
+  }
+
+  function loadState() {
+    setSync('', 'loading...');
+    fetch('/api/billing', { headers: apiHeaders(false) })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (j) {
+        if (j && j.success && j.data) {
+          applyState(j.data, true);
+        } else {
+          fromLocal();
+        }
+      })
+      .catch(function () { fromLocal(); });
+  }
+
+  function fromLocal() {
+    var raw = null;
+    try { raw = localStorage.getItem(LS_KEY); } catch (e) {}
+    if (raw) {
+      try { applyState(JSON.parse(raw), false); return; } catch (e) {}
+    }
+    toast('Koi data nahi mila — pehle desktop par bill kholo');
+    setSync('error', 'empty');
+  }
+
+  function applyState(data, fromMongo) {
+    S = {
+      isFinalized: !!data.isFinalized,
+      projectMeta: data.projectMeta || {},
+      selectedCompanyId: data.selectedCompanyId || '',
+      contractorsList: Array.isArray(data.contractorsList) ? data.contractorsList : [],
+      selectedContractorId: data.selectedContractorId || '',
+      pctStage1: data.pctStage1, pctStage2: data.pctStage2, pctStage3: data.pctStage3,
+      locations: Array.isArray(data.locations) ? data.locations : [],
+      activities: (data.activities && typeof data.activities === 'object') ? data.activities : {},
+      masterAbstractList: Array.isArray(data.masterAbstractList) ? data.masterAbstractList : [],
+      activityQuantities: (data.activityQuantities && typeof data.activityQuantities === 'object') ? data.activityQuantities : {},
+      invoiceData: data.invoiceData || { items: [] },
+      mappingLocks: data.mappingLocks || {}
+    };
+    var keys = Object.keys(S.activities).sort(function (a, b) { return parseInt(a) - parseInt(b); });
+    actKey = keys.length ? keys[0] : '';
+    try {
+      var raw = fromMongo ? JSON.stringify(buildPayload()) : (localStorage.getItem(LS_KEY) || '');
+      if (raw) {
+        var h = 0;
+        for (var i = 0; i < raw.length; i += 97) { h = ((h * 31) + raw.charCodeAt(i)) >>> 0; }
+        lastHash = raw.length + ':' + h;
+      }
+    } catch (e) {}
+    setSync(fromMongo ? 'synced' : '', fromMongo ? 'synced' : 'local');
+    render();
+  }
+
+  function renderLock(force) {
+    var locked = force || (S && S.isFinalized);
+    $('lockBar').hidden = !locked;
+    return locked;
+  }
+
+  function render() {
+    if (!S) return;
+    var locked = renderLock(false);
+    $('projName').textContent = (S.projectMeta && S.projectMeta.projectName) || 'Billing Pro';
+
+    var sel = $('actSel');
+    var keys = Object.keys(S.activities).sort(function (a, b) { return parseInt(a) - parseInt(b); });
+    sel.innerHTML = '';
+    keys.forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k;
+      var t = (S.activities[k] && S.activities[k].title) || k;
+      o.textContent = k + ' — ' + String(t).substring(0, 40);
+      sel.appendChild(o);
+    });
+    if (keys.indexOf(actKey) === -1) actKey = keys.length ? keys[0] : '';
+    sel.value = actKey;
+
+    $('metaLine').textContent = S.locations.length + ' locations • Rate change mobile se nahi hoga';
+    renderCards(locked);
+  }
+
+  function matchQ(m) {
+    if (!searchQ) return true;
+    var q = searchQ.toLowerCase();
+    return (m.desc && String(m.desc).toLowerCase().indexOf(q) > -1) ||
+      String(m.no).toLowerCase().indexOf(q) > -1;
+  }
+
+  function renderCards(locked) {
+    var box = $('cards');
+    var act = S.activities[actKey];
+    if (!act || !act.materials || !act.materials.length) {
+      box.innerHTML = '<div class="empty">Is activity me koi item nahi hai.</div>';
+      $('totAmt').textContent = '0.00'; $('totQty').textContent = 'Qty: 0';
+      return;
+    }
+    ensureMatrix(actKey);
+    var mats = act.materials.map(function (m, idx) {
+      var c = {}; for (var k in m) c[k] = m[k];
+      c.origIndex = idx; return c;
+    }).filter(matchQ);
+
+    var html = '', grand = 0, grandQty = 0, extraOpen = false;
+    mats.forEach(function (m) {
+      var q = itemQty(actKey, m.origIndex);
+      var amt = q * num(m.rate);
+      grand += amt; grandQty += q;
+      if (m.isExtra && !extraOpen) { html += '<div class="sec-head">✏️ Extra Items</div>'; extraOpen = true; }
+      html += '<div class="card' + (m.isExtra ? ' extra' : '') + '">' +
+        '<span class="item-no">' + esc(m.no) + '</span>' +
+        '<div class="item-desc">' + esc(m.desc) + '</div>' +
+        '<div class="item-sub">Unit: <b>' + esc(m.unit || 'No') + '</b> • Rate: <b>₹' + fmt(m.rate) + '</b>' +
+        (m.itemCode ? ' • SAP: ' + esc(m.itemCode) : '') + '</div>';
+      for (var l = 0; l < S.locations.length; l++) {
+        var locName = (S.locations[l] && S.locations[l].name) || ('Loc ' + (l + 1));
+        var v = (S.activityQuantities[actKey][l] && S.activityQuantities[actKey][l][m.origIndex] !== undefined)
+          ? S.activityQuantities[actKey][l][m.origIndex] : '';
+        html += '<div class="loc-row">' +
+          '<span class="loc-name">' + esc(locName) + '</span>' +
+          '<button class="step-btn" data-a="dec" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + '>−</button>' +
+          '<input class="qty-box" type="number" inputmode="decimal" step="any" min="0" value="' + esc(v) + '"' +
+          ' data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + ' placeholder="0">' +
+          '<button class="step-btn" data-a="inc" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + '>+</button>' +
+          '</div>';
+      }
+      html += '<div class="line-total"><span>Total Qty: ' + (Math.round(q * 100) / 100) + '</span><b>₹' + fmt(amt) + '</b></div></div>';
+    });
+    if (!mats.length) html = '<div class="empty">🔍 Kuch nahi mila — kuch aur likh kar dekho.</div>';
+    box.innerHTML = html;
+    $('totAmt').textContent = fmt(grand);
+    $('totQty').textContent = 'Qty: ' + (Math.round(grandQty * 100) / 100);
+  }
+
+  function refreshTotals() {
+    var act = S.activities[actKey];
+    if (!act || !act.materials) return;
+    var grand = 0, grandQty = 0;
+    for (var i = 0; i < act.materials.length; i++) {
+      var q = itemQty(actKey, i);
+      grandQty += q; grand += q * num(act.materials[i].rate);
+    }
+    $('totAmt').textContent = fmt(grand);
+    $('totQty').textContent = 'Qty: ' + (Math.round(grandQty * 100) / 100);
+  }
+
+  function refreshCardTotal(input) {
+    var card = input.closest('.card');
+    if (!card) return;
+    var mat = parseInt(input.getAttribute('data-mat'), 10);
+    var q = itemQty(actKey, mat);
+    var act = S.activities[actKey];
+    var rate = act && act.materials[mat] ? num(act.materials[mat].rate) : 0;
+    var lt = card.querySelector('.line-total');
+    if (lt) lt.innerHTML = '<span>Total Qty: ' + (Math.round(q * 100) / 100) + '</span><b>₹' + fmt(q * rate) + '</b>';
+  }
+
+  function setQty(loc, mat, val, input) {
+    ensureMatrix(actKey);
+    if (val === '' || val === null || val === undefined) {
+      S.activityQuantities[actKey][loc][mat] = '';
+    } else {
+      var n = parseFloat(val);
+      if (isNaN(n) || n < 0) return;
+      S.activityQuantities[actKey][loc][mat] = n;
+    }
+    saveLocal(); scheduleSync();
+    refreshTotals();
+    if (input) refreshCardTotal(input);
+  }
+
+  // Events (delegation — tez + simple)
+  $('cards').addEventListener('click', function (e) {
+    var b = e.target.closest('.step-btn');
+    if (!b || b.disabled) return;
+    var loc = parseInt(b.getAttribute('data-loc'), 10);
+    var mat = parseInt(b.getAttribute('data-mat'), 10);
+    var card = b.closest('.card');
+    var input = card ? card.querySelector('input[data-loc="' + loc + '"][data-mat="' + mat + '"]') : null;
+    var cur = num(input ? input.value : 0);
+    var nv = b.getAttribute('data-a') === 'inc' ? cur + 1 : cur - 1;
+    if (nv < 0) nv = 0;
+    nv = Math.round(nv * 100) / 100;
+    if (input) input.value = nv;
+    setQty(loc, mat, nv, input);
+  });
+
+  $('cards').addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('qty-box') || t.disabled) return;
+    var loc = parseInt(t.getAttribute('data-loc'), 10);
+    var mat = parseInt(t.getAttribute('data-mat'), 10);
+    setQty(loc, mat, t.value, t);
+  });
+
+  $('actSel').addEventListener('change', function (e) {
+    actKey = e.target.value;
+    renderCards(renderLock(false));
+  });
+
+  var searchH = null;
+  $('search').addEventListener('input', function (e) {
+    clearTimeout(searchH);
+    searchH = setTimeout(function () {
+      searchQ = e.target.value.trim();
+      renderCards(renderLock(false));
+    }, 250);
+  });
+
+  $('btnSave').addEventListener('click', function () {
+    saveLocal();
+    toast('💾 Save ho gaya');
+    syncNow();
+  });
+  $('btnRefresh').addEventListener('click', function () { loadState(); toast('🔄 Naya data la rahe hain...'); });
+  $('deskLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    try { localStorage.setItem('billing_pref_desktop', '1'); } catch (x) {}
+    location.href = '/index.html?view=desktop';
+  });
+
+  document.addEventListener('DOMContentLoaded', loadState);
+  loadState();
+})();
+</script>
+</body>
+</html>

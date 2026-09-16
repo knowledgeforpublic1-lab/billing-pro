@@ -14,6 +14,8 @@ app.use(apiApp);
 // Sirf index.html serve karo; sensitive extensions/data files hard-block.
 app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.status(403).send('Forbidden'));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// Alag mobile page — desktop index.html ko haath lagaye bina
+app.get(['/mobile', '/mobile.html'], (req, res) => res.sendFile(path.join(__dirname, 'mobile.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Billing Pro local: http://localhost:${PORT}`));
