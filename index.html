@@ -1029,6 +1029,13 @@
                         {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
                     </button>
                 </div>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 160px; flex: unset;">
+                    <label>Activity (wahi dikhegi)</label>
+                    <select v-model="reverseActKey" class="filter-select" title="Jo activity chunoge, table me sirf wahi dikhegi">
+                        <option value="ALL">Sab activity</option>
+                        <option v-for="k in pivotReconciliationData.columns" :key="'ra_'+k" :value="k">{{ k }}</option>
+                    </select>
+                </div>
                 <div class="filter-col" v-if="reverseEntry" style="min-width: 220px; flex: unset;">
                     <label>Material Filter (likho + chuno)</label>
                     <input v-model="reverseMatSearch" list="revMatList" class="filter-select" placeholder="🔍 All Material — naam/code likho..." @change="onReverseMatPick" title="Naam ya code likho — list me se chuno, ya Enter dabao (text search)">
@@ -11722,6 +11729,7 @@
                     selectedLocationIdx: 'ALL',
                     // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
                     reverseEntry: false,
+                    reverseActKey: 'ALL',
                     reverseMatFilter: 'ALL',
                     reverseMatSearch: '',
                     reverseNewLocName: '',
@@ -11978,7 +11986,12 @@
                     if (!this.reverseEntry) return [];
                     const out = [];
                     const self = this;
-                    this.pivotReconciliationData.columns.forEach(actKey => {
+                    let keys = this.pivotReconciliationData.columns;
+                    // Jo activity chuni, wahi dikhegi (ALL = sab)
+                    if (this.reverseActKey && this.reverseActKey !== 'ALL') {
+                        keys = keys.filter(k => k === this.reverseActKey);
+                    }
+                    keys.forEach(actKey => {
                         self.visibleLocIdxList(actKey).forEach(locIdx => {
                             out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
                         });
