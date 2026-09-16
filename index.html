@@ -260,17 +260,17 @@
                                     <th style="width: 82px;" class="text-center" rowspan="2">SAP Item Code</th>
                                     <th style="width: 44px;" class="text-center" rowspan="2">Unit</th>
 
-                                    <th v-for="lp in visibleDetailLocs" :key="lp.idx"
+                                    <th v-for="(loc, locIdx) in locations" :key="locIdx"
                                         class="th-location text-center">
                                         <div class="loc-header-box">
                                             <div
                                                 style="display: flex; width: 100%; gap: 4px; align-items: center; justify-content: center;">
-                                                <input type="text" v-model="lp.loc.name" class="loc-header-input"
+                                                <input type="text" v-model="loc.name" class="loc-header-input"
                                                     placeholder="Location Name" @focus="$event.target.select()"
                                                     @change="saveToStorage">
-                                                <button v-if="visibleDetailLocs.length > 1" class="btn-danger"
+                                                <button v-if="locations.length > 1" class="btn-danger"
                                                     style="padding: 2px 5px; font-size: 0.7rem; border-radius: 4px;"
-                                                    @click="removeLocation(lp.idx)" title="Remove Location">✕</button>
+                                                    @click="removeLocation(locIdx)" title="Remove Location">✕</button>
                                             </div>
                                         </div>
                                     </th>
@@ -309,15 +309,15 @@
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
                                             @change="saveToStorage">
                                     </td>
-                                    <td v-for="lp in visibleDetailLocs" :key="lp.idx" class="text-right">
+                                    <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
                                         <input type="number" inputmode="decimal" step="any" min="0"
-                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][lp.idx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][lp.idx][item.origIndex]"
-                                            class="qty-input" :data-row="itemIdx" :data-loc="lp.idx" placeholder="0"
+                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
+                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
+                                            class="qty-input" :data-row="itemIdx" :data-loc="locIdx" placeholder="0"
                                             @focus="$event.target.select()"
-                                            @keydown.enter.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'down')"
-                                            @keydown.down.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'down')"
-                                            @keydown.up.prevent="handleGridKeyNav($event, itemIdx, lp.idx, 'up')"
+                                            @keydown.enter.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
+                                            @keydown.down.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
+                                            @keydown.up.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'up')"
                                             @input="saveToStorage" @change="saveToStorage">
                                         <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
@@ -335,7 +335,7 @@
 
                                 <!-- Extra Items Heading -->
                                 <tr v-if="extraMaterials.length > 0">
-                                    <td :colspan="5 + visibleDetailLocs.length" style="background: linear-gradient(90deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%); padding: 6px 12px; border-top: 2px solid var(--accent-indigo); border-bottom: 2px solid var(--accent-indigo);">
+                                    <td :colspan="5 + locations.length" style="background: linear-gradient(90deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%); padding: 6px 12px; border-top: 2px solid var(--accent-indigo); border-bottom: 2px solid var(--accent-indigo);">
                                         <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-indigo);">✏️ Extra Items</span>
                                         <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 8px;">({{ extraMaterials.length }} items added separately)</span>
                                     </td>
@@ -363,10 +363,10 @@
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
                                             @change="saveToStorage">
                                     </td>
-                                    <td v-for="lp in visibleDetailLocs" :key="lp.idx" class="text-right">
+                                    <td v-for="(loc, locIdx) in locations" :key="locIdx" class="text-right">
                                         <input type="number" inputmode="decimal" step="any" min="0"
-                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][lp.idx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][lp.idx][item.origIndex]"
+                                            v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
+                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" placeholder="0"
                                             @focus="$event.target.select()"
                                             @input="saveToStorage" @change="saveToStorage">
@@ -386,7 +386,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th :colspan="4 + visibleDetailLocs.length + 1" class="text-right">ACTIVITY TOTAL</th>
+                                    <th :colspan="4 + locations.length + 1" class="text-right">ACTIVITY TOTAL</th>
                                     <th class="text-right font-mono">{{ formatCurrency(activeTotals.amt100) }}</th>
                                     <th class="text-right font-mono" style="color: var(--accent-green)">{{
                                         formatCurrency(activeTotals.amtStage1) }}</th>
@@ -1029,36 +1029,16 @@
                         {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
                     </button>
                 </div>
-                <div class="filter-col" v-if="reverseEntry" style="min-width: 160px; flex: unset;">
-                    <label>Activity (wahi dikhegi)</label>
-                    <select v-model="reverseActKey" class="filter-select" title="Jo activity chunoge, table me sirf wahi dikhegi">
-                        <option value="ALL">Sab activity</option>
-                        <option v-for="k in pivotReconciliationData.columns" :key="'ra_'+k" :value="k">{{ k }}</option>
+                <div class="filter-col" v-if="reverseEntry" style="min-width: 180px; flex: unset;">
+                    <label>Khali row ki qty jayegi (Location)</label>
+                    <select v-model.number="reverseLocIdx" class="filter-select" title="Jis item/location me pehle se kuch nahi hai, uski entry is location me jayegi">
+                        <option v-for="(loc, i) in locations" :key="i" :value="i">{{ loc.name }}</option>
                     </select>
-                </div>
-                <div class="filter-col" v-if="reverseEntry" style="min-width: 220px; flex: unset;">
-                    <label>Material Filter (likho + chuno)</label>
-                    <input v-model="reverseMatSearch" list="revMatList" class="filter-select" placeholder="🔍 All Material — naam/code likho..." @change="onReverseMatPick" title="Naam ya code likho — list me se chuno, ya Enter dabao (text search)">
-                    <datalist id="revMatList">
-                        <option value="All Material"></option>
-                        <option v-for="r in pivotReconciliationData.rows" :key="'f_'+r.code" :value="'[' + r.code + '] ' + (r.desc || '')"></option>
-                    </datalist>
-                </div>
-                <div class="filter-col" v-if="reverseEntry" style="min-width: 280px;">
-                    <label>Location jodo (naam + activity chuno)</label>
-                    <div style="display: flex; gap: 0.4rem;">
-                        <input v-model="reverseNewLocName" class="filter-select" placeholder="📍 Naam likho..." style="flex: 1; min-width: 0;" :disabled="isFinalized" title="Nayi location ka naam">
-                        <select v-model="reverseNewLocAct" class="filter-select" style="flex: 1; min-width: 0;" :disabled="isFinalized" title="Kis activity me jodni hai?">
-                            <option value="ALL">Sab activity</option>
-                            <option v-for="k in Object.keys(activities).sort((a,b) => parseInt(a)-parseInt(b))" :key="'la_'+k" :value="k">{{ k }}</option>
-                        </select>
-                        <button @click="addReverseLocation" :disabled="isFinalized" class="btn-filter-add" title="Location jodo">＋</button>
-                    </div>
                 </div>
                 <div class="filter-col" style="flex: 1; justify-content: flex-end;">
                     <label>&nbsp;</label>
                     <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                        {{ reverseEntry ? '✏️ Activity × Location column me qty likho — mapping ke hisaab se activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                        {{ reverseEntry ? '✏️ Activity column me qty likho — mapping ke hisaab se activity + invoice update hoga' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
                     </div>
                 </div>
             </div>
@@ -1068,7 +1048,7 @@
                     <table class="billing-table">
                         <thead>
                             <tr>
-                                <th :colspan="5 + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
+                                <th :colspan="5 + pivotReconciliationData.columns.length" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
                                 </th>
                             </tr>
@@ -1078,24 +1058,13 @@
                                 <th style="min-width: 180px;">ITEMS DESCRIPTION</th>
                                 <th style="width: 45px;" class="text-center">UNIT</th>
                                 <th style="width: 60px;" class="text-right">ISSUE</th>
-                                <template v-if="!reverseEntry">
                                 <th v-for="col in pivotReconciliationData.columns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
                                     {{ col }}
                                 </th>
-                                </template>
-                                <template v-else>
-                                <th v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center" style="min-width: 86px; font-size: 0.72rem; padding: 0.25rem 0.2rem; background: rgba(163, 113, 247, 0.12);">
-                                    <div style="font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                        <span>{{ rcol.actKey }}</span>
-                                        <button @click="confirmRemoveReverseLocation(rcol.locIdx)" :disabled="isFinalized" title="Ye location hatao (delete)" style="border: 1px solid var(--accent-red); background: transparent; color: var(--accent-red); border-radius: 4px; font-size: 0.62rem; font-weight: 800; cursor: pointer; padding: 0 4px; line-height: 1.4;">✕</button>
-                                    </div>
-                                    <input :value="locations[rcol.locIdx] ? locations[rcol.locIdx].name : ''" @change="renameReverseLocation(rcol.locIdx, $event.target.value)" :disabled="isFinalized" title="Location ka naam yahin likho" style="width: 100%; margin-top: 2px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-main); border-radius: 4px; padding: 1px 3px; font-size: 0.68rem; text-align: center; outline: none;">
-                                </th>
-                                </template>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, idx) in reconDisplayRows" :key="row.code">
+                            <tr v-for="(row, idx) in pivotReconciliationData.rows" :key="row.code">
                                 <td class="text-center">{{ idx + 1 }}</td>
                                 <td class="text-center font-mono font-bold" style="color: var(--primary);">{{ row.code }}</td>
                                 <td>
@@ -1105,22 +1074,14 @@
                                 <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.08);">
                                     {{ row.totalQty > 0 ? row.totalQty : '' }}
                                 </td>
-                                <template v-if="!reverseEntry">
                                 <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono">
-                                    {{ row.activities[col] > 0 ? row.activities[col] : '' }}
+                                    <span v-if="!reverseEntry">{{ row.activities[col] > 0 ? row.activities[col] : '' }}</span>
+                                    <input v-else type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="row.activities[col] > 0 ? row.activities[col] : ''" placeholder="0" @change="applyReverseEntry(row.code, col, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + col + ' me mapping ke hisaab se bategi'">
                                 </td>
-                                </template>
-                                <template v-else>
-                                <td v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center font-mono">
-                                    <input type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLocValue(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (locations[rcol.locIdx] ? locations[rcol.locIdx].name : '') + ' me jayegi'">
-                                </td>
-                                </template>
                             </tr>
-                            <tr v-if="reconDisplayRows.length === 0">
-                                <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
-                                    <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
-                                    <span v-else-if="reverseMatFilter !== 'ALL' || String(reverseMatSearch || '').trim()">🔍 Is filter me kuch nahi — kuch aur likh kar dekho.</span>
-                                    <span v-else>📭 Abhi koi value nahi — upar material chuno ya 📍 location jodo, tab entry hogi.</span>
+                            <tr v-if="pivotReconciliationData.rows.length === 0">
+                                <td :colspan="5 + pivotReconciliationData.columns.length" class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                                    No SAP Materials mapped with quantities yet.
                                 </td>
                             </tr>
                         </tbody>
@@ -11730,12 +11691,7 @@
                     selectedLocationIdx: 'ALL',
                     // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
                     reverseEntry: false,
-                    reverseActKey: 'ALL',
-                    reverseMatFilter: 'ALL',
-                    reverseMatSearch: '',
-                    reverseNewLocName: '',
-                    reverseNewLocAct: 'ALL',
-                    reverseFreshLocs: [],
+                    reverseLocIdx: 0,
                     mappingActivityFilter: 'ALL',
                     mappingSearchQuery: '',
                     // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
@@ -11936,7 +11892,6 @@
                                 const qMatrix = this.activityQuantities[actKey] || [];
                                 const numLocs = this.locations ? this.locations.length : 3;
                                 for (let locIdx = 0; locIdx < numLocs; locIdx++) {
-                                    if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar location mat gino
                                     const val = (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '')
                                         ? parseFloat(qMatrix[locIdx][mIdx])
                                         : 0;
@@ -11980,52 +11935,8 @@
                         // Reverse entry ON ho to zero wali row bhi dikhao (pehli entry ke liye); OFF = purana behavior
                         .filter(row => this.reverseEntry ? true : row.totalQty > 0)
                         .sort((a, b) => a.code.localeCompare(b.code));
-
+                    
                     return { columns, rows };
-                },
-                // ↩️ Reverse mode: har activity har location ke sath — jaise 907 me 2 location to 907 do baar
-                // Value wala column hi dikhega; naya joda ya material chuna/khoja ho to zero wala bhi (pehli entry ke liye)
-                reverseReconColumns() {
-                    if (!this.reverseEntry) return [];
-                    const self = this;
-                    let keys = this.pivotReconciliationData.columns;
-                    // Jo activity chuni, wahi dikhegi (ALL = sab)
-                    if (this.reverseActKey && this.reverseActKey !== 'ALL') {
-                        keys = keys.filter(k => k === this.reverseActKey);
-                    }
-                    const intent = (this.reverseMatFilter && this.reverseMatFilter !== 'ALL') || String(this.reverseMatSearch || '').trim();
-                    const out = [];
-                    keys.forEach(actKey => {
-                        self.visibleLocIdxList(actKey).forEach(locIdx => {
-                            if (intent) { out.push({ key: actKey + '__' + locIdx, actKey, locIdx }); return; }
-                            if (self.reverseFreshLocs.indexOf(locIdx) > -1) { out.push({ key: actKey + '__' + locIdx, actKey, locIdx }); return; }
-                            const arr = ((self.activityQuantities[actKey] || [])[locIdx]) || [];
-                            const hasVal = arr.some(v => parseFloat(v) > 0);
-                            if (hasVal) out.push({ key: actKey + '__' + locIdx, actKey, locIdx });
-                        });
-                    });
-                    return out;
-                },
-                // ↩️ Reverse mode rows: value wali dikhao; chuni/khoji ho to wahi (zero ho tab bhi)
-                reconDisplayRows() {
-                    const base = this.pivotReconciliationData.rows;
-                    if (!this.reverseEntry) return base;
-                    if (this.reverseMatFilter && this.reverseMatFilter !== 'ALL') {
-                        return base.filter(r => r.code === this.reverseMatFilter);
-                    }
-                    const q = String(this.reverseMatSearch || '').trim().toLowerCase();
-                    if (q) {
-                        return base.filter(r => (r.code && String(r.code).toLowerCase().indexOf(q) > -1) || (r.desc && String(r.desc).toLowerCase().indexOf(q) > -1));
-                    }
-                    return base.filter(r => (Number(r.totalQty) || 0) > 0);
-                },
-                reconColCount() {
-                    return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
-                },
-                // Detail view: chuni activity me dikhne wali locations (global idx ke sath)
-                visibleDetailLocs() {
-                    const self = this;
-                    return this.visibleLocIdxList(this.selectedActivityKey).map(i => ({ loc: self.locations[i], idx: i }));
                 },
                 canUndo() {
                     return this.historyIndex > 0;
@@ -12609,7 +12520,6 @@
                         for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
                             let itemQty = 0;
                             for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
-                                if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar mat gino
                                 if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
                                     const v = parseFloat(qMatrix[locIdx][mIdx]);
                                     if (!isNaN(v)) itemQty += v;
@@ -12635,7 +12545,6 @@
                         for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
                             let itemQty = 0;
                             for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
-                                if (!this.isLocVisible(actKey, locIdx)) continue; // 📍 scope-bahar mat gino
                                 if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
                                     const v = parseFloat(qMatrix[locIdx][mIdx]);
                                     if (!isNaN(v)) itemQty += v;
@@ -12683,7 +12592,6 @@
                     const qMatrix = this.activityQuantities ? this.activityQuantities['907'] : null;
                     if (qMatrix && Array.isArray(qMatrix)) {
                         for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
-                            if (!this.isLocVisible('907', locIdx)) continue; // 📍 scope-bahar mat gino
                             if (qMatrix[locIdx] && qMatrix[locIdx][matIdx] !== undefined && qMatrix[locIdx][matIdx] !== '') {
                                 const val = parseFloat(qMatrix[locIdx][matIdx]);
                                 if (!isNaN(val)) totalAaacRmt += val;
@@ -12765,112 +12673,14 @@
                     this.reverseEntry = !this.reverseEntry;
                     this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
                 },
-                // ↩️ Search box se chunna: [CODE] naam / exact code / All Material / free text
-                onReverseMatPick() {
-                    const txt = String(this.reverseMatSearch || '').trim();
-                    if (!txt || txt.toLowerCase() === 'all material') {
-                        this.reverseMatFilter = 'ALL';
-                        this.reverseMatSearch = '';
-                        return;
-                    }
-                    const rows = this.pivotReconciliationData.rows;
-                    const m = txt.match(/^\[(.+?)\]/);
-                    if (m && rows.some(r => r.code === m[1])) {
-                        this.reverseMatFilter = m[1];
-                        this.reverseMatSearch = '';
-                        return;
-                    }
-                    const exact = rows.find(r => String(r.code).toUpperCase() === txt.toUpperCase());
-                    if (exact) {
-                        this.reverseMatFilter = exact.code;
-                        this.reverseMatSearch = '';
-                        return;
-                    }
-                    // free text — substring search ke liye rakho
-                    this.reverseMatFilter = 'ALL';
-                },
-                // 📍 Location scope — location kis activity me dikhegi (acts khali = sab me, purana data wese hi)
-                isLocVisible(actKey, locIdx) {
-                    const loc = this.locations[locIdx];
-                    if (!loc || !actKey) return true;
-                    if (!loc.acts || !loc.acts.length) return true;
-                    return loc.acts.indexOf(actKey) > -1;
-                },
-                visibleLocIdxList(actKey) {
-                    const out = [];
-                    for (let i = 0; i < this.locations.length; i++) {
-                        if (this.isLocVisible(actKey, i)) out.push(i);
-                    }
-                    // Galti se sab band ho to sab dikhao (total zero hone se bachao)
-                    return out.length ? out : this.locations.map((_, i) => i);
-                },
-                // 📍 Location jodo — naam + activity poochho (ALL = sab me, purana tarika)
-                addReverseLocation() {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    const nm = String(this.reverseNewLocName || '').trim();
-                    if (!nm) { this.showToast('⚠️ Pehle location ka naam likho', '⛔'); return; }
-                    const act = this.reverseNewLocAct || 'ALL';
-                    const newIdx = this.locations.length;
-                    this.locations.push({ name: nm, acts: act === 'ALL' ? [] : [act] });
-                    Object.keys(this.activities).forEach(actKey => {
-                        const matCount = this.activities[actKey].materials.length;
-                        if (!this.activityQuantities[actKey]) {
-                            this.activityQuantities[actKey] = [];
-                        }
-                        this.activityQuantities[actKey].push(new Array(matCount).fill(''));
-                    });
-                    this.reverseNewLocName = '';
-                    if (this.reverseFreshLocs.indexOf(newIdx) === -1) this.reverseFreshLocs.push(newIdx);
-                    this.saveToStorage();
-                    this.showToast(act === 'ALL' ? ('📍 Location judi (sab activity): ' + nm) : ('📍 Location judi (' + act + ' me): ' + nm), '✅');
-                },
-                confirmRemoveReverseLocation(locIdx) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    const nm = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
-                    if (!confirm('Location "' + nm + '" hatana hai?\n\nIski sari qty (sab activity se) hat jayegi.')) return;
-                    this.removeLocation(locIdx);
-                    // Fresh list ke index theek karo (delete se aage wale khisak jate hain)
-                    this.reverseFreshLocs = this.reverseFreshLocs.filter(i => i !== locIdx).map(i => i > locIdx ? i - 1 : i);
-                },
-                renameReverseLocation(locIdx, name) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    const nm = String(name || '').trim();
-                    if (!nm) { this.showToast('⚠️ Naam khali nahi ho sakta', '⛔'); return; }
-                    if (!this.locations[locIdx]) return;
-                    this.locations[locIdx].name = nm;
-                    this.saveToStorage();
-                    this.showToast('📍 Location naam: ' + nm, '✅');
-                },
-                // ↩️ Cell value: is SAP row × (activity × location) me abhi kitni qty hai
-                reconCellLocValue(sapCode, rcol) {
-                    const act = this.activities[rcol.actKey];
-                    if (!act || !act.materials) return 0;
-                    const qMatrix = this.activityQuantities[rcol.actKey] || [];
-                    const locArr = qMatrix[rcol.locIdx] || [];
-                    let total = 0;
-                    act.materials.forEach((m, mIdx) => {
-                        if (!m.sapItems) return;
-                        m.sapItems.forEach(s => {
-                            if (!s.code || s.code !== sapCode) return;
-                            const mq = Number(s.qty);
-                            const factor = isNaN(mq) ? 1 : mq;
-                            if (factor === 0) return;
-                            const raw = locArr[mIdx];
-                            const v = (raw === '' || raw === null || raw === undefined) ? 0 : parseFloat(raw);
-                            if (!isNaN(v)) total += v * factor;
-                        });
-                    });
-                    return Math.round(total * 100) / 100;
-                },
-                // ↩️ Reverse entry: reconciliation cell (sapCode × activity × location) → usi location me wapas likho
-                // Rule: 1 item se juda ho to seedha; kai item ho to us location ke purane anupaat me (sab khali ho to barabar)
-                applyReverseEntryLoc(sapCode, actKey, locIdx, targetVal) {
+                // ↩️ Reverse entry: reconciliation cell (sapCode × activity) → activity quantities me wapas banto
+                // Rule: 1 item se juda ho to seedha; kai item ho to pehle wale anupaat me; location bhi purane ratio me (khali ho to chuni location me)
+                applyReverseEntry(sapCode, actKey, targetVal) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     const t = parseFloat(targetVal);
                     if (isNaN(t) || t < 0) { this.showToast('⚠️ Sahi qty likho (0 ya zyada)', '⛔'); return; }
                     const act = this.activities[actKey];
                     if (!act || !act.materials || !act.materials.length) return;
-                    if (locIdx < 0 || locIdx >= this.locations.length) return;
                     // Is activity me ye SAP code kin item se juda hai (factor 0 = not-required → bahar)
                     const mapped = [];
                     act.materials.forEach((m, mIdx) => {
@@ -12882,42 +12692,59 @@
                         });
                     });
                     if (!mapped.length) { this.showToast('ℹ️ Mapping qty 0 hai — pehle mapping me qty dalo', 'ℹ️'); return; }
+                    const nLoc = this.locations.length;
                     const qMatrix = this.activityQuantities[actKey] || [];
-                    const locArr = qMatrix[locIdx] || [];
-                    // Sirf isi location ke cell dekho — formula ho to ruko
-                    const cur = mapped.map(mp => {
-                        const raw = (locArr[mp.mIdx] !== undefined) ? locArr[mp.mIdx] : '';
-                        if (typeof raw === 'string' && (raw.trim().startsWith('=') || raw.trim().startsWith('+'))) {
-                            return { mp, formula: true, v: 0, contrib: 0 };
+                    const contribs = mapped.map(mp => {
+                        const locVals = [];
+                        let sum = 0;
+                        for (let l = 0; l < nLoc; l++) {
+                            const raw = (qMatrix[l] && qMatrix[l][mp.mIdx] !== undefined) ? qMatrix[l][mp.mIdx] : '';
+                            if (typeof raw === 'string' && (raw.trim().startsWith('=') || raw.trim().startsWith('+'))) {
+                                locVals.push({ formula: true, v: 0 });
+                            } else {
+                                const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
+                                const vv = isNaN(v) ? 0 : v;
+                                locVals.push({ formula: false, v: vv });
+                                sum += vv;
+                            }
                         }
-                        const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
-                        const vv = isNaN(v) ? 0 : v;
-                        return { mp, formula: false, v: vv, contrib: vv * mp.factor };
+                        return { mp, locVals, actQty: sum, contrib: sum * mp.factor };
                     });
-                    if (cur.some(c => c.formula)) {
-                        this.showToast('⚠️ Is cell me formula hai — pehle Activity me formula hatao, phir likho', '⛔');
+                    // Formula wala cell beech me ho to ruko — pehle activity me formula hatao
+                    if (contribs.some(c => c.locVals.some(lv => lv.formula))) {
+                        this.showToast('⚠️ Beech me formula wala cell hai — pehle Activity me formula hatao, phir likho', '⛔');
                         return;
                     }
-                    const totalContrib = cur.reduce((a, c) => a + c.contrib, 0);
+                    const totalContrib = contribs.reduce((a, c) => a + c.contrib, 0);
                     let shares;
                     if (totalContrib > 0) {
-                        shares = cur.map(c => t * (c.contrib / totalContrib));
-                    } else if (cur.length === 1) {
+                        shares = contribs.map(c => t * (c.contrib / totalContrib));
+                    } else if (contribs.length === 1) {
                         shares = [t];
                     } else {
-                        shares = cur.map(() => t / cur.length);
-                        this.showToast('ℹ️ ' + cur.length + ' item me barabar banta (is location me pehle kuch nahi tha)', 'ℹ️');
+                        shares = contribs.map(() => t / contribs.length);
+                        this.showToast('ℹ️ ' + contribs.length + ' item me barabar banta (pehle se kuch nahi tha)', 'ℹ️');
                     }
-                    // Matrix pakka karo (desktop wala init), sirf isi location me likho — baaki location ko haath nahi
+                    // Matrix pakka karo (desktop wala init), phir likho
                     this.initQuantitiesForActivity(actKey);
                     const m2 = this.activityQuantities[actKey];
-                    cur.forEach((c, i) => {
+                    contribs.forEach((c, i) => {
                         const want = shares[i] / c.mp.factor;
-                        m2[locIdx][c.mp.mIdx] = (want === 0) ? '' : (Math.round(want * 100) / 100);
+                        const locSum = c.locVals.reduce((a, lv) => a + lv.v, 0);
+                        if (locSum > 0) {
+                            for (let l = 0; l < nLoc; l++) {
+                                const pv = want * (c.locVals[l].v / locSum);
+                                m2[l][c.mp.mIdx] = (pv === 0) ? '' : (Math.round(pv * 100) / 100);
+                            }
+                        } else {
+                            const li = Math.min(Number(this.reverseLocIdx) || 0, nLoc - 1);
+                            for (let l = 0; l < nLoc; l++) {
+                                m2[l][c.mp.mIdx] = (l === li) ? ((want === 0) ? '' : (Math.round(want * 100) / 100)) : '';
+                            }
+                        }
                     });
                     this.saveToStorage(); // invoice auto-sync isi se judta hai
-                    const locName = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
-                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' / ' + locName + ' (invoice bhi)', '✅');
+                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' update (invoice bhi)', '✅');
                 },
                 onMappingRateChange(item) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
@@ -13503,7 +13330,6 @@
                     if (!qMatrix) return 0;
                     let total = 0;
                     for (let locIdx = 0; locIdx < this.locations.length; locIdx++) {
-                        if (!this.isLocVisible(this.selectedActivityKey, locIdx)) continue; // 📍 scope-bahar mat gino
                         if (qMatrix[locIdx] && qMatrix[locIdx][itemIndex] !== undefined) {
                             const val = parseFloat(qMatrix[locIdx][itemIndex]);
                             if (!isNaN(val)) total += val;
@@ -14608,8 +14434,7 @@
                         pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
-                    const visLocIdx = this.visibleLocIdxList(actKey); // 📍 sirf is activity ki locations
-                    const numLocs = visLocIdx.length;
+                    const numLocs = this.locations.length;
                     const totalCols = 3 + numLocs + 5;
 
                     const locStartCol = 4;
@@ -14703,7 +14528,7 @@
                         if (itemsList.length === 0) return;
 
                         let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                        visLocIdx.forEach(li => headerValues.push(isExtra ? 'Erected Qty.' : this.locations[li].name));
+                        this.locations.forEach(l => headerValues.push(isExtra ? 'Erected Qty.' : l.name));
                         headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
 
                         const rowH = ws.getRow(rowIdx);
@@ -14727,12 +14552,11 @@
                             row.getCell(3).value = mat.unit;
 
                             let itemTotalQty = 0;
-                            for (let li = 0; li < numLocs; li++) {
-                                const locIdx = visLocIdx[li]; // 📍 global row
+                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
                                 const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
                                     ? parseFloat(qMatrix[locIdx][idx])
                                     : 0;
-                                row.getCell(locStartCol + li).value = val;
+                                row.getCell(locStartCol + locIdx).value = val;
                                 if (!isNaN(val)) itemTotalQty += val;
                             }
 
