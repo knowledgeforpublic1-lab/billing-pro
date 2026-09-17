@@ -13908,7 +13908,11 @@
                             if (manual) this.showToast('⏳ Bahut jaldi-jaldi Save dabaya — 1 min ruk kar phir dabao', '⏳');
                             return false;
                         }
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        if (!res.ok) {
+                            let srv = '';
+                            try { const ej = await res.json(); if (ej && ej.error) srv = String(ej.error).slice(0, 140); } catch(e) {}
+                            throw new Error('HTTP ' + res.status + (srv ? ' — ' + srv : ''));
+                        }
                         this.lastSentHash = hash;
                         this.syncStatus = 'synced';
                         try {
@@ -13920,7 +13924,7 @@
                     } catch (err) {
                         this.syncStatus = 'error';
                         console.error('Mongo sync failed (local copy safe hai):', err);
-                        if (manual) this.showToast('⚠️ Offline? Cloud save FAIL — net/server check karo (F12 Console). Local copy safe hai', '⚠️');
+                        if (manual) { const m = String((err && err.message) || 'net/server').slice(0, 150); this.showToast('⚠️ Cloud save FAIL: ' + m + '. Local copy safe hai', '⚠️'); }
                         return false;
                     }
                 },
@@ -14022,7 +14026,10 @@
                           const res = await fetch('/api/billing', {
                               headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
                           });
-                          if (!res.ok) throw new Error('API Error: ' + res.status);
+                          if (!res.ok) {
+                              try { const ej = await res.clone().json().catch(() => null); if (ej && ej.error) setTimeout(() => { try { this.showToast('☁️ Cloud load fail: ' + String(ej.error).slice(0, 140), '⚠️'); } catch(e) {} }, 600); } catch(e) {}
+                              throw new Error('API Error: ' + res.status);
+                          }
                           const json = await res.json();
                           if (json && json.success && json.data) {
                               serverRaw = JSON.stringify(json.data);

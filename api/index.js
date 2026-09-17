@@ -80,6 +80,14 @@ async function connectToDatabase() {
     return client;
 }
 
+// 500 ka exact kaaran client tak pahuchao (password kabhi nahi bhejte — sirf hint)
+function dbErrorHint(err) {
+    const msg = (err && err.message ? err.message : String(err || ''));
+    if (/MONGODB_URI env is not defined/.test(msg)) return 'MONGODB_URI env missing hai — Vercel env vars me dalo + redeploy karo';
+    if (/bad auth|authentication failed/i.test(msg)) return 'MongoDB username/password galat hai — Atlas Database Access me check karo';
+    if (/IP|whitelist|network|timed out|ECONNREFUSED|ENOTFOUND/i.test(msg)) return 'MongoDB tak network nahi pahunch raha — Atlas Network Access me 0.0.0.0/0 allow karo';
+    return 'Database error — Vercel Logs me pura error dekho';
+}
 // Billing State Schema and Model
 const billingStateSchema = new mongoose.Schema({
     dataId: { type: String, default: 'main-billing-state', unique: true },
@@ -100,7 +108,7 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
         res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt });
     } catch (err) {
         console.error('Error fetching data:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch data' });
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });
 
@@ -134,7 +142,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         res.json({ success: true, message: 'Data saved successfully' });
     } catch (err) {
         console.error('Error saving data:', err);
-        res.status(500).json({ success: false, error: 'Failed to save data' });
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });
 
