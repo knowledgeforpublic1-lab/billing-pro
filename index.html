@@ -927,6 +927,7 @@
                             <input type="text" v-model="mappingSearchQuery" placeholder="🔍 Search material / SAP code..." style="padding: 4px 10px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); outline: none; min-width: 200px;">
                         </div>
                         <div class="table-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <span title="Mapping me jo bhi entry/change karoge wo turant MongoDB me save hoga aur wahi default bana rahega" style="font-size: 0.72rem; font-weight: 800; color: #059669; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">🟢 Auto-save ON → MongoDB</span>
                             <button class="btn btn-secondary" @click="toggleMappingLock('rate')" :title="mappingLocks.rate ? 'Rate locked hai — edit ke liye click karke unlock karo' : 'Rate unlocked hai — click karke lock karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-style: solid;" :style="mappingLocks.rate ? '' : 'border-color: var(--accent-amber); color: var(--accent-amber);'">
                                 {{ mappingLocks.rate ? '🔒 Rate' : '🔓 Rate' }}
                             </button>
@@ -12829,6 +12830,7 @@
                     this.mappingLocks[field] = !this.mappingLocks[field];
                     this.persistMappingLocks();
                     this.saveToStorage();
+                    this.scheduleMappingSync();
                     const label = field === 'rate' ? 'Rate' : (field === 'sap' ? 'SAP Item' : 'Qty');
                     this.showToast(this.mappingLocks[field] ? `🔒 ${label} locked — ab fix hai` : `🔓 ${label} unlocked — ab edit kar sakte ho`, '🔒');
                 },
@@ -12836,6 +12838,7 @@
                     this.mappingLocks = { rate: true, sap: true, qty: true };
                     this.persistMappingLocks();
                     this.saveToStorage();
+                    this.scheduleMappingSync();
                     this.showToast('🔒 Sab lock ho gaya — Rate, Item, Qty fix', '🔒');
                 },
                 toggleReverseEntry() {
@@ -13051,7 +13054,8 @@
                     if (isNaN(v) || v < 0) { v = 0; item.rate = 0; }
                     else item.rate = v;
                     this.saveToStorage();
-                    this.showToast(`✅ Rate update: ₹${v}`, '💰');
+                    this.scheduleMappingSync();
+                    this.showToast(`✅ Rate update: ₹${v} — MongoDB me save ho raha hai…`, '💰');
                 },
                 onMappingQtyChange(sItem) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
@@ -13060,6 +13064,7 @@
                     if (isNaN(v) || v < 0) { v = 0; sItem.qty = 0; }
                     else sItem.qty = v;
                     this.saveToStorage();
+                    this.scheduleMappingSync();
                 },
                 onItemCodeManualChange(item) {
                     if (item.itemCode && this.sapMaterialsMaster) {
@@ -13120,6 +13125,7 @@
                         docHeader: '0031006347'
                     });
                     this.saveToStorage();
+                    this.scheduleMappingSync();
                     this.showToast('Added new SAP Material component. Select from dropdown to map.', '➕');
                 },
                 removeSapItemFromActivityMaterial(mat, sIdx) {
@@ -13136,7 +13142,8 @@
                             mat.sapDescription = '';
                         }
                         this.saveToStorage();
-                        this.showToast('SAP item removed from mapping', '🗑️');
+                        this.scheduleMappingSync();
+                        this.showToast('SAP item removed from mapping — MongoDB me save ho raha hai…', '🗑️');
                     }
                 },
                 onSapItemDropdownChange(mat, sItem, event) {
@@ -13161,7 +13168,8 @@
                         mat.sapUom = mat.sapItems[0] ? mat.sapItems[0].uom : mat.unit;
                         mat.docHeader = mat.sapItems[0] ? mat.sapItems[0].docHeader : '0031006347';
                         this.saveToStorage();
-                        this.showToast(`Mapped: [${found.code}] ${found.desc}`, '✅');
+                        this.scheduleMappingSync();
+                        this.showToast(`Mapped: [${found.code}] ${found.desc} — MongoDB me save ho raha hai…`, '✅');
                     } else {
                         this.showToast(`⚠️ SAP code nahi mila: "${newCode}" — dropdown se select karo`, '❌');
                         if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
@@ -13870,6 +13878,14 @@
                     if (this._syncTimer) clearTimeout(this._syncTimer);
                     this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 2500);
                 },
+                // 📦 Mapping auto-save — mapping me jo bhi entry/change ho, sidha MongoDB me save.
+                // Normal 2.5s wait nahi — 800ms me push, jab tak change na ho wahi default bana rahega.
+                scheduleMappingSync() {
+                    if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                    if (this._mappingSyncTimer) clearTimeout(this._mappingSyncTimer);
+                    this.syncStatus = 'syncing';
+                    this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow(); }, 800);
+                },
                 async syncToMongoNow(opts) {
                     const manual = !!(opts && opts.manual);
                     // Conflict lock — dusre PC ka naya data aaya hai, pehle Refresh zaroori.
@@ -13962,12 +13978,14 @@
                 async saveAndSyncNow() {
                     this.saveToStorage();
                     if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                    if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
                     await this.syncToMongoNow({ manual: true });
                 },
                 // Dusre PC par naya mapping dekhne ke liye — cloud se force reload
                 async refreshFromCloud() {
                     try {
                         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                        if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
                         this.showToast('🔄 Cloud se fresh data la raha hu...', '🔄');
                         await this.loadFromStorage();
                         this.showToast('✅ Fresh data load ho gaya', '🔄');

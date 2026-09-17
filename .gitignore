@@ -11,3 +11,6 @@ App_Important_Links_And_Credentials.txt
 *.xls
 contractor_data.json
 *.pdf
+
+.vercel
+.env*
