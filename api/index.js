@@ -131,13 +131,14 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
         }
-        // Optimistic concurrency — stale tab (purana rev) naya cloud data overwrite na kare.
-        // Client har POST me baseRev bhejta hai (GET se mila rev). Purane client me baseRev
-        // nahi hota — unko allow karo (backward compatible), warna purane cached tab toot jayenge.
+        // Optimistic concurrency — stale tab/phone (purana rev) naya cloud data overwrite na kare.
+        // Har client (desktop + mobile) har POST me baseRev bhejta hai (GET se mila rev).
+        // Doc maujood hai aur baseRev missing/galat hai to 409 — koi silent overwrite nahi.
+        // (Sirf pehla save — jab koi doc hi nahi hai — bina baseRev ke allowed hai.)
         const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
             ? Number(req.body.baseRev) : null;
         const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
-        if (baseRev !== null && !isNaN(baseRev) && existing && baseRev !== curRev) {
+        if (existing && (baseRev === null || isNaN(baseRev) || baseRev !== curRev)) {
             return res.status(409).json({
                 success: false,
                 error: 'Conflict: dusre PC/tab ne is beech naya save kiya hai. Pehle Refresh karo, phir apna change dobara karo.',

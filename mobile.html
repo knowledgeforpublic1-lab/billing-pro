@@ -219,6 +219,7 @@
 
   var S = null, actKey = '', searchQ = '', locFilter = 'ALL';
   var syncTimer = null, lastHash = '', dirty = false, pollTimer = null, updatedAt = '';
+  var cloudRev = 0, conflict = false;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -303,6 +304,7 @@
       var k = SAVE_KEYS[i];
       if (S[k] !== undefined) o[k] = S[k];
     }
+    o.savedAt = Date.now();
     return o;
   }
 
@@ -315,33 +317,52 @@
     syncTimer = setTimeout(syncNow, 2000);
   }
 
-  function syncNow() {
+  function syncNow(manual) {
     syncTimer = null;
+    if (conflict) {
+      setSync('error', 'conflict');
+      if (manual) toast('⚠️ Pehle 🔄 dabao — desktop/dusre PC ne naya save kiya hai');
+      return;
+    }
     var json;
-    try { json = JSON.stringify(buildPayload()); } catch (e) { return; }
-    if (json.length > 800 * 1024) { setSync('error', 'too big'); return; }
+    try { var p = buildPayload(); p.baseRev = cloudRev; json = JSON.stringify(p); } catch (e) { return; }
+    if (json.length > 800 * 1024) { setSync('error', 'too big'); if (manual) toast('⚠️ Data bahut bada — sync skipped'); return; }
     var h = 0;
     for (var i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
     var hash = json.length + ':' + h;
-    if (hash === lastHash) { setSync('synced', 'synced'); return; }
+    if (hash === lastHash) { setSync('synced', 'synced'); if (manual) toast('✅ Already synced'); return; }
     setSync('syncing', 'syncing...');
     fetch('/api/billing', { method: 'POST', headers: apiHeaders(true), body: json })
       .then(function (res) {
         if (res.status === 423) {
           lastHash = hash; setSync('local', 'locked');
           renderLock(true); toast('🔒 Bill locked hai');
-          return;
+          return null;
         }
-        if (res.status === 401) { setSync('error', 'key?'); toast('API key chahiye — desktop se set karo'); return; }
+        if (res.status === 401) { setSync('error', 'key?'); toast('API key chahiye — desktop se set karo'); return null; }
+        if (res.status === 409) {
+          lastHash = hash; conflict = true; setSync('error', 'conflict');
+          res.json().then(function (rj) {
+            if (rj && typeof rj.rev === 'number') cloudRev = rj.rev;
+          }).catch(function () {});
+          toast('⚠️ Desktop/dusre PC ne naya save kiya! 🔄 dabao, phir entry dobara karo');
+          return null;
+        }
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (rj) {
+        if (!rj) return;
+        if (typeof rj.rev === 'number') cloudRev = rj.rev;
         lastHash = hash;
-        dirty = false;
+        dirty = false; conflict = false;
         try {
           var t = new Date();
           setSync('synced', ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2));
         } catch (e) { setSync('synced', 'synced'); }
+        if (manual) toast('☁️ Cloud save ho gaya!');
       })
-      .catch(function () { setSync('error', 'offline'); });
+      .catch(function () { setSync('error', 'offline'); if (manual) toast('⚠️ Cloud save FAIL — net check karo'); });
   }
 
   function loadState() {
@@ -353,6 +374,8 @@
       })
       .then(function (j) {
         if (j && j.success && j.data) {
+          if (typeof j.rev === 'number') cloudRev = j.rev;
+          conflict = false;
           applyState(j.data, true);
         } else {
           fromLocal();
@@ -591,6 +614,7 @@
       })
       .then(function (j) {
         if (!j || !j.success || !j.data) return;
+        if (typeof j.rev === 'number') cloudRev = j.rev;
         var raw;
         try { raw = JSON.stringify(j.data); } catch (e) { return; }
         var h = 0;
@@ -655,8 +679,7 @@
 
   $('btnSave').addEventListener('click', function () {
     saveLocal();
-    toast('💾 Save ho gaya');
-    syncNow();
+    syncNow(true);
   });
   $('btnRefresh').addEventListener('click', function () { dirty = false; loadState(); toast('🔄 Naya data la rahe hain...'); });
   $('btnKeySave').addEventListener('click', function () {
