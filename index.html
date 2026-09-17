@@ -13886,6 +13886,20 @@
                     this.syncStatus = 'syncing';
                     this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow(); }, 800);
                 },
+                // 🔁 Reload-revert fix: savedAt/baseRev hatkar stable hash — local vs cloud compare ke liye.
+                // Jo change abhi cloud me nahi gaya (unsynced), wo reload par kabhi nahi harega.
+                stableStateHash(obj) {
+                    try {
+                        const c = Object.assign({}, obj);
+                        delete c.savedAt; delete c.baseRev;
+                        const json = JSON.stringify(c);
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        return json.length + ':' + h;
+                    } catch(e) { return ''; }
+                },
+                getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
+                setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
                 async syncToMongoNow(opts) {
                     const manual = !!(opts && opts.manual);
                     // Conflict lock — dusre PC ka naya data aaya hai, pehle Refresh zaroori.
@@ -13960,6 +13974,7 @@
                         }
                         try { const okj = await res.json(); if (okj && typeof okj.rev === 'number') this.cloudRev = okj.rev; } catch(e) {}
                         this.lastSentHash = hash;
+                        this.setSyncedHash(this.stableStateHash(payload));
                         this.syncStatus = 'synced';
                         try {
                             const t = new Date();
@@ -13981,13 +13996,13 @@
                     if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
                     await this.syncToMongoNow({ manual: true });
                 },
-                // Dusre PC par naya mapping dekhne ke liye — cloud se force reload
+                // Dusre PC ka data chahiye to ye dabao — cloud copy force lega (local unsynced ho to bhi)
                 async refreshFromCloud() {
                     try {
                         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
                         if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
                         this.showToast('🔄 Cloud se fresh data la raha hu...', '🔄');
-                        await this.loadFromStorage();
+                        await this.loadFromStorage({ forceServer: true });
                         this.showToast('✅ Fresh data load ho gaya', '🔄');
                     } catch (e) {
                         console.error('Refresh failed', e);
@@ -14065,7 +14080,8 @@
                         console.error('Save error', e);
                     }
                 },
-                async loadFromStorage() {
+                async loadFromStorage(opts) {
+                      const forceServer = !!(opts && opts.forceServer);
                       let raw = null;
                       let fromMongo = false;
                       // Cloud copy lao (fail ho to null — phir local hi jeetega)
@@ -14091,19 +14107,43 @@
                       } catch (err) {
                           console.error('Failed to load from MongoDB API:', err);
                       }
-                      // Local copy padho — jo NEWER hai wahi jeetega.
-                      // (Pehle cloud hamesha jeetta tha, isliye save ke baad reload par purana data wapas aa jata tha)
+                      // Local copy padho.
+                      // RULE: jo change abhi cloud me nahi gaya (unsynced local), wo reload par
+                      // kabhi nahi harega — chahe server timestamp naya dikhe (wahi revert bug tha).
+                      // Server tabhi jeetega jab us par dusre PC ka NAYA synced data ho.
                       let localRaw = null;
                       try { localRaw = localStorage.getItem('lk_billing_app_state_v10'); } catch(e) {}
                       let localSavedAt = 0;
+                      let localHash = '';
                       if (localRaw) {
-                          try { localSavedAt = Number((JSON.parse(localRaw) || {}).savedAt) || 0; } catch(e) {}
+                          try {
+                              const lp = JSON.parse(localRaw) || {};
+                              localSavedAt = Number(lp.savedAt) || 0;
+                              localHash = this.stableStateHash(lp);
+                          } catch(e) {}
                       }
-                      if (serverRaw && (!localRaw || serverUpdatedAt >= localSavedAt)) {
+                      let serverHash = '';
+                      if (serverRaw) {
+                          try { serverHash = this.stableStateHash(JSON.parse(serverRaw)); } catch(e) {}
+                          if (typeof this._loadedRev === 'number') { /* rev neeche har branch me adopt hoga */ }
+                      }
+                      let syncedHash = this.getSyncedHash();
+                      if (serverHash && !syncedHash) { syncedHash = serverHash; this.setSyncedHash(serverHash); }
+                      const localDirty = !!(localRaw && localHash && serverHash && localHash !== serverHash && localHash !== syncedHash && serverHash === syncedHash);
+                      if (serverRaw && !forceServer && localDirty) {
+                          // Sirf is PC me unsynced change hai, cloud purana hai → LOCAL jeetega + turant push
+                          raw = localRaw;
+                          fromMongo = false;
+                          if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
+                          console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
+                          try { this.showToast('📱 Is PC ka unsaved change mila — cloud me save kar raha hu...', '🔄'); } catch(e) {}
+                          setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
+                      } else if (serverRaw && (forceServer || !localRaw || serverUpdatedAt >= localSavedAt)) {
                           raw = serverRaw;
                           fromMongo = true;
                           if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
                           this.cloudConflict = false;
+                          if (serverHash) this.setSyncedHash(serverHash);
                       } else if (localRaw) {
                           raw = localRaw;
                           fromMongo = false;
