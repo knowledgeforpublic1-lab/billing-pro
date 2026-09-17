@@ -138,6 +138,19 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
             ? Number(req.body.baseRev) : null;
         const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
+        // Khali-state overwrite block — cloud me bhara data hai aur ye push khali aaya
+        // (fresh/default state, corrupt copy) to reject. Koi reset nahi hoga.
+        const incomingActs = (dataToSave.activities && typeof dataToSave.activities === 'object' && !Array.isArray(dataToSave.activities)) ? dataToSave.activities : {};
+        const existingActs = (existing && existing.stateData && existing.stateData.activities && typeof existing.stateData.activities === 'object' && !Array.isArray(existing.stateData.activities)) ? existing.stateData.activities : {};
+        if (existing && Object.keys(existingActs).length > 0 && Object.keys(incomingActs).length === 0) {
+            return res.status(409).json({
+                success: false,
+                error: 'Empty data overwrite blocked — cloud me tumhara purana data safe hai. Pehle Refresh karo.',
+                data: existing.stateData,
+                updatedAt: existing.updatedAt,
+                rev: curRev
+            });
+        }
         if (existing && (baseRev === null || isNaN(baseRev) || baseRev !== curRev)) {
             return res.status(409).json({
                 success: false,

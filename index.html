@@ -13923,15 +13923,18 @@
                             return false;
                         }
                         if (res.status === 409) {
-                            // Stale tab reject hua — server ka naya rev/data apnao, dobara push roko
+                            // Stale/khali push reject hua — server ka naya rev/data apnao, dobara push roko
                             let rj = null;
                             try { rj = await res.json(); } catch(e) {}
                             if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
                             this.lastSentHash = hash;
                             this.cloudConflict = true;
                             this.syncStatus = 'error';
-                            console.warn('Sync 409 conflict: dusre PC/tab ne naya save kiya');
-                            this.showToast('⚠️ Dusre PC ne beech me naya save kiya! 🔄 Refresh dabao, phir apna change dobara karo', '⚠️');
+                            console.warn('Sync 409 conflict: overwrite blocked, cloud data safe hai');
+                            try {
+                                const srvMsg = (rj && rj.error) ? String(rj.error).slice(0, 150) : '';
+                                this.showToast('⚠️ ' + (srvMsg || 'Dusre PC ne beech me naya save kiya! 🔄 Refresh dabao, phir apna change dobara karo'), '⚠️');
+                            } catch(e) {}
                             return false;
                         }
                         if (!res.ok) {
@@ -15136,16 +15139,37 @@
                 window.addEventListener('pagehide', () => { try { this.flushPendingSync(); } catch(e) {} });
                 window.addEventListener('beforeunload', () => { try { this.flushPendingSync(); } catch(e) {} });
                 
-                // ONE-TIME PATCH FOR 907 & 934A MAPPINGS
-                if (!localStorage.getItem('patch_907_934a_applied_v2')) {
-                    if (this.activities['907']) {
-                        this.activities['907'] = JSON.parse(JSON.stringify(defaultActivities['907']));
-                    }
-                    if (this.activities['934A']) {
-                        this.activities['934A'] = JSON.parse(JSON.stringify(defaultActivities['934A']));
-                    }
-                    this.saveToStorage();
-                    localStorage.setItem('patch_907_934a_applied_v2', 'true');
+                // PATCH FOR 907 & 934A MAPPINGS — sirf MISSING cheez bharo.
+                // User ka saved rate/sapItems/qty kabhi overwrite mat karo (pehle replace tha — wahi reset bug tha).
+                if (!localStorage.getItem('patch_907_934a_merge_v3')) {
+                    let patched = false;
+                    ['907', '934A'].forEach(code => {
+                        const def = defaultActivities[code];
+                        if (!def) return;
+                        if (!this.activities[code]) {
+                            this.activities[code] = JSON.parse(JSON.stringify(def));
+                            patched = true;
+                        } else {
+                            if (!this.activities[code].materials) this.activities[code].materials = [];
+                            if (!this.activities[code].title && def.title) { this.activities[code].title = def.title; patched = true; }
+                            (def.materials || []).forEach((defMat, mIdx) => {
+                                const cur = this.activities[code].materials[mIdx];
+                                if (!cur) {
+                                    this.activities[code].materials[mIdx] = JSON.parse(JSON.stringify(defMat));
+                                    patched = true;
+                                } else {
+                                    // Khali field bharo — bhari hui value ko haath mat lagao
+                                    if (!cur.itemCode && defMat.itemCode) { cur.itemCode = defMat.itemCode; patched = true; }
+                                    if (!cur.sapDescription && defMat.sapDescription) { cur.sapDescription = defMat.sapDescription; patched = true; }
+                                    if (!cur.sapUom && defMat.sapUom) { cur.sapUom = defMat.sapUom; patched = true; }
+                                    if (!cur.docHeader && defMat.docHeader) { cur.docHeader = defMat.docHeader; patched = true; }
+                                    if (!cur.sapItems && defMat.sapItems) { cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems)); patched = true; }
+                                }
+                            });
+                        }
+                    });
+                    if (patched) this.saveToStorage();
+                    localStorage.setItem('patch_907_934a_merge_v3', 'true');
                 }
 
                 // Initial history snapshot
