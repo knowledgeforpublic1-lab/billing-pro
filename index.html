@@ -939,8 +939,11 @@
                             <button class="btn btn-secondary" v-if="!mappingLocks.rate || !mappingLocks.sap || !mappingLocks.qty" @click="lockAllMapping()" title="Sabko wapas lock karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 🔒 All
                             </button>
-                            <button class="btn btn-primary" @click="saveToStorage(); showToast('Mapping Sheet saved successfully! 💾', '💾');" title="Save Mapping changes manually">
+                            <button class="btn btn-primary" @click="saveAndSyncNow()" title="Save + turant cloud push (dusre PC par 🔄 Refresh se dikhega)">
                                 💾 Save Mapping
+                            </button>
+                            <button class="btn btn-secondary" @click="refreshFromCloud()" title="Dusre PC ka saved mapping cloud se lao" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                                🔄 Refresh
                             </button>
                         </div>
                     </div>
@@ -13859,7 +13862,8 @@
                     if (this._syncTimer) clearTimeout(this._syncTimer);
                     this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 2500);
                 },
-                async syncToMongoNow() {
+                async syncToMongoNow(opts) {
+                    const manual = !!(opts && opts.manual);
                     try {
                         const payload = this.buildSyncPayload();
                         const json = JSON.stringify(payload);
@@ -13867,13 +13871,17 @@
                         if (json.length > 800 * 1024) {
                             this.syncStatus = 'error';
                             console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
-                            return;
+                            if (manual) this.showToast('⚠️ Data bahut bada hai (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped, local copy safe hai', '⚠️');
+                            return false;
                         }
                         // Simple change-check: same data dobara mat bhejo (hash = length + short checksum)
                         let h = 0;
                         for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
                         const hash = json.length + ':' + h;
-                        if (hash === this.lastSentHash) return;
+                        if (hash === this.lastSentHash) {
+                            if (manual) this.showToast('✅ Already synced — dusre PC par 🔄 Refresh dabao', '☁️');
+                            return true;
+                        }
                         this.syncStatus = 'syncing';
                         const res = await fetch('/api/billing', {
                             method: 'POST',
@@ -13884,7 +13892,19 @@
                             this.lastSentHash = hash;
                             this.syncStatus = 'local';
                             console.info('Mongo: bill locked hai, local copy safe hai');
-                            return;
+                            if (manual) this.showToast('🔒 Bill locked hai — pehle Unlock karo, tabhi dusre PC par jayega', '🔒');
+                            return false;
+                        }
+                        if (res.status === 401) {
+                            this.syncStatus = 'error';
+                            if (manual) this.showToast('🔑 API key galat/missing hai — dusre PC par nahi jayega. Console (F12) me 401 check karo', '🔑');
+                            else console.warn('Sync 401: x-api-key missing/wrong');
+                            return false;
+                        }
+                        if (res.status === 429) {
+                            this.syncStatus = 'error';
+                            if (manual) this.showToast('⏳ Bahut jaldi-jaldi Save dabaya — 1 min ruk kar phir dabao', '⏳');
+                            return false;
                         }
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         this.lastSentHash = hash;
@@ -13893,10 +13913,61 @@
                             const t = new Date();
                             this.lastSyncAt = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
                         } catch(e) {}
+                        if (manual) this.showToast('☁️ Cloud save ho gaya! Dusre PC par 🔄 Refresh dabao', '☁️');
+                        return true;
                     } catch (err) {
                         this.syncStatus = 'error';
                         console.error('Mongo sync failed (local copy safe hai):', err);
+                        if (manual) this.showToast('⚠️ Offline? Cloud save FAIL — net/server check karo (F12 Console). Local copy safe hai', '⚠️');
+                        return false;
                     }
+                },
+                // Manual Save button ke liye — turant cloud push (2.5s wait nahi)
+                async saveAndSyncNow() {
+                    this.saveToStorage();
+                    if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                    await this.syncToMongoNow({ manual: true });
+                },
+                // Dusre PC par naya mapping dekhne ke liye — cloud se force reload
+                async refreshFromCloud() {
+                    try {
+                        if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                        this.showToast('🔄 Cloud se fresh data la raha hu...', '🔄');
+                        await this.loadFromStorage();
+                        this.showToast('✅ Fresh data load ho gaya', '🔄');
+                    } catch (e) {
+                        console.error('Refresh failed', e);
+                        this.showToast('⚠️ Refresh fail — net check karo', '⚠️');
+                    }
+                },
+                flushPendingSync() {
+                    try {
+                        if (this._syncTimer) {
+                            clearTimeout(this._syncTimer);
+                            this._syncTimer = null;
+                        }
+                        const payload = this.buildSyncPayload();
+                        const json = JSON.stringify(payload);
+                        if (json.length > 800 * 1024) return;
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        const hash = json.length + ':' + h;
+                        if (hash === this.lastSentHash) return;
+                        try {
+                            const headers = { 'Content-Type': 'application/json' };
+                            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+                            const blob = new Blob([json], { type: 'application/json' });
+                            if (navigator.sendBeacon) {
+                                // sendBeacon custom headers nahi bhej sakta — key query me fallback
+                                let url = '/api/billing';
+                                try { const k = localStorage.getItem('billing_api_key'); if (k) url += '?api_key=' + encodeURIComponent(k); } catch(e) {}
+                                // Note: server query-key support nahi karta to beacon sirf no-auth setup me kaam karega
+                                navigator.sendBeacon(url, blob);
+                            } else {
+                                fetch('/api/billing', { method: 'POST', headers, body: json, keepalive: true }).catch(() => {});
+                            }
+                        } catch(e) {}
+                    } catch(e) {}
                 },
                 saveToStorage() {
                     try {
@@ -14990,6 +15061,9 @@
             },
             mounted() {
                 this.loadFromStorage();
+                // Tab close/reload par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
+                window.addEventListener('pagehide', () => { try { this.flushPendingSync(); } catch(e) {} });
+                window.addEventListener('beforeunload', () => { try { this.flushPendingSync(); } catch(e) {} });
                 
                 // ONE-TIME PATCH FOR 907 & 934A MAPPINGS
                 if (!localStorage.getItem('patch_907_934a_applied_v2')) {

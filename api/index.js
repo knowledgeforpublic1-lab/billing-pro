@@ -37,7 +37,8 @@ app.use('/api/', apiLimiter);
 function requireApiKey(req, res, next) {
     const expected = (process.env.API_KEY || '').trim();
     if (!expected) return next();
-    const got = (req.header('x-api-key') || '').trim();
+    const got = (req.header('x-api-key') || '').trim()
+        || (req.query && req.query.api_key ? String(req.query.api_key).trim() : '');
     if (got !== expected) {
         return res.status(401).json({ success: false, error: 'Unauthorized: valid x-api-key header required' });
     }
