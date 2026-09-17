@@ -50,7 +50,7 @@ const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'invoiceData', 'mappingLocks'
+    'invoiceData', 'mappingLocks', 'savedAt'
 ]);
 
 function pickAllowedKeys(obj) {
@@ -97,7 +97,7 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
         if (!state) {
             return res.json({ success: true, data: null });
         }
-        res.json({ success: true, data: state.stateData });
+        res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt });
     } catch (err) {
         console.error('Error fetching data:', err);
         res.status(500).json({ success: false, error: 'Failed to fetch data' });

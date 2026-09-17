@@ -13821,7 +13821,8 @@
                             masterAbstractList: this.masterAbstractList,
                             activityQuantities: this.activityQuantities,
                             invoiceData: this.invoiceData,
-                            mappingLocks: this.mappingLocks
+                            mappingLocks: this.mappingLocks,
+                            savedAt: Date.now()
                         };
                         localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
                           try {
@@ -13855,7 +13856,8 @@
                         masterAbstractList: this.masterAbstractList,
                         activityQuantities: this.activityQuantities,
                         invoiceData: this.invoiceData,
-                        mappingLocks: this.mappingLocks
+                        mappingLocks: this.mappingLocks,
+                        savedAt: Date.now()
                     };
                 },
                 scheduleRemoteSync() {
@@ -13997,7 +13999,8 @@
                             masterAbstractList: this.masterAbstractList,
                             activityQuantities: this.activityQuantities,
                             invoiceData: this.invoiceData,
-                            mappingLocks: this.mappingLocks
+                            mappingLocks: this.mappingLocks,
+                            savedAt: Date.now()
                         };
                         localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
                         try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
@@ -14012,6 +14015,9 @@
                 async loadFromStorage() {
                       let raw = null;
                       let fromMongo = false;
+                      // Cloud copy lao (fail ho to null — phir local hi jeetega)
+                      let serverRaw = null;
+                      let serverUpdatedAt = 0;
                       try {
                           const res = await fetch('/api/billing', {
                               headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
@@ -14019,17 +14025,42 @@
                           if (!res.ok) throw new Error('API Error: ' + res.status);
                           const json = await res.json();
                           if (json && json.success && json.data) {
-                              raw = JSON.stringify(json.data);
-                              fromMongo = true;
-                          } else {
-                              raw = localStorage.getItem('lk_billing_app_state_v10');
+                              serverRaw = JSON.stringify(json.data);
+                              try { serverUpdatedAt = json.updatedAt ? new Date(json.updatedAt).getTime() : 0; } catch(e) { serverUpdatedAt = 0; }
+                              if (!serverUpdatedAt && json.data && json.data.savedAt) {
+                                  serverUpdatedAt = Number(json.data.savedAt) || 0;
+                              }
                           }
                       } catch (err) {
                           console.error('Failed to load from MongoDB API:', err);
-                          // Fallback to local storage
-                          raw = localStorage.getItem('lk_billing_app_state_v10');
                       }
-                      this.syncStatus = fromMongo ? 'synced' : 'local';
+                      // Local copy padho — jo NEWER hai wahi jeetega.
+                      // (Pehle cloud hamesha jeetta tha, isliye save ke baad reload par purana data wapas aa jata tha)
+                      let localRaw = null;
+                      try { localRaw = localStorage.getItem('lk_billing_app_state_v10'); } catch(e) {}
+                      let localSavedAt = 0;
+                      if (localRaw) {
+                          try { localSavedAt = Number((JSON.parse(localRaw) || {}).savedAt) || 0; } catch(e) {}
+                      }
+                      if (serverRaw && (!localRaw || serverUpdatedAt >= localSavedAt)) {
+                          raw = serverRaw;
+                          fromMongo = true;
+                      } else if (localRaw) {
+                          raw = localRaw;
+                          fromMongo = false;
+                          if (serverRaw) {
+                              // Is PC ka data cloud se NAYA hai — cloud purana hai, isko push karke fix karo
+                              console.info('Local copy cloud se nayi hai — sync retry schedule hua');
+                              try { this.showToast('📱 Is PC ka data naya hai — cloud sync kar raha hu...', '🔄'); } catch(e) {}
+                              setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 3000);
+                          }
+                      } else if (serverRaw) {
+                          raw = serverRaw;
+                          fromMongo = true;
+                      } else {
+                          try { this.showToast('📭 Cloud aur local dono me data nahi mila', 'ℹ️'); } catch(e) {}
+                      }
+                      this.syncStatus = fromMongo ? 'synced' : (serverRaw ? 'syncing' : 'local');
                       if (fromMongo && raw) {
                           try {
                               let h = 0;
@@ -15059,8 +15090,8 @@
                     this.exportExcelWithExcelJS('all_activities');
                 }
             },
-            mounted() {
-                this.loadFromStorage();
+            async mounted() {
+                await this.loadFromStorage();
                 // Tab close/reload par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
                 window.addEventListener('pagehide', () => { try { this.flushPendingSync(); } catch(e) {} });
                 window.addEventListener('beforeunload', () => { try { this.flushPendingSync(); } catch(e) {} });
