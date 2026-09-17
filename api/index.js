@@ -88,10 +88,12 @@ function dbErrorHint(err) {
     if (/IP|whitelist|network|timed out|ECONNREFUSED|ENOTFOUND/i.test(msg)) return 'MongoDB tak network nahi pahunch raha — Atlas Network Access me 0.0.0.0/0 allow karo';
     return 'Database error — Vercel Logs me pura error dekho';
 }
-// Billing State Schema and Model
+// Billing State Schema and Model (rev = optimistic-concurrency version;
+// purana khula tab naya cloud data overwrite na kar paye)
 const billingStateSchema = new mongoose.Schema({
     dataId: { type: String, default: 'main-billing-state', unique: true },
     stateData: { type: Object, required: true },
+    rev: { type: Number, default: 0 },
     updatedAt: { type: Date, default: Date.now }
 });
 
@@ -105,7 +107,7 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
         if (!state) {
             return res.json({ success: true, data: null });
         }
-        res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt });
+        res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         console.error('Error fetching data:', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
@@ -129,17 +131,34 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
         }
-        
+        // Optimistic concurrency — stale tab (purana rev) naya cloud data overwrite na kare.
+        // Client har POST me baseRev bhejta hai (GET se mila rev). Purane client me baseRev
+        // nahi hota — unko allow karo (backward compatible), warna purane cached tab toot jayenge.
+        const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
+            ? Number(req.body.baseRev) : null;
+        const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
+        if (baseRev !== null && !isNaN(baseRev) && existing && baseRev !== curRev) {
+            return res.status(409).json({
+                success: false,
+                error: 'Conflict: dusre PC/tab ne is beech naya save kiya hai. Pehle Refresh karo, phir apna change dobara karo.',
+                data: existing.stateData,
+                updatedAt: existing.updatedAt,
+                rev: curRev
+            });
+        }
+
+        const nextRev = curRev + 1;
         await BillingState.findOneAndUpdate(
             { dataId: 'main-billing-state' },
-            { 
+            {
                 stateData: dataToSave,
+                rev: nextRev,
                 updatedAt: new Date()
             },
             { upsert: true, new: true }
         );
-        
-        res.json({ success: true, message: 'Data saved successfully' });
+
+        res.json({ success: true, message: 'Data saved successfully', rev: nextRev });
     } catch (err) {
         console.error('Error saving data:', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });

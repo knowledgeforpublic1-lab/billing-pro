@@ -97,7 +97,7 @@
                 <div class="sidebar-footer">
                     <div class="sidebar-autosave">
                         <div class="sidebar-autosave-dot" :style="syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;'))"></div>
-                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : (syncStatus === 'error' ? '⚠️ Offline (local only)' : '💾 Local only')) }}</span>
+                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Offline (local only)' : '💾 Local only'))) }}</span>
                     </div>
                 </div>
                 </aside>
@@ -11774,6 +11774,10 @@
                     syncStatus: 'local',
                     lastSyncAt: '',
                     lastSentHash: '',
+                    // Optimistic concurrency — cloudRev = GET/POST se mila latest rev;
+                    // cloudConflict = stale tab ne push kiya jo reject hua, Refresh zaroori
+                    cloudRev: 0,
+                    cloudConflict: false,
                     sapMaterialsMaster: typeof defaultSapMaterialsMaster !== 'undefined' ? defaultSapMaterialsMaster : [],
                     pctStage1: 85,
                     pctStage2: 10,
@@ -13822,7 +13826,8 @@
                             activityQuantities: this.activityQuantities,
                             invoiceData: this.invoiceData,
                             mappingLocks: this.mappingLocks,
-                            savedAt: Date.now()
+                            savedAt: Date.now(),
+                            baseRev: this.cloudRev
                         };
                         localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
                           try {
@@ -13857,7 +13862,8 @@
                         activityQuantities: this.activityQuantities,
                         invoiceData: this.invoiceData,
                         mappingLocks: this.mappingLocks,
-                        savedAt: Date.now()
+                        savedAt: Date.now(),
+                        baseRev: this.cloudRev
                     };
                 },
                 scheduleRemoteSync() {
@@ -13866,6 +13872,14 @@
                 },
                 async syncToMongoNow(opts) {
                     const manual = !!(opts && opts.manual);
+                    // Conflict lock — dusre PC ka naya data aaya hai, pehle Refresh zaroori.
+                    // (Nahi to purana tab naya cloud data overwrite kar dega — wahi revert bug)
+                    if (this.cloudConflict) {
+                        this.syncStatus = 'error';
+                        if (manual) this.showToast('⚠️ Pehle 🔄 Refresh karo — dusre PC ne naya save kiya hai. Uske baad apna change dobara karo', '⚠️');
+                        else console.warn('Sync blocked: cloudConflict, Refresh pending');
+                        return false;
+                    }
                     try {
                         const payload = this.buildSyncPayload();
                         const json = JSON.stringify(payload);
@@ -13908,11 +13922,24 @@
                             if (manual) this.showToast('⏳ Bahut jaldi-jaldi Save dabaya — 1 min ruk kar phir dabao', '⏳');
                             return false;
                         }
+                        if (res.status === 409) {
+                            // Stale tab reject hua — server ka naya rev/data apnao, dobara push roko
+                            let rj = null;
+                            try { rj = await res.json(); } catch(e) {}
+                            if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
+                            this.lastSentHash = hash;
+                            this.cloudConflict = true;
+                            this.syncStatus = 'error';
+                            console.warn('Sync 409 conflict: dusre PC/tab ne naya save kiya');
+                            this.showToast('⚠️ Dusre PC ne beech me naya save kiya! 🔄 Refresh dabao, phir apna change dobara karo', '⚠️');
+                            return false;
+                        }
                         if (!res.ok) {
                             let srv = '';
                             try { const ej = await res.json(); if (ej && ej.error) srv = String(ej.error).slice(0, 140); } catch(e) {}
                             throw new Error('HTTP ' + res.status + (srv ? ' — ' + srv : ''));
                         }
+                        try { const okj = await res.json(); if (okj && typeof okj.rev === 'number') this.cloudRev = okj.rev; } catch(e) {}
                         this.lastSentHash = hash;
                         this.syncStatus = 'synced';
                         try {
@@ -13948,6 +13975,7 @@
                 },
                 flushPendingSync() {
                     try {
+                        if (this.cloudConflict) return; // conflict me close-flush purana data na chadhaye
                         if (this._syncTimer) {
                             clearTimeout(this._syncTimer);
                             this._syncTimer = null;
@@ -14037,6 +14065,7 @@
                               if (!serverUpdatedAt && json.data && json.data.savedAt) {
                                   serverUpdatedAt = Number(json.data.savedAt) || 0;
                               }
+                              if (typeof json.rev === 'number') this._loadedRev = json.rev;
                           }
                       } catch (err) {
                           console.error('Failed to load from MongoDB API:', err);
@@ -14052,6 +14081,8 @@
                       if (serverRaw && (!localRaw || serverUpdatedAt >= localSavedAt)) {
                           raw = serverRaw;
                           fromMongo = true;
+                          if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
+                          this.cloudConflict = false;
                       } else if (localRaw) {
                           raw = localRaw;
                           fromMongo = false;
@@ -14064,6 +14095,8 @@
                       } else if (serverRaw) {
                           raw = serverRaw;
                           fromMongo = true;
+                          if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
+                          this.cloudConflict = false;
                       } else {
                           try { this.showToast('📭 Cloud aur local dono me data nahi mila', 'ℹ️'); } catch(e) {}
                       }
