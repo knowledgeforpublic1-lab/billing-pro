@@ -14044,17 +14044,21 @@
                 saveToStorage() {
                     if (this._isLoading) return;
                     try {
-                        if (this.invoiceData && this.invoiceData.autoSync) {
-                            this.updateSyncTaxInvoiceFromActivities();
-                        } else if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
-                            const q907 = this.getActivity907InvoiceQty();
-                            if (q907 > 0) {
-                                this.invoiceData.items.forEach(it => {
-                                    if (it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) {
-                                        if (!it.manual) it.qty = q907;
-                                    }
-                                });
+                        try {
+                            if (this.invoiceData && this.invoiceData.autoSync) {
+                                this.updateSyncTaxInvoiceFromActivities();
+                            } else if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
+                                const q907 = this.getActivity907InvoiceQty();
+                                if (q907 > 0) {
+                                    this.invoiceData.items.forEach(it => {
+                                        if (it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) {
+                                            if (!it.manual) it.qty = q907;
+                                        }
+                                    });
+                                }
                             }
+                        } catch (syncErr) {
+                            console.error('Invoice sync error (save still proceeds):', syncErr);
                         }
                         const dataToSave = {
                             isFinalized: this.isFinalized,
