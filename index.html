@@ -11866,7 +11866,18 @@
                         { name: 'Ra-09 Gogaon' },
                         { name: 'Ra-09 Nawegaon' }
                     ],
-                    activities: JSON.parse(JSON.stringify(defaultActivities)),
+                    activities: (function() {
+                        try {
+                            const raw = localStorage.getItem('lk_billing_app_state_v10');
+                            if (raw) {
+                                const parsed = JSON.parse(raw);
+                                if (parsed && parsed.activities && typeof parsed.activities === 'object' && Object.keys(parsed.activities).length > 0) {
+                                    return parsed.activities;
+                                }
+                            }
+                        } catch(e) {}
+                        return JSON.parse(JSON.stringify(defaultActivities));
+                    })(),
                     masterAbstractList: JSON.parse(JSON.stringify(defaultMasterAbstract)),
                     activityQuantities: {},
                     invoiceData: JSON.parse(JSON.stringify(defaultInvoiceData)),
@@ -13076,11 +13087,21 @@
                             item.sapDescription = found.desc;
                             item.sapUom = found.uom;
                             if (found.docHeader) item.docHeader = found.docHeader;
-                            if (item.sapItems && item.sapItems.length > 0) {
+                            if (!item.sapItems) item.sapItems = [];
+                            if (item.sapItems.length > 0) {
                                 item.sapItems[0].code = found.code;
                                 item.sapItems[0].desc = found.desc;
                                 item.sapItems[0].uom = found.uom;
                                 if (found.docHeader) item.sapItems[0].docHeader = found.docHeader;
+                            } else {
+                                item.sapItems.push({
+                                    code: found.code,
+                                    desc: found.desc,
+                                    uom: found.uom,
+                                    qty: 1,
+                                    docHeader: found.docHeader || '0031006347'
+                                });
+                                item.itemCode = found.code;
                             }
                             // Auto-fill rate — collect all rates for this code from ALL activities, pick most frequent
                             const rateMap = {};
@@ -13111,6 +13132,8 @@
                             this.showToast('⚠️ Item code not found in SAP master', '❌');
                         }
                     }
+                    this.saveToStorage();
+                    this.scheduleMappingSync();
                 },
                 addSapItemToActivityMaterial(mat) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
@@ -13743,6 +13766,7 @@
                     }
                 },
                 debouncedSave() {
+                    if (this._isLoading) return;
                     if (this._saveTimer) clearTimeout(this._saveTimer);
                     this._saveTimer = setTimeout(() => {
                         this.saveToStorage();
@@ -14040,6 +14064,7 @@
                     } catch(e) {}
                 },
                 saveToStorage() {
+                    if (this._isLoading) return;
                     try {
                         if (this.invoiceData && this.invoiceData.autoSync) {
                             this.updateSyncTaxInvoiceFromActivities();
@@ -14197,11 +14222,15 @@
                                     } else if (defaultActivities[k] && defaultActivities[k].materials) {
                                         defaultActivities[k].materials.forEach((defMat, mIdx) => {
                                             if (this.activities[k].materials && this.activities[k].materials[mIdx]) {
-                                                if (!this.activities[k].materials[mIdx].itemCode && defMat.itemCode) {
-                                                    this.activities[k].materials[mIdx].itemCode = defMat.itemCode;
-                                                    this.activities[k].materials[mIdx].sapDescription = defMat.sapDescription;
-                                                    this.activities[k].materials[mIdx].sapUom = defMat.sapUom;
-                                                    this.activities[k].materials[mIdx].docHeader = defMat.docHeader;
+                                                const cur = this.activities[k].materials[mIdx];
+                                                if (!cur.itemCode && defMat.itemCode) {
+                                                    cur.itemCode = defMat.itemCode;
+                                                    cur.sapDescription = defMat.sapDescription;
+                                                    cur.sapUom = defMat.sapUom;
+                                                    cur.docHeader = defMat.docHeader;
+                                                }
+                                                if (!cur.sapItems && defMat.sapItems) {
+                                                    cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
                                                 }
                                             }
                                         });
@@ -15192,10 +15221,11 @@
                 }
             },
             async mounted() {
+                this._isLoading = true;
                 await this.loadFromStorage();
                 // Tab close/reload par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
-                window.addEventListener('pagehide', () => { try { this.flushPendingSync(); } catch(e) {} });
-                window.addEventListener('beforeunload', () => { try { this.flushPendingSync(); } catch(e) {} });
+                window.addEventListener('pagehide', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
+                window.addEventListener('beforeunload', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
                 
                 // PATCH FOR 907 & 934A MAPPINGS — sirf MISSING cheez bharo.
                 // User ka saved rate/sapItems/qty kabhi overwrite mat karo (pehle replace tha — wahi reset bug tha).
@@ -15226,10 +15256,11 @@
                             });
                         }
                     });
-                    if (patched) this.saveToStorage();
+                    if (patched) { this._isLoading = false; this.saveToStorage(); }
                     localStorage.setItem('patch_907_934a_merge_v3', 'true');
                 }
 
+                this._isLoading = false;
                 // Initial history snapshot
                 this.takeSnapshot();
 

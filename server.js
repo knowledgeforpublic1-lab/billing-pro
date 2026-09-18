@@ -7,8 +7,15 @@ const apiApp = require('./api/index.js');
 
 const app = express();
 
-// API routes (/api/billing) — helmet/rate-limit/auth api/index.js ke andar
-app.use(apiApp);
+// API routes (/api/billing) — helmet/rate-limit/auth api/index.js ke andar.
+// IMPORTANT: apiApp ko sirf /api/* par chalao. Poore app par lagane se helmet ka
+// CSP (script-src 'self') index.html par bhi lag jata hai aur Vue CDN + inline
+// script block ho jata hai — page raw {{ }} dikhata hai. (Vercel par static
+// helmet ke bina serve hota hai, isliye wahan chalta tha.)
+app.use((req, res, next) => {
+  if (req.path === '/api' || req.path.startsWith('/api/')) return apiApp(req, res, next);
+  next();
+});
 
 // Static frontend — poora folder serve MAT karo (xlsx/json/pdf/env leak hote hain).
 // Sirf index.html serve karo; sensitive extensions/data files hard-block.

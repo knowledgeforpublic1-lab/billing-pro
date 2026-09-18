@@ -125,6 +125,11 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             return res.status(413).json({ success: false, error: 'Payload too large (800KB limit, Mongo me jagah kam hai)' });
         }
         const dataToSave = pickAllowedKeys(req.body || {});
+        // DEBUG: check if sapItems is received for 907
+        if (dataToSave.activities && dataToSave.activities['907'] && dataToSave.activities['907'].materials) {
+             const m = dataToSave.activities['907'].materials[0];
+             console.log("API RECEIVED sapItems length for 907 mat 0:", m.sapItems ? m.sapItems.length : 'missing');
+        }
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
         const existing = await BillingState.findOne({ dataId: 'main-billing-state' });
