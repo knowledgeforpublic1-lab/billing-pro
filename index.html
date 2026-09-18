@@ -13410,12 +13410,27 @@
                         });
                         this.showToast(`Activity ${actKey} added to invoice (${this.formatCurrency(amt85)})!`, '✅');
                     }
+                    this.syncInvoiceLocationNames();
                     this.saveToStorage();
                 },
                 onQuickAddActivitySelect() {
                     if (this.quickSelectedActivityKey) {
                         this.addSpecificActivityToInvoice(this.quickSelectedActivityKey);
                         this.quickSelectedActivityKey = '';
+                    }
+                },
+                syncInvoiceLocationNames() {
+                    const excluded = this.invoiceData.excludedActKeys || [];
+                    const allLocNames = new Set();
+                    this.invoiceData.items.forEach(it => {
+                        if (it.actKey && this.activities[it.actKey] && !excluded.includes(it.actKey)) {
+                            this.getActLocations(it.actKey).forEach(loc => {
+                                if (loc.name && loc.name.trim()) allLocNames.add(loc.name.trim());
+                            });
+                        }
+                    });
+                    if (allLocNames.size > 0) {
+                        this.invoiceData.locationName = [...allLocNames].join(', ');
                     }
                 },
                 // 🧾 Invoice row manual-lock — hath se badli row ko auto-sync overwrite nahi karega
@@ -13513,6 +13528,7 @@
                             }
                         ];
                     }
+                    this.syncInvoiceLocationNames();
                 },
                 addInvoiceItem() {
                     if (this.isFinalized) {
