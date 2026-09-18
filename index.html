@@ -749,9 +749,6 @@
                                     <input type="text" v-model="it.desc" class="inv-input-clean"
                                         placeholder="Activity or Work Description"
                                         style="width: 100%; font-weight: 600;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
-                                    <div v-if="it.locations" style="font-size: 0.72rem; color: var(--primary); font-weight: 600; margin-top: 2px;">
-                                        📍 {{ it.locations }}
-                                    </div>
                                     <div v-if="(it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) && getActivity907AaacTotalRmt() > 0"
                                         style="font-size: 0.72rem; color: var(--primary); font-weight: 600; margin-top: 2px;">
                                         ⚡ AAAC: {{ getActivity907AaacTotalRmt().toLocaleString() }} Rmt ÷ {{ projectMeta.aaacDivisor }} = {{ it.qty }} KM
@@ -13392,7 +13389,6 @@
                     if (existing) {
                         existing.amount = Math.round(amt85 * 100) / 100;
                         existing.unit = uom;
-                        existing.locations = this.getActLocationNames(actKey);
                         if (actKey === '907') {
                             const q907 = this.getActivity907InvoiceQty();
                             if (q907 > 0) existing.qty = q907;
@@ -13410,8 +13406,7 @@
                             desc: `${actKey}: ${actTitle}`,
                             unit: uom,
                             qty: actQty,
-                            amount: Math.round(amt85 * 100) / 100,
-                            locations: this.getActLocationNames(actKey)
+                            amount: Math.round(amt85 * 100) / 100
                         });
                         this.showToast(`Activity ${actKey} added to invoice (${this.formatCurrency(amt85)})!`, '✅');
                     }
@@ -13475,7 +13470,6 @@
                             it.unit = this.getActivityUom(k);
                             it.qty = qtyFor(k);
                             it.amount = Math.round(this.getActivityBilled85Amount(k) * 100) / 100;
-                            it.locations = this.getActLocationNames(k);
                             it.manual = false;
                             newItems.push(it);
                         } else if (k && this.activities[k] && it.manual && !seen.has(k)) {
@@ -13498,7 +13492,6 @@
                                 unit: this.getActivityUom(k),
                                 qty: qtyFor(k),
                                 amount: Math.round(this.getActivityBilled85Amount(k) * 100) / 100,
-                                locations: this.getActLocationNames(k),
                                 manual: false
                             });
                         }
@@ -13616,10 +13609,6 @@
                 getActLocations(actKey) {
                     if (this.activityLocations && this.activityLocations[actKey]) return this.activityLocations[actKey];
                     return this.locations;
-                },
-                getActLocationNames(actKey) {
-                    const locs = this.getActLocations(actKey);
-                    return locs.map(l => l.name).filter(n => n && n.trim()).join(', ');
                 },
                 addLocation() {
                     if (this.isFinalized) {
@@ -14220,13 +14209,6 @@
                             }
                             if (parsed.invoiceData && typeof parsed.invoiceData === 'object') {
                                 this.invoiceData = parsed.invoiceData;
-                                if (this.invoiceData.items && Array.isArray(this.invoiceData.items)) {
-                                    this.invoiceData.items.forEach(it => {
-                                        if (it.actKey && !it.locations) {
-                                            it.locations = this.getActLocationNames(it.actKey);
-                                        }
-                                    });
-                                }
                             }
                             if (parsed.mappingLocks && typeof parsed.mappingLocks === 'object') {
                                 this.mappingLocks = { rate: parsed.mappingLocks.rate !== false, sap: parsed.mappingLocks.sap !== false, qty: parsed.mappingLocks.qty !== false };
@@ -14363,7 +14345,7 @@
                         const row = ws.getRow(curRow);
                         row.getCell(1).value = Number(it.srNo) || it.srNo;
                         row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(2).value = it.locations ? `${it.desc}\n📍 ${it.locations}` : it.desc;
+                        row.getCell(2).value = it.desc;
                         row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
                         row.getCell(3).value = it.unit;
                         row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
@@ -14381,7 +14363,7 @@
                             }
                         }
                         
-                        row.height = it.locations ? 40 : 30;
+                        row.height = 30;
                         curRow++;
                     });
                     const itemsEndRow = curRow - 1;
