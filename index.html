@@ -917,7 +917,7 @@
                 <div class="abstract-card">
                     <div class="table-header-strip">
                         <div class="table-title" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                            <span>📦 Material Mapping Sheet (Select from SAP Dropdown / Add Multiple Items)</span>
+                            <span>📦 Material Mapping</span>
                             <select v-model="mappingActivityFilter" style="padding: 4px 10px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; border: 1.5px solid var(--primary); background: var(--bg-surface); color: var(--text-main); cursor: pointer;">
                                 <option value="ALL">📁 All 11 Activities</option>
                                 <option v-for="(act, key) in activities" :key="key" :value="key">
@@ -927,7 +927,6 @@
                             <input type="text" v-model="mappingSearchQuery" placeholder="🔍 Search material / SAP code..." style="padding: 4px 10px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); outline: none; min-width: 200px;">
                         </div>
                         <div class="table-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <span title="Mapping me jo bhi entry/change karoge wo turant MongoDB me save hoga aur wahi default bana rahega" style="font-size: 0.72rem; font-weight: 800; color: #059669; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">🟢 Auto-save ON → MongoDB</span>
                             <button class="btn btn-secondary" @click="toggleMappingLock('rate')" :title="mappingLocks.rate ? 'Rate locked hai — edit ke liye click karke unlock karo' : 'Rate unlocked hai — click karke lock karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-style: solid;" :style="mappingLocks.rate ? '' : 'border-color: var(--accent-amber); color: var(--accent-amber);'">
                                 {{ mappingLocks.rate ? '🔒 Rate' : '🔓 Rate' }}
                             </button>
@@ -939,9 +938,6 @@
                             </button>
                             <button class="btn btn-secondary" v-if="!mappingLocks.rate || !mappingLocks.sap || !mappingLocks.qty" @click="lockAllMapping()" title="Sabko wapas lock karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 🔒 All
-                            </button>
-                            <button class="btn btn-primary" @click="saveAndSyncNow()" title="Save + turant cloud push (dusre PC par 🔄 Refresh se dikhega)">
-                                💾 Save Mapping
                             </button>
                             <button class="btn btn-secondary" @click="refreshFromCloud()" title="Dusre PC ka saved mapping cloud se lao" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 🔄 Refresh
