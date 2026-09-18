@@ -1032,36 +1032,30 @@
                 <div class="filter-col" style="flex: 1; justify-content: flex-end; order: 3;">
                     <label>&nbsp;</label>
                     <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                        {{ reverseEntry ? '✏️ Sirf invoice wali activity dikhengi — apni location me qty likho, activity + invoice update hoga • 🔩 Bolt nos me likho, activity me kg banega' : '👁️ Purana system — activity me entry karo, ye sheet khud banegi' }}
+                        {{ reverseEntry ? 'Enter qty in your location — activity + invoice will update. 🔩 Bolt: enter in nos, activity converts to kg' : 'Old system — enter in activity, this sheet builds automatically' }}
                     </div>
                 </div>
-                <div v-if="reverseEntry" class="filter-col no-print" style="min-width: 150px; flex: unset; position: relative; order: 2;" v-click-outside="closeReverseAddMenu">
-                    <label>Item</label>
-                    <button @click="showReverseAddMenu = !showReverseAddMenu" :disabled="isFinalized || reverseInvoiceActKeys.length === 0" :title="isFinalized ? 'Bill locked hai' : 'Pehli qty jodo ya naya SAP item — zero wali row chhupi rehti hai'" style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; border: none; background: linear-gradient(135deg, #2563eb, #38bdf8); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3);">
-                        ➕ Item ▾
-                    </button>
-                    <div v-if="showReverseAddMenu" style="position: absolute; top: calc(100% + 6px); right: 0; width: 330px; max-height: 340px; overflow-y: auto; background: var(--bg-card); border: 1.5px solid var(--border-strong); border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 200;">
-                        <div style="padding: 6px 8px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
-                            <input type="text" v-model="reverseAddSearch" placeholder="🔍 code ya naam se khojo..." @focus="$event.target.select()" style="width: 100%; padding: 0.35rem 0.55rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.78rem; outline: none;">
-                        </div>
-                        <div v-for="r in reverseSapMenuList" :key="r.code" @click="pickReverseSap(r.code)" style="padding: 6px 10px; cursor: pointer; font-size: 0.78rem; font-weight: 600; border-bottom: 1px solid var(--border-subtle);">
-                            <div><span class="font-mono" style="color: var(--primary); font-weight: 800;">{{ r.code }}</span> — {{ String(r.desc || '').substring(0, 38) }}
-                                <span style="color: var(--accent-green); font-weight: 800;" v-if="r.total > 0"> • {{ r.total }}</span>
-                                <span style="color: var(--accent-amber);" v-else> • zero</span>
-                            </div>
-                            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 1px;">{{ r.uom }}<span v-if="r.acts.length" style="color: var(--accent-indigo); font-weight: 700;"> → {{ r.acts.join(', ') }}</span><span v-else style="color: var(--accent-amber);"> • invoice me nahi</span></div>
-                        </div>
-                        <div v-if="!reverseSapMenuList.length" style="padding: 1rem; text-align: center; font-size: 0.78rem; color: var(--text-muted);">Kuch nahi mila</div>
-                    </div>
+                <div v-if="reverseEntry" class="filter-col no-print" style="min-width: 280px; flex: unset; order: 2;">
+                    <label>Select Item</label>
+                    <input type="text" list="reconSapItemsList" placeholder="-- All Materials / Select Items --"
+                        :disabled="isFinalized || reverseInvoiceActKeys.length === 0"
+                        @change="onReconItemSelect($event)"
+                        ref="reconItemInput"
+                        style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); width: 100%;">
+                    <datalist id="reconSapItemsList">
+                        <option v-for="r in reverseSapMenuList" :key="r.code" :value="r.code">
+                            {{ r.code }} - {{ String(r.desc || '').substring(0, 50) }} ({{ r.uom }}){{ r.total > 0 ? ' | qty: ' + r.total : '' }}
+                        </option>
+                    </datalist>
                 </div>
             </div>
             <div v-if="reverseEntry && reverseInvoiceActKeys.length === 0" class="filter-bar-card no-print" style="border-color: var(--accent-amber);">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber);">📝 Pehle Tax Invoice me activity add karo — wahi activity yahan dikhegi.</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber);">Add activities to Tax Invoice first — only those will appear here.</div>
             </div>
 
             <!-- ↩️ Dropdown se chuna reconciliation item: activity + location + qty likho (zero row chhupi hai, isliye entry yahin se) -->
             <div v-if="reverseEntry && reverseAddSelCode" class="filter-bar-card no-print" style="border-color: var(--accent-green);">
-                <div v-if="reverseAddExtraMode" style="flex-basis: 100%; font-size: 0.78rem; font-weight: 700; color: var(--accent-green);">✏️ Ye item activity me nahi hai — Activity rate sheet ke <b>Extra Item</b> me judega (rate wahan dalna, qty yahin jayegi)</div>
+                <div v-if="reverseAddExtraMode" style="flex-basis: 100%; font-size: 0.78rem; font-weight: 700; color: var(--accent-green);">This item is not in the activity — it will be added as an <b>Extra Item</b> (set rate in activity sheet, qty goes here)</div>
                 <div class="filter-col" style="min-width: 200px; flex: 2;">
                     <label class="font-mono">{{ reverseAddSelCode }} — {{ reverseSelCodeDesc }}</label>
                     <select v-model="reverseAddAct" class="filter-select" style="width: 100%;">
@@ -1079,7 +1073,7 @@
                     <input type="number" inputmode="decimal" step="any" min="0" v-model.number="reverseAddQty" @keydown.enter="submitReverseSapQty" placeholder="0" class="filter-input" style="width: 100%;">
                 </div>
                 <div class="filter-actions" style="align-self: flex-end;">
-                    <button class="btn-filter-add" @click="submitReverseSapQty">✅ Jodo</button>
+                    <button class="btn-filter-add" @click="submitReverseSapQty">Add</button>
                     <button class="btn-filter-reset" @click="reverseAddSelCode = ''; reverseAddExtraMode = false">✕</button>
                 </div>
             </div>
@@ -1137,8 +1131,8 @@
                             <tr v-if="reconRows.length === 0">
                                 <td :colspan="5 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
                                     <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
-                                    <span v-else-if="!reverseShownCodes.length">📭 Invoice wali activity me koi material mapped nahi — upar ➕ Item ▾ se jodo.</span>
-                                    <span v-else>📭 Abhi koi entry nahi — upar ➕ Item ▾ se pehli qty jodo (zero wali row chhupi rehti hai).</span>
+                                    <span v-else-if="!reverseShownCodes.length">No materials mapped in invoice activities — add items from the dropdown above.</span>
+                                    <span v-else>No entries yet — enter qty in the cells above (zero rows are hidden).</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -12086,13 +12080,7 @@
                 },
                 // ↩️ "➕ Item ▾" dropdown: reconciliation wale SAP material (code + desc), search ke sath
                 reverseSapMenuList() {
-                    const q = String(this.reverseAddSearch || '').trim().toLowerCase();
                     return this.pivotReconciliationData.rows
-                        .filter(r => {
-                            if (!q) return true;
-                            return String(r.code || '').toLowerCase().includes(q) ||
-                                String(r.desc || '').toLowerCase().includes(q);
-                        })
                         .map(r => ({ code: r.code, desc: r.desc, uom: r.uom, total: Math.round((Number(r.totalQty) || 0) * 100) / 100, acts: this.reverseActsForCode(r.code) }))
                         .sort((a, b) => String(a.code).localeCompare(String(b.code)));
                 },
@@ -12528,7 +12516,7 @@
                         if (ifsc) { c.bankIfsc = ifsc; fixed++; }
                         if (nameParts.length > 0) c.bankName = nameParts.join(' ');
                     });
-                    if (fixed > 0) { this.saveToStorage(); this.showToast(`🏦 ${fixed} bank field saaf kiye`, '🏦'); }
+                    if (fixed > 0) { this.saveToStorage(); this.showToast(`🏦 ${fixed} bank fields cleaned`, '🏦'); }
                 },
                 toggleContractorDropdown() {
                     if (this.isFinalized) return;
@@ -12610,14 +12598,14 @@
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     this.invoiceData.gstManual = true;
                     this.saveToStorage();
-                    this.showToast('✏️ GST type manual lock — ab auto-rule nahi badlega', '✏️');
+                    this.showToast('GST type manual lock — auto-rule won\'t change', '✏️');
                 },
                 toggleGstMode() {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     this.invoiceData.gstManual = !this.invoiceData.gstManual;
                     if (!this.invoiceData.gstManual) this.checkAndApplyAutoGstRule();
                     this.saveToStorage();
-                    this.showToast(this.invoiceData.gstManual ? '✏️ GST manual lock — fix rahega' : '🔄 GST auto mode — GSTIN se set hoga', this.invoiceData.gstManual ? '✏️' : '🔄');
+                    this.showToast(this.invoiceData.gstManual ? 'GST manual lock — fixed' : 'GST auto mode — set from GSTIN', this.invoiceData.gstManual ? '✏️' : '🔄');
                 },
                 showToast(msg, icon = '✅') {
                     const toast = { msg, icon };
@@ -12839,20 +12827,18 @@
                     this.saveToStorage();
                     this.scheduleMappingSync();
                     const label = field === 'rate' ? 'Rate' : (field === 'sap' ? 'SAP Item' : 'Qty');
-                    this.showToast(this.mappingLocks[field] ? `🔒 ${label} locked — ab fix hai` : `🔓 ${label} unlocked — ab edit kar sakte ho`, '🔒');
                 },
                 lockAllMapping() {
                     this.mappingLocks = { rate: true, sap: true, qty: true };
                     this.persistMappingLocks();
                     this.saveToStorage();
                     this.scheduleMappingSync();
-                    this.showToast('🔒 Sab lock ho gaya — Rate, Item, Qty fix', '🔒');
                 },
                 toggleReverseEntry() {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     this.reverseEntry = !this.reverseEntry;
                     try { localStorage.setItem('lk_billing_reverse_entry', this.reverseEntry ? '1' : '0'); } catch(e) {}
-                    this.showToast(this.reverseEntry ? '↩️ Reverse ON — reconciliation se activity me likho' : '👁️ Reverse OFF — purana system (activity se entry)', '↩️');
+                    this.showToast(this.reverseEntry ? 'Reverse ON — enter from reconciliation to activity' : 'Reverse OFF — old system (enter from activity)', '↩️');
                 },
                 // ↩️ Reverse view: ➕ Item ▾ dropdown (reconciliation material) se qty entry
                 closeReverseAddMenu() {
@@ -12873,6 +12859,15 @@
                     });
                     return out;
                 },
+                onReconItemSelect(event) {
+                    const val = event.target.value;
+                    if (!val) return;
+                    const found = this.reverseSapMenuList.find(r => r.code === val);
+                    if (found) {
+                        this.pickReverseSap(found.code);
+                    }
+                    event.target.value = '';
+                },
                 pickReverseSap(sapCode) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     const acts = this.reverseActsForCode(sapCode);
@@ -12880,7 +12875,7 @@
                     this.reverseAddQty = 1;
                     if (!acts.length) {
                         // Item activity me nahi hai → Extra Item mode (activity chun kar jodo)
-                        if (!this.reverseInvoiceActKeys.length) { this.showToast('📝 Pehle Tax Invoice me activity add karo', 'ℹ️'); this.reverseAddSelCode = ''; return; }
+                        if (!this.reverseInvoiceActKeys.length) { this.showToast('Add activity to Tax Invoice first', 'ℹ️'); this.reverseAddSelCode = ''; return; }
                         this.reverseAddExtraMode = true;
                         this.reverseAddAct = this.reverseInvoiceActKeys[0];
                     } else {
@@ -12892,16 +12887,16 @@
                     this.showReverseAddMenu = false;
                 },
                 submitReverseSapQty() {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
+                    if (this.isFinalized) { return; }
                     const code = this.reverseAddSelCode;
                     if (!code) return;
                     const q = Number(this.reverseAddQty);
-                    if (isNaN(q) || q <= 0) { this.showToast('⚠️ Qty 0 se zyada likho', '⛔'); return; }
-                    if (this.reverseAddLoc < 0 || this.reverseAddLoc >= this.locations.length) { this.showToast('⚠️ Location chuno', '⛔'); return; }
+                    if (isNaN(q) || q <= 0) { return; }
+                    if (this.reverseAddLoc < 0 || this.reverseAddLoc >= this.locations.length) { return; }
                     // ✏️ EXTRA MODE: item activity me nahi hai → rate sheet ke Extra Item me jodo
                     if (this.reverseAddExtraMode) {
-                        if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — jodne ke liye Mapping me 🔓 Item dabao', '🔒'); return; }
-                        if (this.reverseInvoiceActKeys.indexOf(this.reverseAddAct) === -1) { this.showToast('⚠️ Activity chuno', '⛔'); return; }
+                        if (this.mappingLocks && this.mappingLocks.sap) { return; }
+                        if (this.reverseInvoiceActKeys.indexOf(this.reverseAddAct) === -1) { return; }
                         const act = this.activities[this.reverseAddAct];
                         if (!act || !act.materials) return;
                         const row = this.pivotReconciliationData.rows.find(x => x.code === code) || {};
@@ -12924,12 +12919,11 @@
                         this.initQuantitiesForActivity(this.reverseAddAct);
                         this.activityQuantities[this.reverseAddAct][this.reverseAddLoc][act.materials.length - 1] = q;
                         this.saveToStorage();
-                        this.showToast('✅ ' + code + ' → Activity ' + this.reverseAddAct + ' ke Extra Item me jud gaya (No. ' + newMat.no + ') — rate activity sheet me dalo', '➕');
                         this.reverseAddSelCode = '';
                         this.reverseAddExtraMode = false;
                         return;
                     }
-                    if (this.reverseActsForCode(code).indexOf(this.reverseAddAct) === -1) { this.showToast('⚠️ Activity chuno', '⛔'); return; }
+                    if (this.reverseActsForCode(code).indexOf(this.reverseAddAct) === -1) { return; }
                     // Qty usi location me likho (row me value aate hi table me dikhegi)
                     this.applyReverseEntryLoc(code, this.reverseAddAct, this.reverseAddLoc, q);
                     this.reverseAddSelCode = '';
@@ -12995,7 +12989,7 @@
                 applyReverseEntryLoc(sapCode, actKey, locIdx, targetVal) {
                     if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
                     const t = parseFloat(targetVal);
-                    if (isNaN(t) || t < 0) { this.showToast('⚠️ Sahi qty likho (0 ya zyada)', '⛔'); return; }
+                    if (isNaN(t) || t < 0) { this.showToast('Enter valid qty (0 or more)', '⛔'); return; }
                     const act = this.activities[actKey];
                     if (!act || !act.materials || !act.materials.length) return;
                     if (locIdx < 0 || locIdx >= this.locations.length) return;
@@ -13013,7 +13007,7 @@
                             }
                         });
                     });
-                    if (!mapped.length) { this.showToast('ℹ️ Mapping qty 0 hai — pehle mapping me qty dalo', 'ℹ️'); return; }
+                    if (!mapped.length) { return; }
                     const qMatrix = this.activityQuantities[actKey] || [];
                     const locArr = qMatrix[locIdx] || [];
                     // Sirf isi location ke cell dekho — formula ho to ruko
@@ -13027,10 +13021,7 @@
                         // 🔩 hissa SAP unit (nos) me naapo taaki baant sahi ho
                         return { mp, formula: false, v: vv, contrib: vv * mp.factor / (mp.w || 1) };
                     });
-                    if (cur.some(c => c.formula)) {
-                        this.showToast('⚠️ Is cell me formula hai — pehle Activity me formula hatao, phir likho', '⛔');
-                        return;
-                    }
+                    if (cur.some(c => c.formula)) { return; }
                     const totalContrib = cur.reduce((a, c) => a + c.contrib, 0);
                     let shares;
                     if (totalContrib > 0) {
@@ -13039,7 +13030,7 @@
                         shares = [t];
                     } else {
                         shares = cur.map(() => t / cur.length);
-                        this.showToast('ℹ️ ' + cur.length + ' item me barabar banta (is location me pehle kuch nahi tha)', 'ℹ️');
+                        this.showToast(`${cur.length} items split equally (no prior data in this location)`, 'ℹ️');
                     }
                     // Matrix pakka karo, sirf isi location me likho — baaki location ko haath nahi
                     this.initQuantitiesForActivity(actKey);
@@ -13052,21 +13043,20 @@
                     });
                     this.saveToStorage(); // invoice auto-sync isi se judta hai
                     const locName = (this.locations[locIdx] && this.locations[locIdx].name) || ('Loc ' + (locIdx + 1));
-                    this.showToast('↩️ ' + sapCode + ' → Activity ' + actKey + ' / ' + locName + (converted ? ' (🔩 kg me gaya)' : '') + ' (invoice bhi)', '✅');
+                    this.showToast(sapCode + ' → Activity ' + actKey + ' / ' + locName + (converted ? ' (converted to kg)' : '') + ' (invoice updated)', '✅');
                 },
                 onMappingRateChange(item) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    if (this.mappingLocks && this.mappingLocks.rate) { this.showToast('🔒 Rate locked hai — edit ke liye 🔓 Rate dabao', '🔒'); return; }
+                    if (this.isFinalized) { return; }
+                    if (this.mappingLocks && this.mappingLocks.rate) { return; }
                     let v = Number(item.rate);
                     if (isNaN(v) || v < 0) { v = 0; item.rate = 0; }
                     else item.rate = v;
                     this.saveToStorage();
                     this.scheduleMappingSync();
-                    this.showToast(`✅ Rate update: ₹${v} — MongoDB me save ho raha hai…`, '💰');
                 },
                 onMappingQtyChange(sItem) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    if (this.mappingLocks && this.mappingLocks.qty) { this.showToast('🔒 Qty locked hai — edit ke liye 🔓 Qty dabao', '🔒'); return; }
+                    if (this.isFinalized) { return; }
+                    if (this.mappingLocks && this.mappingLocks.qty) { return; }
                     let v = Number(sItem.qty);
                     if (isNaN(v) || v < 0) { v = 0; sItem.qty = 0; }
                     else sItem.qty = v;
@@ -13122,20 +13112,15 @@
                             if (bestRate > 0) {
                                 item.rate = bestRate;
                             }
-                            const rateMsg = bestRate > 0 ? ` | Rate: ₹${bestRate}` : ' | Rate: manually enter';
-                            this.showToast(`✅ ${found.code} — ${found.desc} (${found.uom})${rateMsg}`, '📦');
-                        } else {
-                            this.showToast('⚠️ Item code not found in SAP master', '❌');
                         }
                     }
                     this.saveToStorage();
                     this.scheduleMappingSync();
                 },
                 addSapItemToActivityMaterial(mat) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — add ke liye 🔓 Item dabao', '🔒'); return; }
+                    if (this.isFinalized) { return; }
+                    if (this.mappingLocks && this.mappingLocks.sap) { return; }
                     if (!mat.sapItems) mat.sapItems = [];
-                    // Blank row jodo taaki galat material (SAND RIVER) auto-save na ho
                     mat.sapItems.push({
                         code: '',
                         desc: '',
@@ -13145,11 +13130,10 @@
                     });
                     this.saveToStorage();
                     this.scheduleMappingSync();
-                    this.showToast('Added new SAP Material component. Select from dropdown to map.', '➕');
                 },
                 removeSapItemFromActivityMaterial(mat, sIdx) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-                    if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — remove ke liye 🔓 Item dabao', '🔒'); return; }
+                    if (this.isFinalized) { return; }
+                    if (this.mappingLocks && this.mappingLocks.sap) { return; }
                     if (mat.sapItems && mat.sapItems.length > 0) {
                         mat.sapItems.splice(sIdx, 1);
                         if (mat.sapItems.length > 0) {
@@ -13162,12 +13146,11 @@
                         }
                         this.saveToStorage();
                         this.scheduleMappingSync();
-                        this.showToast('SAP item removed from mapping — MongoDB me save ho raha hai…', '🗑️');
                     }
                 },
                 onSapItemDropdownChange(mat, sItem, event) {
-                    if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
-                    if (this.mappingLocks && this.mappingLocks.sap) { this.showToast('🔒 Item locked hai — edit ke liye 🔓 Item dabao', '🔒'); if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
+                    if (this.isFinalized) { if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
+                    if (this.mappingLocks && this.mappingLocks.sap) { if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
                     let rawVal = event ? event.target.value : sItem.code;
                     let newCode = String(rawVal == null ? '' : rawVal).trim();
                     // Extract code if it's in the [CODE] DESC format
@@ -13188,14 +13171,11 @@
                         mat.docHeader = mat.sapItems[0] ? mat.sapItems[0].docHeader : '0031006347';
                         this.saveToStorage();
                         this.scheduleMappingSync();
-                        this.showToast(`Mapped: [${found.code}] ${found.desc} — MongoDB me save ho raha hai…`, '✅');
                     } else {
-                        this.showToast(`⚠️ SAP code nahi mila: "${newCode}" — dropdown se select karo`, '❌');
                         if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
                     }
                 },
                 async exportMaterialMappingExcel() {
-                    this.showToast('Exporting SAP Material Code Mapping Master Excel...', '⏳');
                     const workbook = new ExcelJS.Workbook();
                     workbook.creator = 'Billing Pro Studio';
                     workbook.created = new Date();
@@ -13417,7 +13397,7 @@
                             const q907 = this.getActivity907InvoiceQty();
                             if (q907 > 0) existing.qty = q907;
                         }
-                        this.showToast(`Activity ${actKey} invoice mein already hai! Amount updated: ${this.formatCurrency(existing.amount)}`, '🔄');
+                        this.showToast(`Activity ${actKey} already in invoice! Amount updated: ${this.formatCurrency(existing.amount)}`, '🔄');
                     } else {
                         // Remove initial blank row if it exists
                         if (this.invoiceData.items.length === 1 && !this.invoiceData.items[0].desc && !this.invoiceData.items[0].amount) {
@@ -13432,7 +13412,7 @@
                             qty: actQty,
                             amount: Math.round(amt85 * 100) / 100
                         });
-                        this.showToast(`Activity ${actKey} invoice mein add ho gayi (${this.formatCurrency(amt85)})! 🎉`, '✅');
+                        this.showToast(`Activity ${actKey} added to invoice (${this.formatCurrency(amt85)})!`, '✅');
                     }
                     this.saveToStorage();
                 },
@@ -13452,7 +13432,7 @@
                     if (this.editingInvoiceRow === it) this.editingInvoiceRow = null;
                     if (it && it.actKey && !it.manual) {
                         it.manual = true;
-                        this.showToast('✏️ Row manual ho gayi — auto-sync ab isko overwrite nahi karega', '✏️');
+                        this.showToast('Row set to manual — auto-sync won\'t overwrite', '✏️');
                     }
                     this.saveToStorage();
                 },
@@ -13463,7 +13443,7 @@
                         this.updateSyncTaxInvoiceFromActivities();
                     }
                     this.saveToStorage();
-                    this.showToast(it.manual ? '✏️ Manual lock — ye row fix rahegi' : '🔄 Auto sync on — billing se refresh ho gayi', it.manual ? '✏️' : '🔄');
+                    this.showToast(it.manual ? 'Manual lock — this row is fixed' : 'Auto sync on — refreshed from billing', it.manual ? '✏️' : '🔄');
                 },
                 updateSyncTaxInvoiceFromActivities() {
                     if (!this.invoiceData.autoSync) return;
@@ -13646,7 +13626,7 @@
                         this.activityQuantities[actKey].push(new Array(matCount).fill(''));
                     });
                     this.saveToStorage();
-                    this.showToast(`Added location "${locName}" (sirf ${this.selectedActivityKey} me)`, '📍');
+                    this.showToast(`Added location "${locName}" (only in activity ${this.selectedActivityKey})`, '📍');
                 },
                 // 📍 Location scope toggle: sirf is activity ↔ sab activity
                 toggleLocScope(locIdx) {
@@ -13655,10 +13635,10 @@
                     if (!loc) return;
                     if (!loc.acts || !loc.acts.length) {
                         loc.acts = [this.selectedActivityKey];
-                        this.showToast(`📍 "${loc.name}" ab sirf ${this.selectedActivityKey} me dikhegi`, '📍');
+                        this.showToast(`"${loc.name}" now visible only in activity ${this.selectedActivityKey}`, '📍');
                     } else {
                         loc.acts = [];
-                        this.showToast(`🌍 "${loc.name}" ab sab activity me dikhegi`, '🌍');
+                        this.showToast(`"${loc.name}" now visible in all activities`, '🌍');
                     }
                     this.saveToStorage();
                 },
@@ -13926,7 +13906,7 @@
                     // (Nahi to purana tab naya cloud data overwrite kar dega — wahi revert bug)
                     if (this.cloudConflict) {
                         this.syncStatus = 'error';
-                        if (manual) this.showToast('⚠️ Pehle 🔄 Refresh karo — dusre PC ne naya save kiya hai. Uske baad apna change dobara karo', '⚠️');
+                        if (manual) this.showToast('Refresh first — another PC saved changes. Then redo your changes', '⚠️');
                         else console.warn('Sync blocked: cloudConflict, Refresh pending');
                         return false;
                     }
@@ -13937,7 +13917,7 @@
                         if (json.length > 800 * 1024) {
                             this.syncStatus = 'error';
                             console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
-                            if (manual) this.showToast('⚠️ Data bahut bada hai (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped, local copy safe hai', '⚠️');
+                            if (manual) this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped, local copy safe', '⚠️');
                             return false;
                         }
                         // Simple change-check: same data dobara mat bhejo (hash = length + short checksum)
@@ -13945,7 +13925,7 @@
                         for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
                         const hash = json.length + ':' + h;
                         if (hash === this.lastSentHash) {
-                            if (manual) this.showToast('✅ Already synced — dusre PC par 🔄 Refresh dabao', '☁️');
+                            if (manual) this.showToast('Already synced — Refresh on other PC', '☁️');
                             return true;
                         }
                         this.syncStatus = 'syncing';
@@ -13958,18 +13938,18 @@
                             this.lastSentHash = hash;
                             this.syncStatus = 'local';
                             console.info('Mongo: bill locked hai, local copy safe hai');
-                            if (manual) this.showToast('🔒 Bill locked hai — pehle Unlock karo, tabhi dusre PC par jayega', '🔒');
+                            if (manual) this.showToast('Bill locked — Unlock first to sync', '🔒');
                             return false;
                         }
                         if (res.status === 401) {
                             this.syncStatus = 'error';
-                            if (manual) this.showToast('🔑 API key galat/missing hai — dusre PC par nahi jayega. Console (F12) me 401 check karo', '🔑');
+                            if (manual) this.showToast('API key wrong/missing — won\'t sync. Check 401 in Console (F12)', '🔑');
                             else console.warn('Sync 401: x-api-key missing/wrong');
                             return false;
                         }
                         if (res.status === 429) {
                             this.syncStatus = 'error';
-                            if (manual) this.showToast('⏳ Bahut jaldi-jaldi Save dabaya — 1 min ruk kar phir dabao', '⏳');
+                            if (manual) this.showToast('Save clicked too fast — wait 1 min then retry', '⏳');
                             return false;
                         }
                         if (res.status === 409) {
@@ -13983,7 +13963,7 @@
                             console.warn('Sync 409 conflict: overwrite blocked, cloud data safe hai');
                             try {
                                 const srvMsg = (rj && rj.error) ? String(rj.error).slice(0, 150) : '';
-                                this.showToast('⚠️ ' + (srvMsg || 'Dusre PC ne beech me naya save kiya! 🔄 Refresh dabao, phir apna change dobara karo'), '⚠️');
+                                this.showToast('⚠️ ' + (srvMsg || 'Another PC saved in between! Refresh, then redo your changes'), '⚠️');
                             } catch(e) {}
                             return false;
                         }
@@ -14000,33 +13980,26 @@
                             const t = new Date();
                             this.lastSyncAt = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
                         } catch(e) {}
-                        if (manual) this.showToast('☁️ Cloud save ho gaya! Dusre PC par 🔄 Refresh dabao', '☁️');
+                        if (manual) this.showToast('Cloud saved! Refresh on other PC', '☁️');
                         return true;
                     } catch (err) {
                         this.syncStatus = 'error';
                         console.error('Mongo sync failed (local copy safe hai):', err);
-                        if (manual) { const m = String((err && err.message) || 'net/server').slice(0, 150); this.showToast('⚠️ Cloud save FAIL: ' + m + '. Local copy safe hai', '⚠️'); }
+                        if (manual) { const m = String((err && err.message) || 'net/server').slice(0, 150); this.showToast('Cloud save FAIL: ' + m + '. Local copy safe', '⚠️'); }
                         return false;
                     }
                 },
-                // Manual Save button ke liye — turant cloud push (2.5s wait nahi)
-                async saveAndSyncNow() {
-                    this.saveToStorage();
-                    if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
-                    if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
-                    await this.syncToMongoNow({ manual: true });
-                },
-                // Dusre PC ka data chahiye to ye dabao — cloud copy force lega (local unsynced ho to bhi)
+                // Force cloud refresh
                 async refreshFromCloud() {
                     try {
                         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
                         if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
-                        this.showToast('🔄 Cloud se fresh data la raha hu...', '🔄');
+                        this.showToast('Loading fresh data from cloud...', '🔄');
                         await this.loadFromStorage({ forceServer: true });
-                        this.showToast('✅ Fresh data load ho gaya', '🔄');
+                        this.showToast('Fresh data loaded', '🔄');
                     } catch (e) {
                         console.error('Refresh failed', e);
-                        this.showToast('⚠️ Refresh fail — net check karo', '⚠️');
+                        this.showToast('Refresh failed — check internet', '⚠️');
                     }
                 },
                 flushPendingSync() {
@@ -14157,7 +14130,7 @@
                           fromMongo = false;
                           if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
                           console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
-                          try { this.showToast('📱 Is PC ka unsaved change mila — cloud me save kar raha hu...', '🔄'); } catch(e) {}
+                          try { this.showToast('Unsaved changes found on this PC — saving to cloud...', '🔄'); } catch(e) {}
                           setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
                       } else if (serverRaw && (forceServer || !localRaw || serverUpdatedAt >= localSavedAt)) {
                           raw = serverRaw;
@@ -14171,7 +14144,7 @@
                           if (serverRaw) {
                               // Is PC ka data cloud se NAYA hai — cloud purana hai, isko push karke fix karo
                               console.info('Local copy cloud se nayi hai — sync retry schedule hua');
-                              try { this.showToast('📱 Is PC ka data naya hai — cloud sync kar raha hu...', '🔄'); } catch(e) {}
+                              try { this.showToast('This PC has newer data — syncing to cloud...', '🔄'); } catch(e) {}
                               setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 3000);
                           }
                       } else if (serverRaw) {
@@ -14180,7 +14153,7 @@
                           if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
                           this.cloudConflict = false;
                       } else {
-                          try { this.showToast('📭 Cloud aur local dono me data nahi mila', 'ℹ️'); } catch(e) {}
+                          try { this.showToast('No data found in cloud or local', 'ℹ️'); } catch(e) {}
                       }
                       this.syncStatus = fromMongo ? 'synced' : (serverRaw ? 'syncing' : 'local');
                       if (fromMongo && raw) {
@@ -14633,7 +14606,7 @@
                 async exportTaxInvoiceExcel() {
                     const missing = this.getMissingInvoiceMeta();
                     if (missing.length) {
-                        this.showToast('⚠️ Pehle ye bharo: ' + missing.join(', '), '⛔');
+                        this.showToast('⚠️ Fill these first: ' + missing.join(', '), '⛔');
                         alert('Excel export ruk gaya.\n\nPehle Tax Invoice me ye field haath se bharo:\n• ' + missing.join('\n• '));
                         return;
                     }
