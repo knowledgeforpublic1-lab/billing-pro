@@ -49,7 +49,7 @@ function requireApiKey(req, res, next) {
 const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
-    'locations', 'activities', 'masterAbstractList', 'activityQuantities',
+    'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
     'invoiceData', 'mappingLocks', 'savedAt'
 ]);
 
