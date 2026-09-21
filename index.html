@@ -13846,13 +13846,9 @@
                             baseRev: this.cloudRev
                         };
                         localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
-                          try {
-                              fetch('/api/billing', {
-                                  method: 'POST',
-                                  headers: (() => { const h = { 'Content-Type': 'application/json' }; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })(),
-                                  body: JSON.stringify(dataToSave)
-                              }).catch(err => console.error("API Save Error:", err));
-                          } catch(err) { console.error("Fetch failed", err); }
+                        // Cloud sync tested path se — direct fire-and-forget POST me rev/hash stale reh jata tha,
+                        // agla auto-sync 409 khakar cloudConflict me phas jata tha. scheduleMappingSync rev/hash/conflict sahi handle karta hai.
+                        try { this.scheduleMappingSync(); } catch(e) { console.error("Undo sync schedule failed", e); }
                     } catch (e) {
                         console.error('Failed to apply history state', e);
                     } finally {
