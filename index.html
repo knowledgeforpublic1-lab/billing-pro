@@ -14013,11 +14013,9 @@
                 },
                 flushPendingSync() {
                     try {
-                        if (this.cloudConflict) return; // conflict me close-flush purana data na chadhaye
-                        if (this._syncTimer) {
-                            clearTimeout(this._syncTimer);
-                            this._syncTimer = null;
-                        }
+                        if (this.cloudConflict) return;
+                        if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
+                        if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
                         const payload = this.buildSyncPayload();
                         const json = JSON.stringify(payload);
                         if (json.length > 800 * 1024) return;
@@ -14028,16 +14026,7 @@
                         try {
                             const headers = { 'Content-Type': 'application/json' };
                             try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-                            const blob = new Blob([json], { type: 'application/json' });
-                            if (navigator.sendBeacon) {
-                                // sendBeacon custom headers nahi bhej sakta — key query me fallback
-                                let url = '/api/billing';
-                                try { const k = localStorage.getItem('billing_api_key'); if (k) url += '?api_key=' + encodeURIComponent(k); } catch(e) {}
-                                // Note: server query-key support nahi karta to beacon sirf no-auth setup me kaam karega
-                                navigator.sendBeacon(url, blob);
-                            } else {
-                                fetch('/api/billing', { method: 'POST', headers, body: json, keepalive: true }).catch(() => {});
-                            }
+                            fetch('/api/billing', { method: 'POST', headers, body: json, keepalive: true }).catch(() => {});
                         } catch(e) {}
                     } catch(e) {}
                 },
@@ -15207,9 +15196,15 @@
             async mounted() {
                 this._isLoading = true;
                 await this.loadFromStorage();
-                // Tab close/reload par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
+                // Tab close/reload/switch par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
                 window.addEventListener('pagehide', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
                 window.addEventListener('beforeunload', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'hidden') {
+                        try { this.saveToStorage(); } catch(e) {}
+                        try { this.flushPendingSync(); } catch(e) {}
+                    }
+                });
                 
                 // PATCH FOR 907 & 934A MAPPINGS — sirf MISSING cheez bharo.
                 // User ka saved rate/sapItems/qty kabhi overwrite mat karo (pehle replace tha — wahi reset bug tha).
