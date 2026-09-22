@@ -96,8 +96,8 @@
 
                 <div class="sidebar-footer">
                     <div class="sidebar-autosave">
-                        <div class="sidebar-autosave-dot" :style="syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;'))"></div>
-                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Offline (local only)' : '💾 Local only'))) }}</span>
+                        <div class="sidebar-autosave-dot" :style="(syncStatus === 'error' ? 'animation: pulse 1.5s infinite;' : '') + (syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;')))" :title="syncStatus === 'synced' ? 'Cloud sync OK' : (syncStatus === 'error' ? 'Cloud sync FAIL — changes saved locally' : 'Sync in progress')"></div>
+                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Sync FAIL — local safe' : '💾 Local only'))) }}</span>
                     </div>
                 </div>
                 </aside>
@@ -13907,25 +13907,30 @@
                 setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
                 async syncToMongoNow(opts) {
                     const manual = !!(opts && opts.manual);
-                    // Conflict lock — dusre PC ka naya data aaya hai, pehle Refresh zaroori.
-                    // (Nahi to purana tab naya cloud data overwrite kar dega — wahi revert bug)
                     if (this.cloudConflict) {
-                        this.syncStatus = 'error';
-                        if (manual) this.showToast('Refresh first — another PC saved changes. Then redo your changes', '⚠️');
-                        else console.warn('Sync blocked: cloudConflict, Refresh pending');
-                        return false;
+                        if (manual) {
+                            this.syncStatus = 'error';
+                            this.showToast('Refresh first — another PC saved changes. Then redo your changes', '⚠️');
+                            return false;
+                        }
+                        console.warn('Sync blocked: cloudConflict — auto-recovering by re-fetching server rev');
+                        try {
+                            const rRes = await fetch('/api/billing', {
+                                headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                            });
+                            if (rRes.ok) { const rj = await rRes.json(); if (rj && typeof rj.rev === 'number') { this.cloudRev = rj.rev; this.cloudConflict = false; console.info('Auto-recovered: cloudRev updated to ' + rj.rev); } }
+                            else { this._scheduleSyncRetry(); return false; }
+                        } catch(e) { this._scheduleSyncRetry(); return false; }
                     }
                     try {
                         const payload = this.buildSyncPayload();
                         const json = JSON.stringify(payload);
-                        // ~800KB se bada payload auto-push mat karo — Mongo me kachra / fail se bachao
                         if (json.length > 800 * 1024) {
                             this.syncStatus = 'error';
                             console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
-                            if (manual) this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped, local copy safe', '⚠️');
+                            this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped', '⚠️');
                             return false;
                         }
-                        // Simple change-check: same data dobara mat bhejo (hash = length + short checksum)
                         let h = 0;
                         for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
                         const hash = json.length + ':' + h;
@@ -13948,22 +13953,21 @@
                         }
                         if (res.status === 401) {
                             this.syncStatus = 'error';
-                            if (manual) this.showToast('API key wrong/missing — won\'t sync. Check 401 in Console (F12)', '🔑');
-                            else console.warn('Sync 401: x-api-key missing/wrong');
+                            this.showToast('Cloud sync FAIL: API key wrong/missing — changes saved locally only. Set billing_api_key in localStorage.', '🔑');
+                            this._scheduleSyncRetry();
                             return false;
                         }
                         if (res.status === 429) {
                             this.syncStatus = 'error';
-                            if (manual) this.showToast('Save clicked too fast — wait 1 min then retry', '⏳');
+                            this.showToast('Cloud sync FAIL: Too many saves — wait 1 min', '⏳');
+                            this._scheduleSyncRetry();
                             return false;
                         }
                         if (res.status === 409) {
-                            // Stale/khali push reject hua — server ka naya rev/data apnao, dobara push roko
                             let rj = null;
                             try { rj = await res.json(); } catch(e) {}
                             if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
                             this.lastSentHash = hash;
-                            this.cloudConflict = true;
                             this.syncStatus = 'error';
                             console.warn('Sync 409 conflict: overwrite blocked, cloud data safe hai');
                             try {
@@ -13981,6 +13985,7 @@
                         this.lastSentHash = hash;
                         this.setSyncedHash(this.stableStateHash(payload));
                         this.syncStatus = 'synced';
+                        this._syncRetryCount = 0;
                         try {
                             const t = new Date();
                             this.lastSyncAt = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
@@ -13990,9 +13995,21 @@
                     } catch (err) {
                         this.syncStatus = 'error';
                         console.error('Mongo sync failed (local copy safe hai):', err);
-                        if (manual) { const m = String((err && err.message) || 'net/server').slice(0, 150); this.showToast('Cloud save FAIL: ' + m + '. Local copy safe', '⚠️'); }
+                        const m = String((err && err.message) || 'network/server error').slice(0, 150);
+                        this.showToast('Cloud sync FAIL: ' + m + '. Local copy safe, retrying...', '⚠️');
+                        this._scheduleSyncRetry();
                         return false;
                     }
+                },
+                _syncRetryCount: 0,
+                _syncRetryTimer: null,
+                _scheduleSyncRetry() {
+                    if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
+                    this._syncRetryCount = (this._syncRetryCount || 0) + 1;
+                    if (this._syncRetryCount > 5) { this._syncRetryCount = 0; return; }
+                    const delay = Math.min(3000 * this._syncRetryCount, 30000);
+                    console.info('Sync retry #' + this._syncRetryCount + ' in ' + (delay / 1000) + 's');
+                    this._syncRetryTimer = setTimeout(() => { this._syncRetryTimer = null; this.syncToMongoNow(); }, delay);
                 },
                 // Force cloud refresh
                 async refreshFromCloud() {
@@ -14228,6 +14245,8 @@
                     if (this.invoiceData && this.invoiceData.autoSync) {
                         this.updateSyncTaxInvoiceFromActivities();
                     }
+                    this._syncRetryCount = 0;
+                    if (this._syncRetryTimer) { clearTimeout(this._syncRetryTimer); this._syncRetryTimer = null; }
                 },
                 initDefaultSampleQuantities() {
                     Object.keys(this.activities).forEach(k => {
@@ -15238,6 +15257,24 @@
                 this._isLoading = false;
                 // Initial history snapshot
                 this.takeSnapshot();
+
+                // Periodic heartbeat sync — agar koi change pending hai toh push ho jaye
+                this._heartbeatTimer = setInterval(() => {
+                    if (this._isLoading || this.cloudConflict) return;
+                    if (this.syncStatus === 'syncing') return;
+                    try {
+                        const payload = this.buildSyncPayload();
+                        const json = JSON.stringify(payload);
+                        if (json.length > 800 * 1024) return;
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        const hash = json.length + ':' + h;
+                        if (hash !== this.lastSentHash) {
+                            console.info('Heartbeat: unsynced change detected, triggering sync');
+                            this.syncToMongoNow();
+                        }
+                    } catch(e) {}
+                }, 15000);
 
                 // Prevent mouse scroll wheel from changing numbers in active input while keeping scrolling buttery smooth
                 window.addEventListener('wheel', function (e) {
