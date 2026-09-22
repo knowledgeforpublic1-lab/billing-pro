@@ -97,6 +97,7 @@ window.UtilsModule = {
                         this.initQuantitiesForActivity(actKey);
                     }
                     let pasted = 0;
+                    const flashed = [];
                     for (let r = 0; r < rows.length; r++) {
                         const cells = rows[r].split('\t');
                         const matIdx = startRowIdx + r;
@@ -112,6 +113,7 @@ window.UtilsModule = {
                             if (raw === '' || !isNaN(val)) {
                                 this.activityQuantities[actKey][locIdx][matIdx] = raw === '' ? '' : val;
                                 pasted++;
+                                if (raw !== '') flashed.push([matIdx, locIdx]);
                             }
                         }
                     }
@@ -120,6 +122,15 @@ window.UtilsModule = {
                         this.debouncedSave();
                         const nextRow = Math.min(startRowIdx + rows.length, (act.materials || []).length - 1);
                         this.$nextTick(() => {
+                            flashed.forEach(([fr, fl]) => {
+                                const cell = document.querySelector(`input[data-row="${fr}"][data-loc="${fl}"]`);
+                                if (cell) {
+                                    cell.classList.remove('cell-flash');
+                                    void cell.offsetWidth;
+                                    cell.classList.add('cell-flash');
+                                    setTimeout(() => cell.classList.remove('cell-flash'), 950);
+                                }
+                            });
                             const el = document.querySelector(`input[data-row="${nextRow}"][data-loc="${startLocIdx}"]`);
                             if (el) { el.focus(); el.select(); }
                         });

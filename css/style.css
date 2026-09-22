@@ -1790,6 +1790,65 @@
         body.dark-mode .modal-content { border: 1px solid #484f58; }
         body.dark-mode .firm-card.active-firm { background: rgba(56, 139, 253, 0.12); border-color: #58a6ff; }
 
+        /* ===================== MICRO-ANIMATIONS ===================== */
+        /* Paste flash — Ctrl+V se bhare cells halke hare chamkenge */
+        @keyframes cellFlash {
+            0% { background: rgba(16, 185, 129, 0.45); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.7); }
+            100% { background: transparent; box-shadow: none; }
+        }
+        .cell-flash {
+            animation: cellFlash 0.9s ease-out;
+            border-radius: 4px;
+        }
+        /* Modal pop-in (v-if se khulne par auto-play) */
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.94) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes overlayFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-overlay {
+            animation: overlayFade 0.18s ease-out;
+        }
+        .modal-content {
+            animation: modalPop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+        /* Button dabane par halka press-feel */
+        .btn:active, .btn-filter-reset:active, .btn-filter-add:active, .btn-icon:active {
+            transform: scale(0.94);
+        }
+        /* Input focus glow */
+        .qty-input:focus {
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+        }
+        .editable-cell:focus {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+        }
+        .sap-select-dropdown:focus {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+            outline: none;
+        }
+        /* Sidebar nav item slide */
+        .sidebar-nav-item, .tab-item {
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+        .sidebar-nav-item:active, .tab-item:active {
+            transform: scale(0.96);
+        }
+        /* Row hover lift (billing tables) */
+        .billing-table tbody tr {
+            transition: background 0.15s ease;
+        }
+        /* Motion-sensitivity samman — zaroorat par sab animations band */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
         /* ===================== PRINT STYLES ===================== */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }

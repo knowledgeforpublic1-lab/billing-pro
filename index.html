@@ -185,7 +185,7 @@
                             </div>
 
                             <!-- VIEW 1: DETAILED ACTIVITY BILLING -->
-                            <div v-if="currentView === 'detail'">
+                            <div v-if="currentView === 'detail'" class="animate-fade-in">
                                 <!-- Screenshot Exact Filter Bar -->
                                 <div class="filter-bar-card no-print">
                                     <div class="filter-col" style="flex: 2; min-width: 220px;">
@@ -439,7 +439,7 @@
             </div>
 
             <!-- VIEW 2: MASTER ABSTRACT VIEW (11 ITEMS OVERVIEW) -->
-            <div v-if="currentView === 'abstract'">
+            <div v-if="currentView === 'abstract'" class="animate-fade-in">
                 <!-- Executive Summary Metric Cards -->
                 <div class="no-print"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
@@ -568,7 +568,7 @@
             </div>
 
             <!-- VIEW 3: EXACT TAX INVOICE REPLICA FORMAT -->
-            <div v-if="currentView === 'invoice'">
+            <div v-if="currentView === 'invoice'" class="animate-fade-in">
                 <!-- INVOICE TOOLBAR -->
                 <div class="invoice-toolbar no-print">
                     <div class="inv-tool-item">
@@ -924,7 +924,7 @@
             </div>
         
             <!-- VIEW 4: INTERACTIVE MATERIAL MAPPING VIEW (WITH SEARCHABLE DROPDOWNS & MULTI-ITEM SUPPORT) -->
-            <div v-if="currentView === 'mapping'">
+            <div v-if="currentView === 'mapping'" class="animate-fade-in">
                 <div class="abstract-card">
                     <div class="table-header-strip">
                         <div class="table-title" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
