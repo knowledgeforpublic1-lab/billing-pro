@@ -68,10 +68,6 @@
                         <span class="tab-dot" style="background: #3b82f6;"></span>
                         Activity Billing
                     </button>
-                    <button class="tab-item" :class="{ 'active': currentView === 'abstract' }" @click="switchView('abstract')">
-                        <span class="tab-dot" style="background: #06b6d4;"></span>
-                        Master Abstract
-                    </button>
                     <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
                         <span class="tab-dot" style="background: #6366f1;"></span>
                         SAP Mapping
@@ -85,11 +81,8 @@
                         Master Reconciliation
                     </button>
 
+                    <div class="tabs-divider"></div>
                     <div class="tabs-export-group">
-                        <div class="sync-pill" :title="syncStatus === 'synced' ? 'Cloud sync OK' : (syncStatus === 'error' ? 'Cloud sync FAIL — changes saved locally' : 'Sync in progress')">
-                            <span class="sidebar-autosave-dot" :style="(syncStatus === 'error' ? 'animation: pulse 1.5s infinite;' : '') + (syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;')))"></span>
-                            <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Sync FAIL — local safe' : '💾 Local only'))) }}</span>
-                        </div>
                         <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             📁 Contractor DB
                         </button>
