@@ -280,6 +280,41 @@ js/core/app.js (creates + mounts Vue)
 
 ---
 
+## 12. SESSION UPDATE — Recon portal join + tabs-bar UI overhaul (22 Sep, shaam)
+
+### 12a. Master Reconciliation tab (`4a904d8`)
+- `Reconciliation master/` folder repo me committed (7 files, ~4MB: app.js, data.js/json, index.html, styles.css, upload.php, xlsx lib)
+- Billing tabs bar me 4th... ab 6th tab: iframe me poori recon site, dono ka logic untouched
+- vercel.json: `Reconciliation master/**` static build + 1hr cache header
+- LIMIT: upload.php Vercel par nahi chalega (PHP) — Excel parse client-side OK, save-to-file nahi
+
+### 12b. Left sidebar removed (`95ee666`)
+- Poora `<aside>` DOM se deleted (71 lines)
+- 6 tabs: Tax Invoice, Activity Billing, Master Abstract, SAP Mapping, Reconciliation Sheet, Master Reconciliation
+- Contractor DB button + sync pill tabs bar me shift; Reports=Export All (pehle se tha)
+
+### 12c. Tabs bar cleanup + animations (`b5014a0`, `1a4b175`, `9919906`)
+- Master Abstract tab HATAYA, sync pill HATAYA (status ab sirf toast se)
+- Sliding gradient underline, pulsing active dot, staggered load-in, hover lift, divider
+- Project header bar merge: ⚡ RDSS brand tabs me, 🔔 bell HATAYI, Export All HATAYI, user pill right end me
+- Print button masterrecon view me hidden (iframe print bekaar)
+- Responsive: 1500px/1200px breakpoints
+
+### 12d. Recon portal navbar + dashboard (`0e56de8`, localhost-checked, user-approved before push)
+- Single-line navbar: tabs inline + [Upload] ➖ [Export|Missing Rates]; brand/Refresh/PowerBI buttons HATAYE
+- Discrepancies + Advanced Reports tabs HATAYE (content dormant hai, wapas 1-line me lagega), scrollbar hidden
+- Dashboard: KPI count-up, staggered entrance, accent glow, floating icons, animated charts, ambient bg, compact cards
+- Risk strip banaya tha phir HATAYA (chart me already tha — user: duplicate laga)
+- Recon save ALREADY localStorage me tha (materialAppData + ExtractedAt compare) — Vercel par persist OK
+
+### Open threads update
+- Sec 6 checklist me "Sidebar Synced" purana ho gaya — sync status ab sirf toast me dikhta hai
+- 1220 pole recon issue: user confirm pending (qty? reverse mode?)
+- 19 blank mappings: hath se jodne hain
+- Billing→recon consumption feed, RA snapshot, Drive save: decisions pending
+
+---
+
 ## 5. Sync Flow Summary (current code)
 
 ```

@@ -12,14 +12,6 @@ const pageState = {
     alerts: 1
 };
 
-// Global Refresh Function
-function refreshAppData() {
-    try {
-        localStorage.clear();
-    } catch(e){}
-    window.location.href = window.location.pathname + '?t=' + Date.now();
-}
-
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -1883,81 +1875,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-async function exportForPowerBI() {
-    if (!rawData || !rawData.Contractors) {
-        alert("No data available to export.");
-        return;
-    }
-
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("RawData_PowerBI");
-
-    sheet.columns = [
-        { header: "Contractor Name", key: "cName", width: 30 },
-        { header: "Owner Name", key: "owner", width: 20 },
-        { header: "Contact Numbers", key: "contact", width: 20 },
-        { header: "PAN", key: "pan", width: 15 },
-        { header: "GST", key: "gst", width: 20 },
-        { header: "Work Order No", key: "wo", width: 15 },
-        { header: "Item Code", key: "code", width: 15 },
-        { header: "Item Description", key: "desc", width: 40 },
-        { header: "UOM", key: "uom", width: 10 },
-        { header: "Debit Rate", key: "rate", width: 12 },
-        { header: "Issued Qty", key: "issued", width: 12 },
-        { header: "MRN Qty", key: "mrn", width: 12 },
-        { header: "Net Issue", key: "netIssue", width: 12 },
-        { header: "Total Consumption", key: "cons", width: 15 },
-        { header: "WIP", key: "wip", width: 12 },
-        { header: "Theft", key: "theft", width: 12 },
-        { header: "Balance Qty", key: "balQty", width: 15 },
-        { header: "Total Balance Cost", key: "balCost", width: 20 }
-    ];
-
-    sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3B82F6" } };
-    sheet.getRow(1).font = { color: { argb: "FFFFFFFF" }, bold: true };
-
-    rawData.Contractors.forEach(contractor => {
-        const meta = contractor.Metadata || {};
-        contractor.Items.forEach(item => {
-            sheet.addRow({
-                cName: contractor.ContractorName,
-                owner: meta.OwnerName || "",
-                contact: meta.ContactNumbers || "",
-                pan: meta.PAN || "",
-                gst: meta.GST || "",
-                wo: meta.WONo || "",
-                code: item.ItemCode,
-                desc: item.ItemDescription,
-                uom: item.UOM,
-                rate: item.DebitRate || 0,
-                issued: item.IssuedQty || 0,
-                mrn: item.MRNQty || 0,
-                netIssue: item.NetIssue || 0,
-                cons: item.Consumption || 0,
-                wip: item.WIP || 0,
-                theft: item.Theft || 0,
-                balQty: item.BalanceQty || 0,
-                balCost: item.BalanceCost || 0
-            });
-        });
-    });
-
-    try {
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "PowerBI_RawData_Material_Reconciliation.xlsx";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } catch (err) {
-        console.error("Power BI export error:", err);
-        alert("Failed to export: " + err.message);
-    }
-}
 
 
 // --- MODAL AND PRINT LOGIC ---

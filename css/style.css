@@ -667,97 +667,6 @@
         }
 
         /* LEFT SIDEBAR */
-        .left-sidebar {
-            width: 220px !important;
-            min-width: 220px !important;
-            max-width: 220px !important;
-            flex-shrink: 0 !important;
-            background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
-            color: #8b949e;
-            display: flex !important;
-            flex-direction: column !important;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 50;
-            border-right: 1px solid rgba(255,255,255,0.05);
-        }
-        .sidebar-brand {
-            padding: 1.15rem 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-        }
-        .sidebar-brand-icon {
-            width: 42px; height: 42px;
-            background: linear-gradient(135deg, #2563eb, #38bdf8);
-            border-radius: 11px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; color: white; font-weight: 800; flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(37,99,235,0.35);
-        }
-        .sidebar-brand-text h2 {
-            margin: 0; font-size: 1.08rem; font-weight: 800; color: #e8e6e3; line-height: 1.2;
-        }
-        .sidebar-brand-text p {
-            margin: 2px 0 0; font-size: 0.67rem; color: #475569; font-weight: 500;
-        }
-        .sidebar-nav {
-            flex: 1; padding: 0.6rem 0;
-        }
-        .sidebar-nav-item {
-            display: flex; align-items: center; gap: 0.7rem;
-            padding: 0.55rem 1.1rem;
-            cursor: pointer; font-size: 0.82rem; font-weight: 600;
-            color: #8193ab; transition: all 0.2s ease;
-            border-left: 3px solid transparent; user-select: none;
-        }
-        .sidebar-nav-item:hover {
-            background: rgba(255,255,255,0.04); color: #cbd5e1;
-        }
-        .sidebar-nav-item.active {
-            background: linear-gradient(90deg, rgba(37,99,235,0.18) 0%, rgba(37,99,235,0.05) 100%);
-            color: #60a5fa; border-left-color: #2563eb; font-weight: 700;
-        }
-        .sidebar-nav-item svg {
-            width: 18px; height: 18px; flex-shrink: 0; opacity: 0.6;
-        }
-        .sidebar-nav-item.active svg { opacity: 1; }
-        .sidebar-footer {
-            padding: 0.85rem 1rem;
-            border-top: 1px solid rgba(255,255,255,0.07);
-        }
-        .sidebar-autosave {
-            display: flex; align-items: center; gap: 0.45rem;
-            padding: 0.35rem 0.4rem; font-size: 0.74rem; color: #64748b;
-        }
-        .sidebar-autosave-dot {
-            width: 8px; height: 8px; background: #10b981; border-radius: 50%;
-            box-shadow: 0 0 6px rgba(16,185,129,0.5); flex-shrink: 0;
-        }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
-        .sidebar-darkmode {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0.45rem 0.4rem; margin-top: 0.4rem;
-        }
-        .sidebar-darkmode-label {
-            display: flex; align-items: center; gap: 0.4rem;
-            font-size: 0.78rem; color: #94a3b8;
-        }
-        .toggle-switch {
-            position: relative; width: 40px; height: 22px;
-            background: #334155; border-radius: 11px; cursor: pointer;
-            transition: background 0.3s; flex-shrink: 0;
-        }
-        .toggle-switch.on { background: #2563eb; }
-        .toggle-switch::after {
-            content: ''; position: absolute; width: 16px; height: 16px;
-            background: #fff; border-radius: 50%; top: 3px; left: 3px;
-            transition: transform 0.3s;
-        }
-        .toggle-switch.on::after { transform: translateX(18px); }
 
         /* MAIN AREA */
         .main-area {
@@ -765,85 +674,9 @@
             min-width: 0; background: var(--bg-body);
         }
 
-        /* PROJECT HEADER BAR */
-        .project-header-bar {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 0.45rem 1rem;
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 1rem; backdrop-filter: blur(12px); flex-wrap: wrap;
-        }
-        .project-info-group {
-            display: flex; align-items: center; gap: 0.85rem;
-        }
-        .project-icon-box {
-            width: 48px; height: 48px;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.35rem; flex-shrink: 0;
-        }
-        .project-name-block h3 {
-            margin: 0; font-size: 1rem; font-weight: 800; color: var(--text-main);
-            display: flex; align-items: center; gap: 0.5rem;
-        }
-        .project-name-block p {
-            margin: 2px 0 0; font-size: 0.72rem; color: var(--text-muted); font-weight: 500;
-        }
         .badge-active {
             background: #10b981; color: white; font-size: 0.62rem; font-weight: 700;
             padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .project-meta-stats {
-            display: flex; align-items: center; gap: 1.25rem;
-        }
-        .project-stat {
-            display: flex; flex-direction: column; align-items: center; gap: 2px;
-        }
-        .project-stat-label {
-            font-size: 0.66rem; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.3px;
-            display: flex; align-items: center; gap: 4px;
-        }
-        .project-stat-value {
-            font-size: 0.85rem; font-weight: 800; color: var(--text-main);
-        }
-        .stat-dot {
-            width: 6px; height: 6px; border-radius: 50%; display: inline-block;
-        }
-        .overall-progress-box {
-            display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
-            padding: 0.4rem 0.8rem; background: var(--bg-body);
-            border-radius: 10px; border: 1px solid var(--border-subtle);
-        }
-        .overall-progress-box .lbl {
-            font-size: 0.66rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;
-        }
-        .progress-bar-mini {
-            width: 110px; height: 7px; background: var(--bg-hover);
-            border-radius: 4px; overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%; background: linear-gradient(90deg, #2563eb, #38bdf8);
-            border-radius: 4px; transition: width 0.5s ease;
-        }
-        .overall-pct {
-            font-size: 0.82rem; font-weight: 800; color: var(--primary);
-        }
-        .header-right-actions {
-            display: flex; align-items: center; gap: 0.75rem;
-        }
-        .notif-bell {
-            position: relative; width: 36px; height: 36px;
-            background: var(--bg-body); border: 1px solid var(--border-subtle);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 1rem; transition: all 0.2s;
-        }
-        .notif-bell:hover { background: var(--bg-hover); }
-        .notif-badge {
-            position: absolute; top: -4px; right: -4px;
-            width: 16px; height: 16px; background: #ef4444; border-radius: 50%;
-            font-size: 0.58rem; color: white; display: flex; align-items: center;
-            justify-content: center; font-weight: 700;
         }
         .user-profile-pill {
             display: flex; align-items: center; gap: 0.5rem;
@@ -1259,13 +1092,6 @@
             .right-sidebar-panel { display: none; }
         }
         @media (max-width: 900px) {
-            .left-sidebar { width: 52px; min-width: 52px; max-width: 52px; }
-            .sidebar-brand-text, .sidebar-nav-item span,
-            .sidebar-footer .sidebar-autosave span { display: none; }
-            .sidebar-nav-item { padding: 0.6rem 0; justify-content: center; }
-            .sidebar-brand { justify-content: center; padding: 0.8rem 0.4rem; }
-            .sidebar-brand-icon { width: 36px; height: 36px; font-size: 1rem; }
-            .project-meta-stats { display: none; }
             .center-content { padding: 0.5rem; }
             .filter-bar-card { flex-direction: column; gap: 0.5rem; padding: 0.5rem; }
             .filter-col { min-width: 100%; }
@@ -1274,24 +1100,13 @@
             .inv-tool-item:last-child { min-width: 100%; }
             .activity-selector-group { flex-wrap: wrap; gap: 0.5rem; }
             .activity-selector-group > div { min-width: 100%; }
-            .project-header-bar { flex-wrap: wrap; gap: 0.5rem; padding: 0.4rem 0.6rem; }
-            .project-name-block h3 { font-size: 0.9rem; }
             .tabs-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .tab-item { white-space: nowrap; font-size: 0.75rem; padding: 0.5rem 0.6rem; }
             .table-responsive { overflow-x: auto; }
             table.billing-table { min-width: 700px; }
         }
         @media (max-width: 640px) {
-            /* Phone par bhi left icon-rail rakho (900px wala 52px rule lagoo rehta hai) — nav gayab MAT karo */
-            .left-sidebar { width: 52px !important; min-width: 52px !important; max-width: 52px !important; }
-            .sidebar-brand-text, .sidebar-nav-item span,
-            .sidebar-footer .sidebar-autosave span { display: none; }
-            .sidebar-nav-item { padding: 0.6rem 0; justify-content: center; }
-            .sidebar-brand { justify-content: center; padding: 0.8rem 0.4rem; }
-            .sidebar-brand-icon { width: 36px; height: 36px; font-size: 1rem; }
-            .sidebar-footer { padding: 0.6rem 0.3rem; justify-content: center; }
             .user-info-text { display: none; }
-            .notif-bell { width: 32px; height: 32px; }
             /* Export buttons phone par gayab MAT karo — neeche fixed action bar banao */
             .tabs-export-group {
                 display: flex !important;
@@ -1322,9 +1137,6 @@
             .btn-icon { min-width: 44px; min-height: 44px; }
             table.billing-table td { padding: 0.4rem 0.35rem; }
             .tab-item { min-height: 44px; }
-            .project-header-bar { padding: 0.35rem 0.5rem; }
-            .project-name-block h3 { font-size: 0.8rem; }
-            .project-name-block p { display: none; }
             .filter-bar-card { padding: 0.4rem; margin-bottom: 0.5rem; }
             .invoice-toolbar { padding: 0.4rem; }
             .inv-tool-item { min-width: 100%; }
@@ -1892,11 +1704,11 @@
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
             outline: none;
         }
-        /* Sidebar nav item slide */
-        .sidebar-nav-item, .tab-item {
+        /* Tab item press feel */
+        .tab-item {
             transition: transform 0.15s ease, background 0.2s ease;
         }
-        .sidebar-nav-item:active, .tab-item:active {
+        .tab-item:active {
             transform: scale(0.96);
         }
         /* Row hover lift (billing tables) */
@@ -1954,7 +1766,7 @@
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
             body { background: #fff !important; color: #000 !important; margin: 0; padding: 0; }
-            .left-sidebar, .right-sidebar-panel, .no-print, .footer-info-strip { display: none !important; }
+            .right-sidebar-panel, .no-print, .footer-info-strip { display: none !important; }
             .app-layout { display: block !important; }
             .main-content-area { margin: 0 !important; padding: 0.5rem !important; border: none !important; background: #fff !important; overflow: visible !important; max-width: 100% !important; }
             .invoice-card { box-shadow: none !important; border: none !important; max-width: 100% !important; margin: 0 !important; padding: 1rem !important; background: #fff !important; }
