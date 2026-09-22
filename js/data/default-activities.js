@@ -74,13 +74,13 @@ const defaultActivities = {
         "unit": "Set",
         "rate": 9000.0,
         "itemCode": "17005100",
-        "sapDescription": "CIRCUIT BREAKER 11 KV 400 AMP",
+        "sapDescription": "CIRCUIT BREAKER 11 KV 400 AMP 12.5KA OD",
         "sapUom": "SET",
         "docHeader": "EE00009753",
         "sapItems": [
           {
             "code": "17005100",
-            "desc": "CIRCUIT BREAKER 11 KV 400 AMP",
+            "desc": "CIRCUIT BREAKER 11 KV 400 AMP 12.5KA OD",
             "uom": "SET",
             "docHeader": "EE00009753"
           }
@@ -102,18 +102,11 @@ const defaultActivities = {
         "desc": "11 KV CT 400 - 200 / 5 - 5 Outdoor",
         "unit": "No",
         "rate": 2333.34,
-        "itemCode": "17005101",
-        "sapDescription": "CURRENT TRANSFORMER 11KV 400-200/5-5",
-        "sapUom": "NO",
-        "docHeader": "EE00009753",
-        "sapItems": [
-          {
-            "code": "17005101",
-            "desc": "CURRENT TRANSFORMER 11KV 400-200/5-5",
-            "uom": "NO",
-            "docHeader": "EE00009753"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "7",
@@ -373,13 +366,13 @@ const defaultActivities = {
         "unit": "Rmt.",
         "rate": 25.0,
         "itemCode": "17004596",
-        "sapDescription": "CABLE AL LT XLPE 1X120 SQMM AR",
+        "sapDescription": "CABLE AL LT XLPE 1X120 SQMM ARM",
         "sapUom": "MTR",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17004596",
-            "desc": "CABLE AL LT XLPE 1X120 SQMM AR",
+            "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
             "uom": "MTR",
             "docHeader": "0031006347"
           }
@@ -391,13 +384,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 200.0,
         "itemCode": "17005107",
-        "sapDescription": "RELAY BOX MS FABRICATED FOR SD",
+        "sapDescription": "RELAY BOX MS FABRICATED FOR SDT OD TYPE",
         "sapUom": "NO",
         "docHeader": "0031007408",
         "sapItems": [
           {
             "code": "17005107",
-            "desc": "RELAY BOX MS FABRICATED FOR SD",
+            "desc": "RELAY BOX MS FABRICATED FOR SDT OD TYPE",
             "uom": "NO",
             "docHeader": "0031007408"
           }
@@ -445,13 +438,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 15.0,
         "itemCode": "17001397",
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -463,13 +456,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -481,13 +474,13 @@ const defaultActivities = {
         "unit": "Set",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -778,8 +771,8 @@ const defaultActivities = {
         "desc": "Cut Point Set with Channel, angle and clamps",
         "unit": "Set",
         "rate": 750.0,
-        "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+        "itemCode": "17005042",
+        "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
@@ -832,14 +825,14 @@ const defaultActivities = {
         "desc": "11 KV V cross arm with clamp",
         "unit": "No.",
         "rate": 50.0,
-        "itemCode": "17001295",
-        "sapDescription": "11 KV V CROSS ARM MS 100X50",
+        "itemCode": "17005050",
+        "sapDescription": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001295",
-            "desc": "11 KV V CROSS ARM MS 100X50",
+            "code": "17005050",
+            "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
             "uom": "NO",
             "docHeader": "0031006347",
             "qty": 1
@@ -885,13 +878,13 @@ const defaultActivities = {
         "unit": "Kg.",
         "rate": 3.0,
         "itemCode": "17000613",
-        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
         "sapUom": "KG",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000613",
-            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
             "uom": "KG",
             "docHeader": "0031007012"
           }
@@ -903,13 +896,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 15.0,
         "itemCode": "17001397",
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -921,13 +914,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -939,13 +932,13 @@ const defaultActivities = {
         "unit": "Set",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -1136,14 +1129,14 @@ const defaultActivities = {
         "desc": "Red Oxide Paint for 1 coats",
         "unit": "LTR",
         "rate": 14.0,
-        "itemCode": "17000776",
-        "sapDescription": "PAINT RED OXIDE ZINC CHROMATE",
+        "itemCode": "17000778",
+        "sapDescription": "RED OXIDE",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000776",
-            "desc": "PAINT RED OXIDE ZINC CHROMATE",
+            "code": "17000778",
+            "desc": "RED OXIDE",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -1315,13 +1308,13 @@ const defaultActivities = {
         "unit": "No",
         "rate": 15.0,
         "itemCode": "17001397",
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1477,13 +1470,13 @@ const defaultActivities = {
         "unit": "No",
         "rate": 1600.0,
         "itemCode": "17000081",
-        "sapDescription": "DIST BOX WITH KITKAT FOR 100 KVA",
+        "sapDescription": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
         "sapUom": "NO",
         "docHeader": "0031003360",
         "sapItems": [
           {
             "code": "17000081",
-            "desc": "DIST BOX WITH KITKAT FOR 100 KVA",
+            "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
             "uom": "NO",
             "docHeader": "0031003360"
           }
@@ -1578,13 +1571,13 @@ const defaultActivities = {
         "unit": "Kg.",
         "rate": 3.0,
         "itemCode": "17000613",
-        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
         "sapUom": "KG",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000613",
-            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
             "uom": "KG",
             "docHeader": "0031007012"
           }
@@ -1596,13 +1589,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -1614,13 +1607,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -1727,13 +1720,13 @@ const defaultActivities = {
         "unit": "Nos",
         "rate": 12.0,
         "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320",
+        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
         "sapUom": "NOS",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320",
+            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
             "uom": "NOS",
             "docHeader": "0031006347"
           }
@@ -1780,14 +1773,14 @@ const defaultActivities = {
         "desc": "L.T.Shackle hardware",
         "unit": "Pair",
         "rate": 3.0,
-        "itemCode": "17000700",
-        "sapDescription": "LT SHACKLE HARDWARE FITTING",
+        "itemCode": "17000696",
+        "sapDescription": "LT SHACKLE HARDWARE",
         "sapUom": "PAIR",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000700",
-            "desc": "LT SHACKLE HARDWARE FITTING",
+            "code": "17000696",
+            "desc": "LT SHACKLE HARDWARE",
             "uom": "PAIR",
             "docHeader": "0031006347"
           }
@@ -1852,13 +1845,13 @@ const defaultActivities = {
         "desc": "L.T. Stay sets",
         "unit": "Set",
         "rate": 400.0,
-        "itemCode": "17005051",
+        "itemCode": "17005091",
         "sapDescription": "MS-LT STAY SET 16 MM",
         "sapUom": "SET",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005051",
+            "code": "17005091",
             "desc": "MS-LT STAY SET 16 MM",
             "uom": "SET",
             "docHeader": "0031006347"
@@ -1965,13 +1958,13 @@ const defaultActivities = {
         "unit": "Kg",
         "rate": 3.0,
         "itemCode": "17000613",
-        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
         "sapUom": "KG",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000613",
-            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
             "uom": "KG",
             "docHeader": "0031007012"
           }
@@ -2136,13 +2129,13 @@ const defaultActivities = {
         "unit": "No",
         "rate": 35.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -2231,13 +2224,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -2249,13 +2242,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -2374,14 +2367,14 @@ const defaultActivities = {
         "desc": "Red Oxide Paint for 1 coats",
         "unit": "Ltr.",
         "rate": 14.0,
-        "itemCode": "17000776",
-        "sapDescription": "PAINT RED OXIDE ZINC CHROMATE",
+        "itemCode": "17000778",
+        "sapDescription": "RED OXIDE",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000776",
-            "desc": "PAINT RED OXIDE ZINC CHROMATE",
+            "code": "17000778",
+            "desc": "RED OXIDE",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -2481,13 +2474,13 @@ const defaultActivities = {
         "unit": "Nos",
         "rate": 10.0,
         "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320",
+        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
         "sapUom": "NOS",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320",
+            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
             "uom": "NOS",
             "docHeader": "0031006347"
           }
@@ -2553,13 +2546,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -2571,13 +2564,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -2714,14 +2707,14 @@ const defaultActivities = {
         "desc": "Red Oxide Paint for 1 coats",
         "unit": "Ltr.",
         "rate": 14.0,
-        "itemCode": "17000776",
-        "sapDescription": "PAINT RED OXIDE ZINC CHROMATE",
+        "itemCode": "17000778",
+        "sapDescription": "RED OXIDE",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000776",
-            "desc": "PAINT RED OXIDE ZINC CHROMATE",
+            "code": "17000778",
+            "desc": "RED OXIDE",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -2857,13 +2850,13 @@ const defaultActivities = {
         "unit": "no",
         "rate": 10.0,
         "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320",
+        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
         "sapUom": "NOS",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320",
+            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
             "uom": "NOS",
             "docHeader": "0031006347"
           }
@@ -2893,13 +2886,13 @@ const defaultActivities = {
         "unit": "NO.",
         "rate": 15.0,
         "itemCode": "17001397",
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -2929,13 +2922,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -3072,14 +3065,14 @@ const defaultActivities = {
         "desc": "Red Oxide Paint for 1 coats",
         "unit": "Ltr.",
         "rate": 14.0,
-        "itemCode": "17000776",
-        "sapDescription": "PAINT RED OXIDE ZINC CHROMATE",
+        "itemCode": "17000778",
+        "sapDescription": "RED OXIDE",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000776",
-            "desc": "PAINT RED OXIDE ZINC CHROMATE",
+            "code": "17000778",
+            "desc": "RED OXIDE",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -3211,8 +3204,8 @@ const defaultActivities = {
         "desc": "Cut Point Set with Channel, angle and clamps",
         "unit": "Set",
         "rate": 1250.0,
-        "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+        "itemCode": "17005042",
+        "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
@@ -3265,14 +3258,14 @@ const defaultActivities = {
         "desc": "11 KV V cross arm with clamp",
         "unit": "No.",
         "rate": 50.0,
-        "itemCode": "17001295",
-        "sapDescription": "11 KV V CROSS ARM MS 100X50",
+        "itemCode": "17005050",
+        "sapDescription": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001295",
-            "desc": "11 KV V CROSS ARM MS 100X50",
+            "code": "17005050",
+            "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
             "uom": "NO",
             "docHeader": "0031006347",
             "qty": 1
@@ -3318,13 +3311,13 @@ const defaultActivities = {
         "unit": "Kg.",
         "rate": 3.0,
         "itemCode": "17000613",
-        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+        "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
         "sapUom": "KG",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000613",
-            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL",
+            "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
             "uom": "KG",
             "docHeader": "0031007012"
           }
@@ -3336,13 +3329,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 15.0,
         "itemCode": "17001397",
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -3354,13 +3347,13 @@ const defaultActivities = {
         "unit": "No.",
         "rate": 30.0,
         "itemCode": "17000046",
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLY",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLY",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -3372,13 +3365,13 @@ const defaultActivities = {
         "unit": "Set",
         "rate": 20.0,
         "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TY",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
             "docHeader": "0031007012"
           }
@@ -3569,14 +3562,14 @@ const defaultActivities = {
         "desc": "Red Oxide Paint for 1 coats",
         "unit": "Ltr",
         "rate": 14.0,
-        "itemCode": "17000776",
-        "sapDescription": "PAINT RED OXIDE ZINC CHROMATE",
+        "itemCode": "17000778",
+        "sapDescription": "RED OXIDE",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000776",
-            "desc": "PAINT RED OXIDE ZINC CHROMATE",
+            "code": "17000778",
+            "desc": "RED OXIDE",
             "uom": "LTR",
             "docHeader": "0031007244"
           }

@@ -662,7 +662,8 @@
             if (!localStorage.getItem('patch_orphan_remap_v4')) {
                 try {
                     const masterSet = {};
-                    (this.sapMaterialsMaster || []).forEach(s => { if (s && s.code) masterSet[s.code] = true; });
+                    const masterDesc = {};
+                    (this.sapMaterialsMaster || []).forEach(s => { if (s && s.code) { masterSet[s.code] = true; masterDesc[s.code] = s.desc || ''; } });
                     if (Object.keys(masterSet).length >= 200) {
                         const REMAP = {
                             '17000006': { code: '17001243', desc: 'RSJ POLE 100X116 MM 11 MTR' },
@@ -683,29 +684,69 @@
                             '23001573': { code: '17004372', desc: 'JOINTING SLEEVE AAAC RABBIT CONDUCTOR' },
                             '28000103': { code: '17005597', desc: 'COVERED CONDUCTOR 55 SQMM' }
                         };
+                        // Desc-scoped rules — ye codes master me HAIN lekin galat row par lage the.
+                        // scope: entry/row desc me ye text ho tabhi lagoo (sahi jagah lage codes ko haath nahi).
+                        const SCOPED = [
+                            { code: '17001295', has: 'V CROSS ARM', to: '17005050', toDesc: 'MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG' },
+                            { code: '17000700', has: 'SHACKLE', to: '17000696', toDesc: 'LT SHACKLE HARDWARE' },
+                            { code: '17005051', has: 'STAY SET', to: '17005091', toDesc: 'MS-LT STAY SET 16 MM' },
+                            { code: '17000776', has: 'RED OXIDE', to: '17000778', toDesc: 'RED OXIDE' },
+                            { code: '17005101', has: 'CURRENT TRANSFORMER', blank: true }
+                        ];
+                        function scopedRule(code, desc) {
+                            for (let i = 0; i < SCOPED.length; i++) {
+                                const r = SCOPED[i];
+                                if (r.code === code && desc && desc.toUpperCase().indexOf(r.has) !== -1) return r;
+                            }
+                            return null;
+                        }
                         let remapped = 0, blanked = 0;
                         Object.keys(this.activities || {}).forEach(actKey => {
                             const act = this.activities[actKey];
                             (act.materials || []).forEach(m => {
-                                if (m.itemCode && REMAP[m.itemCode]) {
-                                    m.itemCode = REMAP[m.itemCode].code;
-                                    m.sapDescription = REMAP[m.itemCode].desc;
-                                    remapped++;
-                                } else if (m.itemCode && !masterSet[m.itemCode]) {
-                                    m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = '';
-                                    blanked++;
+                                const mIsCutPoint = (m.desc || '').indexOf('Cut Point') !== -1;
+                                // row-level itemCode
+                                if (m.itemCode) {
+                                    if (mIsCutPoint && m.itemCode === '17001294') {
+                                        m.itemCode = '17005042';
+                                        m.sapDescription = 'MS-11KV CUT POINT CH-75X40X6X1310-9.35KG';
+                                        remapped++;
+                                    } else {
+                                        const sr = scopedRule(m.itemCode, m.sapDescription);
+                                        if (sr) {
+                                            if (sr.blank) { m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = ''; blanked++; }
+                                            else { m.itemCode = sr.to; m.sapDescription = sr.toDesc; remapped++; }
+                                        } else if (REMAP[m.itemCode]) {
+                                            m.itemCode = REMAP[m.itemCode].code;
+                                            m.sapDescription = REMAP[m.itemCode].desc;
+                                            remapped++;
+                                        } else if (!masterSet[m.itemCode]) {
+                                            m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = '';
+                                            blanked++;
+                                        } else if (masterDesc[m.itemCode] && m.sapDescription !== masterDesc[m.itemCode]) {
+                                            m.sapDescription = masterDesc[m.itemCode];
+                                            remapped++;
+                                        }
+                                    }
                                 }
                                 if (Array.isArray(m.sapItems)) {
                                     for (let i = m.sapItems.length - 1; i >= 0; i--) {
                                         const s = m.sapItems[i];
                                         if (!s || !s.code) continue;
-                                        if (REMAP[s.code]) {
+                                        const sr = scopedRule(s.code, s.desc);
+                                        if (sr) {
+                                            if (sr.blank) { m.sapItems.splice(i, 1); blanked++; }
+                                            else { s.code = sr.to; s.desc = sr.toDesc; remapped++; }
+                                        } else if (REMAP[s.code]) {
                                             s.code = REMAP[s.code].code;
                                             s.desc = REMAP[s.code].desc;
                                             remapped++;
                                         } else if (!masterSet[s.code]) {
                                             m.sapItems.splice(i, 1);
                                             blanked++;
+                                        } else if (masterDesc[s.code] && s.desc !== masterDesc[s.code]) {
+                                            s.desc = masterDesc[s.code];
+                                            remapped++;
                                         }
                                     }
                                 }
