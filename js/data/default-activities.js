@@ -548,14 +548,14 @@ const defaultActivities = {
         "desc": "2Core 2.5sqmm Copper Cable",
         "unit": "Rmt",
         "rate": 15.0,
-        "itemCode": "17004590",
-        "sapDescription": "CABLE COPPER 2CX2.5 SQMM",
+        "itemCode": "17002274",
+        "sapDescription": "COPPER FLEXIBLE WIRE 2.5 SQMM",
         "sapUom": "MTR",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17004590",
-            "desc": "CABLE COPPER 2CX2.5 SQMM",
+            "code": "17002274",
+            "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
             "uom": "MTR",
             "docHeader": "0031006347"
           }
@@ -566,14 +566,14 @@ const defaultActivities = {
         "desc": "4 Core 2.5sqmm Copper Cable",
         "unit": "Rmt",
         "rate": 15.0,
-        "itemCode": "17004591",
-        "sapDescription": "CABLE COPPER 4CX2.5 SQMM",
+        "itemCode": "17002274",
+        "sapDescription": "COPPER FLEXIBLE WIRE 2.5 SQMM",
         "sapUom": "MTR",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17004591",
-            "desc": "CABLE COPPER 4CX2.5 SQMM",
+            "code": "17002274",
+            "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
             "uom": "MTR",
             "docHeader": "0031006347"
           }
@@ -602,13 +602,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG / 6 SWG",
         "unit": "Kg.",
         "rate": 2.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -756,13 +756,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 10 m long",
         "unit": "No.",
         "rate": 2100.0,
-        "itemCode": "17000005",
+        "itemCode": "17001242",
         "sapDescription": "RSJ POLE 100X116 MM 10 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000005",
+            "code": "17001242",
             "desc": "RSJ POLE 100X116 MM 10 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -872,14 +872,14 @@ const defaultActivities = {
         "desc": "11 KV Top fitting with clamp",
         "unit": "No.",
         "rate": 20.0,
-        "itemCode": "17001296",
-        "sapDescription": "11 KV TOP FITTING MS CLAMP",
+        "itemCode": "17005041",
+        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001296",
-            "desc": "11 KV TOP FITTING MS CLAMP",
+            "code": "17005041",
+            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
             "uom": "NO",
             "docHeader": "0031006347",
             "qty": 1
@@ -970,14 +970,14 @@ const defaultActivities = {
         "desc": "11 kV HT Covered Conductor",
         "unit": "Rmt",
         "rate": 6,
-        "itemCode": "28000103",
-        "sapDescription": "CLAMPS FOR 11 KV ISOLATOR 0.1 CONDUCTOR",
+        "itemCode": "17005597",
+        "sapDescription": "COVERED CONDUCTOR 55 SQMM",
         "sapUom": "NO",
         "docHeader": "Ugam Industries",
         "sapItems": [
           {
-            "code": "28000103",
-            "desc": "CLAMPS FOR 11 KV ISOLATOR 0.1 CONDUCTOR",
+            "code": "17005597",
+            "desc": "COVERED CONDUCTOR 55 SQMM",
             "uom": "NO",
             "docHeader": "Ugam Industries"
           }
@@ -1114,13 +1114,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 2.2,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -1132,14 +1132,14 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "LTR",
         "rate": 10.0,
-        "itemCode": "17000777",
-        "sapDescription": "BLACK BITUMINOUS PAINT",
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000777",
-            "desc": "BLACK BITUMINOUS PAINT",
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -1263,13 +1263,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No",
         "rate": 2500.0,
-        "itemCode": "17000006",
+        "itemCode": "17001243",
         "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000006",
+            "code": "17001243",
             "desc": "RSJ POLE 100X116 MM 11 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -1425,14 +1425,14 @@ const defaultActivities = {
         "desc": "11KV H.G.Fuses",
         "unit": "Set",
         "rate": 900.0,
-        "itemCode": "17001251",
-        "sapDescription": "11 KV HG FUSE SET 400 AMP",
+        "itemCode": "17000026",
+        "sapDescription": "HORN GAP FUSE 11 KV",
         "sapUom": "SET",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001251",
-            "desc": "11 KV HG FUSE SET 400 AMP",
+            "code": "17000026",
+            "desc": "HORN GAP FUSE 11 KV",
             "uom": "SET",
             "docHeader": "0031006347"
           }
@@ -1587,13 +1587,13 @@ const defaultActivities = {
         "desc": "8 SWG GI WIRE FOR EARTHING & GUARDING",
         "unit": "Kg.",
         "rate": 2.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -1718,13 +1718,13 @@ const defaultActivities = {
         "desc": "ACSR Weasel",
         "unit": "Rmt",
         "rate": 2.0,
-        "itemCode": "17000216",
+        "itemCode": "17000120",
         "sapDescription": "ACSR WEASEL CONDUCTOR",
         "sapUom": "KM",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000216",
+            "code": "17000120",
             "desc": "ACSR WEASEL CONDUCTOR",
             "uom": "KM",
             "docHeader": "0031006347"
@@ -1772,14 +1772,14 @@ const defaultActivities = {
         "desc": "L.T.Shackle Insulator",
         "unit": "No",
         "rate": 6.0,
-        "itemCode": "17001398",
-        "sapDescription": "SHACKLE INSULATOR TYPE-1 (90X75MM)",
+        "itemCode": "17000056",
+        "sapDescription": "LT SHACKLE INSULATOR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001398",
-            "desc": "SHACKLE INSULATOR TYPE-1 (90X75MM)",
+            "code": "17000056",
+            "desc": "LT SHACKLE INSULATOR",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1790,14 +1790,14 @@ const defaultActivities = {
         "desc": "Aluminium Bobbins for neutral",
         "unit": "No.",
         "rate": 2.0,
-        "itemCode": "17001400",
-        "sapDescription": "ALUMINIUM BOBBIN FOR NEUTRAL",
+        "itemCode": "17001150",
+        "sapDescription": "ALUMINIUM BOBBINS",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001400",
-            "desc": "ALUMINIUM BOBBIN FOR NEUTRAL",
+            "code": "17001150",
+            "desc": "ALUMINIUM BOBBINS",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1826,14 +1826,14 @@ const defaultActivities = {
         "desc": "Jointing Sleeves for AAC",
         "unit": "No",
         "rate": 5.0,
-        "itemCode": "23001573",
-        "sapDescription": "STAND FOR GLASS",
+        "itemCode": "17004372",
+        "sapDescription": "JOINTING SLEEVE AAAC RABBIT CONDUCTOR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "23001573",
-            "desc": "STAND FOR GLASS",
+            "code": "17004372",
+            "desc": "JOINTING SLEEVE AAAC RABBIT CONDUCTOR",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1844,14 +1844,14 @@ const defaultActivities = {
         "desc": "PG Clamp",
         "unit": "No",
         "rate": 8.0,
-        "itemCode": "17000650",
-        "sapDescription": "PG CLAMP FOR AAAC/ACSR CONDUCTOR",
+        "itemCode": "17000700",
+        "sapDescription": "PG CLAMP FOR ACSR WEASEL CONDUCTOR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000650",
-            "desc": "PG CLAMP FOR AAAC/ACSR CONDUCTOR",
+            "code": "17000700",
+            "desc": "PG CLAMP FOR ACSR WEASEL CONDUCTOR",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1916,14 +1916,14 @@ const defaultActivities = {
         "desc": "Stay Insulators",
         "unit": "No",
         "rate": 4.0,
-        "itemCode": "17001399",
-        "sapDescription": "STAY INSULATOR TYPE-C",
+        "itemCode": "17000058",
+        "sapDescription": "LT STAY INSULATOR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001399",
-            "desc": "STAY INSULATOR TYPE-C",
+            "code": "17000058",
+            "desc": "LT STAY INSULATOR",
             "uom": "NO",
             "docHeader": "0031006347"
           }
@@ -1970,13 +1970,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -2376,13 +2376,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -2412,14 +2412,14 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10.0,
-        "itemCode": "17000777",
-        "sapDescription": "BLACK BITUMINOUS PAINT",
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000777",
-            "desc": "BLACK BITUMINOUS PAINT",
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -2525,13 +2525,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No.",
         "rate": 2500.0,
-        "itemCode": "17000006",
+        "itemCode": "17001243",
         "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000006",
+            "code": "17001243",
             "desc": "RSJ POLE 100X116 MM 11 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -2705,13 +2705,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "kg.",
         "rate": 4.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -2759,14 +2759,14 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10.0,
-        "itemCode": "17000777",
-        "sapDescription": "BLACK BITUMINOUS PAINT",
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000777",
-            "desc": "BLACK BITUMINOUS PAINT",
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -2980,14 +2980,14 @@ const defaultActivities = {
         "desc": "Disc Insulator 11 KV 45 KN",
         "unit": "NO.",
         "rate": 30.0,
-        "itemCode": "17000045",
-        "sapDescription": "DISC INSULATOR 11KV 45KN T & C",
+        "itemCode": "17000046",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
         "docHeader": "0031007012",
         "sapItems": [
           {
-            "code": "17000045",
-            "desc": "DISC INSULATOR 11KV 45KN T & C",
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
             "docHeader": "0031007012"
           }
@@ -3088,13 +3088,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -3124,14 +3124,14 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10.0,
-        "itemCode": "17000777",
-        "sapDescription": "BLACK BITUMINOUS PAINT",
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000777",
-            "desc": "BLACK BITUMINOUS PAINT",
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -3237,13 +3237,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 8 m long",
         "unit": "No.",
         "rate": 1500.0,
-        "itemCode": "17000003",
+        "itemCode": "17005037",
         "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000003",
+            "code": "17005037",
             "desc": "RSJ POLE 100X116 MM 8 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -3361,14 +3361,14 @@ const defaultActivities = {
         "desc": "11 KV Top fitting with clamp",
         "unit": "No.",
         "rate": 20.0,
-        "itemCode": "17001296",
-        "sapDescription": "11 KV TOP FITTING MS CLAMP",
+        "itemCode": "17005041",
+        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001296",
-            "desc": "11 KV TOP FITTING MS CLAMP",
+            "code": "17005041",
+            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
             "uom": "NO",
             "docHeader": "0031006347",
             "qty": 1
@@ -3603,13 +3603,13 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG / 6 SWG",
         "unit": "Kg.",
         "rate": 2.0,
-        "itemCode": "17000236",
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000236",
+            "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
             "docHeader": "0031006347"
@@ -3621,14 +3621,14 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr",
         "rate": 10.0,
-        "itemCode": "17000777",
-        "sapDescription": "BLACK BITUMINOUS PAINT",
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "LTR",
         "docHeader": "0031007244",
         "sapItems": [
           {
-            "code": "17000777",
-            "desc": "BLACK BITUMINOUS PAINT",
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
             "uom": "LTR",
             "docHeader": "0031007244"
           }
@@ -3693,13 +3693,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No.",
         "rate": 2500.0,
-        "itemCode": "17000006",
+        "itemCode": "17001243",
         "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000006",
+            "code": "17001243",
             "desc": "RSJ POLE 100X116 MM 11 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -3711,13 +3711,13 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 10 m long",
         "unit": "No.",
         "rate": 2100.0,
-        "itemCode": "17000005",
+        "itemCode": "17001242",
         "sapDescription": "RSJ POLE 100X116 MM 10 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000005",
+            "code": "17001242",
             "desc": "RSJ POLE 100X116 MM 10 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
