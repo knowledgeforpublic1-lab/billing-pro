@@ -209,6 +209,77 @@ js/core/app.js (creates + mounts Vue)
 
 ---
 
+## 10. SESSION UPDATE — Material sync, mapping fixes, Excel audit format, animations (22 Sep, dopahar)
+
+### 10a. SAP master list sync with material list.ods (`80cc6a2`)
+- `material list.ods` (289 items) ko source of truth mana
+- `js/data/default-sap-materials.js`: 756 → **289 items** (467 removed: vehicles, office, kitchen, spare parts)
+- Comparison me 0 new items (sab ODS codes pehle se the)
+- ODS file repo me committed (source of truth)
+
+### 10b. Orphan mapping remap (`4390a9e`)
+- Activities me 23 codes aise jo master me nahi the (19 pehle se orphan + 4 sync se hue)
+- 17 ka sahi remap kiya (poles 8/10/11m, GI wire, paint, top cleat, disc 70KN, HG fuse, copper wire, weasel, shackle, stay, bobbin, PG clamp, jointing sleeve, covered conductor)
+- 6 bina replacement ke chhode (DIESEL, DISTILLED WATER, BINDING×2, WEASEL-strain, PT)
+
+### 10c. Galat code = blank (`5340319`)
+- User demand: galat code dikhe hi nahi, blank dikhe taaki pata chale kahan fix karna hai
+- Defaults me 6 orphans blanked (10 rows: sapItems [] + row fields cleared)
+- One-time migration `patch_orphan_remap_v4` in mounted(): saved bills (MongoDB data) par bhi 17 remaps + unknown blank — master 200+ entries hone par hi chalta hai (safety guard)
+
+### 10d. Genuinely-wrong mappings slooved (`ac2807d`)
+- 1425A R8 Shackle hardware → PG CLAMP laga tha → LT SHACKLE HARDWARE
+- 1425A R12 Stay sets → TOP BRKT laga tha → MS-LT STAY SET 16MM
+- 907 R5 / 934A R4 V-cross-arm → BARBED CLAMP laga tha → V-CROSS ARM (`17005050`)
+- 907 R4 / 934A R3 Cut Point → row-level BARBED CLAMP → CUT POINT CH (`17005042`)
+- Red Oxide paint 5 rows → BLACK paint laga tha → RED OXIDE (`17000778`)
+- 603B R6 CT → PANTHER conductor laga tha → blank (CT master me nahi)
+- ~30 truncated descs normalized (TY→TYPE, POLY→POLYMER, AR→ARM, WSHR, 5KN POLY, 12.5KA OD)
+- UOM mismatches (MTR/KM, SET/NO) NOT touched — display-only, hisab par asar nahi
+- Saved-bill migration me desc-scoped rules add (sahi jagah lage codes ko haath nahi)
+
+### 10e. Mapping UX fixes (`e334391`)
+- SAP search box: blur turant list hatata tha → 250ms delayed hide (pehli try me select)
+- Mapping Qty me Enter/↑/↓ navigation (activity grid jaisa), locked cells skip
+
+### 10f. Animations (`d66f219`, `6f684b9`) — CSS-only, perf safe
+- Paste flash (hare glow), view fade-in (5 views), modal pop-in, button press scale
+- Input focus glow, sidebar/tab press feel, row hover
+- Dropdowns: contractor panel slide-down + item hover slide, extra-item suggest pop, select focus glow
+- `prefers-reduced-motion` support
+- NOTE: SAP/reverse datalist native hai (browser-controlled) — usme animation possible nahi
+
+### 10g. Activity Excel audit format (`f18198c` → `3acf43e` → `e153170` → `83a0c26` → `5ddc34a`)
+- Final format: Sr | Desc | Unit | Loc1..N | Rate | 100% | 85% | 10% | 5% (Qty column HATAYA per user)
+- Amounts live formulas: `SUM(locs)×Rate`
+- Extra Items: banner (no gap, no header row, no Qty col), tinted rows, Sr from 1, static amounts
+- Single grand ACTIVITY TOTAL (multi-range SUM formulas)
+- Ye format single + all-activities + tax-invoice workbook teeno me
+
+### 10h. Cache fix (`0545f0c`)
+- PROBLEM: vercel.json me JS/CSS 1-saal immutable cache → users purana code chalate rahe, naye fixes nahi pahunche (5% issue isi se tha — code sahi tha!)
+- FIX: cache 1 hr + must-revalidate. Users ko ek baar Ctrl+Shift+R karna pada.
+
+### Open threads (bada update se pehle yaad rakhna)
+1. **1220 pole recon me nahi dikha tha** — root cause: recon sirf qty>0 rows dikhata hai + reverse ON ho to sirf invoice activities. User se confirm pending (qty dali? reverse ON/OFF?).
+2. **19 blank mapping rows** hath se jodne hain (Sundries/DIESEL, WATER, BINDING, strain, PT, CT, 603B R15–R22).
+3. **Master recon + RA snapshot design** discuss hua (section 11 dekho) — RA dimension abhi nahi hai.
+4. **Google Drive save** — Option 1 (Save to Drive button) vs Option 2 (auto-backup), user decision pending.
+
+---
+
+## 11. MASTER RECONCILIATION DESIGN (discussed, NOT implemented)
+
+- Goal: pure project ka master reconciliation dataset (activity-wise + RA-wise consumption)
+- rf.gd site bot-check ke peeche hai — andar nahi dekh paya; user se pucha (manual entry ya Excel upload?)
+- Proposed grain: one row per (SAP code × Activity × Location × RA)
+- Blocker: app me RA dimension nahi hai (activityQuantities cumulative hai)
+- Proposed solution: **RA Snapshot** — har RA finalize par quantities freeze; is RA ka consumption = current − pichhla snapshot
+- Link options staged: A. File export/import (SAP Code key) → B. API (`GET /api/reconciliation`) → C. Shared MongoDB
+- Google Drive: main khud file nahi daal sakta; app me Save-to-Drive button (opt 1) ya auto-backup (opt 2, needs Google Cloud API key) — decision pending
+
+---
+
 ## 5. Sync Flow Summary (current code)
 
 ```
