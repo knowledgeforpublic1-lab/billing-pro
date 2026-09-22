@@ -932,13 +932,13 @@ window.ExportModule = {
                         pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
-                    // Audit format: Sr | Desc | Unit | Loc1..N | Qty | Rate | 100% | st1% | st2% | st3%
-                    // (Extra Items section me location columns nahi — sirf Qty)
+                    // Audit format: Sr | Desc | Unit | Loc1..N | Rate | 100% | st1% | st2% | st3%
+                    // (Extra Items section compact: no locs, no Qty)
                     const numLocs = this.getActLocations(actKey).length;
-                    const totalCols = 9 + numLocs;
+                    const totalCols = 8 + numLocs;
                     const locStartCol = 4, locEndCol = 3 + numLocs;
-                    const qtyCol = 4 + numLocs, rateCol = 5 + numLocs;
-                    const amt100Col = 6 + numLocs, amt85Col = 7 + numLocs, amt10Col = 8 + numLocs, amt5Col = 9 + numLocs;
+                    const rateCol = 4 + numLocs;
+                    const amt100Col = 5 + numLocs, amt85Col = 6 + numLocs, amt10Col = 7 + numLocs, amt5Col = 8 + numLocs;
                     const L = (c) => getColLetter(c);
 
                     const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
@@ -1014,10 +1014,7 @@ window.ExportModule = {
 
                     const writeTableHeader = (withLocs) => {
                         let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                        if (withLocs) {
-                            this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
-                            headerValues.push('Qty');
-                        }
+                        if (withLocs) this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
                         headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
                         const rowH = ws.getRow(rowIdx);
                         rowH.values = headerValues;
@@ -1032,10 +1029,10 @@ window.ExportModule = {
                         rowIdx++;
                     };
 
-                    // Ek table likho. withLocs=true → location cells + Qty formula; false → compact (Qty col nahi, static amounts).
+                    // Ek table likho. withLocs=true → location cells, amounts = SUM(locs)×Rate.
+                    // withLocs=false (extra) → compact, static amounts, Qty col nahi.
                     // Wapas: { startRow, endRow, sum100, a100, a85, a10, a5 } (amount column letters)
                     const writeItems = (itemsList, isExtra, withLocs) => {
-                        const qC = withLocs ? qtyCol : 0;
                         const rC = withLocs ? rateCol : 4;
                         const c100 = withLocs ? amt100Col : 5;
                         const c85 = withLocs ? amt85Col : 6;
@@ -1058,10 +1055,6 @@ window.ExportModule = {
                                 if (withLocs) row.getCell(locStartCol + locIdx).value = val;
                                 if (!isNaN(val)) itemTotalQty += val;
                             }
-                            if (withLocs) {
-                                const locRange = numLocs === 1 ? `${L(locStartCol)}${rowIdx}` : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`;
-                                row.getCell(qC).value = { formula: locRange, result: itemTotalQty };
-                            }
 
                             const rateVal = Number(mat.rate) || 0;
                             row.getCell(rC).value = rateVal;
@@ -1069,7 +1062,10 @@ window.ExportModule = {
                             const est100 = itemTotalQty * rateVal;
                             sum100 += est100;
                             if (withLocs) {
-                                row.getCell(c100).value = { formula: `${L(qC)}${rowIdx}*${L(rC)}${rowIdx}`, result: est100 };
+                                const sumLocFormula = numLocs === 1
+                                    ? `${L(locStartCol)}${rowIdx}`
+                                    : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`;
+                                row.getCell(c100).value = { formula: `(${sumLocFormula})*${L(rC)}${rowIdx}`, result: est100 };
                                 row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
                                 row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
                                 row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
@@ -1174,7 +1170,7 @@ window.ExportModule = {
 
                     let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
                     this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
-                    widths.push({ width: 12 }, { width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
+                    widths.push({ width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
                     ws.columns = widths;
                 },
 
