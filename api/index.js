@@ -176,10 +176,11 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             return res.status(413).json({ success: false, error: 'Payload too large (800KB limit, Mongo me jagah kam hai)' });
         }
 
-        // Input validation — required fields for sync
-        if (!req.body.docId || req.body.state === undefined || typeof req.body.baseRev !== 'number') {
-            log.warn('POST', `Missing required fields — docId: ${!!req.body.docId}, state: ${req.body.state !== undefined}, baseRev type: ${typeof req.body.baseRev}`);
-            return res.status(400).json({ success: false, error: 'Missing required fields: docId, state, baseRev' });
+        // Input validation — payload must have at least one sync key (activities, projectMeta, etc.)
+        const bodyKeys = Object.keys(req.body);
+        if (bodyKeys.length === 0) {
+            log.warn('POST', 'Empty payload received');
+            return res.status(400).json({ success: false, error: 'Empty payload' });
         }
 
         const dataToSave = pickAllowedKeys(req.body || {});
