@@ -91,18 +91,11 @@ const defaultActivities = {
         "desc": "11 KV PT",
         "unit": "Set",
         "rate": 2000.0,
-        "itemCode": "17005102",
-        "sapDescription": "POTENTIAL TRANSFORMER 11KV/110V",
-        "sapUom": "SET",
-        "docHeader": "EE00009753",
-        "sapItems": [
-          {
-            "code": "17005102",
-            "desc": "POTENTIAL TRANSFORMER 11KV/110V",
-            "uom": "SET",
-            "docHeader": "EE00009753"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "6",
@@ -235,18 +228,11 @@ const defaultActivities = {
         "desc": "Water arrangement if required",
         "unit": "Job",
         "rate": 1800.0,
-        "itemCode": "22005498",
-        "sapDescription": "DISTILLED WATER",
-        "sapUom": "L",
-        "docHeader": "MATETIAL USE CAMPER",
-        "sapItems": [
-          {
-            "code": "22005498",
-            "desc": "DISTILLED WATER",
-            "uom": "L",
-            "docHeader": "MATETIAL USE CAMPER"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "14",
@@ -1186,18 +1172,11 @@ const defaultActivities = {
         "desc": "Sundries",
         "unit": "Ls",
         "rate": 0.0,
-        "itemCode": "20000001",
-        "sapDescription": "DIESEL",
-        "sapUom": "L",
-        "docHeader": "DIESEL USED IN AS01FD3472",
-        "sapItems": [
-          {
-            "code": "20000001",
-            "desc": "DIESEL",
-            "uom": "L",
-            "docHeader": "DIESEL USED IN AS01FD3472"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "23",
@@ -1515,18 +1494,11 @@ const defaultActivities = {
         "desc": "Sundries",
         "unit": "LS",
         "rate": 0.0,
-        "itemCode": "20000001",
-        "sapDescription": "DIESEL",
-        "sapUom": "L",
-        "docHeader": "DIESEL USED IN AS01FD3472",
-        "sapItems": [
-          {
-            "code": "20000001",
-            "desc": "DIESEL",
-            "uom": "L",
-            "docHeader": "DIESEL USED IN AS01FD3472"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "17",
@@ -1934,36 +1906,22 @@ const defaultActivities = {
         "desc": "Binding Wire",
         "unit": "Kg",
         "rate": 2.5,
-        "itemCode": "17000235",
-        "sapDescription": "ALUMINIUM BINDING WIRE",
-        "sapUom": "KG",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000235",
-            "desc": "ALUMINIUM BINDING WIRE",
-            "uom": "KG",
-            "docHeader": "0031006347"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "16",
         "desc": "Binding Tape",
         "unit": "Kg",
         "rate": 2.5,
-        "itemCode": "17000234",
-        "sapDescription": "ALUMINIUM BINDING TAPE",
-        "sapUom": "KG",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000234",
-            "desc": "ALUMINIUM BINDING TAPE",
-            "uom": "KG",
-            "docHeader": "0031006347"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "17",
@@ -2060,18 +2018,11 @@ const defaultActivities = {
         "desc": "Sundries",
         "unit": "LS",
         "rate": 0.0,
-        "itemCode": "20000001",
-        "sapDescription": "DIESEL",
-        "sapUom": "L",
-        "docHeader": "DIESEL USED IN AS01FD3472",
-        "sapItems": [
-          {
-            "code": "20000001",
-            "desc": "DIESEL",
-            "uom": "L",
-            "docHeader": "DIESEL USED IN AS01FD3472"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "21",
@@ -2173,18 +2124,11 @@ const defaultActivities = {
         "desc": "Strain Hardware for Weasel/Squirrel",
         "unit": "Set",
         "rate": 10.0,
-        "itemCode": "17000701",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR WEASEL",
-        "sapUom": "SET",
-        "docHeader": "0031007012",
-        "sapItems": [
-          {
-            "code": "17000701",
-            "desc": "STRAIN HARDWARE FOR ACSR WEASEL",
-            "uom": "SET",
-            "docHeader": "0031007012"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       },
       {
         "no": "6",
@@ -2502,18 +2446,11 @@ const defaultActivities = {
         "desc": "Sundries",
         "unit": "Ls",
         "rate": 0.0,
-        "itemCode": "20000001",
-        "sapDescription": "DIESEL",
-        "sapUom": "L",
-        "docHeader": "DIESEL USED IN AS01FD3472",
-        "sapItems": [
-          {
-            "code": "20000001",
-            "desc": "DIESEL",
-            "uom": "L",
-            "docHeader": "DIESEL USED IN AS01FD3472"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       }
     ]
   },
@@ -2831,18 +2768,11 @@ const defaultActivities = {
         "desc": "Sundries",
         "unit": "L.S.",
         "rate": 0.0,
-        "itemCode": "20000001",
-        "sapDescription": "DIESEL",
-        "sapUom": "L",
-        "docHeader": "DIESEL USED IN AS01FD3472",
-        "sapItems": [
-          {
-            "code": "20000001",
-            "desc": "DIESEL",
-            "uom": "L",
-            "docHeader": "DIESEL USED IN AS01FD3472"
-          }
-        ]
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
       }
     ]
   },

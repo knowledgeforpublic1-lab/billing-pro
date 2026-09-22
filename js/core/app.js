@@ -656,6 +656,72 @@
                 localStorage.setItem('patch_907_934a_merge_v3', 'true');
             }
 
+            // PATCH: galat/orphan SAP mappings — ek baar, saved bill par bhi.
+            // 17 codes ka sahi remap; master list me na milne wala code blank (galat code dikhega hi nahi).
+            // Sirf tab chalega jab master poori load hui ho (200+ entries) — adhoori master par kuch nahi bigdega.
+            if (!localStorage.getItem('patch_orphan_remap_v4')) {
+                try {
+                    const masterSet = {};
+                    (this.sapMaterialsMaster || []).forEach(s => { if (s && s.code) masterSet[s.code] = true; });
+                    if (Object.keys(masterSet).length >= 200) {
+                        const REMAP = {
+                            '17000006': { code: '17001243', desc: 'RSJ POLE 100X116 MM 11 MTR' },
+                            '17000005': { code: '17001242', desc: 'RSJ POLE 100X116 MM 10 MTR' },
+                            '17000003': { code: '17005037', desc: 'RSJ POLE 100X116 MM 8 MTR' },
+                            '17000236': { code: '17000243', desc: 'GI WIRE 8 SWG' },
+                            '17000777': { code: '17000776', desc: 'PAINT BLACK BITUMINUS' },
+                            '17001296': { code: '17005041', desc: 'MS-11KV TOP CLEAT-75X40X6X325-2.44KG' },
+                            '17000045': { code: '17000046', desc: 'DISC INSULATOR 11KV 70KN B & S POLYMER' },
+                            '17001251': { code: '17000026', desc: 'HORN GAP FUSE 11 KV' },
+                            '17004590': { code: '17002274', desc: 'COPPER FLEXIBLE WIRE 2.5 SQMM' },
+                            '17004591': { code: '17002274', desc: 'COPPER FLEXIBLE WIRE 2.5 SQMM' },
+                            '17000216': { code: '17000120', desc: 'ACSR WEASEL CONDUCTOR' },
+                            '17001398': { code: '17000056', desc: 'LT SHACKLE INSULATOR' },
+                            '17001399': { code: '17000058', desc: 'LT STAY INSULATOR' },
+                            '17001400': { code: '17001150', desc: 'ALUMINIUM BOBBINS' },
+                            '17000650': { code: '17000700', desc: 'PG CLAMP FOR ACSR WEASEL CONDUCTOR' },
+                            '23001573': { code: '17004372', desc: 'JOINTING SLEEVE AAAC RABBIT CONDUCTOR' },
+                            '28000103': { code: '17005597', desc: 'COVERED CONDUCTOR 55 SQMM' }
+                        };
+                        let remapped = 0, blanked = 0;
+                        Object.keys(this.activities || {}).forEach(actKey => {
+                            const act = this.activities[actKey];
+                            (act.materials || []).forEach(m => {
+                                if (m.itemCode && REMAP[m.itemCode]) {
+                                    m.itemCode = REMAP[m.itemCode].code;
+                                    m.sapDescription = REMAP[m.itemCode].desc;
+                                    remapped++;
+                                } else if (m.itemCode && !masterSet[m.itemCode]) {
+                                    m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = '';
+                                    blanked++;
+                                }
+                                if (Array.isArray(m.sapItems)) {
+                                    for (let i = m.sapItems.length - 1; i >= 0; i--) {
+                                        const s = m.sapItems[i];
+                                        if (!s || !s.code) continue;
+                                        if (REMAP[s.code]) {
+                                            s.code = REMAP[s.code].code;
+                                            s.desc = REMAP[s.code].desc;
+                                            remapped++;
+                                        } else if (!masterSet[s.code]) {
+                                            m.sapItems.splice(i, 1);
+                                            blanked++;
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        if (remapped > 0 || blanked > 0) {
+                            this._isLoading = false;
+                            this.saveToStorage();
+                            const msg = 'Mapping safai: ' + remapped + ' sahi, ' + blanked + ' blank (khud check karo)';
+                            setTimeout(() => { try { this.showToast(msg, '🧹'); } catch(e) {} }, 1200);
+                        }
+                    }
+                } catch(e) { console.error('orphan remap patch failed', e); }
+                try { localStorage.setItem('patch_orphan_remap_v4', 'true'); } catch(e) {}
+            }
+
             this._isLoading = false;
             // Initial history snapshot
             this.takeSnapshot();
