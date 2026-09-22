@@ -1014,8 +1014,11 @@ window.ExportModule = {
 
                     const writeTableHeader = (withLocs) => {
                         let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                        if (withLocs) this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
-                        headerValues.push('Qty', 'Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
+                        if (withLocs) {
+                            this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
+                            headerValues.push('Qty');
+                        }
+                        headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
                         const rowH = ws.getRow(rowIdx);
                         rowH.values = headerValues;
                         rowH.height = 28;
@@ -1029,15 +1032,15 @@ window.ExportModule = {
                         rowIdx++;
                     };
 
-                    // Ek table likho. withLocs=true → location cells + Qty formula; false → sirf total Qty.
+                    // Ek table likho. withLocs=true → location cells + Qty formula; false → compact (Qty col nahi, static amounts).
                     // Wapas: { startRow, endRow, sum100, a100, a85, a10, a5 } (amount column letters)
                     const writeItems = (itemsList, isExtra, withLocs) => {
-                        const qC = withLocs ? qtyCol : 4;
-                        const rC = withLocs ? rateCol : 5;
-                        const c100 = withLocs ? amt100Col : 6;
-                        const c85 = withLocs ? amt85Col : 7;
-                        const c10 = withLocs ? amt10Col : 8;
-                        const c5 = withLocs ? amt5Col : 9;
+                        const qC = withLocs ? qtyCol : 0;
+                        const rC = withLocs ? rateCol : 4;
+                        const c100 = withLocs ? amt100Col : 5;
+                        const c85 = withLocs ? amt85Col : 6;
+                        const c10 = withLocs ? amt10Col : 7;
+                        const c5 = withLocs ? amt5Col : 8;
                         const startRow = rowIdx;
                         let sum100 = 0;
                         itemsList.forEach((itemObj, listIdx) => {
@@ -1058,8 +1061,6 @@ window.ExportModule = {
                             if (withLocs) {
                                 const locRange = numLocs === 1 ? `${L(locStartCol)}${rowIdx}` : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`;
                                 row.getCell(qC).value = { formula: locRange, result: itemTotalQty };
-                            } else {
-                                row.getCell(qC).value = itemTotalQty;
                             }
 
                             const rateVal = Number(mat.rate) || 0;
@@ -1067,10 +1068,17 @@ window.ExportModule = {
 
                             const est100 = itemTotalQty * rateVal;
                             sum100 += est100;
-                            row.getCell(c100).value = { formula: `${L(qC)}${rowIdx}*${L(rC)}${rowIdx}`, result: est100 };
-                            row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
-                            row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
-                            row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
+                            if (withLocs) {
+                                row.getCell(c100).value = { formula: `${L(qC)}${rowIdx}*${L(rC)}${rowIdx}`, result: est100 };
+                                row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
+                                row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
+                                row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
+                            } else {
+                                row.getCell(c100).value = est100;
+                                row.getCell(c85).value = est100 * s1Factor;
+                                row.getCell(c10).value = est100 * s2Factor;
+                                row.getCell(c5).value = est100 * s3Factor;
+                            }
 
                             row.height = 22;
 
@@ -1079,8 +1087,8 @@ window.ExportModule = {
                             row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
 
                             for (let c = 4; c <= totalCols; c++) {
-                                // Extra table chhoti hai (9 col) — aage ke cells skip
-                                if (!withLocs && c > 9) break;
+                                // Extra table compact hai (8 col) — aage ke cells skip
+                                if (!withLocs && c > 8) break;
                                 row.getCell(c).numFmt = '#,##0.00';
                                 row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
                             }
@@ -1109,8 +1117,7 @@ window.ExportModule = {
                     }
 
                     if (extraMats.length > 0) {
-                        rowIdx++; // Empty row gap between tables
-                        // Web jaisa "Extra Items" banner
+                        // Web jaisa "Extra Items" banner — seedha item rows (no gap, no header)
                         ws.mergeCells(rowIdx, 1, rowIdx, totalCols);
                         const banCell = ws.getCell(rowIdx, 1);
                         banCell.value = 'Extra Items';
@@ -1120,7 +1127,6 @@ window.ExportModule = {
                         banCell.border = thinBorder;
                         ws.getRow(rowIdx).height = 24;
                         rowIdx++;
-                        writeTableHeader(false);
                         extRange = writeItems(extraMats, true, false);
                     }
 
