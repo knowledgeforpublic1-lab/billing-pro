@@ -143,6 +143,10 @@
                         <span class="tab-dot" style="background: #10b981;"></span>
                         Reconciliation Sheet
                     </button>
+                    <button class="tab-item" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
+                        <span class="tab-dot" style="background: #8b5cf6;"></span>
+                        Master Reconciliation
+                    </button>
 
                     <div class="tabs-export-group">
                         <button class="btn btn-print" @click="printView()" title="Print Current View or Save as PDF" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
@@ -1159,6 +1163,15 @@
                 </div>
             </div>
         </div>
+
+            <!-- VIEW 6: MASTER RECONCILIATION (doosri site — iframe me poori khulti hai, logic untouched) -->
+            <div v-if="currentView === 'masterrecon'" class="animate-fade-in">
+                <div class="table-card" style="padding: 0; overflow: hidden;">
+                    <iframe src="Reconciliation master/index.html" title="Master Reconciliation"
+                        style="width: 100%; height: calc(100vh - 170px); min-height: 560px; border: 0; display: block; background: #fff;">
+                    </iframe>
+                </div>
+            </div>
 
         <!-- Footer Info Bar -->
         <div class="footer-info-strip no-print">

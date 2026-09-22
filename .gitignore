@@ -14,3 +14,6 @@ contractor_data.json
 
 .vercel
 .env*
+# Local backup zips + Office lock files — repo me nahi
+BACKUP_FULL_2026-09-22.zip
+~$*

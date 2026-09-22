@@ -19,6 +19,10 @@
     {
       "src": "js/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "Reconciliation master/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -43,6 +47,12 @@
     },
     {
       "source": "/css/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/Reconciliation master/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
       ]

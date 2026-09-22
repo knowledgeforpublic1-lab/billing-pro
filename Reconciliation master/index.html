@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Reconciliation Dashboard | Ashoka Buildcon Ltd</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css?v=20260901_3">
+    
+    <!-- Chart.js, SheetJS & ExcelJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon">🏗️</div>
+                <div class="brand-text">
+                    <h1>Material Reconciliation Portal</h1>
+                    <p>Ashoka Buildcon Ltd — Gadchiroli Project (T-10__1458)</p>
+                </div>
+            </div>
+            
+            <div class="nav-stats" style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+                <button id="uploadExcelBtn" class="btn btn-primary" onclick="document.getElementById('excelUpload').click()" style="background: #3b82f6; border-color: #3b82f6;">
+                    <span>📂 Upload Excel</span>
+                </button>
+                <button id="refreshDataBtn" class="btn btn-secondary" onclick="refreshAppData()" style="background: #10b981; border-color: #10b981; color: white;">
+                    <span>🔄 Refresh</span>
+                </button>
+                <button class="btn btn-success" onclick="exportActiveViewExcel()">
+                    <span>📥 Export to Excel</span>
+                </button>
+                <button class="btn" style="background: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportMissingRates()">
+                    <span>⚠️ Missing Rates</span>
+                </button>
+                <button class="btn" style="background: #8b5cf6; border-color: #8b5cf6; color: white;" onclick="exportForPowerBI()">
+                    <span>📈 Power BI Data</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Container -->
+    <div class="main-wrapper">
+
+        <!-- Views Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="overview">
+                <span>📊 Dashboard Overview</span>
+            </button>
+            <button class="tab-btn" data-tab="contractor">
+                <span>👷 Contractor Statements</span>
+            </button>
+            <button class="tab-btn" data-tab="material">
+                <span>📦 Material-wise Summary</span>
+            </button>
+            <button class="tab-btn" data-tab="debit">
+                <span>💲 Debit Rates Master</span>
+            </button>
+            <button class="tab-btn" data-tab="alerts">
+                <span>⚠️ Discrepancies & Stock Alerts</span>
+            </button>
+            <button class="tab-btn" data-tab="reports">
+                <span>📊 Advanced Reports</span>
+            </button>
+        </div>
+
+        <!-- 1. OVERVIEW TAB -->
+        <div id="tab-overview" class="tab-content">
+            <!-- KPI Grid -->
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+                <div class="kpi-card" style="--card-accent: #3b82f6; --card-icon-bg: rgba(59, 130, 246, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Sub-Contractors</h3>
+                        <div id="kpi-contractors" class="kpi-value">0</div>
+                        <div class="kpi-subtext">Active contract packages</div>
+                    </div>
+                    <div class="kpi-icon">👷</div>
+                </div>
+
+                <div class="kpi-card" style="--card-accent: #8b5cf6; --card-icon-bg: rgba(139, 92, 246, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Material Items Tracked</h3>
+                        <div id="kpi-items" class="kpi-value">0</div>
+                        <div class="kpi-subtext">Reconciled line entries</div>
+                    </div>
+                    <div class="kpi-icon">📋</div>
+                </div>
+
+                <div class="kpi-card" style="--card-accent: #10b981; --card-icon-bg: rgba(16, 185, 129, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Net Issue Value</h3>
+                        <div id="kpi-issue-cost" class="kpi-value">₹ 0.00</div>
+                        <div class="kpi-subtext">Cumulative material issued</div>
+                    </div>
+                    <div class="kpi-icon">💰</div>
+                </div>
+
+                <div class="kpi-card" style="--card-accent: #f59e0b; --card-icon-bg: rgba(245, 158, 11, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Balance Stock Liability</h3>
+                        <div id="kpi-balance-cost" class="kpi-value">₹ 0.00</div>
+                        <div class="kpi-subtext">Unerected material cost</div>
+                    </div>
+                    <div class="kpi-icon">⚖️</div>
+                </div>
+            </div>
+
+            <!-- Overview Analytics Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>📈 Top Consumed / Erected Materials</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartCons"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>⚠️ Top Contractor Stock Liabilities</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartBal"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CONTRACTOR VIEW TAB -->
+        <div id="tab-contractor" class="tab-content" style="display: none;">
+            <div class="control-card" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <div class="select-box">
+                        <select id="contractorSelect">
+                            <option value="">-- All Contractors --</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="contractorSearch" placeholder="Search contractor, item code or material name...">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportActiveViewCSV()">📄 CSV Export</button>
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Print Statement</button>
+                </div>
+            </div>
+
+            <!-- Contractor Metadata Info Panel -->
+            <div id="contractorInfoPanel" class="contractor-info-card" style="display: none; margin-bottom: 24px;">
+                <!-- Filled dynamically by JavaScript -->
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Contractor Material Issued & Consumption Ledger</h3>
+                    <div>
+                        <span class="text-muted">Showing <strong id="cViewCount" class="text-primary">0</strong> items | Total Balance Value: <strong id="cViewBalCost" class="text-warning">₹ 0.00</strong></span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="contractorTable">
+                        <thead>
+                            <tr>
+                                <th class="hide-print">Contractor</th>
+                                <th>Item Code</th>
+                                <th>Material Description</th>
+                                <th>UOM</th>
+                                <th class="text-right">Debit Rate</th>
+                                <th class="text-right">Issued Qty</th>
+                                <th class="text-right">MRN Qty</th>
+                                <th class="text-right">Net Issue</th>
+                                <th class="text-right">Consumption</th>
+                                <th class="text-right">WIP</th>
+                                <th class="text-right">Theft</th>
+                                <th class="text-right">Balance Qty</th>
+                                <th class="text-right">Balance Cost</th>
+                                <th class="text-center hide-print">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="pagination-contractor">
+                    <button class="btn btn-secondary btn-sm prev-btn">◀ Previous</button>
+                    <span class="page-info">Page 1 of 1</span>
+                    <button class="btn btn-secondary btn-sm next-btn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MATERIAL SUMMARY TAB -->
+        <div id="tab-material" class="tab-content" style="display: none;">
+            <div class="control-card" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <div class="multi-select-wrapper" id="materialMultiSelect">
+                        <div class="multi-select-trigger" id="materialSelectTrigger">
+                            <div class="multi-select-tags" id="materialSelectedTags">
+                                <span class="multi-select-placeholder">-- All Materials / Select Items --</span>
+                            </div>
+                            <span class="multi-select-arrow">▾</span>
+                        </div>
+                        <div class="multi-select-dropdown" id="materialDropdown">
+                            <div class="multi-select-search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="materialDropdownSearch" placeholder="Search item code or material name..." autocomplete="off">
+                            </div>
+                            <div class="multi-select-actions">
+                                <button class="ms-action-btn" id="materialSelectAll">✅ Select All</button>
+                                <button class="ms-action-btn ms-clear" id="materialClearAll">✖ Clear All</button>
+                            </div>
+                            <div class="multi-select-options" id="materialOptions">
+                                <!-- Options populated via JS -->
+                            </div>
+                            <div class="multi-select-footer">
+                                <span id="materialSelectedCount">0 selected</span>
+                                <button class="btn btn-primary btn-sm" id="materialApplyFilter">Apply Filter</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportActiveViewCSV()">📄 CSV Export</button>
+                </div>
+            </div>
+
+            <!-- Material Summary Bar -->
+            <div class="kpi-grid" style="margin-bottom: 20px;">
+                <div class="kpi-card" style="--card-accent: #3b82f6;">
+                    <div class="kpi-info">
+                        <h3>Total Net Issued Qty</h3>
+                        <div id="mSumIssue" class="kpi-value">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #10b981;">
+                    <div class="kpi-info">
+                        <h3>Total Erected Qty</h3>
+                        <div id="mSumCons" class="kpi-value text-success">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #f59e0b;">
+                    <div class="kpi-info">
+                        <h3>Total Remaining Stock</h3>
+                        <div id="mSumBal" class="kpi-value text-warning">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #8b5cf6;">
+                    <div class="kpi-info">
+                        <h3>Total Remaining Cost</h3>
+                        <div id="mSumCost" class="kpi-value">₹ 0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Material-wise Contractor Distribution</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="materialTable">
+                        <thead>
+                            <tr>
+                                <th>Contractor Name</th>
+                                <th>Item Code</th>
+                                <th>Material Description</th>
+                                <th>UOM</th>
+                                <th class="text-right">Debit Rate</th>
+                                <th class="text-right">Net Issue Qty</th>
+                                <th class="text-right">Consumption</th>
+                                <th class="text-right">WIP</th>
+                                <th class="text-right">Theft</th>
+                                <th class="text-right">Balance Stock</th>
+                                <th class="text-right">Balance Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="pagination-material">
+                    <button class="btn btn-secondary btn-sm prev-btn">◀ Previous</button>
+                    <span class="page-info">Page 1 of 1</span>
+                    <button class="btn btn-secondary btn-sm next-btn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. DEBIT MASTER TAB -->
+        <div id="tab-debit" class="tab-content" style="display: none;">
+            <div class="control-card" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <div class="search-box" style="max-width: 500px;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="debitSearch" placeholder="Search by item code or material description...">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportActiveViewCSV()">📄 CSV Export</button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Master Debit Rates Registry</h3>
+                    <div><span class="text-muted">Total Master Items: <strong id="debitCount" class="text-primary">0</strong></span></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="debitTable">
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Material Description</th>
+                                <th>UOM</th>
+                                <th class="text-right">Debit Rate (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="pagination-debit">
+                    <button class="btn btn-secondary btn-sm prev-btn">◀ Previous</button>
+                    <span class="page-info">Page 1 of 1</span>
+                    <button class="btn btn-secondary btn-sm next-btn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ALERTS TAB -->
+        <div id="tab-alerts" class="tab-content" style="display: none;">
+            <div class="control-card" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <div class="select-box">
+                        <select id="alertTypeSelect">
+                            <option value="all">-- All Stock Discrepancies --</option>
+                            <option value="holding">Unused Stock Held (Balance > 0)</option>
+                            <option value="excess">Excess Erected / Deficit (Balance < 0)</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="alertSearch" placeholder="Search by contractor or item...">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportActiveViewCSV()">📄 CSV Export</button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Material Risk & Discrepancy Alert Center</h3>
+                    <div><span class="text-muted">Flagged Items: <strong id="alertTotalCount" class="text-warning">0</strong> | Total At Risk Cost: <strong id="alertTotalCost" class="text-danger">₹ 0.00</strong></span></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="alertsTable">
+                        <thead>
+                            <tr>
+                                <th>Contractor Name</th>
+                                <th>Item Code</th>
+                                <th>Material Description</th>
+                                <th class="text-right">Net Issued</th>
+                                <th class="text-right">Erected</th>
+                                <th class="text-right">WIP</th>
+                                <th class="text-right">Theft</th>
+                                <th class="text-right">Variance Qty</th>
+                                <th class="text-right">Financial Risk</th>
+                                <th class="text-center">Alert Classification</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls" id="pagination-alerts">
+                    <button class="btn btn-secondary btn-sm prev-btn">◀ Previous</button>
+                    <span class="page-info">Page 1 of 1</span>
+                    <button class="btn btn-secondary btn-sm next-btn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- 6. REPORTS TAB -->
+        <div id="tab-reports" class="tab-content" style="display: none;">
+            <div class="reports-sidebar-layout">
+                <div class="reports-sidebar">
+                    <button class="report-nav-btn active" data-report="mgmt">📈 Management Summary</button>
+                    <button class="report-nav-btn" data-report="risk">🚨 High Risk / Defaulters</button>
+                    <button class="report-nav-btn" data-report="idle">💤 Idle Inventory</button>
+                    <button class="report-nav-btn" data-report="retention">⚖️ Retention vs Recovery</button>
+                </div>
+                
+                <div class="reports-content">
+                    
+                    <!-- Management Summary -->
+                    <div id="report-mgmt" class="report-view active">
+                        <div class="table-header">
+                            <h3>Top Management Financial Summary</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="exportReportCSV('mgmt')">📄 CSV Export</button>
+                        </div>
+                        <div class="kpi-grid" style="margin-top: 16px;">
+                            <div class="kpi-card" style="--card-accent: #3b82f6;">
+                                <div class="kpi-info">
+                                    <h3>Total WO Value</h3>
+                                    <div id="rMgmtWO" class="kpi-value">₹ 0.00</div>
+                                </div>
+                            </div>
+                            <div class="kpi-card" style="--card-accent: #10b981;">
+                                <div class="kpi-info">
+                                    <h3>Total Work Completed</h3>
+                                    <div id="rMgmtWork" class="kpi-value text-success">₹ 0.00</div>
+                                </div>
+                            </div>
+                            <div class="kpi-card" style="--card-accent: #f59e0b;">
+                                <div class="kpi-info">
+                                    <h3>Total Retention Held</h3>
+                                    <div id="rMgmtRet" class="kpi-value text-warning">₹ 0.00</div>
+                                </div>
+                            </div>
+                            <div class="kpi-card" style="--card-accent: #ef4444;">
+                                <div class="kpi-info">
+                                    <h3>Overall Material Risk</h3>
+                                    <div id="rMgmtRisk" class="kpi-value text-danger">₹ 0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- High Risk -->
+                    <div id="report-risk" class="report-view" style="display: none;">
+                        <div class="table-header">
+                            <h3>High Risk / Defaulters Report</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="exportReportCSV('risk')">📄 CSV Export</button>
+                        </div>
+                        <div class="table-card mt-3">
+                            <div class="table-responsive">
+                                <table class="data-table" id="reportRiskTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Contractor Name</th>
+                                            <th>Status</th>
+                                            <th class="text-right">Balance Material Cost</th>
+                                            <th class="text-right">Required Recovery Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Idle Inventory -->
+                    <div id="report-idle" class="report-view" style="display: none;">
+                        <div class="table-header">
+                            <h3>Idle / Slow Moving Inventory (0 Consumption)</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="exportReportCSV('idle')">📄 CSV Export</button>
+                        </div>
+                        <div class="table-card mt-3">
+                            <div class="table-responsive">
+                                <table class="data-table" id="reportIdleTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Contractor Name</th>
+                                            <th>Item Code</th>
+                                            <th>Description</th>
+                                            <th class="text-right">Issued Qty</th>
+                                            <th class="text-right">Consumption</th>
+                                            <th class="text-right">Locked Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Retention vs Recovery -->
+                    <div id="report-retention" class="report-view" style="display: none;">
+                        <div class="table-header">
+                            <h3>Retention vs Material Recovery Analysis</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="exportReportCSV('retention')">📄 CSV Export</button>
+                        </div>
+                        <div class="table-card mt-3">
+                            <div class="table-responsive">
+                                <table class="data-table" id="reportRetentionTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Contractor Name</th>
+                                            <th class="text-right">Total Retention (5+10+15%)</th>
+                                            <th class="text-right">Balance Material Cost</th>
+                                            <th class="text-right">Net Buffer</th>
+                                            <th class="text-center">Safety Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Contractor Modal -->
+    <div id="contractorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalContractorName">Contractor Name</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-actions">
+                <button id="btnPrint" class="btn btn-outline" onclick="printModal()"><i class="fa fa-print"></i> Print</button>
+                <button id="btnDownload" class="btn btn-primary" onclick="downloadModalCSV()"><i class="fa fa-download"></i> Download CSV</button>
+            </div>
+            <div class="table-container" id="modalTableContainer">
+                <table id="modalTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Item Code</th>
+                            <th>Description</th>
+                            <th>UOM</th>
+                            <th>Net Issue</th>
+                            <th>Consumption</th>
+                            <th>Balance Qty</th>
+                            <th>Balance Cost (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 Ashoka Buildcon Ltd | Material Reconciliation Portal v2.0 | Auto-generated from <code>Contractor details.xlsx</code></p>
+    </footer>
+
+    <!-- Data (embedded as JS for file:// compatibility) -->
+    <script src="data.js?v=20260901_3"></script>
+    <!-- App JS -->
+    <script src="app.js?v=20260901_3"></script>
+</body>
+</html>
