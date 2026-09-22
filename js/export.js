@@ -932,9 +932,14 @@ window.ExportModule = {
                         pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
-                    // Audit format: Sr | Description | Unit | Qty(total) | Rate | 100% | st1% | st2% | st3%
+                    // Audit format: Sr | Desc | Unit | Loc1..N | Qty | Rate | 100% | st1% | st2% | st3%
+                    // (Extra Items section me location columns nahi — sirf Qty)
                     const numLocs = this.getActLocations(actKey).length;
-                    const totalCols = 9;
+                    const totalCols = 9 + numLocs;
+                    const locStartCol = 4, locEndCol = 3 + numLocs;
+                    const qtyCol = 4 + numLocs, rateCol = 5 + numLocs;
+                    const amt100Col = 6 + numLocs, amt85Col = 7 + numLocs, amt10Col = 8 + numLocs, amt5Col = 9 + numLocs;
+                    const L = (c) => getColLetter(c);
 
                     const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
                     const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF404040' } };
@@ -1007,13 +1012,16 @@ window.ExportModule = {
 
                     let rowIdx = 7;
 
-                    const writeTableHeader = () => {
-                        const headerValues = ['Sr.No.', 'Description of Material', 'Unit', 'Qty', 'Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`];
+                    const writeTableHeader = (withLocs) => {
+                        let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
+                        if (withLocs) this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
+                        headerValues.push('Qty', 'Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
                         const rowH = ws.getRow(rowIdx);
                         rowH.values = headerValues;
                         rowH.height = 28;
-                        rowH.eachCell((cell) => {
-                            cell.fill = headerFill;
+                        rowH.eachCell((cell, colIdx) => {
+                            const isLoc = withLocs && colIdx >= 4 && colIdx <= locEndCol;
+                            cell.fill = isLoc ? locFill : headerFill;
                             cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                             cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                             cell.border = thinBorder;
@@ -1021,8 +1029,15 @@ window.ExportModule = {
                         rowIdx++;
                     };
 
-                    // Ek table (regular ya extra) likho — rows + unka range/sum wapas do
-                    const writeItems = (itemsList, isExtra) => {
+                    // Ek table likho. withLocs=true → location cells + Qty formula; false → sirf total Qty.
+                    // Wapas: { startRow, endRow, sum100, a100, a85, a10, a5 } (amount column letters)
+                    const writeItems = (itemsList, isExtra, withLocs) => {
+                        const qC = withLocs ? qtyCol : 4;
+                        const rC = withLocs ? rateCol : 5;
+                        const c100 = withLocs ? amt100Col : 6;
+                        const c85 = withLocs ? amt85Col : 7;
+                        const c10 = withLocs ? amt10Col : 8;
+                        const c5 = withLocs ? amt5Col : 9;
                         const startRow = rowIdx;
                         let sum100 = 0;
                         itemsList.forEach((itemObj, listIdx) => {
@@ -1037,19 +1052,25 @@ window.ExportModule = {
                                 const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
                                     ? parseFloat(qMatrix[locIdx][idx])
                                     : 0;
+                                if (withLocs) row.getCell(locStartCol + locIdx).value = val;
                                 if (!isNaN(val)) itemTotalQty += val;
                             }
-                            row.getCell(4).value = itemTotalQty;
+                            if (withLocs) {
+                                const locRange = numLocs === 1 ? `${L(locStartCol)}${rowIdx}` : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`;
+                                row.getCell(qC).value = { formula: locRange, result: itemTotalQty };
+                            } else {
+                                row.getCell(qC).value = itemTotalQty;
+                            }
 
                             const rateVal = Number(mat.rate) || 0;
-                            row.getCell(5).value = rateVal;
+                            row.getCell(rC).value = rateVal;
 
                             const est100 = itemTotalQty * rateVal;
                             sum100 += est100;
-                            row.getCell(6).value = { formula: `D${rowIdx}*E${rowIdx}`, result: est100 };
-                            row.getCell(7).value = { formula: `F${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
-                            row.getCell(8).value = { formula: `F${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
-                            row.getCell(9).value = { formula: `F${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
+                            row.getCell(c100).value = { formula: `${L(qC)}${rowIdx}*${L(rC)}${rowIdx}`, result: est100 };
+                            row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
+                            row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
+                            row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
 
                             row.height = 22;
 
@@ -1058,14 +1079,16 @@ window.ExportModule = {
                             row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
 
                             for (let c = 4; c <= totalCols; c++) {
+                                // Extra table chhoti hai (9 col) — aage ke cells skip
+                                if (!withLocs && c > 9) break;
                                 row.getCell(c).numFmt = '#,##0.00';
                                 row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
                             }
 
-                            row.getCell(6).font = { name: 'Calibri', size: 11, bold: true };
-                            row.getCell(7).font = { name: 'Calibri', size: 11, bold: true };
-                            row.getCell(8).font = { name: 'Calibri', size: 11 };
-                            row.getCell(9).font = { name: 'Calibri', size: 11 };
+                            row.getCell(c100).font = { name: 'Calibri', size: 11, bold: true };
+                            row.getCell(c85).font = { name: 'Calibri', size: 11, bold: true };
+                            row.getCell(c10).font = { name: 'Calibri', size: 11 };
+                            row.getCell(c5).font = { name: 'Calibri', size: 11 };
 
                             row.eachCell(cell => {
                                 cell.border = thinBorder;
@@ -1075,14 +1098,14 @@ window.ExportModule = {
 
                             rowIdx++;
                         });
-                        return { startRow, endRow: rowIdx - 1, sum100 };
+                        return { startRow, endRow: rowIdx - 1, sum100, a100: L(c100), a85: L(c85), a10: L(c10), a5: L(c5) };
                     };
 
                     let regRange = null, extRange = null;
 
                     if (regularMats.length > 0) {
-                        writeTableHeader();
-                        regRange = writeItems(regularMats, false);
+                        writeTableHeader(true);
+                        regRange = writeItems(regularMats, false, true);
                     }
 
                     if (extraMats.length > 0) {
@@ -1097,8 +1120,8 @@ window.ExportModule = {
                         banCell.border = thinBorder;
                         ws.getRow(rowIdx).height = 24;
                         rowIdx++;
-                        writeTableHeader();
-                        extRange = writeItems(extraMats, true);
+                        writeTableHeader(false);
+                        extRange = writeItems(extraMats, true, false);
                     }
 
                     // Single grand total — regular + extra milake
@@ -1109,19 +1132,19 @@ window.ExportModule = {
                         const ranges5 = [];
                         [regRange, extRange].forEach(rg => {
                             if (!rg) return;
-                            ranges100.push(`F${rg.startRow}:F${rg.endRow}`);
-                            ranges85.push(`G${rg.startRow}:G${rg.endRow}`);
-                            ranges10.push(`H${rg.startRow}:H${rg.endRow}`);
-                            ranges5.push(`I${rg.startRow}:I${rg.endRow}`);
+                            ranges100.push(`${rg.a100}${rg.startRow}:${rg.a100}${rg.endRow}`);
+                            ranges85.push(`${rg.a85}${rg.startRow}:${rg.a85}${rg.endRow}`);
+                            ranges10.push(`${rg.a10}${rg.startRow}:${rg.a10}${rg.endRow}`);
+                            ranges5.push(`${rg.a5}${rg.startRow}:${rg.a5}${rg.endRow}`);
                         });
                         const grand100 = (regRange ? regRange.sum100 : 0) + (extRange ? extRange.sum100 : 0);
                         const totalRow = ws.getRow(rowIdx);
-                        ws.mergeCells(rowIdx, 1, rowIdx, 5);
+                        ws.mergeCells(rowIdx, 1, rowIdx, rateCol);
                         totalRow.getCell(1).value = 'ACTIVITY TOTAL';
-                        totalRow.getCell(6).value = { formula: `SUM(${ranges100.join(',')})`, result: grand100 };
-                        totalRow.getCell(7).value = { formula: `SUM(${ranges85.join(',')})`, result: grand100 * s1Factor };
-                        totalRow.getCell(8).value = { formula: `SUM(${ranges10.join(',')})`, result: grand100 * s2Factor };
-                        totalRow.getCell(9).value = { formula: `SUM(${ranges5.join(',')})`, result: grand100 * s3Factor };
+                        totalRow.getCell(amt100Col).value = { formula: `SUM(${ranges100.join(',')})`, result: grand100 };
+                        totalRow.getCell(amt85Col).value = { formula: `SUM(${ranges85.join(',')})`, result: grand100 * s1Factor };
+                        totalRow.getCell(amt10Col).value = { formula: `SUM(${ranges10.join(',')})`, result: grand100 * s2Factor };
+                        totalRow.getCell(amt5Col).value = { formula: `SUM(${ranges5.join(',')})`, result: grand100 * s3Factor };
 
                         totalRow.height = 26;
 
@@ -1134,7 +1157,7 @@ window.ExportModule = {
                                 left: { style: 'thin', color: { argb: 'FF888888' } },
                                 right: { style: 'thin', color: { argb: 'FF888888' } }
                             };
-                            if (colNum >= 6) {
+                            if (colNum >= amt100Col) {
                                 cell.numFmt = '#,##0.00';
                                 cell.alignment = { horizontal: 'right', vertical: 'middle' };
                             }
@@ -1143,7 +1166,10 @@ window.ExportModule = {
                         rowIdx++;
                     }
 
-                    ws.columns = [{ width: 8 }, { width: 50 }, { width: 8 }, { width: 12 }, { width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 }];
+                    let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
+                    this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
+                    widths.push({ width: 12 }, { width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
+                    ws.columns = widths;
                 },
 
                 exportCurrentActivityStyledExcel() {
