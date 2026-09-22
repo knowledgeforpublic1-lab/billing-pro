@@ -928,6 +928,17 @@
         .tabs-export-group .user-profile-pill {
             margin-left: 0.2rem;
         }
+        /* Tabs bar responsive — chhoti screen par compact */
+        @media (max-width: 1500px) {
+            .tab-item { padding: 0.7rem 0.7rem; font-size: 0.78rem; }
+            .tabs-brand-client { display: none; }
+            .tabs-export-group .user-info-text .urole { display: none; }
+            .tabs-export-group .user-profile-pill { padding: 0.2rem 0.45rem; }
+        }
+        @media (max-width: 1200px) {
+            .tabs-brand-text { display: none; }
+            .tab-item { padding: 0.7rem 0.55rem; font-size: 0.75rem; gap: 0.3rem; }
+        }
         .tab-dot {
             width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
         }

@@ -66,10 +66,10 @@
 
                     <div class="tabs-divider"></div>
                     <div class="tabs-export-group">
-                        <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                        <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                             📁 Contractor DB
                         </button>
-                        <button class="btn btn-print" @click="printView()" title="Print Current View or Save as PDF" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                        <button v-if="currentView !== 'masterrecon'" class="btn btn-print" @click="printView()" title="Print Current View or Save as PDF" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                             🖨️ Print / PDF
                         </button>
                         <button v-if="currentView === 'mapping'" class="btn btn-excel" @click="exportMaterialMappingExcel" title="Export SAP Material Mapping Master Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
