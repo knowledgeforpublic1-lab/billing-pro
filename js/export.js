@@ -1025,6 +1025,19 @@ window.ExportModule = {
                     const renderTable = (itemsList, isExtra) => {
                         if (itemsList.length === 0) return;
 
+                        // Web jaisa "✏️ Extra Items" banner — extra table ke upar merged heading
+                        if (isExtra) {
+                            ws.mergeCells(rowIdx, 1, rowIdx, totalCols);
+                            const banCell = ws.getCell(rowIdx, 1);
+                            banCell.value = `✏️ Extra Items (${itemsList.length} items added separately)`;
+                            banCell.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF4F46E5' } };
+                            banCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E9FD' } };
+                            banCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                            banCell.border = thinBorder;
+                            ws.getRow(rowIdx).height = 24;
+                            rowIdx++;
+                        }
+
                         let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
                         this.getActLocations(actKey).forEach(l => headerValues.push(isExtra ? 'Erected Qty.' : l.name));
                         headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
@@ -1090,6 +1103,7 @@ window.ExportModule = {
                             row.eachCell(cell => {
                                 cell.border = thinBorder;
                                 if (listIdx % 2 === 1) cell.fill = zebraFill;
+                                else if (isExtra) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F2FE' } };
                             });
 
                             rowIdx++;
