@@ -1,7 +1,113 @@
-# Session Backup — 22 Sep 2026 (Mapping Sync Round-3 + Data Restore)
+# Session Backup — 22 Sep 2026 (Mapping Sync Round-3 + Data Restore + Code Restructure)
 
 Ye file is session me hui har research, har issue, har fix aur uska result ka backup hai.
 (Taaki chat history na hone par bhi sab recall ho sake.)
+
+---
+
+## 8. CODE RESTRUCTURE — 15K line monolith → 20 modular files (22 Sep 2026)
+
+### What happened
+- User asked: "make better code structure for future best and fast correction and update and audit"
+- index.html was 15,331 lines (631 KB) — single file containing ALL: HTML, JS, data, logic
+
+### New folder structure
+```
+Billing2/
+├── index.html          ← 1,742 lines (130 KB) — HTML template + script tags ONLY
+├── mobile.html         ← Standalone mobile page (unchanged)
+├── css/
+│   └── style.css       ← 67 KB (same styles)
+├── js/
+│   ├── data/           ← 6 data files (global constants)
+│   │   ├── default-sap-materials.js   (3,793 lines — 642 SAP items)
+│   │   ├── default-activities.js      (3,729 lines — 11 activities, all materials)
+│   │   ├── default-contractors.js     (2,443 lines — 162 contractors)
+│   │   ├── default-master-abstract.js (20 lines)
+│   │   ├── default-companies.js       (21 lines)
+│   │   └── default-invoice.js         (39 lines)
+│   ├── core/
+│   │   └── app.js       ← 729 lines — Vue createApp, data(), computed, watch, mounted, mount
+│   ├── sync.js          ← 416 lines — Cloud sync + localStorage (SyncModule)
+│   ├── billing.js       ← 734 lines — Invoice, GST, contractors, billing calc (BillingModule)
+│   ├── mapping.js       ← 241 lines — SAP item mapping (MappingModule)
+│   ├── views.js         ← 443 lines — Reconciliation, locations, calculators (ViewsModule)
+│   ├── utils.js         ← 197 lines — formatters, keyboard nav, paste (UtilsModule)
+│   ├── history.js       ← 114 lines — Undo/redo snapshots (HistoryModule)
+│   └── export.js        ← 1,154 lines — Excel export with ExcelJS (ExportModule)
+├── api/index.js         ← 250 lines — Express API (structured logging, health check, validation)
+├── vercel.json          ← Updated: js/** + css/** static builds, cache headers
+└── package.json
+```
+
+### How modules combine in app.js
+```javascript
+const allMethods = Object.assign(
+    {},
+    window.UtilsModule || {},
+    window.HistoryModule || {},
+    window.SyncModule || {},
+    window.BillingModule || {},
+    window.MappingModule || {},
+    window.ViewsModule || {},
+    window.ExportModule || {}
+);
+const app = Vue.createApp({ data(), computed, watch, methods: allMethods, mounted });
+app.mount('#app');
+```
+
+### Script load order in index.html
+```
+Vue 3 CDN → ExcelJS CDN →
+js/data/*.js (6 files) →
+js/utils.js → js/history.js →
+js/sync.js → js/billing.js → js/mapping.js → js/views.js → js/export.js →
+js/core/app.js (creates + mounts Vue)
+```
+
+### API improvements
+- Structured logging with timestamps: `[2026-09-22T08:07:32.343Z] [INFO] [POST] Data saved`
+- Health endpoint: `GET /api/health` → `{ ok: true, readyState: "connected" }`
+- Input validation: rejects empty payloads (NOT the wrong docId/state validation that was fixed)
+- Rate limit info in every JSON response
+
+### Commits
+- `5cfee80` — refactor: modular codebase (19 files, 15967 insertions, 13647 deletions)
+- `b4f89d7` — fix: remove incorrect API validation (docId/state → empty payload check)
+- `733a088` — feat: Excel-style paste support in activity detail grid
+- `9b632e1` — fix: extra materials qty inputs now support paste + keyboard nav
+
+### Fixes during restructure
+1. **API validation bug** (commit `b4f89d7`) — Restructure me galat validation add hua tha (`docId`, `state` check). Client `savedAt` + `baseRev` bhejta hai. Fixed to only reject empty payloads.
+2. **Extra materials missing keyboard nav** (commit `9b632e1`) — Extra items ke qty inputs me `data-row`/`data-loc` + arrow/Tab/paste handlers missing the. Fixed using `item.origIndex`.
+
+---
+
+## 9. EXCEL-STYLE PASTE FEATURE (22 Sep 2026)
+
+### Feature: Activity Detail Grid Paste
+- User can copy data from Excel (tab-separated) and paste into the qty grid
+- Supports multi-row AND multi-column paste
+- Pasting starts from the focused cell and fills rightward + downward
+
+### How it works
+1. Click any Qty cell in the activity detail grid
+2. Copy data from Excel (Ctrl+C)
+3. Press Ctrl+V in the web app
+4. `handleGridPaste()` parses tab-separated text, fills `activityQuantities[actKey][locIdx][matIdx]`
+5. Shows toast "Pasted N values" + auto-saves + moves focus to next row
+
+### Keyboard navigation (spreadsheet-style)
+- Arrow keys: ← → ↑ ↓ (move between cells)
+- Enter: move down
+- Tab: move right, Shift+Tab: move left
+- Ctrl+V: paste from clipboard
+
+### Implementation
+- `handleGridPaste(event, startRowIdx, startLocIdx)` in `js/utils.js`
+- `@paste` + `@keydown` handlers on qty inputs in `index.html`
+- "Paste Excel" button + instruction banner above the grid
+- Uses `item.origIndex` for `data-row` (unique across regular + extra items)
 
 ---
 
@@ -99,7 +205,7 @@ Ye file is session me hui har research, har issue, har fix aur uska result ka ba
 ## 4. Important URLs
 - Production site: `https://billing-pro-dusky.vercel.app`
 - GitHub repo: `https://github.com/knowledgeforpublic1-lab/billing-pro.git` (branch `master`)
-- Local dev: `node server.js` → `http://localhost:3000`
+- Local dev: `node server.js` → `http://localhost:3456`
 
 ---
 
