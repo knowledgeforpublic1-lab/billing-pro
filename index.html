@@ -30,77 +30,6 @@
 <body class="dark dark-mode">
     <div id="app">
         <div class="app-layout">
-            <!-- LEFT SIDEBAR -->
-            <aside class="left-sidebar">
-                <div class="sidebar-brand">
-                    <div class="sidebar-brand-icon">⚡</div>
-                    <div class="sidebar-brand-text">
-                        <h2>Billing Pro</h2>
-                        <p>Enterprise Suite</p>
-                    </div>
-                </div>
-
-                <nav class="sidebar-nav">
-                    <div class="sidebar-nav-item" :class="{ 'active': currentView === 'invoice' }" @click="switchView('invoice')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        <span>Tax Invoice</span>
-                    </div>
-                    <div class="sidebar-nav-item" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                        </svg>
-                        <span>Activity Billing</span>
-                    </div>
-                    <div class="sidebar-nav-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
-                        <span>Reconciliation</span>
-                    </div>
-                    <div class="sidebar-nav-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                        </svg>
-                        <span>SAP Mapping</span>
-                    </div>
-                    <div class="sidebar-nav-item" @click="openContractorManager">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                        <span>Contractor DB</span>
-                    </div>
-                    <div class="sidebar-nav-item" @click="exportMasterWorkbookStyledExcel">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Reports & MIS</span>
-                    </div>
-                </nav>
-
-                <div class="sidebar-footer">
-                    <div class="sidebar-autosave">
-                        <div class="sidebar-autosave-dot" :style="(syncStatus === 'error' ? 'animation: pulse 1.5s infinite;' : '') + (syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;')))" :title="syncStatus === 'synced' ? 'Cloud sync OK' : (syncStatus === 'error' ? 'Cloud sync FAIL — changes saved locally' : 'Sync in progress')"></div>
-                        <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Sync FAIL — local safe' : '💾 Local only'))) }}</span>
-                    </div>
-                </div>
-                </aside>
 
             <!-- MAIN AREA -->
             <div class="main-area">
@@ -139,6 +68,14 @@
                         <span class="tab-dot" style="background: #3b82f6;"></span>
                         Activity Billing
                     </button>
+                    <button class="tab-item" :class="{ 'active': currentView === 'abstract' }" @click="switchView('abstract')">
+                        <span class="tab-dot" style="background: #06b6d4;"></span>
+                        Master Abstract
+                    </button>
+                    <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
+                        <span class="tab-dot" style="background: #6366f1;"></span>
+                        SAP Mapping
+                    </button>
                     <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
                         <span class="tab-dot" style="background: #10b981;"></span>
                         Reconciliation Sheet
@@ -149,6 +86,13 @@
                     </button>
 
                     <div class="tabs-export-group">
+                        <div class="sync-pill" :title="syncStatus === 'synced' ? 'Cloud sync OK' : (syncStatus === 'error' ? 'Cloud sync FAIL — changes saved locally' : 'Sync in progress')">
+                            <span class="sidebar-autosave-dot" :style="(syncStatus === 'error' ? 'animation: pulse 1.5s infinite;' : '') + (syncStatus === 'synced' ? 'background:#10b981;' : (syncStatus === 'syncing' ? 'background:#f59e0b;' : (syncStatus === 'error' ? 'background:#ef4444;' : 'background:#64748b;')))"></span>
+                            <span>{{ syncStatus === 'synced' ? ('☁️ Synced' + (lastSyncAt ? ' ' + lastSyncAt : '')) : (syncStatus === 'syncing' ? '☁️ Syncing…' : ((syncStatus === 'error' && cloudConflict) ? '⚠️ Conflict — 🔄 Refresh karo' : (syncStatus === 'error' ? '⚠️ Sync FAIL — local safe' : '💾 Local only'))) }}</span>
+                        </div>
+                        <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                            📁 Contractor DB
+                        </button>
                         <button class="btn btn-print" @click="printView()" title="Print Current View or Save as PDF" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             🖨️ Print / PDF
                         </button>

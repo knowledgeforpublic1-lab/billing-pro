@@ -1790,6 +1790,15 @@
         body.dark-mode .modal-content { border: 1px solid #484f58; }
         body.dark-mode .firm-card.active-firm { background: rgba(56, 139, 253, 0.12); border-color: #58a6ff; }
 
+        /* TOP TABS sync pill (sidebar footer ka compact roop) */
+        .sync-pill {
+            display: flex; align-items: center; gap: 0.45rem;
+            font-size: 0.76rem; font-weight: 700; color: var(--text-main);
+            background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: 8px; padding: 0.35rem 0.65rem; white-space: nowrap;
+        }
+        .sync-pill .sidebar-autosave-dot { flex-shrink: 0; }
+
         /* ===================== MICRO-ANIMATIONS ===================== */
         /* Paste flash — Ctrl+V se bhare cells halke hare chamkenge */
         @keyframes cellFlash {
