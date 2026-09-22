@@ -67,7 +67,14 @@ window.UtilsModule = {
                         targetRow = rowIdx + 1;
                     } else if (direction === 'up') {
                         targetRow = rowIdx - 1;
+                    } else if (direction === 'right') {
+                        targetLoc = locIdx + 1;
+                    } else if (direction === 'left') {
+                        targetLoc = locIdx - 1;
                     }
+                    const locs = this.getActLocations(this.selectedActivityKey);
+                    if (targetLoc < 0) targetLoc = 0;
+                    if (targetLoc >= locs.length) targetLoc = locs.length - 1;
                     this.$nextTick(() => {
                         const targetEl = document.querySelector(`input[data-row="${targetRow}"][data-loc="${targetLoc}"]`);
                         if (targetEl) {
@@ -75,6 +82,48 @@ window.UtilsModule = {
                             targetEl.select();
                         }
                     });
+                },
+                handleGridPaste(event, startRowIdx, startLocIdx) {
+                    if (this.isFinalized) { this.showToast('Bill locked — unlock to edit', '🔒'); return; }
+                    const text = (event.clipboardData || window.clipboardData).getData('text');
+                    if (!text) return;
+                    event.preventDefault();
+                    const rows = text.split(/\r?\n/).filter(r => r.length > 0);
+                    const actKey = this.selectedActivityKey;
+                    const locs = this.getActLocations(actKey);
+                    const act = this.activities[actKey];
+                    if (!act || !act.materials || !locs.length) return;
+                    if (!this.activityQuantities[actKey]) {
+                        this.initQuantitiesForActivity(actKey);
+                    }
+                    let pasted = 0;
+                    for (let r = 0; r < rows.length; r++) {
+                        const cells = rows[r].split('\t');
+                        const matIdx = startRowIdx + r;
+                        for (let c = 0; c < cells.length; c++) {
+                            const locIdx = startLocIdx + c;
+                            if (locIdx >= locs.length) break;
+                            if (!this.activityQuantities[actKey][locIdx]) {
+                                this.activityQuantities[actKey][locIdx] = new Array(act.materials.length).fill('');
+                            }
+                            if (matIdx >= act.materials.length) break;
+                            const raw = cells[c].trim().replace(/,/g, '');
+                            const val = raw === '' ? '' : Number(raw);
+                            if (raw === '' || !isNaN(val)) {
+                                this.activityQuantities[actKey][locIdx][matIdx] = raw === '' ? '' : val;
+                                pasted++;
+                            }
+                        }
+                    }
+                    if (pasted > 0) {
+                        this.showToast(`Pasted ${pasted} values`, '📋');
+                        this.debouncedSave();
+                        const nextRow = Math.min(startRowIdx + rows.length, (act.materials || []).length - 1);
+                        this.$nextTick(() => {
+                            const el = document.querySelector(`input[data-row="${nextRow}"][data-loc="${startLocIdx}"]`);
+                            if (el) { el.focus(); el.select(); }
+                        });
+                    }
                 },
                 handleAbstractKeyNav(event, actIdx, colType, direction) {
                     let targetRow = actIdx;

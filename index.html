@@ -316,8 +316,12 @@
                                             class="qty-input" :data-row="itemIdx" :data-loc="locIdx" placeholder="0"
                                             @focus="$event.target.select()"
                                             @keydown.enter.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
+                                            @keydown.tab.prevent="handleGridKeyNav($event, itemIdx, locIdx, $event.shiftKey ? 'left' : 'right')"
                                             @keydown.down.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'down')"
                                             @keydown.up.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'up')"
+                                            @keydown.right.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'right')"
+                                            @keydown.left.prevent="handleGridKeyNav($event, itemIdx, locIdx, 'left')"
+                                            @paste="handleGridPaste($event, itemIdx, locIdx)"
                                             @input="saveToStorage" @change="saveToStorage">
                                         <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
@@ -369,6 +373,7 @@
                                             v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" placeholder="0"
                                             @focus="$event.target.select()"
+                                            @paste="handleGridPaste($event, itemIdx, locIdx)"
                                             @input="saveToStorage" @change="saveToStorage">
                                         <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
@@ -1079,8 +1084,16 @@
             </div>
 
             <div class="glass-panel">
-                <div class="table-responsive">
-                    <table class="billing-table">
+                    <div class="table-responsive">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: rgba(99,102,241,0.08); border-bottom: 1px solid var(--border-strong); border-radius: 8px 8px 0 0; margin-bottom: 0;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                                💡 Click any Qty cell → <strong>Ctrl+V</strong> to paste from Excel (supports multi-row & multi-column)
+                            </span>
+                            <button class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.73rem; font-weight: 700; border-color: var(--accent-indigo); color: var(--accent-indigo);" @click="showToast('Click a Qty cell first, then Ctrl+V to paste from Excel', '📋')" title="How to paste from Excel">
+                                📋 Paste Excel
+                            </button>
+                        </div>
+                        <table class="billing-table">
                         <thead>
                             <tr>
                                 <th :colspan="5 + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
