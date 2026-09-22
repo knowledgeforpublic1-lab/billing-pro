@@ -7,6 +7,13 @@ require('dotenv').config();
 
 const app = express();
 
+// Structured logging helper
+const log = {
+    info: (ctx, msg) => console.log(`[${new Date().toISOString()}] [INFO] [${ctx}] ${msg}`),
+    warn: (ctx, msg) => console.warn(`[${new Date().toISOString()}] [WARN] [${ctx}] ${msg}`),
+    error: (ctx, msg, err) => console.error(`[${new Date().toISOString()}] [ERROR] [${ctx}] ${msg}`, err || ''),
+};
+
 // Security headers
 app.use(helmet());
 
@@ -31,18 +38,40 @@ const writeLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+// Attach rate-limit info headers to every response
+app.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+        if (body && typeof body === 'object') {
+            body._rateLimit = {
+                windowMs: req.rateLimit ? req.rateLimit.windowMs : undefined,
+                remaining: req.rateLimit ? req.rateLimit.remaining : undefined,
+                limit: req.rateLimit ? req.rateLimit.limit : undefined,
+            };
+        }
+        return originalJson(body);
+    };
+    next();
+});
+
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
 // API_KEY set nahi hai to check skip (local dev backward compatible).
 function requireApiKey(req, res, next) {
-    const expected = (process.env.API_KEY || '').trim();
-    if (!expected) return next();
-    const got = (req.header('x-api-key') || '').trim()
-        || (req.query && req.query.api_key ? String(req.query.api_key).trim() : '');
-    if (got !== expected) {
-        return res.status(401).json({ success: false, error: 'Unauthorized: valid x-api-key header required' });
+    try {
+        const expected = (process.env.API_KEY || '').trim();
+        if (!expected) return next();
+        const got = (req.header('x-api-key') || '').trim()
+            || (req.query && req.query.api_key ? String(req.query.api_key).trim() : '');
+        if (got !== expected) {
+            log.warn('AUTH', `Unauthorized request from ${req.ip}`);
+            return res.status(401).json({ success: false, error: 'Unauthorized: valid x-api-key header required' });
+        }
+        next();
+    } catch (err) {
+        log.error('AUTH', 'Error in API key validation', err);
+        next(err);
     }
-    next();
 }
 
 // Sirf ye fields save honge — kachra / history / bade blob Mongo me nahi jayenge (space kam hai)
@@ -72,11 +101,11 @@ async function connectToDatabase() {
     if (!MONGODB_URI) {
         throw new Error('MONGODB_URI env is not defined. Vercel env variables ya local .env me set karo.');
     }
-    
-    // Connect to database
+
+    log.info('DB', 'Connecting to MongoDB Atlas...');
     const client = await mongoose.connect(MONGODB_URI, { family: 4 });
     cachedDb = client;
-    console.log('Successfully connected to MongoDB Atlas!');
+    log.info('DB', 'Successfully connected to MongoDB Atlas');
     return client;
 }
 
@@ -88,6 +117,7 @@ function dbErrorHint(err) {
     if (/IP|whitelist|network|timed out|ECONNREFUSED|ENOTFOUND/i.test(msg)) return 'MongoDB tak network nahi pahunch raha — Atlas Network Access me 0.0.0.0/0 allow karo';
     return 'Database error — Vercel Logs me pura error dekho';
 }
+
 // Billing State Schema and Model (rev = optimistic-concurrency version;
 // purana khula tab naya cloud data overwrite na kar paye)
 const billingStateSchema = new mongoose.Schema({
@@ -99,17 +129,34 @@ const billingStateSchema = new mongoose.Schema({
 
 const BillingState = mongoose.models.BillingState || mongoose.model('BillingState', billingStateSchema);
 
+// Health endpoint — DB connection status
+app.get('/api/health', async (req, res) => {
+    try {
+        const ready = mongoose.connection.readyState === 1;
+        res.json({
+            ok: ready,
+            readyState: ready ? 'connected' : 'disconnected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        log.error('HEALTH', 'Health check failed', err);
+        res.status(500).json({ ok: false, readyState: 'error', error: err.message, timestamp: new Date().toISOString() });
+    }
+});
+
 // Routes
 app.get('/api/billing', requireApiKey, async (req, res) => {
     try {
         await connectToDatabase();
         const state = await BillingState.findOne({ dataId: 'main-billing-state' });
         if (!state) {
+            log.info('GET', 'No billing state found — returning null');
             return res.json({ success: true, data: null });
         }
+        log.info('GET', `Billing state fetched (rev: ${state.rev || 0})`);
         res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
-        console.error('Error fetching data:', err);
+        log.error('GET', 'Error fetching billing data', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });
@@ -117,25 +164,34 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
 app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
     try {
         await connectToDatabase();
+
         if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+            log.warn('POST', 'Invalid payload received (not a JSON object)');
             return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
         }
+
         const rawLen = JSON.stringify(req.body || {}).length;
         if (rawLen > 800 * 1024) {
+            log.warn('POST', `Payload too large: ${rawLen} bytes`);
             return res.status(413).json({ success: false, error: 'Payload too large (800KB limit, Mongo me jagah kam hai)' });
         }
-        const dataToSave = pickAllowedKeys(req.body || {});
-        // DEBUG: check if sapItems is received for 907
-        if (dataToSave.activities && dataToSave.activities['907'] && dataToSave.activities['907'].materials) {
-             const m = dataToSave.activities['907'].materials[0];
-             console.log("API RECEIVED sapItems length for 907 mat 0:", m.sapItems ? m.sapItems.length : 'missing');
+
+        // Input validation — required fields for sync
+        if (!req.body.docId || req.body.state === undefined || typeof req.body.baseRev !== 'number') {
+            log.warn('POST', `Missing required fields — docId: ${!!req.body.docId}, state: ${req.body.state !== undefined}, baseRev type: ${typeof req.body.baseRev}`);
+            return res.status(400).json({ success: false, error: 'Missing required fields: docId, state, baseRev' });
         }
+
+        const dataToSave = pickAllowedKeys(req.body || {});
+
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
         const existing = await BillingState.findOne({ dataId: 'main-billing-state' });
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
+            log.warn('POST', 'Save rejected — bill is finalized/locked');
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
         }
+
         // Optimistic concurrency — stale tab/phone (purana rev) naya cloud data overwrite na kare.
         // Har client (desktop + mobile) har POST me baseRev bhejta hai (GET se mila rev).
         // Doc maujood hai aur baseRev missing/galat hai to 409 — koi silent overwrite nahi.
@@ -143,11 +199,13 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
             ? Number(req.body.baseRev) : null;
         const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
+
         // Khali-state overwrite block — cloud me bhara data hai aur ye push khali aaya
         // (fresh/default state, corrupt copy) to reject. Koi reset nahi hoga.
         const incomingActs = (dataToSave.activities && typeof dataToSave.activities === 'object' && !Array.isArray(dataToSave.activities)) ? dataToSave.activities : {};
         const existingActs = (existing && existing.stateData && existing.stateData.activities && typeof existing.stateData.activities === 'object' && !Array.isArray(existing.stateData.activities)) ? existing.stateData.activities : {};
         if (existing && Object.keys(existingActs).length > 0 && Object.keys(incomingActs).length === 0) {
+            log.warn('POST', 'Empty data overwrite blocked');
             return res.status(409).json({
                 success: false,
                 error: 'Empty data overwrite blocked — cloud me tumhara purana data safe hai. Pehle Refresh karo.',
@@ -156,7 +214,9 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
                 rev: curRev
             });
         }
+
         if (existing && (baseRev === null || isNaN(baseRev) || baseRev !== curRev)) {
+            log.warn('POST', `Conflict detected — client baseRev: ${baseRev}, server rev: ${curRev}`);
             return res.status(409).json({
                 success: false,
                 error: 'Conflict: dusre PC/tab ne is beech naya save kiya hai. Pehle Refresh karo, phir apna change dobara karo.',
@@ -177,13 +237,13 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             { upsert: true, new: true }
         );
 
+        log.info('POST', `Data saved successfully (rev: ${nextRev}, payload: ${rawLen} bytes)`);
         res.json({ success: true, message: 'Data saved successfully', rev: nextRev });
     } catch (err) {
-        console.error('Error saving data:', err);
+        log.error('POST', 'Error saving billing data', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });
 
 // Export the app for Vercel
 module.exports = app;
-
