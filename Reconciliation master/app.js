@@ -157,6 +157,26 @@ function formatNum(val) {
     return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
 }
 
+// KPI count-up — dashboard numbers 0 se gin kar aate hain
+function animateKpiValue(id, target, formatter) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    try {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            el.textContent = formatter(target);
+            return;
+        }
+    } catch(e) {}
+    const dur = 900, t0 = performance.now();
+    function frame(t) {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = formatter(target * e);
+        if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
 // Populate Select Dropdowns
 let materialOptionsData = []; // store for search/filter
 let selectedMaterials = new Set(); // track selected material keys
@@ -431,10 +451,10 @@ function renderOverview() {
         contractorBalMap[c.ContractorName] = cBalCost;
     });
     
-    document.getElementById('kpi-contractors').textContent = totalContractors;
-    document.getElementById('kpi-items').textContent = totalItemsTracked;
-    document.getElementById('kpi-issue-cost').textContent = formatCurrency(totalNetIssueCost);
-    document.getElementById('kpi-balance-cost').textContent = formatCurrency(totalBalanceCost);
+    animateKpiValue('kpi-contractors', totalContractors, v => Math.round(v).toLocaleString('en-IN'));
+    animateKpiValue('kpi-items', totalItemsTracked, v => Math.round(v).toLocaleString('en-IN'));
+    animateKpiValue('kpi-issue-cost', totalNetIssueCost, formatCurrency);
+    animateKpiValue('kpi-balance-cost', totalBalanceCost, formatCurrency);
     
     renderOverviewCharts(matConsMap, contractorBalMap);
 }
@@ -467,6 +487,7 @@ function renderOverviewCharts(matConsMap, contractorBalMap) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 900, easing: 'easeOutQuart' },
             plugins: {
                 legend: { display: false },
                 tooltip: { backgroundColor: '#1e293b', titleColor: '#fff', bodyColor: '#cbd5e1' }
@@ -506,6 +527,7 @@ function renderOverviewCharts(matConsMap, contractorBalMap) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
             onClick: (event, elements, chart) => {
                 if (elements.length > 0) {
                     const index = elements[0].index;

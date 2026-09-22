@@ -22,32 +22,37 @@
 
     <!-- Header Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="brand">
-                <div class="brand-icon">🏗️</div>
-                <div class="brand-text">
-                    <h1>Material Reconciliation Portal</h1>
-                    <p>Ashoka Buildcon Ltd — Gadchiroli Project (T-10__1458)</p>
-                </div>
+        <div class="nav-container nav-single">
+            <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+            <div class="tab-navigation nav-tabs">
+                <button class="tab-btn active" data-tab="overview">
+                    <span>📊 Dashboard Overview</span>
+                </button>
+                <button class="tab-btn" data-tab="contractor">
+                    <span>👷 Contractor Statements</span>
+                </button>
+                <button class="tab-btn" data-tab="material">
+                    <span>📦 Material-wise Summary</span>
+                </button>
+                <button class="tab-btn" data-tab="debit">
+                    <span>💲 Debit Rates Master</span>
+                </button>
             </div>
-            
-            <div class="nav-stats" style="display: flex; gap: 10px; align-items: center;">
-                <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
-                <button id="uploadExcelBtn" class="btn btn-primary" onclick="document.getElementById('excelUpload').click()" style="background: #3b82f6; border-color: #3b82f6;">
-                    <span>📂 Upload Excel</span>
-                </button>
-                <button id="refreshDataBtn" class="btn btn-secondary" onclick="refreshAppData()" style="background: #10b981; border-color: #10b981; color: white;">
-                    <span>🔄 Refresh</span>
-                </button>
-                <button class="btn btn-success" onclick="exportActiveViewExcel()">
-                    <span>📥 Export to Excel</span>
-                </button>
-                <button class="btn" style="background: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportMissingRates()">
-                    <span>⚠️ Missing Rates</span>
-                </button>
-                <button class="btn" style="background: #8b5cf6; border-color: #8b5cf6; color: white;" onclick="exportForPowerBI()">
-                    <span>📈 Power BI Data</span>
-                </button>
+            <div class="nav-stats">
+                <div class="nav-group">
+                    <button id="uploadExcelBtn" class="btn btn-primary" onclick="document.getElementById('excelUpload').click()" style="background: #3b82f6; border-color: #3b82f6;">
+                        <span>📂 Upload Excel</span>
+                    </button>
+                </div>
+                <div class="nav-sep"></div>
+                <div class="nav-group">
+                    <button class="btn btn-success" onclick="exportActiveViewExcel()">
+                        <span>📥 Export to Excel</span>
+                    </button>
+                    <button class="btn" style="background: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportMissingRates()">
+                        <span>⚠️ Missing Rates</span>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -55,27 +60,6 @@
     <!-- Main App Container -->
     <div class="main-wrapper">
 
-        <!-- Views Tab Navigation -->
-        <div class="tab-navigation">
-            <button class="tab-btn active" data-tab="overview">
-                <span>📊 Dashboard Overview</span>
-            </button>
-            <button class="tab-btn" data-tab="contractor">
-                <span>👷 Contractor Statements</span>
-            </button>
-            <button class="tab-btn" data-tab="material">
-                <span>📦 Material-wise Summary</span>
-            </button>
-            <button class="tab-btn" data-tab="debit">
-                <span>💲 Debit Rates Master</span>
-            </button>
-            <button class="tab-btn" data-tab="alerts">
-                <span>⚠️ Discrepancies & Stock Alerts</span>
-            </button>
-            <button class="tab-btn" data-tab="reports">
-                <span>📊 Advanced Reports</span>
-            </button>
-        </div>
 
         <!-- 1. OVERVIEW TAB -->
         <div id="tab-overview" class="tab-content">
