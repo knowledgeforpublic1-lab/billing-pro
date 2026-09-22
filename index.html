@@ -33,33 +33,16 @@
 
             <!-- MAIN AREA -->
             <div class="main-area">
-                <!-- Project Header Bar -->
-                <div class="project-header-bar">
-                    <div class="project-info-group">
-                        <div class="project-icon-box">⚡</div>
-                        <div class="project-name-block">
-                            <h3>{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }} <span class="badge-active">ACTIVE</span></h3>
-                            <p>{{ selectedCompanyId === 'ashoka_buildcon' ? 'ASHOKA BUILDCON LTD.' : (selectedCompanyId === 'ashoka_endurance' ? 'ASHOKA ENDURANCE ROAD DEV.' : 'Client Entity') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="header-right-actions">
-                        <div class="notif-bell" title="System Notifications">
-                            🔔
-                            <span class="notif-badge">3</span>
-                        </div>
-                        <div class="user-profile-pill" title="User Profile">
-                            <div class="user-avatar">RK</div>
-                            <div class="user-info-text">
-                                <div class="uname">Rakesh Kushawaha</div>
-                                <div class="urole">Billing Engineer</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tabs Bar -->
                 <div class="tabs-bar">
+                    <div class="tabs-brand">
+                        <div class="tabs-brand-icon">⚡</div>
+                        <div class="tabs-brand-text">
+                            <div class="tabs-brand-name">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }} <span class="badge-active">ACTIVE</span></div>
+                            <div class="tabs-brand-client">{{ selectedCompanyId === 'ashoka_buildcon' ? 'ASHOKA BUILDCON LTD.' : (selectedCompanyId === 'ashoka_endurance' ? 'ASHOKA ENDURANCE ROAD DEV.' : 'Client Entity') }}</div>
+                        </div>
+                    </div>
+                    <div class="tabs-divider"></div>
                     <button class="tab-item" :class="{ 'active': currentView === 'invoice' }" @click="switchView('invoice')">
                         <span class="tab-dot" style="background: #f59e0b;"></span>
                         Tax Invoice
@@ -101,9 +84,13 @@
                         <button v-else-if="currentView === 'detail'" class="btn btn-excel" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             📗 Export Activity {{ selectedActivityKey }}
                         </button>
-                        <button class="btn btn-secondary" @click="exportMasterWorkbookStyledExcel" title="Export complete workbook with Master Abstract + All Activities" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                            📑 Export All
-                        </button>
+                        <div class="user-profile-pill" title="User Profile">
+                            <div class="user-avatar">RK</div>
+                            <div class="user-info-text">
+                                <div class="uname">Rakesh Kushawaha</div>
+                                <div class="urole">Billing Engineer</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

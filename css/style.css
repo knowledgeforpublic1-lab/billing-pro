@@ -904,6 +904,30 @@
             width: 1px; height: 26px; background: var(--border-strong);
             margin: 0 0.6rem; flex-shrink: 0;
         }
+        /* Project brand chip — header bar se tabs me shift */
+        .tabs-brand {
+            display: flex; align-items: center; gap: 0.55rem;
+            padding-right: 0.2rem; flex-shrink: 0;
+            animation: tabIn 0.32s backwards;
+        }
+        .tabs-brand-icon {
+            width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff;
+            box-shadow: 0 3px 10px rgba(37,99,235,0.35);
+        }
+        .tabs-brand-name {
+            font-size: 0.82rem; font-weight: 800; color: var(--text-main);
+            white-space: nowrap; line-height: 1.25;
+        }
+        .tabs-brand-client {
+            font-size: 0.66rem; font-weight: 600; color: var(--text-muted);
+            white-space: nowrap; line-height: 1.2;
+        }
+        .tabs-export-group .user-profile-pill {
+            margin-left: 0.2rem;
+        }
         .tab-dot {
             width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
         }
