@@ -1841,6 +1841,45 @@
         .billing-table tbody tr {
             transition: background 0.15s ease;
         }
+        /* Dropdown open animation — contractor search, suggestion lists */
+        @keyframes dropDown {
+            from { opacity: 0; transform: translateY(-8px) scaleY(0.96); }
+            to { opacity: 1; transform: translateY(0) scaleY(1); }
+        }
+        .searchable-dropdown-panel {
+            animation: dropDown 0.18s ease-out;
+            transform-origin: top center;
+        }
+        .searchable-dropdown-item {
+            transition: background 0.12s, transform 0.12s ease, padding-left 0.12s ease;
+        }
+        .searchable-dropdown-item:hover {
+            transform: translateX(3px);
+        }
+        /* Extra-item / generic suggestion popup */
+        .suggest-pop {
+            animation: dropDown 0.18s ease-out;
+            transform-origin: top center;
+        }
+        .suggest-pop > div {
+            transition: background 0.12s, padding-left 0.12s ease;
+        }
+        .suggest-pop > div:hover {
+            background: var(--primary-light);
+            padding-left: 14px;
+        }
+        /* Native selects — focus glow + hover */
+        select {
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        select:hover {
+            border-color: var(--primary);
+        }
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+            outline: none;
+        }
         /* Motion-sensitivity samman — zaroorat par sab animations band */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
