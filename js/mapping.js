@@ -155,6 +155,38 @@ window.MappingModule = {
             if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
         }
     },
+    onSapSearchFocus(key) {
+        try { if (this._sapBlurTimer) { clearTimeout(this._sapBlurTimer); this._sapBlurTimer = null; } } catch(e) {}
+        if (this.editingSapKey !== key) this.editingSapKey = key;
+    },
+    onSapSearchBlur() {
+        // Datalist option click se PEHLE blur fire hota hai — turant list hatayi to option select nahi hota.
+        // 250ms ruko taaki @change fire ho jaye, phir list hatao.
+        try { if (this._sapBlurTimer) clearTimeout(this._sapBlurTimer); } catch(e) {}
+        this._sapBlurTimer = setTimeout(() => { this._sapBlurTimer = null; this.editingSapKey = null; }, 250);
+    },
+    handleMappingQtyNav(event, rowIdx, sIdx, direction) {
+        this.$nextTick(() => {
+            const pick = (r, s) => {
+                const el = document.querySelector(`input[data-map-qty="${r}_${s}"]`);
+                return (el && !el.disabled) ? el : null;
+            };
+            let el = null;
+            if (direction === 'right') el = pick(rowIdx, sIdx + 1);
+            else if (direction === 'left') el = pick(rowIdx, sIdx - 1);
+            else {
+                const step = direction === 'up' ? -1 : 1;
+                let r = rowIdx + step;
+                // jab tak us number ki row exist karti hai, same sIdx (na mile to pehli qty) try karo
+                while (document.querySelector(`input[data-map-qty^="${r}_"]`)) {
+                    el = pick(r, sIdx) || pick(r, 0);
+                    if (el) break;
+                    r += step;
+                }
+            }
+            if (el) { el.focus(); el.select(); }
+        });
+    },
     async exportMaterialMappingExcel() {
         const workbook = new ExcelJS.Workbook();
         workbook.creator = 'Billing Pro Studio';
