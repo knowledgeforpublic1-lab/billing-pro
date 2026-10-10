@@ -218,7 +218,7 @@
     'invoiceData', 'mappingLocks'];
 
   var S = null, actKey = '', searchQ = '', locFilter = 'ALL';
-  var syncTimer = null, lastHash = '', dirty = false, pollTimer = null, updatedAt = '';
+  var syncTimer = null, lastHash = '', dirty = false, pollTimer = null, updatedAt = '', retryTimer = null, syncRetryCount = 0;
   var cloudRev = 0, conflict = false;
 
   function $(id) { return document.getElementById(id); }
@@ -314,7 +314,16 @@
 
   function scheduleSync() {
     if (syncTimer) clearTimeout(syncTimer);
+    syncRetryCount = 0;
     syncTimer = setTimeout(syncNow, 2000);
+  }
+
+  function scheduleSyncRetry() {
+    if (retryTimer) clearTimeout(retryTimer);
+    syncRetryCount = syncRetryCount + 1;
+    if (syncRetryCount > 6) { syncRetryCount = 0; return; }
+    var d = Math.min(5000 * syncRetryCount, 60000);
+    retryTimer = setTimeout(function () { retryTimer = null; syncNow(false); }, d);
   }
 
   function syncNow(manual) {
@@ -326,7 +335,7 @@
     }
     var json;
     try { var p = buildPayload(); p.baseRev = cloudRev; json = JSON.stringify(p); } catch (e) { return; }
-    if (json.length > 800 * 1024) { setSync('error', 'too big'); if (manual) toast('⚠️ Data bahut bada — sync skipped'); return; }
+    if (json.length > 4 * 1024 * 1024) { setSync('error', 'too big'); if (manual) toast('⚠️ Data bahut bada — sync skipped'); return; }
     var h = 0;
     for (var i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
     var hash = json.length + ':' + h;
@@ -356,13 +365,15 @@
         if (typeof rj.rev === 'number') cloudRev = rj.rev;
         lastHash = hash;
         dirty = false; conflict = false;
+        syncRetryCount = 0;
+        if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
         try {
           var t = new Date();
           setSync('synced', ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2));
         } catch (e) { setSync('synced', 'synced'); }
         if (manual) toast('☁️ Cloud save ho gaya!');
       })
-      .catch(function () { setSync('error', 'offline'); if (manual) toast('⚠️ Cloud save FAIL — net check karo'); });
+      .catch(function () { setSync('error', 'offline'); if (manual) toast('⚠️ Cloud save FAIL — net check karo'); scheduleSyncRetry(); });
   }
 
   function loadState() {

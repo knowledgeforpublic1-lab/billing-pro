@@ -12,6 +12,46 @@ const pageState = {
     alerts: 1
 };
 
+// ---------- Cloud (MongoDB) helpers — ye hi ab primary online save hai ----------
+function reconApiHeaders(jsonBody) {
+    var h = {};
+    if (jsonBody) h['Content-Type'] = 'application/json';
+    try { var k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch (e) {}
+    return h;
+}
+
+async function fetchReconCloud() {
+    try {
+        var res = await fetch('/api/reconciliation', { headers: reconApiHeaders(false) });
+        if (!res.ok) return null;
+        var j = await res.json();
+        if (j && j.success && j.data) return j;
+    } catch (e) { console.warn('Recon cloud load failed:', e); }
+    return null;
+}
+
+function saveReconCloud(jsonPayload) {
+    return fetch('/api/reconciliation', { method: 'POST', headers: reconApiHeaders(true), body: jsonPayload })
+        .then(function (res) {
+            if (res.status === 401) throw new Error('API key galat/missing');
+            if (!res.ok) return res.json().then(function (j) { throw new Error((j && j.error) || ('HTTP ' + res.status)); });
+            return res.json();
+        })
+        .then(function (j) { console.log('Recon cloud save OK:', j); return j; })
+        .catch(function (err) {
+            console.warn('Recon cloud save failed, legacy upload.php try ho raha hai:', err);
+            return fetch('upload.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: jsonPayload })
+                .then(function (r) { return r.json(); })
+                .then(function (d) { console.log('Legacy server save response:', d); return { legacy: true, resp: d }; });
+        });
+}
+
+function reconTimeMs(v) {
+    if (!v) return 0;
+    var t = new Date(v).getTime();
+    return isNaN(t) ? 0 : t;
+}
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -77,6 +117,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) {
                 rawData = null;
             }
+        }
+
+        // Cloud (MongoDB) copy — online me sabse nayi data yahan se aayegi
+        let cloudUsed = false;
+        const cloud = await fetchReconCloud();
+        if (cloud && cloud.data) {
+            const cloudHasData = Array.isArray(cloud.data.Contractors) && cloud.data.Contractors.length > 0;
+            const cloudMs = reconTimeMs(cloud.updatedAt) || reconTimeMs(cloud.data.ExtractedAt);
+            const localMs = rawData ? (reconTimeMs(rawData.ExtractedAt) || reconTimeMs(rawData.savedAt)) : 0;
+            // Khali cloud copy kabhi jeetegi nahi — sirf tab lo jab local hi na ho ya cloud naya+bhara ho
+            if ((!rawData && cloudHasData) || (cloudHasData && cloudMs > localMs) || (!rawData && cloud.data)) {
+                rawData = cloud.data;
+                cloudUsed = true;
+                try { localStorage.setItem('materialAppData', JSON.stringify(rawData)); } catch (e) {}
+                console.log('Loaded freshest data from cloud (MongoDB)');
+            }
+        }
+        // Local jeeta (ya cloud me kuch nahi) to use cloud me push kar do — self-heal
+        if (rawData && !cloudUsed) {
+            const localCopy = JSON.stringify(rawData);
+            setTimeout(() => { saveReconCloud(localCopy).catch(() => {}); }, 1500);
         }
         
         if (rawData) {
@@ -1679,29 +1740,29 @@ function handleExcelUpload(event) {
                 else if (currentTab === 'alerts') renderAlertsView();
                 else if (currentTab === 'reports') renderReportsView();
                 
-                // POST data to upload.php (for InfinityFree/PHP servers)
+                // POST to cloud API (MongoDB) — upload.php sirf fallback hai (PHP servers ke liye)
                 const jsonPayload = JSON.stringify(rawData);
-                fetch('upload.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: jsonPayload
-                })
-                .then(res => res.json())
-                .then(data => console.log('Server save response:', data))
-                .catch(err => console.warn('Server save failed (offline or no PHP):', err));
-                
-                // Restore button
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>✅ Uploaded & Saved!</span>';
-                    btn.style.background = '#10b981'; // Green
-                    btn.style.borderColor = '#10b981';
-                    
+                const finalizeBtn = (text, color) => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = text;
+                        btn.style.background = color;
+                        btn.style.borderColor = color;
+                    }
                     setTimeout(() => {
                         // Force hard reload with cache busting
                         window.location.href = window.location.pathname + '?t=' + new Date().getTime();
                     }, 1500);
-                }
+                };
+                saveReconCloud(jsonPayload)
+                .then(result => {
+                    console.log('Server save response:', result);
+                    finalizeBtn('<span>✅ Saved to Cloud!</span>', '#10b981');
+                })
+                .catch(err => {
+                    console.warn('Server save failed (offline):', err);
+                    finalizeBtn('<span>⚠️ Local save OK — cloud retry hoga</span>', '#f59e0b');
+                });
                 
                 if (missingColumnsContractors.length > 0) {
                     alert('⚠️ Alert: In contractors ki sheet mein "Issue", "MRN", "Net Issue", "Consumption", ya "Balance" column nahi mila:\n\n' + missingColumnsContractors.join('\n'));

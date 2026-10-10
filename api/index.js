@@ -19,7 +19,7 @@ app.use(helmet());
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // Rate limiting — brute-force / spam POST se bachao (serverless per-instance memory store)
 const apiLimiter = rateLimit({
@@ -171,9 +171,9 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         }
 
         const rawLen = JSON.stringify(req.body || {}).length;
-        if (rawLen > 800 * 1024) {
+        if (rawLen > 4 * 1024 * 1024) {
             log.warn('POST', `Payload too large: ${rawLen} bytes`);
-            return res.status(413).json({ success: false, error: 'Payload too large (800KB limit, Mongo me jagah kam hai)' });
+            return res.status(413).json({ success: false, error: 'Payload too large (4MB limit — Vercel body limit)' });
         }
 
         // Input validation — payload must have at least one sync key (activities, projectMeta, etc.)
@@ -242,6 +242,83 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         res.json({ success: true, message: 'Data saved successfully', rev: nextRev });
     } catch (err) {
         log.error('POST', 'Error saving billing data', err);
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
+    }
+});
+
+// ============ Reconciliation (Excel-parsed dataset) — online copy ============
+const reconciliationStateSchema = new mongoose.Schema({
+    dataId: { type: String, default: 'main-reconciliation-state', unique: true },
+    stateData: { type: Object, required: true },
+    rev: { type: Number, default: 0 },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const ReconciliationState = mongoose.models.ReconciliationState
+    || mongoose.model('ReconciliationState', reconciliationStateSchema);
+
+app.get('/api/reconciliation', requireApiKey, async (req, res) => {
+    try {
+        await connectToDatabase();
+        const state = await ReconciliationState.findOne({ dataId: 'main-reconciliation-state' });
+        if (!state) {
+            log.info('GET-RECON', 'No reconciliation state found — returning null');
+            return res.json({ success: true, data: null });
+        }
+        log.info('GET-RECON', `Reconciliation state fetched (rev: ${state.rev || 0})`);
+        res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
+    } catch (err) {
+        log.error('GET-RECON', 'Error fetching reconciliation data', err);
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
+    }
+});
+
+app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) => {
+    try {
+        await connectToDatabase();
+
+        if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+            return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
+        }
+        const rawLen = JSON.stringify(req.body || {}).length;
+        if (rawLen > 4 * 1024 * 1024) {
+            log.warn('POST-RECON', `Payload too large: ${rawLen} bytes`);
+            return res.status(413).json({ success: false, error: 'Payload too large (4MB limit — Vercel body limit)' });
+        }
+        const bodyKeys = Object.keys(req.body);
+        if (bodyKeys.length === 0) {
+            return res.status(400).json({ success: false, error: 'Empty payload' });
+        }
+
+        const incoming = req.body.data && typeof req.body.data === 'object' && !Array.isArray(req.body.data)
+            ? req.body.data : req.body;
+        const incomingContractors = Array.isArray(incoming.Contractors) ? incoming.Contractors : [];
+        const existing = await ReconciliationState.findOne({ dataId: 'main-reconciliation-state' });
+        const existingContractors = (existing && existing.stateData && Array.isArray(existing.stateData.Contractors))
+            ? existing.stateData.Contractors : [];
+
+        // Khali overwrite block — cloud me bhara data hai aur ye push khali aaya to reject
+        if (existing && existingContractors.length > 0 && incomingContractors.length === 0) {
+            log.warn('POST-RECON', 'Empty reconciliation overwrite blocked');
+            return res.status(409).json({
+                success: false,
+                error: 'Empty data overwrite blocked — cloud me purana data safe hai',
+                data: existing.stateData,
+                updatedAt: existing.updatedAt,
+                rev: existing.rev || 0
+            });
+        }
+
+        const nextRev = ((existing && typeof existing.rev === 'number') ? existing.rev : 0) + 1;
+        await ReconciliationState.findOneAndUpdate(
+            { dataId: 'main-reconciliation-state' },
+            { stateData: incoming, rev: nextRev, updatedAt: new Date() },
+            { upsert: true, new: true }
+        );
+        log.info('POST-RECON', `Saved (rev: ${nextRev}, payload: ${rawLen} bytes)`);
+        res.json({ success: true, message: 'Reconciliation data saved', rev: nextRev });
+    } catch (err) {
+        log.error('POST-RECON', 'Error saving reconciliation data', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });

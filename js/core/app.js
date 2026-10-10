@@ -767,6 +767,9 @@
             // Initial history snapshot
             this.takeSnapshot();
 
+            // Net wapas aaye to pending sync turant push ho jaye
+            this.armOnlineRecovery();
+
             // Periodic heartbeat sync — agar koi change pending hai toh push ho jaye
             this._heartbeatTimer = setInterval(() => {
                 if (this._isLoading || this.cloudConflict) return;
@@ -774,7 +777,7 @@
                 try {
                     const payload = this.buildSyncPayload();
                     const json = JSON.stringify(payload);
-                    if (json.length > 800 * 1024) return;
+                    if (json.length > 4 * 1024 * 1024) return;
                     let h = 0;
                     for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
                     const hash = json.length + ':' + h;

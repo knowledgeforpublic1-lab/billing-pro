@@ -45,6 +45,7 @@ window.SyncModule = {
         };
     },
     scheduleRemoteSync() {
+        this._syncRetryCount = 0; // naya edit = retry budget dobara se
         if (this._syncTimer) clearTimeout(this._syncTimer);
         this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 2500);
     },
@@ -86,7 +87,7 @@ window.SyncModule = {
         try {
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
-            if (json.length > 800 * 1024) {
+            if (json.length > 4 * 1024 * 1024) {
                 this.syncStatus = 'error';
                 console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
                 this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped', '⚠️');
@@ -172,6 +173,17 @@ window.SyncModule = {
         console.info('Sync retry #' + this._syncRetryCount + ' in ' + (delay / 1000) + 's');
         this._syncRetryTimer = setTimeout(() => { this._syncRetryTimer = null; this.syncToMongoNow(); }, delay);
     },
+    // Net wapas aane par turant pending sync push karo (offline tha to 5 retry khatam ho chuke hote hain)
+    armOnlineRecovery() {
+        if (this._onlineArmed) return;
+        this._onlineArmed = true;
+        window.addEventListener('online', () => {
+            console.info('Browser online — pending cloud sync retry ho raha hai');
+            this._syncRetryCount = 0;
+            if (this.cloudConflict) return;
+            setTimeout(() => { try { this.syncToMongoNow(); } catch(e) {} }, 500);
+        });
+    },
     async refreshFromCloud() {
         try {
             if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
@@ -191,7 +203,7 @@ window.SyncModule = {
             if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
-            if (json.length > 800 * 1024) return;
+            if (json.length > 4 * 1024 * 1024) return;
             let h = 0;
             for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
             const hash = json.length + ':' + h;
