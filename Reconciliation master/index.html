@@ -31,6 +31,9 @@
                 <button class="tab-btn" data-tab="contractor">
                     <span>👷 Contractor Statements</span>
                 </button>
+                <button class="tab-btn" data-tab="item-balance">
+                    <span>⚖️ Item Balance Finder</span>
+                </button>
                 <button class="tab-btn" data-tab="material">
                     <span>📦 Material-wise Summary</span>
                 </button>
@@ -183,6 +186,154 @@
                     <button class="btn btn-secondary btn-sm prev-btn">◀ Previous</button>
                     <span class="page-info">Page 1 of 1</span>
                     <button class="btn btn-secondary btn-sm next-btn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2.5 ITEM BALANCE FINDER TAB (किसके पास कितना माल बचा है) -->
+        <div id="tab-item-balance" class="tab-content" style="display: none;">
+            <!-- Top Controls -->
+            <div class="control-card" style="margin-bottom: 20px;">
+                <div class="filter-group" style="width: 100%; display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+                    <div style="flex: 2; min-width: 320px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+                            🔍 Select or Search Material / Item Code:
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <div class="search-box" style="flex: 1; min-width: 160px;">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="itemBalSearchInput" placeholder="Filter items (e.g. POLE, CABLE, 17000004)..." autocomplete="off">
+                            </div>
+                            <div class="select-box" style="flex: 2;">
+                                <select id="itemBalSelect" style="width: 100%;">
+                                    <option value="">-- Choose Material Item --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; min-width: 220px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+                            ⚡ Filter & Sort Contractors:
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 10px; height: 42px;">
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); cursor: pointer; user-select: none; white-space: nowrap;">
+                                <input type="checkbox" id="itemBalOnlyPositive" checked style="width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;">
+                                <span>Only Balance &gt; 0</span>
+                            </label>
+                            <div class="select-box" style="flex: 1;">
+                                <select id="itemBalSort" style="width: 100%; padding: 10px 12px;">
+                                    <option value="bal-desc">Balance Qty (High → Low)</option>
+                                    <option value="cost-desc">Balance Cost (High → Low)</option>
+                                    <option value="name-asc">Contractor (A → Z)</option>
+                                    <option value="issue-desc">Issued Qty (High → Low)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="search-box" style="flex: 1; min-width: 200px;">
+                        <span class="search-icon">👷</span>
+                        <input type="text" id="itemBalContractorFilter" placeholder="Filter contractor in list...">
+                    </div>
+                </div>
+
+                <div class="action-buttons" style="margin-top: 14px; width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; gap: 10px;">
+                    <!-- Quick Chips Bar -->
+                    <div id="itemBalQuickChips" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">🔥 Quick Items:</span>
+                        <!-- Chips dynamically rendered via JS -->
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="exportActiveViewCSV()">📄 CSV Export</button>
+                        <button class="btn btn-success" onclick="exportActiveViewExcel()">📥 Excel Export</button>
+                        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Statement</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item Showcase Info Card (shows full details of chosen item) -->
+            <div id="itemBalInfoCard" class="contractor-info-card" style="display: none; margin-bottom: 20px;">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- KPI Cards for the selected item -->
+            <div id="itemBalKpis" class="kpi-grid" style="margin-bottom: 20px; display: none;">
+                <div class="kpi-card" style="--card-accent: #3b82f6; --card-icon-bg: rgba(59, 130, 246, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Net Issued</h3>
+                        <div id="ibKpiIssued" class="kpi-value">0</div>
+                        <div id="ibKpiIssuedSub" class="kpi-subtext">Issued across all contractors</div>
+                    </div>
+                    <div class="kpi-icon">📦</div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #10b981; --card-icon-bg: rgba(16, 185, 129, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Erected / Consumed</h3>
+                        <div id="ibKpiCons" class="kpi-value text-success">0</div>
+                        <div id="ibKpiConsSub" class="kpi-subtext">Site installed progress</div>
+                    </div>
+                    <div class="kpi-icon">🏗️</div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #f59e0b; --card-icon-bg: rgba(245, 158, 11, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Balance in Hand</h3>
+                        <div id="ibKpiBal" class="kpi-value text-warning">0</div>
+                        <div id="ibKpiBalSub" class="kpi-subtext">Pending remaining stock</div>
+                    </div>
+                    <div class="kpi-icon">⚖️</div>
+                </div>
+                <div class="kpi-card" style="--card-accent: #ef4444; --card-icon-bg: rgba(239, 68, 68, 0.12);">
+                    <div class="kpi-info">
+                        <h3>Total Balance Liability</h3>
+                        <div id="ibKpiCost" class="kpi-value text-danger">₹ 0.00</div>
+                        <div id="ibKpiCostSub" class="kpi-subtext">Pending financial debit cost</div>
+                    </div>
+                    <div class="kpi-icon">💰</div>
+                </div>
+            </div>
+
+            <!-- Contractor Balance Breakdown Table -->
+            <div id="itemBalTableCard" class="table-card" style="display: none;">
+                <div class="table-header">
+                    <div>
+                        <h3 id="itemBalTableTitle">Contractor Balance Distribution</h3>
+                        <span class="text-muted">Showing <strong id="ibTableCount" class="text-primary">0</strong> contractors holding <strong id="ibTableBalTotal" class="text-warning">0</strong> balance</span>
+                    </div>
+                    <div id="itemBalHoldingSummary" style="font-size: 13px; color: var(--text-secondary);">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="itemBalTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Contractor Name</th>
+                                <th class="text-right" style="color: var(--warning); font-size: 13px;">Balance Stock (Qty)</th>
+                                <th class="text-right">Balance Cost</th>
+                                <th class="text-right">Net Issued</th>
+                                <th class="text-right text-success">Consumption</th>
+                                <th class="text-right text-info">WIP / Theft</th>
+                                <th style="width: 140px;" class="text-center">% Erected</th>
+                                <th class="text-center">Stock Status</th>
+                                <th class="text-center hide-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Empty / Prompt State (when no item is selected yet) -->
+            <div id="itemBalEmptyState" class="table-card" style="padding: 44px 24px; text-align: center; border: 1px dashed var(--border-highlight); background: rgba(59, 130, 246, 0.03);">
+                <div style="font-size: 48px; margin-bottom: 12px;">⚖️</div>
+                <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Select an Item to Check Contractor Balances</h3>
+                <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 24px; line-height: 1.6;">
+                    Upar diye gaye dropdown me se koi bhi material select karein ya niche diye gaye popular items par click karein. Aapko turant dikhega ki kis contractor ke paas kitna balance maal bacha hua hai aur uski kitni value hai.
+                </p>
+                <div id="itemBalEmptyTopItems" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 820px; margin: 0 auto;">
+                    <!-- Filled by JS with top items with largest balance liability -->
                 </div>
             </div>
         </div>

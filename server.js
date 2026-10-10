@@ -23,7 +23,19 @@ app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.s
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 // Alag mobile page — desktop index.html ko haath lagaye bina
 app.get(['/mobile', '/mobile.html'], (req, res) => res.sendFile(path.join(__dirname, 'mobile.html')));
-// Alag-alag asset files (style.css, aage app.js) — sirf safe naam, poora folder nahi
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use((req, res, next) => {
+  const p = decodeURI(req.url);
+  if (p.startsWith('/Reconciliation master')) {
+    return express.static(path.join(__dirname, 'Reconciliation master'))(
+      Object.assign(req, { url: p.replace('/Reconciliation master', '') || '/' }),
+      res,
+      next
+    );
+  }
+  next();
+});
 app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 
 const PORT = process.env.PORT || 3000;

@@ -191,6 +191,7 @@ function setupNavigation() {
             
             if (target === 'overview') renderOverview();
             else if (target === 'contractor') renderContractorView();
+            else if (target === 'item-balance') renderItemBalanceView();
             else if (target === 'material') renderMaterialView();
             else if (target === 'debit') renderDebitView();
             else if (target === 'alerts') renderAlertsView();
@@ -272,6 +273,7 @@ function populateDropdowns() {
         materialOptionsData = Array.from(matMap.values()).sort((a, b) => a.label.localeCompare(b.label));
         renderMaterialOptions();
         setupMultiSelect();
+        populateItemBalanceDropdown();
     }
 }
 
@@ -757,7 +759,14 @@ function renderContractorView() {
         tr.innerHTML = `
             <td class="hide-print"><strong>${r.contractor}</strong></td>
             <td><code>${r.code}</code></td>
-            <td>${r.desc}</td>
+            <td>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span>${r.desc}</span>
+                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${(r.code && r.code !== '-') ? r.code : r.desc.replace(/'/g, "\\'")}')" title="Check all contractors holding this item">
+                        ⚖️ Balance
+                    </button>
+                </div>
+            </td>
             <td><span class="badge badge-info">${r.uom}</span></td>
             <td class="text-right">₹ ${formatNum(r.rate)}</td>
             <td class="text-right">${formatNum(r.issued)}</td>
@@ -774,6 +783,369 @@ function renderContractorView() {
     });
 
     updatePaginationUI(tabKey, pageState[tabKey], totalPages);
+}
+
+// ============================================================================
+// 2.5 ITEM BALANCE FINDER (किसके पास कितना माल बचा है)
+// ============================================================================
+let itemBalanceItemsList = [];
+let currentItemBalKey = '';
+
+function getItemBalanceData(itemKey) {
+    if (!rawData || !rawData.Contractors || !itemKey) return null;
+    
+    let code = '', desc = '', uom = '', debitRate = 0;
+    let totalIssued = 0, totalCons = 0, totalBal = 0, totalBalCost = 0, totalWip = 0, totalTheft = 0;
+    const contractors = [];
+    
+    rawData.Contractors.forEach(c => {
+        const foundItem = c.Items.find(i => {
+            const curCode = (i.ItemCode || '').trim();
+            const curDesc = (i.ItemDescription || '').trim();
+            const key = curCode ? curCode : curDesc;
+            return key === itemKey || curCode === itemKey || curDesc.toLowerCase() === itemKey.toLowerCase();
+        });
+        
+        if (foundItem) {
+            if (!desc) {
+                desc = foundItem.ItemDescription || '';
+                code = foundItem.ItemCode || '';
+                uom = foundItem.UOM || '';
+                debitRate = foundItem.DebitRate || 0;
+            }
+            totalIssued += (foundItem.NetIssue || 0);
+            totalCons += (foundItem.Consumption || 0);
+            totalBal += (foundItem.BalanceQty || 0);
+            totalBalCost += (foundItem.BalanceCost || 0);
+            totalWip += (foundItem.WIP || 0);
+            totalTheft += (foundItem.Theft || 0);
+            
+            contractors.push({
+                contractor: c.ContractorName,
+                firm: c.Metadata ? (c.Metadata.FirmName || '') : '',
+                activeStatus: c.Metadata ? (c.Metadata.ActiveStatus || '') : '',
+                workingStatus: c.Metadata ? (c.Metadata.WorkingStatus || '') : '',
+                woNo: c.Metadata ? (c.Metadata.WONo || '') : '',
+                netIssue: foundItem.NetIssue || 0,
+                consumption: foundItem.Consumption || 0,
+                wip: foundItem.WIP || 0,
+                theft: foundItem.Theft || 0,
+                balanceQty: foundItem.BalanceQty || 0,
+                balanceCost: foundItem.BalanceCost || 0,
+                rate: foundItem.DebitRate || debitRate
+            });
+        }
+    });
+    
+    return {
+        key: itemKey,
+        code,
+        desc,
+        uom,
+        debitRate,
+        totalIssued,
+        totalCons,
+        totalBal,
+        totalBalCost,
+        totalWip,
+        totalTheft,
+        contractors
+    };
+}
+
+function populateItemBalanceDropdown(filterText = '') {
+    if (!rawData || !rawData.Contractors) return;
+    
+    const matMap = new Map();
+    rawData.Contractors.forEach(c => {
+        c.Items.forEach(i => {
+            const code = (i.ItemCode || '').trim();
+            const desc = (i.ItemDescription || '').trim();
+            if (!code && !desc) return;
+            const key = code ? code : desc;
+            
+            if (!matMap.has(key)) {
+                matMap.set(key, {
+                    key,
+                    code,
+                    desc,
+                    uom: i.UOM || '',
+                    rate: i.DebitRate || 0,
+                    totalIssued: 0,
+                    totalCons: 0,
+                    totalBal: 0,
+                    totalBalCost: 0,
+                    contractorsWithBal: 0,
+                    contractorsTotal: 0
+                });
+            }
+            const m = matMap.get(key);
+            m.totalIssued += (i.NetIssue || 0);
+            m.totalCons += (i.Consumption || 0);
+            m.totalBal += (i.BalanceQty || 0);
+            m.totalBalCost += (i.BalanceCost || 0);
+            m.contractorsTotal++;
+            if (i.BalanceQty > 0) m.contractorsWithBal++;
+        });
+    });
+    
+    itemBalanceItemsList = Array.from(matMap.values()).sort((a, b) => {
+        return b.totalBalCost - a.totalBalCost;
+    });
+    
+    const select = document.getElementById('itemBalSelect');
+    if (!select) return;
+    
+    const prevVal = select.value;
+    select.innerHTML = '<option value="">-- Choose Material Item --</option>';
+    
+    const search = filterText.toLowerCase().trim();
+    itemBalanceItemsList.forEach(m => {
+        const matches = !search ||
+            m.desc.toLowerCase().includes(search) ||
+            m.code.toLowerCase().includes(search) ||
+            m.key.toLowerCase().includes(search);
+        if (!matches) return;
+        
+        const opt = document.createElement('option');
+        opt.value = m.key;
+        const codePrefix = m.code ? `[${m.code}] ` : '';
+        const balText = m.totalBal > 0 ? ` (Bal: ${formatNum(m.totalBal)} ${m.uom} in ${m.contractorsWithBal} agencies)` : ' (Nil Bal)';
+        opt.textContent = `${codePrefix}${m.desc}${balText}`;
+        select.appendChild(opt);
+    });
+    
+    if (prevVal && select.querySelector(`option[value="${prevVal}"]`)) {
+        select.value = prevVal;
+    }
+    
+    // Quick Chips
+    const chipsContainer = document.getElementById('itemBalQuickChips');
+    if (chipsContainer) {
+        chipsContainer.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">🔥 Quick Items:</span>';
+        const topChips = itemBalanceItemsList.filter(m => m.totalBal > 0).slice(0, 7);
+        topChips.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = 'item-bal-chip' + (m.key === select.value ? ' active' : '');
+            btn.dataset.key = m.key;
+            const shortName = m.desc.length > 22 ? m.desc.slice(0, 20) + '...' : m.desc;
+            btn.innerHTML = `<span>${shortName}</span> <span class="chip-qty">${formatNum(m.totalBal)} ${m.uom}</span>`;
+            btn.onclick = () => {
+                selectItemBalanceKey(m.key);
+            };
+            chipsContainer.appendChild(btn);
+        });
+    }
+    
+    // Empty state top items
+    const emptyTopContainer = document.getElementById('itemBalEmptyTopItems');
+    if (emptyTopContainer) {
+        emptyTopContainer.innerHTML = '';
+        const topItems = itemBalanceItemsList.filter(m => m.totalBalCost > 0).slice(0, 8);
+        topItems.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'item-bal-chip';
+            card.style.padding = '8px 14px';
+            card.style.fontSize = '13px';
+            card.innerHTML = `<strong>${m.desc}</strong> — <span class="chip-qty">${formatNum(m.totalBal)} ${m.uom}</span> (${formatCurrency(m.totalBalCost)})`;
+            card.onclick = () => {
+                selectItemBalanceKey(m.key);
+            };
+            emptyTopContainer.appendChild(card);
+        });
+    }
+}
+
+function selectItemBalanceKey(key) {
+    const select = document.getElementById('itemBalSelect');
+    if (select) {
+        if (!select.querySelector(`option[value="${key}"]`)) {
+            const searchInput = document.getElementById('itemBalSearchInput');
+            if (searchInput) searchInput.value = '';
+            populateItemBalanceDropdown('');
+        }
+        select.value = key;
+        renderItemBalanceView(key);
+    }
+}
+
+function renderItemBalanceView(preferredKey) {
+    if (!rawData) return;
+    
+    const select = document.getElementById('itemBalSelect');
+    if (!select) return;
+    
+    if (preferredKey) {
+        select.value = preferredKey;
+        currentItemBalKey = preferredKey;
+    } else if (select.value) {
+        currentItemBalKey = select.value;
+    }
+    
+    const itemKey = select.value;
+    const emptyState = document.getElementById('itemBalEmptyState');
+    const infoCard = document.getElementById('itemBalInfoCard');
+    const kpiGrid = document.getElementById('itemBalKpis');
+    const tableCard = document.getElementById('itemBalTableCard');
+    
+    if (!itemKey) {
+        if (emptyState) emptyState.style.display = 'block';
+        if (infoCard) infoCard.style.display = 'none';
+        if (kpiGrid) kpiGrid.style.display = 'none';
+        if (tableCard) tableCard.style.display = 'none';
+        return;
+    }
+    
+    const data = getItemBalanceData(itemKey);
+    if (!data) return;
+    
+    if (emptyState) emptyState.style.display = 'none';
+    if (infoCard) infoCard.style.display = 'block';
+    if (kpiGrid) kpiGrid.style.display = 'grid';
+    if (tableCard) tableCard.style.display = 'block';
+    
+    const holdingCount = data.contractors.filter(c => c.balanceQty > 0).length;
+    const totalWithItem = data.contractors.length;
+    
+    infoCard.innerHTML = `
+        <div class="info-card-header">
+            <div class="info-card-title">
+                <h2>📦 ${data.desc || 'Material Details'}</h2>
+                <p class="subtitle">SAP Code: <strong style="color: #60a5fa;">${data.code || 'N/A'}</strong> | Unit: <span class="badge badge-info">${data.uom || '-'}</span> | Debit Rate: <strong style="color: #10b981;">₹ ${formatNum(data.debitRate)}</strong></p>
+            </div>
+            <div class="info-card-badges">
+                <span class="badge ${holdingCount > 0 ? 'badge-warning' : 'badge-success'}">
+                    👷 ${holdingCount} Contractors Holding Stock
+                </span>
+                <span class="badge badge-info">
+                    📋 ${totalWithItem} Total Issued
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const erectedPct = data.totalIssued > 0 ? ((data.totalCons / data.totalIssued) * 100).toFixed(1) : 0;
+    
+    animateKpiValue('ibKpiIssued', data.totalIssued, formatNum);
+    const subIssued = document.getElementById('ibKpiIssuedSub');
+    if (subIssued) subIssued.textContent = `${data.uom || ''} issued across ${totalWithItem} contractors`;
+    
+    animateKpiValue('ibKpiCons', data.totalCons, formatNum);
+    const subCons = document.getElementById('ibKpiConsSub');
+    if (subCons) subCons.textContent = `${erectedPct}% completed / installed`;
+    
+    animateKpiValue('ibKpiBal', data.totalBal, formatNum);
+    const subBal = document.getElementById('ibKpiBalSub');
+    if (subBal) subBal.textContent = `${holdingCount} contractors currently holding ${data.uom || ''}`;
+    
+    animateKpiValue('ibKpiCost', data.totalBalCost, formatCurrency);
+    const subCost = document.getElementById('ibKpiCostSub');
+    if (subCost) subCost.textContent = `Total unerected stock value liability`;
+    
+    const onlyPositive = document.getElementById('itemBalOnlyPositive') ? document.getElementById('itemBalOnlyPositive').checked : true;
+    const sortMode = document.getElementById('itemBalSort') ? document.getElementById('itemBalSort').value : 'bal-desc';
+    const conFilter = document.getElementById('itemBalContractorFilter') ? document.getElementById('itemBalContractorFilter').value.toLowerCase().trim() : '';
+    
+    let filtered = data.contractors.filter(c => {
+        if (onlyPositive && c.balanceQty <= 0) return false;
+        if (conFilter && !c.contractor.toLowerCase().includes(conFilter) && !c.firm.toLowerCase().includes(conFilter)) return false;
+        return true;
+    });
+    
+    if (sortMode === 'bal-desc') filtered.sort((a, b) => b.balanceQty - a.balanceQty);
+    else if (sortMode === 'cost-desc') filtered.sort((a, b) => b.balanceCost - a.balanceCost);
+    else if (sortMode === 'name-asc') filtered.sort((a, b) => a.contractor.localeCompare(b.contractor));
+    else if (sortMode === 'issue-desc') filtered.sort((a, b) => b.netIssue - a.netIssue);
+    
+    const tbody = document.querySelector('#itemBalTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    let sumFilteredBal = 0;
+    let sumFilteredCost = 0;
+    
+    filtered.forEach((c, idx) => {
+        sumFilteredBal += c.balanceQty;
+        sumFilteredCost += c.balanceCost;
+        
+        const pct = c.netIssue > 0 ? Math.min(100, Math.max(0, (c.consumption / c.netIssue) * 100)) : 0;
+        
+        let statusBadge = '';
+        if (c.balanceQty > 0) {
+            statusBadge = `<span class="badge badge-warning">⚠️ Holding Stock</span>`;
+        } else if (c.balanceQty === 0) {
+            statusBadge = `<span class="badge badge-success">✓ Fully Erected (Nil)</span>`;
+        } else {
+            statusBadge = `<span class="badge badge-danger">Excess Deficit</span>`;
+        }
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong class="text-muted">${idx + 1}</strong></td>
+            <td>
+                <div>
+                    <strong style="color: var(--text-primary); cursor: pointer;" onclick="jumpToContractor('${c.contractor.replace(/'/g, "\\'")}')" title="Click to open full statement">
+                        ${c.contractor}
+                    </strong>
+                    ${c.firm && c.firm !== c.contractor ? `<div style="font-size: 11px; color: var(--text-muted);">${c.firm}</div>` : ''}
+                </div>
+            </td>
+            <td class="text-right">
+                <span class="font-bold ${c.balanceQty > 0 ? 'text-warning' : (c.balanceQty < 0 ? 'text-danger' : 'text-success')}" style="font-size: 14px;">
+                    ${formatNum(c.balanceQty)}
+                </span>
+                <span style="font-size: 11px; color: var(--text-muted); margin-left: 2px;">${data.uom || ''}</span>
+            </td>
+            <td class="text-right font-bold" style="color: ${c.balanceCost > 0 ? 'var(--text-primary)' : 'var(--text-muted)'};">
+                ${formatCurrency(c.balanceCost)}
+            </td>
+            <td class="text-right">${formatNum(c.netIssue)}</td>
+            <td class="text-right text-success">${formatNum(c.consumption)}</td>
+            <td class="text-right text-info">${(c.wip || c.theft) ? `${formatNum(c.wip)} / ${formatNum(c.theft)}` : '-'}</td>
+            <td class="text-center">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">${pct.toFixed(0)}%</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                </div>
+            </td>
+            <td class="text-center">${statusBadge}</td>
+            <td class="text-center hide-print">
+                <button class="btn btn-secondary btn-xs" onclick="jumpToContractor('${c.contractor.replace(/'/g, "\\'")}')" title="View Contractor Statement">
+                    👁️ View Statement
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    document.getElementById('ibTableCount').textContent = filtered.length;
+    document.getElementById('ibTableBalTotal').textContent = `${formatNum(sumFilteredBal)} ${data.uom || ''} (${formatCurrency(sumFilteredCost)})`;
+    document.getElementById('itemBalTableTitle').textContent = `${data.desc} — Contractor Balance Ledger`;
+    
+    document.querySelectorAll('.item-bal-chip').forEach(chip => {
+        if (chip.dataset.key === itemKey) chip.classList.add('active');
+        else chip.classList.remove('active');
+    });
+}
+
+function jumpToContractor(contractorName) {
+    const sel = document.getElementById('contractorSelect');
+    if (sel) {
+        sel.value = contractorName;
+        localStorage.setItem('selectedContractor', contractorName);
+    }
+    const btn = document.querySelector('.tab-btn[data-tab="contractor"]');
+    if (btn) btn.click();
+}
+
+function jumpToItemBalance(itemKey) {
+    const btn = document.querySelector('.tab-btn[data-tab="item-balance"]');
+    if (btn) {
+        btn.click();
+        setTimeout(() => {
+            selectItemBalanceKey(itemKey);
+        }, 50);
+    }
 }
 
 // 3. MATERIAL RECONCILIATION VIEW
@@ -844,7 +1216,14 @@ function renderMaterialView() {
         tr.innerHTML = `
             <td><strong>${r.contractor}</strong></td>
             <td><code>${r.code}</code></td>
-            <td>${r.desc}</td>
+            <td>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span>${r.desc}</span>
+                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${(r.code && r.code !== '-') ? r.code : r.desc.replace(/'/g, "\\'")}')" title="Check all contractors holding this item">
+                        ⚖️ Balance
+                    </button>
+                </div>
+            </td>
             <td><span class="badge badge-info">${r.uom}</span></td>
             <td class="text-right">₹ ${formatNum(r.rate)}</td>
             <td class="text-right">${formatNum(r.netIssue)}</td>
@@ -1010,6 +1389,38 @@ function setupFilters() {
         renderAlertsView();
     });
 
+    // Item Balance Finder filter events
+    const ibSelect = document.getElementById('itemBalSelect');
+    if (ibSelect) {
+        ibSelect.addEventListener('change', (e) => {
+            renderItemBalanceView(e.target.value);
+        });
+    }
+    const ibSearch = document.getElementById('itemBalSearchInput');
+    if (ibSearch) {
+        ibSearch.addEventListener('input', (e) => {
+            populateItemBalanceDropdown(e.target.value);
+        });
+    }
+    const ibOnlyPos = document.getElementById('itemBalOnlyPositive');
+    if (ibOnlyPos) {
+        ibOnlyPos.addEventListener('change', () => {
+            renderItemBalanceView();
+        });
+    }
+    const ibSort = document.getElementById('itemBalSort');
+    if (ibSort) {
+        ibSort.addEventListener('change', () => {
+            renderItemBalanceView();
+        });
+    }
+    const ibConFilter = document.getElementById('itemBalContractorFilter');
+    if (ibConFilter) {
+        ibConFilter.addEventListener('input', () => {
+            renderItemBalanceView();
+        });
+    }
+
     // Initialize pagination handlers
     setupPaginationEvents('contractor', renderContractorView);
     setupPaginationEvents('material', renderMaterialView);
@@ -1038,10 +1449,11 @@ function exportActiveViewCSV() {
     let filename = '';
     
     if (currentTab === 'contractor') { tableId = 'contractorTable'; filename = 'Contractor_Material_Reconciliation.csv'; }
+    else if (currentTab === 'item-balance') { tableId = 'itemBalTable'; filename = 'Item_Contractor_Balances.csv'; }
     else if (currentTab === 'material') { tableId = 'materialTable'; filename = 'Material_wise_Reconciliation.csv'; }
     else if (currentTab === 'debit') { tableId = 'debitTable'; filename = 'Master_Debit_Rates.csv'; }
     else if (currentTab === 'alerts') { tableId = 'alertsTable'; filename = 'Material_Discrepancies_Alerts.csv'; }
-    else { alert('Pehle koi data tab select karo (Contractor / Material / Debit / Alerts)!'); return; }
+    else { alert('Pehle koi data tab select karo (Contractor / Item Balance / Material / Debit / Alerts)!'); return; }
     
     const table = document.getElementById(tableId);
     if (!table) { alert('Table not found!'); return; }
@@ -1161,6 +1573,39 @@ async function exportActiveViewExcel() {
                 });
             });
         });
+    }
+    else if (currentTab === 'item-balance') {
+        const itemKey = document.getElementById('itemBalSelect') ? document.getElementById('itemBalSelect').value : '';
+        const itemInfo = getItemBalanceData(itemKey);
+        filename = (itemInfo && itemInfo.desc ? itemInfo.desc.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 30) : 'Item') + '_Contractor_Balances.xlsx';
+        sheetName = 'Contractor Balances';
+        
+        if (itemInfo && itemInfo.contractors) {
+            const onlyPos = document.getElementById('itemBalOnlyPositive') ? document.getElementById('itemBalOnlyPositive').checked : true;
+            const conFilter = document.getElementById('itemBalContractorFilter') ? document.getElementById('itemBalContractorFilter').value.toLowerCase().trim() : '';
+            
+            itemInfo.contractors.forEach((c, idx) => {
+                if (onlyPos && c.balanceQty <= 0) return;
+                if (conFilter && !c.contractor.toLowerCase().includes(conFilter) && !c.firm.toLowerCase().includes(conFilter)) return;
+                dataToExport.push({
+                    '#': idx + 1,
+                    'Contractor Name': c.contractor,
+                    'Firm Name': c.firm || '-',
+                    'Status': c.activeStatus || '-',
+                    'Item Code': itemInfo.code || '-',
+                    'Material Description': itemInfo.desc,
+                    'UOM': itemInfo.uom || '-',
+                    'Debit Rate': itemInfo.debitRate,
+                    'Balance Stock (Qty)': c.balanceQty,
+                    'Balance Cost (₹)': c.balanceCost,
+                    'Net Issued': c.netIssue,
+                    'Consumption (Erected)': c.consumption,
+                    'WIP': c.wip,
+                    'Theft': c.theft,
+                    '% Erected': c.netIssue > 0 ? ((c.consumption / c.netIssue) * 100).toFixed(1) + '%' : '0%'
+                });
+            });
+        }
     }
     else if (currentTab === 'material') { 
         filename = 'Material_wise_Reconciliation.xlsx';

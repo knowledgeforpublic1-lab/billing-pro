@@ -1329,3 +1329,60 @@ body::before {
 .close-btn { color: var(--text-secondary); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
 .close-btn:hover { color: var(--text-primary); }
 .modal-actions { display: flex; gap: 12px; margin-bottom: 16px; justify-content: flex-end; }
+
+/* Item Balance Finder Custom Styles */
+.item-bal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    background: var(--bg-element);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+}
+.item-bal-chip:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
+.item-bal-chip.active {
+    background: var(--primary-gradient);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+.item-bal-chip .chip-qty {
+    font-weight: 700;
+    color: var(--warning);
+}
+.item-bal-chip.active .chip-qty {
+    color: #fef08a;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 7px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+.btn-xs {
+    padding: 4px 9px;
+    font-size: 11px;
+    border-radius: 6px;
+}
+
