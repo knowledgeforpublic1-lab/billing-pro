@@ -375,7 +375,7 @@ window.ViewsModule = {
         }
     },
     onExtraItemCodeSearch() {
-        // suggestions are handled by computed extraItemSuggestions
+        this.showExtraItemSuggest = true;
     },
     selectExtraItemCode(mat) {
         this.newMaterial.desc = mat.desc;
@@ -383,6 +383,7 @@ window.ViewsModule = {
         this.newMaterial.rate = mat.rate || 0;
         this.newMaterial.sapCode = mat.itemCode || '';
         this.newMaterial.codeSearch = mat.desc;
+        this.showExtraItemSuggest = false;
     },
     submitAddMaterial() {
         if (this.isFinalized) {
@@ -408,6 +409,7 @@ window.ViewsModule = {
             qMatrix.forEach(locArr => locArr.push(''));
         }
         this.showAddMaterialModal = false;
+        this.showExtraItemSuggest = false;
         this.newMaterial = { no: '', desc: '', unit: 'No', rate: 0, codeSearch: '', sapCode: '' };
         this.saveToStorage();
         this.showToast('Extra item added at bottom ✨', '✅');

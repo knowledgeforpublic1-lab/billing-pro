@@ -183,7 +183,8 @@
                     rate: 0,
                     codeSearch: '',
                     sapCode: ''
-                }
+                },
+                showExtraItemSuggest: false
             };
         },
 
@@ -561,13 +562,15 @@
                 return parseFloat((this.selectedAugerSize * 0.0254 / 2).toFixed(4));
             },
             extraItemSuggestions() {
-                if (!this.newMaterial.codeSearch || this.newMaterial.codeSearch.length < 1) return [];
-                const q = this.newMaterial.codeSearch.toLowerCase();
                 const act11 = this.activities['907'];
                 if (!act11 || !act11.materials) return [];
+                const q = (this.newMaterial.codeSearch || '').toLowerCase().trim();
+                if (!q) return act11.materials;
                 return act11.materials.filter(m =>
-                    (m.desc && m.desc.toLowerCase().includes(q))
-                ).slice(0, 10);
+                    (m.desc && m.desc.toLowerCase().includes(q)) ||
+                    (m.itemCode && m.itemCode.toLowerCase().includes(q)) ||
+                    (m.no && String(m.no).toLowerCase().includes(q))
+                );
             }
         },
 
