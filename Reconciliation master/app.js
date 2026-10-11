@@ -910,8 +910,8 @@ function populateItemBalanceDropdown(filterText = '') {
         const opt = document.createElement('option');
         opt.value = m.key;
         const codePrefix = m.code ? `[${m.code}] ` : '';
-        const balText = m.totalBal > 0 ? ` (Bal: ${formatNum(m.totalBal)} ${m.uom} in ${m.contractorsWithBal} agencies)` : ' (Nil Bal)';
-        opt.textContent = `${codePrefix}${m.desc}${balText}`;
+        const balPrefix = m.totalBal > 0 ? `⚡ [Bal: ${formatNum(m.totalBal)} ${m.uom}] ` : `[Nil Bal] `;
+        opt.textContent = `${balPrefix}${codePrefix}${m.desc}`;
         select.appendChild(opt);
     });
     
@@ -1057,16 +1057,36 @@ function renderItemBalanceView(preferredKey) {
     else if (sortMode === 'name-asc') filtered.sort((a, b) => a.contractor.localeCompare(b.contractor));
     else if (sortMode === 'issue-desc') filtered.sort((a, b) => b.netIssue - a.netIssue);
     
+    const liveBadge = document.getElementById('itemBalLiveBadge');
+    if (liveBadge) {
+        liveBadge.style.display = 'inline-flex';
+        if (data.totalBal > 0) {
+            liveBadge.innerHTML = `⚡ Bal: <strong style="margin-left: 4px; color: #fef08a;">${formatNum(data.totalBal)} ${data.uom || ''}</strong>`;
+            liveBadge.title = `Total Balance Cost: ${formatCurrency(data.totalBalCost)}`;
+        } else {
+            liveBadge.innerHTML = `✓ Nil Bal (0 ${data.uom || ''})`;
+            liveBadge.style.color = 'var(--success)';
+        }
+    }
+
     const tbody = document.querySelector('#itemBalTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
     
     let sumFilteredBal = 0;
     let sumFilteredCost = 0;
+    let sumFilteredIssued = 0;
+    let sumFilteredCons = 0;
+    let sumFilteredWip = 0;
+    let sumFilteredTheft = 0;
     
     filtered.forEach((c, idx) => {
         sumFilteredBal += c.balanceQty;
         sumFilteredCost += c.balanceCost;
+        sumFilteredIssued += c.netIssue;
+        sumFilteredCons += c.consumption;
+        sumFilteredWip += (c.wip || 0);
+        sumFilteredTheft += (c.theft || 0);
         
         const pct = c.netIssue > 0 ? Math.min(100, Math.max(0, (c.consumption / c.netIssue) * 100)) : 0;
         
@@ -1120,7 +1140,21 @@ function renderItemBalanceView(preferredKey) {
     
     document.getElementById('ibTableCount').textContent = filtered.length;
     document.getElementById('ibTableBalTotal').textContent = `${formatNum(sumFilteredBal)} ${data.uom || ''} (${formatCurrency(sumFilteredCost)})`;
-    document.getElementById('itemBalTableTitle').textContent = `${data.desc} — Contractor Balance Ledger`;
+    document.getElementById('itemBalTableTitle').textContent = `${data.desc} — Total Balance Stock: ${formatNum(data.totalBal)} ${data.uom || ''}`;
+
+    // Update tfoot totals
+    const footBalQty = document.getElementById('ibFootBalQty');
+    if (footBalQty) footBalQty.textContent = `${formatNum(sumFilteredBal)} ${data.uom || ''}`;
+    const footBalCost = document.getElementById('ibFootBalCost');
+    if (footBalCost) footBalCost.textContent = formatCurrency(sumFilteredCost);
+    const footIssued = document.getElementById('ibFootIssued');
+    if (footIssued) footIssued.textContent = formatNum(sumFilteredIssued);
+    const footCons = document.getElementById('ibFootCons');
+    if (footCons) footCons.textContent = formatNum(sumFilteredCons);
+    const footWipTheft = document.getElementById('ibFootWipTheft');
+    if (footWipTheft) footWipTheft.textContent = (sumFilteredWip || sumFilteredTheft) ? `${formatNum(sumFilteredWip)} / ${formatNum(sumFilteredTheft)}` : '-';
+    const footErectedPct = document.getElementById('ibFootErectedPct');
+    if (footErectedPct) footErectedPct.textContent = sumFilteredIssued > 0 ? `${((sumFilteredCons / sumFilteredIssued) * 100).toFixed(0)}%` : '0%';
     
     document.querySelectorAll('.item-bal-chip').forEach(chip => {
         if (chip.dataset.key === itemKey) chip.classList.add('active');
