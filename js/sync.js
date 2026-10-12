@@ -394,6 +394,19 @@ window.SyncModule = {
                             });
                         }
                     });
+                    // Ensure all materials (including extra items) have valid sapItems
+                    Object.keys(this.activities).forEach(k => {
+                        const act = this.activities[k];
+                        if (act && act.materials) {
+                            act.materials.forEach((m, idx) => {
+                                if (!m.sapItems || !m.sapItems.length || !m.sapItems[0].code) {
+                                    if (typeof this.ensureMaterialSap === 'function') {
+                                        this.ensureMaterialSap(m, idx);
+                                    }
+                                }
+                            });
+                        }
+                    });
                 }
                 if (parsed.masterAbstractList && Array.isArray(parsed.masterAbstractList) && parsed.masterAbstractList.length > 0) {
                     this.masterAbstractList = parsed.masterAbstractList;

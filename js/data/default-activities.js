@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Default Activities & Materials
  * @description All project activities (603B, 907, 916, 919, 922, 924, 934A, 1220, 1230, 1425A, 6723)
  * with their materials, rates, SAP item codes, and default SAP mappings.
@@ -250,6 +250,19 @@ const defaultActivities = {
         "desc": "11KV A.B. Swtch, 400 A",
         "unit": "Set",
         "rate": 1800.0,
+        "itemCode": "17000023",
+        "sapDescription": "AB SWITCH 11 KV 400 AMP",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000023",
+            "desc": "AB SWITCH 11 KV 400 AMP",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -257,6 +270,19 @@ const defaultActivities = {
         "desc": "MS Channel Top Channel (100x50x6 mm)",
         "unit": "No",
         "rate": 125.0,
+        "itemCode": "17002007",
+        "sapDescription": "MS CHANNEL 100X50X6 MM",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17002007",
+            "desc": "MS CHANNEL 100X50X6 MM",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -264,6 +290,19 @@ const defaultActivities = {
         "desc": "M.S.Channel AB switch (75x40x6 mm)",
         "unit": "No",
         "rate": 125.0,
+        "itemCode": "17001391",
+        "sapDescription": "MS CHANNEL 75X40X6 MM",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17001391",
+            "desc": "MS CHANNEL 75X40X6 MM",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -271,6 +310,19 @@ const defaultActivities = {
         "desc": "H.T.Stay Set",
         "unit": "Set",
         "rate": 600.0,
+        "itemCode": "17005052",
+        "sapDescription": "MS-HT STAY SET 20 MM",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "MS-HT STAY SET 20 MM",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -278,6 +330,19 @@ const defaultActivities = {
         "desc": "Strain Hardware forWeasel/Squirrel",
         "unit": "Set",
         "rate": 10.0,
+        "itemCode": "17000702",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000702",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -285,6 +350,19 @@ const defaultActivities = {
         "desc": "Disc Insulator 11 KV 70 KN",
         "unit": "No",
         "rate": 35.0,
+        "itemCode": "17000046",
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -292,6 +370,19 @@ const defaultActivities = {
         "desc": "RSJ 116x100, 9 m long",
         "unit": "No",
         "rate": 2100.0,
+        "itemCode": "17000004",
+        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000004",
+            "desc": "RSJ POLE 100X116 MM 9 MTR",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       },
       {
@@ -299,6 +390,19 @@ const defaultActivities = {
         "desc": "Concreting ration 1:3 6",
         "unit": "CMT",
         "rate": 2700.0,
+        "itemCode": "11000336",
+        "sapDescription": "CEMENT GRADE OPC 53",
+        "sapUom": "BAG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "11000336",
+            "desc": "CEMENT GRADE OPC 53",
+            "uom": "BAG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ],
         "isExtra": true
       }
     ]

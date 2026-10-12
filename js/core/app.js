@@ -272,6 +272,13 @@
                                 activitySheetQty += val;
                             }
 
+                            // ✏️ Ensure SAP mapping exists for extra items or any unmapped items
+                            if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
+                                if (typeof this.ensureMaterialSap === 'function') {
+                                    this.ensureMaterialSap(m, mIdx);
+                                }
+                            }
+
                             if (m.sapItems && m.sapItems.length > 0) {
                                 m.sapItems.forEach(s => {
                                     if (!s.code) return;
@@ -280,8 +287,8 @@
                                     if (!sapMap[s.code]) {
                                         sapMap[s.code] = {
                                             code: s.code,
-                                            desc: s.desc,
-                                            uom: s.uom,
+                                            desc: s.desc || m.sapDescription || m.desc || s.code,
+                                            uom: s.uom || m.sapUom || m.unit || 'No',
                                             totalQty: 0,
                                             activities: {}
                                         };
@@ -356,7 +363,10 @@
                 const self = this;
                 this.reverseInvoiceActKeys.forEach(actKey => {
                     const act = self.activities[actKey];
-                    if (act && act.materials) act.materials.forEach(m => {
+                    if (act && act.materials) act.materials.forEach((m, mIdx) => {
+                        if (!m.sapItems || !m.sapItems.length) {
+                            if (typeof self.ensureMaterialSap === 'function') self.ensureMaterialSap(m, mIdx);
+                        }
                         if (m.sapItems) m.sapItems.forEach(s => {
                             if (s.code && set.indexOf(s.code) === -1) set.push(s.code);
                         });
@@ -562,15 +572,57 @@
                 return parseFloat((this.selectedAugerSize * 0.0254 / 2).toFixed(4));
             },
             extraItemSuggestions() {
-                const act11 = this.activities['907'];
-                if (!act11 || !act11.materials) return [];
                 const q = (this.newMaterial.codeSearch || '').toLowerCase().trim();
-                if (!q) return act11.materials;
-                return act11.materials.filter(m =>
-                    (m.desc && m.desc.toLowerCase().includes(q)) ||
-                    (m.itemCode && m.itemCode.toLowerCase().includes(q)) ||
-                    (m.no && String(m.no).toLowerCase().includes(q))
-                );
+                const list = [];
+                const seen = new Set();
+
+                // 1. Collect materials from all activities
+                Object.keys(this.activities || {}).forEach(ak => {
+                    const act = this.activities[ak];
+                    if (act && act.materials) {
+                        act.materials.forEach(m => {
+                            if (!m || !m.desc) return;
+                            const key = (m.itemCode || '') + '__' + m.desc.toLowerCase();
+                            if (seen.has(key)) return;
+                            seen.add(key);
+                            if (!q || m.desc.toLowerCase().includes(q) || (m.itemCode && m.itemCode.toLowerCase().includes(q))) {
+                                list.push({
+                                    desc: m.desc,
+                                    itemCode: m.itemCode || '',
+                                    unit: m.unit || 'No',
+                                    rate: m.rate || 0,
+                                    sapDescription: m.sapDescription,
+                                    sapUom: m.sapUom,
+                                    docHeader: m.docHeader,
+                                    sapItems: m.sapItems
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // 2. Also match from sapMaterialsMaster
+                (this.sapMaterialsMaster || []).forEach(sap => {
+                    if (!sap || !sap.desc) return;
+                    const key = sap.code + '__' + sap.desc.toLowerCase();
+                    if (seen.has(key)) return;
+                    if (q && (sap.desc.toLowerCase().includes(q) || (sap.code && sap.code.toLowerCase().includes(q)))) {
+                        seen.add(key);
+                        list.push({
+                            desc: sap.desc,
+                            itemCode: sap.code,
+                            code: sap.code,
+                            unit: sap.uom || 'No',
+                            rate: 0,
+                            sapDescription: sap.desc,
+                            sapUom: sap.uom,
+                            docHeader: sap.docHeader || '0031006347',
+                            sapItems: [{ code: sap.code, desc: sap.desc, uom: sap.uom || 'No', qty: 1, docHeader: sap.docHeader || '0031006347' }]
+                        });
+                    }
+                });
+
+                return list.slice(0, 30);
             }
         },
 

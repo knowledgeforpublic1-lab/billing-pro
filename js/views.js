@@ -16,16 +16,97 @@ window.ViewsModule = {
     closeReverseAddMenu() {
         this.showReverseAddMenu = false;
     },
+    resolveExtraSapCode(m, mIdx) {
+        if (!m) return '';
+        if (m.itemCode && String(m.itemCode).trim()) return String(m.itemCode).trim();
+        if (m.sapItems && m.sapItems.length && m.sapItems[0].code) return String(m.sapItems[0].code).trim();
+        
+        const desc = String(m.desc || '').trim().toLowerCase();
+        if (!desc) return 'EXTRA-' + (m.no || (mIdx !== undefined ? mIdx + 1 : '1'));
+
+        // 1. Search in all activities for matching item with valid SAP code
+        const acts = this.activities || {};
+        for (const ak in acts) {
+            const act = acts[ak];
+            if (act && act.materials) {
+                for (const other of act.materials) {
+                    if (other !== m && other.desc) {
+                        const otherDesc = String(other.desc).trim().toLowerCase();
+                        if (otherDesc === desc || (desc.length > 5 && (otherDesc.includes(desc) || desc.includes(otherDesc)))) {
+                            if (other.itemCode && String(other.itemCode).trim()) {
+                                return String(other.itemCode).trim();
+                            }
+                            if (other.sapItems && other.sapItems.length && other.sapItems[0].code) {
+                                return String(other.sapItems[0].code).trim();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Search in sapMaterialsMaster
+        const sMaster = this.sapMaterialsMaster || [];
+        for (const sap of sMaster) {
+            if (sap.desc) {
+                const sDesc = sap.desc.trim().toLowerCase();
+                if (sDesc === desc || (desc.length > 5 && (desc.includes(sDesc) || sDesc.includes(desc)))) {
+                    return sap.code;
+                }
+            }
+        }
+
+        // 3. Fallback code for extra item
+        return 'EXTRA-' + (m.no || (mIdx !== undefined ? mIdx + 1 : '1'));
+    },
+    ensureMaterialSap(m, mIdx) {
+        if (!m) return;
+        if (m.sapItems && m.sapItems.length > 0 && m.sapItems[0].code) {
+            if (!m.itemCode) m.itemCode = m.sapItems[0].code;
+            if (!m.sapDescription) m.sapDescription = m.sapItems[0].desc;
+            if (!m.sapUom) m.sapUom = m.sapItems[0].uom;
+            return;
+        }
+        const code = this.resolveExtraSapCode(m, mIdx);
+        if (!code) return;
+        let desc = m.sapDescription || m.desc || code;
+        let uom = m.sapUom || m.unit || 'No';
+        let docHeader = m.docHeader || '0031006347';
+
+        if (this.sapMaterialsMaster) {
+            const found = this.sapMaterialsMaster.find(s => s.code === code);
+            if (found) {
+                desc = found.desc || desc;
+                uom = found.uom || uom;
+                if (found.docHeader) docHeader = found.docHeader;
+            }
+        }
+
+        m.itemCode = code;
+        m.sapDescription = desc;
+        m.sapUom = uom;
+        m.docHeader = docHeader;
+        m.sapItems = [{
+            code: code,
+            desc: desc,
+            uom: uom,
+            qty: 1,
+            docHeader: docHeader
+        }];
+    },
     reverseActsForCode(sapCode) {
         const out = [];
         this.reverseInvoiceActKeys.forEach(actKey => {
             const act = this.activities ? this.activities[actKey] : null;
             if (!act || !act.materials) return;
-            const hit = act.materials.some(m => (m.sapItems || []).some(s => {
-                if (!s.code || s.code !== sapCode) return false;
-                const mq = Number(s.qty);
-                return isNaN(mq) ? true : mq !== 0;
-            }));
+            const hit = act.materials.some((m, mIdx) => {
+                if (!m.sapItems || !m.sapItems.length) this.ensureMaterialSap(m, mIdx);
+                return (m.sapItems || []).some(s => {
+                    if (!s.code || s.code !== sapCode) return false;
+                    const mq = Number(s.qty);
+                    return isNaN(mq) ? true : mq !== 0;
+                });
+            });
             if (hit) out.push(actKey);
         });
         return out;
@@ -136,6 +217,7 @@ window.ViewsModule = {
         const locArr = qMatrix[rcol.locIdx] || [];
         let total = 0;
         act.materials.forEach((m, mIdx) => {
+            if (!m.sapItems || !m.sapItems.length) this.ensureMaterialSap(m, mIdx);
             if (!m.sapItems) return;
             // 🔩 kg-material + wazan mila to cell (kg) ko nos me dikhao
             const _bw = this.nutBoltWeightForCode(sapCode);
@@ -162,6 +244,7 @@ window.ViewsModule = {
         // Is activity me ye SAP code kin item se juda hai (factor 0 = not-required → bahar)
         const mapped = [];
         act.materials.forEach((m, mIdx) => {
+            if (!m.sapItems || !m.sapItems.length) this.ensureMaterialSap(m, mIdx);
             if (m.sapItems) m.sapItems.forEach(s => {
                 if (!s.code || s.code !== sapCode) return;
                 const mq = Number(s.qty);
@@ -321,7 +404,7 @@ window.ViewsModule = {
     },
     getActLocations(actKey) {
         if (this.activityLocations && this.activityLocations[actKey]) return this.activityLocations[actKey];
-        return this.locations;
+        return this.locations || [];
     },
     addLocation() {
         if (this.isFinalized) {
@@ -379,10 +462,25 @@ window.ViewsModule = {
     },
     selectExtraItemCode(mat) {
         this.newMaterial.desc = mat.desc;
-        this.newMaterial.unit = mat.unit || 'No';
+        this.newMaterial.unit = mat.unit || mat.uom || 'No';
         this.newMaterial.rate = mat.rate || 0;
-        this.newMaterial.sapCode = mat.itemCode || '';
-        this.newMaterial.codeSearch = mat.desc;
+        const code = mat.itemCode || mat.code || '';
+        this.newMaterial.sapCode = code;
+        this.newMaterial.codeSearch = code ? `[${code}] ${mat.desc}` : mat.desc;
+        this.newMaterial.sapDescription = mat.sapDescription || mat.desc || '';
+        this.newMaterial.sapUom = mat.sapUom || mat.uom || mat.unit || '';
+        this.newMaterial.docHeader = mat.docHeader || '0031006347';
+        if (mat.sapItems && mat.sapItems.length) {
+            this.newMaterial.sapItems = JSON.parse(JSON.stringify(mat.sapItems));
+        } else if (code) {
+            this.newMaterial.sapItems = [{
+                code: code,
+                desc: mat.desc,
+                uom: mat.uom || mat.unit || 'No',
+                qty: 1,
+                docHeader: mat.docHeader || '0031006347'
+            }];
+        }
         this.showExtraItemSuggest = false;
     },
     submitAddMaterial() {
@@ -395,12 +493,59 @@ window.ViewsModule = {
             return;
         }
         const itemNo = this.newMaterial.no || (this.currentActivity.materials.length + 1).toString();
+
+        let code = (this.newMaterial.sapCode || '').trim();
+        if (!code && this.newMaterial.codeSearch) {
+            const trimmed = this.newMaterial.codeSearch.trim();
+            const match = trimmed.match(/^\[(.*?)\]/);
+            if (match) {
+                code = match[1].trim();
+            } else if (/^\d{6,10}$/.test(trimmed)) {
+                code = trimmed;
+            }
+        }
+
+        let sapItem = null;
+        if (code && this.sapMaterialsMaster) {
+            sapItem = this.sapMaterialsMaster.find(s => s.code === code);
+        }
+        if (!sapItem && this.newMaterial.desc && this.sapMaterialsMaster) {
+            const descNorm = this.newMaterial.desc.trim().toLowerCase();
+            sapItem = this.sapMaterialsMaster.find(s => s.desc && s.desc.trim().toLowerCase() === descNorm);
+            if (sapItem && !code) code = sapItem.code;
+        }
+
+        if (!code) {
+            code = this.resolveExtraSapCode({ desc: this.newMaterial.desc, no: itemNo, unit: this.newMaterial.unit });
+        }
+
+        const sDesc = (sapItem && sapItem.desc) || this.newMaterial.sapDescription || this.newMaterial.desc || code;
+        const sUom = (sapItem && sapItem.uom) || this.newMaterial.sapUom || this.newMaterial.unit || 'No';
+        const docHeader = this.newMaterial.docHeader || (sapItem && sapItem.docHeader) || '0031006347';
+
+        let sapItems = [];
+        if (this.newMaterial.sapItems && this.newMaterial.sapItems.length) {
+            sapItems = JSON.parse(JSON.stringify(this.newMaterial.sapItems));
+        } else {
+            sapItems = [{
+                code: code,
+                desc: sDesc,
+                uom: sUom,
+                qty: 1,
+                docHeader: docHeader
+            }];
+        }
+
         const newMat = {
             no: itemNo,
             desc: this.newMaterial.desc,
-            unit: this.newMaterial.unit || 'No',
+            unit: this.newMaterial.unit || sUom || 'No',
             rate: parseFloat(this.newMaterial.rate) || 0,
-            itemCode: this.newMaterial.sapCode || '',
+            itemCode: code,
+            sapDescription: sDesc,
+            sapUom: sUom,
+            docHeader: docHeader,
+            sapItems: sapItems,
             isExtra: true
         };
         this.currentActivity.materials.push(newMat);
@@ -410,7 +555,7 @@ window.ViewsModule = {
         }
         this.showAddMaterialModal = false;
         this.showExtraItemSuggest = false;
-        this.newMaterial = { no: '', desc: '', unit: 'No', rate: 0, codeSearch: '', sapCode: '' };
+        this.newMaterial = { no: '', desc: '', unit: 'No', rate: 0, codeSearch: '', sapCode: '', sapItems: [] };
         this.saveToStorage();
         this.showToast('Extra item added at bottom ✨', '✅');
     },

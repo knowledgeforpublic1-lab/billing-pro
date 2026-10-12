@@ -44,11 +44,19 @@ window.MappingModule = {
         this.scheduleMappingSync();
     },
     onItemCodeManualChange(item) {
-        if (item.itemCode && this.sapMaterialsMaster) {
-            const codeClean = String(item.itemCode).trim();
+        if (!item) return;
+        const codeClean = String(item.itemCode || '').trim();
+        if (!codeClean) {
+            item.itemCode = '';
+            item.sapItems = [];
+            this.saveToStorage();
+            this.scheduleMappingSync();
+            return;
+        }
+        if (this.sapMaterialsMaster) {
             const found = this.sapMaterialsMaster.find(s => s.code === codeClean);
             if (found) {
-                item.desc = found.desc;
+                if (!item.desc || !item.isExtra) item.desc = found.desc;
                 item.unit = found.uom || item.unit;
                 item.sapDescription = found.desc;
                 item.sapUom = found.uom;
@@ -67,8 +75,8 @@ window.MappingModule = {
                         qty: 1,
                         docHeader: found.docHeader || '0031006347'
                     });
-                    item.itemCode = found.code;
                 }
+                item.itemCode = found.code;
                 // Auto-fill rate — collect all rates for this code from ALL activities, pick most frequent
                 const rateMap = {};
                 for (const actKey in this.activities) {
@@ -89,9 +97,21 @@ window.MappingModule = {
                         bestRate = Number(rate);
                     }
                 }
-                if (bestRate > 0) {
+                if (bestRate > 0 && (!item.rate || item.rate === 0)) {
                     item.rate = bestRate;
                 }
+            } else {
+                // Custom code entered
+                item.itemCode = codeClean;
+                item.sapDescription = item.sapDescription || item.desc || codeClean;
+                item.sapUom = item.sapUom || item.unit || 'No';
+                item.sapItems = [{
+                    code: codeClean,
+                    desc: item.desc || codeClean,
+                    uom: item.unit || 'No',
+                    qty: 1,
+                    docHeader: item.docHeader || '0031006347'
+                }];
             }
         }
         this.saveToStorage();
