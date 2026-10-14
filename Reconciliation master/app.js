@@ -2065,67 +2065,238 @@ function handleExcelUpload(event) {
                     }
                 }
 
+                // Helper to safely parse numeric quantities from Excel cell (handles commas, numbers, whitespace)
+                const parseQty = (val) => {
+                    if (val === null || val === undefined || val === '') return 0;
+                    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+                    const clean = String(val).replace(/,/g, '').trim();
+                    const num = parseFloat(clean);
+                    return isNaN(num) ? 0 : num;
+                };
+
+                const cleanHeaderStr = (val) => {
+                    if (val === null || val === undefined) return '';
+                    return String(val)
+                        .replace(/[\r\n\t_]+/g, ' ')
+                        .replace(/[^\w\s.%-]/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toLowerCase();
+                };
+
                 for (const cNameRaw of contractorSheets) {
                     const officialName = getOfficialName(cNameRaw);
                     const cSheet = XLSX.utils.sheet_to_json(wb.Sheets[cNameRaw], {header: 1, defval: ""});
                     
-                    // Check for required columns
-                    let hasRequiredColumns = false;
-                    let colMap = { itemCode: 1, itemDesc: 2, uom: 3, debitRate: 4, issue: 5, mrn: 6, netIssue: 7, consumption: 8, balance: 9 };
-                    let startRow = 2;
-                    for (let r = 0; r < Math.min(cSheet.length, 15); r++) {
-                        const rowStr = (cSheet[r] || []).join(' ').toLowerCase();
-                        if ((rowStr.includes('item') || rowStr.includes('material') || rowStr.includes('desc')) && (rowStr.includes('issue') || rowStr.includes('qty') || rowStr.includes('mrn') || rowStr.includes('balance'))) {
-                            const headers = cSheet[r].map(h => String(h || '').toLowerCase().replace(/\s+/g, ' ').trim());
-                            
-                            const findCol = (keywords, exclude = []) => {
-                                for (const k of keywords) {
-                                    let idx = headers.findIndex(h => h && h === k);
-                                    if (idx !== -1) return idx;
-                                }
-                                for (const k of keywords) {
-                                    for (let i = headers.length - 1; i >= 0; i--) {
-                                        const h = headers[i];
-                                        if (h && h.includes(k)) {
-                                            if (exclude.some(ex => h.includes(ex))) continue;
-                                            return i;
-                                        }
+                    // Dynamic Header & Column Detection for image headings:
+                    // 1. ISSUED QTY
+                    // 2. MRN QTY
+                    // 3. NET ISSUED
+                    // 4. TOTAL Consumptio (TOTAL Consumption)
+                    // 5. WIP
+                    // 6. Total Balance
+                    // Plus core item identifiers: Item Code, Item Description, UOM
+                    
+                    let colMap = {
+                        itemCode: -1,
+                        itemDesc: -1,
+                        uom: -1,
+                        issue: -1,
+                        mrn: -1,
+                        netIssue: -1,
+                        consumption: -1,
+                        wip: -1,
+                        theft: -1,
+                        balance: -1
+                    };
+                    let startRow = 1;
+                    let bestScore = -1;
+                    let bestColMap = null;
+                    let bestStartRow = 1;
+
+                    // Matchers for each column given a normalized string
+                    const matchers = {
+                        issue: (h) => {
+                            if (!h) return 0;
+                            if (h === 'issued qty' || h === 'issue qty' || h === 'issued quantity' || h === 'qty issued' || h === 'quantity issued' || h === 'issued nos') return 10;
+                            if (['net', 'amount', 'rate', 'cost', 'value', 'rs', 'inr'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('issued qty') || h.includes('issue qty')) return 9;
+                            if (h.startsWith('issued') || h.startsWith('issue') || h === 'issued') return 6;
+                            return 0;
+                        },
+                        mrn: (h) => {
+                            if (!h) return 0;
+                            if (h === 'mrn qty' || h === 'mrn quantity' || h === 'qty mrn' || h === 'mrn nos' || h === 'mrn') return 10;
+                            if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('mrn qty') || h.includes('mrn nos')) return 9;
+                            if (h.includes('mrn') || h.includes('m r n')) return 7;
+                            return 0;
+                        },
+                        netIssue: (h) => {
+                            if (!h) return 0;
+                            if (h === 'net issued' || h === 'net issue' || h === 'net issued qty' || h === 'net issue qty' || h === 'net qty issued' || h === 'net quantity') return 10;
+                            if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('net issued') || h.includes('net issue')) return 9;
+                            if (h.includes('net') && (h.includes('issue') || h.includes('issued'))) return 7;
+                            return 0;
+                        },
+                        consumption: (h) => {
+                            if (!h) return 0;
+                            // Exact matches including 'total consumptio' from image
+                            if (h === 'total consumptio' || h === 'total consumption' || h === 'total consumtion' || h === 'total cosumption') return 10;
+                            if (['amount', 'rate', 'cost', 'value', 'percent', '%'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('total consumptio') || h.includes('total consumption') || h.includes('total consumtion')) return 9;
+                            if (h.includes('total') && (h.includes('consum') || h.includes('cosum') || h.includes('erect'))) return 8;
+                            if (h === 'consumption' || h === 'consumtion' || h === 'consumed qty' || h === 'total erected' || h === 'erected qty') return 7;
+                            if (h.includes('consumption') || h.includes('consumtion') || h.includes('erected')) return 5;
+                            return 0;
+                        },
+                        wip: (h) => {
+                            if (!h) return 0;
+                            if (h === 'wip' || h === 'w i p' || h === 'wip qty' || h === 'work in progress') return 10;
+                            if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('wip') || h.includes('w i p') || h.includes('work in progress')) return 8;
+                            return 0;
+                        },
+                        balance: (h) => {
+                            if (!h) return 0;
+                            // Exact matches including 'total balance' from image
+                            if (h === 'total balance' || h === 'total bal' || h === 'total balance qty' || h === 'total bal qty') return 10;
+                            if (['amount', 'rate', 'cost', 'value', 'debit'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('total balance') || h.includes('total bal')) return 9;
+                            if (h === 'balance qty' || h === 'balance quantity' || h === 'balance stock' || h === 'balance material' || h === 'bal qty') return 8;
+                            if (h.includes('balance') || h.includes('bal qty')) return 6;
+                            return 0;
+                        },
+                        theft: (h) => {
+                            if (!h) return 0;
+                            if (h === 'theft' || h === 'thef' || h === 'stolen' || h === 'theft material') return 10;
+                            if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('theft') || h.includes('thef')) return 7;
+                            return 0;
+                        },
+                        itemCode: (h) => {
+                            if (!h) return 0;
+                            if (h === 'item code' || h === 'itemcode' || h === 'material code' || h === 'mat code' || h === 'sap code' || h === 'mat no' || h === 'item no' || h === 'item no.') return 10;
+                            if (['desc', 'description', 'name'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('item code') || h.includes('material code') || h.includes('sap code') || h.includes('mat code')) return 9;
+                            if (h === 'code') return 6;
+                            return 0;
+                        },
+                        itemDesc: (h) => {
+                            if (!h) return 0;
+                            if (h === 'item description' || h === 'material description' || h === 'description of material' || h === 'item desc' || h === 'material desc' || h === 'description' || h === 'material' || h === 'items' || h === 'particulars') return 10;
+                            if (['code', 'rate', 'uom', 'unit', 'cost', 'amount', 'val'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('description') || h.includes('material desc') || h.includes('item desc')) return 8;
+                            if (h.includes('material') || h.includes('item name')) return 6;
+                            return 0;
+                        },
+                        uom: (h) => {
+                            if (!h) return 0;
+                            if (h === 'uom' || h === 'unit' || h === 'unit of measurement' || h === 'u o m' || h === 'u.o.m') return 10;
+                            if (['rate', 'cost', 'price', 'amount'].some(ex => h.includes(ex))) return 0;
+                            if (h.includes('uom') || h.includes('unit')) return 7;
+                            return 0;
+                        }
+                    };
+
+                    const maxHeaderRows = Math.min(cSheet.length, 40);
+
+                    // Scan every potential header row (both single-row and 2-row merged headers)
+                    for (let r = 0; r < maxHeaderRows; r++) {
+                        const row1 = cSheet[r] || [];
+                        const row2 = (r + 1 < maxHeaderRows) ? (cSheet[r + 1] || []) : [];
+                        const maxCols = Math.max(row1.length, row2.length);
+                        if (maxCols === 0) continue;
+
+                        // Test A: Single row at r
+                        // Test B: Multi-row combining r and r+1
+                        const tests = [
+                            {
+                                headerArr: Array.from({length: maxCols}, (_, c) => cleanHeaderStr(row1[c])),
+                                nextRow: r + 1
+                            }
+                        ];
+                        if (row2.length > 0) {
+                            tests.push({
+                                headerArr: Array.from({length: maxCols}, (_, c) => cleanHeaderStr(row1[c] + ' ' + row2[c])),
+                                nextRow: r + 2
+                            });
+                        }
+
+                        for (const test of tests) {
+                            const headers = test.headerArr;
+                            const curColMap = {
+                                itemCode: -1,
+                                itemDesc: -1,
+                                uom: -1,
+                                issue: -1,
+                                mrn: -1,
+                                netIssue: -1,
+                                consumption: -1,
+                                wip: -1,
+                                theft: -1,
+                                balance: -1
+                            };
+                            let score = 0;
+
+                            for (const key of Object.keys(matchers)) {
+                                let bestMatchScore = 0;
+                                let bestColIdx = -1;
+                                for (let c = 0; c < headers.length; c++) {
+                                    const mScore = matchers[key](headers[c]);
+                                    if (mScore > bestMatchScore) {
+                                        bestMatchScore = mScore;
+                                        bestColIdx = c;
                                     }
                                 }
-                                return -1;
-                            };
-                            
-                            const iItemCode = findCol(['item code']);
-                            const iItemDesc = findCol(['items', 'item description', 'description', 'material']);
-                            const iUOM = findCol(['uom', 'unit']);
-                            
-                            const iIssued = findCol(['issued qty', 'issue'], ['net', 'cost', 'amount', 'value', 'rate']);
-                            const iMrn = findCol(['mrn', 'mrn qty']);
-                            const iNet = findCol(['net issue', 'net issued'], ['cost', 'amount', 'value', 'rate']);
-                            const iCons = findCol(['total consumtion', 'total consumption', 'total cosumption', 'consumption', 'consumtion', 'cosumption', 'consumed', 'consumed qty', 'erected', 'erection', 'erected qty', 'total erected'], ['cost', 'amount', 'value', 'rate']);
-                            const iWip = findCol(['wip', 'w.i.p', 'work in progress'], ['cost', 'amount', 'value', 'rate']);
-                            const iTheft = findCol(['theft', 'thef', 'stolen', 'theft material', 'thef material'], ['cost', 'amount', 'value', 'rate']);
-                            const iBal = findCol(['total bal', 'total balance', 'balance material', 'balance', 'balance stock', 'balance qty', 'bal qty'], ['cost', 'amount', 'value', 'rate']);
-                            
-                            if (iItemCode !== -1 && iItemDesc !== -1) {
-                                hasRequiredColumns = true;
-                                startRow = r + 1;
-                                if(iItemCode !== -1) colMap.itemCode = iItemCode; else colMap.itemCode = -1;
-                                if(iItemDesc !== -1) colMap.itemDesc = iItemDesc; else colMap.itemDesc = -1;
-                                if(iUOM !== -1) colMap.uom = iUOM; else colMap.uom = -1;
-                                if(iIssued !== -1) colMap.issue = iIssued; else colMap.issue = -1;
-                                if(iMrn !== -1) colMap.mrn = iMrn; else colMap.mrn = -1;
-                                if(iNet !== -1) colMap.netIssue = iNet; else colMap.netIssue = -1;
-                                if(iCons !== -1) colMap.consumption = iCons; else colMap.consumption = -1;
-                                if(iWip !== -1) colMap.wip = iWip; else colMap.wip = -1;
-                                if(iTheft !== -1) colMap.theft = iTheft; else colMap.theft = -1;
-                                if(iBal !== -1) colMap.balance = iBal; else colMap.balance = -1;
-                                break;
+                                if (bestMatchScore > 0) {
+                                    curColMap[key] = bestColIdx;
+                                    score += bestMatchScore;
+                                }
+                            }
+
+                            // Extra weighting for key columns from the image
+                            if (curColMap.issue !== -1) score += 5;
+                            if (curColMap.mrn !== -1) score += 5;
+                            if (curColMap.netIssue !== -1) score += 5;
+                            if (curColMap.consumption !== -1) score += 5;
+                            if (curColMap.wip !== -1) score += 5;
+                            if (curColMap.balance !== -1) score += 5;
+
+                            if (score > bestScore) {
+                                bestScore = score;
+                                bestColMap = curColMap;
+                                bestStartRow = test.nextRow;
                             }
                         }
                     }
-                    
-                    if (!hasRequiredColumns) {
+
+                    if (bestColMap && bestScore >= 15) {
+                        colMap = bestColMap;
+                        startRow = bestStartRow;
+                    }
+
+                    // Fallback heuristics for itemCode and itemDesc if not found by header
+                    if (colMap.itemCode === -1 || colMap.itemDesc === -1) {
+                        for (let r = startRow; r < Math.min(cSheet.length, startRow + 15); r++) {
+                            const row = cSheet[r];
+                            if (!row) continue;
+                            for (let c = 0; c < row.length; c++) {
+                                const valStr = String(row[c] || '').trim();
+                                if (colMap.itemCode === -1 && /^\d{6,10}$/.test(valStr)) {
+                                    colMap.itemCode = c;
+                                }
+                                if (colMap.itemDesc === -1 && valStr.length > 5 && /[a-zA-Z]/.test(valStr) && c !== colMap.itemCode) {
+                                    colMap.itemDesc = c;
+                                }
+                            }
+                            if (colMap.itemCode !== -1 && colMap.itemDesc !== -1) break;
+                        }
+                    }
+
+                    const hasKeyColumns = (colMap.issue !== -1 || colMap.consumption !== -1 || colMap.balance !== -1);
+                    if (!hasKeyColumns) {
                         missingColumnsContractors.push(officialName);
                     }
 
@@ -2143,57 +2314,77 @@ function handleExcelUpload(event) {
                     
                     for (let i = startRow; i < cSheet.length; i++) {
                         const row = cSheet[i];
-                        if (row && (colMap.itemCode === -1 || row[colMap.itemCode]) && (colMap.itemDesc === -1 || row[colMap.itemDesc]) && String(row[colMap.itemCode] || '').trim().toUpperCase() !== 'ITEM CODE') {
-                            const issuedQty  = parseFloat(row[colMap.issue])       || 0;
-                            const mrnQty     = parseFloat(row[colMap.mrn])         || 0;
-                            // NetIssue: read from sheet column, but if missing/zero calculate from formula
-                            let netIssueRaw  = parseFloat(row[colMap.netIssue])    || 0;
-                            if (netIssueRaw === 0 && colMap.netIssue === -1) {
+                        if (!row) continue;
+
+                        const codeStr = String((colMap.itemCode !== -1 ? row[colMap.itemCode] : '') || '').trim();
+                        const descStr = String((colMap.itemDesc !== -1 ? row[colMap.itemDesc] : '') || '').trim();
+
+                        // Skip empty rows
+                        if (!codeStr && !descStr) continue;
+
+                        // Skip repeated headers or totals
+                        const upperCode = codeStr.toUpperCase();
+                        const upperDesc = descStr.toUpperCase();
+                        if (upperCode === 'ITEM CODE' || upperCode === 'ITEM' || upperCode === 'CODE' || upperCode === 'SR. NO.' || upperCode === 'SR NO') continue;
+                        if (upperDesc.startsWith('TOTAL') || upperDesc.startsWith('GRAND TOTAL') || upperDesc.startsWith('SUB TOTAL') || upperDesc === 'DESCRIPTION' || upperDesc === 'MATERIAL') continue;
+                        if (upperCode.startsWith('TOTAL') || upperCode.startsWith('GRAND TOTAL')) continue;
+
+                        // Extract data specifically from the matched columns (as in user's image)
+                        const issuedQty  = colMap.issue !== -1 ? parseQty(row[colMap.issue]) : 0;
+                        const mrnQty     = colMap.mrn !== -1 ? parseQty(row[colMap.mrn]) : 0;
+
+                        // NetIssue: read from sheet column if found, else calculate issuedQty - mrnQty
+                        let netIssueRaw  = colMap.netIssue !== -1 ? parseQty(row[colMap.netIssue]) : 0;
+                        if (netIssueRaw === 0 && (colMap.netIssue === -1 || (issuedQty !== 0 || mrnQty !== 0))) {
+                            if (colMap.netIssue === -1 || (netIssueRaw === 0 && row[colMap.netIssue] === '')) {
                                 netIssueRaw = issuedQty - mrnQty;
                             }
-
-                            const item = {
-                                ItemCode:        String(row[colMap.itemCode] || '').trim(),
-                                ItemDescription: String(row[colMap.itemDesc] || '').trim(),
-                                UOM:             String(row[colMap.uom]      || ''),
-                                DebitRate:       0, // Will be set from Master list
-                                IssuedQty:       issuedQty,
-                                MRNQty:          mrnQty,
-                                NetIssue:        netIssueRaw,
-                                Consumption:     parseFloat(row[colMap.consumption]) || 0,
-                                WIP:             parseFloat(row[colMap.wip])         || 0,
-                                Theft:           parseFloat(row[colMap.theft])       || 0,
-                                BalanceQty:      0, // computed below
-                                BalanceCost:     0  // computed below
-                            };
-                            
-                            // ALWAYS use Master Debit Rate — match by ItemCode first, then Description
-                            const masterMatch = parsedData.DebitRates.find(d => {
-                                const mCode  = String(d.ItemCode    || '').trim().toLowerCase();
-                                const iCode  = String(item.ItemCode || '').trim().toLowerCase();
-                                // BUG FIX: field in DebitRates is 'Description', not 'ItemDescription'
-                                const mDesc  = String(d.Description        || '').trim().toLowerCase();
-                                const iDesc  = String(item.ItemDescription || '').trim().toLowerCase();
-                                
-                                return (iCode && mCode === iCode) || (iDesc && iDesc.length > 2 && mDesc === iDesc);
-                            });
-                            
-                            if (masterMatch) {
-                                item.DebitRate = masterMatch.DebitRate;
-                            }
-                            
-                            // BalanceQty: read dynamically from sheet. If column missing, calculate.
-                            let balRaw = parseFloat(row[colMap.balance]);
-                            if (isNaN(balRaw) && colMap.balance === -1) {
-                                balRaw = item.NetIssue - item.Consumption - item.WIP - item.Theft;
-                            } else if (isNaN(balRaw)) {
-                                balRaw = 0;
-                            }
-                            
-                            item.BalanceQty  = balRaw;
-                            item.BalanceCost = item.BalanceQty * item.DebitRate;
-                            contractor.Items.push(item);
                         }
+
+                        const consumptionQty = colMap.consumption !== -1 ? parseQty(row[colMap.consumption]) : 0;
+                        const wipQty         = colMap.wip !== -1 ? parseQty(row[colMap.wip]) : 0;
+                        const theftQty       = colMap.theft !== -1 ? parseQty(row[colMap.theft]) : 0;
+
+                        // BalanceQty: read from sheet column if found, else calculate formula
+                        let balRaw = 0;
+                        if (colMap.balance !== -1) {
+                            balRaw = parseQty(row[colMap.balance]);
+                        } else {
+                            balRaw = netIssueRaw - consumptionQty - wipQty - theftQty;
+                        }
+
+                        const item = {
+                            ItemCode:        codeStr,
+                            ItemDescription: descStr,
+                            UOM:             String((colMap.uom !== -1 ? row[colMap.uom] : '') || ''),
+                            DebitRate:       0, // Will be set from Master list
+                            IssuedQty:       issuedQty,
+                            MRNQty:          mrnQty,
+                            NetIssue:        netIssueRaw,
+                            Consumption:     consumptionQty,
+                            WIP:             wipQty,
+                            Theft:           theftQty,
+                            BalanceQty:      balRaw,
+                            BalanceCost:     0 // computed below
+                        };
+                        
+                        // ALWAYS use Master Debit Rate — match by ItemCode first, then Description
+                        const masterMatch = parsedData.DebitRates.find(d => {
+                            const mCode  = String(d.ItemCode    || '').trim().toLowerCase();
+                            const iCode  = String(item.ItemCode || '').trim().toLowerCase();
+                            // BUG FIX: field in DebitRates is 'Description', not 'ItemDescription'
+                            const mDesc  = String(d.Description        || '').trim().toLowerCase();
+                            const iDesc  = String(item.ItemDescription || '').trim().toLowerCase();
+                            
+                            return (iCode && mCode === iCode) || (iDesc && iDesc.length > 2 && mDesc === iDesc);
+                        });
+                        
+                        if (masterMatch) {
+                            item.DebitRate = masterMatch.DebitRate;
+                        }
+                        
+                        item.BalanceCost = item.BalanceQty * item.DebitRate;
+                        contractor.Items.push(item);
                     }
                     contractor.ItemCount = contractor.Items.length;
                     parsedData.Contractors.push(contractor);
