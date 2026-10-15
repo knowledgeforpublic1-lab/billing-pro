@@ -696,23 +696,29 @@
         /* TABS BAR */
         .tabs-bar {
             background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);
-            padding: 0 1rem; display: flex; align-items: center; gap: 0.15rem;
-            overflow-x: auto; flex-wrap: nowrap;
+            padding: 0 0.6rem; display: flex; align-items: center; gap: 0.15rem;
+            /* No horizontal scrollbar — content fit nahi hua to neeche wrap ho jayega */
+            overflow-x: hidden; flex-wrap: wrap;
+        }
+        /* Tabs ek saath rahen — beech me split na hon; jagah na mile to andar hi wrap */
+        .tabs-nav {
+            display: flex; align-items: center; gap: 0.15rem;
+            min-width: 0; flex: 1 1 auto; flex-wrap: wrap;
         }
         .tab-item {
             display: flex; align-items: center; gap: 0.45rem;
-            padding: 0.7rem 1.1rem; border: none; background: transparent;
+            padding: 0.7rem 0.85rem; border: none; background: transparent;
             color: var(--text-muted); font-weight: 600; font-size: 0.83rem;
             cursor: pointer; border-bottom: 2.5px solid transparent;
             transition: all 0.2s; white-space: nowrap; font-family: inherit;
             position: relative;
             animation: tabIn 0.32s backwards;
         }
-        .tabs-bar .tab-item:nth-child(2) { animation-delay: 0.05s; }
-        .tabs-bar .tab-item:nth-child(3) { animation-delay: 0.1s; }
-        .tabs-bar .tab-item:nth-child(4) { animation-delay: 0.15s; }
-        .tabs-bar .tab-item:nth-child(5) { animation-delay: 0.2s; }
-        .tabs-bar .tab-item:nth-child(6) { animation-delay: 0.25s; }
+        .tabs-nav .tab-item:nth-child(1) { animation-delay: 0.05s; }
+        .tabs-nav .tab-item:nth-child(2) { animation-delay: 0.1s; }
+        .tabs-nav .tab-item:nth-child(3) { animation-delay: 0.15s; }
+        .tabs-nav .tab-item:nth-child(4) { animation-delay: 0.2s; }
+        .tabs-nav .tab-item:nth-child(5) { animation-delay: 0.25s; }
         @keyframes tabIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -735,7 +741,7 @@
         }
         .tabs-divider {
             width: 1px; height: 26px; background: var(--border-strong);
-            margin: 0 0.6rem; flex-shrink: 0;
+            margin: 0 0.45rem; flex-shrink: 0;
         }
         /* Project brand chip — header bar se tabs me shift */
         .tabs-brand {
@@ -762,8 +768,8 @@
             margin-left: 0.2rem;
         }
         /* Tabs bar responsive — chhoti screen par compact */
-        @media (max-width: 1500px) {
-            .tab-item { padding: 0.7rem 0.7rem; font-size: 0.78rem; }
+        @media (max-width: 1600px) {
+            .tab-item { padding: 0.7rem 0.6rem; font-size: 0.78rem; }
             .tabs-brand-client { display: none; }
             .tabs-export-group .user-info-text .urole { display: none; }
             .tabs-export-group .user-profile-pill { padding: 0.2rem 0.45rem; }
@@ -776,7 +782,7 @@
             width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
         }
         .tabs-export-group {
-            margin-left: auto; display: flex; gap: 0.4rem;
+            margin-left: auto; display: flex; gap: 0.35rem;
             align-items: center; padding: 0.4rem 0;
         }
 
@@ -1100,7 +1106,6 @@
             .inv-tool-item:last-child { min-width: 100%; }
             .activity-selector-group { flex-wrap: wrap; gap: 0.5rem; }
             .activity-selector-group > div { min-width: 100%; }
-            .tabs-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .tab-item { white-space: nowrap; font-size: 0.75rem; padding: 0.5rem 0.6rem; }
             .table-responsive { overflow-x: auto; }
             table.billing-table { min-width: 700px; }
@@ -1127,6 +1132,8 @@
                 font-size: 0.85rem !important;
                 padding: 0.7rem 0.5rem !important;
             }
+            /* Phone par brand chip + divider hatao — sirf tabs rahen (header chhota) */
+            .tabs-brand, .tabs-bar > .tabs-divider { display: none; }
             /* Fixed bar ke peeche content na chhupe */
             .center-content { padding: 0.35rem 0.35rem 5.5rem 0.35rem; }
             .toast-container { bottom: 6rem; }

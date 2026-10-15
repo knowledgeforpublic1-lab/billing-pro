@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261015_02">
+    <link rel="stylesheet" href="css/style.css?v=20261015_06">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -43,37 +43,32 @@
                         </div>
                     </div>
                     <div class="tabs-divider"></div>
-                    <button class="tab-item" :class="{ 'active': currentView === 'invoice' }" @click="switchView('invoice')">
-                        <span class="tab-dot" style="background: #f59e0b;"></span>
-                        Tax Invoice
-                    </button>
-                    <button class="tab-item" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
-                        <span class="tab-dot" style="background: #3b82f6;"></span>
-                        Activity Billing
-                    </button>
-                    <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
-                        <span class="tab-dot" style="background: #6366f1;"></span>
-                        SAP Mapping
-                    </button>
-                    <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
-                        <span class="tab-dot" style="background: #10b981;"></span>
-                        Reconciliation Sheet
-                    </button>
-                    <button class="tab-item" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
-                        <span class="tab-dot" style="background: #8b5cf6;"></span>
-                        Master Reconciliation
-                    </button>
+                    <div class="tabs-nav">
+                        <button class="tab-item" :class="{ 'active': currentView === 'invoice' }" @click="switchView('invoice')">
+                            <span class="tab-dot" style="background: #f59e0b;"></span>
+                            Tax Invoice
+                        </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
+                            <span class="tab-dot" style="background: #3b82f6;"></span>
+                            Activity Billing
+                        </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
+                            <span class="tab-dot" style="background: #6366f1;"></span>
+                            SAP Mapping
+                        </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
+                            <span class="tab-dot" style="background: #10b981;"></span>
+                            Reconciliation Sheet
+                        </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
+                            <span class="tab-dot" style="background: #8b5cf6;"></span>
+                            Master Reconciliation
+                        </button>
+                    </div>
 
-                    <div class="tabs-divider"></div>
                     <div class="tabs-export-group">
                         <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                             📁 Contractor DB
-                        </button>
-                        <button class="btn btn-secondary" @click="openGDriveModal" title="Google Drive Auto-Backup (RDSS T-10 GADCHIROLI)" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 700; white-space: nowrap;">
-                            ☁️ Google Drive
-                        </button>
-                        <button v-if="currentView !== 'masterrecon'" class="btn btn-print" @click="printView()" title="Print Current View or Save as PDF" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
-                            🖨️ Print / PDF
                         </button>
                         <button v-if="currentView === 'mapping'" class="btn btn-excel" @click="exportMaterialMappingExcel" title="Export SAP Material Mapping Master Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             📗 Export (.xlsx)
