@@ -50,6 +50,9 @@
                 reverseAddLoc: 0,
                 mappingActivityFilter: 'ALL',
                 mappingSearchQuery: '',
+                // 📚 SAP Material Master editor (cloud copy)
+                showSapMasterModal: false,
+                sapMasterSearch: '',
                 // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
                 mappingLocks: (function() {
                     try {
@@ -243,6 +246,17 @@
                     );
                     return descMatch || actMatch || sapMatch;
                 });
+            },
+            // 📚 SAP Master editor ka filtered list — same object references (edit direct master par)
+            filteredSapMasterList() {
+                const list = Array.isArray(this.sapMaterialsMaster) ? this.sapMaterialsMaster : [];
+                const q = String(this.sapMasterSearch || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(s =>
+                    (s.code && String(s.code).toLowerCase().includes(q)) ||
+                    (s.desc && String(s.desc).toLowerCase().includes(q)) ||
+                    (s.uom && String(s.uom).toLowerCase().includes(q))
+                );
             },
             pivotReconciliationData() {
                 const sapMap = {}; // mapping by sap code
@@ -638,6 +652,10 @@
                 deep: true
             },
             masterAbstractList: {
+                handler() { this.debouncedSave(); },
+                deep: true
+            },
+            sapMaterialsMaster: {
                 handler() { this.debouncedSave(); },
                 deep: true
             },

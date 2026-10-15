@@ -25,6 +25,58 @@ window.MappingModule = {
         this.saveToStorage();
         this.scheduleMappingSync();
     },
+    // ============ 📚 SAP MATERIAL MASTER (cloud copy) ============
+    openSapMasterModal() {
+        this.sapMasterSearch = '';
+        this.showSapMasterModal = true;
+    },
+    addSapMasterRow() {
+        if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
+        if (!Array.isArray(this.sapMaterialsMaster)) this.sapMaterialsMaster = [];
+        this.sapMasterSearch = '';
+        this.sapMaterialsMaster.unshift({ code: '', desc: '', uom: 'No' });
+        this.$nextTick(() => {
+            const el = document.querySelector('[data-sap-master-code]');
+            if (el) { el.focus(); el.select(); }
+        });
+    },
+    removeSapMasterRow(row) {
+        if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
+        if (!row) return;
+        const label = row.code ? '[' + row.code + '] ' + (row.desc || '') : (row.desc || 'nayi row');
+        if (!confirm('SAP Master se delete karein?\n' + label + '\n\nYe list cloud par sab devices par update hogi.')) return;
+        const i = this.sapMaterialsMaster.indexOf(row);
+        if (i > -1) {
+            this.sapMaterialsMaster.splice(i, 1);
+            this.persistSapMaster();
+            this.showToast('Deleted: ' + label, '📚');
+        }
+    },
+    onSapMasterRowChange(row) {
+        if (!row || this.isFinalized) return;
+        row.code = String(row.code || '').trim();
+        row.desc = String(row.desc || '').trim();
+        const u = String(row.uom || '').trim();
+        row.uom = u ? u.toUpperCase() : 'No';
+        if (row.code) {
+            const dup = this.sapMaterialsMaster.filter(s => s !== row && s.code === row.code);
+            if (dup.length) this.showToast('⚠️ SAP code [' + row.code + '] pehle se list me hai', '⚠️');
+        }
+        this.persistSapMaster();
+    },
+    persistSapMaster() {
+        this.saveToStorage();
+        this.scheduleMappingSync();
+    },
+    restoreDefaultSapMaster() {
+        if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
+        const def = (typeof defaultSapMaterialsMaster !== 'undefined' && defaultSapMaterialsMaster) ? defaultSapMaterialsMaster : [];
+        if (!def.length) { this.showToast('Default list nahi mili', '⚠️'); return; }
+        if (!confirm('Cloud wali SAP Master list ko DEFAULT list se badal dein?\n(' + def.length + ' items)\n\nAapke custom codes delete ho jayenge.')) return;
+        this.sapMaterialsMaster = JSON.parse(JSON.stringify(def));
+        this.persistSapMaster();
+        this.showToast('Default SAP Master list restore ho gayi (' + def.length + ' items)', '📚');
+    },
     onMappingRateChange(item) {
         if (this.isFinalized) { return; }
         if (this.mappingLocks && this.mappingLocks.rate) { return; }

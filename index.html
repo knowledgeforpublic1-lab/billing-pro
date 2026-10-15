@@ -902,6 +902,9 @@
                             <button class="btn btn-secondary" @click="refreshFromCloud()" title="Dusre PC ka saved mapping cloud se lao" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 🔄 Refresh
                             </button>
+                            <button class="btn btn-secondary" @click="openSapMasterModal()" title="SAP Material Master list (dropdown ke codes) — cloud copy add/edit karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                                📚 SAP Master ({{ sapMaterialsMaster.length }})
+                            </button>
                         </div>
                     </div>
 
@@ -1735,6 +1738,77 @@
             </div>
         </div>
 
+        <!-- MODAL: SAP MATERIAL MASTER (ONLINE / CLOUD COPY) -->
+        <div class="modal-overlay" v-if="showSapMasterModal" @click.self="showSapMasterModal = false">
+            <div class="modal-content modal-content-lg" style="max-width: 800px;">
+                <div class="modal-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3rem;">📚</span>
+                        <div>
+                            <div class="modal-title" style="font-size: 1rem; font-weight: 800; color: var(--text-main);">SAP Material Master</div>
+                            <div style="font-size: 0.73rem; color: var(--text-muted);">{{ sapMaterialsMaster.length }} items • ☁️ MongoDB me save • har PC/phone par auto-sync</div>
+                        </div>
+                    </div>
+                    <button class="modal-close" @click="showSapMasterModal = false">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 0.85rem;">
+
+                    <div v-if="isFinalized" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 0.55rem 0.8rem; margin-bottom: 0.65rem; font-size: 0.78rem; font-weight: 700; color: #f87171;">
+                        🔒 Bill finalized hai — SAP Master edit karne ke liye pehle Unlock karo.
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <input type="text" v-model="sapMasterSearch" placeholder="🔍 Search code / description / UoM..." style="flex: 1; min-width: 180px; padding: 0.4rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem; outline: none;">
+                        <button type="button" class="btn btn-primary" @click="addSapMasterRow()" :disabled="isFinalized" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;">➕ Add Code</button>
+                        <button type="button" class="btn btn-secondary" @click="restoreDefaultSapMaster()" :disabled="isFinalized" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;" title="Bundled default list (material list.ods) wapas lao">↩️ Default List</button>
+                    </div>
+
+                    <!-- Master list -->
+                    <div style="max-height: 46vh; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                        <table class="billing-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 130px;">SAP Code</th>
+                                    <th>Material Description</th>
+                                    <th style="width: 80px;" class="text-center">UoM</th>
+                                    <th style="width: 44px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, i) in filteredSapMasterList" :key="i">
+                                    <td>
+                                        <input type="text" data-sap-master-code v-model="row.code" @change="onSapMasterRowChange(row)" :disabled="isFinalized" placeholder="11000119" title="SAP Material Code" style="width: 100%; padding: 3px 6px; font-family: monospace; font-size: 0.8rem; border: 1px solid var(--border-subtle); border-radius: 5px; background: var(--bg-input); color: var(--text-main);">
+                                    </td>
+                                    <td>
+                                        <input type="text" v-model="row.desc" @change="onSapMasterRowChange(row)" :disabled="isFinalized" placeholder="Material description" style="width: 100%; padding: 3px 6px; font-size: 0.8rem; border: 1px solid var(--border-subtle); border-radius: 5px; background: var(--bg-input); color: var(--text-main);">
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="text" v-model="row.uom" @change="onSapMasterRowChange(row)" :disabled="isFinalized" placeholder="KG" title="Unit of Measure" style="width: 100%; padding: 3px 4px; font-family: monospace; font-size: 0.78rem; text-align: center; text-transform: uppercase; border: 1px solid var(--border-subtle); border-radius: 5px; background: var(--bg-input); color: var(--text-main);">
+                                    </td>
+                                    <td class="text-center">
+                                        <button v-if="!isFinalized" type="button" class="btn-danger" style="padding: 2px 7px; font-size: 0.75rem; border-radius: 4px;" @click="removeSapMasterRow(row)" title="Is code ko master list se hatao">✕</button>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredSapMasterList.length === 0">
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.1rem 0.5rem; font-size: 0.8rem;">
+                                        Koi item nahi mila — search hatayein ya <strong>➕ Add Code</strong> dabayein
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 0.75rem; flex-wrap: wrap;">
+                        <div style="font-size: 0.73rem; color: var(--text-muted);">
+                            Dikha raha: <strong>{{ filteredSapMasterList.length }} / {{ sapMaterialsMaster.length }}</strong> • Har change ☁️ cloud par sync hota hai (dropdown par turant asar)
+                        </div>
+                        <button type="button" class="btn btn-primary" @click="showSapMasterModal = false">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Toast Notifications -->
         <div class="toast-container">
             <div v-for="(toast, idx) in toasts" :key="idx" class="toast">
@@ -1750,26 +1824,26 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261015_04"></script>
-    <script src="js/data/default-activities.js?v=20261015_04"></script>
-    <script src="js/data/default-contractors.js?v=20261015_04"></script>
-    <script src="js/data/default-master-abstract.js?v=20261015_04"></script>
-    <script src="js/data/default-companies.js?v=20261015_04"></script>
-    <script src="js/data/default-invoice.js?v=20261015_04"></script>
+    <script src="js/data/default-sap-materials.js?v=20261015_05"></script>
+    <script src="js/data/default-activities.js?v=20261015_05"></script>
+    <script src="js/data/default-contractors.js?v=20261015_05"></script>
+    <script src="js/data/default-master-abstract.js?v=20261015_05"></script>
+    <script src="js/data/default-companies.js?v=20261015_05"></script>
+    <script src="js/data/default-invoice.js?v=20261015_05"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261015_04"></script>
-    <script src="js/history.js?v=20261015_04"></script>
+    <script src="js/utils.js?v=20261015_05"></script>
+    <script src="js/history.js?v=20261015_05"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261015_04"></script>
-    <script src="js/billing.js?v=20261015_04"></script>
-    <script src="js/mapping.js?v=20261015_04"></script>
-    <script src="js/views.js?v=20261015_04"></script>
-    <script src="js/export.js?v=20261015_04"></script>
+    <script src="js/sync.js?v=20261015_05"></script>
+    <script src="js/billing.js?v=20261015_05"></script>
+    <script src="js/mapping.js?v=20261015_05"></script>
+    <script src="js/views.js?v=20261015_05"></script>
+    <script src="js/export.js?v=20261015_05"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261015_04"></script>
+    <script src="js/core/app.js?v=20261015_05"></script>
 </body>
 
 </html>

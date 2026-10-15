@@ -214,8 +214,8 @@
   var API_LS = 'billing_api_key';
   var SAVE_KEYS = ['isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
-    'locations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'invoiceData', 'mappingLocks'];
+    'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
+    'invoiceData', 'mappingLocks', 'sapMaterialsMaster'];
 
   var S = null, actKey = '', searchQ = '', locFilter = 'ALL';
   var syncTimer = null, lastHash = '', dirty = false, pollTimer = null, updatedAt = '', retryTimer = null, syncRetryCount = 0;
@@ -430,6 +430,9 @@
       invoiceData: data.invoiceData || { items: [] },
       mappingLocks: data.mappingLocks || {}
     };
+    // In dono ko tabhi rakho jab aaya ho — mobile inhe khali karke cloud/desktop copy mita na de
+    if (data.activityLocations && typeof data.activityLocations === 'object') S.activityLocations = data.activityLocations;
+    if (Array.isArray(data.sapMaterialsMaster) && data.sapMaterialsMaster.length) S.sapMaterialsMaster = data.sapMaterialsMaster;
     var keys = Object.keys(S.activities).sort(function (a, b) { return parseInt(a) - parseInt(b); });
     actKey = keys.length ? keys[0] : '';
     try {

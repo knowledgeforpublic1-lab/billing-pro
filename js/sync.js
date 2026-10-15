@@ -40,6 +40,7 @@ window.SyncModule = {
             activityQuantities: this.activityQuantities,
             invoiceData: this.invoiceData,
             mappingLocks: this.mappingLocks,
+            sapMaterialsMaster: this.sapMaterialsMaster,
             savedAt: Date.now(),
             baseRev: this.cloudRev
         };
@@ -250,6 +251,7 @@ window.SyncModule = {
                 activityQuantities: this.activityQuantities,
                 invoiceData: this.invoiceData,
                 mappingLocks: this.mappingLocks,
+                sapMaterialsMaster: this.sapMaterialsMaster,
                 savedAt: Date.now()
             };
             localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
@@ -354,6 +356,13 @@ window.SyncModule = {
           if (raw) {
             try {
                 const parsed = JSON.parse(raw);
+                let loadedHasCatalog = false;
+                if (Array.isArray(parsed.sapMaterialsMaster) && parsed.sapMaterialsMaster.length > 0) {
+                    // ☁️ SAP Material Master ka cloud copy yahan se aata hai
+                    this.sapMaterialsMaster = parsed.sapMaterialsMaster;
+                    loadedHasCatalog = true;
+                }
+                this._loadedHasCatalog = loadedHasCatalog;
                 if (parsed.isFinalized !== undefined) this.isFinalized = parsed.isFinalized;
                 if (parsed.projectMeta) {
                     this.projectMeta = parsed.projectMeta;
@@ -444,6 +453,21 @@ window.SyncModule = {
             } catch (e) {
                 console.error('Error loading stored state', e);
             }
+        }
+        // Winning copy me catalog nahi tha — par is PC ke localStorage me saved hai to
+        // wo prefer karo (cloud ko apni koi opinion hi nahi isi key par).
+        if (this._loadedHasCatalog === false && localRaw) {
+            try {
+                const lpCat = JSON.parse(localRaw);
+                if (lpCat && Array.isArray(lpCat.sapMaterialsMaster) && lpCat.sapMaterialsMaster.length) {
+                    this.sapMaterialsMaster = lpCat.sapMaterialsMaster;
+                    this._loadedHasCatalog = true;
+                }
+            } catch(e) {}
+        }
+        // Catalog cloud/local dono me naya tha (pehli baar online hua) — bundled defaults seed karke push karo
+        if (raw && this._loadedHasCatalog === false && Array.isArray(this.sapMaterialsMaster) && this.sapMaterialsMaster.length) {
+            try { this.scheduleMappingSync(); } catch(e) {}
         }
         this.initDefaultSampleQuantities();
         this.normalizeAllContractorBanks();

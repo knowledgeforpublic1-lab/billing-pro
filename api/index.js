@@ -79,7 +79,7 @@ const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'invoiceData', 'mappingLocks', 'savedAt'
+    'invoiceData', 'mappingLocks', 'sapMaterialsMaster', 'savedAt'
 ]);
 
 function pickAllowedKeys(obj) {
@@ -214,6 +214,33 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
                 updatedAt: existing.updatedAt,
                 rev: curRev
             });
+        }
+
+        // Missing-key preserve — purane clients (mobile/old build) sirf apne jaane hue
+        // keys bhejte hain. Unka POST naye key (sapMaterialsMaster, activityLocations)
+        // ko cloud se mita na de — absent key ko existing value se wapas bharo.
+        // (Empty-overwrite check upar chal chuka hai — wahan intact rahega.)
+        const incomingKeys = new Set(bodyKeys);
+        for (const k of ALLOWED_SYNC_KEYS) {
+            if (incomingKeys.has(k)) continue;
+            if (existing && existing.stateData && existing.stateData[k] !== undefined) {
+                dataToSave[k] = existing.stateData[k];
+            }
+        }
+
+        // Shape guard — SAP Master sirf {code,desc,uom} objects ka non-empty array ho.
+        // Garbage/empty aaya to cloud ki purani (sahi) copy hi rehne do.
+        if (dataToSave.sapMaterialsMaster !== undefined) {
+            const cat = dataToSave.sapMaterialsMaster;
+            const ok = Array.isArray(cat) && cat.length > 0 && cat.length <= 5000
+                && cat.every(x => x && typeof x === 'object' && !Array.isArray(x));
+            if (!ok) {
+                log.warn('POST', 'Invalid sapMaterialsMaster shape — keeping existing catalog');
+                delete dataToSave.sapMaterialsMaster;
+                if (existing && existing.stateData && existing.stateData.sapMaterialsMaster !== undefined) {
+                    dataToSave.sapMaterialsMaster = existing.stateData.sapMaterialsMaster;
+                }
+            }
         }
 
         if (existing && (baseRev === null || isNaN(baseRev) || baseRev !== curRev)) {

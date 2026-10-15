@@ -96,6 +96,7 @@ window.HistoryModule = {
                             activityQuantities: this.activityQuantities,
                             invoiceData: this.invoiceData,
                             mappingLocks: this.mappingLocks,
+                            sapMaterialsMaster: this.sapMaterialsMaster,
                             savedAt: Date.now(),
                             baseRev: this.cloudRev
                         };
