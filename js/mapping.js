@@ -213,32 +213,34 @@ window.MappingModule = {
         workbook.created = new Date();
         const ws = workbook.addWorksheet('SAP Material Mapping Master', {
             views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
-        const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-        const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-        const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
         const thinBorder = {
             top: { style: 'thin', color: { argb: 'FF888888' } },
             left: { style: 'thin', color: { argb: 'FF888888' } },
             bottom: { style: 'thin', color: { argb: 'FF888888' } },
             right: { style: 'thin', color: { argb: 'FF888888' } }
         };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
         ws.mergeCells('A1:I1');
         const r1 = ws.getCell('A1');
         r1.value = 'LK ELECTRICALS - SAP ERP MATERIAL CODE & WORK ORDER ACTIVITY MAPPING MASTER';
-        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-        r1.fill = titleFill;
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
         r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
         ws.getRow(1).height = 30;
         const row2 = ws.getRow(2);
         row2.values = ['Act Code', 'Sr.No.', 'Work Order Description of Material', 'Act Unit', 'Rate (Rs)', 'SAP Item Code (Material)', 'SAP Material Description', 'SAP Unit', 'Document Header Text (Ref/WO)'];
         row2.height = 26;
         row2.eachCell(cell => {
-            cell.fill = headerFill;
-            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
-            cell.border = thinBorder;
+            cell.border = headerBorder;
         });
         let rowIdx = 3;
         const items = this.filteredMappingMasterList;
@@ -268,7 +270,6 @@ window.MappingModule = {
                 row.getCell(9).alignment = { horizontal: 'center', vertical: 'middle' };
                 row.eachCell(c => {
                     c.border = thinBorder;
-                    if (idx % 2 === 1) c.fill = zebraFill;
                 });
                 row.height = 20;
                 rowIdx++;

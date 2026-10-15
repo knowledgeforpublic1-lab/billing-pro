@@ -14,32 +14,34 @@ window.ExportModule = {
                     workbook.created = new Date();
                     const ws = workbook.addWorksheet('SAP Material Mapping Master', {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
                         top: { style: 'thin', color: { argb: 'FF888888' } },
                         left: { style: 'thin', color: { argb: 'FF888888' } },
                         bottom: { style: 'thin', color: { argb: 'FF888888' } },
                         right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
+                    const headerBorder = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
+                    };
                     ws.mergeCells('A1:I1');
                     const r1 = ws.getCell('A1');
                     r1.value = 'LK ELECTRICALS - SAP ERP MATERIAL CODE & WORK ORDER ACTIVITY MAPPING MASTER';
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = headerBorder;
                     ws.getRow(1).height = 30;
                     const row2 = ws.getRow(2);
                     row2.values = ['Act Code', 'Sr.No.', 'Work Order Description of Material', 'Act Unit', 'Rate (Rs)', 'SAP Item Code (Material)', 'SAP Material Description', 'SAP Unit', 'Document Header Text (Ref/WO)'];
                     row2.height = 26;
                     row2.eachCell(cell => {
-                        cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = thinBorder;
+                        cell.border = headerBorder;
                     });
                     let rowIdx = 3;
                     const items = this.filteredMappingMasterList;
@@ -69,7 +71,6 @@ window.ExportModule = {
                             row.getCell(9).alignment = { horizontal: 'center', vertical: 'middle' };
                             row.eachCell(c => {
                                 c.border = thinBorder;
-                                if (idx % 2 === 1) c.fill = zebraFill;
                             });
                             row.height = 20;
                             rowIdx++;
@@ -98,15 +99,18 @@ window.ExportModule = {
                     workbook.created = new Date();
                     const ws = workbook.addWorksheet('Reconciliation Sheet', {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
                         top: { style: 'thin', color: { argb: 'FF888888' } },
                         left: { style: 'thin', color: { argb: 'FF888888' } },
                         bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
+                    };
+                    const headerBorder = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
                         right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
                     
@@ -124,9 +128,9 @@ window.ExportModule = {
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
                     r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = headerBorder;
                     ws.getRow(1).height = 30;
                     
                     // Header Row
@@ -135,10 +139,9 @@ window.ExportModule = {
                     row2.values = headers;
                     row2.height = 26;
                     row2.eachCell((cell, colNum) => {
-                        cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = thinBorder;
+                        cell.border = headerBorder;
                     });
                     
                     // Data Rows
@@ -163,7 +166,6 @@ window.ExportModule = {
                         
                         row.eachCell((c, colNum) => {
                             c.border = thinBorder;
-                            if (idx % 2 === 1) c.fill = zebraFill;
                             
                             c.alignment = { vertical: 'middle' };
                             if (colNum === 3) {
@@ -202,7 +204,7 @@ window.ExportModule = {
                 addStyledTaxInvoiceToWorkbook(workbook) {
                     const ws = workbook.addWorksheet('Tax Invoice', {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
                     const borderThin = {
@@ -211,58 +213,55 @@ window.ExportModule = {
                         bottom: { style: 'thin', color: { argb: 'FF000000' } },
                         right: { style: 'thin', color: { argb: 'FF000000' } }
                     };
+                    const borderHeader = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF000000' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF000000' } }
+                    };
 
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const metaLabelFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
-                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
-
-                    // Row 1: Title & Contractor Name
+                    // Row 1: Title & Contractor Name (Low-Ink: Clean White, Bold Black)
                     ws.mergeCells('A1:E1');
                     const r1 = ws.getCell('A1');
                     r1.value = `Tax Invoice - ${this.getContractorDisplayName()}`;
-                    r1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = borderHeader;
                     ws.getRow(1).height = 28;
 
                     // Row 2: Project Name & Contractor
                     ws.mergeCells('A2:E2');
                     const r2 = ws.getCell('A2');
                     r2.value = `Project Name : ${this.projectMeta.projectName}  |  Contractor : ${this.getContractorDisplayName()}`.toUpperCase();
-                    r2.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r2.fill = titleFill;
+                    r2.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF000000' } };
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r2.border = borderThin;
                     ws.getRow(2).height = 22;
 
-                    // Row 3,4,5: Client Details
+                    // Row 3,4,5: Client Details (Clean White, Bold Black)
                     ws.mergeCells('A3:E3');
                     ws.getCell('A3').value = `To :- ${this.invoiceData.clientName}`;
-                    ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true };
-                    ws.getCell('A3').fill = metaLabelFill;
+                    ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                     ws.mergeCells('A4:E4');
                     ws.getCell('A4').value = `${this.invoiceData.clientAddress}`;
-                    ws.getCell('A4').font = { name: 'Arial', size: 11, bold: true };
-                    ws.getCell('A4').fill = metaLabelFill;
+                    ws.getCell('A4').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                     ws.mergeCells('A5:E5');
                     ws.getCell('A5').value = `GSTIN : ${this.invoiceData.clientGstin}`;
-                    ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true };
-                    ws.getCell('A5').fill = metaLabelFill;
+                    ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
 
-                    // Row 6: Contractor Name Banner (with PAN / GSTIN)
+                    // Row 6: Contractor Name Banner (with PAN / GSTIN) (Low-Ink: Clean White, Bold Black)
                     ws.mergeCells('A6:E6');
                     const r6 = ws.getCell('A6');
                     const cPanGst = [this.invoiceData.contractorPan ? `PAN: ${this.invoiceData.contractorPan}` : '', this.invoiceData.contractorGstin ? `GSTIN: ${this.invoiceData.contractorGstin}` : ''].filter(Boolean).join('  |  ');
                     r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}${cPanGst ? '  (' + cPanGst + ')' : ''}`;
-                    r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r6.fill = headerFill;
+                    r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r6.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r6.border = borderThin;
                     ws.getRow(6).height = 22;
 
-                    // Row 7 to 11: 2-Column Meta Table
+                    // Row 7 to 11: 2-Column Meta Table (Clean White, Bold Black Labels)
                     const metaRows = [
                         ['Invoice No :', this.invoiceData.invoiceNo, 'Name of Contractor :', this.getContractorDisplayName()],
                         ['Work Order No :', `${this.invoiceData.workOrderNo}    Dt:${this.invoiceData.workOrderDate}`, 'GSTIN :', this.invoiceData.contractorGstin],
@@ -277,33 +276,31 @@ window.ExportModule = {
                         row.height = 22;
 
                         row.getCell(1).value = mr[0];
-                        row.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        row.getCell(1).fill = metaLabelFill;
+                        row.getCell(1).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                         row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         row.getCell(2).value = mr[1];
-                        row.getCell(2).font = { name: 'Arial', size: 11 };
+                        row.getCell(2).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
                         row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         row.getCell(3).value = mr[2];
-                        row.getCell(3).font = { name: 'Arial', size: 11, bold: true };
-                        row.getCell(3).fill = metaLabelFill;
+                        row.getCell(3).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                         row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         ws.mergeCells(curRow, 4, curRow, 5);
                         row.getCell(4).value = mr[3];
-                        row.getCell(4).font = { name: 'Arial', size: 11 };
+                        row.getCell(4).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
                         row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         curRow++;
                     });
 
-                    // Row 12: Item Headers
+                    // Row 12: Item Headers (Low-Ink: Clean White, Medium Top/Bottom Borders)
                     const itemHeaderRow = ws.getRow(curRow);
                     itemHeaderRow.values = ['Sr. No.', 'Description of Goods', 'Unit', 'Qty', 'Amount'];
                     itemHeaderRow.eachCell(c => {
-                        c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                        c.fill = headerFill;
+                        c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+                        c.border = borderHeader;
                         c.alignment = { horizontal: 'center', vertical: 'middle' };
                     });
                     itemHeaderRow.height = 24;
@@ -324,13 +321,7 @@ window.ExportModule = {
                         row.getCell(5).value = Number(it.amount) || 0;
                         row.getCell(5).numFmt = '#,##0.00';
                         row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        
-                        if (idx % 2 !== 0) {
-                            for (let c = 1; c <= 5; c++) {
-                                row.getCell(c).fill = zebraFill;
-                            }
-                        }
+                        row.getCell(5).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                         
                         row.height = 30;
                         curRow++;
@@ -494,35 +485,39 @@ window.ExportModule = {
                         curRow++;
                     }
 
-                    // Apply totalFill to summary rows (Rows itemsEndRow+1 to curRow-1)
-                    for (let r = itemsEndRow + 1; r < curRow; r++) {
-                        const row = ws.getRow(r);
-                        for (let c = 1; c <= 5; c++) {
-                            row.getCell(c).fill = totalFill;
-                        }
+                    // Double-bottom border for Grand Total row (Low-Ink Accounting Standard)
+                    const grandTotalRowIdx = curRow - 1;
+                    const borderDoubleTotal = {
+                        top: { style: 'thin', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF000000' } },
+                        bottom: { style: 'double', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF000000' } }
+                    };
+                    for (let c = 1; c <= 5; c++) {
+                        ws.getRow(grandTotalRowIdx).getCell(c).border = borderDoubleTotal;
                     }
 
                     // Amount in words row
                     ws.mergeCells(curRow, 1, curRow, 5);
                     const rWords = ws.getCell(`A${curRow}`);
                     rWords.value = `Amount in Words :  ${this.amountInWordsIndian(this.calculatedInvoiceGrandTotal)}`;
-                    rWords.font = { name: 'Arial', size: 11, bold: true };
+                    rWords.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                     curRow++;
 
                     // Declaration & Signatures
                     ws.mergeCells(curRow, 1, curRow + 4, 3);
                     const rDecl = ws.getCell(`A${curRow}`);
                     rDecl.value = `Declaration :\n. Any Complaint/Dispute regarding this sheet should be\n  communicated within 7 days from date of receipt of bill.`;
-                    rDecl.font = { name: 'Arial', size: 9.5 };
+                    rDecl.font = { name: 'Arial', size: 9.5, color: { argb: 'FF000000' } };
                     rDecl.alignment = { wrapText: true, vertical: 'top' };
 
                     ws.mergeCells(curRow, 4, curRow, 5);
                     ws.getCell(`D${curRow}`).value = `For, ${this.getContractorDisplayName()}`;
-                    ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true };
+                    ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                     ws.mergeCells(curRow + 4, 4, curRow + 4, 5);
                     ws.getCell(`D${curRow + 4}`).value = 'Proprietor';
-                    ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 11, bold: true };
+                    ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                     ws.getCell(`D${curRow + 4}`).alignment = { horizontal: 'right' };
 
                     const totalEndRow = curRow + 4;
@@ -533,14 +528,11 @@ window.ExportModule = {
                         for (let c = 1; c <= 5; c++) {
                             const cell = row.getCell(c);
                             if (cell.isMerged && cell.master !== cell) {
-                                // Inherit fill from master cell so merged cell background is fully solid
-                                if (cell.master.fill) {
-                                    cell.fill = cell.master.fill;
-                                }
-                                // Skip border for inner merged cells to prevent lines from appearing inside merged regions
                                 continue;
                             }
-                            cell.border = borderThin;
+                            if (!cell.border) {
+                                cell.border = borderThin;
+                            }
                         }
                     }
 
@@ -732,15 +724,18 @@ window.ExportModule = {
                 addReconciliationToWorkbook(workbook, actKeys) {
                     const ws = workbook.addWorksheet('Reconciliation', {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const thinBorder = {
                         top: { style: 'thin', color: { argb: 'FF888888' } },
                         left: { style: 'thin', color: { argb: 'FF888888' } },
                         bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
+                    };
+                    const headerBorder = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
                         right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
 
@@ -750,9 +745,9 @@ window.ExportModule = {
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
                     r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = headerBorder;
                     ws.getRow(1).height = 30;
 
                     const row2 = ws.getRow(2);
@@ -760,10 +755,9 @@ window.ExportModule = {
                     row2.values = headers;
                     row2.height = 26;
                     row2.eachCell((cell) => {
-                        cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = thinBorder;
+                        cell.border = headerBorder;
                     });
 
                     const pData = this.pivotReconciliationData;
@@ -788,7 +782,6 @@ window.ExportModule = {
 
                         row.eachCell((c, colNum) => {
                             c.border = thinBorder;
-                            if (idx % 2 === 1) c.fill = zebraFill;
                             c.alignment = { vertical: 'middle' };
                             if (colNum === 3) {
                                 c.alignment = { horizontal: 'left', wrapText: true };
@@ -854,14 +847,8 @@ window.ExportModule = {
                 addStyledMasterAbstractToWorkbook(workbook) {
                     const ws = workbook.addWorksheet('Master Abstract', {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
-
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF404040' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
 
                     const thinBorder = {
                         top: { style: 'thin', color: { argb: 'FF888888' } },
@@ -869,21 +856,27 @@ window.ExportModule = {
                         bottom: { style: 'thin', color: { argb: 'FF888888' } },
                         right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
+                    const headerBorder = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
+                    };
 
                     ws.mergeCells('A1:I1');
                     const r1 = ws.getCell('A1');
                     r1.value = `PROJECT: ${this.projectMeta.projectName.toUpperCase()} - MASTER BILLING ABSTRACT`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = headerBorder;
                     ws.getRow(1).height = 32;
 
                     ws.mergeCells('A2:I2');
                     const r2 = ws.getCell('A2');
                     r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
-                    r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FFFFFFFF' } };
-                    r2.fill = subFill;
+                    r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF000000' } };
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r2.border = thinBorder;
                     ws.getRow(2).height = 22;
 
                     ws.getRow(3).height = 10;
@@ -904,10 +897,9 @@ window.ExportModule = {
                     row4.values = headers;
                     row4.height = 28;
                     row4.eachCell((cell) => {
-                        cell.fill = headerFill;
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                        cell.border = thinBorder;
+                        cell.border = headerBorder;
                     });
 
                     let rowIdx = 5;
@@ -936,13 +928,13 @@ window.ExportModule = {
                         row.height = 24;
 
                         row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(1).font = { name: 'Calibri', size: 11, bold: true };
+                        row.getCell(1).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                         row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(2).font = { name: 'Calibri', size: 11 };
+                        row.getCell(2).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
 
                         row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(3).font = { name: 'Calibri', size: 11 };
+                        row.getCell(3).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
 
                         row.getCell(4).numFmt = '#,##0.00';
                         row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
@@ -952,23 +944,22 @@ window.ExportModule = {
 
                         row.getCell(6).numFmt = '#,##0.00';
                         row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(6).font = { name: 'Calibri', size: 11, bold: true };
+                        row.getCell(6).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                         row.getCell(7).numFmt = '#,##0.00';
                         row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(7).font = { name: 'Calibri', size: 11, bold: true };
+                        row.getCell(7).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                         row.getCell(8).numFmt = '#,##0.00';
                         row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(8).font = { name: 'Calibri', size: 11 };
+                        row.getCell(8).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
 
                         row.getCell(9).numFmt = '#,##0.00';
                         row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(9).font = { name: 'Calibri', size: 11 };
+                        row.getCell(9).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
 
                         row.eachCell((cell) => {
                             cell.border = thinBorder;
-                            if (idx % 2 === 1) cell.fill = zebraFill;
                         });
 
                         rowIdx++;
@@ -987,11 +978,10 @@ window.ExportModule = {
                     totalRow.height = 26;
 
                     totalRow.eachCell((cell, colNum) => {
-                        cell.fill = totalFill;
                         cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         cell.border = {
-                            top: { style: 'medium', color: { argb: 'FF222222' } },
-                            bottom: { style: 'double', color: { argb: 'FF222222' } },
+                            top: { style: 'medium', color: { argb: 'FF000000' } },
+                            bottom: { style: 'double', color: { argb: 'FF000000' } },
                             left: { style: 'thin', color: { argb: 'FF888888' } },
                             right: { style: 'thin', color: { argb: 'FF888888' } }
                         };
@@ -1022,7 +1012,7 @@ window.ExportModule = {
                     const safeSheetName = `Act ${actKey}`.substring(0, 31);
                     const ws = workbook.addWorksheet(safeSheetName, {
                         views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
                     });
 
                     // Audit format: Sr | Desc | Unit | Loc1..N | Rate | 100% | st1% | st2% | st3%
@@ -1033,17 +1023,16 @@ window.ExportModule = {
                     const amt100Col = 5 + numLocs, amt85Col = 6 + numLocs, amt10Col = 7 + numLocs, amt5Col = 8 + numLocs;
                     const L = (c) => getColLetter(c);
 
-                    const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-                    const subFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF404040' } };
-                    const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-                    const locFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF555555' } };
-                    const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
-                    const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
-
                     const thinBorder = {
                         top: { style: 'thin', color: { argb: 'FF888888' } },
                         left: { style: 'thin', color: { argb: 'FF888888' } },
                         bottom: { style: 'thin', color: { argb: 'FF888888' } },
+                        right: { style: 'thin', color: { argb: 'FF888888' } }
+                    };
+                    const headerBorder = {
+                        top: { style: 'medium', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF888888' } },
+                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
                         right: { style: 'thin', color: { argb: 'FF888888' } }
                     };
 
@@ -1052,13 +1041,12 @@ window.ExportModule = {
                     const companyObj = this.companiesList.find(c => c.id === this.selectedCompanyId);
                     const companyName = companyObj ? companyObj.name : '';
                     r1.value = companyName;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    r1.fill = titleFill;
+                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
+                    r1.border = headerBorder;
                     ws.getRow(1).height = 30;
 
-                    const metaLabelFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E9FD' } };
-                    const metaLabelFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF111111' } };
+                    const metaLabelFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                     const metaStartRow = 2;
                     const metaRows = [
@@ -1073,7 +1061,6 @@ window.ExportModule = {
                         const labelCell = ws.getCell(r, 1);
                         labelCell.value = `${m.label} ${m.value}`;
                         labelCell.font = metaLabelFont;
-                        labelCell.fill = metaLabelFill;
                         labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
                         labelCell.border = thinBorder;
                         ws.getRow(r).height = 22;
@@ -1082,8 +1069,7 @@ window.ExportModule = {
                     const r5 = ws.getCell(5, 1);
                     ws.mergeCells(5, 1, 5, totalCols);
                     r5.value = act.title;
-                    r5.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF111111' } };
-                    r5.fill = metaLabelFill;
+                    r5.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r5.alignment = { horizontal: 'left', vertical: 'middle' };
                     r5.border = thinBorder;
                     ws.getRow(5).height = 22;
@@ -1112,11 +1098,9 @@ window.ExportModule = {
                         rowH.values = headerValues;
                         rowH.height = 28;
                         rowH.eachCell((cell, colIdx) => {
-                            const isLoc = colIdx >= 4 && colIdx <= locEndCol;
-                            cell.fill = isLoc ? locFill : headerFill;
-                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                             cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                            cell.border = thinBorder;
+                            cell.border = headerBorder;
                         });
                         rowIdx++;
                     };
@@ -1173,21 +1157,14 @@ window.ExportModule = {
                                 row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
                             }
 
-                            row.getCell(c100).font = { name: 'Calibri', size: 11, bold: true };
-                            row.getCell(c85).font = { name: 'Calibri', size: 11, bold: true };
-                            row.getCell(c10).font = { name: 'Calibri', size: 11 };
-                            row.getCell(c5).font = { name: 'Calibri', size: 11 };
+                            row.getCell(c100).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                            row.getCell(c85).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                            row.getCell(c10).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+                            row.getCell(c5).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
 
                             for (let c = 1; c <= totalCols; c++) {
                                 const cell = row.getCell(c);
                                 cell.border = thinBorder;
-                                if (isExtra) {
-                                    cell.fill = (listIdx % 2 === 1)
-                                        ? { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6E8FD' } }
-                                        : { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F2FE' } };
-                                } else if (listIdx % 2 === 1) {
-                                    cell.fill = zebraFill;
-                                }
                             }
 
                             rowIdx++;
@@ -1207,13 +1184,11 @@ window.ExportModule = {
                         ws.mergeCells(rowIdx, 1, rowIdx, totalCols);
                         const banCell = ws.getCell(rowIdx, 1);
                         banCell.value = `Extra Items (${extraMats.length} items)`;
-                        banCell.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF4F46E5' } };
+                        banCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                         banCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                        const banFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E9FD' } };
                         for (let c = 1; c <= totalCols; c++) {
                             const cell = ws.getRow(rowIdx).getCell(c);
-                            cell.fill = banFill;
-                            cell.border = thinBorder;
+                            cell.border = headerBorder;
                         }
                         ws.getRow(rowIdx).height = 24;
                         rowIdx++;
@@ -1246,11 +1221,10 @@ window.ExportModule = {
 
                         for (let c = 1; c <= totalCols; c++) {
                             const cell = totalRow.getCell(c);
-                            cell.fill = totalFill;
                             cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                             cell.border = {
-                                top: { style: 'medium', color: { argb: 'FF222222' } },
-                                bottom: { style: 'double', color: { argb: 'FF222222' } },
+                                top: { style: 'medium', color: { argb: 'FF000000' } },
+                                bottom: { style: 'double', color: { argb: 'FF000000' } },
                                 left: { style: 'thin', color: { argb: 'FF888888' } },
                                 right: { style: 'thin', color: { argb: 'FF888888' } }
                             };

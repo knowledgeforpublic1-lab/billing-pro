@@ -301,15 +301,18 @@ window.ViewsModule = {
         workbook.created = new Date();
         const ws = workbook.addWorksheet('Reconciliation Sheet', {
             views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
-        const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF222222' } };
-        const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
-        const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
         const thinBorder = {
             top: { style: 'thin', color: { argb: 'FF888888' } },
             left: { style: 'thin', color: { argb: 'FF888888' } },
             bottom: { style: 'thin', color: { argb: 'FF888888' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
             right: { style: 'thin', color: { argb: 'FF888888' } }
         };
         
@@ -327,9 +330,9 @@ window.ViewsModule = {
         ws.mergeCells(1, 1, 1, totalCols);
         const r1 = ws.getCell(1, 1);
         r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
-        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-        r1.fill = titleFill;
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
         r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
         ws.getRow(1).height = 30;
         
         // Header Row
@@ -338,10 +341,9 @@ window.ViewsModule = {
         row2.values = headers;
         row2.height = 26;
         row2.eachCell((cell, colNum) => {
-            cell.fill = headerFill;
-            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
-            cell.border = thinBorder;
+            cell.border = headerBorder;
         });
         
         // Data Rows
@@ -366,7 +368,6 @@ window.ViewsModule = {
             
             row.eachCell((c, colNum) => {
                 c.border = thinBorder;
-                if (idx % 2 === 1) c.fill = zebraFill;
                 
                 c.alignment = { vertical: 'middle' };
                 if (colNum === 3) {
