@@ -218,20 +218,20 @@ window.ExportModule = {
                     const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
                     const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD0D0D0' } };
 
-                    // Row 1: Title
+                    // Row 1: Title & Contractor Name
                     ws.mergeCells('A1:E1');
                     const r1 = ws.getCell('A1');
-                    r1.value = 'Tax Invoice';
-                    r1.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r1.value = `Tax Invoice - ${this.getContractorDisplayName()}`;
+                    r1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
                     r1.fill = titleFill;
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(1).height = 28;
 
-                    // Row 2: Project Name
+                    // Row 2: Project Name & Contractor
                     ws.mergeCells('A2:E2');
                     const r2 = ws.getCell('A2');
-                    r2.value = `Project Name : ${this.projectMeta.projectName}`.toUpperCase();
-                    r2.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                    r2.value = `Project Name : ${this.projectMeta.projectName}  |  Contractor : ${this.getContractorDisplayName()}`.toUpperCase();
+                    r2.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
                     r2.fill = titleFill;
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
                     ws.getRow(2).height = 22;
@@ -252,10 +252,11 @@ window.ExportModule = {
                     ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true };
                     ws.getCell('A5').fill = metaLabelFill;
 
-                    // Row 6: Contractor Name Banner
+                    // Row 6: Contractor Name Banner (with PAN / GSTIN)
                     ws.mergeCells('A6:E6');
                     const r6 = ws.getCell('A6');
-                    r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}`;
+                    const cPanGst = [this.invoiceData.contractorPan ? `PAN: ${this.invoiceData.contractorPan}` : '', this.invoiceData.contractorGstin ? `GSTIN: ${this.invoiceData.contractorGstin}` : ''].filter(Boolean).join('  |  ');
+                    r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}${cPanGst ? '  (' + cPanGst + ')' : ''}`;
                     r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     r6.fill = headerFill;
                     r6.alignment = { horizontal: 'center', vertical: 'middle' };

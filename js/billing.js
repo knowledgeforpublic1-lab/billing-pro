@@ -417,17 +417,17 @@ window.BillingModule = {
             this.invoiceData.bankAccountNo = firm.bankAccountNo || '';
             this.invoiceData.bankIfsc = firm.bankIfsc || '';
             this.invoiceData.bankName = firm.bankName || '';
-            // Manual suraksha: haath se bhare field ko contractor badalne par overwrite MAT karo - sirf khali ho to bharo
-            if (firm.workOrderNo && !this.invoiceData.workOrderNo) this.invoiceData.workOrderNo = firm.workOrderNo;
-            if (firm.workOrderDate && !this.invoiceData.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
-            if (firm.divisionName && !this.invoiceData.divisionName) this.invoiceData.divisionName = firm.divisionName;
-            if (firm.subDivName && !this.invoiceData.subDivName) this.invoiceData.subDivName = firm.subDivName;
-            if (firm.feederName && !this.invoiceData.feederName) this.invoiceData.feederName = firm.feederName;
+            // Selected firm ke work order aur location details apply karo
+            if (firm.workOrderNo) this.invoiceData.workOrderNo = firm.workOrderNo;
+            if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
+            if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
+            if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
+            if (firm.feederName) this.invoiceData.feederName = firm.feederName;
 
             this.projectMeta.contractorName = firmName;
             this.checkAndApplyAutoGstRule();
             this.saveToStorage();
-            this.showToast(`Applied Firm: ${firm.name} (PAN: ${firm.pan}, GST: ${firm.gstin})`, 'Check');
+            this.showToast(`Applied Firm: ${firm.name} (PAN: ${firm.pan || 'N/A'}, GST: ${firm.gstin || 'N/A'})`, 'Check');
         }
         this.showContractorModal = false;
     },
@@ -501,7 +501,17 @@ window.BillingModule = {
     },
 
     getContractorDisplayName() {
-        const name = this.invoiceData.contractorName || 'CONTRACTOR';
+        let name = (this.invoiceData && this.invoiceData.contractorName && this.invoiceData.contractorName.trim()) || '';
+        if (!name || name.toUpperCase() === 'CONTRACTOR' || name.toUpperCase() === 'M/S CONTRACTOR') {
+            if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
+                const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId);
+                if (firm && firm.name) name = firm.name;
+            }
+        }
+        if (!name && this.projectMeta && this.projectMeta.contractorName) {
+            name = this.projectMeta.contractorName;
+        }
+        if (!name) name = 'CONTRACTOR';
         if (name.toLowerCase().startsWith('m/s') || name.toLowerCase().startsWith('ms')) return name;
         return 'M/s ' + name;
     },

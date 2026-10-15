@@ -417,6 +417,15 @@ window.SyncModule = {
                 if (parsed.invoiceData && typeof parsed.invoiceData === 'object') {
                     this.invoiceData = parsed.invoiceData;
                 }
+                // Contractor name suraksha - agar khali ya default CONTRACTOR hai toh active firm se bharo
+                if (this.invoiceData && (!this.invoiceData.contractorName || this.invoiceData.contractorName === 'CONTRACTOR' || this.invoiceData.contractorName === 'M/s CONTRACTOR')) {
+                    const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId);
+                    if (firm && firm.name) {
+                        this.invoiceData.contractorName = firm.name.startsWith('M/s') ? firm.name : `M/s ${firm.name}`;
+                    } else if (this.projectMeta && this.projectMeta.contractorName) {
+                        this.invoiceData.contractorName = this.projectMeta.contractorName;
+                    }
+                }
                 if (parsed.mappingLocks && typeof parsed.mappingLocks === 'object') {
                     this.mappingLocks = { rate: parsed.mappingLocks.rate !== false, sap: parsed.mappingLocks.sap !== false, qty: parsed.mappingLocks.qty !== false };
                 }
