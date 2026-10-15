@@ -542,18 +542,12 @@
                 <div class="invoice-card" id="tax-invoice-sheet">
                     <!-- Top Title Bar -->
                     <div class="inv-title-bar">
-                        <div style="font-size: 16px; font-weight: 800; letter-spacing: 1px;">TAX INVOICE</div>
-                        <div style="font-size: 13px; font-weight: 800; color: #fbbf24; margin-top: 3px; text-transform: uppercase;">
-                            {{ getContractorDisplayName() }}
-                        </div>
+                        Tax Invoice
                     </div>
 
                     <!-- Project Name Banner -->
                     <div class="inv-project-banner">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                            <span><strong>Project Name :</strong> {{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}</span>
-                            <span><strong>Contractor / Agency :</strong> <span style="font-weight: 800; color: var(--text-main);">{{ getContractorDisplayName() }}</span></span>
-                        </div>
+                        Project Name : {{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}
                     </div>
 
                     <!-- Receiver Details Block -->
@@ -597,13 +591,7 @@
 
                     <!-- Contractor Name Banner -->
                     <div class="inv-contractor-banner">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                            <span>Name of Contractor / Agency :- <strong style="font-size: 12px; text-transform: uppercase;">{{ getContractorDisplayName() }}</strong></span>
-                            <span style="font-size: 11px; font-weight: 600; opacity: 0.9;">
-                                <span v-if="invoiceData.contractorPan"><strong>PAN:</strong> {{ invoiceData.contractorPan }}</span>
-                                <span v-if="invoiceData.contractorGstin" style="margin-left: 10px;"><strong>GSTIN:</strong> {{ invoiceData.contractorGstin }}</span>
-                            </span>
-                        </div>
+                        Name of Contractor :- {{ getContractorDisplayName() }}
                     </div>
 
                     <!-- Meta Table (4-Column) -->
@@ -1841,7 +1829,7 @@
     <script src="js/billing.js?v=20261015_05"></script>
     <script src="js/mapping.js?v=20261015_05"></script>
     <script src="js/views.js?v=20261015_05"></script>
-    <script src="js/export.js?v=20261015_07"></script>
+    <script src="js/export.js?v=20261015_08"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
     <script src="js/core/app.js?v=20261015_05"></script>

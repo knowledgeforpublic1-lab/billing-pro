@@ -223,8 +223,8 @@ window.ExportModule = {
                     // Row 1: Title & Contractor Name (Low-Ink: Clean White, Bold Black)
                     ws.mergeCells('A1:E1');
                     const r1 = ws.getCell('A1');
-                    r1.value = `Tax Invoice - ${this.getContractorDisplayName()}`;
-                    r1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF000000' } };
+                    r1.value = 'Tax Invoice';
+                    r1.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     r1.border = borderHeader;
                     ws.getRow(1).height = 28;
@@ -232,8 +232,8 @@ window.ExportModule = {
                     // Row 2: Project Name & Contractor
                     ws.mergeCells('A2:E2');
                     const r2 = ws.getCell('A2');
-                    r2.value = `Project Name : ${this.projectMeta.projectName}  |  Contractor : ${this.getContractorDisplayName()}`.toUpperCase();
-                    r2.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF000000' } };
+                    r2.value = `Project Name : ${this.projectMeta.projectName}`.toUpperCase();
+                    r2.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
                     r2.border = borderThin;
                     ws.getRow(2).height = 22;
@@ -254,8 +254,7 @@ window.ExportModule = {
                     // Row 6: Contractor Name Banner (with PAN / GSTIN) (Low-Ink: Clean White, Bold Black)
                     ws.mergeCells('A6:E6');
                     const r6 = ws.getCell('A6');
-                    const cPanGst = [this.invoiceData.contractorPan ? `PAN: ${this.invoiceData.contractorPan}` : '', this.invoiceData.contractorGstin ? `GSTIN: ${this.invoiceData.contractorGstin}` : ''].filter(Boolean).join('  |  ');
-                    r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}${cPanGst ? '  (' + cPanGst + ')' : ''}`;
+                    r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}`;
                     r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r6.alignment = { horizontal: 'center', vertical: 'middle' };
                     r6.border = borderThin;
