@@ -675,15 +675,19 @@ window.ExportModule = {
                     this.showToast(`Google Drive uploading: [${contractorName}] / [${billNo}]... ⏳`, '☁️');
 
                     try {
+                        // Convert buffer to base64 in chunks to avoid call stack overflow on large files
                         let binary = '';
                         const bytes = new Uint8Array(buffer);
                         const len = bytes.byteLength;
-                        for (let i = 0; i < len; i++) {
-                            binary += String.fromCharCode(bytes[i]);
+                        const chunkSize = 8192;
+                        for (let offset = 0; offset < len; offset += chunkSize) {
+                            const slice = bytes.subarray(offset, Math.min(offset + chunkSize, len));
+                            binary += String.fromCharCode.apply(null, slice);
                         }
                         const base64Data = window.btoa(binary);
 
                         const payload = {
+                            webhookUrl: webhookUrl,
                             folderId: '1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000',
                             contractorName: contractorName,
                             billNo: billNo,
@@ -692,17 +696,35 @@ window.ExportModule = {
                             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                         };
 
-                        await fetch(webhookUrl, {
+                        const fileSizeMB = (base64Data.length / (1024 * 1024)).toFixed(2);
+                        console.log(`[GDrive Upload] File: ${fileName}, Base64 size: ${fileSizeMB} MB, Contractor: ${contractorName}, Bill: ${billNo}`);
+
+                        // Route through our own Vercel API proxy to avoid CORS issues.
+                        // Browser → /api/gdrive-upload (same-origin) → Google Apps Script (server-to-server)
+                        const headers = { 'Content-Type': 'application/json' };
+                        try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+
+                        const response = await fetch('/api/gdrive-upload', {
                             method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            headers: headers,
                             body: JSON.stringify(payload)
                         });
 
-                        this.showToast(`Google Drive Folder me save ho gaya! 📁 [${contractorName}] / [${billNo}] 🎉`, '✅');
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            this.showToast(`Google Drive Folder me save ho gaya! 📁 [${contractorName}] / [${billNo}] 🎉`, '✅');
+                            console.log('[GDrive Upload] Success:', result);
+                        } else {
+                            throw new Error(result.error || `Server responded with status ${response.status}`);
+                        }
                     } catch (err) {
                         console.error('Drive upload failed:', err);
-                        this.showToast('Google Drive save fail: ' + (err.message || 'Network error'), '❌');
+                        let errorMsg = err.message || 'Network error';
+                        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                            errorMsg = 'Network error — internet check karo ya Vercel deploy verify karo';
+                        }
+                        this.showToast('❌ Google Drive save fail: ' + errorMsg, '❌');
                     }
                 },
                 openGDriveModal() {

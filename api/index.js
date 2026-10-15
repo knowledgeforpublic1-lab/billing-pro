@@ -350,5 +350,59 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
     }
 });
 
+// ============ Google Drive Upload Proxy ============
+// Browser → Vercel API (same-origin, no CORS) → Google Apps Script (server-to-server, no CORS)
+// Solves the GAS redirect CORS issue that blocks direct browser-to-GAS fetch calls.
+app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
+    const ctx = 'GDRIVE-PROXY';
+    try {
+        const { webhookUrl, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
+
+        if (!webhookUrl || !fileData || !fileName) {
+            log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');
+            return res.status(400).json({ success: false, error: 'Missing required fields: webhookUrl, fileData, fileName' });
+        }
+
+        // Validate webhook URL — must be a Google Apps Script URL
+        if (!webhookUrl.startsWith('https://script.google.com/')) {
+            log.warn(ctx, `Invalid webhook URL: ${webhookUrl.substring(0, 50)}...`);
+            return res.status(400).json({ success: false, error: 'Invalid webhook URL — must be a Google Apps Script URL' });
+        }
+
+        const fileSizeMB = (fileData.length / (1024 * 1024)).toFixed(2);
+        log.info(ctx, `Uploading to GDrive: ${fileName} (${fileSizeMB} MB base64), Contractor: ${contractorName}, Bill: ${billNo}`);
+
+        // Forward payload to Google Apps Script — server-to-server (no CORS)
+        const gasPayload = JSON.stringify({ folderId, contractorName, billNo, fileName, fileData, mimeType });
+
+        const gasResponse = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: gasPayload,
+            redirect: 'follow'
+        });
+
+        const responseText = await gasResponse.text();
+        let responseJson;
+        try {
+            responseJson = JSON.parse(responseText);
+        } catch (e) {
+            responseJson = { status: gasResponse.ok ? 'ok' : 'error', raw: responseText.substring(0, 500) };
+        }
+
+        if (gasResponse.ok) {
+            log.info(ctx, `GDrive upload success: ${fileName}`);
+            res.json({ success: true, message: 'File uploaded to Google Drive', gasResponse: responseJson });
+        } else {
+            log.error(ctx, `GAS responded with ${gasResponse.status}: ${responseText.substring(0, 300)}`);
+            res.status(502).json({ success: false, error: `Google Apps Script error (${gasResponse.status})`, details: responseJson });
+        }
+    } catch (err) {
+        log.error(ctx, 'GDrive proxy error', err);
+        res.status(500).json({ success: false, error: 'Server-side upload failed: ' + (err.message || 'Unknown error') });
+    }
+});
+
 // Export the app for Vercel
 module.exports = app;
+
