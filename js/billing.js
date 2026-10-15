@@ -11,6 +11,25 @@ window.BillingModule = {
 
     // ─── INVOICE METHODS ───────────────────────────────────────────
 
+    keyOfInvoiceItem(it) {
+        if (!it) return '';
+        if (it.actKey) return it.actKey;
+        if (!it.desc) return '';
+        const m = it.desc.match(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i);
+        return m ? m[1] : '';
+    },
+
+    getActivityInvoiceDescription(k) {
+        const act = (this.activities && this.activities[k]) || {};
+        let rawTitle = (act.title || '').trim();
+        let clean = rawTitle;
+        // Strip repeated prefixes (e.g. "907: 907: ", "907: ", "Activity 907 : ")
+        clean = clean.replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '');
+        clean = clean.replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '');
+        clean = clean.trim();
+        return `Activity ${k} : ${clean}`;
+    },
+
     addSpecificActivityToInvoice(actKey) {
         if (this.isFinalized) {
             this.showToast('Bill is locked. Please unlock first.', 'Lock');
@@ -25,7 +44,6 @@ window.BillingModule = {
         }
 
         const amt85 = this.getActivityBilled85Amount(actKey);
-        const actTitle = this.activities[actKey].title;
         const uom = this.getActivityUom(actKey);
         let actQty = 1.00;
         if (actKey === '907') {
@@ -34,8 +52,10 @@ window.BillingModule = {
         }
 
         // Check if already in items
-        const existing = this.invoiceData.items.find(it => it.actKey === actKey || (it.desc && it.desc.startsWith(actKey + ':')));
+        const existing = this.invoiceData.items.find(it => it.actKey === actKey || this.keyOfInvoiceItem(it) === actKey);
         if (existing) {
+            existing.actKey = actKey;
+            existing.desc = this.getActivityInvoiceDescription(actKey);
             existing.amount = Math.round(amt85 * 100) / 100;
             existing.unit = uom;
             if (actKey === '907') {
@@ -52,7 +72,7 @@ window.BillingModule = {
             this.invoiceData.items.push({
                 srNo: nextSr,
                 actKey: actKey,
-                desc: `${actKey}: ${actTitle}`,
+                desc: this.getActivityInvoiceDescription(actKey),
                 unit: uom,
                 qty: actQty,
                 amount: Math.round(amt85 * 100) / 100
@@ -116,7 +136,7 @@ window.BillingModule = {
             this.invoiceData.excludedActKeys = [];
         }
 
-        const keyOf = (it) => it.actKey || ((it.desc && /^[A-Za-z0-9]+:/.test(it.desc)) ? it.desc.split(':')[0] : '');
+        const keyOf = (it) => this.keyOfInvoiceItem(it);
         const excluded = this.invoiceData.excludedActKeys || [];
         const billedKeys = Object.keys(this.activities).filter(k => !excluded.includes(k) && this.getActivityBilled85Amount(k) > 0);
         const billedSet = new Set(billedKeys);
@@ -131,16 +151,20 @@ window.BillingModule = {
             if (k && billedSet.has(k) && !seen.has(k)) {
                 seen.add(k);
                 if (it === this.editingInvoiceRow) { newItems.push(it); return; }
-                if (it.manual) { it.actKey = k; newItems.push(it); return; }
                 it.actKey = k;
-                it.desc = `${k}: ${this.activities[k].title}`;
+                // Auto sync: always ensure correct format "Activity [k] : ..."
+                it.desc = this.getActivityInvoiceDescription(k);
                 it.unit = this.getActivityUom(k);
                 it.qty = qtyFor(k);
                 it.amount = Math.round(this.getActivityBilled85Amount(k) * 100) / 100;
                 it.manual = false;
                 newItems.push(it);
-            } else if (k && this.activities[k] && it.manual && !seen.has(k)) {
+            } else if (k && this.activities[k] && !seen.has(k)) {
                 seen.add(k);
+                it.actKey = k;
+                if (/^[A-Za-z0-9]+:\s*[A-Za-z0-9]+:/i.test(it.desc || '') || /^[A-Za-z0-9]+:\s*(?!\s)/i.test(it.desc || '')) {
+                    it.desc = this.getActivityInvoiceDescription(k);
+                }
                 newItems.push(it);
             } else if (!k || !this.activities[k]) {
                 newItems.push(it);
@@ -152,7 +176,7 @@ window.BillingModule = {
                 newItems.push({
                     srNo: '',
                     actKey: k,
-                    desc: `${k}: ${this.activities[k].title}`,
+                    desc: this.getActivityInvoiceDescription(k),
                     unit: this.getActivityUom(k),
                     qty: qtyFor(k),
                     amount: Math.round(this.getActivityBilled85Amount(k) * 100) / 100,

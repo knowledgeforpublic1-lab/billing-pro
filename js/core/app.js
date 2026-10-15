@@ -333,8 +333,8 @@
                     if (it.actKey && this.activities[it.actKey] && out.indexOf(it.actKey) === -1) {
                         out.push(it.actKey);
                     } else if (it.desc) {
-                        // Sakht match: "907: ..." ya "907 ..." se shuru ho tabhi (beech me number mile to nahi)
-                        const k = actKeys.find(k => it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' '));
+                        // Sakht match: "Activity 907 : ...", "907: ..." ya "907 ..." se shuru ho tabhi
+                        const k = actKeys.find(k => it.desc.startsWith('Activity ' + k) || it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' '));
                         if (k && out.indexOf(k) === -1) out.push(k);
                     }
                 });
@@ -860,6 +860,39 @@
                 } catch(e) {
                     console.warn('patch_remove_10_sap_items_v1 error:', e);
                 }
+            }
+
+            // Standardize all activity titles and existing invoice items to "Activity [code] : ..."
+            let actTitlesFixed = false;
+            if (this.activities) {
+                Object.keys(this.activities).forEach(k => {
+                    const act = this.activities[k];
+                    if (act && act.title) {
+                        let clean = act.title.replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '').replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '').trim();
+                        const desired = `Activity ${k} : ${clean}`;
+                        if (act.title !== desired) {
+                            act.title = desired;
+                            actTitlesFixed = true;
+                        }
+                    }
+                });
+            }
+            if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
+                this.invoiceData.items.forEach(it => {
+                    const k = it.actKey || (typeof this.keyOfInvoiceItem === 'function' ? this.keyOfInvoiceItem(it) : ((it.desc && /^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i.test(it.desc)) ? it.desc.match(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i)[1] : ''));
+                    if (k && this.activities && this.activities[k]) {
+                        it.actKey = k;
+                        const desired = typeof this.getActivityInvoiceDescription === 'function' ? this.getActivityInvoiceDescription(k) : `Activity ${k} : ${(this.activities[k].title || '').replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '').trim()}`;
+                        if (it.desc !== desired) {
+                            it.desc = desired;
+                            actTitlesFixed = true;
+                        }
+                    }
+                });
+            }
+            if (actTitlesFixed) {
+                this._isLoading = false;
+                this.saveToStorage();
             }
 
             this._isLoading = false;

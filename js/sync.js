@@ -225,7 +225,7 @@ window.SyncModule = {
                     const q907 = this.getActivity907InvoiceQty();
                     if (q907 > 0) {
                         this.invoiceData.items.forEach(it => {
-                            if (it.actKey === '907' || (it.desc && it.desc.startsWith('907:'))) {
+                            if (it.actKey === '907' || (it.desc && /^(?:Activity\s+)?907\s*:/i.test(it.desc))) {
                                 if (!it.manual) it.qty = q907;
                             }
                         });
@@ -425,6 +425,18 @@ window.SyncModule = {
                     } else if (this.projectMeta && this.projectMeta.contractorName) {
                         this.invoiceData.contractorName = this.projectMeta.contractorName;
                     }
+                }
+                // Normalize existing invoice item descriptions to "Activity [k] : ..."
+                if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
+                    this.invoiceData.items.forEach(it => {
+                        const k = it.actKey || (typeof this.keyOfInvoiceItem === 'function' ? this.keyOfInvoiceItem(it) : ((it.desc && /^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i.test(it.desc)) ? it.desc.match(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i)[1] : ''));
+                        if (k && this.activities && this.activities[k]) {
+                            it.actKey = k;
+                            if (typeof this.getActivityInvoiceDescription === 'function') {
+                                it.desc = this.getActivityInvoiceDescription(k);
+                            }
+                        }
+                    });
                 }
                 if (parsed.mappingLocks && typeof parsed.mappingLocks === 'object') {
                     this.mappingLocks = { rate: parsed.mappingLocks.rate !== false, sap: parsed.mappingLocks.sap !== false, qty: parsed.mappingLocks.qty !== false };

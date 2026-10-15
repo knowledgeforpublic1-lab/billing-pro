@@ -12,7 +12,7 @@
 
 const defaultActivities = {
   "907": {
-    "title": "907: RSJ 116x100, 9 m long with V Cross arm, Top fitting and allied material (1 KM)",
+    "title": "Activity 907 : RSJ 116x100, 9 m long with V Cross arm, Top fitting and allied material (1 KM)",
     "materials": [
       {
         "no": "1",
@@ -513,7 +513,7 @@ const defaultActivities = {
     ]
   },
   "916": {
-    "title": "916: Erection, Testing & Commissioning of 11kv 3Cx95 mm2 XLPE UG cable (1 KM)",
+    "title": "Activity 916 : Erection, Testing & Commissioning of 11kv 3Cx95 mm2 XLPE UG cable (1 KM)",
     "materials": [
       {
         "no": "1",
@@ -644,7 +644,7 @@ const defaultActivities = {
     ]
   },
   "919": {
-    "title": "919: River crossing with 55sqmm overhead on 152X152 mm, 13mtr RSJ poles",
+    "title": "Activity 919 : River crossing with 55sqmm overhead on 152X152 mm, 13mtr RSJ poles",
     "materials": [
       {
         "no": "1",
@@ -988,7 +988,7 @@ const defaultActivities = {
     ]
   },
   "922": {
-    "title": "922: Double pole cut point Structure for 11kv line on RSJ 116x100, 11 m long pole",
+    "title": "Activity 922 : Double pole cut point Structure for 11kv line on RSJ 116x100, 11 m long pole",
     "materials": [
       {
         "no": "1",
@@ -1289,7 +1289,7 @@ const defaultActivities = {
     ]
   },
   "924": {
-    "title": "924: Single pole cut point Structure for 11kv line on RSJ 152x152, 11 m long pole with concreting",
+    "title": "Activity 924 : Single pole cut point Structure for 11kv line on RSJ 152x152, 11 m long pole with concreting",
     "materials": [
       {
         "no": "1",
@@ -1543,7 +1543,7 @@ const defaultActivities = {
     ]
   },
   "1220": {
-    "title": "1220: 100 KVA Dist. Transformer centers on RSJ , 100 X 116 mm, 11 mtr with Kitkat Dist box",
+    "title": "Activity 1220 : 100 KVA Dist. Transformer centers on RSJ , 100 X 116 mm, 11 mtr with Kitkat Dist box",
     "materials": [
       {
         "no": "1",
@@ -1966,7 +1966,7 @@ const defaultActivities = {
     ]
   },
   "1230": {
-    "title": "1230: Erection, Testing & Commissioning of 11 KV Specially Designed Transformer with all accessories, Control cable, Relays",
+    "title": "Activity 1230 : Erection, Testing & Commissioning of 11 KV Specially Designed Transformer with all accessories, Control cable, Relays",
     "materials": [
       {
         "no": "1",
@@ -2238,7 +2238,7 @@ const defaultActivities = {
     ]
   },
   "6723": {
-    "title": "6723: 11 kV A.B. Switch 400 Amp with DP structure",
+    "title": "Activity 6723 : 11 kV A.B. Switch 400 Amp with DP structure",
     "materials": [
       {
         "no": "1",
@@ -2380,7 +2380,7 @@ const defaultActivities = {
     ]
   },
   "603B": {
-    "title": "603B: Erection, Testing & Commissioning of 11kv Feeder Bay with Gantry Structure & PT",
+    "title": "Activity 603B : Erection, Testing & Commissioning of 11kv Feeder Bay with Gantry Structure & PT",
     "materials": [
       {
         "no": "1",
@@ -2776,7 +2776,7 @@ const defaultActivities = {
     ]
   },
   "934A": {
-    "title": "934A: 11 KV Single circuit Pin type with AB cable 3Cx95+70 sqmm on 100x116 mm 10 mtr RSJ poles",
+    "title": "Activity 934A : 11 KV Single circuit Pin type with AB cable 3Cx95+70 sqmm on 100x116 mm 10 mtr RSJ poles",
     "materials": [
       {
         "no": "1",
@@ -3244,7 +3244,7 @@ const defaultActivities = {
     ]
   },
   "1425A": {
-    "title": "1425A: 3 phase 5 wire LT line with AAAC 55 sqmm for phase and ACSR Weasel for neutral on PSC pole, 8 mtr., 140 Kg",
+    "title": "Activity 1425A : 3 phase 5 wire LT line with AAAC 55 sqmm for phase and ACSR Weasel for neutral on PSC pole, 8 mtr., 140 Kg",
     "materials": [
       {
         "no": "1",
