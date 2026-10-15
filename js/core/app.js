@@ -184,7 +184,9 @@
                     codeSearch: '',
                     sapCode: ''
                 },
-                showExtraItemSuggest: false
+                showExtraItemSuggest: false,
+                showGDriveModal: false,
+                gdriveWebhookUrl: localStorage.getItem('billing_gdrive_webhook_url') || ''
             };
         },
 
@@ -724,17 +726,10 @@
                             '17000006': { code: '17001243', desc: 'RSJ POLE 100X116 MM 11 MTR' },
                             '17000005': { code: '17001242', desc: 'RSJ POLE 100X116 MM 10 MTR' },
                             '17000003': { code: '17005037', desc: 'RSJ POLE 100X116 MM 8 MTR' },
-                            '17000236': { code: '17000243', desc: 'GI WIRE 8 SWG' },
-                            '17000777': { code: '17000776', desc: 'PAINT BLACK BITUMINUS' },
                             '17001296': { code: '17005041', desc: 'MS-11KV TOP CLEAT-75X40X6X325-2.44KG' },
                             '17000045': { code: '17000046', desc: 'DISC INSULATOR 11KV 70KN B & S POLYMER' },
                             '17001251': { code: '17000026', desc: 'HORN GAP FUSE 11 KV' },
-                            '17004590': { code: '17002274', desc: 'COPPER FLEXIBLE WIRE 2.5 SQMM' },
-                            '17004591': { code: '17002274', desc: 'COPPER FLEXIBLE WIRE 2.5 SQMM' },
                             '17000216': { code: '17000120', desc: 'ACSR WEASEL CONDUCTOR' },
-                            '17001398': { code: '17000056', desc: 'LT SHACKLE INSULATOR' },
-                            '17001399': { code: '17000058', desc: 'LT STAY INSULATOR' },
-                            '17001400': { code: '17001150', desc: 'ALUMINIUM BOBBINS' },
                             '17000650': { code: '17000700', desc: 'PG CLAMP FOR ACSR WEASEL CONDUCTOR' },
                             '23001573': { code: '17004372', desc: 'JOINTING SLEEVE AAAC RABBIT CONDUCTOR' },
                             '28000103': { code: '17005597', desc: 'COVERED CONDUCTOR 55 SQMM' }
@@ -816,6 +811,55 @@
                     }
                 } catch(e) { console.error('orphan remap patch failed', e); }
                 try { localStorage.setItem('patch_orphan_remap_v4', 'true'); } catch(e) {}
+            }
+
+            // PATCH: remove 10 excluded SAP items (GI wire, Lug, Bituminous paint, Stay set clamps, MS angle 50x50x6, Shackle/Stay/Bobbin insulators, Copper flexible wire)
+            if (!localStorage.getItem('patch_remove_10_sap_items_v1')) {
+                try {
+                    const excludedCodes = new Set([
+                        '17000236', '17000243',
+                        '17000656',
+                        '17000777', '17000776',
+                        '17001312',
+                        '17001313',
+                        '17001390',
+                        '17001398', '17000056',
+                        '17001399', '17000058',
+                        '17001400', '17001150',
+                        '17002274', '17004590', '17004591'
+                    ]);
+                    let cleaned = 0;
+                    Object.keys(this.activities || {}).forEach(actKey => {
+                        const act = this.activities[actKey];
+                        (act.materials || []).forEach(m => {
+                            let shouldBlank = false;
+                            if (excludedCodes.has(m.itemCode)) shouldBlank = true;
+                            if (Array.isArray(m.sapItems)) {
+                                for (let i = m.sapItems.length - 1; i >= 0; i--) {
+                                    if (excludedCodes.has(m.sapItems[i].code)) {
+                                        shouldBlank = true;
+                                        m.sapItems.splice(i, 1);
+                                    }
+                                }
+                            }
+                            if (shouldBlank) {
+                                m.itemCode = '';
+                                m.sapDescription = '';
+                                m.sapUom = '';
+                                m.docHeader = '';
+                                m.sapItems = [];
+                                cleaned++;
+                            }
+                        });
+                    });
+                    if (cleaned > 0) {
+                        this._isLoading = false;
+                        this.saveToStorage();
+                    }
+                    localStorage.setItem('patch_remove_10_sap_items_v1', 'true');
+                } catch(e) {
+                    console.warn('patch_remove_10_sap_items_v1 error:', e);
+                }
             }
 
             this._isLoading = false;

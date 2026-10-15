@@ -2,12 +2,12 @@
  * @file SAP Materials Master Data
  * @description Approved list of SAP material codes with descriptions, UOMs, and categories.
  * This data is used for SAP item dropdowns in the mapping view.
- * Source: material list.ods (289 items)
+ * Source: material list.ods (279 items)
  * 
  * @global {Array} defaultSapMaterialsMaster
  * @readonly
  * @since v1.0
- * @audit Updated: 2026-09-22 — synced with material list.ods (289 items)
+ * @audit Updated: 2026-10-15 — removed 10 unapproved/excluded items (279 items)
  */
 
 const defaultSapMaterialsMaster = [
@@ -82,18 +82,8 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
-    "code": "17000056",
-    "desc": "LT SHACKLE INSULATOR",
-    "uom": "NO"
-  },
-  {
     "code": "17000057",
     "desc": "LT SPACER",
-    "uom": "NO"
-  },
-  {
-    "code": "17000058",
-    "desc": "LT STAY INSULATOR",
     "uom": "NO"
   },
   {
@@ -154,11 +144,6 @@ const defaultSapMaterialsMaster = [
   {
     "code": "17000239",
     "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-    "uom": "KG"
-  },
-  {
-    "code": "17000243",
-    "desc": "GI WIRE 8 SWG",
     "uom": "KG"
   },
   {
@@ -242,11 +227,6 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
-    "code": "17000656",
-    "desc": "LUG CU RING 2.5 SQMM",
-    "uom": "NO"
-  },
-  {
     "code": "17000671",
     "desc": "HDPE PIPE 160 MM DIA",
     "uom": "M"
@@ -307,11 +287,6 @@ const defaultSapMaterialsMaster = [
     "uom": "L"
   },
   {
-    "code": "17000776",
-    "desc": "PAINT BLACK BITUMINUS",
-    "uom": "L"
-  },
-  {
     "code": "17000778",
     "desc": "RED OXIDE",
     "uom": "L"
@@ -344,11 +319,6 @@ const defaultSapMaterialsMaster = [
   {
     "code": "17001130",
     "desc": "LUG AL RING 120 SQMM",
-    "uom": "NO"
-  },
-  {
-    "code": "17001150",
-    "desc": "ALUMINIUM BOBBINS",
     "uom": "NO"
   },
   {
@@ -427,16 +397,6 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
-    "code": "17001312",
-    "desc": "STAY SET CLAMP-A LG 100X116 50X10X310 MM",
-    "uom": "NO"
-  },
-  {
-    "code": "17001313",
-    "desc": "STAY SET CLAMP-B SH 100X116 50X10X310 MM",
-    "uom": "NO"
-  },
-  {
     "code": "17001315",
     "desc": "SUPPORT ANGLE FOR AB SW 50X50X6X500 MM",
     "uom": "NO"
@@ -492,11 +452,6 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
-    "code": "17001390",
-    "desc": "MS ANGLE 50X50X6 MM",
-    "uom": "MT"
-  },
-  {
     "code": "17001391",
     "desc": "MS CHANNEL 75X40X6 MM",
     "uom": "MT"
@@ -535,11 +490,6 @@ const defaultSapMaterialsMaster = [
     "code": "17002007",
     "desc": "MS CHANNEL 100X50X6 MM",
     "uom": "MT"
-  },
-  {
-    "code": "17002274",
-    "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-    "uom": "M"
   },
   {
     "code": "17002323",

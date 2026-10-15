@@ -78,9 +78,17 @@
                         <button v-else-if="currentView === 'reconciliation'" class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             📗 Export (.xlsx)
                         </button>
-                        <button v-else-if="currentView === 'invoice'" class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                            📗 Export Invoice (.xlsx)
-                        </button>
+                        <template v-else-if="currentView === 'invoice'">
+                            <button class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
+                                📗 Export Invoice (.xlsx)
+                            </button>
+                            <button class="btn btn-secondary" @click="manualSaveBillToDrive" title="Save Bill to Google Drive Folder (Contractor / Bill No)" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 700; white-space: nowrap;">
+                                ☁️ Save to Drive
+                            </button>
+                            <button class="btn btn-secondary" @click="openGDriveModal" title="Google Drive Settings" style="padding: 0.35rem 0.45rem; font-size: 0.76rem; opacity: 0.85;">
+                                ⚙️
+                            </button>
+                        </template>
                         <button v-else-if="currentView === 'detail'" class="btn btn-excel" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                             📗 Export Activity {{ selectedActivityKey }}
                         </button>
@@ -1642,6 +1650,73 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Drive Backup Settings Modal -->
+        <div class="modal-overlay" v-if="showGDriveModal" @click.self="showGDriveModal = false">
+            <div class="modal-content" style="max-width: 620px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border-bottom: 1px solid var(--border-strong);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3rem;">☁️</span>
+                        <div>
+                            <div class="modal-title" style="font-size: 1rem; font-weight: 800; color: var(--text-main);">Google Drive Auto-Backup Settings</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Target Folder: RDSS T-10 GADCHIROLI</div>
+                        </div>
+                    </div>
+                    <button class="modal-close" @click="showGDriveModal = false">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 1.25rem;">
+                    <!-- Target Folder Info Box -->
+                    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <div>
+                                <div style="font-size: 0.8rem; font-weight: 700; color: #60a5fa;">📁 Connected Drive Folder ID:</div>
+                                <div style="font-size: 0.78rem; font-family: monospace; color: var(--text-main); margin-top: 2px;">1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000</div>
+                            </div>
+                            <a href="https://drive.google.com/drive/folders/1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000?usp=drive_link" target="_blank" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">
+                                Open Folder ↗
+                            </a>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px;">
+                            Bills automatically <strong>[Contractor Name]</strong> folder ke andar <strong>[Bill No]</strong> subfolder me save honge.
+                        </div>
+                    </div>
+
+                    <!-- Webhook URL input -->
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>Google Apps Script Web App URL:</span>
+                            <span v-if="gdriveWebhookUrl" style="color: var(--accent-green); font-size: 0.74rem; font-weight: 700;">● Connected</span>
+                            <span v-else style="color: var(--text-muted); font-size: 0.74rem;">Not connected</span>
+                        </label>
+                        <input type="text" v-model="gdriveWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" style="width: 100%; padding: 0.5rem 0.75rem; font-family: monospace; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-main);">
+                        <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 4px;">
+                            Apps Script deploy karne ke baad mili hui Web App URL yahan paste karein.
+                        </div>
+                    </div>
+
+                    <!-- Instructions Accordion / Help -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.78rem; line-height: 1.5;">
+                        <div style="font-weight: 800; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <span>⚡ Quick 1-Minute Setup Guide:</span>
+                        </div>
+                        <ol style="margin: 0; padding-left: 1.25rem; color: var(--text-muted);">
+                            <li><a href="https://script.new" target="_blank" style="color: #60a5fa; font-weight: 600;">script.new</a> par click karein.</li>
+                            <li>Agent dvara diya gaya Apps Script code paste karein.</li>
+                            <li><strong>Deploy > New deployment</strong> dabayein, select type <strong>Web app</strong>.</li>
+                            <li><strong>Who has access:</strong> "Anyone" select karein aur Deploy karein.</li>
+                            <li>Mili hui <code>/exec</code> URL ko upar box me paste karke <strong>Save & Connect</strong> karein.</li>
+                        </ol>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem;">
+                        <button type="button" class="btn btn-secondary" @click="showGDriveModal = false">Close</button>
+                        <button type="button" class="btn btn-primary" style="background: #2563eb; border-color: #2563eb; font-weight: 700;" @click="saveGDriveSettings">
+                            💾 Save & Connect
+                        </button>
                     </div>
                 </div>
             </div>

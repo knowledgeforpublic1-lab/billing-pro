@@ -566,15 +566,7 @@ window.ExportModule = {
                     if (!String(v.subDivName || '').trim()) missing.push('Name of Sub-Div');
                     return missing;
                 },
-                async exportTaxInvoiceExcel() {
-                    const missing = this.getMissingInvoiceMeta();
-                    if (missing.length) {
-                        this.showToast('⚠️ Fill these first: ' + missing.join(', '), '⛔');
-                        alert('Excel export ruk gaya.\n\nPehle Tax Invoice me ye field haath se bharo:\n• ' + missing.join('\n• '));
-                        return;
-                    }
-                    this.showToast('Generating Tax Invoice & Added Activity Sheets...', '⏳');
-
+                async buildTaxInvoiceWorkbook() {
                     const workbook = new ExcelJS.Workbook();
                     workbook.creator = 'Billing Pro Studio';
                     workbook.created = new Date();
@@ -621,6 +613,19 @@ window.ExportModule = {
                     // 3. Add Reconciliation Sheet
                     this.addReconciliationToWorkbook(workbook, addedActKeys);
 
+                    return { workbook, addedActKeys };
+                },
+                async exportTaxInvoiceExcel() {
+                    const missing = this.getMissingInvoiceMeta();
+                    if (missing.length) {
+                        this.showToast('⚠️ Fill these first: ' + missing.join(', '), '⛔');
+                        alert('Excel export ruk gaya.\n\nPehle Tax Invoice me ye field haath se bharo:\n• ' + missing.join('\n• '));
+                        return;
+                    }
+                    this.showToast('Generating Tax Invoice & Added Activity Sheets...', '⏳');
+
+                    const { workbook, addedActKeys } = await this.buildTaxInvoiceWorkbook();
+
                     const buffer = await workbook.xlsx.writeBuffer();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const url = window.URL.createObjectURL(blob);
@@ -634,6 +639,93 @@ window.ExportModule = {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
                     this.showToast(`Tax Invoice downloaded with ${addedActKeys.length} activity sheets + Reconciliation! 🎉`, '🧾');
+
+                    // If Google Drive is configured, also auto-save to Drive
+                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+                    if (webhookUrl) {
+                        this.uploadBufferToGoogleDrive(buffer, fileName);
+                    }
+                },
+                async manualSaveBillToDrive() {
+                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+                    if (!webhookUrl) {
+                        this.openGDriveModal();
+                        return;
+                    }
+                    const missing = this.getMissingInvoiceMeta();
+                    if (missing.length) {
+                        this.showToast('⚠️ Pehle ye field bharo: ' + missing.join(', '), '⛔');
+                        alert('Drive save ruk gaya.\n\nPehle Tax Invoice me ye field bharo:\n• ' + missing.join('\n• '));
+                        return;
+                    }
+                    this.showToast('Generating Bill Workbook for Google Drive... ⏳', '☁️');
+                    try {
+                        const { workbook } = await this.buildTaxInvoiceWorkbook();
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const cleanInvNo = (this.invoiceData.invoiceNo || 'Draft').replace(/[\/\\:*?"<>|]/g, '_');
+                        const fileName = `Tax_Invoice_${cleanInvNo}_All_Sheets.xlsx`;
+                        await this.uploadBufferToGoogleDrive(buffer, fileName);
+                    } catch(e) {
+                        console.error('Manual drive save error:', e);
+                        this.showToast('Drive save error: ' + (e.message || e), '❌');
+                    }
+                },
+                async uploadBufferToGoogleDrive(buffer, fileName) {
+                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+                    if (!webhookUrl) {
+                        this.openGDriveModal();
+                        return;
+                    }
+                    const contractorName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
+                    const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
+
+                    this.showToast(`Google Drive uploading: [${contractorName}] / [${billNo}]... ⏳`, '☁️');
+
+                    try {
+                        let binary = '';
+                        const bytes = new Uint8Array(buffer);
+                        const len = bytes.byteLength;
+                        for (let i = 0; i < len; i++) {
+                            binary += String.fromCharCode(bytes[i]);
+                        }
+                        const base64Data = window.btoa(binary);
+
+                        const payload = {
+                            folderId: '1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000',
+                            contractorName: contractorName,
+                            billNo: billNo,
+                            fileName: fileName,
+                            fileData: base64Data,
+                            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                        };
+
+                        await fetch(webhookUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        this.showToast(`Google Drive Folder me save ho gaya! 📁 [${contractorName}] / [${billNo}] 🎉`, '✅');
+                    } catch (err) {
+                        console.error('Drive upload failed:', err);
+                        this.showToast('Google Drive save fail: ' + (err.message || 'Network error'), '❌');
+                    }
+                },
+                openGDriveModal() {
+                    this.gdriveWebhookUrl = localStorage.getItem('billing_gdrive_webhook_url') || '';
+                    this.showGDriveModal = true;
+                },
+                saveGDriveSettings() {
+                    if (this.gdriveWebhookUrl && this.gdriveWebhookUrl.trim()) {
+                        localStorage.setItem('billing_gdrive_webhook_url', this.gdriveWebhookUrl.trim());
+                        this.showToast('Google Drive Webhook URL saved! ✅', '☁️');
+                        this.showGDriveModal = false;
+                    } else {
+                        localStorage.removeItem('billing_gdrive_webhook_url');
+                        this.showToast('Google Drive Webhook disconnected.', 'ℹ️');
+                        this.showGDriveModal = false;
+                    }
                 },
 
                 addReconciliationToWorkbook(workbook, actKeys) {
