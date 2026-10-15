@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261015_06">
+    <link rel="stylesheet" href="css/style.css?v=20261015_07">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -66,27 +66,8 @@
                         </button>
                     </div>
 
+                    <!-- Sirf user pill — action buttons har view ke apne toolbar me (niche) -->
                     <div class="tabs-export-group">
-                        <button class="btn btn-secondary" @click="openContractorManager" title="Contractor Database" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
-                            📁 Contractor DB
-                        </button>
-                        <button v-if="currentView === 'mapping'" class="btn btn-excel" @click="exportMaterialMappingExcel" title="Export SAP Material Mapping Master Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                            📗 Export (.xlsx)
-                        </button>
-                        <button v-else-if="currentView === 'reconciliation'" class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                            📗 Export (.xlsx)
-                        </button>
-                        <template v-else-if="currentView === 'invoice'">
-                            <button class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                                📗 Export Invoice (.xlsx)
-                            </button>
-                            <button class="btn btn-secondary" @click="manualSaveBillToDrive" title="Save Bill to Google Drive Folder (Contractor / Bill No)" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; white-space: nowrap;">
-                                ☁️ Save Bill to Drive
-                            </button>
-                        </template>
-                        <button v-else-if="currentView === 'detail'" class="btn btn-excel" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                            📗 Export Activity {{ selectedActivityKey }}
-                        </button>
                         <div class="user-profile-pill" title="User Profile">
                             <div class="user-avatar">RK</div>
                             <div class="user-info-text">
@@ -179,6 +160,9 @@
                             <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">
                                 {{ filteredMaterials.length }} Items | {{ getActLocations(selectedActivityKey).length }} Locations
                             </span>
+                            <button class="btn btn-excel" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
+                                📗 Export Activity {{ selectedActivityKey }}
+                            </button>
                         </div>
                     </div>
 
@@ -542,6 +526,17 @@
                         <label>Invoice Date:</label>
                         <input type="date" v-model="invoiceData.invoiceDate" @change="saveToStorage" :readonly="isFinalized">
                     </div>
+                    <div class="inv-tool-item" style="flex: 0 0 auto; min-width: 0;">
+                        <label>Bill Actions</label>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
+                                📗 Export Invoice (.xlsx)
+                            </button>
+                            <button class="btn btn-secondary" @click="manualSaveBillToDrive" title="Save Bill to Google Drive Folder (Contractor / Bill No)" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; white-space: nowrap;">
+                                ☁️ Save Bill to Drive
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="invoice-card" id="tax-invoice-sheet">
@@ -900,6 +895,9 @@
                             <button class="btn btn-secondary" @click="openSapMasterModal()" title="SAP Material Master list (dropdown ke codes) — cloud copy add/edit karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 📚 SAP Master ({{ sapMaterialsMaster.length }})
                             </button>
+                            <button class="btn btn-excel" @click="exportMaterialMappingExcel" title="Export SAP Material Mapping Master Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
+                                📗 Export (.xlsx)
+                            </button>
                         </div>
                     </div>
 
@@ -989,8 +987,13 @@
                 </div>
                 <div class="filter-col" style="flex: 1; justify-content: flex-end; order: 3;">
                     <label>&nbsp;</label>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                        {{ reverseEntry ? 'Enter qty in your location — activity + invoice will update. 🔩 Bolt: enter in nos, activity converts to kg' : 'Old system — enter in activity, this sheet builds automatically' }}
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                            {{ reverseEntry ? 'Enter qty in your location — activity + invoice will update. 🔩 Bolt: enter in nos, activity converts to kg' : 'Old system — enter in activity, this sheet builds automatically' }}
+                        </span>
+                        <button class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
+                            📗 Export (.xlsx)
+                        </button>
                     </div>
                 </div>
                 <div v-if="reverseEntry" class="filter-col no-print" style="min-width: 280px; flex: unset; order: 2;">

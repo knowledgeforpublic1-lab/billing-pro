@@ -1112,31 +1112,12 @@
         }
         @media (max-width: 640px) {
             .user-info-text { display: none; }
-            /* Export buttons phone par gayab MAT karo — neeche fixed action bar banao */
-            .tabs-export-group {
-                display: flex !important;
-                position: fixed;
-                left: 0; right: 0; bottom: 0;
-                z-index: 500;
-                gap: 0.5rem;
-                padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
-                background: var(--bg-surface);
-                border-top: 1px solid var(--border-strong);
-                box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
-                margin: 0;
-            }
-            .tabs-export-group .btn {
-                flex: 1;
-                justify-content: center;
-                min-height: 48px;
-                font-size: 0.85rem !important;
-                padding: 0.7rem 0.5rem !important;
-            }
+            /* Ab top bar me sirf tabs + avatar bacha hai — fixed action bar ki zaroorat nahi,
+               export/DB buttons har view ke toolbar me hain */
+            .tabs-export-group { gap: 0; margin-left: auto; }
             /* Phone par brand chip + divider hatao — sirf tabs rahen (header chhota) */
             .tabs-brand, .tabs-bar > .tabs-divider { display: none; }
-            /* Fixed bar ke peeche content na chhupe */
-            .center-content { padding: 0.35rem 0.35rem 5.5rem 0.35rem; }
-            .toast-container { bottom: 6rem; }
+            .center-content { padding: 0.35rem; }
             /* iPhone auto-zoom band: focus par font 16px se chhota nahi */
             input, select, textarea { font-size: 16px !important; }
             /* Ungli se dabane layak bade nishane */
