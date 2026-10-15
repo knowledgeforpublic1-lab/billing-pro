@@ -713,12 +713,10 @@ window.ExportModule = {
                     if (this.gdriveWebhookUrl && this.gdriveWebhookUrl.trim()) {
                         localStorage.setItem('billing_gdrive_webhook_url', this.gdriveWebhookUrl.trim());
                         this.showToast('Google Drive Webhook URL saved! ✅', '☁️');
-                        this.showGDriveModal = false;
                     } else {
                         localStorage.removeItem('billing_gdrive_webhook_url');
-                        this.showToast('Google Drive Webhook disconnected.', 'ℹ️');
-                        this.showGDriveModal = false;
                     }
+                    this.showGDriveModal = false;
                 },
 
                 addReconciliationToWorkbook(workbook, actKeys) {
