@@ -1687,15 +1687,15 @@
                     <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <div>
-                                <div style="font-size: 0.8rem; font-weight: 700; color: #60a5fa;">📁 Connected Drive Folder ID:</div>
-                                <div style="font-size: 0.78rem; font-family: monospace; color: var(--text-main); margin-top: 2px;">1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000</div>
+                                <div style="font-size: 0.8rem; font-weight: 700; color: #60a5fa;">📁 Drive me file yahan banegi:</div>
+                                <div style="font-size: 0.78rem; font-family: monospace; color: var(--text-main); margin-top: 2px;">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }} / {{ selectedContractorName }} / Tax_Invoice_&lt;Bill No&gt;.xlsx</div>
                             </div>
-                            <a href="https://drive.google.com/drive/folders/1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000?usp=drive_link" target="_blank" rel="noopener noreferrer" @click.stop class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">
-                                Open Folder ↗
+                            <a href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener noreferrer" @click.stop class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border-color: rgba(59, 130, 241, 0.4); color: #60a5fa;">
+                                Open Drive ↗
                             </a>
                         </div>
                         <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px;">
-                            Bills automatically <strong>[Contractor Name]</strong> folder ke andar <strong>[Bill No]</strong> subfolder me save honge.
+                            Folder automatic ban jayega. Setup guide: <code>google-drive/README.md</code> (Apps Script code: <code>google-drive/BillingDriveWebApp.gs</code>).
                         </div>
                     </div>
 
@@ -1718,16 +1718,19 @@
                             <span>⚡ Quick 1-Minute Setup Guide:</span>
                         </div>
                         <ol style="margin: 0; padding-left: 1.25rem; color: var(--text-muted);">
-                            <li><a href="https://script.new" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; font-weight: 600;">script.new</a> par click karein.</li>
-                            <li>Agent dvara diya gaya Apps Script code paste karein.</li>
+                            <li><a href="https://script.new" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; font-weight: 600;">script.new</a> par click karein (Drive wala Google account).</li>
+                            <li>Repo me <code>google-drive/BillingDriveWebApp.gs</code> ka poora code paste karein.</li>
                             <li><strong>Deploy > New deployment</strong> dabayein, select type <strong>Web app</strong>.</li>
-                            <li><strong>Who has access:</strong> "Anyone" select karein aur Deploy karein.</li>
-                            <li>Mili hui <code>/exec</code> URL ko upar box me paste karke <strong>Save & Connect</strong> karein.</li>
+                            <li><strong>Execute as: Me</strong> aur <strong>Who has access: Anyone</strong> select karke Deploy karein.</li>
+                            <li>Mili hui <code>/exec</code> URL ko upar box me paste karke <strong>Save & Connect</strong> karein, phir <strong>🔍 Test Connection</strong>.</li>
                         </ol>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem;">
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; flex-wrap: wrap;">
                         <button type="button" class="btn btn-secondary" @click="showGDriveModal = false">Close</button>
+                        <button type="button" class="btn btn-secondary" @click="testGDriveConnection" title="Apps Script deployment + access dono check karta hai" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 700;">
+                            🔍 Test Connection
+                        </button>
                         <button type="button" class="btn btn-primary" style="background: #2563eb; border-color: #2563eb; font-weight: 700;" @click="saveGDriveSettings">
                             💾 Save & Connect
                         </button>
@@ -1838,7 +1841,7 @@
     <script src="js/billing.js?v=20261015_05"></script>
     <script src="js/mapping.js?v=20261015_05"></script>
     <script src="js/views.js?v=20261015_05"></script>
-    <script src="js/export.js?v=20261015_06"></script>
+    <script src="js/export.js?v=20261015_07"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
     <script src="js/core/app.js?v=20261015_05"></script>

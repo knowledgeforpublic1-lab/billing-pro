@@ -353,33 +353,90 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
 // ============ Google Drive Upload Proxy ============
 // Browser → Vercel API (same-origin, no CORS) → Google Apps Script (server-to-server, no CORS)
 // Solves the GAS redirect CORS issue that blocks direct browser-to-GAS fetch calls.
+// Setup guide: google-drive/README.md | Script code: google-drive/BillingDriveWebApp.gs
+
+function validateGasUrl(webhookUrl) {
+    if (!webhookUrl || typeof webhookUrl !== 'string' || !webhookUrl.startsWith('https://script.google.com/')) {
+        return 'Invalid webhook URL — script.google.com ka /exec URL lagao';
+    }
+    return null;
+}
+
+async function callGas(webhookUrl, options) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+        return await fetch(webhookUrl, Object.assign({ redirect: 'follow', signal: controller.signal }, options));
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+// Connection test — app ke "🔍 Test Connection" button se GET jata hai (doGet chalta hai)
+app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
+    const ctx = 'GDRIVE-PING';
+    try {
+        const webhookUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
+        const bad = validateGasUrl(webhookUrl);
+        if (bad) return res.status(400).json({ success: false, error: bad });
+
+        const gasResponse = await callGas(webhookUrl, { method: 'GET' });
+        const text = await gasResponse.text();
+        let gas;
+        try { gas = JSON.parse(text); } catch (e) { gas = { raw: text.substring(0, 300) }; }
+
+        if (gasResponse.ok && gas && (gas.ok === true || gas.status === 'success')) {
+            log.info(ctx, `GAS ping OK: app=${gas.app || '?'}, root=${gas.rootFolder || '?'}`);
+            return res.json({ success: true, gas });
+        }
+        log.warn(ctx, `GAS ping failed (${gasResponse.status}): ${text.substring(0, 200)}`);
+        res.status(502).json({
+            success: false,
+            error: `Apps Script deployment theek nahi (HTTP ${gasResponse.status}) — New deployment → Web app → "Anyone" banao aur /exec URL use karo`,
+            gas
+        });
+    } catch (err) {
+        log.error(ctx, 'GDrive ping error', err);
+        res.status(500).json({ success: false, error: 'Ping failed: ' + (err.message || 'Unknown error') });
+    }
+});
+
 app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'GDRIVE-PROXY';
     try {
-        const { webhookUrl, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
+        const { webhookUrl, folderName, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
 
         if (!webhookUrl || !fileData || !fileName) {
             log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');
             return res.status(400).json({ success: false, error: 'Missing required fields: webhookUrl, fileData, fileName' });
         }
 
-        // Validate webhook URL — must be a Google Apps Script URL
-        if (!webhookUrl.startsWith('https://script.google.com/')) {
-            log.warn(ctx, `Invalid webhook URL: ${webhookUrl.substring(0, 50)}...`);
-            return res.status(400).json({ success: false, error: 'Invalid webhook URL — must be a Google Apps Script URL' });
+        const bad = validateGasUrl(webhookUrl);
+        if (bad) {
+            log.warn(ctx, `Invalid webhook URL: ${String(webhookUrl).substring(0, 50)}...`);
+            return res.status(400).json({ success: false, error: bad });
+        }
+
+        // Vercel serverless request body limit 4.5MB — base64 fileData usse chhoti honi chahiye
+        const MAX_BASE64 = 4.2 * 1024 * 1024;
+        if (fileData.length > MAX_BASE64) {
+            log.warn(ctx, `Payload too big: ${Math.round(fileData.length / 1024)}KB base64`);
+            return res.status(413).json({
+                success: false,
+                error: `File bahut bada hai (${(fileData.length / (1024 * 1024)).toFixed(1)}MB base64, limit 4.2MB) — bill workbook chhota karo ya file seedha download karke manually Drive me daalo`
+            });
         }
 
         const fileSizeMB = (fileData.length / (1024 * 1024)).toFixed(2);
         log.info(ctx, `Uploading to GDrive: ${fileName} (${fileSizeMB} MB base64), Contractor: ${contractorName}, Bill: ${billNo}`);
 
         // Forward payload to Google Apps Script — server-to-server (no CORS)
-        const gasPayload = JSON.stringify({ folderId, contractorName, billNo, fileName, fileData, mimeType });
+        const gasPayload = JSON.stringify({ folderName, folderId, contractorName, billNo, fileName, fileData, mimeType });
 
-        const gasResponse = await fetch(webhookUrl, {
+        const gasResponse = await callGas(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: gasPayload,
-            redirect: 'follow'
+            body: gasPayload
         });
 
         const responseText = await gasResponse.text();
@@ -390,17 +447,38 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
             responseJson = { status: gasResponse.ok ? 'ok' : 'error', raw: responseText.substring(0, 500) };
         }
 
-        if (gasResponse.ok) {
-            log.info(ctx, `GDrive upload success: ${fileName}`);
-            res.json({ success: true, message: 'File uploaded to Google Drive', gasResponse: responseJson });
-        } else {
-            log.error(ctx, `GAS responded with ${gasResponse.status}: ${responseText.substring(0, 300)}`);
-            res.status(502).json({ success: false, error: `Google Apps Script error (${gasResponse.status})`, details: responseJson });
+        // GAS hamesha HTTP 200 bhejta hai — asli result JSON ke "ok"/"status" me hota hai
+        const gasFailed = !gasResponse.ok || !responseJson || responseJson.ok === false || responseJson.status === 'error';
+        if (gasFailed) {
+            log.error(ctx, `GAS failed (${gasResponse.status}): ${responseJson && responseJson.error ? responseJson.error : responseText.substring(0, 300)}`);
+            return res.status(502).json({
+                success: false,
+                error: (responseJson && responseJson.error) || `Google Apps Script error (${gasResponse.status})`,
+                gasResponse: responseJson
+            });
         }
+
+        log.info(ctx, `GDrive upload success: ${responseJson.folder || ''}/${fileName}`);
+        res.json({ success: true, message: 'File uploaded to Google Drive', gasResponse: responseJson });
     } catch (err) {
         log.error(ctx, 'GDrive proxy error', err);
         res.status(500).json({ success: false, error: 'Server-side upload failed: ' + (err.message || 'Unknown error') });
     }
+});
+
+// Express JSON body errors (jaise 5MB limit) → Hinglish JSON message (HTML ki jagah)
+app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.too.large') {
+        return res.status(413).json({
+            success: false,
+            error: 'Request body limit (5MB) exceed — file bahut bada hai. Bill workbook chhota karo ya seedha download karke manually upload karo.'
+        });
+    }
+    if (err) {
+        log.error('MIDDLEWARE', `Error on ${req.method} ${req.path}`, err);
+        return res.status(500).json({ success: false, error: 'Server error: ' + (err.message || 'Unknown') });
+    }
+    next();
 });
 
 // Export the app for Vercel

@@ -663,6 +663,32 @@ window.ExportModule = {
                         this.showToast('Drive save error: ' + (e.message || e), '❌');
                     }
                 },
+                async testGDriveConnection() {
+                    const url = (this.gdriveWebhookUrl || '').trim();
+                    if (!url) {
+                        this.showToast('Pehle Apps Script Webhook URL paste karo', '⚠️');
+                        return;
+                    }
+                    if (!url.startsWith('https://script.google.com/')) {
+                        this.showToast('URL script.google.com ka /exec link hona chahiye', '⚠️');
+                        return;
+                    }
+                    this.showToast('Drive webhook test ho raha hai... ⏳', '🔍');
+                    try {
+                        const headers = {};
+                        try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+                        const res = await fetch('/api/gdrive-ping?url=' + encodeURIComponent(url), { headers });
+                        const data = await res.json().catch(function(){ return {}; });
+                        if (res.ok && data.success) {
+                            const root = (data.gas && data.gas.rootFolder) || 'RDSS T-10 GADCHIROLI';
+                            this.showToast('Google Drive webhook CONNECTED ✅ (folder: ' + root + ')', '✅');
+                        } else {
+                            throw new Error(data.error || ('HTTP ' + res.status));
+                        }
+                    } catch (e) {
+                        this.showToast('Drive test FAIL: ' + (e.message || e), '❌');
+                    }
+                },
                 async uploadBufferToGoogleDrive(buffer, fileName) {
                     const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
                     if (!webhookUrl) {
@@ -671,6 +697,7 @@ window.ExportModule = {
                     }
                     const contractorName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
                     const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
+                    const folderName = (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
 
                     this.showToast(`Google Drive uploading: [${contractorName}] / [${billNo}]... ⏳`, '☁️');
 
@@ -686,9 +713,15 @@ window.ExportModule = {
                         }
                         const base64Data = window.btoa(binary);
 
+                        // Vercel proxy request limit 4.5MB — usse bada payload pehle hi roko
+                        if (base64Data.length > 4.2 * 1024 * 1024) {
+                            this.showToast('❌ File bahut bada hai (' + (base64Data.length / (1024 * 1024)).toFixed(1) + 'MB, limit 4.2MB) — bill workbook chhota karo ya file seedha download karke manually Drive me daalo', '❌');
+                            return;
+                        }
+
                         const payload = {
                             webhookUrl: webhookUrl,
-                            folderId: '1LaRWftgCXuhZaxSHIjUUOqMOVwHpF000',
+                            folderName: folderName,
                             contractorName: contractorName,
                             billNo: billNo,
                             fileName: fileName,
@@ -713,7 +746,8 @@ window.ExportModule = {
                         const result = await response.json();
 
                         if (response.ok && result.success) {
-                            this.showToast(`Google Drive Folder me save ho gaya! 📁 [${contractorName}] / [${billNo}] 🎉`, '✅');
+                            const folderPath = (result.gasResponse && result.gasResponse.folder) || (folderName + ' / ' + contractorName);
+                            this.showToast(`Google Drive Folder me save ho gaya! 📁 [${folderPath}] 🎉`, '✅');
                             console.log('[GDrive Upload] Success:', result);
                         } else {
                             throw new Error(result.error || `Server responded with status ${response.status}`);
