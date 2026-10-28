@@ -79,7 +79,7 @@ const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'invoiceData', 'mappingLocks', 'sapMaterialsMaster', 'savedAt'
+    'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt'
 ]);
 
 function pickAllowedKeys(obj) {

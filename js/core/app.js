@@ -879,8 +879,10 @@
                                             s.desc = REMAP[s.code].desc;
                                             remapped++;
                                         } else if (!masterSet[s.code]) {
-                                            m.sapItems.splice(i, 1);
-                                            blanked++;
+                                            if (s.code !== 'N/A' && !String(s.code).startsWith('EXTRA-')) {
+                                                m.sapItems.splice(i, 1);
+                                                blanked++;
+                                            }
                                         } else if (masterDesc[s.code] && s.desc !== masterDesc[s.code]) {
                                             s.desc = masterDesc[s.code];
                                             remapped++;
@@ -989,20 +991,37 @@
             // Net wapas aaye to pending sync turant push ho jaye
             this.armOnlineRecovery();
 
-            // Periodic heartbeat sync — agar koi change pending hai toh push ho jaye
-            this._heartbeatTimer = setInterval(() => {
+            // Periodic heartbeat sync — local changes push karo aur dusre PC ke updates auto-pull karo
+            this._heartbeatTimer = setInterval(async () => {
                 if (this._isLoading || this.cloudConflict) return;
                 if (this.syncStatus === 'syncing') return;
                 try {
+                    // 1. Check if we have pending local changes to push
                     const payload = this.buildSyncPayload();
                     const json = JSON.stringify(payload);
-                    if (json.length > 4 * 1024 * 1024) return;
-                    let h = 0;
-                    for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-                    const hash = json.length + ':' + h;
-                    if (hash !== this.lastSentHash) {
-                        console.info('Heartbeat: unsynced change detected, triggering sync');
-                        this.syncToMongoNow();
+                    if (json.length <= 4 * 1024 * 1024) {
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        const hash = json.length + ':' + h;
+                        if (hash !== this.lastSentHash) {
+                            console.info('Heartbeat: unsynced change detected, pushing to cloud');
+                            await this.syncToMongoNow();
+                            return;
+                        }
+                    }
+                    // 2. Periodic check: if another PC saved changes to cloud, auto-pull them!
+                    if (!this.cloudConflict && typeof this.cloudRev === 'number') {
+                        const headRes = await fetch('/api/billing', {
+                            headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                        });
+                        if (headRes.ok) {
+                            const headData = await headRes.json();
+                            if (headData && typeof headData.rev === 'number' && headData.rev > this.cloudRev) {
+                                console.info(`Heartbeat: newer cloud rev detected (${headData.rev} > ${this.cloudRev}), loading updates...`);
+                                await this.loadFromStorage({ forceServer: true });
+                                try { this.showToast('Cloud updates received from another PC ☁️', 'ℹ️'); } catch(e) {}
+                            }
+                        }
                     }
                 } catch(e) {}
             }, 15000);

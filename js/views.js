@@ -807,6 +807,10 @@ window.ViewsModule = {
         this.activeSapManagerOrigIndex = -1;
         this.sapManagerSearchQuery = '';
         this.sapManagerSuggestions = [];
+        this.saveToStorage();
+        if (typeof this.syncToMongoNow === 'function') {
+            this.syncToMongoNow({ manual: false });
+        }
     },
     onSapManagerItemQtyChange(sItem, val) {
         if (!sItem) return;

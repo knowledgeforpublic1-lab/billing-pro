@@ -40,6 +40,7 @@ window.SyncModule = {
             activityQuantities: this.activityQuantities,
             invoiceData: this.invoiceData,
             mappingLocks: this.mappingLocks,
+            mappingRoundMode: this.mappingRoundMode || 'none',
             sapMaterialsMaster: this.sapMaterialsMaster,
             savedAt: Date.now(),
             baseRev: this.cloudRev
@@ -54,7 +55,7 @@ window.SyncModule = {
         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
         if (this._mappingSyncTimer) clearTimeout(this._mappingSyncTimer);
         this.syncStatus = 'syncing';
-        this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow(); }, 800);
+        this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow(); }, 400);
     },
     stableStateHash(obj) {
         try {
@@ -300,11 +301,13 @@ window.SyncModule = {
           let localRaw = null;
           try { localRaw = localStorage.getItem('lk_billing_app_state_v10'); } catch(e) {}
           let localSavedAt = 0;
+          let localRev = 0;
           let localHash = '';
           if (localRaw) {
               try {
                   const lp = JSON.parse(localRaw) || {};
                   localSavedAt = Number(lp.savedAt) || 0;
+                  localRev = (typeof lp.baseRev === 'number') ? lp.baseRev : 0;
                   localHash = this.stableStateHash(lp);
               } catch(e) {}
           }
@@ -316,7 +319,8 @@ window.SyncModule = {
           let syncedHash = this.getSyncedHash();
           if (serverHash && !syncedHash) { syncedHash = serverHash; this.setSyncedHash(serverHash); }
           const localDirty = !!(localRaw && localHash && serverHash && localHash !== serverHash && localHash !== syncedHash && serverHash === syncedHash);
-          if (serverRaw && !forceServer && localDirty) {
+          const serverRevIsNewer = (typeof this._loadedRev === 'number' && typeof localRev === 'number' && this._loadedRev > localRev);
+          if (serverRaw && !forceServer && localDirty && !serverRevIsNewer) {
               // Sirf is PC me unsynced change hai, cloud purana hai → LOCAL jeetega + turant push
               raw = localRaw;
               fromMongo = false;
@@ -324,7 +328,7 @@ window.SyncModule = {
               console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
               try { this.showToast('Unsaved changes found on this PC — saving to cloud...', '🔄'); } catch(e) {}
               setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
-          } else if (serverRaw && (forceServer || !localRaw || serverUpdatedAt >= localSavedAt)) {
+          } else if (serverRaw && (forceServer || !localRaw || serverRevIsNewer || serverUpdatedAt >= localSavedAt)) {
               raw = serverRaw;
               fromMongo = true;
               if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
@@ -451,7 +455,10 @@ window.SyncModule = {
                 }
                 if (parsed.mappingLocks && typeof parsed.mappingLocks === 'object') {
                     this.mappingLocks = { rate: parsed.mappingLocks.rate !== false, sap: parsed.mappingLocks.sap !== false, qty: parsed.mappingLocks.qty !== false };
-                    if (parsed.mappingRoundMode) this.mappingRoundMode = parsed.mappingRoundMode;
+                }
+                if (parsed.mappingRoundMode) {
+                    this.mappingRoundMode = parsed.mappingRoundMode;
+                    try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode); } catch(e) {}
                 }
             } catch (e) {
                 console.error('Error loading stored state', e);

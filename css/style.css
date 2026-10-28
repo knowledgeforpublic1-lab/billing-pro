@@ -2159,3 +2159,16 @@
             color: var(--accent-indigo);
             transform: translateY(1px);
         }
+/* ☁️ Cloud Sync Pill & Animation */
+@keyframes spinClockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spin-anim {
+    display: inline-block;
+    animation: spinClockwise 1s linear infinite;
+}
+.cloud-sync-pill:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}

@@ -75,8 +75,25 @@
                         </button>
                     </div>
 
-                    <!-- Sirf user pill — action buttons har view ke apne toolbar me (niche) -->
-                    <div class="tabs-export-group">
+                    <!-- Cloud Sync Pill + User Profile Pill -->
+                    <div class="tabs-export-group" style="display: flex; align-items: center; gap: 8px;">
+                        <!-- ☁️ Live Cloud Sync Status Pill -->
+                        <div class="cloud-sync-pill"
+                            @click="syncToMongoNow({ manual: true })"
+                            :title="'Cloud Sync: ' + (syncStatus === 'synced' ? 'All changes saved to Cloud! Click to re-sync now.' : (syncStatus === 'syncing' ? 'Syncing with MongoDB cloud...' : 'Click to save now.'))"
+                            style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
+                            :style="syncStatus === 'synced' 
+                                ? 'background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.35);' 
+                                : (syncStatus === 'syncing' 
+                                    ? 'background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1.5px solid var(--accent-amber);' 
+                                    : 'background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1.5px solid rgba(239, 68, 68, 0.4);')">
+                            <span :class="{ 'spin-anim': syncStatus === 'syncing' }" style="font-size: 0.85rem;">
+                                {{ syncStatus === 'synced' ? '☁️' : (syncStatus === 'syncing' ? '🔄' : '⚠️') }}
+                            </span>
+                            <span>
+                                {{ syncStatus === 'synced' ? ('Cloud Synced' + (lastSyncAt ? ' (' + lastSyncAt + ')' : '')) : (syncStatus === 'syncing' ? 'Saving Online...' : 'Save Online') }}
+                            </span>
+                        </div>
                         <div class="user-profile-pill" title="User Profile">
                             <div class="user-avatar">RK</div>
                             <div class="user-info-text">
@@ -977,8 +994,12 @@
                             <button class="btn btn-secondary" v-if="!mappingLocks.rate || !mappingLocks.sap || !mappingLocks.qty" @click="lockAllMapping()" title="Sabko wapas lock karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 🔒 All
                             </button>
-                            <button class="btn btn-secondary" @click="refreshFromCloud()" title="Dusre PC ka saved mapping cloud se lao" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
-                                🔄 Refresh
+                            <!-- ☁️ Save to Cloud & Refresh -->
+                            <button class="btn btn-secondary" @click="syncToMongoNow({ manual: true })" title="Sabhi mapping settings aur values ko turant cloud me save karo taaki dusre PC par turant mil sake" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; font-weight: 700; border-color: #10b981; color: #10b981; white-space: nowrap;">
+                                ☁️ Save Online
+                            </button>
+                            <button class="btn btn-secondary" @click="refreshFromCloud()" title="Dusre PC ka saved mapping cloud se lao" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: var(--accent-indigo); color: var(--accent-indigo); font-weight: 700; white-space: nowrap;">
+                                🔄 Refresh from Cloud
                             </button>
                             <button class="btn btn-secondary" @click="openSapMasterModal()" title="SAP Material Master list (dropdown ke codes) — cloud copy add/edit karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 📚 SAP Master ({{ sapMaterialsMaster.length }})
