@@ -347,8 +347,9 @@
                                         const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                         finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
                                     }
-                                    if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
-                                        finalQty = this.applyRoundValue(finalQty, this.mappingRoundMode);
+                                    const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
+                                    if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+                                        finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                     }
                                     
                                     sapMap[s.code].totalQty += finalQty;

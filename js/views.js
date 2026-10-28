@@ -848,13 +848,20 @@ window.ViewsModule = {
         this.saveToStorage();
         if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
     },
+    onSapManagerItemRoundModeChange(sItem, newMode) {
+        if (this.isFinalized) return;
+        sItem.roundMode = newMode || 'default';
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+    },
     onSapManagerItemManualQtyChange(sItem, val) {
         if (this.isFinalized) return;
         const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(val) : val;
         let v = Number(evalVal);
         if (isNaN(v) || v < 0) v = 0;
-        if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
-            v = this.applyRoundValue(v, this.mappingRoundMode);
+        const itemRoundMode = (sItem && sItem.roundMode && sItem.roundMode !== 'default') ? sItem.roundMode : (this.mappingRoundMode || 'none');
+        if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+            v = this.applyRoundValue(v, itemRoundMode);
         }
         sItem.manualQty = v;
         this.saveToStorage();
@@ -862,15 +869,16 @@ window.ViewsModule = {
     },
     getSapComponentCalculatedRecoQty(item, sItem, actKeyOverride) {
         if (!item) return '0.00';
+        const itemRoundMode = (sItem && sItem.roundMode && sItem.roundMode !== 'default') ? sItem.roundMode : (this.mappingRoundMode || 'none');
         if (sItem && sItem.isManual) {
             const mRaw = (sItem.manualQty !== undefined && sItem.manualQty !== null && sItem.manualQty !== '') ? sItem.manualQty : sItem.qty;
             const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
             let recoQty = Number(evalVal);
             if (isNaN(recoQty)) recoQty = 0;
-            if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
-                recoQty = this.applyRoundValue(recoQty, this.mappingRoundMode);
+            if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+                recoQty = this.applyRoundValue(recoQty, itemRoundMode);
             }
-            return (this.mappingRoundMode === 'round' || this.mappingRoundMode === 'ceil' || this.mappingRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
+            return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
         }
         let totalActQty = 0;
         const actKey = actKeyOverride || this.selectedActivityKey;
@@ -891,9 +899,9 @@ window.ViewsModule = {
         const factorEval = (typeof this.evalFormula === 'function') ? this.evalFormula(factorRaw) : factorRaw;
         const factor = isNaN(Number(factorEval)) ? 1 : Number(factorEval);
         let recoQty = totalActQty * factor;
-        if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
-            recoQty = this.applyRoundValue(recoQty, this.mappingRoundMode);
+        if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+            recoQty = this.applyRoundValue(recoQty, itemRoundMode);
         }
-        return (this.mappingRoundMode === 'round' || this.mappingRoundMode === 'ceil' || this.mappingRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
+        return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
     }
 };

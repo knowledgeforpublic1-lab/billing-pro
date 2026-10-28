@@ -178,6 +178,60 @@ window.MappingModule = {
         this.saveToStorage();
         if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
     },
+    onMappingItemRoundModeChange(sItem, newMode) {
+        if (this.isFinalized) return;
+        if (this.mappingLocks && this.mappingLocks.qty) {
+            this.showToast('Qty locked hai — pehle 🔓 Qty par click karke unlock karein', 'Lock');
+            return;
+        }
+        sItem.roundMode = newMode || 'default';
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+        const modeLabels = {
+            'default': 'Default (Global)',
+            'none': 'Off (Exact)',
+            'round': 'Nearest Integer',
+            'ceil': 'Round Up (Ceil)',
+            'floor': 'Round Down (Floor)',
+            '2dec': '2 Decimals'
+        };
+        this.showToast(`Material Rounding: ${modeLabels[sItem.roundMode] || sItem.roundMode}`, 'Check');
+    },
+    autoSetMaterialRoundModesByUnit() {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', 'Lock');
+            return;
+        }
+        if (this.mappingLocks && this.mappingLocks.qty) {
+            this.showToast('Qty locked hai — pehle 🔓 Qty par click karke unlock karein', 'Lock');
+            return;
+        }
+        let intCount = 0;
+        let decCount = 0;
+        const acts = this.activities || {};
+        Object.keys(acts).forEach(k => {
+            const act = acts[k];
+            if (act && act.materials) {
+                act.materials.forEach(m => {
+                    if (m.sapItems && Array.isArray(m.sapItems)) {
+                        m.sapItems.forEach(s => {
+                            const uom = String(s.uom || m.sapUom || m.unit || '').trim().toLowerCase();
+                            if (['no', 'nos', 'set', 'sets', 'pair', 'pc', 'pcs'].includes(uom)) {
+                                s.roundMode = 'round';
+                                intCount++;
+                            } else if (['kg', 'mtr', 'm', 'meter', 'km', 'mt', 'ton', 'ltr', 'liter'].includes(uom)) {
+                                s.roundMode = '2dec';
+                                decCount++;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+        this.showToast(`Auto Round Set: ${intCount} Discrete (Nos/Sets → Int), ${decCount} Decimal (Kg/Mtr → 2Dec)`, 'Check');
+    },
     onMappingManualQtyChange(sItem, event) {
         if (this.isFinalized) { return; }
         if (this.mappingLocks && this.mappingLocks.qty) { return; }
@@ -185,8 +239,9 @@ window.MappingModule = {
         const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(raw) : raw;
         let v = Number(evalVal);
         if (isNaN(v) || v < 0) { v = 0; }
-        if (this.mappingRoundMode && this.mappingRoundMode !== 'none') {
-            v = this.applyRoundValue(v, this.mappingRoundMode);
+        const itemRoundMode = (sItem && sItem.roundMode && sItem.roundMode !== 'default') ? sItem.roundMode : (this.mappingRoundMode || 'none');
+        if (itemRoundMode && itemRoundMode !== 'none') {
+            v = this.applyRoundValue(v, itemRoundMode);
         } else {
             v = Math.round(v * 100) / 100;
         }
@@ -202,8 +257,9 @@ window.MappingModule = {
         const evalVal = this.evalFormula(raw);
         let v = Number(evalVal);
         if (isNaN(v) || v < 0) { v = 0; }
-        if (this.mappingRoundMode && this.mappingRoundMode !== 'none') {
-            v = this.applyRoundValue(v, this.mappingRoundMode);
+        const itemRoundMode = (sItem && sItem.roundMode && sItem.roundMode !== 'default') ? sItem.roundMode : (this.mappingRoundMode || 'none');
+        if (itemRoundMode && itemRoundMode !== 'none') {
+            v = this.applyRoundValue(v, itemRoundMode);
         } else {
             v = Math.round(v * 10000) / 10000;
         }

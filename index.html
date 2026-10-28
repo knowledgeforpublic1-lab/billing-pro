@@ -961,6 +961,10 @@
                             <button class="btn btn-secondary" @click="roundOffAllMappingValues()" :title="'Saare mapping Qty values ko chune hue option (' + mappingRoundMode + ') ke hisaab se round off karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; font-weight: 700; border-color: var(--accent-amber); color: var(--accent-amber);">
                                 ⚡ Round All Qtys
                             </button>
+                            <!-- 🏷️ Auto Round by UoM -->
+                            <button class="btn btn-secondary" @click="autoSetMaterialRoundModesByUnit()" title="Units ke hisaab se automatic material round mode set karo: Nos/Sets ko Integer aur Kg/Mtr ko 2 Decimals" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; font-weight: 700; border-color: var(--accent-indigo); color: var(--accent-indigo); white-space: nowrap;">
+                                🏷️ Auto Round by UoM
+                            </button>
                             <button class="btn btn-secondary" @click="toggleMappingLock('rate')" :title="mappingLocks.rate ? 'Rate locked hai — edit ke liye click karke unlock karo' : 'Rate unlocked hai — click karke lock karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-style: solid;" :style="mappingLocks.rate ? '' : 'border-color: var(--accent-amber); color: var(--accent-amber);'">
                                 {{ mappingLocks.rate ? '🔒 Rate' : '🔓 Rate' }}
                             </button>
@@ -1056,7 +1060,7 @@
                                                             class="editable-cell text-right font-mono"
                                                             :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.08); font-weight: 800; color: var(--accent-amber);'"
                                                             placeholder="0">
-                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.manualQty = applyRoundValue(sItem.manualQty); onMappingManualQtyChange(sItem)" title="Is manual value ko round off karo">
+                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.manualQty = applyRoundValue(sItem.manualQty, sItem.roundMode); onMappingManualQtyChange(sItem)" title="Is manual value ko round off karo">
                                                             ≈
                                                         </button>
                                                     </template>
@@ -1077,10 +1081,28 @@
                                                             class="editable-cell text-right font-mono"
                                                             :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'"
                                                             placeholder="0">
-                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.qty = applyRoundValue(sItem.qty); onMappingQtyChange(sItem)" title="Is single value ko chune hue option se round off karo">
+                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.qty = applyRoundValue(sItem.qty, sItem.roundMode); onMappingQtyChange(sItem)" title="Is single value ko chune hue option se round off karo">
                                                             ≈
                                                         </button>
                                                     </template>
+
+                                                    <!-- Material-wise Round Mode Selector -->
+                                                    <select
+                                                        :value="sItem.roundMode || 'default'"
+                                                        @change="onMappingItemRoundModeChange(sItem, $event.target.value)"
+                                                        :disabled="mappingLocks.qty || isFinalized"
+                                                        title="Material-wise Round Off Mode: Is material ke liye specific rounding rule chunein"
+                                                        style="padding: 1px 3px; font-size: 0.68rem; font-weight: 700; border-radius: 4px; outline: none; cursor: pointer; line-height: 1.2;"
+                                                        :style="(sItem.roundMode && sItem.roundMode !== 'default') 
+                                                            ? 'border: 1.5px solid var(--accent-indigo); background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);' 
+                                                            : 'border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-muted);'">
+                                                        <option value="default">🎯 Auto</option>
+                                                        <option value="round">Int (13)</option>
+                                                        <option value="ceil">Ceil (↑)</option>
+                                                        <option value="floor">Floor (↓)</option>
+                                                        <option value="2dec">2 Dec (.00)</option>
+                                                        <option value="none">Off (Exact)</option>
+                                                    </select>
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
@@ -1505,6 +1527,26 @@
                                                 style="width: 72px; padding: 2px 6px; font-size: 0.8rem; font-weight: 700; font-family: monospace; text-align: right; border: 1.5px solid var(--accent-amber); border-radius: 5px; background: var(--bg-input); color: var(--text-main); outline: none;"
                                                 title="Formula set karo: jaise 0.5 ya 1/2 (agar activity qty 28 hai aur factor 0.5 hai to reconciliation me 14 jayega)">
                                         </template>
+                                    </div>
+
+                                    <!-- Material-wise Round Selector in Modal -->
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted);">🎯 Round:</span>
+                                        <select
+                                            :value="sItem.roundMode || 'default'"
+                                            @change="onSapManagerItemRoundModeChange(sItem, $event.target.value)"
+                                            style="padding: 2px 6px; font-size: 0.72rem; font-weight: 700; border-radius: 4px; outline: none; cursor: pointer;"
+                                            :style="(sItem.roundMode && sItem.roundMode !== 'default') 
+                                                ? 'border: 1.5px solid var(--accent-indigo); background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);' 
+                                                : 'border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-muted);'"
+                                            title="Is component ke liye specific round off mode">
+                                            <option value="default">Default ({{ mappingRoundMode }})</option>
+                                            <option value="round">Nearest Int (13)</option>
+                                            <option value="ceil">Round Up (↑)</option>
+                                            <option value="floor">Round Down (↓)</option>
+                                            <option value="2dec">2 Decimals (.00)</option>
+                                            <option value="none">Off (Exact)</option>
+                                        </select>
                                     </div>
 
                                     <!-- Live Reco Preview -->
