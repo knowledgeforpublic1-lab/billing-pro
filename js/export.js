@@ -118,7 +118,7 @@ window.ExportModule = {
                     // ↩️ Reverse ON ho to screen wali sheet export karo (invoice-activity × location columns, filtered rows)
                     const revOn = !!this.reverseEntry;
                     const rcols = revOn ? this.reverseReconColumns : [];
-                    const expRows = revOn ? this.reconRows : pData.rows;
+                    const expRows = this.reconRows;
                     const expHeaders = revOn
                         ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
                         : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(pData.columns);

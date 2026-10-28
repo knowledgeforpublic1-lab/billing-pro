@@ -29,6 +29,11 @@
 
 <body class="dark dark-mode">
     <div id="app">
+        <!-- Global SAP Materials Autocomplete Datalist (shared across all tabs) -->
+        <datalist id="globalSapMaterialsList">
+            <option v-for="sap in sapMaterialsMaster" :key="sap.code" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
+        </datalist>
+
         <div class="app-layout">
 
             <!-- MAIN AREA -->
@@ -216,6 +221,7 @@
                                     </td>
                                     <td class="text-center font-mono">
                                         <input type="text" v-model="item.itemCode" placeholder="SAP Code"
+                                            list="globalSapMaterialsList"
                                             class="editable-cell text-center font-mono"
                                             style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
                                             @change="onItemCodeManualChange(item); saveToStorage();">
@@ -274,6 +280,7 @@
                                     </td>
                                     <td class="text-center font-mono">
                                         <input type="text" v-model="item.itemCode" placeholder="SAP Code"
+                                            list="globalSapMaterialsList"
                                             class="editable-cell text-center font-mono"
                                             style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
                                             @change="onItemCodeManualChange(item); saveToStorage();">
@@ -925,10 +932,7 @@
                                                 </span>
                                                 <!-- Searchable Datalist for SAP Item -->
                                                 <div style="flex: 1; display: flex; flex-direction: column;">
-                                                    <input type="text" :list="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @focus="onSapSearchFocus(row.actKey + '_' + row.item.no + '_' + sIdx)" @blur="onSapSearchBlur()" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked' : 'Search SAP Code or Type...'">
-                                                    <datalist v-if="editingSapKey === row.actKey + '_' + row.item.no + '_' + sIdx" :id="'sapList_' + row.actKey + '_' + row.item.no + '_' + sIdx">
-                                                        <option v-for="sap in sapMaterialsMaster" :key="sap.code" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
-                                                    </datalist>
+                                                    <input type="text" list="globalSapMaterialsList" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked (Click 🔓 Item above to edit)' : 'Search SAP Code or Type...'">
                                                     <span style="font-size: 0.75rem; color: var(--text-main); margin-top:2px; font-weight:600;">{{ sItem.desc }}</span>
                                                 </div>
                                                 <!-- Qty Input -->
@@ -979,6 +983,9 @@
                         <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
                             {{ reverseEntry ? 'Enter qty in your location — activity + invoice will update. 🔩 Bolt: enter in nos, activity converts to kg' : 'Old system — enter in activity, this sheet builds automatically' }}
                         </span>
+                        <button class="btn btn-secondary" @click="reconFilterZeroOnly = !reconFilterZeroOnly" :title="reconFilterZeroOnly ? 'Show all mapped materials (including zero qty)' : 'Hide zero qty rows'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap; font-weight: 700;">
+                            {{ reconFilterZeroOnly ? '👁️ Showing: Only With Qty (' + reconNonZeroCount + ')' : '👁️ Showing: All Mapped Items (' + (pivotReconciliationData.rows ? pivotReconciliationData.rows.length : 0) + ')' }}
+                        </button>
                         <button class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                             📗 Export (.xlsx)
                         </button>
@@ -1821,18 +1828,18 @@
     <script src="js/data/default-invoice.js?v=20261015_05"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261015_05"></script>
-    <script src="js/history.js?v=20261015_05"></script>
+    <script src="js/utils.js?v=20261028_02"></script>
+    <script src="js/history.js?v=20261028_02"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261015_05"></script>
-    <script src="js/billing.js?v=20261015_05"></script>
-    <script src="js/mapping.js?v=20261015_05"></script>
-    <script src="js/views.js?v=20261015_05"></script>
-    <script src="js/export.js?v=20261015_08"></script>
+    <script src="js/sync.js?v=20261028_02"></script>
+    <script src="js/billing.js?v=20261028_02"></script>
+    <script src="js/mapping.js?v=20261028_02"></script>
+    <script src="js/views.js?v=20261028_02"></script>
+    <script src="js/export.js?v=20261028_02"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261015_05"></script>
+    <script src="js/core/app.js?v=20261028_02"></script>
 </body>
 
 </html>

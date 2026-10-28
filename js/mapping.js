@@ -97,18 +97,30 @@ window.MappingModule = {
     },
     onItemCodeManualChange(item) {
         if (!item) return;
-        const codeClean = String(item.itemCode || '').trim();
-        if (!codeClean) {
+        let rawVal = String(item.itemCode || '').trim();
+        if (!rawVal) {
             item.itemCode = '';
+            item.sapDescription = '';
             item.sapItems = [];
             this.saveToStorage();
             this.scheduleMappingSync();
             return;
         }
+        // Extract code if format is [CODE] DESC or has code digits
+        const mBracket = rawVal.match(/^\[(.*?)\]/);
+        let codeClean = mBracket ? mBracket[1].trim() : rawVal;
+        const mDigits = codeClean.match(/(?:^|\b)(\d{7,10})(?:$|\b)/);
+        if (mDigits) codeClean = mDigits[1];
+
         if (this.sapMaterialsMaster) {
-            const found = this.sapMaterialsMaster.find(s => s.code === codeClean);
+            let found = this.sapMaterialsMaster.find(s => s.code === codeClean);
+            if (!found) {
+                const lower = rawVal.toLowerCase();
+                found = this.sapMaterialsMaster.find(s => s.desc && s.desc.toLowerCase() === lower);
+            }
             if (found) {
-                if (!item.desc || !item.isExtra) item.desc = found.desc;
+                // IMPORTANT: Work order item.desc should NOT be overwritten for regular items!
+                if (item.isExtra && !item.desc) item.desc = found.desc;
                 item.unit = found.uom || item.unit;
                 item.sapDescription = found.desc;
                 item.sapUom = found.uom;
@@ -202,29 +214,75 @@ window.MappingModule = {
     },
     onSapItemDropdownChange(mat, sItem, event) {
         if (this.isFinalized) { if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
-        if (this.mappingLocks && this.mappingLocks.sap) { if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''; return; }
-        let rawVal = event ? event.target.value : sItem.code;
-        let newCode = String(rawVal == null ? '' : rawVal).trim();
-        // Extract code if it's in the [CODE] DESC format
-        const match = newCode.match(/^\[(.*?)\]/);
-        if (match) {
-            newCode = match[1];
+        if (this.mappingLocks && this.mappingLocks.sap) {
+            if (typeof this.showToast === 'function') this.showToast('SAP Item locked hai — upar 🔓 Item dabakar unlock karo', '🔒');
+            if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
+            return;
         }
-        const found = this.sapMaterialsMaster.find(s => s.code === newCode);
+        let rawVal = event ? event.target.value : sItem.code;
+        let inputStr = String(rawVal == null ? '' : rawVal).trim();
+        
+        // Agar blank kar diya to mapping clear karo
+        if (!inputStr) {
+            sItem.code = '';
+            sItem.desc = '';
+            sItem.uom = mat.unit || 'No';
+            mat.itemCode = (mat.sapItems && mat.sapItems[0] && mat.sapItems[0] !== sItem) ? mat.sapItems[0].code : '';
+            mat.sapDescription = (mat.sapItems && mat.sapItems[0] && mat.sapItems[0] !== sItem) ? mat.sapItems[0].desc : '';
+            mat.sapUom = mat.unit || 'No';
+            this.saveToStorage();
+            this.scheduleMappingSync();
+            return;
+        }
+
+        // Smart resolution:
+        let targetCode = '';
+        const mBracket = inputStr.match(/^\[(.*?)\]/);
+        if (mBracket) {
+            targetCode = mBracket[1].trim();
+        } else {
+            const mDigits = inputStr.match(/(?:^|\b)(\d{7,10})(?:$|\b)/);
+            if (mDigits) targetCode = mDigits[1];
+        }
+
+        const master = this.sapMaterialsMaster || [];
+        let found = null;
+        if (targetCode) {
+            found = master.find(s => s.code === targetCode);
+        }
+        if (!found) {
+            found = master.find(s => s.code === inputStr);
+        }
+        if (!found) {
+            const lower = inputStr.toLowerCase();
+            found = master.find(s => s.desc && s.desc.toLowerCase() === lower);
+        }
+        if (!found) {
+            const lower = inputStr.toLowerCase();
+            if (lower.length >= 3) {
+                found = master.find(s => s.desc && s.desc.toLowerCase().startsWith(lower)) ||
+                        master.find(s => s.desc && s.desc.toLowerCase().includes(lower));
+            }
+        }
+
         if (found) {
             sItem.code = found.code;
             sItem.desc = found.desc;
-            sItem.uom = found.uom;
+            sItem.uom = found.uom || sItem.uom || mat.unit || 'No';
             sItem.docHeader = found.docHeader || '0031006347';
-            // Update primary fields from first SAP item
-            mat.itemCode = mat.sapItems[0] ? mat.sapItems[0].code : '';
-            mat.sapDescription = mat.sapItems[0] ? mat.sapItems[0].desc : '';
-            mat.sapUom = mat.sapItems[0] ? mat.sapItems[0].uom : mat.unit;
-            mat.docHeader = mat.sapItems[0] ? mat.sapItems[0].docHeader : '0031006347';
+            // Update primary fields on material from first SAP item
+            if (mat.sapItems && mat.sapItems.length > 0) {
+                mat.itemCode = mat.sapItems[0].code || '';
+                mat.sapDescription = mat.sapItems[0].desc || '';
+                mat.sapUom = mat.sapItems[0].uom || mat.unit;
+                mat.docHeader = mat.sapItems[0].docHeader || '0031006347';
+            }
+            if (event) event.target.value = '[' + found.code + '] ' + found.desc;
             this.saveToStorage();
             this.scheduleMappingSync();
         } else {
             if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
+            if (typeof this.showToast === 'function') this.showToast('SAP code ya material nahi mila', '⚠️');
         }
     },
     onSapSearchFocus(key) {

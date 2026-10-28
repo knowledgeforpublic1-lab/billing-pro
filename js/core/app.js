@@ -53,14 +53,15 @@
                 // 📚 SAP Material Master editor (cloud copy)
                 showSapMasterModal: false,
                 sapMasterSearch: '',
-                // 🔒 Mapping locks — hamesha fix (locked) rahega, edit ke liye unlock karna hoga
+                // 🔒 Mapping locks — edit ke liye unlock karna hoga (sap mapping default unlocked hai taaki mapping asani se ho sake)
                 mappingLocks: (function() {
                     try {
                         const s = JSON.parse(localStorage.getItem('lk_billing_mapping_locks_v1') || 'null');
-                        if (s && typeof s === 'object') return { rate: s.rate !== false, sap: s.sap !== false, qty: s.qty !== false };
+                        if (s && typeof s === 'object') return { rate: s.rate !== false, sap: s.sap === true, qty: s.qty !== false };
                     } catch(e) {}
-                    return { rate: true, sap: true, qty: true };
+                    return { rate: true, sap: false, qty: true };
                 })(),
+                reconFilterZeroOnly: false,
                 // ☁️ Mongo sync status (kam space kharch ho isliye debounce + change-check ke sath)
                 syncStatus: 'local',
                 lastSyncAt: '',
@@ -210,15 +211,15 @@
                     const act = this.activities[actKey];
                     if (act && act.materials) {
                         act.materials.forEach(m => {
-                            // Ensure sapItems array exists on each material (qty 0 ko 0 hi rehne do)
-                            if (!m.sapItems) {
-                                m.sapItems = m.itemCode ? [{
-                                    code: m.itemCode,
+                            // Ensure sapItems array exists on each material (hamesha kam se kam 1 item render ho taaki mapping input dikhe)
+                            if (!m.sapItems || m.sapItems.length === 0) {
+                                m.sapItems = [{
+                                    code: m.itemCode || '',
                                     desc: m.sapDescription || '',
-                                    uom: m.sapUom || m.unit,
+                                    uom: m.sapUom || m.unit || 'No',
                                     qty: 1,
                                     docHeader: m.docHeader || '0031006347'
-                                }] : [];
+                                }];
                             } else {
                                 m.sapItems.forEach(s => {
                                     if (s.qty === undefined || s.qty === null || s.qty === '') s.qty = 1;
@@ -332,8 +333,8 @@
                 
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const rows = Object.values(sapMap)
-                    // Reverse entry ON ho to zero wali row bhi dikhao (pehli entry ke liye); OFF = purana behavior
-                    .filter(row => this.reverseEntry ? true : row.totalQty > 0)
+                    // Activity me mapped har SAP item dikhao (chahe abhi qty 0 ho taaki mapping reco me turant dikhe)
+                    .filter(row => Object.keys(row.activities).length > 0)
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
                 return { columns, rows };
@@ -391,16 +392,26 @@
                 return set;
             },
             reconRows() {
-                if (!this.reverseEntry) return this.pivotReconciliationData.rows;
+                if (!this.reverseEntry) {
+                    if (this.reconFilterZeroOnly) {
+                        return this.pivotReconciliationData.rows.filter(r => r.totalQty > 0);
+                    }
+                    return this.pivotReconciliationData.rows;
+                }
                 const codes = this.reverseShownCodes;
                 const cols = this.reverseReconColumns;
-                // Sirf value wali row dikhao — zero wali chhupi (entry ➕ Item ▾ dropdown se)
                 return this.pivotReconciliationData.rows.filter(r => {
                     if (codes.indexOf(r.code) === -1) return false;
-                    let t = 0;
-                    for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
-                    return t > 0;
+                    if (this.reconFilterZeroOnly) {
+                        let t = 0;
+                        for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
+                        return t > 0;
+                    }
+                    return true;
                 });
+            },
+            reconNonZeroCount() {
+                return (this.pivotReconciliationData.rows || []).filter(r => r.totalQty > 0).length;
             },
             // ↩️ "➕ Item ▾" dropdown: reconciliation wale SAP material (code + desc), search ke sath
             reverseSapMenuList() {
