@@ -228,7 +228,11 @@
                             } else {
                                 m.sapItems.forEach(s => {
                                     if (s.qty === undefined || s.qty === null || s.qty === '') s.qty = 1;
-                                    else { const n = Number(s.qty); s.qty = isNaN(n) ? 1 : n; }
+                                    else {
+                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                        const n = Number(evalVal);
+                                        s.qty = isNaN(n) ? 1 : n;
+                                    }
                                 });
                             }
                             list.push({
@@ -317,7 +321,8 @@
                                     }
                                     
                                     // Qty 0 ka matlab 0 hi hai (not-required), blank/NaN ka matlab 1
-                                    let _mq = Number(s.qty);
+                                    const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                    let _mq = Number(evalVal);
                                     const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
                                     // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
                                     const _bw = this.nutBoltWeightForCode(s.code);

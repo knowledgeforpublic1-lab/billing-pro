@@ -118,7 +118,8 @@ window.ViewsModule = {
                 if (!m.sapItems || !m.sapItems.length) this.ensureMaterialSap(m, mIdx);
                 return (m.sapItems || []).some(s => {
                     if (!s.code || s.code !== sapCode) return false;
-                    const mq = Number(s.qty);
+                    const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                    const mq = Number(evalVal);
                     return isNaN(mq) ? true : mq !== 0;
                 });
             });
@@ -239,7 +240,8 @@ window.ViewsModule = {
             const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
             m.sapItems.forEach(s => {
                 if (!s.code || s.code !== sapCode) return;
-                const mq = Number(s.qty);
+                const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                const mq = Number(evalVal);
                 const factor = isNaN(mq) ? 1 : mq;
                 if (factor === 0) return;
                 const raw = locArr[mIdx];
@@ -263,7 +265,8 @@ window.ViewsModule = {
             if (!m.sapItems || !m.sapItems.length) this.ensureMaterialSap(m, mIdx);
             if (m.sapItems) m.sapItems.forEach(s => {
                 if (!s.code || s.code !== sapCode) return;
-                const mq = Number(s.qty);
+                const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                const mq = Number(evalVal);
                 const factor = isNaN(mq) ? 1 : mq;
                 if (factor !== 0) {
                     // 🔩 kg-material + wazan mila to nos → kg convert hoga
@@ -795,5 +798,53 @@ window.ViewsModule = {
         this.activeSapManagerOrigIndex = -1;
         this.sapManagerSearchQuery = '';
         this.sapManagerSuggestions = [];
+    },
+    onSapManagerItemQtyChange(sItem, val) {
+        if (!sItem) return;
+        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(val) : val;
+        let num = Number(evalVal);
+        if (isNaN(num) || num < 0) num = 1;
+        sItem.qty = num;
+        this.syncActiveSapManagerItem();
+        this.showToast(`Split Ratio updated: ${num} (${sItem.code})`, 'Check');
+    },
+    splitSapItemsEqually(item) {
+        if (!item || !item.sapItems || item.sapItems.length === 0) return;
+        const count = item.sapItems.length;
+        const ratio = count === 2 ? 0.5 : Number((1 / count).toFixed(4));
+        item.sapItems.forEach(s => {
+            s.qty = ratio;
+        });
+        this.syncActiveSapManagerItem();
+        this.showToast(`Divided equally: ${ratio} (${(ratio * 100).toFixed(0)}%) each across ${count} items`, 'Check');
+    },
+    setAllSapItemsRatio(item, val) {
+        if (!item || !item.sapItems) return;
+        const ratio = Number(val) || 1;
+        item.sapItems.forEach(s => {
+            s.qty = ratio;
+        });
+        this.syncActiveSapManagerItem();
+        this.showToast(`Set ratio ${ratio} for all components`, 'Check');
+    },
+    getSapComponentCalculatedRecoQty(item, sItem) {
+        if (!item) return '0.00';
+        let totalActQty = 0;
+        const actKey = this.selectedActivityKey;
+        const qMatrix = (this.activityQuantities && this.activityQuantities[actKey]) ? this.activityQuantities[actKey] : [];
+        const origIdx = (item.origIndex !== undefined) ? item.origIndex : (this.activeSapManagerOrigIndex >= 0 ? this.activeSapManagerOrigIndex : -1);
+        if (origIdx >= 0) {
+            qMatrix.forEach(locArr => {
+                const raw = locArr[origIdx];
+                const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(raw) : raw;
+                const v = (evalVal === '' || evalVal === null || evalVal === undefined) ? 0 : parseFloat(evalVal);
+                if (!isNaN(v)) totalActQty += v;
+            });
+        }
+        const factorRaw = (sItem && sItem.qty !== undefined) ? sItem.qty : 1;
+        const factorEval = (typeof this.evalFormula === 'function') ? this.evalFormula(factorRaw) : factorRaw;
+        const factor = isNaN(Number(factorEval)) ? 1 : Number(factorEval);
+        const recoQty = totalActQty * factor;
+        return Number(recoQty.toFixed(2)).toString();
     }
 };
