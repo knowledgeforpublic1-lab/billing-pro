@@ -237,9 +237,9 @@
                                             @change="saveToStorage">
                                     </td>
                                     <td v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="locIdx" class="text-right">
-                                        <input type="number" inputmode="decimal" step="any" min="0"
+                                        <input type="text" inputmode="decimal"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
+                                            v-model="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" :data-row="item.origIndex" :data-loc="locIdx" placeholder="0"
                                             @focus="$event.target.select()"
                                             @keydown.enter.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
@@ -249,8 +249,10 @@
                                             @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
                                             @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
                                             @paste="handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="saveToStorage" @change="saveToStorage">
-                                        <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
+                                            @input="saveToStorage"
+                                            @change="onQtyCellChange($event, item.origIndex, locIdx)"
+                                            @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
+                                        <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
@@ -300,9 +302,9 @@
                                             @change="saveToStorage">
                                     </td>
                                     <td v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="locIdx" class="text-right">
-                                        <input type="number" inputmode="decimal" step="any" min="0"
+                                        <input type="text" inputmode="decimal"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
-                                            v-model.number="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
+                                            v-model="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" :data-row="item.origIndex" :data-loc="locIdx" placeholder="0"
                                             @focus="$event.target.select()"
                                             @keydown.enter.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
@@ -312,8 +314,10 @@
                                             @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
                                             @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
                                             @paste="handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="saveToStorage" @change="saveToStorage">
-                                        <input type="number" inputmode="decimal" step="any" min="0" v-else class="qty-input" placeholder="0"
+                                            @input="saveToStorage"
+                                            @change="onQtyCellChange($event, item.origIndex, locIdx)"
+                                            @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
+                                        <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
                                             @focus="initQuantitiesForActivity(selectedActivityKey); $event.target.select();">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
@@ -447,13 +451,14 @@
                                     <td>{{ act.desc }}</td>
                                     <td class="text-center font-mono">{{ act.uom }}</td>
                                     <td class="text-right font-mono">
-                                        <input type="number" inputmode="decimal" step="any" min="0" v-model.number="act.qty"
+                                        <input type="text" inputmode="decimal" v-model="act.qty"
                                             class="editable-cell text-right font-mono" style="width: 80px;"
                                             :data-abs-row="actIdx" :data-abs-col="'qty'" @focus="$event.target.select()"
                                             @keydown.enter.prevent="handleAbstractKeyNav($event, actIdx, 'qty', 'down')"
                                             @keydown.down.prevent="handleAbstractKeyNav($event, actIdx, 'qty', 'down')"
                                             @keydown.up.prevent="handleAbstractKeyNav($event, actIdx, 'qty', 'up')"
-                                            @input="saveToStorage" @change="saveToStorage">
+                                            @change="onMasterAbstractQtyChange(act, $event)"
+                                            @blur="onMasterAbstractQtyChange(act, $event)">
                                     </td>
                                     <td class="text-right font-mono">
                                         <span class="text-right font-mono font-semibold" style="width: 110px; display: inline-block;">{{ formatCurrency(act.rate) }}</span>
@@ -714,15 +719,21 @@
                                         style="width: 100%;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
                                 </td>
                                 <td class="text-right">
-                                    <input type="text" step="any" v-model.number="it.qty"
+                                    <input type="text" v-model="it.qty"
                                         class="inv-input-clean text-right font-mono" style="width: 100%;"
-                                        @focus="$event.target.select(); editingInvoiceRow = it;" @blur="onInvoiceFieldBlur(it, 'qty', $event)" @change="onInvoiceRowEdit(it)">
+                                        @focus="$event.target.select(); editingInvoiceRow = it;"
+                                        @blur="onInvoiceFieldBlur(it, 'qty', $event)"
+                                        @change="onInvoiceRowEdit(it)"
+                                        @keydown.enter="$event.target.blur()">
                                 </td>
                                 <td class="text-right font-mono" style="font-weight: 700;">
-                                    <input type="text" step="any" v-model.number="it.amount"
+                                    <input type="text" v-model="it.amount"
                                         class="inv-input-clean text-right font-mono"
-                                        style="width: 100%; font-weight: 700;" @focus="$event.target.select(); editingInvoiceRow = it;"
-                                        @blur="onInvoiceFieldBlur(it, 'amount', $event)" @change="onInvoiceRowEdit(it)">
+                                        style="width: 100%; font-weight: 700;"
+                                        @focus="$event.target.select(); editingInvoiceRow = it;"
+                                        @blur="onInvoiceFieldBlur(it, 'amount', $event)"
+                                        @change="onInvoiceRowEdit(it)"
+                                        @keydown.enter="$event.target.blur()">
                                 </td>
                                 <td class="no-print text-center" style="white-space: nowrap;">
                                     <button @click="toggleInvoiceRowMode(it)" :title="it.manual ? '✏️ Manual row — auto-sync overwrite nahi karega. Auto par wapas karne ke liye click karo' : '🔄 Auto row — billing se sync hota hai. Manual lock ke liye click karo'" style="padding: 1px 5px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-strong); background: var(--bg-surface); cursor: pointer;">
@@ -931,12 +942,12 @@
                                     <td class="text-center font-mono">{{ (row && row.item) ? row.item.unit : '' }}</td>
                                     <td class="text-right font-mono">
                                         <span v-if="mappingLocks.rate || isFinalized" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
-                                        <input v-else type="number" inputmode="decimal" step="any" min="0" v-model.number="row.item.rate" @change="onMappingRateChange(row.item)" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
+                                        <input v-else type="text" inputmode="decimal" v-model="row.item.rate" @change="onMappingRateChange(row.item, $event)" @blur="onMappingRateChange(row.item, $event)" @keydown.enter="$event.target.blur()" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
                                     </td>
                                     <td style="padding: 0.6rem;" v-if="row && row.item">
                                         <!-- List of attached SAP items for this material -->
                                         <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                                            <div v-for="(sItem, sIdx) in (row.item.sapItems || [])" :key="sIdx" style="display: flex; gap: 6px; align-items: center; background: var(--bg-surface); padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                                             <div v-for="(sItem, sIdx) in (row.item.sapItems || [])" :key="sIdx" style="display: flex; gap: 6px; align-items: center; background: var(--bg-surface); padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">
                                                 <span class="badge font-mono" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); font-size: 0.75rem; padding: 2px 6px; min-width: 24px; text-align: center;">
                                                     #{{ sIdx + 1 }}
                                                 </span>
@@ -948,7 +959,7 @@
                                                 <!-- Qty Input -->
                                                 <div style="display: flex; align-items: center; gap: 4px;">
                                                     <span style="font-size: 0.75rem; color: var(--text-muted);">Qty{{ mappingLocks.qty ? ' 🔒' : '' }}:</span>
-                                                    <input type="number" inputmode="decimal" step="any" min="0" v-model.number="sItem.qty" @change="onMappingQtyChange(sItem)" :data-map-qty="idx + '_' + sIdx" @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
+                                                    <input type="text" inputmode="decimal" v-model="sItem.qty" @change="onMappingQtyChange(sItem, $event)" @blur="onMappingQtyChange(sItem, $event)" :data-map-qty="idx + '_' + sIdx" @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
@@ -1098,7 +1109,7 @@
                                 </template>
                                 <template v-else>
                                 <td v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center font-mono">
-                                    <input type="number" inputmode="decimal" step="any" min="0" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLoc(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '') + ' me jayegi'">
+                                    <input type="text" inputmode="decimal" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLoc(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '') + ' me jayegi'">
                                 </td>
                                 </template>
                             </tr>
@@ -1247,11 +1258,11 @@
             </div>
             <div class="bs-row">
                 <span class="bs-label">Contract Value ₹</span>
-                <input type="number" inputmode="decimal" min="0" step="any" v-model.number="projectMeta.contractValue" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
+                <input type="text" inputmode="decimal" v-model="projectMeta.contractValue" @change="onProjectMetaFormulaChange('contractValue', $event)" @blur="onProjectMetaFormulaChange('contractValue', $event)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
             </div>
             <div class="bs-row">
                 <span class="bs-label" title="907 invoice qty = AAAC Rmt ÷ divisor">AAAC ÷ divisor</span>
-                <input type="number" min="1" step="any" v-model.number="projectMeta.aaacDivisor" @change="saveToStorage" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="907 invoice qty = AAAC Rmt ÷ divisor">
+                <input type="text" inputmode="decimal" v-model="projectMeta.aaacDivisor" @change="onProjectMetaFormulaChange('aaacDivisor', $event)" @blur="onProjectMetaFormulaChange('aaacDivisor', $event)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="907 invoice qty = AAAC Rmt ÷ divisor">
             </div>
         </div>
     </aside>
@@ -1296,7 +1307,7 @@
                         </div>
                         <div class="form-group">
                             <label>Unit Rate</label>
-                            <input type="number" inputmode="decimal" step="any" v-model.number="newMaterial.rate" placeholder="0.00">
+                            <input type="text" inputmode="decimal" v-model="newMaterial.rate" @change="newMaterial.rate = evalFormula($event.target.value)" @blur="newMaterial.rate = evalFormula($event.target.value)" placeholder="0.00">
                         </div>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
@@ -1340,7 +1351,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.weight }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="text" inputmode="decimal" v-model="item.qty" @change="item.qty = evalFormula($event.target.value)" @blur="item.qty = evalFormula($event.target.value)" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.weight * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -1410,7 +1421,7 @@
                                     <td style="text-align: center; font-family: 'JetBrains Mono', monospace;">{{ selectedAugerRadius }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h).toFixed(3) }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.poles" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="text" inputmode="decimal" v-model="item.poles" @change="item.poles = evalFormula($event.target.value)" @blur="item.poles = evalFormula($event.target.value)" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (Math.PI * selectedAugerRadius * selectedAugerRadius * item.h * (item.poles || 0)).toFixed(3) }}</td>
                                 </tr>
@@ -1439,7 +1450,7 @@
                                     <td style="text-align: center; color: var(--text-muted);">{{ item.unit }}</td>
                                     <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ item.vol }}</td>
                                     <td style="text-align: right;">
-                                        <input type="number" v-model.number="item.qty" min="0" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
+                                        <input type="text" inputmode="decimal" v-model="item.qty" @change="item.qty = evalFormula($event.target.value)" @blur="item.qty = evalFormula($event.target.value)" style="width: 70px; text-align: right; padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text-main); font-size: 0.8rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;" placeholder="0" @focus="$event.target.select()" @keydown.enter.prevent="$event.target.closest('tr').nextElementSibling?.querySelector('input')?.focus()">
                                     </td>
                                     <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">{{ (item.vol * (item.qty || 0)).toFixed(3) }}</td>
                                 </tr>

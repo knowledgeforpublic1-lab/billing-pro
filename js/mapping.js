@@ -77,21 +77,27 @@ window.MappingModule = {
         this.persistSapMaster();
         this.showToast('Default SAP Master list restore ho gayi (' + def.length + ' items)', '📚');
     },
-    onMappingRateChange(item) {
+    onMappingRateChange(item, event) {
         if (this.isFinalized) { return; }
         if (this.mappingLocks && this.mappingLocks.rate) { return; }
-        let v = Number(item.rate);
-        if (isNaN(v) || v < 0) { v = 0; item.rate = 0; }
-        else item.rate = v;
+        const raw = event ? event.target.value : item.rate;
+        const evalVal = this.evalFormula(raw);
+        let v = Number(evalVal);
+        if (isNaN(v) || v < 0) { v = 0; }
+        item.rate = v;
+        if (event) event.target.value = v;
         this.saveToStorage();
         this.scheduleMappingSync();
     },
-    onMappingQtyChange(sItem) {
+    onMappingQtyChange(sItem, event) {
         if (this.isFinalized) { return; }
         if (this.mappingLocks && this.mappingLocks.qty) { return; }
-        let v = Number(sItem.qty);
-        if (isNaN(v) || v < 0) { v = 0; sItem.qty = 0; }
-        else sItem.qty = v;
+        const raw = event ? event.target.value : sItem.qty;
+        const evalVal = this.evalFormula(raw);
+        let v = Number(evalVal);
+        if (isNaN(v) || v < 0) { v = 0; }
+        sItem.qty = v;
+        if (event) event.target.value = v;
         this.saveToStorage();
         this.scheduleMappingSync();
     },

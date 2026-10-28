@@ -251,7 +251,8 @@ window.ViewsModule = {
     },
     applyReverseEntryLoc(sapCode, actKey, locIdx, targetVal) {
         if (this.isFinalized) { this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒'); return; }
-        const t = parseFloat(targetVal);
+        const evalVal = this.evalFormula(targetVal);
+        const t = parseFloat(evalVal);
         if (isNaN(t) || t < 0) { this.showToast('Enter valid qty (0 or more)', '⛔'); return; }
         const act = this.activities[actKey];
         if (!act || !act.materials || !act.materials.length) return;

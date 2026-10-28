@@ -12,42 +12,108 @@ window.UtilsModule = {
                     return Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 },
                 evalFormula(input) {
-                    if (typeof input !== 'string') return input;
-                    const trimmed = input.trim();
-                    if (!trimmed.startsWith('=') && !trimmed.startsWith('+')) return input;
-                    const expr = trimmed.slice(1).trim();
-                    if (!expr) return input;
-                    try {
-                        const sanitized = expr.replace(/[^0-9+\-*/().,% ]/g, '');
-                        if (!sanitized || /[+\-*/]{2,}/.test(sanitized.replace(/\s/g, ''))) return input;
-                        const result = Function('"use strict"; return (' + sanitized + ')')();
-                        if (typeof result === 'number' && isFinite(result)) {
-                            return Math.round(result * 100) / 100;
-                        }
-                        return input;
-                    } catch (e) {
-                        return input;
+                    if (input === undefined || input === null) return 0;
+                    if (typeof input === 'number') return isFinite(input) ? input : 0;
+                    const str = String(input).trim();
+                    if (!str) return '';
+
+                    const isFormula = str.startsWith('=') || str.startsWith('+');
+                    let expr = isFormula ? str.slice(1).trim() : str;
+                    if (!expr) return 0;
+
+                    // Pure numbers (e.g. "125", "12.5", "-5")
+                    if (/^[+-]?\d+(?:\.\d+)?$/.test(expr)) {
+                        return parseFloat(expr);
                     }
+
+                    // If not an explicit formula and has no math operators, return number or text
+                    if (!isFormula && !/[+\-*/()]/.test(expr)) {
+                        const num = parseFloat(str);
+                        return isNaN(num) ? str : num;
+                    }
+
+                    try {
+                        let clean = expr.replace(/,/g, '');
+                        clean = clean.replace(/(\d+(?:\.\d+)?)\s*%/g, '($1/100)');
+                        clean = clean.replace(/(\d)\s*[xX]\s*(\d)/g, '$1*$2');
+                        if (!/^[0-9+\-*/().\s]+$/.test(clean)) {
+                            return str;
+                        }
+                        if (/[+\-*/]{3,}/.test(clean.replace(/\s/g, ''))) {
+                            return str;
+                        }
+                        const result = Function('"use strict"; return (' + clean + ')')();
+                        if (typeof result === 'number' && isFinite(result)) {
+                            return Math.round(result * 10000) / 10000;
+                        }
+                        return str;
+                    } catch (e) {
+                        if (typeof this.showToast === 'function' && isFormula) {
+                            this.showToast('Formula error: ' + str, '⚠️');
+                        }
+                        return isNaN(Number(str)) ? str : Number(str);
+                    }
+                },
+                commitGridFormula(event, rowIdx, locIdx) {
+                    if (!event || !event.target) return;
+                    const rawVal = event.target.value;
+                    if (rawVal === '' || rawVal === null || rawVal === undefined) {
+                        if (this.activityQuantities[this.selectedActivityKey] && this.activityQuantities[this.selectedActivityKey][locIdx]) {
+                            this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = '';
+                        }
+                        this.saveToStorage();
+                        return;
+                    }
+                    const evaluated = this.evalFormula(rawVal);
+                    const finalVal = (evaluated === '' || isNaN(evaluated)) ? '' : evaluated;
+                    if (this.activityQuantities[this.selectedActivityKey] && this.activityQuantities[this.selectedActivityKey][locIdx]) {
+                        this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = finalVal;
+                    }
+                    event.target.value = finalVal;
+                    this.saveToStorage();
+                },
+                onQtyCellBlur(event, rowIdx, locIdx) {
+                    this.commitGridFormula(event, rowIdx, locIdx);
+                },
+                onQtyCellChange(event, rowIdx, locIdx) {
+                    this.commitGridFormula(event, rowIdx, locIdx);
                 },
                 handleFormulaBlur(field, event) {
                     const val = event.target.value;
-                    if (typeof val === 'string' && (val.startsWith('=') || val.startsWith('+'))) {
-                        const result = this.evalFormula(val);
-                        if (result !== val) {
-                            this[field] = result;
-                            event.target.value = result;
-                        }
-                    }
+                    const result = this.evalFormula(val);
+                    const num = Number(result);
+                    const finalVal = isNaN(num) ? 0 : num;
+                    this[field] = finalVal;
+                    event.target.value = finalVal;
+                    this.saveToStorage();
                 },
                 handleItemFormulaBlur(item, field, event) {
+                    if (!item || !field || !event || !event.target) return;
                     const val = event.target.value;
-                    if (typeof val === 'string' && (val.startsWith('=') || val.startsWith('+'))) {
-                        const result = this.evalFormula(val);
-                        if (result !== val) {
-                            item[field] = Number(result);
-                            event.target.value = result;
-                        }
-                    }
+                    const result = this.evalFormula(val);
+                    const num = Number(result);
+                    const finalVal = isNaN(num) ? 0 : num;
+                    item[field] = finalVal;
+                    event.target.value = finalVal;
+                    this.saveToStorage();
+                },
+                onProjectMetaFormulaChange(field, event) {
+                    if (!event || !event.target || !this.projectMeta) return;
+                    const val = this.evalFormula(event.target.value);
+                    const num = Number(val);
+                    const finalVal = isNaN(num) ? 0 : num;
+                    this.projectMeta[field] = finalVal;
+                    event.target.value = finalVal;
+                    this.saveToStorage();
+                },
+                onMasterAbstractQtyChange(act, event) {
+                    if (!act || !event || !event.target) return;
+                    const val = this.evalFormula(event.target.value);
+                    const num = Number(val);
+                    const finalVal = isNaN(num) ? 0 : num;
+                    act.qty = finalVal;
+                    event.target.value = finalVal;
+                    this.saveToStorage();
                 },
                 amountInWordsIndian(val) {
                     return numberToWordsIndian(val);
@@ -61,6 +127,9 @@ window.UtilsModule = {
                     }, 3500);
                 },
                 handleGridKeyNav(event, rowIdx, locIdx, direction) {
+                    if (event && event.target) {
+                        this.commitGridFormula(event, rowIdx, locIdx);
+                    }
                     let targetRow = rowIdx;
                     let targetLoc = locIdx;
                     if (direction === 'down') {
@@ -109,9 +178,10 @@ window.UtilsModule = {
                             }
                             if (matIdx >= act.materials.length) break;
                             const raw = cells[c].trim().replace(/,/g, '');
-                            const val = raw === '' ? '' : Number(raw);
+                            const evaluated = this.evalFormula(raw);
+                            const val = (raw === '' || evaluated === '') ? '' : Number(evaluated);
                             if (raw === '' || !isNaN(val)) {
-                                this.activityQuantities[actKey][locIdx][matIdx] = raw === '' ? '' : val;
+                                this.activityQuantities[actKey][locIdx][matIdx] = (raw === '' || evaluated === '') ? '' : val;
                                 pasted++;
                                 if (raw !== '') flashed.push([matIdx, locIdx]);
                             }
@@ -137,6 +207,10 @@ window.UtilsModule = {
                     }
                 },
                 handleAbstractKeyNav(event, actIdx, colType, direction) {
+                    if (event && event.target) {
+                        const act = this.masterAbstractList && this.masterAbstractList[actIdx];
+                        if (act) this.onMasterAbstractQtyChange(act, event);
+                    }
                     let targetRow = actIdx;
                     if (direction === 'down') {
                         targetRow = actIdx + 1;
