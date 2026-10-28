@@ -203,8 +203,7 @@ window.ExportModule = {
                 },
                 addStyledTaxInvoiceToWorkbook(workbook) {
                     const ws = workbook.addWorksheet('Tax Invoice', {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+                        views: [{ showGridLines: true }]
                     });
 
                     const borderThin = {

@@ -1648,16 +1648,24 @@ const defaultActivities = {
         "desc": "Top & Bottom MS Channel (100x50x6 mm)",
         "unit": "No",
         "rate": 250,
-        "itemCode": "17002007",
-        "sapDescription": "MS CHANNEL 100X50X6 MM",
-        "sapUom": "MT",
-        "docHeader": "CUST PURCHASED TO CLINET",
+        "itemCode": "17005060, 17005059",
+        "sapDescription": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG | MS-11KV TOP CH-100X50X6X2700-25.81KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17002007",
-            "desc": "MS CHANNEL 100X50X6 MM",
-            "uom": "MT",
-            "docHeader": "CUST PURCHASED TO CLINET"
+            "code": "17005060",
+            "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005059",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
           }
         ]
       },

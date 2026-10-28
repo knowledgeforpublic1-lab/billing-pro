@@ -197,6 +197,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         // Har client (desktop + mobile) har POST me baseRev bhejta hai (GET se mila rev).
         // Doc maujood hai aur baseRev missing/galat hai to 409 — koi silent overwrite nahi.
         // (Sirf pehla save — jab koi doc hi nahi hai — bina baseRev ke allowed hai.)
+        const isForce = !!(req.body && req.body.force === true);
         const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
             ? Number(req.body.baseRev) : null;
         const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
@@ -243,10 +244,11 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             }
         }
 
-        if (existing && (baseRev === null || isNaN(baseRev) || baseRev !== curRev)) {
+        if (existing && !isForce && (baseRev === null || isNaN(baseRev) || (curRev > 0 && baseRev !== curRev))) {
             log.warn('POST', `Conflict detected — client baseRev: ${baseRev}, server rev: ${curRev}`);
             return res.status(409).json({
                 success: false,
+                conflict: true,
                 error: 'Conflict: dusre PC/tab ne is beech naya save kiya hai. Pehle Refresh karo, phir apna change dobara karo.',
                 data: existing.stateData,
                 updatedAt: existing.updatedAt,

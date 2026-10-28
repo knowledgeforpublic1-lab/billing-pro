@@ -984,6 +984,23 @@
                 this.saveToStorage();
             }
 
+            // Migration: Top & Bottom MS Channel item 3 in Activity 907 auto-setup if missing/extra
+            try {
+                if (this.activities && this.activities['907'] && Array.isArray(this.activities['907'].materials)) {
+                    const m3 = this.activities['907'].materials[2];
+                    if (m3 && (m3.itemCode === 'EXTRA-3' || m3.itemCode === '17002007' || !m3.sapItems || m3.sapItems.length < 2)) {
+                        m3.itemCode = '17005060, 17005059';
+                        m3.sapDescription = 'MS-11KV TR BASE CH-100X50X6X2700-25.81KG | MS-11KV TOP CH-100X50X6X2700-25.81KG';
+                        m3.sapUom = 'NO';
+                        m3.docHeader = '0031006347';
+                        m3.sapItems = [
+                            { code: '17005060', desc: 'MS-11KV TR BASE CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' },
+                            { code: '17005059', desc: 'MS-11KV TOP CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' }
+                        ];
+                    }
+                }
+            } catch(e) {}
+
             this._isLoading = false;
             // Initial history snapshot
             this.takeSnapshot();
@@ -991,26 +1008,13 @@
             // Net wapas aaye to pending sync turant push ho jaye
             this.armOnlineRecovery();
 
-            // Periodic heartbeat sync — local changes push karo aur dusre PC ke updates auto-pull karo
+            // Periodic heartbeat sync — check cloud updates first, then push local changes
             this._heartbeatTimer = setInterval(async () => {
                 if (this._isLoading || this.cloudConflict) return;
                 if (this.syncStatus === 'syncing') return;
                 try {
-                    // 1. Check if we have pending local changes to push
-                    const payload = this.buildSyncPayload();
-                    const json = JSON.stringify(payload);
-                    if (json.length <= 4 * 1024 * 1024) {
-                        let h = 0;
-                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-                        const hash = json.length + ':' + h;
-                        if (hash !== this.lastSentHash) {
-                            console.info('Heartbeat: unsynced change detected, pushing to cloud');
-                            await this.syncToMongoNow();
-                            return;
-                        }
-                    }
-                    // 2. Periodic check: if another PC saved changes to cloud, auto-pull them!
-                    if (!this.cloudConflict && typeof this.cloudRev === 'number') {
+                    // 1. Check if another PC saved changes to cloud, auto-pull them!
+                    if (typeof this.cloudRev === 'number') {
                         const headRes = await fetch('/api/billing', {
                             headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
                         });
@@ -1020,7 +1024,20 @@
                                 console.info(`Heartbeat: newer cloud rev detected (${headData.rev} > ${this.cloudRev}), loading updates...`);
                                 await this.loadFromStorage({ forceServer: true });
                                 try { this.showToast('Cloud updates received from another PC ☁️', 'ℹ️'); } catch(e) {}
+                                return;
                             }
+                        }
+                    }
+                    // 2. If already up to date, check if we have local changes to push
+                    const payload = this.buildSyncPayload();
+                    const json = JSON.stringify(payload);
+                    if (json.length <= 4 * 1024 * 1024) {
+                        let h = 0;
+                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
+                        const hash = json.length + ':' + h;
+                        if (hash !== this.lastSentHash) {
+                            console.info('Heartbeat: unsynced change detected, pushing to cloud');
+                            await this.syncToMongoNow();
                         }
                     }
                 } catch(e) {}

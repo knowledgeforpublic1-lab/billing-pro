@@ -23,8 +23,8 @@ window.SyncModule = {
             this.saveToStorage();
         }, 120);
     },
-    buildSyncPayload() {
-        return {
+    buildSyncPayload(extra = {}) {
+        return Object.assign({
             isFinalized: this.isFinalized,
             projectMeta: this.projectMeta,
             selectedCompanyId: this.selectedCompanyId,
@@ -43,8 +43,8 @@ window.SyncModule = {
             mappingRoundMode: this.mappingRoundMode || 'none',
             sapMaterialsMaster: this.sapMaterialsMaster,
             savedAt: Date.now(),
-            baseRev: this.cloudRev
-        };
+            baseRev: (typeof this.cloudRev === 'number' ? this.cloudRev : 0)
+        }, extra);
     },
     scheduleRemoteSync() {
         this._syncRetryCount = 0; // naya edit = retry budget dobara se
@@ -71,6 +71,7 @@ window.SyncModule = {
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
     async syncToMongoNow(opts) {
         const manual = !!(opts && opts.manual);
+        const force = !!(opts && opts.force);
         if (this.cloudConflict) {
             if (manual) {
                 this.syncStatus = 'error';
@@ -87,7 +88,7 @@ window.SyncModule = {
             } catch(e) { this._scheduleSyncRetry(); return false; }
         }
         try {
-            const payload = this.buildSyncPayload();
+            const payload = this.buildSyncPayload(force ? { force: true } : {});
             const json = JSON.stringify(payload);
             if (json.length > 4 * 1024 * 1024) {
                 this.syncStatus = 'error';
@@ -133,10 +134,17 @@ window.SyncModule = {
                 if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
                 this.lastSentHash = hash;
                 this.syncStatus = 'error';
-                console.warn('Sync 409 conflict: overwrite blocked, cloud data safe hai');
+                console.warn('Sync 409 conflict: overwrite blocked, checking auto-recovery...');
+                // Auto-recover if background sync or idle: pull newer cloud data directly!
+                if (!manual && rj && rj.data) {
+                    console.info('Auto-reloading newer cloud data after conflict...');
+                    await this.loadFromStorage({ forceServer: true });
+                    try { this.showToast('Cloud data synchronized from other PC ☁️', 'ℹ️'); } catch(e) {}
+                    return true;
+                }
                 try {
                     const srvMsg = (rj && rj.error) ? String(rj.error).slice(0, 150) : '';
-                    this.showToast('⚠️ ' + (srvMsg || 'Another PC saved in between! Refresh, then redo your changes'), '⚠️');
+                    this.showToast('⚠️ ' + (srvMsg || 'Another PC saved in between! Click Refresh on toolbar to load it'), '⚠️');
                 } catch(e) {}
                 return false;
             }
@@ -254,7 +262,8 @@ window.SyncModule = {
                 mappingLocks: this.mappingLocks,
                 mappingRoundMode: this.mappingRoundMode || 'none',
                 sapMaterialsMaster: this.sapMaterialsMaster,
-                savedAt: Date.now()
+                savedAt: Date.now(),
+                baseRev: (typeof this.cloudRev === 'number' ? this.cloudRev : 0)
             };
             localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
             try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
