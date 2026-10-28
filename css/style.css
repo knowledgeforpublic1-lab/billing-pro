@@ -584,6 +584,288 @@
             gap: 0.5rem;
         }
 
+        /* ==========================================================================
+           PREMIUM ACTIVITY HEADER STRIP STYLING
+           ========================================================================== */
+        .activity-header-strip {
+            padding: 0.85rem 1.25rem !important;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            transition: all 0.2s ease;
+        }
+
+        /* Left Section */
+        .activity-header-info {
+            flex: 1 1 450px;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .activity-header-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        /* Activity Badge Pill */
+        .act-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.22rem 0.65rem;
+            background: rgba(88, 166, 255, 0.12);
+            border: 1px solid rgba(88, 166, 255, 0.35);
+            color: #58a6ff;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            user-select: none;
+        }
+
+        .act-badge-pin {
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+
+        /* Meta Chips (Items & Locations) */
+        .act-meta-chips {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.74rem;
+        }
+
+        .act-meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.18rem 0.55rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .act-meta-chip strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .act-meta-chip .meta-icon {
+            font-size: 0.75rem;
+            line-height: 1;
+        }
+
+        .act-meta-divider {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            user-select: none;
+        }
+
+        /* Main Activity Description */
+        .activity-header-title {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.4;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        /* Right Section: Actions & Stats */
+        .activity-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
+
+        .activity-stats-group {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: nowrap;
+        }
+
+        /* KPI Stat Pills */
+        .act-stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.32rem 0.7rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .act-stat-pill:hover {
+            transform: translateY(-1px);
+        }
+
+        .act-stat-pill .stat-tag {
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            padding: 0.12rem 0.38rem;
+            border-radius: 4px;
+            line-height: 1.1;
+        }
+
+        .act-stat-pill .stat-val {
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+        }
+
+        /* 100% Total Pill */
+        .act-stat-pill.pill-neutral {
+            background: #161b22;
+            border-color: #30363d;
+            color: #e6edf3;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+
+        .act-stat-pill.pill-neutral .stat-tag {
+            background: #21262d;
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        /* 85% Stage Pill */
+        .act-stat-pill.pill-emerald {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.35);
+            color: #3fb950;
+            box-shadow: 0 1px 4px rgba(63, 185, 80, 0.12);
+        }
+
+        .act-stat-pill.pill-emerald .stat-tag {
+            background: rgba(63, 185, 80, 0.2);
+            color: #3fb950;
+            border: 1px solid rgba(63, 185, 80, 0.3);
+        }
+
+        /* Enhanced Excel Export Button */
+        .act-btn-excel-enhanced {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.38rem 0.8rem;
+            background: linear-gradient(135deg, #0e7039, #107c41);
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            font-size: 0.77rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(16, 124, 65, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            text-decoration: none;
+            font-family: inherit;
+            flex-shrink: 0;
+        }
+
+        .act-btn-excel-enhanced:hover {
+            background: linear-gradient(135deg, #107c41, #168a4c);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 124, 65, 0.45);
+        }
+
+        .act-btn-excel-enhanced:active {
+            transform: translateY(0);
+        }
+
+        .act-btn-excel-enhanced .btn-icon {
+            font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        /* Light Mode Overrides */
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-badge-pill {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: rgba(79, 70, 229, 0.25);
+            color: #4f46e5;
+        }
+
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-meta-chip {
+            background: #ffffff;
+            border-color: #e2e8f0;
+        }
+
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-stat-pill.pill-neutral {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-stat-pill.pill-neutral .stat-tag {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-stat-pill.pill-emerald {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #059669;
+        }
+
+        html:not(.dark):not(.dark-mode) body:not(.dark-mode) .act-stat-pill.pill-emerald .stat-tag {
+            background: rgba(16, 185, 129, 0.18);
+            color: #047857;
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        /* Responsive layout adjustments */
+        @media (max-width: 980px) {
+            .activity-header-strip {
+                gap: 0.85rem;
+            }
+            .activity-header-actions {
+                width: 100%;
+                justify-content: space-between;
+                padding-top: 0.5rem;
+                border-top: 1px solid var(--border-subtle);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .activity-header-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+            .activity-stats-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .act-stat-pill {
+                flex: 1;
+                justify-content: center;
+            }
+            .act-btn-excel-enhanced {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
         .table-responsive {
             overflow-x: auto;
             overflow-y: visible;

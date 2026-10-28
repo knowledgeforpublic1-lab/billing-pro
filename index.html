@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261015_07">
+    <link rel="stylesheet" href="css/style.css?v=20261028_01">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -146,32 +146,49 @@
                                 </div>
 
                                 <div class="table-card">
-                                    <div class="table-header-strip">
-                                        <div class="table-title">
-                            <span>📌 {{ currentActivity.title }}</span>
-                        </div>
-                        <div class="table-actions"
-                            style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                            <div
-                                style="display: flex; gap: 6px; font-size: 0.78rem; font-weight: 700; align-items: center;">
-                                <span class="badge"
-                                    style="background: var(--bg-surface); border: 1px solid var(--border-strong); padding: 3px 8px; border-radius: 6px;">
-                                    100%: <strong class="font-mono">{{ formatCurrency(activeTotals.amt100) }}</strong>
-                                </span>
-                                <span class="badge"
-                                    style="background: rgba(16, 185, 129, 0.12); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 6px;">
-                                    {{ pctStage1 }}%: <strong class="font-mono">{{
-                                        formatCurrency(activeTotals.amtStage1) }}</strong>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">
-                                {{ filteredMaterials.length }} Items | {{ getActLocations(selectedActivityKey).length }} Locations
-                            </span>
-                            <button class="btn btn-excel" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
-                                📗 Export Activity {{ selectedActivityKey }}
-                            </button>
-                        </div>
-                    </div>
+                                    <div class="table-header-strip activity-header-strip">
+                                        <!-- Left Section: Activity Code Badge, Meta Chips & Full Title -->
+                                        <div class="activity-header-info">
+                                            <div class="activity-header-meta-row">
+                                                <span class="act-badge-pill" :title="'Current Activity Code: ' + selectedActivityKey">
+                                                    <span class="act-badge-pin">📌</span>
+                                                    <span>Activity {{ selectedActivityKey }}</span>
+                                                </span>
+                                                <div class="act-meta-chips">
+                                                    <span class="act-meta-chip" title="Total Materials / Items in this activity">
+                                                        <span class="meta-icon">📦</span>
+                                                        <span><strong>{{ filteredMaterials.length }}</strong> Items</span>
+                                                    </span>
+                                                    <span class="act-meta-divider">•</span>
+                                                    <span class="act-meta-chip" title="Configured Locations for this activity">
+                                                        <span class="meta-icon">📍</span>
+                                                        <span><strong>{{ getActLocations(selectedActivityKey).length }}</strong> {{ getActLocations(selectedActivityKey).length === 1 ? 'Location' : 'Locations' }}</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <h3 class="activity-header-title" :title="currentActivity.title">
+                                                {{ getActivityCleanDesc(currentActivity.title) }}
+                                            </h3>
+                                        </div>
+
+                                        <!-- Right Section: KPIs (100% & Stage 1) and Export Action -->
+                                        <div class="activity-header-actions">
+                                            <div class="activity-stats-group">
+                                                <div class="act-stat-pill pill-neutral" title="100% Total Activity Amount">
+                                                    <span class="stat-tag">100%</span>
+                                                    <span class="stat-val font-mono">₹ {{ formatCurrency(activeTotals.amt100) }}</span>
+                                                </div>
+                                                <div class="act-stat-pill pill-emerald" :title="pctStage1 + '% Stage 1 Total Amount'">
+                                                    <span class="stat-tag">{{ pctStage1 }}%</span>
+                                                    <span class="stat-val font-mono">₹ {{ formatCurrency(activeTotals.amtStage1) }}</span>
+                                                </div>
+                                            </div>
+                                            <button class="act-btn-excel-enhanced no-print" @click="exportCurrentActivityStyledExcel" :title="'Export Activity ' + selectedActivityKey + ' Excel with formulas'">
+                                                <span class="btn-icon">📗</span>
+                                                <span>Export Activity {{ selectedActivityKey }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
 
                     <div class="table-responsive">
                         <table class="billing-table">

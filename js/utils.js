@@ -240,6 +240,11 @@ window.UtilsModule = {
                 },
                 printView() {
                     window.print();
+                },
+                getActivityCleanDesc(title) {
+                    if (!title || typeof title !== 'string') return '';
+                    const clean = title.replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '').trim();
+                    return clean || title;
                 }
 };
 
