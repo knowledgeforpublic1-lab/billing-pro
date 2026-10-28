@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261028_01">
+    <link rel="stylesheet" href="css/style.css?v=20261028_02">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -33,7 +33,9 @@
         <datalist id="globalSapMaterialsList">
             <option value="[N/A] NOT APPLICABLE">NOT APPLICABLE (No Code)</option>
             <option value="N/A">NOT APPLICABLE</option>
-            <option v-for="sap in sapMaterialsMaster" :key="sap.code" v-if="sap && sap.code !== 'N/A'" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
+            <template v-for="sap in sapMaterialsMaster" :key="sap.code">
+                <option v-if="sap && sap.code !== 'N/A'" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
+            </template>
         </datalist>
 
         <div class="app-layout">
@@ -233,21 +235,39 @@
                                     <td>
                                         <input type="text" v-model="item.desc" class="editable-cell"
                                             @focus="$event.target.select()" @change="saveToStorage">
-                                        <div v-if="item.itemCode === 'N/A'"
+                                        <div v-if="item.itemCode === 'N/A' || (item.sapItems && item.sapItems.length > 0 && item.sapItems[0].code === 'N/A')"
                                             style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 2px; font-family: monospace; font-weight: 600;">
                                             SAP: [N/A] Not Applicable
+                                        </div>
+                                        <div v-else-if="item.sapItems && item.sapItems.length > 1"
+                                            style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace; display: flex; flex-direction: column; gap: 2px;">
+                                            <div v-for="(s, sIdx) in item.sapItems" :key="sIdx" style="display: flex; gap: 4px; align-items: baseline;">
+                                                <span style="color: var(--accent-indigo); font-weight: 700;">SAP {{ sIdx + 1 }}:</span>
+                                                <span>[{{ s.code }}] {{ s.desc }} <span v-if="s.docHeader" style="color: var(--text-dim);">(Doc: {{ s.docHeader }})</span></span>
+                                            </div>
                                         </div>
                                         <div v-else-if="item.sapDescription"
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
-                                    <td class="text-center font-mono">
-                                        <input type="text" v-model="item.itemCode" placeholder="SAP / N/A"
-                                            list="globalSapMaterialsList"
-                                            class="editable-cell text-center font-mono"
-                                            style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
-                                            @change="onItemCodeManualChange(item); saveToStorage();">
+                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
+                                        <!-- Multiple SAP items -->
+                                        <div v-if="item.sapItems && item.sapItems.length > 1" class="sap-badge-group">
+                                            <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge">
+                                                {{ s.code }}
+                                            </span>
+                                            <span v-if="item.sapItems.length > 2" class="sap-more-badge">
+                                                +{{ item.sapItems.length - 2 }}
+                                            </span>
+                                        </div>
+                                        <!-- Single SAP item -->
+                                        <div v-else class="sap-badge-single">
+                                            <span class="sap-code-badge" :class="{ 'sap-badge-na': (item.itemCode === 'N/A' || (item.sapItems && item.sapItems[0] && item.sapItems[0].code === 'N/A')), 'sap-badge-extra': String(item.itemCode || '').startsWith('EXTRA-') }">
+                                                {{ (item.sapItems && item.sapItems[0] && item.sapItems[0].code) || item.itemCode || '+ SAP' }}
+                                            </span>
+                                            <span class="sap-arrow-icon">▾</span>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
@@ -298,21 +318,37 @@
                                     <td>
                                         <input type="text" v-model="item.desc" class="editable-cell"
                                             @focus="$event.target.select()" @change="saveToStorage">
-                                        <div v-if="item.itemCode === 'N/A'"
+                                        <div v-if="item.itemCode === 'N/A' || (item.sapItems && item.sapItems.length > 0 && item.sapItems[0].code === 'N/A')"
                                             style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 2px; font-family: monospace; font-weight: 600;">
                                             SAP: [N/A] Not Applicable
+                                        </div>
+                                        <div v-else-if="item.sapItems && item.sapItems.length > 1"
+                                            style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace; display: flex; flex-direction: column; gap: 2px;">
+                                            <div v-for="(s, sIdx) in item.sapItems" :key="sIdx" style="display: flex; gap: 4px; align-items: baseline;">
+                                                <span style="color: var(--accent-indigo); font-weight: 700;">SAP {{ sIdx + 1 }}:</span>
+                                                <span>[{{ s.code }}] {{ s.desc }} <span v-if="s.docHeader" style="color: var(--text-dim);">(Doc: {{ s.docHeader }})</span></span>
+                                            </div>
                                         </div>
                                         <div v-else-if="item.sapDescription"
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
-                                    <td class="text-center font-mono">
-                                        <input type="text" v-model="item.itemCode" placeholder="SAP / N/A"
-                                            list="globalSapMaterialsList"
-                                            class="editable-cell text-center font-mono"
-                                            style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
-                                            @change="onItemCodeManualChange(item); saveToStorage();">
+                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
+                                        <div v-if="item.sapItems && item.sapItems.length > 1" class="sap-badge-group">
+                                            <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge">
+                                                {{ s.code }}
+                                            </span>
+                                            <span v-if="item.sapItems.length > 2" class="sap-more-badge">
+                                                +{{ item.sapItems.length - 2 }}
+                                            </span>
+                                        </div>
+                                        <div v-else class="sap-badge-single">
+                                            <span class="sap-code-badge" :class="{ 'sap-badge-na': (item.itemCode === 'N/A' || (item.sapItems && item.sapItems[0] && item.sapItems[0].code === 'N/A')), 'sap-badge-extra': String(item.itemCode || '').startsWith('EXTRA-') }">
+                                                {{ (item.sapItems && item.sapItems[0] && item.sapItems[0].code) || item.itemCode || '+ SAP' }}
+                                            </span>
+                                            <span class="sap-arrow-icon">▾</span>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;" @focus="$event.target.select()"
@@ -1286,6 +1322,112 @@
 </div><!-- /content-grid -->
 </div><!-- /main-area -->
 </div><!-- /app-layout -->
+
+        <!-- MODAL: SAP MATERIAL COMPONENTS MANAGER (Single & Multiple SAP Codes) -->
+        <div class="modal-overlay" v-if="showSapItemManagerModal" @click.self="closeSapItemManager">
+            <div class="modal-content" style="max-width: 620px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(79, 70, 229, 0.08)); border-bottom: 1px solid var(--border-strong);">
+                    <div>
+                        <div class="modal-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                            <span>🏷️ SAP Item Manager</span>
+                            <span class="badge font-mono" style="background: rgba(99, 102, 241, 0.2); color: var(--accent-indigo); font-size: 0.76rem; padding: 2px 8px; border-radius: 999px;">Item #{{ activeSapManagerItem ? activeSapManagerItem.no : '' }}</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                            {{ activeSapManagerItem ? activeSapManagerItem.desc : '' }}
+                        </div>
+                    </div>
+                    <button class="modal-close" @click="closeSapItemManager">✕</button>
+                </div>
+
+                <div class="modal-body" style="padding: 1rem 1.25rem;">
+                    <!-- Attached SAP Items List -->
+                    <div style="margin-bottom: 1.2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.3px;">
+                                Attached SAP Material Codes ({{ (activeSapManagerItem && activeSapManagerItem.sapItems) ? activeSapManagerItem.sapItems.length : 0 }})
+                            </label>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Is item me multiple SAP IDs link kar sakte hain</span>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-if="!activeSapManagerItem || !activeSapManagerItem.sapItems || activeSapManagerItem.sapItems.length === 0" style="padding: 1.25rem; text-align: center; background: var(--bg-surface); border: 1.5px dashed var(--border-strong); border-radius: 8px; color: var(--text-muted); font-size: 0.82rem;">
+                            Abhi koi SAP ID linked nahi hai. Neeche se search karke ya N/A select karke add karein.
+                        </div>
+
+                        <!-- List of Attached Items -->
+                        <div v-else style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 220px; overflow-y: auto;">
+                            <div v-for="(sItem, sIdx) in activeSapManagerItem.sapItems" :key="sIdx" style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
+                                    <span class="badge font-mono" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); font-weight: 800; font-size: 0.74rem; padding: 2px 6px;">#{{ sIdx + 1 }}</span>
+                                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <strong class="font-mono" style="color: var(--primary); font-size: 0.88rem;">{{ sItem.code }}</strong>
+                                            <span v-if="sItem.uom" class="badge" style="background: var(--bg-card); font-size: 0.68rem; padding: 1px 5px; color: var(--text-muted);">{{ sItem.uom }}</span>
+                                        </div>
+                                        <div style="font-size: 0.76rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="sItem.desc">
+                                            {{ sItem.desc || 'No description' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Remove Button -->
+                                <button type="button" class="btn-danger" style="padding: 3px 7px; font-size: 0.72rem; border-radius: 4px; flex-shrink: 0;" @click="removeSapItemFromManager(sIdx)" title="Remove this SAP code">
+                                    ✕ Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add New SAP Code Section -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-strong); padding: 0.85rem; border-radius: 8px;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
+                            ➕ Naya SAP ID Add / Search Karein
+                        </label>
+
+                        <!-- Search Input with Live Suggestions -->
+                        <div style="position: relative;">
+                            <input type="text" ref="sapManagerSearchInput" v-model="sapManagerSearchQuery" @input="onSapManagerSearchInput" placeholder="Type SAP Code (e.g. 1700...) ya material name search karo..." style="width: 100%; padding: 0.45rem 0.75rem; border: 1.5px solid var(--primary); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
+
+                            <!-- Live Autocomplete Dropdown List -->
+                            <div v-if="sapManagerSuggestions.length > 0" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-surface); border: 1.5px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-lg); max-height: 240px; overflow-y: auto; z-index: 1000;">
+                                <div v-for="s in sapManagerSuggestions" :key="s.code" @click="selectSapItemForManager(s)" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <div style="min-width: 0; flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <strong class="font-mono" style="color: var(--accent-indigo); font-size: 0.84rem;">[{{ s.code }}]</strong>
+                                            <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-main);">{{ s.desc }}</span>
+                                        </div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                                            UoM: {{ s.uom || 'NO' }} <span v-if="s.docHeader">· Doc: {{ s.docHeader }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); font-size: 0.7rem; padding: 2px 6px; white-space: nowrap;">
+                                        + Select
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Action Chips -->
+                        <div style="display: flex; gap: 6px; margin-top: 0.6rem; align-items: center; flex-wrap: wrap;">
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Quick Options:</span>
+                            <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; font-weight: 600; border-color: var(--accent-amber); color: var(--accent-amber);" @click="setSapItemNa">
+                                🏷️ [N/A] Not Applicable
+                            </button>
+                            <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; font-weight: 600;" @click="setSapItemCustom">
+                                ✏️ Custom Extra Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Done Button -->
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem;">
+                        <button type="button" class="btn btn-primary" style="padding: 0.45rem 1.25rem; font-size: 0.82rem; font-weight: 700;" @click="closeSapItemManager">
+                            ✓ Done / Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- MODAL: ADD MATERIAL ITEM -->
         <div class="modal-overlay" v-if="showAddMaterialModal" @click.self="showAddMaterialModal = false">

@@ -53,6 +53,11 @@
                 // 📚 SAP Material Master editor (cloud copy)
                 showSapMasterModal: false,
                 sapMasterSearch: '',
+                showSapItemManagerModal: false,
+                activeSapManagerItem: null,
+                activeSapManagerOrigIndex: -1,
+                sapManagerSearchQuery: '',
+                sapManagerSuggestions: [],
                 // 🔒 Mapping locks — edit ke liye unlock karna hoga (sap mapping default unlocked hai taaki mapping asani se ho sake)
                 mappingLocks: (function() {
                     try {

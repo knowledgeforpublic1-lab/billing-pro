@@ -631,5 +631,169 @@ window.ViewsModule = {
     resetConcrete() {
         this.concretePoleData.forEach(item => item.poles = '');
         this.concreteMuffingData.forEach(item => item.qty = '');
+    },
+    openSapItemManager(item, origIndex) {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first to change SAP codes.', 'Lock');
+            return;
+        }
+        this.activeSapManagerOrigIndex = origIndex !== undefined ? origIndex : (item.origIndex !== undefined ? item.origIndex : -1);
+        
+        // Ensure valid sapItems array
+        if (!item.sapItems || !Array.isArray(item.sapItems)) {
+            item.sapItems = [];
+            if (item.itemCode && item.itemCode !== 'N/A') {
+                item.sapItems.push({
+                    code: item.itemCode,
+                    desc: item.sapDescription || item.desc || item.itemCode,
+                    uom: item.sapUom || item.unit || 'No',
+                    qty: 1,
+                    docHeader: item.docHeader || '0031006347'
+                });
+            } else if (item.itemCode === 'N/A') {
+                item.sapItems.push({
+                    code: 'N/A',
+                    desc: 'NOT APPLICABLE',
+                    uom: item.unit || 'No',
+                    qty: 1,
+                    docHeader: '0031006347'
+                });
+            }
+        }
+        
+        this.activeSapManagerItem = item;
+        this.sapManagerSearchQuery = '';
+        this.sapManagerSuggestions = [];
+        this.showSapItemManagerModal = true;
+        
+        this.$nextTick(() => {
+            if (this.$refs.sapManagerSearchInput) {
+                this.$refs.sapManagerSearchInput.focus();
+            }
+        });
+    },
+    onSapManagerSearchInput() {
+        const q = (this.sapManagerSearchQuery || '').trim().toLowerCase();
+        if (!q || q.length < 1) {
+            this.sapManagerSuggestions = [];
+            return;
+        }
+        const master = this.sapMaterialsMaster || [];
+        const results = [];
+        for (let i = 0; i < master.length && results.length < 20; i++) {
+            const s = master[i];
+            if (!s) continue;
+            const code = String(s.code || '').toLowerCase();
+            const desc = String(s.desc || '').toLowerCase();
+            if (code.includes(q) || desc.includes(q)) {
+                results.push(s);
+            }
+        }
+        this.sapManagerSuggestions = results;
+    },
+    selectSapItemForManager(s) {
+        if (!this.activeSapManagerItem) return;
+        if (!this.activeSapManagerItem.sapItems) this.activeSapManagerItem.sapItems = [];
+        
+        const items = this.activeSapManagerItem.sapItems;
+        if (items.length === 1 && (!items[0].code || items[0].code === 'N/A' || items[0].code === '')) {
+            items[0].code = s.code;
+            items[0].desc = s.desc;
+            items[0].uom = s.uom || 'No';
+            items[0].docHeader = s.docHeader || '0031006347';
+        } else {
+            if (!items.some(x => x.code === s.code)) {
+                items.push({
+                    code: s.code,
+                    desc: s.desc,
+                    uom: s.uom || 'No',
+                    qty: 1,
+                    docHeader: s.docHeader || '0031006347'
+                });
+            }
+        }
+        
+        this.syncActiveSapManagerItem();
+        this.sapManagerSearchQuery = '';
+        this.sapManagerSuggestions = [];
+        this.showToast(`Linked SAP Code: [${s.code}]`, 'Check');
+    },
+    setSapItemNa() {
+        if (!this.activeSapManagerItem) return;
+        this.activeSapManagerItem.sapItems = [{
+            code: 'N/A',
+            desc: 'NOT APPLICABLE',
+            uom: this.activeSapManagerItem.unit || 'No',
+            qty: 1,
+            docHeader: '0031006347'
+        }];
+        this.syncActiveSapManagerItem();
+        this.sapManagerSearchQuery = '';
+        this.sapManagerSuggestions = [];
+        this.showToast('SAP marked as [N/A] Not Applicable', 'Tag');
+    },
+    setSapItemCustom() {
+        if (!this.activeSapManagerItem) return;
+        const customCode = prompt('Custom Extra SAP Code enter karein (e.g. EXTRA-99 ya SAP Code):', this.activeSapManagerItem.itemCode || '');
+        if (!customCode || !customCode.trim()) return;
+        const code = customCode.trim().toUpperCase();
+        if (!this.activeSapManagerItem.sapItems) this.activeSapManagerItem.sapItems = [];
+        this.activeSapManagerItem.sapItems.push({
+            code: code,
+            desc: this.activeSapManagerItem.desc || code,
+            uom: this.activeSapManagerItem.unit || 'No',
+            qty: 1,
+            docHeader: '0031006347'
+        });
+        this.syncActiveSapManagerItem();
+        this.showToast(`Custom SAP Code [${code}] added`, 'Plus');
+    },
+    removeSapItemFromManager(sIdx) {
+        if (!this.activeSapManagerItem || !this.activeSapManagerItem.sapItems) return;
+        this.activeSapManagerItem.sapItems.splice(sIdx, 1);
+        this.syncActiveSapManagerItem();
+    },
+    syncActiveSapManagerItem() {
+        if (!this.activeSapManagerItem) return;
+        const items = this.activeSapManagerItem.sapItems || [];
+        
+        if (items.length === 0) {
+            this.activeSapManagerItem.itemCode = '';
+            this.activeSapManagerItem.sapDescription = '';
+            this.activeSapManagerItem.sapUom = '';
+        } else if (items.length === 1) {
+            this.activeSapManagerItem.itemCode = items[0].code;
+            this.activeSapManagerItem.sapDescription = items[0].desc;
+            this.activeSapManagerItem.sapUom = items[0].uom;
+            if (items[0].docHeader) this.activeSapManagerItem.docHeader = items[0].docHeader;
+        } else {
+            this.activeSapManagerItem.itemCode = items.map(s => s.code).filter(Boolean).join(', ');
+            this.activeSapManagerItem.sapDescription = items.map(s => s.desc).filter(Boolean).join(' | ');
+            this.activeSapManagerItem.sapUom = items[0].uom || this.activeSapManagerItem.unit;
+        }
+        
+        if (this.currentActivity && this.currentActivity.materials && this.activeSapManagerOrigIndex >= 0) {
+            const targetMat = this.currentActivity.materials[this.activeSapManagerOrigIndex];
+            if (targetMat) {
+                targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
+                targetMat.itemCode = this.activeSapManagerItem.itemCode;
+                targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
+                targetMat.sapUom = this.activeSapManagerItem.sapUom;
+                if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
+            }
+        }
+        
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') {
+            this.scheduleMappingSync();
+        }
+    },
+    closeSapItemManager() {
+        this.syncActiveSapManagerItem();
+        this.showSapItemManagerModal = false;
+        this.activeSapManagerItem = null;
+        this.activeSapManagerOrigIndex = -1;
+        this.sapManagerSearchQuery = '';
+        this.sapManagerSuggestions = [];
     }
 };
