@@ -946,6 +946,21 @@
                             <input type="text" v-model="mappingSearchQuery" placeholder="🔍 Search material / SAP code..." style="padding: 4px 10px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); outline: none; min-width: 200px;">
                         </div>
                         <div class="table-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <!-- 🎯 Round Off Mode Dropdown Selector -->
+                            <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-surface); padding: 3px 8px; border-radius: 6px; border: 1.5px solid var(--border-strong);">
+                                <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">🎯 Round Off:</span>
+                                <select v-model="mappingRoundMode" @change="onMappingRoundModeChange($event.target.value)" style="padding: 2px 6px; font-size: 0.76rem; font-weight: 700; border-radius: 4px; border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--accent-amber); cursor: pointer; outline: none;" title="Mapping Qty / Factor aur Reconciliation values ko round off karne ka option">
+                                    <option value="none">Off (Exact Values)</option>
+                                    <option value="round">Nearest Integer (12.5 → 13)</option>
+                                    <option value="ceil">Round Up / Ceil (12.1 → 13)</option>
+                                    <option value="floor">Round Down / Floor (12.9 → 12)</option>
+                                    <option value="2dec">2 Decimals (12.50)</option>
+                                </select>
+                            </div>
+                            <!-- ⚡ Round All Qtys Button -->
+                            <button class="btn btn-secondary" @click="roundOffAllMappingValues()" :title="'Saare mapping Qty values ko chune hue option (' + mappingRoundMode + ') ke hisaab se round off karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; font-weight: 700; border-color: var(--accent-amber); color: var(--accent-amber);">
+                                ⚡ Round All Qtys
+                            </button>
                             <button class="btn btn-secondary" @click="toggleMappingLock('rate')" :title="mappingLocks.rate ? 'Rate locked hai — edit ke liye click karke unlock karo' : 'Rate unlocked hai — click karke lock karo'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-style: solid;" :style="mappingLocks.rate ? '' : 'border-color: var(--accent-amber); color: var(--accent-amber);'">
                                 {{ mappingLocks.rate ? '🔒 Rate' : '🔓 Rate' }}
                             </button>
@@ -1013,6 +1028,9 @@
                                                 <div style="display: flex; align-items: center; gap: 4px;">
                                                     <span style="font-size: 0.75rem; color: var(--text-muted);">Qty{{ mappingLocks.qty ? ' 🔒' : '' }}:</span>
                                                     <input type="text" inputmode="decimal" v-model="sItem.qty" @change="onMappingQtyChange(sItem, $event)" @blur="onMappingQtyChange(sItem, $event)" :data-map-qty="idx + '_' + sIdx" @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
+                                                    <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.qty = applyRoundValue(sItem.qty); onMappingQtyChange(sItem)" title="Is single value ko chune hue option se round off karo">
+                                                        ≈
+                                                    </button>
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
@@ -1365,6 +1383,16 @@
                                 <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700;" @click="setAllSapItemsRatio(activeSapManagerItem, 1)" title="Har component ko full 1:1 ratio do">
                                     1:1 Ratio (1.0 each)
                                 </button>
+                                <div style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                    <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted);">🎯 Round:</span>
+                                    <select v-model="mappingRoundMode" @change="onMappingRoundModeChange($event.target.value)" style="padding: 2px 6px; font-size: 0.72rem; font-weight: 700; border-radius: 4px; border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--accent-amber); cursor: pointer; outline: none;">
+                                        <option value="none">Off</option>
+                                        <option value="round">Nearest Int</option>
+                                        <option value="ceil">Round Up</option>
+                                        <option value="floor">Round Down</option>
+                                        <option value="2dec">2 Decimals</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- List of Attached Items with Qty Factor & Reco Live Preview -->

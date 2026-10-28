@@ -58,6 +58,7 @@
                 activeSapManagerOrigIndex: -1,
                 sapManagerSearchQuery: '',
                 sapManagerSuggestions: [],
+                mappingRoundMode: (function() { try { return localStorage.getItem('lk_billing_mapping_round_mode') || 'none'; } catch(e) { return 'none'; } })(),
                 // 🔒 Mapping locks — edit ke liye unlock karna hoga (sap mapping default unlocked hai taaki mapping asani se ho sake)
                 mappingLocks: (function() {
                     try {
@@ -327,7 +328,10 @@
                                     // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
                                     const _bw = this.nutBoltWeightForCode(s.code);
                                     const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
-                                    const finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                    let finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                    if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+                                        finalQty = this.applyRoundValue(finalQty, this.mappingRoundMode);
+                                    }
                                     
                                     sapMap[s.code].totalQty += finalQty;
                                     

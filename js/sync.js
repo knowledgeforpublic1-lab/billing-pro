@@ -251,11 +251,13 @@ window.SyncModule = {
                 activityQuantities: this.activityQuantities,
                 invoiceData: this.invoiceData,
                 mappingLocks: this.mappingLocks,
+                mappingRoundMode: this.mappingRoundMode || 'none',
                 sapMaterialsMaster: this.sapMaterialsMaster,
                 savedAt: Date.now()
             };
             localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
             try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
+            try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode || 'none'); } catch(e) {}
             if (!this.isPerformingHistoryAction) {
                 this.takeSnapshot();
             }
@@ -449,6 +451,7 @@ window.SyncModule = {
                 }
                 if (parsed.mappingLocks && typeof parsed.mappingLocks === 'object') {
                     this.mappingLocks = { rate: parsed.mappingLocks.rate !== false, sap: parsed.mappingLocks.sap !== false, qty: parsed.mappingLocks.qty !== false };
+                    if (parsed.mappingRoundMode) this.mappingRoundMode = parsed.mappingRoundMode;
                 }
             } catch (e) {
                 console.error('Error loading stored state', e);

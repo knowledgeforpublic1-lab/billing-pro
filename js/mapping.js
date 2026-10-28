@@ -89,6 +89,63 @@ window.MappingModule = {
         this.saveToStorage();
         this.scheduleMappingSync();
     },
+    onMappingRoundModeChange(newMode) {
+        this.mappingRoundMode = newMode || 'none';
+        try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode); } catch(e) {}
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+        const modeLabels = {
+            'none': 'Off (Exact Values)',
+            'round': 'Nearest Integer (e.g. 12.5 → 13)',
+            'ceil': 'Round Up / Ceil (e.g. 12.1 → 13)',
+            'floor': 'Round Down / Floor (e.g. 12.9 → 12)',
+            '2dec': '2 Decimals (e.g. 12.50)'
+        };
+        this.showToast(`Round Off Mode: ${modeLabels[this.mappingRoundMode] || this.mappingRoundMode}`, 'Check');
+    },
+    applyRoundValue(val, mode) {
+        if (val === undefined || val === null || val === '') return val;
+        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(val) : val;
+        const n = Number(evalVal);
+        if (isNaN(n)) return val;
+        const m = mode || this.mappingRoundMode || 'none';
+        if (m === 'round') return Math.round(n);
+        if (m === 'ceil') return Math.ceil(n);
+        if (m === 'floor') return Math.floor(n);
+        if (m === '2dec') return Math.round(n * 100) / 100;
+        return Math.round(n * 10000) / 10000;
+    },
+    roundOffAllMappingValues(targetMode) {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', 'Lock');
+            return;
+        }
+        const mode = targetMode || (this.mappingRoundMode !== 'none' ? this.mappingRoundMode : 'round');
+        let count = 0;
+        const acts = this.activities || {};
+        Object.keys(acts).forEach(k => {
+            const act = acts[k];
+            if (act && act.materials) {
+                act.materials.forEach(m => {
+                    if (m.sapItems && Array.isArray(m.sapItems)) {
+                        m.sapItems.forEach(s => {
+                            if (s.qty !== undefined && s.qty !== null && s.qty !== '') {
+                                const oldVal = Number(this.evalFormula ? this.evalFormula(s.qty) : s.qty);
+                                const newVal = this.applyRoundValue(oldVal, mode);
+                                if (newVal !== oldVal) {
+                                    s.qty = newVal;
+                                    count++;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+        this.showToast(`Rounded off ${count} mapping values (${mode})`, 'Check');
+    },
     onMappingQtyChange(sItem, event) {
         if (this.isFinalized) { return; }
         if (this.mappingLocks && this.mappingLocks.qty) { return; }
@@ -96,6 +153,11 @@ window.MappingModule = {
         const evalVal = this.evalFormula(raw);
         let v = Number(evalVal);
         if (isNaN(v) || v < 0) { v = 0; }
+        if (this.mappingRoundMode && this.mappingRoundMode !== 'none') {
+            v = this.applyRoundValue(v, this.mappingRoundMode);
+        } else {
+            v = Math.round(v * 10000) / 10000;
+        }
         sItem.qty = v;
         if (event) event.target.value = v;
         this.saveToStorage();

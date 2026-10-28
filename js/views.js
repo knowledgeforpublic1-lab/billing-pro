@@ -844,7 +844,10 @@ window.ViewsModule = {
         const factorRaw = (sItem && sItem.qty !== undefined) ? sItem.qty : 1;
         const factorEval = (typeof this.evalFormula === 'function') ? this.evalFormula(factorRaw) : factorRaw;
         const factor = isNaN(Number(factorEval)) ? 1 : Number(factorEval);
-        const recoQty = totalActQty * factor;
-        return Number(recoQty.toFixed(2)).toString();
+        let recoQty = totalActQty * factor;
+        if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+            recoQty = this.applyRoundValue(recoQty, this.mappingRoundMode);
+        }
+        return (this.mappingRoundMode === 'round' || this.mappingRoundMode === 'ceil' || this.mappingRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
     }
 };
