@@ -2,12 +2,12 @@
  * @file SAP Materials Master Data
  * @description Approved list of SAP material codes with descriptions, UOMs, and categories.
  * This data is used for SAP item dropdowns in the mapping view.
- * Source: material list.ods (279 items)
+ * Source: material list.ods + extra master items (297 items)
  * 
  * @global {Array} defaultSapMaterialsMaster
  * @readonly
  * @since v1.0
- * @audit Updated: 2026-10-15 — removed 10 unapproved/excluded items (279 items)
+ * @audit Updated: 2026-10-28 — synced 18 missing items from contractor list (297 items)
  */
 
 const defaultSapMaterialsMaster = [
@@ -82,8 +82,18 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
+    "code": "17000056",
+    "desc": "LT SHACKLE INSULATOR",
+    "uom": "NO"
+  },
+  {
     "code": "17000057",
     "desc": "LT SPACER",
+    "uom": "NO"
+  },
+  {
+    "code": "17000058",
+    "desc": "LT STAY INSULATOR",
     "uom": "NO"
   },
   {
@@ -144,6 +154,11 @@ const defaultSapMaterialsMaster = [
   {
     "code": "17000239",
     "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+    "uom": "KG"
+  },
+  {
+    "code": "17000243",
+    "desc": "GI WIRE 8 SWG",
     "uom": "KG"
   },
   {
@@ -227,6 +242,11 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
+    "code": "17000656",
+    "desc": "LUG CU RING 2.5 SQMM",
+    "uom": "NO"
+  },
+  {
     "code": "17000671",
     "desc": "HDPE PIPE 160 MM DIA",
     "uom": "M"
@@ -287,6 +307,11 @@ const defaultSapMaterialsMaster = [
     "uom": "L"
   },
   {
+    "code": "17000776",
+    "desc": "PAINT BLACK BITUMINUS",
+    "uom": "L"
+  },
+  {
     "code": "17000778",
     "desc": "RED OXIDE",
     "uom": "L"
@@ -319,6 +344,11 @@ const defaultSapMaterialsMaster = [
   {
     "code": "17001130",
     "desc": "LUG AL RING 120 SQMM",
+    "uom": "NO"
+  },
+  {
+    "code": "17001150",
+    "desc": "ALUMINIUM BOBBINS",
     "uom": "NO"
   },
   {
@@ -394,6 +424,11 @@ const defaultSapMaterialsMaster = [
   {
     "code": "17001302",
     "desc": "DANGER BOARD CLAMP PSC 25X3X630 MM",
+    "uom": "NO"
+  },
+  {
+    "code": "17001312",
+    "desc": "STAY SET CLAMP-A LG 100X116 50X10X310 MM",
     "uom": "NO"
   },
   {
@@ -492,6 +527,11 @@ const defaultSapMaterialsMaster = [
     "uom": "MT"
   },
   {
+    "code": "17002274",
+    "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
+    "uom": "M"
+  },
+  {
     "code": "17002323",
     "desc": "CT CONNECTOR FOR PANTHER CONDUCTOR",
     "uom": "NO"
@@ -505,6 +545,11 @@ const defaultSapMaterialsMaster = [
     "code": "17002817",
     "desc": "CABLE GLAND 28 MM",
     "uom": "NO"
+  },
+  {
+    "code": "17003696",
+    "desc": "HDG BOLT FT M16X175 2 NUT IN 2 PL WSHR",
+    "uom": "SET"
   },
   {
     "code": "17003896",
@@ -827,6 +872,11 @@ const defaultSapMaterialsMaster = [
     "uom": "SET"
   },
   {
+    "code": "17005515",
+    "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
+    "uom": "SET"
+  },
+  {
     "code": "17005519",
     "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
     "uom": "NO"
@@ -848,7 +898,7 @@ const defaultSapMaterialsMaster = [
   },
   {
     "code": "17005560",
-    "desc": "MS-SDT BELTING ANG 50X50X6X2340-10.53KG",
+    "desc": "MS-SDT BELTING ANG 50X50X6X2440-10.98KG",
     "uom": "NO"
   },
   {
@@ -865,6 +915,16 @@ const defaultSapMaterialsMaster = [
     "code": "17005604",
     "desc": "MS-BARBED WIRE CLAMP 25X3X320-0.589KG",
     "uom": "NO"
+  },
+  {
+    "code": "17005682",
+    "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
+    "uom": "SET"
+  },
+  {
+    "code": "17005708",
+    "desc": "GI NUT BOLTS",
+    "uom": "KG"
   },
   {
     "code": "17005775",
@@ -897,12 +957,22 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
+    "code": "17006210",
+    "desc": "MS-FISH PLATE 75X10X254-1.5KG",
+    "uom": "NO"
+  },
+  {
     "code": "17006214",
     "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
     "uom": "NO"
   },
   {
     "code": "17006340",
+    "desc": "CT CONNECTOR FOR DOG CONDUCTOR",
+    "uom": "NO"
+  },
+  {
+    "code": "17006630",
     "desc": "CT CONNECTOR FOR DOG CONDUCTOR",
     "uom": "NO"
   },
@@ -1090,6 +1160,11 @@ const defaultSapMaterialsMaster = [
     "code": "23000004",
     "desc": "ADJUSTABLE SPANNER 12 INCH",
     "uom": "NO"
+  },
+  {
+    "code": "23000021",
+    "desc": "HAMMER 5 KG",
+    "uom": "SET"
   },
   {
     "code": "23000033",
@@ -1377,6 +1452,11 @@ const defaultSapMaterialsMaster = [
     "uom": "NO"
   },
   {
+    "code": "23002488",
+    "desc": "CRIMPING TOOL 16MM TO 400SQMM",
+    "uom": "NO"
+  },
+  {
     "code": "23002536",
     "desc": "CHAIN SAW",
     "uom": "NO"
@@ -1399,6 +1479,16 @@ const defaultSapMaterialsMaster = [
   {
     "code": "23004355",
     "desc": "VOLTAGE ALERT TESTER",
+    "uom": "NO"
+  },
+  {
+    "code": "26000058",
+    "desc": "STAY PLATE 20 MM",
+    "uom": "NO"
+  },
+  {
+    "code": "26000146",
+    "desc": "CLAMP FOR 11 KV VCB",
     "uom": "NO"
   },
   {

@@ -1,13 +1,11 @@
 /**
- * @file Default Activities & Materials
- * @description All project activities (603B, 907, 916, 919, 922, 924, 934A, 1220, 1230, 1425A, 6723)
- * with their materials, rates, SAP item codes, and default SAP mappings.
- * This is the core business data that defines billing line items.
+ * @file Activities Master Data
+ * @description Master configuration for all 11 activities with material specifications,
+ * units, rates, SAP codes, and default item mappings.
  * 
  * @global {Object} defaultActivities
  * @readonly
  * @since v1.0
- * @audit Updated: 2026-10-15 — removed SAP mappings for 10 unapproved/excluded items
  */
 
 const defaultActivities = {
@@ -403,22 +401,38 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG / 6 SWG",
         "unit": "Kg.",
         "rate": 2,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "20",
         "desc": "Black Bituminus Paint",
         "unit": "Ltr",
         "rate": 10,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapUom": "L",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "L",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "21",
@@ -878,11 +892,19 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "15",
@@ -907,11 +929,19 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapUom": "L",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "L",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "17",
@@ -1168,11 +1198,19 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "kg.",
         "rate": 4,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "12",
@@ -1215,11 +1253,19 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapUom": "L",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "L",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "15",
@@ -1422,11 +1468,19 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "9",
@@ -1451,11 +1505,19 @@ const defaultActivities = {
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
         "rate": 10,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapUom": "L",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "L",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "11",
@@ -1885,11 +1947,19 @@ const defaultActivities = {
         "desc": "8 SWG GI WIRE FOR EARTHING & GUARDING",
         "unit": "Kg.",
         "rate": 2,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "21",
@@ -2189,22 +2259,38 @@ const defaultActivities = {
         "desc": "2Core 2.5sqmm Copper Cable",
         "unit": "Rmt",
         "rate": 15,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000231",
+        "sapDescription": "CABLE CU LT PVC 2X2.5 SQMM ARM",
+        "sapUom": "M",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000231",
+            "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
+            "uom": "M",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "14",
         "desc": "4 Core 2.5sqmm Copper Cable",
         "unit": "Rmt",
         "rate": 15,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000232",
+        "sapDescription": "CABLE CU LT PVC 4X2.5 SQMM ARM",
+        "sapUom": "M",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000232",
+            "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
+            "uom": "M",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "15",
@@ -2229,11 +2315,19 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG / 6 SWG",
         "unit": "Kg.",
         "rate": 2,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       }
     ]
   },
@@ -2470,11 +2564,19 @@ const defaultActivities = {
         "desc": "11 KV CT 400 - 200 / 5 - 5 Outdoor",
         "unit": "No",
         "rate": 2333.34,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17005141",
+        "sapDescription": "CT 11KV 400-200/5-5A",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005141",
+            "desc": "CT 11KV 400-200/5-5A",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "7",
@@ -3141,22 +3243,38 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 2.2,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "19",
         "desc": "Black Bituminus Paint",
         "unit": "LTR",
         "rate": 10,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000776",
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapUom": "L",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "L",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "20",
@@ -3334,22 +3452,38 @@ const defaultActivities = {
         "desc": "L.T.Shackle Insulator",
         "unit": "No",
         "rate": 6,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000056",
+        "sapDescription": "LT SHACKLE INSULATOR",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000056",
+            "desc": "LT SHACKLE INSULATOR",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "7",
         "desc": "Aluminium Bobbins for neutral",
         "unit": "No.",
         "rate": 2,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17001150",
+        "sapDescription": "ALUMINIUM BOBBINS",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17001150",
+            "desc": "ALUMINIUM BOBBINS",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "8",
@@ -3464,11 +3598,19 @@ const defaultActivities = {
         "desc": "Stay Insulators",
         "unit": "No",
         "rate": 4,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000058",
+        "sapDescription": "LT STAY INSULATOR",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000058",
+            "desc": "LT STAY INSULATOR",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "15",
@@ -3497,22 +3639,38 @@ const defaultActivities = {
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
         "rate": 4,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000243",
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapUom": "KG",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "18",
         "desc": "L.T.Spacers",
         "unit": "No",
         "rate": 12,
-        "itemCode": "",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "17000057",
+        "sapDescription": "LT SPACER",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000057",
+            "desc": "LT SPACER",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "19",
