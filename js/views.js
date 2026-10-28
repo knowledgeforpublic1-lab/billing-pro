@@ -61,6 +61,21 @@ window.ViewsModule = {
     },
     ensureMaterialSap(m, mIdx) {
         if (!m) return;
+        if (m.itemCode === 'N/A' || (m.sapItems && m.sapItems.length > 0 && m.sapItems[0].code === 'N/A')) {
+            m.itemCode = 'N/A';
+            if (!m.sapDescription) m.sapDescription = 'NOT APPLICABLE';
+            if (!m.sapUom) m.sapUom = m.unit || 'No';
+            if (!m.sapItems || !m.sapItems.length) {
+                m.sapItems = [{
+                    code: 'N/A',
+                    desc: 'NOT APPLICABLE',
+                    uom: m.sapUom || m.unit || 'No',
+                    qty: 1,
+                    docHeader: m.docHeader || '0031006347'
+                }];
+            }
+            return;
+        }
         if (m.sapItems && m.sapItems.length > 0 && m.sapItems[0].code) {
             if (!m.itemCode) m.itemCode = m.sapItems[0].code;
             if (!m.sapDescription) m.sapDescription = m.sapItems[0].desc;
@@ -462,10 +477,26 @@ window.ViewsModule = {
         this.showExtraItemSuggest = true;
     },
     selectExtraItemCode(mat) {
+        const code = mat.itemCode || mat.code || '';
+        if (code === 'N/A') {
+            this.newMaterial.sapCode = 'N/A';
+            this.newMaterial.codeSearch = '[N/A] NOT APPLICABLE';
+            this.newMaterial.sapDescription = 'NOT APPLICABLE';
+            this.newMaterial.sapUom = this.newMaterial.unit || 'No';
+            this.newMaterial.docHeader = '0031006347';
+            this.newMaterial.sapItems = [{
+                code: 'N/A',
+                desc: 'NOT APPLICABLE',
+                uom: this.newMaterial.unit || 'No',
+                qty: 1,
+                docHeader: '0031006347'
+            }];
+            this.showExtraItemSuggest = false;
+            return;
+        }
         this.newMaterial.desc = mat.desc;
         this.newMaterial.unit = mat.unit || mat.uom || 'No';
         this.newMaterial.rate = mat.rate || 0;
-        const code = mat.itemCode || mat.code || '';
         this.newMaterial.sapCode = code;
         this.newMaterial.codeSearch = code ? `[${code}] ${mat.desc}` : mat.desc;
         this.newMaterial.sapDescription = mat.sapDescription || mat.desc || '';
@@ -503,11 +534,23 @@ window.ViewsModule = {
                 code = match[1].trim();
             } else if (/^\d{6,10}$/.test(trimmed)) {
                 code = trimmed;
+            } else if (/^(n\/?a|not\s*applicable)$/i.test(trimmed)) {
+                code = 'N/A';
             }
+        }
+        if (code.toUpperCase() === 'N/A' || code.toUpperCase() === 'NA') {
+            code = 'N/A';
         }
 
         let sapItem = null;
-        if (code && this.sapMaterialsMaster) {
+        if (code === 'N/A') {
+            sapItem = {
+                code: 'N/A',
+                desc: 'NOT APPLICABLE',
+                uom: this.newMaterial.unit || 'No',
+                docHeader: '0031006347'
+            };
+        } else if (code && this.sapMaterialsMaster) {
             sapItem = this.sapMaterialsMaster.find(s => s.code === code);
         }
         if (!sapItem && this.newMaterial.desc && this.sapMaterialsMaster) {

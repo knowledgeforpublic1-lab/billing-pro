@@ -31,7 +31,9 @@
     <div id="app">
         <!-- Global SAP Materials Autocomplete Datalist (shared across all tabs) -->
         <datalist id="globalSapMaterialsList">
-            <option v-for="sap in sapMaterialsMaster" :key="sap.code" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
+            <option value="[N/A] NOT APPLICABLE">NOT APPLICABLE (No Code)</option>
+            <option value="N/A">NOT APPLICABLE</option>
+            <option v-for="sap in sapMaterialsMaster" :key="sap.code" v-if="sap && sap.code !== 'N/A'" :value="'[' + sap.code + '] ' + sap.desc">({{ sap.uom }})</option>
         </datalist>
 
         <div class="app-layout">
@@ -214,13 +216,17 @@
                                     <td>
                                         <input type="text" v-model="item.desc" class="editable-cell"
                                             @focus="$event.target.select()" @change="saveToStorage">
-                                        <div v-if="item.sapDescription"
+                                        <div v-if="item.itemCode === 'N/A'"
+                                            style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 2px; font-family: monospace; font-weight: 600;">
+                                            SAP: [N/A] Not Applicable
+                                        </div>
+                                        <div v-else-if="item.sapDescription"
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
                                     <td class="text-center font-mono">
-                                        <input type="text" v-model="item.itemCode" placeholder="SAP Code"
+                                        <input type="text" v-model="item.itemCode" placeholder="SAP / N/A"
                                             list="globalSapMaterialsList"
                                             class="editable-cell text-center font-mono"
                                             style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
@@ -273,13 +279,17 @@
                                     <td>
                                         <input type="text" v-model="item.desc" class="editable-cell"
                                             @focus="$event.target.select()" @change="saveToStorage">
-                                        <div v-if="item.sapDescription"
+                                        <div v-if="item.itemCode === 'N/A'"
+                                            style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 2px; font-family: monospace; font-weight: 600;">
+                                            SAP: [N/A] Not Applicable
+                                        </div>
+                                        <div v-else-if="item.sapDescription"
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
                                     <td class="text-center font-mono">
-                                        <input type="text" v-model="item.itemCode" placeholder="SAP Code"
+                                        <input type="text" v-model="item.itemCode" placeholder="SAP / N/A"
                                             list="globalSapMaterialsList"
                                             class="editable-cell text-center font-mono"
                                             style="font-weight: 700; color: var(--accent-indigo); font-size: 0.8rem;"
@@ -1260,7 +1270,7 @@
                     <div class="form-group">
                         <label>Item Code (SAP)</label>
                         <div style="position: relative;">
-                            <input type="text" v-model="newMaterial.codeSearch" @input="onExtraItemCodeSearch" @focus="onExtraItemCodeSearch" @blur="showExtraItemSuggest = false" placeholder="Search material description or enter SAP Code..." style="width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem;">
+                            <input type="text" v-model="newMaterial.codeSearch" @input="onExtraItemCodeSearch" @focus="onExtraItemCodeSearch" @blur="showExtraItemSuggest = false" placeholder="Search material description, SAP Code, or N/A..." style="width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem;">
                             <div v-if="extraItemSuggestions.length && showExtraItemSuggest" class="suggest-pop" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 6px; box-shadow: var(--shadow-lg); max-height: 240px; overflow-y: auto; z-index: 10;">
                                 <div v-for="mat in extraItemSuggestions" :key="(mat.itemCode || mat.code || '') + mat.desc" @mousedown.prevent @click="selectExtraItemCode(mat)" style="padding: 6px 10px; cursor: pointer; font-size: 0.78rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
                                     <span style="flex: 1; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">

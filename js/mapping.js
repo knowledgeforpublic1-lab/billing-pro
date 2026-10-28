@@ -112,6 +112,24 @@ window.MappingModule = {
         const mDigits = codeClean.match(/(?:^|\b)(\d{7,10})(?:$|\b)/);
         if (mDigits) codeClean = mDigits[1];
 
+        // Check for N/A (Not Applicable)
+        const cleanUpper = codeClean.toUpperCase();
+        if (cleanUpper === 'N/A' || cleanUpper === 'NA' || cleanUpper === 'NOT APPLICABLE' || rawVal.toUpperCase().startsWith('[N/A]')) {
+            item.itemCode = 'N/A';
+            item.sapDescription = 'NOT APPLICABLE';
+            item.sapUom = item.unit || 'No';
+            item.sapItems = [{
+                code: 'N/A',
+                desc: 'NOT APPLICABLE',
+                uom: item.unit || 'No',
+                qty: 1,
+                docHeader: item.docHeader || '0031006347'
+            }];
+            this.saveToStorage();
+            this.scheduleMappingSync();
+            return;
+        }
+
         if (this.sapMaterialsMaster) {
             let found = this.sapMaterialsMaster.find(s => s.code === codeClean);
             if (!found) {
@@ -235,12 +253,29 @@ window.MappingModule = {
             return;
         }
 
-        // Smart resolution:
-        let targetCode = '';
+        // Check for N/A (Not Applicable)
         const mBracket = inputStr.match(/^\[(.*?)\]/);
-        if (mBracket) {
-            targetCode = mBracket[1].trim();
-        } else {
+        let targetCode = mBracket ? mBracket[1].trim() : inputStr;
+        const upperCode = targetCode.toUpperCase();
+        if (upperCode === 'N/A' || upperCode === 'NA' || upperCode === 'NOT APPLICABLE' || inputStr.toUpperCase().startsWith('[N/A]')) {
+            sItem.code = 'N/A';
+            sItem.desc = 'NOT APPLICABLE';
+            sItem.uom = sItem.uom || mat.unit || 'No';
+            sItem.docHeader = sItem.docHeader || '0031006347';
+            if (mat.sapItems && mat.sapItems.length > 0) {
+                mat.itemCode = mat.sapItems[0].code || 'N/A';
+                mat.sapDescription = mat.sapItems[0].desc || 'NOT APPLICABLE';
+                mat.sapUom = mat.sapItems[0].uom || mat.unit;
+                mat.docHeader = mat.sapItems[0].docHeader || '0031006347';
+            }
+            if (event) event.target.value = '[N/A] NOT APPLICABLE';
+            this.saveToStorage();
+            this.scheduleMappingSync();
+            return;
+        }
+
+        // Smart resolution:
+        if (!targetCode) {
             const mDigits = inputStr.match(/(?:^|\b)(\d{7,10})(?:$|\b)/);
             if (mDigits) targetCode = mDigits[1];
         }

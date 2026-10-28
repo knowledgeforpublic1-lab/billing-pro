@@ -12,6 +12,11 @@
 
 const defaultSapMaterialsMaster = [
   {
+    "code": "N/A",
+    "desc": "NOT APPLICABLE",
+    "uom": "No"
+  },
+  {
     "code": "11000119",
     "desc": "SAND RIVER",
     "uom": "KG"

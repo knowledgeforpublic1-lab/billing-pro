@@ -603,6 +603,22 @@
                 const list = [];
                 const seen = new Set();
 
+                // 0. N/A Option (Not Applicable)
+                if (!q || 'n/a'.includes(q) || 'not applicable'.includes(q) || 'na'.includes(q)) {
+                    list.push({
+                        desc: 'NOT APPLICABLE (No SAP Code)',
+                        itemCode: 'N/A',
+                        code: 'N/A',
+                        unit: 'No',
+                        rate: 0,
+                        sapDescription: 'NOT APPLICABLE',
+                        sapUom: 'No',
+                        docHeader: '0031006347',
+                        sapItems: [{ code: 'N/A', desc: 'NOT APPLICABLE', uom: 'No', qty: 1, docHeader: '0031006347' }]
+                    });
+                    seen.add('N/A__not applicable (no sap code)');
+                }
+
                 // 1. Collect materials from all activities
                 Object.keys(this.activities || {}).forEach(ak => {
                     const act = this.activities[ak];
@@ -740,6 +756,15 @@
                 });
                 if (patched) { this._isLoading = false; this.saveToStorage(); }
                 localStorage.setItem('patch_907_934a_merge_v3', 'true');
+            }
+
+            // Ensure N/A option is always available in sapMaterialsMaster
+            if (Array.isArray(this.sapMaterialsMaster) && !this.sapMaterialsMaster.some(s => s && s.code === 'N/A')) {
+                this.sapMaterialsMaster.unshift({
+                    code: 'N/A',
+                    desc: 'NOT APPLICABLE',
+                    uom: 'No'
+                });
             }
 
             // PATCH: galat/orphan SAP mappings — ek baar, saved bill par bhi.
