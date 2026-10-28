@@ -129,12 +129,23 @@ window.MappingModule = {
                 act.materials.forEach(m => {
                     if (m.sapItems && Array.isArray(m.sapItems)) {
                         m.sapItems.forEach(s => {
-                            if (s.qty !== undefined && s.qty !== null && s.qty !== '') {
-                                const oldVal = Number(this.evalFormula ? this.evalFormula(s.qty) : s.qty);
-                                const newVal = this.applyRoundValue(oldVal, mode);
-                                if (newVal !== oldVal) {
-                                    s.qty = newVal;
-                                    count++;
+                            if (s.isManual) {
+                                if (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') {
+                                    const oldVal = Number(this.evalFormula ? this.evalFormula(s.manualQty) : s.manualQty);
+                                    const newVal = this.applyRoundValue(oldVal, mode);
+                                    if (newVal !== oldVal) {
+                                        s.manualQty = newVal;
+                                        count++;
+                                    }
+                                }
+                            } else {
+                                if (s.qty !== undefined && s.qty !== null && s.qty !== '') {
+                                    const oldVal = Number(this.evalFormula ? this.evalFormula(s.qty) : s.qty);
+                                    const newVal = this.applyRoundValue(oldVal, mode);
+                                    if (newVal !== oldVal) {
+                                        s.qty = newVal;
+                                        count++;
+                                    }
                                 }
                             }
                         });
@@ -145,6 +156,44 @@ window.MappingModule = {
         this.saveToStorage();
         if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
         this.showToast(`Rounded off ${count} mapping values (${mode})`, 'Check');
+    },
+    toggleSapItemManualMode(mat, sItem, actKey) {
+        if (this.isFinalized) { return; }
+        if (this.mappingLocks && this.mappingLocks.qty) {
+            this.showToast('Qty locked hai — pehle 🔓 Qty par click karke unlock karein', 'Lock');
+            return;
+        }
+        sItem.isManual = !sItem.isManual;
+        if (sItem.isManual) {
+            if (sItem.manualQty === undefined || sItem.manualQty === null || sItem.manualQty === '') {
+                const calculated = (typeof this.getSapComponentCalculatedRecoQty === 'function')
+                    ? this.getSapComponentCalculatedRecoQty(mat, sItem, actKey)
+                    : (sItem.qty || 1);
+                sItem.manualQty = Number(calculated) || 0;
+            }
+            this.showToast('Manual Reco Mode ON: Direct fixed quantity enter karein', 'Check');
+        } else {
+            this.showToast('Auto Ratio Mode ON: Activity quantity se multiply hoga', 'Check');
+        }
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+    },
+    onMappingManualQtyChange(sItem, event) {
+        if (this.isFinalized) { return; }
+        if (this.mappingLocks && this.mappingLocks.qty) { return; }
+        const raw = event ? event.target.value : sItem.manualQty;
+        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(raw) : raw;
+        let v = Number(evalVal);
+        if (isNaN(v) || v < 0) { v = 0; }
+        if (this.mappingRoundMode && this.mappingRoundMode !== 'none') {
+            v = this.applyRoundValue(v, this.mappingRoundMode);
+        } else {
+            v = Math.round(v * 100) / 100;
+        }
+        sItem.manualQty = v;
+        if (event) event.target.value = v;
+        this.saveToStorage();
+        this.scheduleMappingSync();
     },
     onMappingQtyChange(sItem, event) {
         if (this.isFinalized) { return; }

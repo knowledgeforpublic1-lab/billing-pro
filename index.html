@@ -1024,13 +1024,63 @@
                                                     <input type="text" list="globalSapMaterialsList" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked (Click 🔓 Item above to edit)' : 'Search SAP Code or Type...'">
                                                     <span style="font-size: 0.75rem; color: var(--text-main); margin-top:2px; font-weight:600;">{{ sItem.desc }}</span>
                                                 </div>
-                                                <!-- Qty Input -->
+                                                <!-- Qty / Mode Control -->
                                                 <div style="display: flex; align-items: center; gap: 4px;">
-                                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Qty{{ mappingLocks.qty ? ' 🔒' : '' }}:</span>
-                                                    <input type="text" inputmode="decimal" v-model="sItem.qty" @change="onMappingQtyChange(sItem, $event)" @blur="onMappingQtyChange(sItem, $event)" :data-map-qty="idx + '_' + sIdx" @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')" @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')" :disabled="mappingLocks.qty || isFinalized" :readonly="mappingLocks.qty || isFinalized" :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty (0 = not required)'" class="editable-cell text-right font-mono" :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'" placeholder="0">
-                                                    <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.qty = applyRoundValue(sItem.qty); onMappingQtyChange(sItem)" title="Is single value ko chune hue option se round off karo">
-                                                        ≈
+                                                    <!-- Mode Toggle Pill: Auto Ratio vs Manual Reco -->
+                                                    <button type="button"
+                                                        @click="toggleSapItemManualMode(row.item, sItem, row.actKey)"
+                                                        :disabled="mappingLocks.qty || isFinalized"
+                                                        :style="sItem.isManual 
+                                                            ? 'background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1.5px solid var(--accent-amber); font-weight: 800; font-size: 0.68rem; padding: 1px 5px; border-radius: 4px; cursor: pointer; line-height: 1.2;' 
+                                                            : 'background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); font-weight: 700; font-size: 0.68rem; padding: 1px 5px; border-radius: 4px; cursor: pointer; line-height: 1.2;'"
+                                                        :title="sItem.isManual ? '✍️ Manual Reco Qty: Direct fixed qty reconciliation me jayegi. Click karke Auto Ratio me badlein.' : '⚡ Auto Ratio: Activity qty se multiply hoga. Click karke Manual Fixed Reco Qty me badlein.'">
+                                                        {{ sItem.isManual ? '✍️ Man' : '⚡ Auto' }}
                                                     </button>
+                                                    <span style="font-size: 0.72rem; font-weight: 700;" :style="sItem.isManual ? 'color: var(--accent-amber);' : 'color: var(--text-muted);'">
+                                                        {{ sItem.isManual ? 'Reco' : 'Ratio' }}{{ mappingLocks.qty ? ' 🔒' : '' }}:
+                                                    </span>
+
+                                                    <!-- Manual Mode Input -->
+                                                    <template v-if="sItem.isManual">
+                                                        <input type="text" inputmode="decimal"
+                                                            :value="sItem.manualQty !== undefined ? sItem.manualQty : sItem.qty"
+                                                            @change="onMappingManualQtyChange(sItem, $event)"
+                                                            @blur="onMappingManualQtyChange(sItem, $event)"
+                                                            :data-map-qty="idx + '_' + sIdx"
+                                                            @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')"
+                                                            @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')"
+                                                            @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')"
+                                                            :disabled="mappingLocks.qty || isFinalized"
+                                                            :readonly="mappingLocks.qty || isFinalized"
+                                                            title="Manual Reco Qty: Ye exact value seedhe Reconciliation me jayegi"
+                                                            class="editable-cell text-right font-mono"
+                                                            :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.08); font-weight: 800; color: var(--accent-amber);'"
+                                                            placeholder="0">
+                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.manualQty = applyRoundValue(sItem.manualQty); onMappingManualQtyChange(sItem)" title="Is manual value ko round off karo">
+                                                            ≈
+                                                        </button>
+                                                    </template>
+
+                                                    <!-- Auto Mode Input -->
+                                                    <template v-else>
+                                                        <input type="text" inputmode="decimal"
+                                                            v-model="sItem.qty"
+                                                            @change="onMappingQtyChange(sItem, $event)"
+                                                            @blur="onMappingQtyChange(sItem, $event)"
+                                                            :data-map-qty="idx + '_' + sIdx"
+                                                            @keydown.enter.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')"
+                                                            @keydown.down.prevent="handleMappingQtyNav($event, idx, sIdx, 'down')"
+                                                            @keydown.up.prevent="handleMappingQtyNav($event, idx, sIdx, 'up')"
+                                                            :disabled="mappingLocks.qty || isFinalized"
+                                                            :readonly="mappingLocks.qty || isFinalized"
+                                                            :title="mappingLocks.qty ? 'Qty locked hai — upar 🔓 Qty dabakar edit karo' : 'Per-unit qty ratio (0 = not required)'"
+                                                            class="editable-cell text-right font-mono"
+                                                            :style="mappingLocks.qty ? 'width: 60px; padding: 3px; opacity: 0.65; cursor: not-allowed;' : 'width: 60px; padding: 3px; border-color: var(--accent-amber);'"
+                                                            placeholder="0">
+                                                        <button v-if="!mappingLocks.qty && !isFinalized" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 800; border-color: var(--border-subtle); color: var(--accent-amber); line-height: 1.1;" @click="sItem.qty = applyRoundValue(sItem.qty); onMappingQtyChange(sItem)" title="Is single value ko chune hue option se round off karo">
+                                                            ≈
+                                                        </button>
+                                                    </template>
                                                 </div>
                                                 <span v-if="sItem.docHeader" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap;" :title="'Document Header / WO Ref: ' + sItem.docHeader">
                                                     Doc: {{ sItem.docHeader }}
@@ -1416,18 +1466,45 @@
                                     {{ sItem.desc || 'No description' }}
                                 </div>
 
-                                <!-- Qty / Split Ratio Control & Reco Calculation -->
+                                <!-- Qty / Mode Control & Reco Calculation -->
                                 <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                     <div style="display: flex; align-items: center; gap: 6px;">
-                                        <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">
-                                            Split Ratio / Factor:
-                                        </label>
-                                        <input type="text"
-                                            :value="sItem.qty !== undefined ? sItem.qty : 1"
-                                            @change="onSapManagerItemQtyChange(sItem, $event.target.value)"
-                                            placeholder="1 or 0.5 or 1/2"
-                                            style="width: 72px; padding: 2px 6px; font-size: 0.8rem; font-weight: 700; font-family: monospace; text-align: right; border: 1.5px solid var(--accent-amber); border-radius: 5px; background: var(--bg-input); color: var(--text-main); outline: none;"
-                                            title="Formula set karo: jaise 0.5 ya 1/2 (agar activity qty 28 hai aur factor 0.5 hai to reconciliation me 14 jayega)">
+                                        <!-- Mode Toggle Button -->
+                                        <button type="button"
+                                            class="btn btn-secondary"
+                                            @click="toggleSapManagerItemMode(sItem)"
+                                            :style="sItem.isManual 
+                                                ? 'padding: 2px 7px; font-size: 0.72rem; font-weight: 800; border-color: var(--accent-amber); color: var(--accent-amber); background: rgba(245, 158, 11, 0.12);' 
+                                                : 'padding: 2px 7px; font-size: 0.72rem; font-weight: 700; border-color: var(--border-subtle); color: var(--text-muted);'"
+                                            :title="sItem.isManual ? 'Abhi Manual Reco Mode ON hai. Click karke Auto Ratio par switch karein.' : 'Abhi Auto Ratio Mode ON hai. Click karke Manual Fixed Reco Qty par switch karein.'">
+                                            {{ sItem.isManual ? '✍️ Manual Reco' : '⚡ Auto Ratio' }}
+                                        </button>
+
+                                        <!-- Manual Reco Qty Input -->
+                                        <template v-if="sItem.isManual">
+                                            <label style="font-size: 0.74rem; font-weight: 800; color: var(--accent-amber);">
+                                                Manual Reco Qty:
+                                            </label>
+                                            <input type="text"
+                                                :value="sItem.manualQty !== undefined ? sItem.manualQty : sItem.qty"
+                                                @change="onSapManagerItemManualQtyChange(sItem, $event.target.value)"
+                                                placeholder="10 or 14"
+                                                style="width: 75px; padding: 2px 6px; font-size: 0.8rem; font-weight: 800; font-family: monospace; text-align: right; border: 1.5px solid var(--accent-amber); border-radius: 5px; background: rgba(245, 158, 11, 0.08); color: var(--accent-amber); outline: none;"
+                                                title="Manual Reco Qty: Ye exact quantity seedhe Reconciliation sheet me jayegi (Auto multiply nahi hoga)">
+                                        </template>
+
+                                        <!-- Auto Split Ratio Input -->
+                                        <template v-else>
+                                            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">
+                                                Split Ratio:
+                                            </label>
+                                            <input type="text"
+                                                :value="sItem.qty !== undefined ? sItem.qty : 1"
+                                                @change="onSapManagerItemQtyChange(sItem, $event.target.value)"
+                                                placeholder="1 or 0.5 or 1/2"
+                                                style="width: 72px; padding: 2px 6px; font-size: 0.8rem; font-weight: 700; font-family: monospace; text-align: right; border: 1.5px solid var(--accent-amber); border-radius: 5px; background: var(--bg-input); color: var(--text-main); outline: none;"
+                                                title="Formula set karo: jaise 0.5 ya 1/2 (agar activity qty 28 hai aur factor 0.5 hai to reconciliation me 14 jayega)">
+                                        </template>
                                     </div>
 
                                     <!-- Live Reco Preview -->
@@ -1435,6 +1512,7 @@
                                         <span style="color: var(--text-muted);">Reco Qty:</span>
                                         <span style="background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
                                             {{ getSapComponentCalculatedRecoQty(activeSapManagerItem, sItem) }} {{ sItem.uom || (activeSapManagerItem ? activeSapManagerItem.unit : 'No') }}
+                                            <span v-if="sItem.isManual" style="color: var(--accent-amber); font-weight: 800; margin-left: 2px;" title="Manual fixed entry">✍️</span>
                                         </span>
                                     </div>
                                 </div>

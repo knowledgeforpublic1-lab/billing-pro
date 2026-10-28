@@ -228,11 +228,21 @@
                                 }];
                             } else {
                                 m.sapItems.forEach(s => {
-                                    if (s.qty === undefined || s.qty === null || s.qty === '') s.qty = 1;
-                                    else {
-                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
-                                        const n = Number(evalVal);
-                                        s.qty = isNaN(n) ? 1 : n;
+                                    if (s.isManual) {
+                                        if (s.manualQty === undefined || s.manualQty === null || s.manualQty === '') {
+                                            s.manualQty = (s.qty !== undefined && s.qty !== null && s.qty !== '') ? s.qty : 1;
+                                        } else {
+                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.manualQty) : s.manualQty;
+                                            const n = Number(evalVal);
+                                            s.manualQty = isNaN(n) ? 0 : n;
+                                        }
+                                    } else {
+                                        if (s.qty === undefined || s.qty === null || s.qty === '') s.qty = 1;
+                                        else {
+                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                            const n = Number(evalVal);
+                                            s.qty = isNaN(n) ? 1 : n;
+                                        }
                                     }
                                 });
                             }
@@ -321,14 +331,22 @@
                                         };
                                     }
                                     
-                                    // Qty 0 ka matlab 0 hi hai (not-required), blank/NaN ka matlab 1
-                                    const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
-                                    let _mq = Number(evalVal);
-                                    const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
-                                    // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
-                                    const _bw = this.nutBoltWeightForCode(s.code);
-                                    const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
-                                    let finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                    let finalQty = 0;
+                                    if (s.isManual) {
+                                        const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
+                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
+                                        const mq = Number(evalVal);
+                                        finalQty = isNaN(mq) ? 0 : mq;
+                                    } else {
+                                        // Qty 0 ka matlab 0 hi hai (not-required), blank/NaN ka matlab 1
+                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                        let _mq = Number(evalVal);
+                                        const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
+                                        // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
+                                        const _bw = this.nutBoltWeightForCode(s.code);
+                                        const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
+                                        finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                    }
                                     if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
                                         finalQty = this.applyRoundValue(finalQty, this.mappingRoundMode);
                                     }

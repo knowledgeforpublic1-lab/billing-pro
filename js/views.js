@@ -240,6 +240,15 @@ window.ViewsModule = {
             const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
             m.sapItems.forEach(s => {
                 if (!s.code || s.code !== sapCode) return;
+                if (s.isManual) {
+                    if (rcol.locIdx === 0) {
+                        const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
+                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
+                        const mq = Number(evalVal);
+                        if (!isNaN(mq)) total += mq;
+                    }
+                    return;
+                }
                 const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
                 const mq = Number(evalVal);
                 const factor = isNaN(mq) ? 1 : mq;
@@ -827,12 +836,49 @@ window.ViewsModule = {
         this.syncActiveSapManagerItem();
         this.showToast(`Set ratio ${ratio} for all components`, 'Check');
     },
-    getSapComponentCalculatedRecoQty(item, sItem) {
+    toggleSapManagerItemMode(sItem) {
+        if (this.isFinalized) return;
+        sItem.isManual = !sItem.isManual;
+        if (sItem.isManual) {
+            if (sItem.manualQty === undefined || sItem.manualQty === null || sItem.manualQty === '') {
+                const curReco = this.getSapComponentCalculatedRecoQty(this.activeSapManagerItem, sItem);
+                sItem.manualQty = Number(curReco) || 0;
+            }
+        }
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+    },
+    onSapManagerItemManualQtyChange(sItem, val) {
+        if (this.isFinalized) return;
+        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(val) : val;
+        let v = Number(evalVal);
+        if (isNaN(v) || v < 0) v = 0;
+        if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+            v = this.applyRoundValue(v, this.mappingRoundMode);
+        }
+        sItem.manualQty = v;
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+    },
+    getSapComponentCalculatedRecoQty(item, sItem, actKeyOverride) {
         if (!item) return '0.00';
+        if (sItem && sItem.isManual) {
+            const mRaw = (sItem.manualQty !== undefined && sItem.manualQty !== null && sItem.manualQty !== '') ? sItem.manualQty : sItem.qty;
+            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
+            let recoQty = Number(evalVal);
+            if (isNaN(recoQty)) recoQty = 0;
+            if (this.mappingRoundMode && this.mappingRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+                recoQty = this.applyRoundValue(recoQty, this.mappingRoundMode);
+            }
+            return (this.mappingRoundMode === 'round' || this.mappingRoundMode === 'ceil' || this.mappingRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
+        }
         let totalActQty = 0;
-        const actKey = this.selectedActivityKey;
+        const actKey = actKeyOverride || this.selectedActivityKey;
         const qMatrix = (this.activityQuantities && this.activityQuantities[actKey]) ? this.activityQuantities[actKey] : [];
-        const origIdx = (item.origIndex !== undefined) ? item.origIndex : (this.activeSapManagerOrigIndex >= 0 ? this.activeSapManagerOrigIndex : -1);
+        let origIdx = (item.origIndex !== undefined) ? item.origIndex : (this.activeSapManagerOrigIndex >= 0 ? this.activeSapManagerOrigIndex : -1);
+        if (origIdx < 0 && actKey && this.activities[actKey] && this.activities[actKey].materials) {
+            origIdx = this.activities[actKey].materials.indexOf(item);
+        }
         if (origIdx >= 0) {
             qMatrix.forEach(locArr => {
                 const raw = locArr[origIdx];
