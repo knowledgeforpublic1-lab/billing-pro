@@ -445,6 +445,10 @@ function sanitizeGasUrl(url) {
     } else if (u.startsWith('script.google.com/')) {
         u = 'https://' + u;
     }
+    // Automatically redirect old retired version 2 URL to v5
+    if (u.includes('AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx')) {
+        u = DEFAULT_GDRIVE_WEBHOOK_URL;
+    }
     return u;
 }
 

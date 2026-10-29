@@ -668,11 +668,13 @@ window.ExportModule = {
                 },
                 getEffectiveDriveWebhookUrl() {
                     const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
+                    const OLD_ID = 'AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx';
                     const isValid = (val) => {
                         if (!val || typeof val !== 'string') return false;
                         let s = val.trim().replace(/^["']|["']$/g, '');
                         if (s.startsWith('http://script.google.com/')) s = 'https://' + s.slice('http://'.length);
                         else if (s.startsWith('script.google.com/')) s = 'https://' + s;
+                        if (s.includes(OLD_ID)) return false; // Reject old retired version
                         return s.startsWith('https://script.google.com/') && s.includes('/exec');
                     };
 
@@ -685,14 +687,20 @@ window.ExportModule = {
                         u = this.projectMeta.gdriveWebhookUrl;
                     } else {
                         u = DEFAULT_URL;
-                        try { localStorage.setItem('billing_gdrive_webhook_url', DEFAULT_URL); } catch(e) {}
-                        this.gdriveWebhookUrl = DEFAULT_URL;
-                        if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = DEFAULT_URL;
                     }
 
                     u = u.trim().replace(/^["']|["']$/g, '');
                     if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
                     else if (u.startsWith('script.google.com/')) u = 'https://' + u;
+
+                    if (!u || u.includes(OLD_ID) || !u.includes('/exec')) {
+                        u = DEFAULT_URL;
+                    }
+
+                    try { localStorage.setItem('billing_gdrive_webhook_url', u); } catch(e) {}
+                    this.gdriveWebhookUrl = u;
+                    if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = u;
+
                     return u;
                 },
                 async manualSaveBillToDrive() {
