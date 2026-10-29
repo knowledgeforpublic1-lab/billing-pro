@@ -1409,6 +1409,10 @@
                 ➕ Create New Bill
             </button>
 
+            <button class="qa-btn qa-btn-outline" @click="resetCurrentBillQuantities" :disabled="isFinalized" title="Current bill ki saari quantities blank karein (Mapping safe rahegi)">
+                🧹 Blank All Quantities
+            </button>
+
             <button class="qa-btn qa-btn-outline" @click="manualSaveBillToDrive" title="Save this entire bill workbook to Google Drive">
                 ☁️ Save Bill to Drive
             </button>
@@ -2511,54 +2515,18 @@
                         </div>
                     </div>
 
-                    <!-- Creation Mode Selection -->
-                    <div>
-                        <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">
-                            INITIAL TEMPLATE & SETUP MODE
-                        </label>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <!-- Option 1: Copy Master (Recommended) -->
-                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
-                                :style="newBillForm.mode === 'copy_master' ? 'background: rgba(16, 185, 129, 0.08); border-color: #10b981;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
-                                <input type="radio" v-model="newBillForm.mode" value="copy_master" style="margin-top: 3px;">
-                                <div>
-                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-                                        <span>📋 Copy Master Setup</span>
-                                        <span style="font-size: 0.68rem; padding: 1px 6px; border-radius: 999px; background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 800;">RECOMMENDED</span>
-                                    </div>
-                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
-                                        Sabhi 20+ Activities, Materials, Rates, aur SAP Mappings retain rahenge — sirf <strong>Quantities 0</strong> se reset hongi (agli RA bill cycle ke liye best).
-                                    </div>
-                                </div>
-                            </label>
-
-                            <!-- Option 2: Fresh Default -->
-                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
-                                :style="newBillForm.mode === 'fresh_default' ? 'background: rgba(99, 102, 241, 0.08); border-color: #6366f1;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
-                                <input type="radio" v-model="newBillForm.mode" value="fresh_default" style="margin-top: 3px;">
-                                <div>
-                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
-                                        ✨ Standard Default Template
-                                    </div>
-                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
-                                        Bundled default activities aur master abstract se bilkul fresh start karein.
-                                    </div>
-                                </div>
-                            </label>
-
-                            <!-- Option 3: Full Clone -->
-                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
-                                :style="newBillForm.mode === 'full_clone' ? 'background: rgba(245, 158, 11, 0.08); border-color: #f59e0b;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
-                                <input type="radio" v-model="newBillForm.mode" value="full_clone" style="margin-top: 3px;">
-                                <div>
-                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
-                                        🔄 Exact Duplicate (Clone)
-                                    </div>
-                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
-                                        Current bill ki sabhi quantities aur locations sahit poora clone banayein.
-                                    </div>
-                                </div>
-                            </label>
+                    <!-- Clean Fresh Slate Notice -->
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;">
+                        <span style="font-size: 1.5rem; line-height: 1;">✨</span>
+                        <div>
+                            <div style="font-size: 0.86rem; font-weight: 800; color: #10b981; display: flex; align-items: center; gap: 6px;">
+                                <span>Clean Fresh Bill Reset</span>
+                                <span style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 1px 6px; border-radius: 999px;">AUTOMATIC</span>
+                            </div>
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45;">
+                                • Pichhle bill ki sabhi <strong>Quantities, Extra Items, Calculator</strong> aur <strong>Invoice</strong> entries puri tarah <strong>0 / Blank</strong> ho jayengi.<br>
+                                • Sabhi 20+ Activities ke <strong>Materials, Rates</strong> aur <strong>SAP Mappings 100% surakshit</strong> rahenge.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2566,9 +2534,9 @@
                 <div class="modal-footer" style="padding: 0.85rem 1.1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
                     <button type="button" class="btn btn-secondary" @click="showNewBillModal = false">Cancel</button>
                     <button type="button" class="btn btn-primary" @click="createNewBill"
-                        style="padding: 0.45rem 1.1rem; font-size: 0.84rem; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: flex; align-items: center; gap: 6px;">
+                        style="padding: 0.45rem 1.2rem; font-size: 0.84rem; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: flex; align-items: center; gap: 6px;">
                         <span>🚀</span>
-                        <span>Create & Open Bill</span>
+                        <span>Create Blank Bill</span>
                     </button>
                 </div>
             </div>

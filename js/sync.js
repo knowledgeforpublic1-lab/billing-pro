@@ -117,6 +117,87 @@ window.SyncModule = {
             }
         }
     },
+    resetAllManualDataKeepMapping() {
+        // 1. Reset all Activity Quantities across ALL activities to blank
+        this.activityQuantities = {};
+        if (this.activities && typeof this.activities === 'object') {
+            Object.keys(this.activities).forEach(actKey => {
+                const act = this.activities[actKey];
+                if (!act) return;
+
+                // Remove any dynamically added extra items (isExtra: true)
+                if (Array.isArray(act.materials)) {
+                    for (let i = act.materials.length - 1; i >= 0; i--) {
+                        if (act.materials[i] && act.materials[i].isExtra) {
+                            act.materials.splice(i, 1);
+                        }
+                    }
+
+                    // Reset manual reco overrides on sapItems, but KEEP all mapping details
+                    act.materials.forEach(m => {
+                        if (Array.isArray(m.sapItems)) {
+                            m.sapItems.forEach(s => {
+                                if (s.isManual) {
+                                    s.isManual = false;
+                                    delete s.manualQty;
+                                }
+                            });
+                        }
+                    });
+
+                    // Build clean blank quantity matrix for all locations
+                    const numLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(actKey).length : 1;
+                    const matCount = act.materials.length;
+                    this.activityQuantities[actKey] = Array.from({ length: numLocs }, () => new Array(matCount).fill(''));
+                }
+            });
+        }
+
+        // 2. Reset Nut Bolt Calculator inputs
+        if (Array.isArray(this.nutBoltData)) {
+            this.nutBoltData.forEach(item => {
+                item.qty = '';
+            });
+        }
+
+        // 3. Reset Concreting Calculator inputs
+        this.selectedAugerSize = 22;
+        if (this.concretingData && typeof this.concretingData === 'object') {
+            Object.keys(this.concretingData).forEach(k => {
+                this.concretingData[k] = '';
+            });
+        }
+
+        // 4. Reset Tax Invoice data
+        if (!this.invoiceData) this.invoiceData = {};
+        this.invoiceData.items = [];
+        this.invoiceData.basicTotal = 0;
+        this.invoiceData.gstTotal = 0;
+        this.invoiceData.grandTotal = 0;
+        this.invoiceData.words = '';
+
+        // 5. Reset filters & UI states
+        this.searchQuery = '';
+        this.selectedLocationIdx = 'ALL';
+        this.mappingSearchQuery = '';
+        this.mappingActivityFilter = 'ALL';
+        this.isFinalized = false;
+
+        // 6. Reset history stack
+        this.historyStack = [];
+        this.historyIndex = -1;
+    },
+    resetCurrentBillQuantities() {
+        if (!confirm('Kya aap current bill ki sabhi quantities aur manual entries blank karna chahte hain?\n\n(Aapka SAP Mapping Master bilkul safe rahega)')) {
+            return;
+        }
+        this.resetAllManualDataKeepMapping();
+        this.saveToStorage();
+        if (typeof this.syncToMongoNow === 'function') {
+            this.syncToMongoNow({ manual: true });
+        }
+        this.showToast('Current bill ki sabhi quantities blank kar di gayi hain! Mapping safe hai ✅', '🧹');
+    },
     async createNewBill() {
         const form = this.newBillForm;
         if (!form.billNo || !form.billNo.trim()) {
@@ -130,53 +211,22 @@ window.SyncModule = {
         this.showToast('Saving current bill before creating new...', '⏳');
         try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) {}
 
-        if (form.mode === 'copy_master') {
-            // Keep activities & SAP mappings intact, reset quantities to 0 for fresh cycle
-            this.activityQuantities = {};
-            this.isFinalized = false;
-            if (!this.projectMeta) this.projectMeta = {};
-            this.projectMeta.billNo = cleanBillNo;
-            this.projectMeta.raNo = cleanRaNo;
-            this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
-            this.projectMeta.projectName = form.projectName;
-            this.selectedContractorId = form.selectedContractorId;
-            this.selectedCompanyId = form.selectedCompanyId;
-            if (!this.invoiceData) this.invoiceData = {};
-            this.invoiceData.invoiceNo = cleanBillNo;
-            this.invoiceData.raNo = cleanRaNo;
-            this.invoiceData.invoiceDate = form.billDate;
-            this.invoiceData.items = [];
-        } else if (form.mode === 'fresh_default') {
-            if (typeof defaultActivities !== 'undefined') {
-                this.activities = JSON.parse(JSON.stringify(defaultActivities));
-            }
-            this.activityQuantities = {};
-            this.isFinalized = false;
-            if (!this.projectMeta) this.projectMeta = {};
-            this.projectMeta.billNo = cleanBillNo;
-            this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
-            this.projectMeta.projectName = form.projectName;
-            this.selectedContractorId = form.selectedContractorId;
-            this.selectedCompanyId = form.selectedCompanyId;
-            if (typeof defaultInvoiceData !== 'undefined') {
-                this.invoiceData = JSON.parse(JSON.stringify(defaultInvoiceData));
-            }
-            if (this.invoiceData) {
-                this.invoiceData.invoiceNo = cleanBillNo;
-                this.invoiceData.invoiceDate = form.billDate;
-            }
-        } else if (form.mode === 'full_clone') {
-            this.isFinalized = false;
-            if (this.projectMeta) {
-                this.projectMeta.billNo = cleanBillNo;
-                this.projectMeta.billDate = form.billDate;
-                this.projectMeta.projectName = form.projectName;
-            }
-            if (this.invoiceData) {
-                this.invoiceData.invoiceNo = cleanBillNo;
-                this.invoiceData.invoiceDate = form.billDate;
-            }
-        }
+        // Reset all manual values (quantities, extra items, calculator, invoice) while keeping all SAP mappings intact
+        this.resetAllManualDataKeepMapping();
+
+        if (!this.projectMeta) this.projectMeta = {};
+        this.projectMeta.billNo = cleanBillNo;
+        this.projectMeta.raNo = cleanRaNo;
+        this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
+        this.projectMeta.projectName = form.projectName || 'RDSS T-10 GADCHIROLI';
+        this.selectedContractorId = form.selectedContractorId;
+        this.selectedCompanyId = form.selectedCompanyId;
+
+        if (!this.invoiceData) this.invoiceData = {};
+        this.invoiceData.invoiceNo = cleanBillNo;
+        this.invoiceData.raNo = cleanRaNo;
+        this.invoiceData.invoiceDate = form.billDate || new Date().toISOString().slice(0, 10);
+        this.invoiceData.items = [];
 
         this.activeBillId = newBillId;
         this.cloudRev = 0;
@@ -188,10 +238,8 @@ window.SyncModule = {
 
         this.showNewBillModal = false;
         this.showSavedBillsModal = false;
-        this.historyStack = [];
-        this.historyIndex = -1;
         if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
-        this.showToast(`New Bill [${cleanBillNo}] created & saved to Cloud! 🎉`, '✨');
+        this.showToast(`New Bill [${cleanBillNo}] created! Sabhi quantities blank, mapping safe hai 🎉`, '✨');
     },
     async openBill(dataId) {
         if (!dataId) return;
