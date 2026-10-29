@@ -7,6 +7,53 @@
  */
 
 window.UtilsModule = {
+    formatDateToDDMMYYYY(val) {
+        if (!val) return '';
+        if (val instanceof Date && !isNaN(val)) {
+            const d = String(val.getDate()).padStart(2, '0');
+            const m = String(val.getMonth() + 1).padStart(2, '0');
+            const y = val.getFullYear();
+            return `${d}-${m}-${y}`;
+        }
+        const s = String(val).trim();
+        // YYYY-MM-DD or YYYY/MM/DD
+        const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (isoMatch) {
+            const y = isoMatch[1];
+            const m = isoMatch[2].padStart(2, '0');
+            const d = isoMatch[3].padStart(2, '0');
+            return `${d}-${m}-${y}`;
+        }
+        // DD-MM-YYYY or DD/MM/YYYY
+        const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (dmyMatch) {
+            const d = dmyMatch[1].padStart(2, '0');
+            const m = dmyMatch[2].padStart(2, '0');
+            const y = dmyMatch[3];
+            return `${d}-${m}-${y}`;
+        }
+        return s;
+    },
+    normalizeDateToYYYYMMDD(val) {
+        if (!val) return '';
+        if (val instanceof Date && !isNaN(val)) {
+            const y = val.getFullYear();
+            const m = String(val.getMonth() + 1).padStart(2, '0');
+            const d = String(val.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        const s = String(val).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (isoMatch) {
+            return `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+        }
+        const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (dmyMatch) {
+            return `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
+        }
+        return s;
+    },
                 formatCurrency(val) {
                     if (val === undefined || val === null || isNaN(val)) return '0.00';
                     return Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

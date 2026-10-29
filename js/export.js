@@ -261,10 +261,15 @@ window.ExportModule = {
                     ws.getRow(6).height = 22;
 
                     // Row 7 to 11: 2-Column Meta Table (Clean White, Bold Black Labels)
+                    const fmtDate = (d) => typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(d) : String(d || '');
+                    const formattedInvDate = fmtDate(this.invoiceData.invoiceDate);
+                    const formattedWoDate = this.invoiceData.workOrderDate ? fmtDate(this.invoiceData.workOrderDate) : '';
+                    const woCellText = formattedWoDate ? `${this.invoiceData.workOrderNo}    Dt:${formattedWoDate}` : (this.invoiceData.workOrderNo || '');
+
                     const metaRows = [
                         ['Invoice No :', this.invoiceData.invoiceNo, 'Name of Contractor :', this.getContractorDisplayName()],
-                        ['Work Order No :', `${this.invoiceData.workOrderNo}    Dt:${this.invoiceData.workOrderDate}`, 'GSTIN :', this.invoiceData.contractorGstin],
-                        ['Invoice Date :', this.invoiceData.invoiceDate, 'PAN No :', this.invoiceData.contractorPan],
+                        ['Work Order No :', woCellText, 'GSTIN :', this.invoiceData.contractorGstin],
+                        ['Invoice Date :', formattedInvDate, 'PAN No :', this.invoiceData.contractorPan],
                         ['Name of Division :', this.invoiceData.divisionName, 'Location :', this.invoiceData.locationName],
                         ['Name of Sub-Div :', this.invoiceData.subDivName, 'Name of Feeder :', this.invoiceData.feederName]
                     ];
@@ -281,6 +286,10 @@ window.ExportModule = {
                         row.getCell(2).value = mr[1];
                         row.getCell(2).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
                         row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
+                        // Ensure Invoice Date (row 9) & WO Date (row 8) stay in DD-MM-YYYY text format without Excel auto-flipping
+                        if (curRow === 8 || curRow === 9) {
+                            row.getCell(2).numFmt = '@';
+                        }
 
                         row.getCell(3).value = mr[2];
                         row.getCell(3).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
@@ -1137,7 +1146,7 @@ function jsonOut(obj) {
 
                     ws.mergeCells('A2:I2');
                     const r2 = ws.getCell('A2');
-                    r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
+                    r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(this.invoiceData.invoiceDate) : this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
                     r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF000000' } };
                     r2.alignment = { horizontal: 'center', vertical: 'middle' };
                     r2.border = thinBorder;

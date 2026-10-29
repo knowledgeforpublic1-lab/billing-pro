@@ -123,6 +123,69 @@ it('Filename Formatter: Formats contractor name and RA number correctly', () => 
     assert.strictEqual(name2, 'Ranjeet Singh Lodhi_RA-12.xlsx');
 });
 
+// 6. Invoice Date Formatter (DD-MM-YYYY)
+it('Invoice Date Formatter: Converts YYYY-MM-DD to DD-MM-YYYY correctly for Excel export', () => {
+    function formatDateToDDMMYYYY(val) {
+        if (!val) return '';
+        if (val instanceof Date && !isNaN(val)) {
+            const d = String(val.getDate()).padStart(2, '0');
+            const m = String(val.getMonth() + 1).padStart(2, '0');
+            const y = val.getFullYear();
+            return `${d}-${m}-${y}`;
+        }
+        const s = String(val).trim();
+        const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (isoMatch) {
+            const y = isoMatch[1];
+            const m = isoMatch[2].padStart(2, '0');
+            const d = isoMatch[3].padStart(2, '0');
+            return `${d}-${m}-${y}`;
+        }
+        const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (dmyMatch) {
+            const d = dmyMatch[1].padStart(2, '0');
+            const m = dmyMatch[2].padStart(2, '0');
+            const y = dmyMatch[3];
+            return `${d}-${m}-${y}`;
+        }
+        return s;
+    }
+
+    assert.strictEqual(formatDateToDDMMYYYY('2026-10-29'), '29-10-2026');
+    assert.strictEqual(formatDateToDDMMYYYY('2026-01-23'), '23-01-2026');
+    assert.strictEqual(formatDateToDDMMYYYY('2026/05/09'), '09-05-2026');
+    assert.strictEqual(formatDateToDDMMYYYY('29-10-2026'), '29-10-2026');
+    assert.strictEqual(formatDateToDDMMYYYY('15/08/2026'), '15-08-2026');
+});
+
+// 7. Invoice Date Normalizer (YYYY-MM-DD for HTML input)
+it('Invoice Date Normalizer: Converts DD-MM-YYYY to YYYY-MM-DD for HTML date picker', () => {
+    function normalizeDateToYYYYMMDD(val) {
+        if (!val) return '';
+        if (val instanceof Date && !isNaN(val)) {
+            const y = val.getFullYear();
+            const m = String(val.getMonth() + 1).padStart(2, '0');
+            const d = String(val.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        const s = String(val).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (isoMatch) {
+            return `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+        }
+        const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (dmyMatch) {
+            return `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
+        }
+        return s;
+    }
+
+    assert.strictEqual(normalizeDateToYYYYMMDD('29-10-2026'), '2026-10-29');
+    assert.strictEqual(normalizeDateToYYYYMMDD('23/01/2026'), '2026-01-23');
+    assert.strictEqual(normalizeDateToYYYYMMDD('2026-10-29'), '2026-10-29');
+});
+
 console.log('----------------------------------------------------');
 console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
 console.log('----------------------------------------------------');

@@ -321,12 +321,20 @@ window.SyncModule = {
             const woMatch = r8.match(/^(.*?)(?:\s+Dt\s*:\s*(.*))?$/i);
             if (woMatch) {
                 this.invoiceData.workOrderNo = (woMatch[1] || '').trim();
-                if (woMatch[2]) this.invoiceData.workOrderDate = woMatch[2].trim();
+                if (woMatch[2]) {
+                    const rawWo = woMatch[2].trim();
+                    this.invoiceData.workOrderDate = typeof this.normalizeDateToYYYYMMDD === 'function'
+                        ? this.normalizeDateToYYYYMMDD(rawWo)
+                        : (typeof normalizeDateToYYYYMMDD === 'function' ? normalizeDateToYYYYMMDD(rawWo) : rawWo);
+                }
             }
             this.invoiceData.contractorGstin = String(invSheet.getCell('D8').value || '').trim();
 
-            // Invoice Date & PAN
-            this.invoiceData.invoiceDate = String(invSheet.getCell('B9').value || '').trim();
+            // Invoice Date & PAN (normalize to YYYY-MM-DD for HTML input)
+            const rawInvDate = invSheet.getCell('B9').value;
+            this.invoiceData.invoiceDate = typeof this.normalizeDateToYYYYMMDD === 'function'
+                ? this.normalizeDateToYYYYMMDD(rawInvDate)
+                : (typeof normalizeDateToYYYYMMDD === 'function' ? normalizeDateToYYYYMMDD(rawInvDate) : String(rawInvDate || '').trim());
             this.invoiceData.contractorPan = String(invSheet.getCell('D9').value || '').trim();
 
             // Division & Location
