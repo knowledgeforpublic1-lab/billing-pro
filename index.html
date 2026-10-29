@@ -2166,11 +2166,26 @@
                         </div>
                         <ol style="margin: 0; padding-left: 1.25rem; color: var(--text-muted);">
                             <li><a href="https://script.new" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; font-weight: 600;">script.new</a> par click karein (Drive wala Google account).</li>
-                            <li>Upar <strong>"📋 Copy Apps Script Code"</strong> dabayein aur editor me purana code hata kar paste kar dein.</li>
+                            <li>Upar <strong>"📋 Copy Apps Script Code"</strong> dabayein ya niche se code copy karein aur editor me paste kar dein.</li>
                             <li>Top right: <strong>Deploy &gt; New deployment</strong> dabayein, select type <strong>Web app</strong>.</li>
                             <li><strong>Execute as: Me</strong> aur <strong>Who has access: Anyone</strong> select karke Deploy karein.</li>
                             <li>Mili hui <code>/exec</code> URL ko upar box me paste karke <strong>💾 Save &amp; Connect</strong> karein, phir <strong>🔍 Test Connection</strong>.</li>
                         </ol>
+
+                        <div style="margin-top: 10px; border-top: 1px dashed var(--border-subtle); padding-top: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <button type="button" class="btn btn-secondary" @click="showScriptCodeBox = !showScriptCodeBox" style="font-size: 0.72rem; padding: 2px 8px;">
+                                    {{ showScriptCodeBox ? '▲ Hide Code Box' : '▼ View Full Script Code Here' }}
+                                </button>
+                                <button type="button" class="btn btn-secondary" @click="copyAppsScriptCode" style="font-size: 0.72rem; padding: 2px 8px; color: #818cf8; font-weight: 700;">
+                                    📋 Copy Code
+                                </button>
+                            </div>
+                            <div v-if="showScriptCodeBox" style="margin-top: 8px;">
+                                <textarea readonly rows="8" onclick="this.select()" style="width: 100%; font-family: monospace; font-size: 0.72rem; background: #0f172a; color: #e2e8f0; padding: 8px; border-radius: 6px; border: 1px solid var(--border-strong); resize: vertical;">{{ appsScriptRawCode }}</textarea>
+                                <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Box par click karein ya "Copy Code" dabayein.</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; flex-wrap: wrap;">

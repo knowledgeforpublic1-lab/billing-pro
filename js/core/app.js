@@ -196,6 +196,7 @@
                 },
                 showExtraItemSuggest: false,
                 showGDriveModal: false,
+                showScriptCodeBox: false,
                 gdriveWebhookUrl: localStorage.getItem('billing_gdrive_webhook_url') || '',
                 activeBillId: (function() { try { return localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state'; } catch(e) { return 'main-billing-state'; } })(),
                 savedBillsList: [],
@@ -215,6 +216,7 @@
         },
 
         computed: {
+            appsScriptRawCode() { return window.APPS_SCRIPT_SOURCE_CODE || ""; },
             hasDriveConnected() {
                 const raw = (this.gdriveWebhookUrl || '').trim()
                     || localStorage.getItem('billing_gdrive_webhook_url')
