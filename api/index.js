@@ -583,7 +583,24 @@ app.get('/api/gdrive-file', requireApiKey, async (req, res) => {
         try { json = JSON.parse(text); } catch(e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
 
         if (gasResponse.ok && json.ok && json.fileData) {
-            return res.json({ success: true, fileData: json.fileData, fileName: json.fileName, mimeType: json.mimeType });
+            let outBase64 = json.fileData;
+            try {
+                const rawBuf = Buffer.from(json.fileData, 'base64');
+                const preview = rawBuf.slice(0, 50).toString('utf8');
+                if (/^80\s*,\s*75\s*,\s*3\s*,\s*4/.test(preview)) {
+                    const text = rawBuf.toString('utf8');
+                    const parts = text.split(',');
+                    const u8 = new Uint8Array(parts.length);
+                    for (let i = 0; i < parts.length; i++) {
+                        let n = parseInt(parts[i], 10);
+                        if (isNaN(n)) continue;
+                        if (n < 0) n = 256 + n;
+                        u8[i] = n;
+                    }
+                    outBase64 = Buffer.from(u8).toString('base64');
+                }
+            } catch(e) {}
+            return res.json({ success: true, fileData: outBase64, fileName: json.fileName, mimeType: json.mimeType });
         } else {
             return res.status(502).json({
                 success: false,

@@ -172,7 +172,8 @@ function saveOrOverwriteFile_(folder, name, bytes, mimeType) {
       } catch(e) {}
     }
   }
-  return folder.createFile(name, bytes, mimeType);
+  const blob = Utilities.newBlob(bytes, mimeType || MimeType.MICROSOFT_EXCEL, name);
+  return folder.createFile(blob);
 }
 
 /** Windows/folder ke liye safe naam */

@@ -1,3 +1,52 @@
+
+/**
+ * Normalizes input buffer to a valid binary ZIP / Excel buffer.
+ * Automatically handles legacy comma-delimited byte strings from Apps Script ("80,75,3,4...").
+ */
+function normalizeToBinaryBuffer(input) {
+    if (!input) return input;
+    let buf;
+    if (input instanceof ArrayBuffer) {
+        buf = new Uint8Array(input);
+    } else if (input instanceof Uint8Array) {
+        buf = input;
+    } else if (typeof input === 'string') {
+        const enc = new TextEncoder();
+        buf = enc.encode(input);
+    } else {
+        return input;
+    }
+
+    // Check if it starts with '80,75,3,4'
+    let headerStr = '';
+    const checkLen = Math.min(buf.length, 60);
+    for (let i = 0; i < checkLen; i++) headerStr += String.fromCharCode(buf[i]);
+
+    if (/^80\s*,\s*75\s*,\s*3\s*,\s*4/.test(headerStr)) {
+        let fullStr = '';
+        try {
+            const dec = new TextDecoder('utf-8');
+            fullStr = dec.decode(buf);
+        } catch(e) {
+            for (let i = 0; i < buf.length; i++) fullStr += String.fromCharCode(buf[i]);
+        }
+        const parts = fullStr.split(',');
+        const u8 = new Uint8Array(parts.length);
+        for (let i = 0; i < parts.length; i++) {
+            let n = parseInt(parts[i], 10);
+            if (isNaN(n)) continue;
+            if (n < 0) n = 256 + n;
+            u8[i] = n;
+        }
+        return u8.buffer;
+    }
+
+    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+        return buf.buffer;
+    }
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}
+
 /**
  * @file Cloud Sync & Local Storage Module
  * @description Handles all data persistence: localStorage save/load, MongoDB cloud sync,
@@ -79,15 +128,39 @@ window.SyncModule = {
         this.gdriveFilesError = '';
         try {
             const webhookUrl = typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '';
-            const headers = {};
-            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-            const res = await fetch('/api/gdrive-files?url=' + encodeURIComponent(webhookUrl), { headers });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok && data.success) {
-                this.gdriveFilesList = data.files || [];
-                this.gdriveRootFolderUrl = data.rootFolderUrl || '';
+            let files = null;
+            let rootFolderUrl = '';
+
+            // Attempt 1: Server proxy (/api/gdrive-files)
+            try {
+                const headers = {};
+                try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+                const res = await fetch('/api/gdrive-files?url=' + encodeURIComponent(webhookUrl), { headers });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success && Array.isArray(data.files)) {
+                    files = data.files;
+                    rootFolderUrl = data.rootFolderUrl || '';
+                }
+            } catch(e) {}
+
+            // Attempt 2: Direct call to Google Apps Script Web App (CORS supported)
+            if (!files && webhookUrl) {
+                try {
+                    const directUrl = webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + 'action=list';
+                    const directRes = await fetch(directUrl);
+                    const directData = await directRes.json().catch(() => ({}));
+                    if (directData && directData.ok && Array.isArray(directData.files)) {
+                        files = directData.files;
+                        rootFolderUrl = directData.rootFolderUrl || '';
+                    }
+                } catch(e) {}
+            }
+
+            if (files && files.length >= 0) {
+                this.gdriveFilesList = files;
+                this.gdriveRootFolderUrl = rootFolderUrl;
             } else {
-                this.gdriveFilesError = data.error || 'Drive se file list load nahi hui';
+                this.gdriveFilesError = 'Google Drive se connect nahi ho saka. Kripya apna internet connection ya Webhook settings check karein.';
             }
         } catch(err) {
             this.gdriveFilesError = 'Connection error: ' + (err.message || 'Drive connect nahi ho paya');
@@ -101,22 +174,44 @@ window.SyncModule = {
         this.showToast(`Google Drive se [${file.name}] download ho rahi hai... ⏳`, '☁️');
         try {
             const webhookUrl = typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '';
-            const headers = {};
-            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-            const res = await fetch(`/api/gdrive-file?url=${encodeURIComponent(webhookUrl)}&fileId=${encodeURIComponent(file.id)}`, { headers });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.success || !data.fileData) {
-                throw new Error(data.error || 'File content fetch nahi ho paya');
+            let fileData = null;
+
+            // Attempt 1: Server proxy (/api/gdrive-file)
+            try {
+                const headers = {};
+                try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+                const res = await fetch(`/api/gdrive-file?url=${encodeURIComponent(webhookUrl)}&fileId=${encodeURIComponent(file.id)}`, { headers });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success && data.fileData) {
+                    fileData = data.fileData;
+                }
+            } catch(e) {}
+
+            // Attempt 2: Direct call to Google Apps Script Web App
+            if (!fileData && webhookUrl) {
+                try {
+                    const directUrl = webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + `action=getFile&fileId=${encodeURIComponent(file.id)}`;
+                    const directRes = await fetch(directUrl);
+                    const directData = await directRes.json().catch(() => ({}));
+                    if (directData && directData.ok && directData.fileData) {
+                        fileData = directData.fileData;
+                    }
+                } catch(e) {}
             }
 
-            // Convert base64 to ArrayBuffer
-            const binary = window.atob(data.fileData);
+            if (!fileData) {
+                throw new Error('Google Drive se file download nahi ho payi. File permissions ya internet check karein.');
+            }
+
+            // Convert base64 to binary buffer
+            const binary = window.atob(fileData);
             const len = binary.length;
             const bytes = new Uint8Array(len);
             for (let i = 0; i < len; i++) {
                 bytes[i] = binary.charCodeAt(i);
             }
-            await this.parseAndLoadBillWorkbook(bytes.buffer, file.name);
+            const normalizedBuffer = typeof normalizeToBinaryBuffer === 'function' ? normalizeToBinaryBuffer(bytes.buffer) : bytes.buffer;
+            await this.parseAndLoadBillWorkbook(normalizedBuffer, file.name);
         } catch(err) {
             console.error('Failed to open bill from Google Drive:', err);
             this.showToast('Drive file open fail: ' + (err.message || err), '❌');
@@ -157,6 +252,9 @@ window.SyncModule = {
         }
     },
     async parseAndLoadBillWorkbook(buffer, fileName) {
+        if (typeof normalizeToBinaryBuffer === 'function') {
+            buffer = normalizeToBinaryBuffer(buffer);
+        }
         this.isParsingBillFile = true;
         try {
             if (!window.ExcelJS) {

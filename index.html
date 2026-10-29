@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261029_10">
+    <link rel="stylesheet" href="css/style.css?v=20261029_11">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -2343,8 +2343,99 @@
                         </button>
                     </div>
 
-                    <!-- TAB 1: DATABASE BILLS (MONGODB) -->
-                    <div v-if="savedBillsModalTab === 'database'">
+                    <!-- TAB 1: GOOGLE DRIVE BILLS -->
+                    <div v-if="savedBillsModalTab === 'drive'">
+                        <!-- Search & Actions Bar for Drive -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
+                            <div style="flex: 1; position: relative; min-width: 220px;">
+                                <input type="text" v-model="savedBillsSearchQuery" placeholder="🔍 Search file in Google Drive by name, contractor..."
+                                    style="width: 100%; padding: 0.45rem 0.75rem; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
+                            </div>
+                            <button type="button" class="btn btn-secondary" @click="fetchGoogleDriveFiles" :disabled="isLoadingDriveFiles" title="Google Drive folder refresh karein" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                <span :class="{ 'spin-anim': isLoadingDriveFiles }">🔄</span>
+                                <span>Refresh Drive</span>
+                            </button>
+                            <a v-if="gdriveRootFolderUrl" :href="gdriveRootFolderUrl" target="_blank" class="btn btn-secondary" title="Google Drive folder web browser me kholein" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                                <span>↗️</span>
+                                <span>Open Drive Folder</span>
+                            </a>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div v-if="isLoadingDriveFiles" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            <div class="spin-anim" style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
+                            <div style="font-size: 0.88rem; font-weight: 600;">Google Drive se bills scan ho rahe hain...</div>
+                        </div>
+
+                        <!-- Notice banner if cloud list had issue -->
+                        <div v-else-if="gdriveFilesError" style="margin-bottom: 12px; padding: 12px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); color: var(--text-main); font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                                <div>
+                                    <strong>⚠️ Drive Connection:</strong> {{ gdriveFilesError }}
+                                    <div style="color: var(--text-muted); font-size: 0.76rem; margin-top: 3px;">
+                                        Folder scan karne ke liye dobara koshish karein ya Webhook settings dekhein.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" @click="fetchGoogleDriveFiles" style="font-size: 0.78rem; padding: 5px 12px; background: #10b981; border-color: #10b981; color: white;">
+                                    🔄 Retry Drive Connection
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Drive Files Cards List -->
+                        <div v-if="filteredGdriveFiles.length > 0" style="display: flex; flex-direction: column; gap: 8px;">
+                            <div v-for="f in filteredGdriveFiles" :key="f.id"
+                                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border-subtle); background: var(--bg-card); transition: all 0.2s;">
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0;">
+                                    <div style="font-size: 1.6rem; line-height: 1; margin-top: 2px;">📗</div>
+                                    <div style="min-width: 0; flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">
+                                                {{ f.name }}
+                                            </span>
+                                            <span v-if="f.contractor" style="font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35);">
+                                                👤 {{ f.contractor }}
+                                            </span>
+                                            <span v-if="f.size" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
+                                                💾 {{ (f.size / 1024).toFixed(1) }} KB
+                                            </span>
+                                        </div>
+                                        <div style="margin-top: 3px; font-size: 0.75rem; color: var(--text-muted);">
+                                            <span>⏱️ <strong>Last Saved:</strong> {{ new Date(f.updatedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                    <button type="button" class="btn btn-primary" @click="openBillFromGoogleDrive(f)"
+                                        :disabled="openingDriveFileId === f.id"
+                                        style="padding: 5px 12px; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white;"
+                                        title="Is bill ko Google Drive se load karke app me open karein">
+                                        <span :class="{ 'spin-anim': openingDriveFileId === f.id }">{{ openingDriveFileId === f.id ? '🔄' : '📂' }}</span>
+                                        <span>{{ openingDriveFileId === f.id ? 'Opening...' : 'Open This File' }}</span>
+                                    </button>
+                                    <a v-if="f.url" :href="f.url" target="_blank" class="btn btn-secondary"
+                                        style="padding: 5px 9px; font-size: 0.78rem; text-decoration: none;" title="Google Drive me dekhein">
+                                        <span>↗️</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State in Drive -->
+                        <div v-else-if="!isLoadingDriveFiles && !gdriveFilesError" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                            <div style="font-size: 2.2rem; margin-bottom: 8px;">☁️</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Google Drive folder me koi bill file nahi mili</div>
+                            <div style="font-size: 0.78rem; margin-top: 4px;">Folder 'RDSS T-10 GADCHIROLI' refresh karne ke liye button dabayein:</div>
+                            <button type="button" class="btn btn-primary" @click="fetchGoogleDriveFiles" style="margin-top: 12px; font-size: 0.8rem; background: #10b981; border-color: #10b981; color: white;">
+                                🔄 Refresh Drive Folder
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: DATABASE BILLS (MONGODB) -->
+                    <div v-else-if="savedBillsModalTab === 'database'">
                         <!-- Search & Actions Bar -->
                         <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
                             <div style="flex: 1; position: relative;">
@@ -2442,97 +2533,6 @@
                             <div style="font-size: 0.78rem; margin-top: 4px;">Koi doosra search term try karein ya naya bill banayein.</div>
                             <button type="button" class="btn btn-primary" @click="openNewBillModal" style="margin-top: 12px; font-size: 0.8rem;">
                                 ➕ Create New Bill
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: GOOGLE DRIVE BILLS -->
-                    <div v-else-if="savedBillsModalTab === 'drive'">
-                        <!-- Search & Actions Bar for Drive -->
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
-                            <div style="flex: 1; position: relative; min-width: 220px;">
-                                <input type="text" v-model="savedBillsSearchQuery" placeholder="🔍 Search file in Google Drive by name, contractor..."
-                                    style="width: 100%; padding: 0.45rem 0.75rem; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
-                            </div>
-                            <button type="button" class="btn btn-secondary" @click="fetchGoogleDriveFiles" :disabled="isLoadingDriveFiles" title="Google Drive folder refresh karein" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-                                <span :class="{ 'spin-anim': isLoadingDriveFiles }">🔄</span>
-                                <span>Refresh Drive</span>
-                            </button>
-                            <a v-if="gdriveRootFolderUrl" :href="gdriveRootFolderUrl" target="_blank" class="btn btn-secondary" title="Google Drive folder web browser me kholein" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-                                <span>↗️</span>
-                                <span>Open Drive Folder</span>
-                            </a>
-                        </div>
-
-                        <!-- Loading State -->
-                        <div v-if="isLoadingDriveFiles" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                            <div class="spin-anim" style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
-                            <div style="font-size: 0.88rem; font-weight: 600;">Google Drive se bills scan ho rahe hain...</div>
-                        </div>
-
-                        <!-- Notice banner if cloud list had issue -->
-                        <div v-else-if="gdriveFilesError" style="margin-bottom: 12px; padding: 12px 14px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); color: var(--text-main); font-size: 0.82rem;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-                                <div>
-                                    <strong>💡 Notice:</strong> {{ gdriveFilesError }}
-                                    <div style="color: var(--text-muted); font-size: 0.76rem; margin-top: 3px;">
-                                        Aap Google Drive folder se file select karne ke liye <strong>Browse Drive File</strong> dabayein:
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-primary" @click="triggerLocalBillFileBrowse" style="font-size: 0.78rem; padding: 5px 12px; background: #10b981; border-color: #10b981; color: white;">
-                                    📂 Browse Drive File Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Drive Files Cards List -->
-                        <div v-if="filteredGdriveFiles.length > 0" style="display: flex; flex-direction: column; gap: 8px;">
-                            <div v-for="f in filteredGdriveFiles" :key="f.id"
-                                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border-subtle); background: var(--bg-card); transition: all 0.2s;">
-                                
-                                <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0;">
-                                    <div style="font-size: 1.6rem; line-height: 1; margin-top: 2px;">📗</div>
-                                    <div style="min-width: 0; flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                            <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">
-                                                {{ f.name }}
-                                            </span>
-                                            <span v-if="f.contractor" style="font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35);">
-                                                👤 {{ f.contractor }}
-                                            </span>
-                                            <span v-if="f.size" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
-                                                💾 {{ (f.size / 1024).toFixed(1) }} KB
-                                            </span>
-                                        </div>
-                                        <div style="margin-top: 3px; font-size: 0.75rem; color: var(--text-muted);">
-                                            <span>⏱️ <strong>Last Saved:</strong> {{ new Date(f.updatedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                                    <button type="button" class="btn btn-primary" @click="openBillFromGoogleDrive(f)"
-                                        :disabled="openingDriveFileId === f.id"
-                                        style="padding: 5px 12px; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white;"
-                                        title="Is bill ko Google Drive se load karke app me open karein">
-                                        <span :class="{ 'spin-anim': openingDriveFileId === f.id }">{{ openingDriveFileId === f.id ? '🔄' : '📂' }}</span>
-                                        <span>{{ openingDriveFileId === f.id ? 'Opening...' : 'Open This File' }}</span>
-                                    </button>
-                                    <a v-if="f.url" :href="f.url" target="_blank" class="btn btn-secondary"
-                                        style="padding: 5px 9px; font-size: 0.78rem; text-decoration: none;" title="Google Drive me dekhein">
-                                        <span>↗️</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Empty State in Drive -->
-                        <div v-else-if="!isLoadingDriveFiles && !gdriveFilesError" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-                            <div style="font-size: 2.2rem; margin-bottom: 8px;">☁️</div>
-                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Google Drive me koi matching bill file nahi mili</div>
-                            <div style="font-size: 0.78rem; margin-top: 4px;">Aap Computer ya Google Drive folder se file chunne ke liye Browse karein:</div>
-                            <button type="button" class="btn btn-primary" @click="triggerLocalBillFileBrowse" style="margin-top: 12px; font-size: 0.8rem; background: #10b981; border-color: #10b981; color: white;">
-                                📂 Browse Drive / PC File (.xlsx)
                             </button>
                         </div>
                     </div>
@@ -2670,29 +2670,29 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261029_10"></script>
-    <script src="js/data/default-activities.js?v=20261029_10"></script>
-    <script src="js/data/default-contractors.js?v=20261029_10"></script>
-    <script src="js/data/default-master-abstract.js?v=20261029_10"></script>
-    <script src="js/data/default-companies.js?v=20261029_10"></script>
-    <script src="js/data/default-invoice.js?v=20261029_10"></script>
+    <script src="js/data/default-sap-materials.js?v=20261029_11"></script>
+    <script src="js/data/default-activities.js?v=20261029_11"></script>
+    <script src="js/data/default-contractors.js?v=20261029_11"></script>
+    <script src="js/data/default-master-abstract.js?v=20261029_11"></script>
+    <script src="js/data/default-companies.js?v=20261029_11"></script>
+    <script src="js/data/default-invoice.js?v=20261029_11"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261029_10"></script>
+    <script src="js/core/storage.js?v=20261029_11"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261029_10"></script>
-    <script src="js/history.js?v=20261029_10"></script>
+    <script src="js/utils.js?v=20261029_11"></script>
+    <script src="js/history.js?v=20261029_11"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261029_10"></script>
-    <script src="js/billing.js?v=20261029_10"></script>
-    <script src="js/mapping.js?v=20261029_10"></script>
-    <script src="js/views.js?v=20261029_10"></script>
-    <script src="js/export.js?v=20261029_10"></script>
+    <script src="js/sync.js?v=20261029_11"></script>
+    <script src="js/billing.js?v=20261029_11"></script>
+    <script src="js/mapping.js?v=20261029_11"></script>
+    <script src="js/views.js?v=20261029_11"></script>
+    <script src="js/export.js?v=20261029_11"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261029_10"></script>
+    <script src="js/core/app.js?v=20261029_11"></script>
 </body>
 
 </html>
