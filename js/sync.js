@@ -56,8 +56,7 @@ window.SyncModule = {
     },
     openSavedBillsManager(tab) {
         this.savedBillsSearchQuery = '';
-        if (tab) this.savedBillsModalTab = tab;
-        else if (!this.savedBillsModalTab) this.savedBillsModalTab = 'database';
+        this.savedBillsModalTab = tab || 'drive'; // Directly connect & open Google Drive tab by default
         this.showSavedBillsModal = true;
         if (this.savedBillsModalTab === 'drive') {
             this.fetchGoogleDriveFiles();
@@ -98,6 +97,7 @@ window.SyncModule = {
     },
     async openBillFromGoogleDrive(file) {
         if (!file || !file.id) return;
+        this.openingDriveFileId = file.id;
         this.showToast(`Google Drive se [${file.name}] download ho rahi hai... ⏳`, '☁️');
         try {
             const webhookUrl = typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '';
@@ -121,6 +121,8 @@ window.SyncModule = {
             console.error('Failed to open bill from Google Drive:', err);
             this.showToast('Drive file open fail: ' + (err.message || err), '❌');
             alert('Google Drive file open nahi ho payi:\n' + (err.message || err));
+        } finally {
+            this.openingDriveFileId = null;
         }
     },
     triggerLocalBillFileBrowse() {

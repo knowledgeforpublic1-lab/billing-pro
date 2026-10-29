@@ -208,12 +208,13 @@
                 savedBillsList: [],
                 isLoadingBills: false,
                 showSavedBillsModal: false,
-                savedBillsModalTab: 'database', // 'database' | 'drive'
+                savedBillsModalTab: 'drive', // 'drive' | 'database' (Defaults to Google Drive!)
                 gdriveFilesList: [],
                 isLoadingDriveFiles: false,
                 gdriveFilesError: '',
                 gdriveRootFolderUrl: '',
                 isParsingBillFile: false,
+                openingDriveFileId: null,
                 savedBillsSearchQuery: '',
                 showNewBillModal: false,
                 newBillForm: {
