@@ -667,7 +667,7 @@ window.ExportModule = {
                     return `${cName}_${raPart}${ext}`;
                 },
                 getEffectiveDriveWebhookUrl() {
-                    const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                    const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
                     const isValid = (val) => {
                         if (!val || typeof val !== 'string') return false;
                         let s = val.trim().replace(/^["']|["']$/g, '');

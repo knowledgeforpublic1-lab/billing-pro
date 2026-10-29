@@ -1085,9 +1085,9 @@ window.SyncModule = {
                         this.gdriveWebhookUrl = this.projectMeta.gdriveWebhookUrl;
                         try { localStorage.setItem('billing_gdrive_webhook_url', this.projectMeta.gdriveWebhookUrl); } catch(e) {}
                     } else {
-                        this.projectMeta.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
-                        this.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
-                        try { localStorage.setItem('billing_gdrive_webhook_url', 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec'); } catch(e) {}
+                        this.projectMeta.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
+                        this.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
+                        try { localStorage.setItem('billing_gdrive_webhook_url', 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec'); } catch(e) {}
                     }
                 }
                 if (parsed.selectedCompanyId) this.selectedCompanyId = parsed.selectedCompanyId;

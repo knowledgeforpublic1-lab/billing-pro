@@ -202,7 +202,7 @@
                         const local = localStorage.getItem('billing_gdrive_webhook_url');
                         if (local && local.includes('/exec')) return local;
                     } catch(e) {}
-                    return 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                    return 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
                 })(),
                 activeBillId: (function() { try { return localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state'; } catch(e) { return 'main-billing-state'; } })(),
                 savedBillsList: [],
@@ -1102,7 +1102,7 @@
                     else if (s.startsWith('script.google.com/')) s = 'https://' + s;
                     return s.startsWith('https://script.google.com/') && s.includes('/exec');
                 };
-                const DEFAULT_GAS = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                const DEFAULT_GAS = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
 
                 if (!isValidGas(this.gdriveWebhookUrl)) {
                     const local = localStorage.getItem('billing_gdrive_webhook_url');

@@ -435,7 +435,7 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
 // Solves the GAS redirect CORS issue that blocks direct browser-to-GAS fetch calls.
 // Setup guide: google-drive/README.md | Script code: google-drive/BillingDriveWebApp.gs
 
-const DEFAULT_GDRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+const DEFAULT_GDRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
 
 function sanitizeGasUrl(url) {
     if (!url || typeof url !== 'string') return '';
