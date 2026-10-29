@@ -362,10 +362,33 @@
                             desc: sap.desc,
                             uom: sap.uom,
                             totalQty: 0,
+                            sapIssuedQty: 0,
                             activities: {}
                         };
                     });
                 }
+
+                // ⚡ Auto-sync SAP Stock Issues for active contractor / work order
+                const contractorSap = typeof this.getContractorSapIssues === 'function' ? this.getContractorSapIssues() : null;
+                const sapIssuesMap = (contractorSap && contractorSap.materials) || {};
+
+                // Pre-populate / inject all issued materials from SAP stock for this contractor
+                Object.keys(sapIssuesMap).forEach(matCode => {
+                    const sItem = sapIssuesMap[matCode];
+                    const numQty = Number(sItem.issuedQty || 0);
+                    if (!sapMap[matCode]) {
+                        sapMap[matCode] = {
+                            code: matCode,
+                            desc: sItem.desc || matCode,
+                            uom: sItem.uom || 'No',
+                            totalQty: 0,
+                            sapIssuedQty: numQty,
+                            activities: {}
+                        };
+                    } else {
+                        sapMap[matCode].sapIssuedQty = numQty;
+                    }
+                });
 
                 Object.keys(this.activities).forEach(actKey => {
                     const act = this.activities[actKey];
@@ -399,6 +422,7 @@
                                             desc: s.desc || m.sapDescription || m.desc || s.code,
                                             uom: s.uom || m.sapUom || m.unit || 'No',
                                             totalQty: 0,
+                                            sapIssuedQty: (sapIssuesMap[s.code] && sapIssuesMap[s.code].issuedQty) || 0,
                                             activities: {}
                                         };
                                     }
@@ -410,11 +434,9 @@
                                         const mq = Number(evalVal);
                                         finalQty = isNaN(mq) ? 0 : mq;
                                     } else {
-                                        // Qty 0 ka matlab 0 hi hai (not-required), blank/NaN ka matlab 1
                                         const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
                                         let _mq = Number(evalVal);
                                         const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
-                                        // 🔩 Bolt: activity kg me, reconciliation nos me — wazan se convert (M12X150 → kg/pc)
                                         const _bw = this.nutBoltWeightForCode(s.code);
                                         const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                         finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
@@ -438,8 +460,7 @@
                 
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const rows = Object.values(sapMap)
-                    // Activity me mapped har SAP item dikhao (chahe abhi qty 0 ho taaki mapping reco me turant dikhe)
-                    .filter(row => Object.keys(row.activities).length > 0)
+                    .filter(row => Object.keys(row.activities).length > 0 || (row.sapIssuedQty && row.sapIssuedQty !== 0))
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
                 return { columns, rows };
@@ -496,10 +517,25 @@
                 });
                 return set;
             },
+            
+            currentContractorSap() {
+                return (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
+            },
+            currentContractorSapInfo() {
+                const s = this.currentContractorSap;
+                if (!s) return '';
+                if (s.docHeader) return (s.contractorName || 'Contractor') + ' (WO: ' + s.docHeader + ')';
+                if (s.contractorName) return s.contractorName;
+                return 'SAP Stock Synced';
+            },
+            currentContractorSapCount() {
+                const s = this.currentContractorSap;
+                return s && s.materials ? Object.keys(s.materials).length : 0;
+            },
             reconRows() {
                 if (!this.reverseEntry) {
                     if (this.reconFilterZeroOnly) {
-                        return this.pivotReconciliationData.rows.filter(r => r.totalQty > 0);
+                        return this.pivotReconciliationData.rows.filter(r => (r.totalQty > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0)));
                     }
                     return this.pivotReconciliationData.rows;
                 }
@@ -510,7 +546,7 @@
                     if (this.reconFilterZeroOnly) {
                         let t = 0;
                         for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
-                        return t > 0;
+                        return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0));
                     }
                     return true;
                 });

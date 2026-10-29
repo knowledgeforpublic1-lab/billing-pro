@@ -8,6 +8,45 @@
  */
 
 window.BillingModule = {
+    // ─── SAP STOCK MATERIAL ISSUES AUTO-SYNC ────
+    getContractorSapIssues() {
+        const stock = window.ContractorSapStock;
+        if (!stock) return null;
+        
+        // 1. Try work order number from invoiceData / projectMeta
+        const wo = ((this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '').trim();
+        if (wo) {
+            if (stock.byDocHeader && stock.byDocHeader[wo]) {
+                return stock.byDocHeader[wo];
+            }
+            const m = wo.match(/\b\d{8}\b/);
+            if (m && stock.byDocHeader && stock.byDocHeader[m[0]]) {
+                return stock.byDocHeader[m[0]];
+            }
+        }
+
+        // 2. Try contractor name from selectedContractorName / invoiceData / projectMeta
+        let cName = this.selectedContractorName;
+        if (!cName || cName === 'Select Contractor...' || cName.includes('Custom')) {
+            cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
+        }
+        if (!cName) return null;
+        
+        const norm = String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+        if (!norm || !stock.byContractorNorm) return null;
+
+        if (stock.byContractorNorm[norm]) {
+            return stock.byContractorNorm[norm];
+        }
+
+        for (const [k, v] of Object.entries(stock.byContractorNorm)) {
+            if (k.length >= 4 && (k.includes(norm) || norm.includes(k))) {
+                return v;
+            }
+        }
+        return null;
+    },
+
 
     // ─── INVOICE METHODS ───────────────────────────────────────────
 

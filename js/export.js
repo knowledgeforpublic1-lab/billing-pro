@@ -153,7 +153,7 @@ window.ExportModule = {
                         row.getCell(2).value = rowObj.code;
                         row.getCell(3).value = rowObj.desc;
                         row.getCell(4).value = rowObj.uom;
-                        row.getCell(5).value = rowObj.totalQty || '';
+                        row.getCell(5).value = (rowObj.sapIssuedQty !== undefined && rowObj.sapIssuedQty !== null && rowObj.sapIssuedQty !== 0) ? rowObj.sapIssuedQty : (rowObj.totalQty || '');
 
                         if (revOn) {
                             rcols.forEach((rc, cIdx) => {

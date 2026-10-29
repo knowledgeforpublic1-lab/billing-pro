@@ -186,6 +186,50 @@ it('Invoice Date Normalizer: Converts DD-MM-YYYY to YYYY-MM-DD for HTML date pic
     assert.strictEqual(normalizeDateToYYYYMMDD('2026-10-29'), '2026-10-29');
 });
 
+// 8. SAP Stock Contractor Issue Matching & Quantity Verification
+it('SAP Stock: Matches contractor and retrieves exact net issued quantities from stock.xlsx', () => {
+    global.window = global;
+    const fs = require('fs');
+    eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
+    const stock = window.ContractorSapStock;
+
+    assert.ok(stock, 'ContractorSapStock should exist');
+    assert.ok(stock.byDocHeader, 'byDocHeader index should exist');
+    assert.ok(stock.byContractorNorm, 'byContractorNorm index should exist');
+    assert.ok(stock.meta.contractorsWithIssues >= 100, 'Should have >= 100 contractors');
+
+    // Ranjeet Singh Lodhi check by WO
+    const rsl = stock.byDocHeader['31006345'];
+    assert.ok(rsl, 'Ranjeet Singh Lodhi docHeader 31006345 must exist');
+    assert.strictEqual(rsl.contractorName, 'RANJEET SINGH LODHI');
+    assert.strictEqual(rsl.materials['17000625'].issuedQty, 15689);
+
+    // Manohar Traders check by WO
+    const mt = stock.byDocHeader['31007236'];
+    assert.ok(mt, 'Manohar Traders docHeader 31007236 must exist');
+    assert.strictEqual(mt.contractorName, 'Manohar Traders');
+    assert.strictEqual(mt.materials['17000625'].issuedQty, 1752);
+
+    // Contractor Name fuzzy match check
+    eval(fs.readFileSync('js/billing.js', 'utf8'));
+    const mockApp = {
+        selectedContractorName: 'M/s Manohar Traders',
+        invoiceData: { workOrderNo: '' }
+    };
+    const mtMatch = window.BillingModule.getContractorSapIssues.call(mockApp);
+    assert.ok(mtMatch, 'M/s Manohar Traders should match by name');
+    assert.ok(mtMatch.materials['17000625'], 'Should have material 17000625');
+    assert.strictEqual(mtMatch.materials['17000625'].issuedQty, 1752);
+
+    const mockAppRsl = {
+        selectedContractorName: 'M/s Ranjeet Singh Lodhi',
+        invoiceData: { workOrderNo: '' }
+    };
+    const rslMatch = window.BillingModule.getContractorSapIssues.call(mockAppRsl);
+    assert.ok(rslMatch, 'M/s Ranjeet Singh Lodhi should match by name');
+    assert.strictEqual(rslMatch.materials['17000625'].issuedQty, 15689);
+});
+
 console.log('----------------------------------------------------');
 console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
 console.log('----------------------------------------------------');
