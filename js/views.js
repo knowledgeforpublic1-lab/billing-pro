@@ -350,9 +350,9 @@ window.ViewsModule = {
         const rcols = revOn ? this.reverseReconColumns : [];
         const expRows = this.reconRows;
         const expHeaders = revOn
-            ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
-            : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(pData.columns);
-        const totalCols = 5 + (revOn ? rcols.length : pData.columns.length);
+            ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
+            : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(pData.columns);
+        const totalCols = 7 + (revOn ? rcols.length : pData.columns.length);
         
         // Title Row
         ws.mergeCells(1, 1, 1, totalCols);
@@ -382,15 +382,17 @@ window.ViewsModule = {
             row.getCell(2).value = rowObj.code;
             row.getCell(3).value = rowObj.desc;
             row.getCell(4).value = rowObj.uom;
-            row.getCell(5).value = (rowObj.sapIssuedQty !== undefined && rowObj.sapIssuedQty !== null && rowObj.sapIssuedQty !== 0) ? rowObj.sapIssuedQty : (rowObj.totalQty || '');
+            row.getCell(5).value = rowObj.sapGrossIssue || rowObj.sapIssuedQty || '';
+            row.getCell(6).value = rowObj.sapMrnReturn || '';
+            row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== 0) ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || rowObj.totalQty || '');
 
             if (revOn) {
                 rcols.forEach((rc, cIdx) => {
-                    row.getCell(6 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
+                    row.getCell(8 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
                 });
             } else {
                 pData.columns.forEach((col, cIdx) => {
-                    row.getCell(6 + cIdx).value = rowObj.activities[col] || '';
+                    row.getCell(8 + cIdx).value = rowObj.activities[col] || '';
                 });
             }
             

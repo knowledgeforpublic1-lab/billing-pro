@@ -85,6 +85,7 @@
                 contractorModalMode: 'list', // 'list' or 'form'
                 contractorSearchQuery: '',
                 contractorDropdownOpen: false,
+                reconContractorDropdownOpen: false,
                 contractorDropdownSearch: '',
                 showNutBoltModal: false,
                 showConcretingModal: false,
@@ -538,6 +539,33 @@
                 const s = this.currentContractorSap;
                 return s && s.materials ? Object.keys(s.materials).length : 0;
             },
+            
+            reconTotals() {
+                const rows = this.reconRows || [];
+                let grossIssue = 0;
+                let mrnReturn = 0;
+                let netIssue = 0;
+                const actTotals = {};
+                (this.pivotReconciliationData.columns || []).forEach(col => { actTotals[col] = 0; });
+
+                rows.forEach(r => {
+                    grossIssue += Number(r.sapGrossIssue || (r.sapIssuedQty > 0 && !r.sapMrnReturn ? r.sapIssuedQty : 0));
+                    mrnReturn += Number(r.sapMrnReturn || 0);
+                    netIssue += Number(r.sapNetIssue !== undefined && r.sapNetIssue !== 0 ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                    if (r.activities) {
+                        Object.keys(r.activities).forEach(k => {
+                            actTotals[k] = (actTotals[k] || 0) + (Number(r.activities[k]) || 0);
+                        });
+                    }
+                });
+
+                return {
+                    grossIssue: Math.round(grossIssue * 1000) / 1000,
+                    mrnReturn: Math.round(mrnReturn * 1000) / 1000,
+                    netIssue: Math.round(netIssue * 1000) / 1000,
+                    activities: actTotals
+                };
+            },
             reconRows() {
                 if (!this.reverseEntry) {
                     if (this.reconFilterZeroOnly) {
@@ -717,16 +745,33 @@
                 );
             },
             sortedFilteredContractors() {
-                let list = this.contractorsList;
-                if (this.contractorDropdownSearch) {
-                    const q = this.contractorDropdownSearch.toLowerCase();
-                    list = list.filter(f =>
-                        (f.name && f.name.toLowerCase().includes(q)) ||
-                        (f.pan && f.pan.toLowerCase().includes(q)) ||
-                        (f.gstin && f.gstin.toLowerCase().includes(q))
-                    );
+                let list = this.contractorsList || [];
+                if (!this.contractorDropdownSearch) {
+                    return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 }
-                return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                const rawQ = String(this.contractorDropdownSearch).trim().toLowerCase();
+                const cleanQ = rawQ.replace(/^m\/s\.?\s*/i, '').trim();
+                const tokens = cleanQ.split(/\s+/).filter(Boolean);
+
+                return list.filter(f => {
+                    const name = (f.name || '').toLowerCase();
+                    const pan = (f.pan || '').toLowerCase();
+                    const gstin = (f.gstin || '').toLowerCase();
+                    const wo = String(f.workOrderNo || '').toLowerCase();
+                    const div = (f.divisionName || '').toLowerCase();
+                    const combined = name + ' ' + pan + ' ' + gstin + ' ' + wo + ' ' + div;
+                    
+                    if (combined.includes(rawQ) || combined.includes(cleanQ)) return true;
+                    return tokens.every(tok => combined.includes(tok));
+                }).sort((a, b) => {
+                    const aName = (a.name || '').toLowerCase();
+                    const bName = (b.name || '').toLowerCase();
+                    const aStarts = aName.startsWith(cleanQ);
+                    const bStarts = bName.startsWith(cleanQ);
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+                    return aName.localeCompare(bName);
+                });
             },
             selectedContractorName() {
                 if (this.selectedContractorId === 'custom') return '✏️ Custom';

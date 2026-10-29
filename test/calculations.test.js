@@ -230,6 +230,35 @@ it('SAP Stock: Matches contractor and retrieves exact net issued quantities from
     assert.strictEqual(rslMatch.materials['17000625'].issuedQty, 15689);
 });
 
+// 9. SAP Stock ISSUE, MRN, NET ISSUE format & Totals
+it('SAP Stock: Verifies ISSUE, MRN, and NET ISSUE breakdown format', () => {
+    global.window = global;
+    const fs = require('fs');
+    eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
+    const stock = window.ContractorSapStock;
+
+    // RSL Cement 11000336: Gross = 900, MRN = 250, Net = 650
+    const rslCement = stock.byDocHeader['31006345'].materials['11000336'];
+    assert.ok(rslCement, 'RSL Cement must exist');
+    assert.strictEqual(rslCement.grossIssue, 900);
+    assert.strictEqual(rslCement.mrnReturn, 250);
+    assert.strictEqual(rslCement.netIssue, 650);
+
+    // RSL RSJ Pole 17000004: Gross = 1873, MRN = 286, Net = 1587
+    const rslPole = stock.byDocHeader['31006345'].materials['17000004'];
+    assert.ok(rslPole, 'RSL Pole must exist');
+    assert.strictEqual(rslPole.grossIssue, 1873);
+    assert.strictEqual(rslPole.mrnReturn, 286);
+    assert.strictEqual(rslPole.netIssue, 1587);
+
+    // MT RSJ Pole 17000004: Gross = 370, MRN = 44, Net = 326
+    const mtPole = stock.byDocHeader['31007236'].materials['17000004'];
+    assert.ok(mtPole, 'MT Pole must exist');
+    assert.strictEqual(mtPole.grossIssue, 370);
+    assert.strictEqual(mtPole.mrnReturn, 44);
+    assert.strictEqual(mtPole.netIssue, 326);
+});
+
 console.log('----------------------------------------------------');
 console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
 console.log('----------------------------------------------------');

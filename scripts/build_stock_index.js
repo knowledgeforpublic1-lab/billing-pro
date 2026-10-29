@@ -37,11 +37,11 @@ async function buildStockIndex() {
   
   console.log('Total valid contractor doc headers:', validDocHeaders.size);
 
-  console.log('2. Streaming Sheet1 (152,860 rows) and filtering for contractors...');
+  console.log('2. Streaming Sheet1 (152,860 rows) and calculating ISSUE, MRN, and NET ISSUE...');
   const stream2 = fs.createReadStream('stock.xlsx');
   const reader2 = new ExcelJS.stream.xlsx.WorkbookReader(stream2, {});
   
-  const docHeaderMaterials = {}; // docHeader -> { [matCode]: { code, desc, uom, issuedQty } }
+  const docHeaderMaterials = {}; // docHeader -> { [matCode]: { code, desc, uom, grossIssue, mrnReturn, issuedQty } }
   let txnCount = 0;
   let matchedTxns = 0;
   
@@ -61,7 +61,6 @@ async function buildStockIndex() {
       
       if (!docHeader || !mat) continue;
       
-      // Check if docHeader matches any valid contractor doc header
       const m = docHeader.match(/\b\d{8}\b/);
       const matchedKey = (m && validDocHeaders.has(m[0])) ? m[0] : (validDocHeaders.has(docHeader) ? docHeader : null);
       
@@ -74,8 +73,16 @@ async function buildStockIndex() {
           code: mat,
           desc: desc,
           uom: uom,
+          grossIssue: 0,
+          mrnReturn: 0,
           issuedQty: 0
         };
+      }
+      
+      if (qty > 0) {
+        docHeaderMaterials[matchedKey][mat].grossIssue += qty;
+      } else if (qty < 0) {
+        docHeaderMaterials[matchedKey][mat].mrnReturn += Math.abs(qty);
       }
       docHeaderMaterials[matchedKey][mat].issuedQty += qty;
     }
@@ -96,15 +103,28 @@ async function buildStockIndex() {
 
   for (const [dh, mats] of Object.entries(docHeaderMaterials)) {
     const cleanMats = {};
+    let totalGross = 0;
+    let totalMrn = 0;
+    let totalNet = 0;
+
     for (const [code, item] of Object.entries(mats)) {
-      const rounded = Math.round(item.issuedQty * 1000) / 1000;
-      if (rounded !== 0) {
+      const gross = Math.round(item.grossIssue * 1000) / 1000;
+      const mrn = Math.round(item.mrnReturn * 1000) / 1000;
+      const net = Math.round(item.issuedQty * 1000) / 1000;
+      
+      if (gross !== 0 || mrn !== 0 || net !== 0) {
         cleanMats[code] = {
           code: item.code,
           desc: item.desc,
           uom: item.uom,
-          issuedQty: rounded
+          grossIssue: gross,
+          mrnReturn: mrn,
+          netIssue: net,
+          issuedQty: net
         };
+        totalGross += gross;
+        totalMrn += mrn;
+        totalNet += net;
       }
     }
     
@@ -115,6 +135,9 @@ async function buildStockIndex() {
         vendorCode: info.vendorCode || '',
         contractorName: info.contractorName || '',
         materialCount: Object.keys(cleanMats).length,
+        totalGrossIssue: Math.round(totalGross * 1000) / 1000,
+        totalMrnReturn: Math.round(totalMrn * 1000) / 1000,
+        totalNetIssue: Math.round(totalNet * 1000) / 1000,
         materials: cleanMats
       };
       
@@ -124,7 +147,10 @@ async function buildStockIndex() {
           outputData.byContractorNorm[norm] = {
             contractorName: info.contractorName,
             docHeaders: [],
-            materials: {}
+            materials: {},
+            totalGrossIssue: 0,
+            totalMrnReturn: 0,
+            totalNetIssue: 0
           };
         }
         if (!outputData.byContractorNorm[norm].docHeaders.includes(dh)) {
@@ -134,15 +160,21 @@ async function buildStockIndex() {
           if (!outputData.byContractorNorm[norm].materials[code]) {
             outputData.byContractorNorm[norm].materials[code] = Object.assign({}, mItem);
           } else {
-            outputData.byContractorNorm[norm].materials[code].issuedQty += mItem.issuedQty;
-            outputData.byContractorNorm[norm].materials[code].issuedQty = Math.round(outputData.byContractorNorm[norm].materials[code].issuedQty * 1000) / 1000;
+            const ex = outputData.byContractorNorm[norm].materials[code];
+            ex.grossIssue = Math.round((ex.grossIssue + mItem.grossIssue) * 1000) / 1000;
+            ex.mrnReturn = Math.round((ex.mrnReturn + mItem.mrnReturn) * 1000) / 1000;
+            ex.netIssue = Math.round((ex.netIssue + mItem.netIssue) * 1000) / 1000;
+            ex.issuedQty = ex.netIssue;
           }
         }
+        outputData.byContractorNorm[norm].totalGrossIssue = Math.round((outputData.byContractorNorm[norm].totalGrossIssue + totalGross) * 1000) / 1000;
+        outputData.byContractorNorm[norm].totalMrnReturn = Math.round((outputData.byContractorNorm[norm].totalMrnReturn + totalMrn) * 1000) / 1000;
+        outputData.byContractorNorm[norm].totalNetIssue = Math.round((outputData.byContractorNorm[norm].totalNetIssue + totalNet) * 1000) / 1000;
       }
     }
   }
 
-  const jsContent = '/**\n * Auto-generated SAP Stock Material Issues Database from stock.xlsx\n * Generated: ' + new Date().toISOString() + '\n */\nwindow.ContractorSapStock = ' + JSON.stringify(outputData, null, 2) + ';\n';
+  const jsContent = '/**\n * Auto-generated SAP Stock Material Issues Database from stock.xlsx\n * Features ISSUE, MRN, and NET ISSUE breakdown per material & contractor\n * Generated: ' + new Date().toISOString() + '\n */\nwindow.ContractorSapStock = ' + JSON.stringify(outputData, null, 2) + ';\n';
   fs.writeFileSync('js/data/contractor-sap-issues.js', jsContent, 'utf8');
   
   const stats = fs.statSync('js/data/contractor-sap-issues.js');

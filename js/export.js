@@ -121,9 +121,9 @@ window.ExportModule = {
                     const rcols = revOn ? this.reverseReconColumns : [];
                     const expRows = this.reconRows;
                     const expHeaders = revOn
-                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
-                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE'].concat(pData.columns);
-                    const totalCols = 5 + (revOn ? rcols.length : pData.columns.length);
+                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
+                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(pData.columns);
+                    const totalCols = 7 + (revOn ? rcols.length : pData.columns.length);
                     
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
