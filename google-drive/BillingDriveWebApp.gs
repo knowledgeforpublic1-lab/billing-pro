@@ -2,7 +2,7 @@
  * BILLING APP → Google Drive Backup & File Browser (Apps Script Web App)
  * Target Folder: RDSS T-10 GADCHIROLI / <Contractor Name> / <Contractor Name>_RA-<No>.xlsx
  * Features:
- *  - Save & overwrite bill files without duplicates
+ *  - Save & overwrite bill files without duplicates (cleans any old timestamped copies)
  *  - Browse / list all saved invoice workbooks
  *  - Retrieve file data (base64) to open directly in Billing Pro app
  */
@@ -26,7 +26,7 @@ function doGet(e) {
       ok: true,
       status: 'success',
       app: 'billing-drive-backup',
-      version: 4,
+      version: 5,
       time: new Date().toISOString(),
       rootFolder: ROOT_FOLDER_NAME
     });
@@ -61,7 +61,7 @@ function doPost(e) {
     const contractorFolder = getOrCreateFolder_(clean_(body.contractorName) || 'Unknown_Contractor', root);
 
     const fileName = clean_(body.fileName) || 'invoice.xlsx';
-    // Overwrite existing file with same name so duplicate files with timestamps are NOT created
+    // Overwrite existing file with same name and clean any old timestamped duplicate copies
     const file = saveOrOverwriteFile_(contractorFolder, fileName, bytes, body.mimeType || MimeType.XLSX);
 
     return jsonOut({
@@ -157,13 +157,20 @@ function getOrCreateFolder_(name, parent) {
   return parent ? parent.createFolder(name) : DriveApp.createFolder(name);
 }
 
-/** Same bill file pehle se ho to use overwrite (replace) karo taaki duplicate/timestamped files na banein */
+/** Same bill file pehle se ho to use overwrite (replace) karo aur purani timestamped duplicate files ko delete karo */
 function saveOrOverwriteFile_(folder, name, bytes, mimeType) {
-  const existing = folder.getFilesByName(name);
-  while (existing.hasNext()) {
-    try {
-      existing.next().setTrashed(true);
-    } catch(e) {}
+  const dot = name.lastIndexOf('.');
+  const base = dot > 0 ? name.substring(0, dot) : name;
+  const it = folder.getFiles();
+  while (it.hasNext()) {
+    const f = it.next();
+    const fName = f.getName();
+    // Match exact name OR old timestamped files (e.g. Manohar Traders_RA-04_29102026_123107.xlsx)
+    if (fName === name || (fName.startsWith(base + '_') && (fName.endsWith('.xlsx') || fName.endsWith('.xls')))) {
+      try {
+        f.setTrashed(true);
+      } catch(e) {}
+    }
   }
   return folder.createFile(name, bytes, mimeType);
 }
