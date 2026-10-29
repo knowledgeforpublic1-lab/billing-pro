@@ -483,7 +483,10 @@ app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
     const ctx = 'GDRIVE-PING';
     try {
         const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
-        const effectiveWebhookUrl = sanitizeGasUrl(rawUrl || process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        let effectiveWebhookUrl = sanitizeGasUrl(rawUrl);
+        if (validateGasUrl(effectiveWebhookUrl)) {
+            effectiveWebhookUrl = sanitizeGasUrl(process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        }
         const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) return res.status(400).json({ success: false, error: bad });
 
@@ -517,16 +520,19 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
     const ctx = 'GDRIVE-PROXY';
     try {
         const { webhookUrl, folderName, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
-        const effectiveWebhookUrl = sanitizeGasUrl(webhookUrl || process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        let effectiveWebhookUrl = sanitizeGasUrl(webhookUrl);
+        if (validateGasUrl(effectiveWebhookUrl)) {
+            effectiveWebhookUrl = sanitizeGasUrl(process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        }
 
         if (!effectiveWebhookUrl || !fileData || !fileName) {
             log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');
-            return res.status(400).json({ success: false, error: 'Missing required fields: webhookUrl (Apps Script URL), fileData, fileName' });
+            return res.status(400).json({ success: false, error: 'Missing required fields: fileData, fileName' });
         }
 
         const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) {
-            log.warn(ctx, `Invalid webhook URL: ${String(webhookUrl).substring(0, 50)}...`);
+            log.warn(ctx, `Invalid webhook URL: ${String(effectiveWebhookUrl).substring(0, 50)}...`);
             return res.status(400).json({ success: false, error: bad });
         }
 
@@ -546,7 +552,7 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
         // Forward payload to Google Apps Script — server-to-server (no CORS)
         const gasPayload = JSON.stringify({ folderName, folderId, contractorName, billNo, fileName, fileData, mimeType });
 
-        const gasResponse = await callGas(webhookUrl, {
+        const gasResponse = await callGas(effectiveWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: gasPayload

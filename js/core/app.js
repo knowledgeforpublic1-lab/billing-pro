@@ -231,6 +231,9 @@
                 const u = raw.replace(/^["']|["']$/g, '');
                 return !!(u && (u.startsWith('https://script.google.com/') || u.startsWith('script.google.com/')) && u.includes('/exec'));
             },
+            effectiveBillNo() {
+                return (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+            },
             effectiveRaNo() {
                 if (this.projectMeta && this.projectMeta.raNo) {
                     return String(this.projectMeta.raNo).trim();
@@ -1059,15 +1062,36 @@
 
             // Auto-load GDrive Webhook URL from server env or projectMeta
             try {
-                if (!this.gdriveWebhookUrl) {
-                    this.gdriveWebhookUrl = localStorage.getItem('billing_gdrive_webhook_url') || (this.projectMeta && this.projectMeta.gdriveWebhookUrl) || '';
+                const isValidGas = (val) => {
+                    if (!val || typeof val !== 'string') return false;
+                    let s = val.trim().replace(/^["']|["']$/g, '');
+                    if (s.startsWith('http://script.google.com/')) s = 'https://' + s.slice('http://'.length);
+                    else if (s.startsWith('script.google.com/')) s = 'https://' + s;
+                    return s.startsWith('https://script.google.com/') && s.includes('/exec');
+                };
+                const DEFAULT_GAS = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+
+                if (!isValidGas(this.gdriveWebhookUrl)) {
+                    const local = localStorage.getItem('billing_gdrive_webhook_url');
+                    const meta = this.projectMeta && this.projectMeta.gdriveWebhookUrl;
+                    if (isValidGas(local)) {
+                        this.gdriveWebhookUrl = local;
+                    } else if (isValidGas(meta)) {
+                        this.gdriveWebhookUrl = meta;
+                    } else {
+                        this.gdriveWebhookUrl = DEFAULT_GAS;
+                        try { localStorage.setItem('billing_gdrive_webhook_url', DEFAULT_GAS); } catch(e) {}
+                        if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = DEFAULT_GAS;
+                    }
                 }
                 fetch('/api/gdrive-config', {
                     headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
                 }).then(r => r.json()).then(d => {
-                    if (d && d.webhookUrl && !this.gdriveWebhookUrl) {
-                        this.gdriveWebhookUrl = d.webhookUrl;
-                        try { localStorage.setItem('billing_gdrive_webhook_url', d.webhookUrl); } catch(e) {}
+                    if (d && d.webhookUrl && isValidGas(d.webhookUrl)) {
+                        if (!isValidGas(this.gdriveWebhookUrl) || this.gdriveWebhookUrl === DEFAULT_GAS) {
+                            this.gdriveWebhookUrl = d.webhookUrl;
+                            try { localStorage.setItem('billing_gdrive_webhook_url', d.webhookUrl); } catch(e) {}
+                        }
                     }
                 }).catch(() => {});
             } catch(e) {}

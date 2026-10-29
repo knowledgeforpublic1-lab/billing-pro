@@ -640,8 +640,10 @@ window.ExportModule = {
                 },
                 getBillExportFileName(ext = '.xlsx') {
                     // 1. Contractor name
-                    let cName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || (this.invoiceData && this.invoiceData.contractorName) || 'Contractor';
-                    if (cName === 'Select Contractor...' || cName === '✏️ Custom') {
+                    let cName = '';
+                    if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
+                        cName = this.selectedContractorName;
+                    } else {
                         cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Contractor';
                     }
                     cName = String(cName || 'Contractor').replace(/^M\/[sS]\.?\s*/i, '').replace(/[\/\\:*?"<>|]/g, '_').trim();
@@ -668,10 +670,29 @@ window.ExportModule = {
                     return `${cName}_${raPart}${ext}`;
                 },
                 getEffectiveDriveWebhookUrl() {
-                    let u = (this.gdriveWebhookUrl || '').trim()
-                        || localStorage.getItem('billing_gdrive_webhook_url')
-                        || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
-                        || 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                    const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                    const isValid = (val) => {
+                        if (!val || typeof val !== 'string') return false;
+                        let s = val.trim().replace(/^["']|["']$/g, '');
+                        if (s.startsWith('http://script.google.com/')) s = 'https://' + s.slice('http://'.length);
+                        else if (s.startsWith('script.google.com/')) s = 'https://' + s;
+                        return s.startsWith('https://script.google.com/') && s.includes('/exec');
+                    };
+
+                    let u = '';
+                    if (isValid(this.gdriveWebhookUrl)) {
+                        u = this.gdriveWebhookUrl;
+                    } else if (isValid(localStorage.getItem('billing_gdrive_webhook_url'))) {
+                        u = localStorage.getItem('billing_gdrive_webhook_url');
+                    } else if (this.projectMeta && isValid(this.projectMeta.gdriveWebhookUrl)) {
+                        u = this.projectMeta.gdriveWebhookUrl;
+                    } else {
+                        u = DEFAULT_URL;
+                        try { localStorage.setItem('billing_gdrive_webhook_url', DEFAULT_URL); } catch(e) {}
+                        this.gdriveWebhookUrl = DEFAULT_URL;
+                        if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = DEFAULT_URL;
+                    }
+
                     u = u.trim().replace(/^["']|["']$/g, '');
                     if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
                     else if (u.startsWith('script.google.com/')) u = 'https://' + u;
@@ -743,7 +764,12 @@ window.ExportModule = {
                         this.openGDriveModal();
                         return;
                     }
-                    const contractorName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || (this.invoiceData && this.invoiceData.contractorName) || 'Unknown_Contractor';
+                    let contractorName = '';
+                    if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
+                        contractorName = this.selectedContractorName;
+                    } else {
+                        contractorName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
+                    }
                     const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
                     const folderName = (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
 

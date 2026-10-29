@@ -93,12 +93,37 @@ window.SyncModule = {
         };
         this.showNewBillModal = true;
     },
+    updateBillNo(val) {
+        const clean = String(val || '').trim();
+        if (!this.projectMeta) this.projectMeta = {};
+        this.projectMeta.billNo = clean;
+        if (!this.invoiceData) this.invoiceData = {};
+        this.invoiceData.invoiceNo = clean;
+        this.saveToStorage();
+        if (this._billSyncDebounce) clearTimeout(this._billSyncDebounce);
+        this._billSyncDebounce = setTimeout(() => {
+            try { this.syncToMongoNow({ manual: false }); } catch(e) {}
+        }, 1500);
+    },
     updateRaNo(val) {
         const clean = String(val || '').trim();
         if (!this.projectMeta) this.projectMeta = {};
         this.projectMeta.raNo = clean;
-        if (this.invoiceData) {
-            this.invoiceData.raNo = clean;
+        if (!this.invoiceData) this.invoiceData = {};
+        this.invoiceData.raNo = clean;
+
+        // Auto-sync bill number suffix with RA number so header and invoice never mismatch!
+        const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+        if (clean && curBill) {
+            if (/^(?:RSL\/RA\/)\d+$/i.test(curBill.trim())) {
+                const updated = 'RSL/RA/' + clean;
+                this.projectMeta.billNo = updated;
+                this.invoiceData.invoiceNo = updated;
+            } else if (/^(?:RA[\/\\-_])\d+$/i.test(curBill.trim())) {
+                const updated = 'RA-' + clean;
+                this.projectMeta.billNo = updated;
+                this.invoiceData.invoiceNo = updated;
+            }
         }
         this.saveToStorage();
         if (this._raSyncDebounce) clearTimeout(this._raSyncDebounce);

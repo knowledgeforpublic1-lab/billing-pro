@@ -79,13 +79,13 @@
                     <div class="tabs-export-group" style="display: flex; align-items: center; gap: 8px;">
                         <!-- 🗄️ Saved Bills & New Bill Group -->
                         <div class="tabs-bill-group" style="display: flex; align-items: center; gap: 6px;">
-                            <!-- Active Bill Pill -->
+                            <!-- Active Bill Pill (Opens Saved Bills Database) -->
                             <div class="active-bill-pill"
                                 @click="openSavedBillsManager"
-                                :title="'Current Bill: ' + ((projectMeta && projectMeta.billNo) || 'Main Bill') + '. Click to open or manage saved bills in database.'"
-                                style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35); user-select: none; transition: all 0.2s;">
+                                :title="'Current Bill: ' + (effectiveBillNo || 'Main Bill') + '. Click to open or manage saved bills in database.'"
+                                style="display: flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35); user-select: none; transition: all 0.2s;">
                                 <span>📄</span>
-                                <span>Bill: {{ (projectMeta && projectMeta.billNo) || 'Main Bill' }}</span>
+                                <span>Bill: {{ effectiveBillNo || 'Main Bill' }}</span>
                                 <span style="font-size: 0.65rem; opacity: 0.7;">▾</span>
                             </div>
 
@@ -102,12 +102,6 @@
                                     title="RA Bill No yahan change karein"
                                     style="width: 44px; background: rgba(0,0,0,0.18); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 4px; padding: 1px 4px; font-size: 0.78rem; font-weight: 800; color: #34d399; text-align: center; outline: none; font-family: monospace;">
                             </div>
-
-                            <!-- Open Bill Button -->
-                            <button class="btn btn-secondary" @click="openSavedBillsManager" title="Database se saved bills open karein" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px;">
-                                <span>📂</span>
-                                <span>Open Bill</span>
-                            </button>
 
                             <!-- New Bill Button -->
                             <button class="btn btn-primary" @click="openNewBillModal" title="Naya Bill / RA Bill banayein" style="padding: 4px 11px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white;">
@@ -661,13 +655,9 @@
                             <button type="button" @click="openContractorManager" class="btn-db-mini" title="Contractor Database" style="padding: 6px 10px; border: none; background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); border-radius: 6px; font-weight: 800; cursor: pointer; white-space: nowrap; height: 36px;">📁 DB</button>
                         </div>
                     </div>
-                    <div class="inv-tool-item" style="min-width: 80px;">
-                        <label>RA No:</label>
-                        <input type="text" :value="effectiveRaNo" @input="updateRaNo($event.target.value)" placeholder="12" :readonly="isFinalized" style="font-weight: 800; color: var(--accent-green); text-align: center; font-family: monospace;">
-                    </div>
-                    <div class="inv-tool-item" style="min-width: 130px;">
+                    <div class="inv-tool-item" style="min-width: 150px;">
                         <label>Invoice / Bill No:</label>
-                        <input type="text" v-model="invoiceData.invoiceNo" placeholder="RSL/RA/12" @change="saveToStorage" :readonly="isFinalized">
+                        <input type="text" :value="effectiveBillNo" @input="updateBillNo($event.target.value)" placeholder="RSL/RA/12" :readonly="isFinalized" style="font-weight: 700;">
                     </div>
                     <div class="inv-tool-item" style="min-width: 140px;">
                         <label>Invoice Date:</label>
@@ -676,11 +666,8 @@
                     <div class="inv-tool-item" style="flex: 0 0 auto; min-width: 0;">
                         <label>Bill Actions</label>
                         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                            <button class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
+                            <button class="btn btn-excel" @click="exportTaxInvoiceExcel" title="Export Exact Formatted Tax Invoice with Formulas" style="padding: 0.35rem 0.75rem; font-size: 0.76rem; white-space: nowrap;">
                                 📗 Export Invoice (.xlsx)
-                            </button>
-                            <button class="btn btn-secondary" @click="manualSaveBillToDrive" title="Save Bill to Google Drive Folder (Contractor / Bill No)" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; white-space: nowrap;">
-                                ☁️ Save Bill to Drive
                             </button>
                         </div>
                     </div>
