@@ -637,23 +637,23 @@ window.ExportModule = {
                         this.uploadBufferToGoogleDrive(buffer, fileName);
                     }
                 },
+                getEffectiveDriveWebhookUrl() {
+                    return (this.gdriveWebhookUrl || '').trim()
+                        || localStorage.getItem('billing_gdrive_webhook_url')
+                        || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
+                        || '';
+                },
                 async manualSaveBillToDrive() {
-                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+                    const webhookUrl = this.getEffectiveDriveWebhookUrl();
                     if (!webhookUrl) {
                         this.openGDriveModal();
-                        return;
-                    }
-                    const missing = this.getMissingInvoiceMeta();
-                    if (missing.length) {
-                        this.showToast('⚠️ Pehle ye field bharo: ' + missing.join(', '), '⛔');
-                        alert('Drive save ruk gaya.\n\nPehle Tax Invoice me ye field bharo:\n• ' + missing.join('\n• '));
                         return;
                     }
                     this.showToast('Generating Bill Workbook for Google Drive... ⏳', '☁️');
                     try {
                         const { workbook } = await this.buildTaxInvoiceWorkbook();
                         const buffer = await workbook.xlsx.writeBuffer();
-                        const cleanInvNo = (this.invoiceData.invoiceNo || 'Draft').replace(/[\/\\:*?"<>|]/g, '_');
+                        const cleanInvNo = ((this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft').replace(/[\/\\:*?"<>|]/g, '_');
                         const fileName = `Tax_Invoice_${cleanInvNo}_All_Sheets.xlsx`;
                         await this.uploadBufferToGoogleDrive(buffer, fileName);
                     } catch(e) {
@@ -688,12 +688,12 @@ window.ExportModule = {
                     }
                 },
                 async uploadBufferToGoogleDrive(buffer, fileName) {
-                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+                    const webhookUrl = this.getEffectiveDriveWebhookUrl();
                     if (!webhookUrl) {
                         this.openGDriveModal();
                         return;
                     }
-                    const contractorName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
+                    const contractorName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || (this.invoiceData && this.invoiceData.contractorName) || 'Unknown_Contractor';
                     const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
                     const folderName = (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
 
@@ -760,15 +760,24 @@ window.ExportModule = {
                     }
                 },
                 openGDriveModal() {
-                    this.gdriveWebhookUrl = localStorage.getItem('billing_gdrive_webhook_url') || '';
+                    this.gdriveWebhookUrl = this.getEffectiveDriveWebhookUrl();
                     this.showGDriveModal = true;
                 },
                 saveGDriveSettings() {
-                    if (this.gdriveWebhookUrl && this.gdriveWebhookUrl.trim()) {
-                        localStorage.setItem('billing_gdrive_webhook_url', this.gdriveWebhookUrl.trim());
-                        this.showToast('Google Drive Webhook URL saved! ✅', '☁️');
+                    const url = (this.gdriveWebhookUrl || '').trim();
+                    if (url) {
+                        localStorage.setItem('billing_gdrive_webhook_url', url);
+                        if (!this.projectMeta) this.projectMeta = {};
+                        this.projectMeta.gdriveWebhookUrl = url;
+                        this.showToast('Google Drive Webhook URL saved & synced! ✅', '☁️');
+                        this.saveToStorage();
+                        if (typeof this.syncToMongoNow === 'function') {
+                            this.syncToMongoNow({ manual: true });
+                        }
                     } else {
                         localStorage.removeItem('billing_gdrive_webhook_url');
+                        if (this.projectMeta) delete this.projectMeta.gdriveWebhookUrl;
+                        this.saveToStorage();
                     }
                     this.showGDriveModal = false;
                 },

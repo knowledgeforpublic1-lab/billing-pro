@@ -389,7 +389,22 @@ window.SyncModule = {
                 const t = new Date();
                 this.lastSyncAt = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
             } catch(e) {}
-            if (manual) this.showToast('Cloud saved! Refresh on other PC', '☁️');
+            if (manual) {
+                this.showToast('Cloud saved! Refresh on other PC', '☁️');
+                const gdriveUrl = (typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '')
+                    || (this.gdriveWebhookUrl || '').trim()
+                    || localStorage.getItem('billing_gdrive_webhook_url')
+                    || (this.projectMeta && this.projectMeta.gdriveWebhookUrl);
+                if (gdriveUrl && typeof this.manualSaveBillToDrive === 'function') {
+                    setTimeout(() => {
+                        try {
+                            this.manualSaveBillToDrive();
+                        } catch(e) {
+                            console.warn('Auto drive upload after bill save failed:', e);
+                        }
+                    }, 500);
+                }
+            }
             return true;
         } catch (err) {
             this.syncStatus = 'error';
@@ -470,6 +485,9 @@ window.SyncModule = {
                 }
             } catch (syncErr) {
                 console.error('Invoice sync error (save still proceeds):', syncErr);
+            }
+            if (this.gdriveWebhookUrl && this.projectMeta) {
+                this.projectMeta.gdriveWebhookUrl = this.gdriveWebhookUrl;
             }
             const dataToSave = {
                 isFinalized: this.isFinalized,
@@ -621,6 +639,10 @@ window.SyncModule = {
                     this.projectMeta = parsed.projectMeta;
                     if (!this.projectMeta.contractValue) this.projectMeta.contractValue = 48550000;
                     if (!this.projectMeta.aaacDivisor) this.projectMeta.aaacDivisor = 3150;
+                    if (this.projectMeta.gdriveWebhookUrl) {
+                        this.gdriveWebhookUrl = this.projectMeta.gdriveWebhookUrl;
+                        try { localStorage.setItem('billing_gdrive_webhook_url', this.projectMeta.gdriveWebhookUrl); } catch(e) {}
+                    }
                 }
                 if (parsed.selectedCompanyId) this.selectedCompanyId = parsed.selectedCompanyId;
                 if (parsed.contractorsList && Array.isArray(parsed.contractorsList) && parsed.contractorsList.length > 0) {

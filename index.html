@@ -119,6 +119,18 @@
                                 {{ syncStatus === 'synced' ? ('Cloud Synced' + (lastSyncAt ? ' (' + lastSyncAt + ')' : '')) : (syncStatus === 'syncing' ? 'Saving Online...' : 'Save Online') }}
                             </span>
                         </div>
+
+                        <!-- 📂 Google Drive Save Pill -->
+                        <div class="cloud-sync-pill gdrive-pill"
+                            @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
+                            :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook to Google Drive.' : 'Google Drive not connected. Click to enter Google Apps Script Webhook URL.'"
+                            style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
+                            :style="hasDriveConnected 
+                                ? 'background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35);' 
+                                : 'background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1.5px dashed rgba(148, 163, 184, 0.4);'">
+                            <span style="font-size: 0.85rem;">📁</span>
+                            <span>{{ hasDriveConnected ? 'Save to Drive' : 'Connect Drive' }}</span>
+                        </div>
                         <div class="user-profile-pill" title="User Profile">
                             <div class="user-avatar">RK</div>
                             <div class="user-info-text">
@@ -1377,6 +1389,10 @@
 
             <button class="qa-btn qa-btn-green" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
                 ➕ Create New Bill
+            </button>
+
+            <button class="qa-btn qa-btn-outline" @click="manualSaveBillToDrive" title="Save this entire bill workbook to Google Drive">
+                ☁️ Save Bill to Drive
             </button>
         </div>
 

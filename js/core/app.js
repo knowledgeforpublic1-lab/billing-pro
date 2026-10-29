@@ -215,6 +215,13 @@
         },
 
         computed: {
+            hasDriveConnected() {
+                const url = (this.gdriveWebhookUrl || '').trim()
+                    || localStorage.getItem('billing_gdrive_webhook_url')
+                    || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
+                    || '';
+                return !!url;
+            },
             filteredSavedBills() {
                 const list = this.savedBillsList || [];
                 const q = (this.savedBillsSearchQuery || '').trim().toLowerCase();
@@ -1030,6 +1037,21 @@
             this._isLoading = false;
             // Initial history snapshot
             this.takeSnapshot();
+
+            // Auto-load GDrive Webhook URL from server env or projectMeta
+            try {
+                if (!this.gdriveWebhookUrl) {
+                    this.gdriveWebhookUrl = localStorage.getItem('billing_gdrive_webhook_url') || (this.projectMeta && this.projectMeta.gdriveWebhookUrl) || '';
+                }
+                fetch('/api/gdrive-config', {
+                    headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                }).then(r => r.json()).then(d => {
+                    if (d && d.webhookUrl && !this.gdriveWebhookUrl) {
+                        this.gdriveWebhookUrl = d.webhookUrl;
+                        try { localStorage.setItem('billing_gdrive_webhook_url', d.webhookUrl); } catch(e) {}
+                    }
+                }).catch(() => {});
+            } catch(e) {}
 
             // Net wapas aaye to pending sync turant push ho jaye
             this.armOnlineRecovery();

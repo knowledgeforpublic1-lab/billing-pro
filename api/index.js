@@ -454,11 +454,12 @@ async function callGas(webhookUrl, options) {
 app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
     const ctx = 'GDRIVE-PING';
     try {
-        const webhookUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
-        const bad = validateGasUrl(webhookUrl);
+        const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
+        const effectiveWebhookUrl = rawUrl || (process.env.GDRIVE_WEBHOOK_URL ? String(process.env.GDRIVE_WEBHOOK_URL).trim() : '');
+        const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) return res.status(400).json({ success: false, error: bad });
 
-        const gasResponse = await callGas(webhookUrl, { method: 'GET' });
+        const gasResponse = await callGas(effectiveWebhookUrl, { method: 'GET' });
         const text = await gasResponse.text();
         let gas;
         try { gas = JSON.parse(text); } catch (e) { gas = { raw: text.substring(0, 300) }; }
@@ -479,17 +480,23 @@ app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
     }
 });
 
+app.get('/api/gdrive-config', requireApiKey, async (req, res) => {
+    const envUrl = (process.env.GDRIVE_WEBHOOK_URL || '').trim();
+    res.json({ success: true, hasEnvWebhook: !!envUrl, webhookUrl: envUrl });
+});
+
 app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'GDRIVE-PROXY';
     try {
         const { webhookUrl, folderName, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
+        const effectiveWebhookUrl = (webhookUrl && String(webhookUrl).trim()) || (process.env.GDRIVE_WEBHOOK_URL && String(process.env.GDRIVE_WEBHOOK_URL).trim());
 
-        if (!webhookUrl || !fileData || !fileName) {
+        if (!effectiveWebhookUrl || !fileData || !fileName) {
             log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');
-            return res.status(400).json({ success: false, error: 'Missing required fields: webhookUrl, fileData, fileName' });
+            return res.status(400).json({ success: false, error: 'Missing required fields: webhookUrl (Apps Script URL), fileData, fileName' });
         }
 
-        const bad = validateGasUrl(webhookUrl);
+        const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) {
             log.warn(ctx, `Invalid webhook URL: ${String(webhookUrl).substring(0, 50)}...`);
             return res.status(400).json({ success: false, error: bad });
