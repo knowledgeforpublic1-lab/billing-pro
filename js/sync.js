@@ -16,6 +16,232 @@
  */
 
 window.SyncModule = {
+    async loadSavedBillsList() {
+        this.isLoadingBills = true;
+        try {
+            const res = await fetch('/api/bills', {
+                headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.success && Array.isArray(data.bills)) {
+                    this.savedBillsList = data.bills;
+                }
+            }
+        } catch(e) {
+            console.error('Failed to load bills list', e);
+        } finally {
+            this.isLoadingBills = false;
+        }
+    },
+    async deleteBillFromCloud(dataId) {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+            const res = await fetch('/api/billing/delete', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ dataId })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Delete failed');
+            }
+            try { localStorage.removeItem('lk_billing_state_' + dataId); } catch(e) {}
+            return true;
+        } catch(e) {
+            this.showToast('Delete failed: ' + e.message, '⚠️');
+            return false;
+        }
+    },
+    openSavedBillsManager() {
+        this.savedBillsSearchQuery = '';
+        this.showSavedBillsModal = true;
+        this.loadSavedBillsList();
+    },
+    openNewBillModal() {
+        let nextBill = 'RA/01';
+        const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+        if (curBill) {
+            const numMatch = curBill.match(/^(.*?)(d+)(s*)$/);
+            if (numMatch) {
+                const prefix = numMatch[1];
+                const num = parseInt(numMatch[2], 10);
+                const padLen = numMatch[2].length;
+                const nextNum = String(num + 1).padStart(padLen, '0');
+                nextBill = prefix + nextNum + numMatch[3];
+            } else {
+                nextBill = curBill + ' - 02';
+            }
+        }
+        const today = new Date().toISOString().slice(0, 10);
+        this.newBillForm = {
+            billNo: nextBill,
+            billDate: today,
+            projectName: (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI',
+            selectedContractorId: this.selectedContractorId || (this.contractorsList && this.contractorsList[0] && this.contractorsList[0].id) || '',
+            selectedCompanyId: this.selectedCompanyId || 'ashoka_buildcon',
+            mode: 'copy_master'
+        };
+        this.showNewBillModal = true;
+    },
+    async createNewBill() {
+        const form = this.newBillForm;
+        if (!form.billNo || !form.billNo.trim()) {
+            this.showToast('Please enter a Bill Number', '⚠️');
+            return;
+        }
+        const cleanBillNo = form.billNo.trim();
+        const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+        this.showToast('Saving current bill before creating new...', '⏳');
+        try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) {}
+
+        if (form.mode === 'copy_master') {
+            // Keep activities & SAP mappings intact, reset quantities to 0 for fresh cycle
+            this.activityQuantities = {};
+            this.isFinalized = false;
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.billNo = cleanBillNo;
+            this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
+            this.projectMeta.projectName = form.projectName;
+            this.selectedContractorId = form.selectedContractorId;
+            this.selectedCompanyId = form.selectedCompanyId;
+            if (!this.invoiceData) this.invoiceData = {};
+            this.invoiceData.invoiceNo = cleanBillNo;
+            this.invoiceData.invoiceDate = form.billDate;
+            this.invoiceData.items = [];
+        } else if (form.mode === 'fresh_default') {
+            if (typeof defaultActivities !== 'undefined') {
+                this.activities = JSON.parse(JSON.stringify(defaultActivities));
+            }
+            this.activityQuantities = {};
+            this.isFinalized = false;
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.billNo = cleanBillNo;
+            this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
+            this.projectMeta.projectName = form.projectName;
+            this.selectedContractorId = form.selectedContractorId;
+            this.selectedCompanyId = form.selectedCompanyId;
+            if (typeof defaultInvoiceData !== 'undefined') {
+                this.invoiceData = JSON.parse(JSON.stringify(defaultInvoiceData));
+            }
+            if (this.invoiceData) {
+                this.invoiceData.invoiceNo = cleanBillNo;
+                this.invoiceData.invoiceDate = form.billDate;
+            }
+        } else if (form.mode === 'full_clone') {
+            this.isFinalized = false;
+            if (this.projectMeta) {
+                this.projectMeta.billNo = cleanBillNo;
+                this.projectMeta.billDate = form.billDate;
+                this.projectMeta.projectName = form.projectName;
+            }
+            if (this.invoiceData) {
+                this.invoiceData.invoiceNo = cleanBillNo;
+                this.invoiceData.invoiceDate = form.billDate;
+            }
+        }
+
+        this.activeBillId = newBillId;
+        this.cloudRev = 0;
+        this.lastSentHash = '';
+        try { localStorage.setItem('lk_billing_active_bill_id', newBillId); } catch(e) {}
+
+        this.saveToStorage();
+        await this.syncToMongoNow({ manual: true, force: true });
+
+        this.showNewBillModal = false;
+        this.showSavedBillsModal = false;
+        this.historyStack = [];
+        this.historyIndex = -1;
+        if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
+        this.showToast(`New Bill [${cleanBillNo}] created & saved to Cloud! 🎉`, '✨');
+    },
+    async openBill(dataId) {
+        if (!dataId) return;
+        if (dataId === this.activeBillId) {
+            this.showToast(`Bill [${(this.projectMeta && this.projectMeta.billNo) || dataId}] is already active`, 'ℹ️');
+            this.showSavedBillsModal = false;
+            return;
+        }
+
+        this.showToast('Saving current bill before switching...', '⏳');
+        try { await this.syncToMongoNow({ manual: true }); } catch(e) {}
+
+        this._isLoading = true;
+        this.activeBillId = dataId;
+        this.cloudRev = 0;
+        this.lastSentHash = '';
+        try { localStorage.setItem('lk_billing_active_bill_id', dataId); } catch(e) {}
+
+        await this.loadFromStorage({ forceServer: true, dataId });
+        this._isLoading = false;
+        this.showSavedBillsModal = false;
+        this.historyStack = [];
+        this.historyIndex = -1;
+        if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
+        this.showToast(`Bill [${(this.projectMeta && this.projectMeta.billNo) || dataId}] loaded successfully! 📂`, '📄');
+    },
+    async duplicateBill(b) {
+        if (!b) return;
+        const newBillNo = prompt('Enter new Bill No for duplicate copy:', (b.billNo || 'Bill') + ' (Copy)');
+        if (!newBillNo || !newBillNo.trim()) return;
+
+        let billState = null;
+        if (b.dataId === this.activeBillId) {
+            billState = JSON.parse(JSON.stringify(this.buildSyncPayload()));
+        } else {
+            this.showToast('Fetching bill data for copy...', '⏳');
+            try {
+                const res = await fetch('/api/billing?dataId=' + encodeURIComponent(b.dataId), {
+                    headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                });
+                const j = await res.json();
+                if (j && j.success && j.data) billState = j.data;
+            } catch(e) {}
+        }
+
+        if (!billState) {
+            this.showToast('Could not load source bill to duplicate', '⚠️');
+            return;
+        }
+
+        const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        if (!billState.projectMeta) billState.projectMeta = {};
+        billState.projectMeta.billNo = newBillNo.trim();
+        if (!billState.invoiceData) billState.invoiceData = {};
+        billState.invoiceData.invoiceNo = newBillNo.trim();
+        billState.isFinalized = false;
+        billState.dataId = newBillId;
+
+        const headers = { 'Content-Type': 'application/json' };
+        try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+        await fetch('/api/billing', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(Object.assign(billState, { dataId: newBillId, force: true, baseRev: 0 }))
+        });
+
+        this.showToast(`Duplicate bill [${newBillNo.trim()}] created! Opening...`, '📋');
+        await this.openBill(newBillId);
+    },
+    async deleteBill(b) {
+        if (!b) return;
+        if (b.dataId === this.activeBillId) {
+            alert('Yeh bill abhi active (open) hai. Pehle koi doosra bill open karein, phir isko delete karein.');
+            return;
+        }
+        const ok = confirm(`Kya aap sach me Bill [${b.billNo || b.dataId}] ko database se DELETE karna chahte hain?\n\nYeh action wapas nahi hoga.`);
+        if (!ok) return;
+
+        this.showToast(`Deleting bill [${b.billNo}]...`, '⏳');
+        const success = await this.deleteBillFromCloud(b.dataId);
+        if (success) {
+            this.showToast(`Bill [${b.billNo}] deleted from database 🗑️`, '🗑️');
+            await this.loadSavedBillsList();
+        }
+    },
     debouncedSave() {
         if (this._isLoading) return;
         if (this._saveTimer) clearTimeout(this._saveTimer);
@@ -25,6 +251,7 @@ window.SyncModule = {
     },
     buildSyncPayload(extra = {}) {
         return Object.assign({
+            dataId: this.activeBillId || 'main-billing-state',
             isFinalized: this.isFinalized,
             projectMeta: this.projectMeta,
             selectedCompanyId: this.selectedCompanyId,
@@ -265,7 +492,12 @@ window.SyncModule = {
                 savedAt: Date.now(),
                 baseRev: (typeof this.cloudRev === 'number' ? this.cloudRev : 0)
             };
-            localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
+            const curBillId = this.activeBillId || 'main-billing-state';
+            const localKey = (curBillId && curBillId !== 'main-billing-state')
+                ? ('lk_billing_state_' + curBillId)
+                : 'lk_billing_app_state_v10';
+            localStorage.setItem(localKey, JSON.stringify(dataToSave));
+            try { localStorage.setItem('lk_billing_active_bill_id', curBillId); } catch(e) {}
             try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
             try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode || 'none'); } catch(e) {}
             if (!this.isPerformingHistoryAction) {
@@ -283,8 +515,11 @@ window.SyncModule = {
           // Cloud copy lao (fail ho to null — phir local hi jeetega)
           let serverRaw = null;
           let serverUpdatedAt = 0;
+          const targetBillId = (opts && opts.dataId) || this.activeBillId || localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state';
+          this.activeBillId = targetBillId;
+          try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}
           try {
-              const res = await fetch('/api/billing', {
+              const res = await fetch('/api/billing?dataId=' + encodeURIComponent(targetBillId), {
                   headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
               });
               if (!res.ok) {
@@ -308,7 +543,10 @@ window.SyncModule = {
           // kabhi nahi harega — chahe server timestamp naya dikhe (wahi revert bug tha).
           // Server tabhi jeetega jab us par dusre PC ka NAYA synced data ho.
           let localRaw = null;
-          try { localRaw = localStorage.getItem('lk_billing_app_state_v10'); } catch(e) {}
+          const localKey = (targetBillId && targetBillId !== 'main-billing-state')
+              ? ('lk_billing_state_' + targetBillId)
+              : 'lk_billing_app_state_v10';
+          try { localRaw = localStorage.getItem(localKey); } catch(e) {}
           let localSavedAt = 0;
           let localRev = 0;
           let localHash = '';

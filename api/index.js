@@ -79,7 +79,7 @@ const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt'
+    'dataId', 'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt'
 ]);
 
 function pickAllowedKeys(obj) {
@@ -122,9 +122,15 @@ function dbErrorHint(err) {
 // purana khula tab naya cloud data overwrite na kar paye)
 const billingStateSchema = new mongoose.Schema({
     dataId: { type: String, default: 'main-billing-state', unique: true },
+    billNo: { type: String, default: '' },
+    billDate: { type: String, default: '' },
+    contractorName: { type: String, default: '' },
+    projectName: { type: String, default: '' },
+    isFinalized: { type: Boolean, default: false },
     stateData: { type: Object, required: true },
     rev: { type: Number, default: 0 },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
 });
 
 const BillingState = mongoose.models.BillingState || mongoose.model('BillingState', billingStateSchema);
@@ -148,15 +154,67 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/billing', requireApiKey, async (req, res) => {
     try {
         await connectToDatabase();
-        const state = await BillingState.findOne({ dataId: 'main-billing-state' });
+        const dataId = (req.query && req.query.dataId && String(req.query.dataId).trim())
+            ? String(req.query.dataId).trim()
+            : 'main-billing-state';
+        const state = await BillingState.findOne({ dataId });
         if (!state) {
-            log.info('GET', 'No billing state found — returning null');
-            return res.json({ success: true, data: null });
+            log.info('GET', `No billing state found for ${dataId} — returning null`);
+            return res.json({ success: true, data: null, dataId });
         }
-        log.info('GET', `Billing state fetched (rev: ${state.rev || 0})`);
-        res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
+        log.info('GET', `Billing state fetched for ${dataId} (rev: ${state.rev || 0})`);
+        res.json({ success: true, dataId: state.dataId || dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         log.error('GET', 'Error fetching billing data', err);
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
+    }
+});
+
+app.get('/api/bills', requireApiKey, async (req, res) => {
+    try {
+        await connectToDatabase();
+        const docs = await BillingState.find({})
+            .select('dataId billNo billDate contractorName projectName isFinalized rev updatedAt createdAt stateData.projectMeta stateData.invoiceData')
+            .sort({ updatedAt: -1 })
+            .lean();
+        
+        const bills = docs.map(doc => {
+            const pm = (doc.stateData && doc.stateData.projectMeta) || {};
+            const inv = (doc.stateData && doc.stateData.invoiceData) || {};
+            return {
+                dataId: doc.dataId || 'main-billing-state',
+                billNo: doc.billNo || pm.billNo || inv.invoiceNo || 'Main Bill',
+                billDate: doc.billDate || pm.billDate || inv.invoiceDate || '',
+                contractorName: doc.contractorName || pm.contractorName || inv.contractorName || '',
+                projectName: doc.projectName || pm.projectName || 'Billing Project',
+                isFinalized: doc.isFinalized !== undefined ? !!doc.isFinalized : !!(doc.stateData && doc.stateData.isFinalized),
+                rev: doc.rev || 0,
+                updatedAt: doc.updatedAt || new Date()
+            };
+        });
+        res.json({ success: true, bills });
+    } catch (err) {
+        log.error('GET-BILLS', 'Error fetching bills list', err);
+        res.status(500).json({ success: false, error: dbErrorHint(err) });
+    }
+});
+
+app.post('/api/billing/delete', requireApiKey, async (req, res) => {
+    try {
+        await connectToDatabase();
+        const dataId = req.body && req.body.dataId ? String(req.body.dataId).trim() : '';
+        if (!dataId) {
+            return res.status(400).json({ success: false, error: 'dataId is required' });
+        }
+        const count = await BillingState.countDocuments();
+        if (count <= 1) {
+            return res.status(400).json({ success: false, error: 'Cannot delete the only existing bill. Database me kam se kam ek bill hona chahiye.' });
+        }
+        await BillingState.deleteOne({ dataId });
+        log.info('DELETE-BILL', `Bill deleted: ${dataId}`);
+        res.json({ success: true, message: 'Bill deleted successfully' });
+    } catch (err) {
+        log.error('DELETE-BILL', 'Error deleting bill', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
     }
 });
@@ -183,11 +241,17 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Empty payload' });
         }
 
+        const dataId = (req.body && req.body.dataId && String(req.body.dataId).trim())
+            ? String(req.body.dataId).trim()
+            : ((req.query && req.query.dataId && String(req.query.dataId).trim())
+                ? String(req.query.dataId).trim()
+                : 'main-billing-state');
+
         const dataToSave = pickAllowedKeys(req.body || {});
 
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
-        const existing = await BillingState.findOne({ dataId: 'main-billing-state' });
+        const existing = await BillingState.findOne({ dataId });
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
             log.warn('POST', 'Save rejected — bill is finalized/locked');
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
@@ -256,19 +320,31 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             });
         }
 
+        const metaBillNo = (dataToSave.projectMeta && dataToSave.projectMeta.billNo) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceNo) || 'Main Bill';
+        const metaBillDate = (dataToSave.projectMeta && dataToSave.projectMeta.billDate) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceDate) || '';
+        const metaContractor = (dataToSave.projectMeta && dataToSave.projectMeta.contractorName) || (dataToSave.invoiceData && dataToSave.invoiceData.contractorName) || '';
+        const metaProject = (dataToSave.projectMeta && dataToSave.projectMeta.projectName) || 'Billing Project';
+        const metaIsFinalized = !!dataToSave.isFinalized;
+
         const nextRev = curRev + 1;
         await BillingState.findOneAndUpdate(
-            { dataId: 'main-billing-state' },
+            { dataId },
             {
+                dataId,
+                billNo: metaBillNo,
+                billDate: metaBillDate,
+                contractorName: metaContractor,
+                projectName: metaProject,
+                isFinalized: metaIsFinalized,
                 stateData: dataToSave,
                 rev: nextRev,
                 updatedAt: new Date()
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
-        log.info('POST', `Data saved successfully (rev: ${nextRev}, payload: ${rawLen} bytes)`);
-        res.json({ success: true, message: 'Data saved successfully', rev: nextRev });
+        log.info('POST', `Data saved successfully for ${dataId} (rev: ${nextRev}, payload: ${rawLen} bytes)`);
+        res.json({ success: true, message: 'Data saved successfully', dataId, rev: nextRev });
     } catch (err) {
         log.error('POST', 'Error saving billing data', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });

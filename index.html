@@ -77,6 +77,31 @@
 
                     <!-- Cloud Sync Pill + User Profile Pill -->
                     <div class="tabs-export-group" style="display: flex; align-items: center; gap: 8px;">
+                        <!-- 🗄️ Saved Bills & New Bill Group -->
+                        <div class="tabs-bill-group" style="display: flex; align-items: center; gap: 6px;">
+                            <!-- Active Bill Pill -->
+                            <div class="active-bill-pill"
+                                @click="openSavedBillsManager"
+                                :title="'Current Bill: ' + ((projectMeta && projectMeta.billNo) || 'Main Bill') + '. Click to open or manage saved bills in database.'"
+                                style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35); user-select: none; transition: all 0.2s;">
+                                <span>📄</span>
+                                <span>Bill: {{ (projectMeta && projectMeta.billNo) || 'Main Bill' }}</span>
+                                <span style="font-size: 0.65rem; opacity: 0.7;">▾</span>
+                            </div>
+
+                            <!-- Open Bill Button -->
+                            <button class="btn btn-secondary" @click="openSavedBillsManager" title="Database se saved bills open karein" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px;">
+                                <span>📂</span>
+                                <span>Open Bill</span>
+                            </button>
+
+                            <!-- New Bill Button -->
+                            <button class="btn btn-primary" @click="openNewBillModal" title="Naya Bill / RA Bill banayein" style="padding: 4px 11px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white;">
+                                <span>➕</span>
+                                <span>New Bill</span>
+                            </button>
+                        </div>
+
                         <!-- ☁️ Live Cloud Sync Status Pill -->
                         <div class="cloud-sync-pill"
                             @click="syncToMongoNow({ manual: true })"
@@ -1345,6 +1370,14 @@
             <button class="qa-btn qa-btn-outline" @click="openContractorManager" title="Open Contractor & Firm Database">
                 📁 Contractor DB
             </button>
+
+            <button class="qa-btn qa-btn-blue" @click="openSavedBillsManager" title="Saved bills open karein ya manage karein">
+                📂 Open Saved Bills
+            </button>
+
+            <button class="qa-btn qa-btn-green" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
+                ➕ Create New Bill
+            </button>
         </div>
 
         <!-- Billing Summary Card -->
@@ -2187,6 +2220,277 @@
                         </div>
                         <button type="button" class="btn btn-primary" @click="showSapMasterModal = false">Close</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODAL 1: SAVED BILLS DATABASE (OPEN/MANAGE) -->
+        <!-- ========================================== -->
+        <div class="modal-overlay" v-if="showSavedBillsModal" @click.self="showSavedBillsModal = false">
+            <div class="modal-content modal-content-lg" style="max-width: 860px; max-height: 90vh; display: flex; flex-direction: column;">
+                <div class="modal-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.4rem;">🗄️</span>
+                        <div>
+                            <div class="modal-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <span>Saved Bills Database</span>
+                                <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 999px; background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35);">
+                                    {{ savedBillsList.length }} Bills in Cloud
+                                </span>
+                            </div>
+                            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
+                                Database me save kiye gaye bills open karein, naya RA bill banayein, ya delete karein
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn btn-primary" @click="openNewBillModal" style="font-size: 0.78rem; padding: 0.35rem 0.8rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: flex; align-items: center; gap: 4px;">
+                            <span>➕</span>
+                            <span>New Bill</span>
+                        </button>
+                        <button class="modal-close" @click="showSavedBillsModal = false">✕</button>
+                    </div>
+                </div>
+
+                <div class="modal-body" style="padding: 1rem; overflow-y: auto; flex: 1;">
+                    <!-- Search & Actions Bar -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+                        <div style="flex: 1; position: relative;">
+                            <input type="text" v-model="savedBillsSearchQuery" placeholder="🔍 Search bill by Bill No, Date, Contractor, Project..."
+                                style="width: 100%; padding: 0.45rem 0.75rem; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
+                        </div>
+                        <button type="button" class="btn btn-secondary" @click="loadSavedBillsList" :disabled="isLoadingBills" title="Refresh bills list from MongoDB" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                            <span :class="{ 'spin-anim': isLoadingBills }">🔄</span>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div v-if="isLoadingBills" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                        <div class="spin-anim" style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
+                        <div style="font-size: 0.88rem; font-weight: 600;">Loading saved bills from MongoDB...</div>
+                    </div>
+
+                    <!-- Bills Cards List -->
+                    <div v-else-if="filteredSavedBills.length > 0" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div v-for="b in filteredSavedBills" :key="b.dataId"
+                            style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid; transition: all 0.2s;"
+                            :style="b.dataId === activeBillId 
+                                ? 'background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.5); box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);' 
+                                : 'background: var(--bg-card); border-color: var(--border-subtle);'">
+                            
+                            <!-- Left: Bill Info -->
+                            <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0;">
+                                <div style="font-size: 1.6rem; line-height: 1; margin-top: 2px;">
+                                    {{ b.dataId === activeBillId ? '🌟' : '📄' }}
+                                </div>
+                                <div style="min-width: 0; flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span style="font-size: 0.96rem; font-weight: 800; color: var(--text-main);">
+                                            {{ b.billNo || 'Main Bill' }}
+                                        </span>
+                                        <span v-if="b.dataId === activeBillId" style="font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;">
+                                            ACTIVE NOW
+                                        </span>
+                                        <span v-if="b.isFinalized" style="font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35);">
+                                            🔒 Finalized
+                                        </span>
+                                        <span v-else style="font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.35);">
+                                            ✍️ Draft
+                                        </span>
+                                        <span v-if="b.billDate" style="font-size: 0.74rem; color: var(--text-dim); font-family: monospace;">
+                                            📅 {{ b.billDate }}
+                                        </span>
+                                    </div>
+
+                                    <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 0.76rem; color: var(--text-muted); flex-wrap: wrap;">
+                                        <span v-if="b.contractorName">👤 <strong>Contractor:</strong> {{ b.contractorName }}</span>
+                                        <span v-if="b.projectName">🏗️ <strong>Project:</strong> {{ b.projectName }}</span>
+                                        <span>⏱️ <strong>Updated:</strong> {{ new Date(b.updatedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Actions -->
+                            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                <!-- Open Button -->
+                                <button v-if="b.dataId !== activeBillId" type="button" class="btn btn-primary" @click="openBill(b.dataId)"
+                                    style="padding: 5px 12px; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 4px;" title="Is bill ko load karein">
+                                    <span>📂</span>
+                                    <span>Open</span>
+                                </button>
+                                <span v-else style="font-size: 0.76rem; font-weight: 700; color: #10b981; padding: 4px 8px;">
+                                    ✓ Opened
+                                </span>
+
+                                <!-- Duplicate / Clone Button -->
+                                <button type="button" class="btn btn-secondary" @click="duplicateBill(b)"
+                                    style="padding: 5px 9px; font-size: 0.78rem;" title="Is bill ki duplicate copy banayein">
+                                    <span>📋</span>
+                                </button>
+
+                                <!-- Delete Button -->
+                                <button type="button" class="btn btn-danger" @click="deleteBill(b)"
+                                    :disabled="b.dataId === activeBillId || savedBillsList.length <= 1"
+                                    :title="b.dataId === activeBillId ? 'Active bill ko delete nahi kar sakte' : 'Is bill ko database se delete karein'"
+                                    style="padding: 5px 9px; font-size: 0.78rem;">
+                                    <span>🗑️</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div v-else style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                        <div style="font-size: 2.2rem; margin-bottom: 8px;">📭</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">No matching bills found</div>
+                        <div style="font-size: 0.78rem; margin-top: 4px;">Koi doosra search term try karein ya naya bill banayein.</div>
+                        <button type="button" class="btn btn-primary" @click="openNewBillModal" style="margin-top: 12px; font-size: 0.8rem;">
+                            ➕ Create New Bill
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="padding: 0.75rem 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.74rem; color: var(--text-muted);">
+                        💡 Active bill auto-save hota hai. Doosra bill open karne par current changes cloud par save ho jate hain.
+                    </div>
+                    <button type="button" class="btn btn-secondary" @click="showSavedBillsModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODAL 2: CREATE NEW BILL / RA BILL         -->
+        <!-- ========================================== -->
+        <div class="modal-overlay" v-if="showNewBillModal" @click.self="showNewBillModal = false">
+            <div class="modal-content" style="max-width: 580px;">
+                <div class="modal-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3rem;">➕</span>
+                        <div>
+                            <div class="modal-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main);">Create New Bill</div>
+                            <div style="font-size: 0.73rem; color: var(--text-muted);">MongoDB database me naya bill start karein</div>
+                        </div>
+                    </div>
+                    <button class="modal-close" @click="showNewBillModal = false">✕</button>
+                </div>
+
+                <div class="modal-body" style="padding: 1.1rem; display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Form Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- Bill No -->
+                        <div>
+                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
+                                BILL / INVOICE NO *
+                            </label>
+                            <input type="text" v-model="newBillForm.billNo" placeholder="e.g. RSL/RA/03"
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1.5px solid var(--accent-indigo); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.88rem; font-weight: 700; outline: none;">
+                        </div>
+
+                        <!-- Bill Date -->
+                        <div>
+                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
+                                BILL DATE *
+                            </label>
+                            <input type="date" v-model="newBillForm.billDate"
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
+                        </div>
+                    </div>
+
+                    <!-- Project Name -->
+                    <div>
+                        <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
+                            PROJECT NAME
+                        </label>
+                        <input type="text" v-model="newBillForm.projectName" placeholder="e.g. RDSS T-10 GADCHIROLI"
+                            style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- Contractor Selection -->
+                        <div>
+                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
+                                CONTRACTOR
+                            </label>
+                            <select v-model="newBillForm.selectedContractorId"
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem; outline: none;">
+                                <option v-for="c in contractorsList" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Company Selection -->
+                        <div>
+                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
+                                CLIENT ENTITY
+                            </label>
+                            <select v-model="newBillForm.selectedCompanyId"
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.82rem; outline: none;">
+                                <option v-for="comp in companiesList" :key="comp.id" :value="comp.id">{{ comp.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Creation Mode Selection -->
+                    <div>
+                        <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">
+                            INITIAL TEMPLATE & SETUP MODE
+                        </label>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Option 1: Copy Master (Recommended) -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
+                                :style="newBillForm.mode === 'copy_master' ? 'background: rgba(16, 185, 129, 0.08); border-color: #10b981;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
+                                <input type="radio" v-model="newBillForm.mode" value="copy_master" style="margin-top: 3px;">
+                                <div>
+                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                                        <span>📋 Copy Master Setup</span>
+                                        <span style="font-size: 0.68rem; padding: 1px 6px; border-radius: 999px; background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 800;">RECOMMENDED</span>
+                                    </div>
+                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
+                                        Sabhi 20+ Activities, Materials, Rates, aur SAP Mappings retain rahenge — sirf <strong>Quantities 0</strong> se reset hongi (agli RA bill cycle ke liye best).
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Option 2: Fresh Default -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
+                                :style="newBillForm.mode === 'fresh_default' ? 'background: rgba(99, 102, 241, 0.08); border-color: #6366f1;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
+                                <input type="radio" v-model="newBillForm.mode" value="fresh_default" style="margin-top: 3px;">
+                                <div>
+                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
+                                        ✨ Standard Default Template
+                                    </div>
+                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
+                                        Bundled default activities aur master abstract se bilkul fresh start karein.
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Option 3: Full Clone -->
+                            <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1.5px solid; cursor: pointer; transition: all 0.2s;"
+                                :style="newBillForm.mode === 'full_clone' ? 'background: rgba(245, 158, 11, 0.08); border-color: #f59e0b;' : 'background: var(--bg-card); border-color: var(--border-subtle);'">
+                                <input type="radio" v-model="newBillForm.mode" value="full_clone" style="margin-top: 3px;">
+                                <div>
+                                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
+                                        🔄 Exact Duplicate (Clone)
+                                    </div>
+                                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;">
+                                        Current bill ki sabhi quantities aur locations sahit poora clone banayein.
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="padding: 0.85rem 1.1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" @click="showNewBillModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="createNewBill"
+                        style="padding: 0.45rem 1.1rem; font-size: 0.84rem; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: flex; align-items: center; gap: 6px;">
+                        <span>🚀</span>
+                        <span>Create & Open Bill</span>
+                    </button>
                 </div>
             </div>
         </div>

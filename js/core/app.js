@@ -196,11 +196,37 @@
                 },
                 showExtraItemSuggest: false,
                 showGDriveModal: false,
-                gdriveWebhookUrl: localStorage.getItem('billing_gdrive_webhook_url') || ''
+                gdriveWebhookUrl: localStorage.getItem('billing_gdrive_webhook_url') || '',
+                activeBillId: (function() { try { return localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state'; } catch(e) { return 'main-billing-state'; } })(),
+                savedBillsList: [],
+                isLoadingBills: false,
+                showSavedBillsModal: false,
+                savedBillsSearchQuery: '',
+                showNewBillModal: false,
+                newBillForm: {
+                    billNo: '',
+                    billDate: '',
+                    projectName: '',
+                    selectedContractorId: 'ranjeet_singh_lodhi',
+                    selectedCompanyId: 'ashoka_buildcon',
+                    mode: 'copy_master'
+                }
             };
         },
 
         computed: {
+            filteredSavedBills() {
+                const list = this.savedBillsList || [];
+                const q = (this.savedBillsSearchQuery || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(b => {
+                    const no = String(b.billNo || '').toLowerCase();
+                    const c = String(b.contractorName || '').toLowerCase();
+                    const p = String(b.projectName || '').toLowerCase();
+                    const d = String(b.billDate || '').toLowerCase();
+                    return no.includes(q) || c.includes(q) || p.includes(q) || d.includes(q);
+                });
+            },
             totalMappedItemsCount() {
                 let total = 0;
                 if (this.activities) {
@@ -1015,14 +1041,15 @@
                 try {
                     // 1. Check if another PC saved changes to cloud, auto-pull them!
                     if (typeof this.cloudRev === 'number') {
-                        const headRes = await fetch('/api/billing', {
+                        const curBillId = this.activeBillId || 'main-billing-state';
+                        const headRes = await fetch('/api/billing?dataId=' + encodeURIComponent(curBillId), {
                             headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
                         });
                         if (headRes.ok) {
                             const headData = await headRes.json();
                             if (headData && typeof headData.rev === 'number' && headData.rev > this.cloudRev) {
                                 console.info(`Heartbeat: newer cloud rev detected (${headData.rev} > ${this.cloudRev}), loading updates...`);
-                                await this.loadFromStorage({ forceServer: true });
+                                await this.loadFromStorage({ forceServer: true, dataId: curBillId });
                                 try { this.showToast('Cloud updates received from another PC ☁️', 'ℹ️'); } catch(e) {}
                                 return;
                             }

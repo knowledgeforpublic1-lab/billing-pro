@@ -2172,3 +2172,7 @@
     filter: brightness(1.15);
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
 }
+.active-bill-pill:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+}
