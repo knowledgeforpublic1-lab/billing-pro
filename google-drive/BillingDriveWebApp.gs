@@ -1,36 +1,24 @@
 /**
- * BILLING APP → Google Drive backup (Apps Script Web App)
- * Setup steps: google-drive/README.md
- *
- * Deploy: script.google.com → Deploy > New deployment > Web app
- *   Execute as: Me | Who has access: Anyone
- *   Jo /exec URL mile, use billing app ke "Google Drive Settings" modal me paste karo.
- *
- * Flow: Billing app → /api/gdrive-upload (Vercel) → yahan (doPost) → Drive folder
- * Drive me structure:
- *   RDSS T-10 GADCHIROLI/
- *     └── <Contractor Firm Name>/
- *           └── Tax_Invoice_<BillNo>_All_Sheets.xlsx
+ * BILLING APP → Google Drive Backup (Apps Script Web App)
+ * Target Folder: RDSS T-10 GADCHIROLI / <Contractor Name> / <Contractor Name>_RA-<No>.xlsx
+ * Behavior: Overwrites (replaces) existing file with the same name — no duplicates or timestamps.
  */
 
 const ROOT_FOLDER_NAME = 'RDSS T-10 GADCHIROLI';
 
-/** Connection test — app ka "Test Connection" button isse GET maarta hai */
+/** Connection test (doGet) */
 function doGet(e) {
   return jsonOut({
     ok: true,
     status: 'success',
     app: 'billing-drive-backup',
-    version: 2,
+    version: 3,
     time: new Date().toISOString(),
     rootFolder: ROOT_FOLDER_NAME
   });
 }
 
-/**
- * File upload. Body (JSON, Content-Type text/plain):
- * { folderName, contractorName, billNo, fileName, fileData(base64), mimeType }
- */
+/** File upload (doPost) */
 function doPost(e) {
   try {
     const raw = (e && e.postData && e.postData.contents) || '';
@@ -46,8 +34,9 @@ function doPost(e) {
     const root = getOrCreateFolder_(rootName);
     const contractorFolder = getOrCreateFolder_(clean_(body.contractorName) || 'Unknown_Contractor', root);
 
-    const fileName = uniqueFileName_(contractorFolder, clean_(body.fileName) || 'invoice.xlsx');
-    const file = contractorFolder.createFile(fileName, bytes, body.mimeType || MimeType.XLSX);
+    const fileName = clean_(body.fileName) || 'invoice.xlsx';
+    // Overwrite existing file with same name so duplicate files with timestamps are NOT created
+    const file = saveOrOverwriteFile_(contractorFolder, fileName, bytes, body.mimeType || MimeType.XLSX);
 
     return jsonOut({
       ok: true,
@@ -65,25 +54,25 @@ function doPost(e) {
   }
 }
 
-/** Folder mile to use, warna banao */
+/** Folder mile to use, warna naya banao */
 function getOrCreateFolder_(name, parent) {
   const it = parent ? parent.getFoldersByName(name) : DriveApp.getRootFolder().getFoldersByName(name);
   if (it.hasNext()) return it.next();
   return parent ? parent.createFolder(name) : DriveApp.createFolder(name);
 }
 
-/** Naam ka file pehle se hai to timestamp lagao (purane bill overwrite na hon) */
-function uniqueFileName_(folder, name) {
-  const it = folder.getFilesByName(name);
-  if (!it.hasNext()) return name;
-  const dot = name.lastIndexOf('.');
-  const base = dot > 0 ? name.substring(0, dot) : name;
-  const ext = dot > 0 ? name.substring(dot) : '';
-  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'ddMMyyyy_HHmmss');
-  return base + '_' + stamp + ext;
+/** Same bill file pehle se ho to use overwrite (replace) karo taaki duplicate/timestamped files na banein */
+function saveOrOverwriteFile_(folder, name, bytes, mimeType) {
+  const existing = folder.getFilesByName(name);
+  while (existing.hasNext()) {
+    try {
+      existing.next().setTrashed(true);
+    } catch(e) {}
+  }
+  return folder.createFile(name, bytes, mimeType);
 }
 
-/** Windows/folder ke liye unsafe characters hatao */
+/** Windows/folder ke liye safe naam */
 function clean_(s) {
   return String(s == null ? '' : s).replace(/[\\/:*?"<>|]/g, '_').trim().substring(0, 120);
 }
