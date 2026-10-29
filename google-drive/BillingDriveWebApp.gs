@@ -1,30 +1,56 @@
 /**
- * BILLING APP → Google Drive Backup (Apps Script Web App)
+ * BILLING APP → Google Drive Backup & File Browser (Apps Script Web App)
  * Target Folder: RDSS T-10 GADCHIROLI / <Contractor Name> / <Contractor Name>_RA-<No>.xlsx
- * Behavior: Overwrites (replaces) existing file with the same name — no duplicates or timestamps.
+ * Features:
+ *  - Save & overwrite bill files without duplicates
+ *  - Browse / list all saved invoice workbooks
+ *  - Retrieve file data (base64) to open directly in Billing Pro app
  */
 
 const ROOT_FOLDER_NAME = 'RDSS T-10 GADCHIROLI';
 
-/** Connection test (doGet) */
+/** Connection test & read operations (doGet) */
 function doGet(e) {
-  return jsonOut({
-    ok: true,
-    status: 'success',
-    app: 'billing-drive-backup',
-    version: 3,
-    time: new Date().toISOString(),
-    rootFolder: ROOT_FOLDER_NAME
-  });
+  try {
+    const p = (e && e.parameter) || {};
+    const action = (p.action || '').trim();
+
+    if (action === 'list') {
+      return listFiles_(p.folderName || ROOT_FOLDER_NAME);
+    }
+    if (action === 'getFile') {
+      return getFile_(p.fileId);
+    }
+
+    return jsonOut({
+      ok: true,
+      status: 'success',
+      app: 'billing-drive-backup',
+      version: 4,
+      time: new Date().toISOString(),
+      rootFolder: ROOT_FOLDER_NAME
+    });
+  } catch (err) {
+    return jsonOut({ ok: false, status: 'error', error: String((err && err.message) || err) });
+  }
 }
 
-/** File upload (doPost) */
+/** File upload & actions (doPost) */
 function doPost(e) {
   try {
     const raw = (e && e.postData && e.postData.contents) || '';
     if (!raw) return jsonOut({ ok: false, status: 'error', error: 'Empty POST body' });
 
     const body = JSON.parse(raw);
+
+    // Support action in POST body
+    if (body.action === 'list') {
+      return listFiles_(body.folderName || ROOT_FOLDER_NAME);
+    }
+    if (body.action === 'getFile') {
+      return getFile_(body.fileId);
+    }
+
     if (!body.fileData || !body.fileName) {
       return jsonOut({ ok: false, status: 'error', error: 'fileData / fileName missing in payload' });
     }
@@ -48,6 +74,76 @@ function doPost(e) {
       folder: rootName + ' / ' + contractorFolder.getName(),
       billNo: body.billNo || '',
       savedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    return jsonOut({ ok: false, status: 'error', error: String((err && err.message) || err) });
+  }
+}
+
+/** List all bills in root folder and contractor subfolders */
+function listFiles_(rootName) {
+  try {
+    const root = getOrCreateFolder_(clean_(rootName) || ROOT_FOLDER_NAME);
+    const files = [];
+
+    function scan(folder, contractorName) {
+      const it = folder.getFiles();
+      while (it.hasNext()) {
+        const f = it.next();
+        const name = f.getName();
+        if (name.toLowerCase().endsWith('.xlsx') || name.toLowerCase().endsWith('.xls')) {
+          files.push({
+            id: f.getId(),
+            name: name,
+            contractor: contractorName || '',
+            size: f.getSize(),
+            url: f.getUrl(),
+            updatedAt: f.getLastUpdated().toISOString()
+          });
+        }
+      }
+    }
+
+    // Scan root and contractor folders
+    scan(root, '');
+    const sub = root.getFolders();
+    while (sub.hasNext()) {
+      const subFolder = sub.next();
+      scan(subFolder, subFolder.getName());
+    }
+
+    // Sort newest first
+    files.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    return jsonOut({
+      ok: true,
+      status: 'success',
+      rootFolder: root.getName(),
+      rootFolderUrl: root.getUrl(),
+      totalFiles: files.length,
+      files: files
+    });
+  } catch (err) {
+    return jsonOut({ ok: false, status: 'error', error: String((err && err.message) || err) });
+  }
+}
+
+/** Retrieve file content as base64 */
+function getFile_(fileId) {
+  try {
+    if (!fileId) return jsonOut({ ok: false, error: 'fileId is required' });
+    const file = DriveApp.getFileById(fileId);
+    const bytes = file.getBlob().getBytes();
+    const base64 = Utilities.base64Encode(bytes);
+    return jsonOut({
+      ok: true,
+      status: 'success',
+      id: file.getId(),
+      fileName: file.getName(),
+      size: file.getSize(),
+      mimeType: file.getMimeType(),
+      updatedAt: file.getLastUpdated().toISOString(),
+      fileData: base64
     });
   } catch (err) {
     return jsonOut({ ok: false, status: 'error', error: String((err && err.message) || err) });

@@ -516,6 +516,87 @@ app.get('/api/gdrive-config', requireApiKey, async (req, res) => {
     res.json({ success: true, hasEnvWebhook: true, webhookUrl: effectiveUrl });
 });
 
+// List all bills / files in Google Drive
+app.get('/api/gdrive-files', requireApiKey, async (req, res) => {
+    const ctx = 'GDRIVE-FILES';
+    try {
+        const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
+        let effectiveWebhookUrl = sanitizeGasUrl(rawUrl);
+        if (validateGasUrl(effectiveWebhookUrl)) {
+            effectiveWebhookUrl = sanitizeGasUrl(process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        }
+        const bad = validateGasUrl(effectiveWebhookUrl);
+        if (bad) return res.status(400).json({ success: false, error: bad });
+
+        const folderName = (req.query && req.query.folderName ? String(req.query.folderName) : 'RDSS T-10 GADCHIROLI').trim();
+        const gasPayload = JSON.stringify({ action: 'list', folderName });
+
+        const gasResponse = await callGas(effectiveWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: gasPayload
+        });
+
+        const text = await gasResponse.text();
+        let json;
+        try { json = JSON.parse(text); } catch(e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
+
+        if (gasResponse.ok && json.ok) {
+            return res.json({ success: true, files: json.files || [], rootFolder: json.rootFolder || folderName, rootFolderUrl: json.rootFolderUrl || '' });
+        } else {
+            return res.status(502).json({
+                success: false,
+                error: json.error || `Apps Script returned HTTP ${gasResponse.status}`,
+                details: json
+            });
+        }
+    } catch(err) {
+        log.error(ctx, 'List files error', err);
+        res.status(500).json({ success: false, error: 'Failed to list files from Google Drive: ' + (err.message || 'Unknown error') });
+    }
+});
+
+// Download / retrieve file data from Google Drive
+app.get('/api/gdrive-file', requireApiKey, async (req, res) => {
+    const ctx = 'GDRIVE-FILE-GET';
+    try {
+        const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
+        let effectiveWebhookUrl = sanitizeGasUrl(rawUrl);
+        if (validateGasUrl(effectiveWebhookUrl)) {
+            effectiveWebhookUrl = sanitizeGasUrl(process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
+        }
+        const bad = validateGasUrl(effectiveWebhookUrl);
+        if (bad) return res.status(400).json({ success: false, error: bad });
+
+        const fileId = (req.query && req.query.fileId ? String(req.query.fileId) : '').trim();
+        if (!fileId) return res.status(400).json({ success: false, error: 'fileId is required' });
+
+        const gasPayload = JSON.stringify({ action: 'getFile', fileId });
+        const gasResponse = await callGas(effectiveWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: gasPayload
+        });
+
+        const text = await gasResponse.text();
+        let json;
+        try { json = JSON.parse(text); } catch(e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
+
+        if (gasResponse.ok && json.ok && json.fileData) {
+            return res.json({ success: true, fileData: json.fileData, fileName: json.fileName, mimeType: json.mimeType });
+        } else {
+            return res.status(502).json({
+                success: false,
+                error: json.error || `Apps Script returned HTTP ${gasResponse.status}`,
+                details: json
+            });
+        }
+    } catch(err) {
+        log.error(ctx, 'Get file error', err);
+        res.status(500).json({ success: false, error: 'Failed to get file from Google Drive: ' + (err.message || 'Unknown error') });
+    }
+});
+
 app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'GDRIVE-PROXY';
     try {

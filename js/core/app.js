@@ -208,6 +208,12 @@
                 savedBillsList: [],
                 isLoadingBills: false,
                 showSavedBillsModal: false,
+                savedBillsModalTab: 'database', // 'database' | 'drive'
+                gdriveFilesList: [],
+                isLoadingDriveFiles: false,
+                gdriveFilesError: '',
+                gdriveRootFolderUrl: '',
+                isParsingBillFile: false,
                 savedBillsSearchQuery: '',
                 showNewBillModal: false,
                 newBillForm: {
@@ -232,7 +238,7 @@
                 return !!(u && (u.startsWith('https://script.google.com/') || u.startsWith('script.google.com/')) && u.includes('/exec'));
             },
             effectiveBillNo() {
-                return (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+                return (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
             },
             effectiveRaNo() {
                 if (this.projectMeta && this.projectMeta.raNo) {
@@ -254,6 +260,16 @@
                     const p = String(b.projectName || '').toLowerCase();
                     const d = String(b.billDate || '').toLowerCase();
                     return no.includes(q) || c.includes(q) || p.includes(q) || d.includes(q);
+                });
+            },
+            filteredGdriveFiles() {
+                const list = this.gdriveFilesList || [];
+                const q = (this.savedBillsSearchQuery || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(f => {
+                    const n = String(f.name || '').toLowerCase();
+                    const c = String(f.contractor || '').toLowerCase();
+                    return n.includes(q) || c.includes(q);
                 });
             },
             totalMappedItemsCount() {
@@ -1020,6 +1036,9 @@
                         }
                     }
                 });
+            }
+            if (typeof this.cleanInvoicePlaceholderRows === 'function') {
+                this.cleanInvoicePlaceholderRows();
             }
             if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
                 // If invoice has real activities/items, clean out any leftover blank rows

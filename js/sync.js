@@ -54,10 +54,329 @@ window.SyncModule = {
             return false;
         }
     },
-    openSavedBillsManager() {
+    openSavedBillsManager(tab) {
         this.savedBillsSearchQuery = '';
+        if (tab) this.savedBillsModalTab = tab;
+        else if (!this.savedBillsModalTab) this.savedBillsModalTab = 'database';
         this.showSavedBillsModal = true;
-        this.loadSavedBillsList();
+        if (this.savedBillsModalTab === 'drive') {
+            this.fetchGoogleDriveFiles();
+        } else {
+            this.loadSavedBillsList();
+        }
+    },
+    switchSavedBillsTab(tab) {
+        this.savedBillsModalTab = tab;
+        if (tab === 'drive') {
+            if (!this.gdriveFilesList || this.gdriveFilesList.length === 0) {
+                this.fetchGoogleDriveFiles();
+            }
+        } else {
+            this.loadSavedBillsList();
+        }
+    },
+    async fetchGoogleDriveFiles() {
+        this.isLoadingDriveFiles = true;
+        this.gdriveFilesError = '';
+        try {
+            const webhookUrl = typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '';
+            const headers = {};
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+            const res = await fetch('/api/gdrive-files?url=' + encodeURIComponent(webhookUrl), { headers });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                this.gdriveFilesList = data.files || [];
+                this.gdriveRootFolderUrl = data.rootFolderUrl || '';
+            } else {
+                this.gdriveFilesError = data.error || 'Drive se file list load nahi hui';
+            }
+        } catch(err) {
+            this.gdriveFilesError = 'Connection error: ' + (err.message || 'Drive connect nahi ho paya');
+        } finally {
+            this.isLoadingDriveFiles = false;
+        }
+    },
+    async openBillFromGoogleDrive(file) {
+        if (!file || !file.id) return;
+        this.showToast(`Google Drive se [${file.name}] download ho rahi hai... ⏳`, '☁️');
+        try {
+            const webhookUrl = typeof this.getEffectiveDriveWebhookUrl === 'function' ? this.getEffectiveDriveWebhookUrl() : '';
+            const headers = {};
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+            const res = await fetch(`/api/gdrive-file?url=${encodeURIComponent(webhookUrl)}&fileId=${encodeURIComponent(file.id)}`, { headers });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success || !data.fileData) {
+                throw new Error(data.error || 'File content fetch nahi ho paya');
+            }
+
+            // Convert base64 to ArrayBuffer
+            const binary = window.atob(data.fileData);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            await this.parseAndLoadBillWorkbook(bytes.buffer, file.name);
+        } catch(err) {
+            console.error('Failed to open bill from Google Drive:', err);
+            this.showToast('Drive file open fail: ' + (err.message || err), '❌');
+            alert('Google Drive file open nahi ho payi:\n' + (err.message || err));
+        }
+    },
+    triggerLocalBillFileBrowse() {
+        const input = document.getElementById('billFileInput');
+        if (input) {
+            input.value = '';
+            input.click();
+        }
+    },
+    async handleBillFileSelect(event) {
+        const file = event && event.target && event.target.files && event.target.files[0];
+        if (!file) return;
+        this.showToast(`Loading [${file.name}]... ⏳`, '📂');
+        try {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const buffer = e.target.result;
+                    await this.parseAndLoadBillWorkbook(buffer, file.name);
+                } catch(err) {
+                    console.error('File parsing error:', err);
+                    this.showToast('File parse error: ' + (err.message || err), '❌');
+                    alert('Excel file parse nahi ho payi: ' + (err.message || err));
+                }
+            };
+            reader.onerror = () => {
+                this.showToast('File read error', '❌');
+            };
+            reader.readAsArrayBuffer(file);
+        } catch(err) {
+            this.showToast('File read fail: ' + (err.message || err), '❌');
+        }
+    },
+    async parseAndLoadBillWorkbook(buffer, fileName) {
+        this.isParsingBillFile = true;
+        try {
+            if (!window.ExcelJS) {
+                throw new Error('ExcelJS library load nahi hai. Page refresh karein.');
+            }
+            const workbook = new window.ExcelJS.Workbook();
+            await workbook.xlsx.load(buffer);
+
+            const invSheet = workbook.getWorksheet('Tax Invoice');
+            if (!invSheet) {
+                throw new Error('Is Excel file me "Tax Invoice" sheet nahi mili. Kripya Billing Pro dwara export ki gayi invoice file chunein.');
+            }
+
+            // Parse Project Name from Row 2
+            const r2 = String(invSheet.getCell('A2').value || '');
+            const pMatch = r2.match(/Project\s*Name\s*:\s*(.*)/i);
+            if (pMatch && pMatch[1]) {
+                if (!this.projectMeta) this.projectMeta = {};
+                this.projectMeta.projectName = pMatch[1].trim();
+            }
+
+            // Parse Client Details
+            const r3 = String(invSheet.getCell('A3').value || '');
+            const cMatch = r3.match(/To\s*:-\s*(.*)/i);
+            if (cMatch && cMatch[1]) this.invoiceData.clientName = cMatch[1].trim();
+            this.invoiceData.clientAddress = String(invSheet.getCell('A4').value || '').trim();
+            const r5 = String(invSheet.getCell('A5').value || '');
+            const gMatch = r5.match(/GSTIN\s*:\s*(.*)/i);
+            if (gMatch && gMatch[1]) this.invoiceData.clientGstin = gMatch[1].trim();
+
+            // Parse Contractor Name
+            const r6 = String(invSheet.getCell('A6').value || '');
+            const contMatch = r6.match(/Name\s*of\s*Contractor\s*:-\s*(.*)/i);
+            let extractedContractor = contMatch && contMatch[1] ? contMatch[1].trim() : String(invSheet.getCell('D7').value || '').trim();
+            if (extractedContractor) {
+                this.invoiceData.contractorName = extractedContractor;
+                if (!this.projectMeta) this.projectMeta = {};
+                this.projectMeta.contractorName = extractedContractor;
+
+                // Try to match firm in contractorsList
+                const firmClean = extractedContractor.replace(/^M\/[sS]\.?\s*/i, '').trim().toLowerCase();
+                const matchedFirm = (this.contractorsList || []).find(c => (c.name || '').toLowerCase().includes(firmClean) || firmClean.includes((c.name || '').toLowerCase()));
+                if (matchedFirm) {
+                    this.selectedContractorId = matchedFirm.id;
+                }
+            }
+
+            // Invoice No & RA No
+            const invNo = String(invSheet.getCell('B7').value || '').trim();
+            if (invNo) {
+                this.invoiceData.invoiceNo = invNo;
+                if (!this.projectMeta) this.projectMeta = {};
+                this.projectMeta.billNo = invNo;
+
+                const raMatch = invNo.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
+                if (raMatch && raMatch[1]) {
+                    this.projectMeta.raNo = raMatch[1];
+                    this.invoiceData.raNo = raMatch[1];
+                }
+            }
+
+            // Work Order No & Date & Contractor GSTIN
+            const r8 = String(invSheet.getCell('B8').value || '').trim();
+            const woMatch = r8.match(/^(.*?)(?:\s+Dt\s*:\s*(.*))?$/i);
+            if (woMatch) {
+                this.invoiceData.workOrderNo = (woMatch[1] || '').trim();
+                if (woMatch[2]) this.invoiceData.workOrderDate = woMatch[2].trim();
+            }
+            this.invoiceData.contractorGstin = String(invSheet.getCell('D8').value || '').trim();
+
+            // Invoice Date & PAN
+            this.invoiceData.invoiceDate = String(invSheet.getCell('B9').value || '').trim();
+            this.invoiceData.contractorPan = String(invSheet.getCell('D9').value || '').trim();
+
+            // Division & Location
+            this.invoiceData.divisionName = String(invSheet.getCell('B10').value || '').trim();
+            this.invoiceData.locationName = String(invSheet.getCell('D10').value || '').trim();
+
+            // Sub-Division & Feeder
+            this.invoiceData.subDivName = String(invSheet.getCell('B11').value || '').trim();
+            this.invoiceData.feederName = String(invSheet.getCell('D11').value || '').trim();
+
+            // Items starting from Row 13
+            const newItems = [];
+            let rowIdx = 13;
+            while (rowIdx <= invSheet.rowCount) {
+                const row = invSheet.getRow(rowIdx);
+                const srVal = row.getCell(1).value;
+                const descVal = String(row.getCell(2).value || '').trim();
+                const col4Val = String(row.getCell(4).value || '').trim();
+
+                if (col4Val === 'Total Erection Amount' || descVal.includes('Name of Account') || srVal === 'Name of Account:') {
+                    break;
+                }
+
+                if (descVal) {
+                    const sr = String(srVal || (newItems.length + 1)).trim();
+                    const unit = String(row.getCell(3).value || 'Nos').trim();
+                    const qCell = row.getCell(4).value;
+                    const qty = typeof qCell === 'object' && qCell !== null ? (qCell.result || 0) : Number(qCell || 0);
+                    const aCell = row.getCell(5).value;
+                    const amount = typeof aCell === 'object' && aCell !== null ? (aCell.result || 0) : Number(aCell || 0);
+
+                    let actKey = '';
+                    const actMatch = descVal.match(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i);
+                    if (actMatch) actKey = actMatch[1];
+
+                    newItems.push({
+                        srNo: sr,
+                        actKey: actKey,
+                        desc: descVal,
+                        unit: unit,
+                        qty: isNaN(qty) ? 1 : qty,
+                        amount: isNaN(amount) ? 0 : amount,
+                        manual: !actKey
+                    });
+                }
+                rowIdx++;
+            }
+
+            if (newItems.length > 0) {
+                this.invoiceData.items = newItems;
+            }
+
+            // Parse Bank details & GST
+            while (rowIdx <= invSheet.rowCount) {
+                const row = invSheet.getRow(rowIdx);
+                const c1 = String(row.getCell(1).value || '').trim();
+                const c2 = String(row.getCell(2).value || '').trim();
+                const c4 = String(row.getCell(4).value || '').trim();
+
+                if (c1.includes('Name of Account') || c1.includes('Account:')) {
+                    this.invoiceData.bankAccountName = c2;
+                } else if (c1.includes('Bank A/C')) {
+                    this.invoiceData.bankAccountNo = c2;
+                } else if (c1.includes('Bank IFSC')) {
+                    this.invoiceData.bankIfsc = c2;
+                } else if (c1.includes('Bank Name')) {
+                    this.invoiceData.bankName = c2;
+                }
+
+                if (c4.includes('CGST')) {
+                    this.invoiceData.gstType = 'CGST_SGST';
+                } else if (c4.includes('IGST')) {
+                    this.invoiceData.gstType = 'IGST';
+                }
+                rowIdx++;
+            }
+
+            // Parse Activity Sheets if present
+            workbook.worksheets.forEach(ws => {
+                const m = ws.name.match(/^Act\s+([A-Za-z0-9]+)$/i);
+                if (m && m[1]) {
+                    const actKey = m[1];
+                    const r6 = ws.getRow(6);
+                    let numLocs = 0;
+                    let c = 4;
+                    while (c <= ws.columnCount) {
+                        const headerVal = String(r6.getCell(c).value || '').trim();
+                        if (headerVal === 'Rate' || headerVal.includes('100%') || !headerVal) break;
+                        numLocs++;
+                        c++;
+                    }
+
+                    if (numLocs > 0) {
+                        let matRow = 7;
+                        const matQtys = [];
+                        while (matRow <= ws.rowCount) {
+                            const row = ws.getRow(matRow);
+                            const descVal = String(row.getCell(2).value || '').trim();
+                            if (!descVal || descVal === 'Total' || descVal.toUpperCase().includes('TOTAL')) break;
+
+                            const rowQtys = [];
+                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                                const val = row.getCell(4 + locIdx).value;
+                                const q = (val === '' || val === null || val === undefined) ? '' : Number(val);
+                                rowQtys.push(isNaN(q) ? '' : q);
+                            }
+                            matQtys.push(rowQtys);
+                            matRow++;
+                        }
+
+                        if (matQtys.length > 0) {
+                            const transposed = [];
+                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                                const locArr = [];
+                                for (let matIdx = 0; matIdx < matQtys.length; matIdx++) {
+                                    locArr.push(matQtys[matIdx][locIdx] !== undefined ? matQtys[matIdx][locIdx] : '');
+                                }
+                                transposed.push(locArr);
+                            }
+                            if (!this.activityQuantities) this.activityQuantities = {};
+                            this.activityQuantities[actKey] = transposed;
+                        }
+                    }
+                }
+            });
+
+            // Set up Bill ID in Database & LocalStorage
+            const cleanBillNo = (this.projectMeta.billNo || 'imported_bill').replace(/[\/\\:*?"<>|\s]/g, '_');
+            const dataId = 'bill-' + cleanBillNo;
+            this.activeBillId = dataId;
+            try { localStorage.setItem('lk_billing_active_bill_id', dataId); } catch(e) {}
+
+            this.saveToStorage();
+            if (typeof this.saveBillStateToMongo === 'function') {
+                await this.saveBillStateToMongo(dataId, {
+                    billNo: this.projectMeta.billNo || '',
+                    raNo: this.projectMeta.raNo || '',
+                    billDate: this.invoiceData.invoiceDate || '',
+                    contractorName: this.projectMeta.contractorName || '',
+                    projectName: this.projectMeta.projectName || ''
+                });
+            }
+
+            // Switch to Tax Invoice view and close modal
+            this.currentView = 3;
+            this.showSavedBillsModal = false;
+            this.showToast(`Invoice [${this.projectMeta.billNo || fileName}] successfully opened! 🎉`, '✅');
+        } finally {
+            this.isParsingBillFile = false;
+        }
     },
     openNewBillModal() {
         let nextBill = 'RSL/RA/01';
@@ -593,6 +912,21 @@ window.SyncModule = {
                 }
             } catch (syncErr) {
                 console.error('Invoice sync error (save still proceeds):', syncErr);
+            }
+            if (typeof this.cleanInvoicePlaceholderRows === 'function') {
+                this.cleanInvoicePlaceholderRows();
+            }
+            if (this.invoiceData && this.invoiceData.invoiceNo) {
+                if (!this.projectMeta) this.projectMeta = {};
+                this.projectMeta.billNo = this.invoiceData.invoiceNo;
+            } else if (this.projectMeta && this.projectMeta.billNo && this.invoiceData) {
+                this.invoiceData.invoiceNo = this.projectMeta.billNo;
+            }
+            if (this.invoiceData && this.invoiceData.raNo) {
+                if (!this.projectMeta) this.projectMeta = {};
+                this.projectMeta.raNo = this.invoiceData.raNo;
+            } else if (this.projectMeta && this.projectMeta.raNo && this.invoiceData) {
+                this.invoiceData.raNo = this.projectMeta.raNo;
             }
             if (this.gdriveWebhookUrl && this.projectMeta) {
                 this.projectMeta.gdriveWebhookUrl = this.gdriveWebhookUrl;

@@ -19,6 +19,27 @@ window.BillingModule = {
         return m ? m[1] : '';
     },
 
+    isBlankInvoiceItem(it) {
+        if (!it) return true;
+        if (it.actKey) return false;
+        const desc = String(it.desc || '').trim().toLowerCase();
+        const isPlaceholderDesc = !desc || desc === 'activity or work description';
+        const numAmt = Number(it.amount || 0);
+        const isZeroAmount = !it.amount || isNaN(numAmt) || numAmt === 0;
+        return isPlaceholderDesc && isZeroAmount;
+    },
+
+    cleanInvoicePlaceholderRows() {
+        if (!this.invoiceData || !Array.isArray(this.invoiceData.items)) return;
+        const hasReal = this.invoiceData.items.some(it => !this.isBlankInvoiceItem(it));
+        if (hasReal) {
+            this.invoiceData.items = this.invoiceData.items.filter(it => !this.isBlankInvoiceItem(it));
+            this.invoiceData.items.forEach((it, idx) => {
+                it.srNo = (idx + 1).toString();
+            });
+        }
+    },
+
     getActivityInvoiceDescription(k) {
         const act = (this.activities && this.activities[k]) || {};
         let rawTitle = (act.title || '').trim();
@@ -55,11 +76,8 @@ window.BillingModule = {
             this.invoiceData.items = [];
         }
 
-        // Remove ANY empty/blank placeholder rows (no actKey, empty desc, 0 amount)
-        this.invoiceData.items = this.invoiceData.items.filter(it => {
-            const isBlank = !it.actKey && (!it.desc || !it.desc.trim()) && (!it.amount || Number(it.amount) === 0);
-            return !isBlank;
-        });
+        // Auto-remove any blank/dummy placeholder rows
+        this.cleanInvoicePlaceholderRows();
 
         // Check if already in items
         const existing = this.invoiceData.items.find(it => it.actKey === actKey || this.keyOfInvoiceItem(it) === actKey);
@@ -178,9 +196,8 @@ window.BillingModule = {
                 }
                 newItems.push(it);
             } else if (!k || !this.activities[k]) {
-                // Check if this item is a blank placeholder (no desc AND 0/empty amount)
-                const isBlankPlaceholder = (!it.desc || !it.desc.trim()) && (!it.amount || Number(it.amount) === 0);
-                if (!isBlankPlaceholder) {
+                // Check if this item is a blank placeholder
+                if (!this.isBlankInvoiceItem(it)) {
                     newItems.push(it);
                 }
             }
@@ -203,6 +220,7 @@ window.BillingModule = {
 
         if (newItems.length > 0) {
             this.invoiceData.items = newItems;
+            this.cleanInvoicePlaceholderRows();
         } else {
             this.invoiceData.items = [
                 {
@@ -283,6 +301,7 @@ window.BillingModule = {
         // Force sync - linked rows ka manual lock khol do taaki fresh billing se refresh ho
         this.invoiceData.items.forEach(it => { if (it.actKey) it.manual = false; });
         this.updateSyncTaxInvoiceFromActivities();
+        this.cleanInvoicePlaceholderRows();
         this.saveToStorage();
         this.showToast('Tax Invoice updated with all active billed activities (85%)!', 'Invoice');
     },
