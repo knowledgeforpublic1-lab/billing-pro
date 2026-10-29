@@ -956,7 +956,11 @@ window.SyncModule = {
             const localKey = (curBillId && curBillId !== 'main-billing-state')
                 ? ('lk_billing_state_' + curBillId)
                 : 'lk_billing_app_state_v10';
-            localStorage.setItem(localKey, JSON.stringify(dataToSave));
+            if (window.BillingStorage && typeof window.BillingStorage.setItem === 'function') {
+                window.BillingStorage.setItem(localKey, JSON.stringify(dataToSave));
+            } else {
+                localStorage.setItem(localKey, JSON.stringify(dataToSave));
+            }
             try { localStorage.setItem('lk_billing_active_bill_id', curBillId); } catch(e) {}
             try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
             try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode || 'none'); } catch(e) {}
@@ -1006,7 +1010,11 @@ window.SyncModule = {
           const localKey = (targetBillId && targetBillId !== 'main-billing-state')
               ? ('lk_billing_state_' + targetBillId)
               : 'lk_billing_app_state_v10';
-          try { localRaw = localStorage.getItem(localKey); } catch(e) {}
+          if (window.BillingStorage && typeof window.BillingStorage.getItemAsync === 'function') {
+              localRaw = await window.BillingStorage.getItemAsync(localKey);
+          } else {
+              try { localRaw = localStorage.getItem(localKey); } catch(e) {}
+          }
           let localSavedAt = 0;
           let localRev = 0;
           let localHash = '';
