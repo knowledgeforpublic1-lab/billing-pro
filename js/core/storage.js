@@ -154,3 +154,4 @@
 
     window.BillingStorage = BillingStorage;
 })(typeof window !== 'undefined' ? window : this);
+
