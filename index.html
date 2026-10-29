@@ -1312,8 +1312,10 @@
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">{{ row.desc }}</div>
                                 </td>
                                 <td class="text-center font-mono" style="font-size: 0.82rem;">{{ row.uom }}</td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.08);">
-                                    {{ row.totalQty > 0 ? row.totalQty : '' }}
+                                <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.08);" :title="(row.sapIssuedQty ? '⚡ SAP Issued: ' + row.sapIssuedQty : 'No SAP Issue') + (row.totalQty ? ' | Consumed: ' + row.totalQty : '')">
+                                    <span v-if="row.sapIssuedQty !== undefined && row.sapIssuedQty !== null && row.sapIssuedQty !== 0" style="color: #60a5fa; font-size: 0.92rem;">{{ row.sapIssuedQty }}</span>
+                                    <span v-else-if="row.totalQty > 0" style="color: var(--text-muted); opacity: 0.6;">{{ row.totalQty }}</span>
+                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
                                 <template v-if="!reverseEntry">
                                 <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono">

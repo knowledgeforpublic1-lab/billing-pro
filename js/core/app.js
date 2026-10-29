@@ -515,6 +515,12 @@
                         });
                     });
                 });
+                const sapStock = this.currentContractorSap;
+                if (sapStock && sapStock.materials) {
+                    Object.keys(sapStock.materials).forEach(code => {
+                        if (set.indexOf(code) === -1) set.push(code);
+                    });
+                }
                 return set;
             },
             
