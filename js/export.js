@@ -638,15 +638,22 @@ window.ExportModule = {
                     }
                 },
                 getEffectiveDriveWebhookUrl() {
-                    return (this.gdriveWebhookUrl || '').trim()
+                    let u = (this.gdriveWebhookUrl || '').trim()
                         || localStorage.getItem('billing_gdrive_webhook_url')
                         || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
                         || '';
+                    u = u.trim().replace(/^["']|["']$/g, '');
+                    if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
+                    else if (u.startsWith('script.google.com/')) u = 'https://' + u;
+                    return u;
                 },
                 async manualSaveBillToDrive() {
                     const webhookUrl = this.getEffectiveDriveWebhookUrl();
-                    if (!webhookUrl) {
+                    if (!webhookUrl || !webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec')) {
                         this.openGDriveModal();
+                        if (webhookUrl && (!webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec'))) {
+                            this.showToast('Google Drive Webhook URL invalid hai — modal me valid /exec URL lagayein', '⚠️');
+                        }
                         return;
                     }
                     this.showToast('Generating Bill Workbook for Google Drive... ⏳', '☁️');
@@ -662,13 +669,27 @@ window.ExportModule = {
                     }
                 },
                 async testGDriveConnection() {
-                    const url = (this.gdriveWebhookUrl || '').trim();
+                    let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
+                    if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
+                    else if (url.startsWith('script.google.com/')) url = 'https://' + url;
+                    this.gdriveWebhookUrl = url;
+
                     if (!url) {
                         this.showToast('Pehle Apps Script Webhook URL paste karo', '⚠️');
                         return;
                     }
+                    if (url.includes('drive.google.com')) {
+                        this.showToast('Aapne Google Drive folder link dala hai — Apps Script Web App link chahiye', '⚠️');
+                        alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai (drive.google.com)!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" button dabakar 1 minute me script deploy karein aur /exec link paste karein.');
+                        return;
+                    }
+                    if (url.includes('/edit')) {
+                        this.showToast('Aapne Script Editor link dala hai — /exec link lagayein', '⚠️');
+                        alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
+                        return;
+                    }
                     if (!url.startsWith('https://script.google.com/')) {
-                        this.showToast('URL script.google.com ka /exec link hona chahiye', '⚠️');
+                        this.showToast('URL https://script.google.com/macros/s/.../exec format me hona chahiye', '⚠️');
                         return;
                     }
                     this.showToast('Drive webhook test ho raha hai... ⏳', '🔍');
@@ -763,9 +784,125 @@ window.ExportModule = {
                     this.gdriveWebhookUrl = this.getEffectiveDriveWebhookUrl();
                     this.showGDriveModal = true;
                 },
+                copyAppsScriptCode() {
+                    const code = `/**
+ * BILLING APP → Google Drive backup (Apps Script Web App)
+ * Setup steps: google-drive/README.md
+ *
+ * Deploy: script.google.com → Deploy > New deployment > Web app
+ *   Execute as: Me | Who has access: Anyone
+ *   Jo /exec URL mile, use billing app ke "Google Drive Settings" modal me paste karo.
+ */
+
+const ROOT_FOLDER_NAME = 'RDSS T-10 GADCHIROLI';
+
+function doGet(e) {
+  return jsonOut({
+    ok: true,
+    status: 'success',
+    app: 'billing-drive-backup',
+    version: 2,
+    time: new Date().toISOString(),
+    rootFolder: ROOT_FOLDER_NAME
+  });
+}
+
+function doPost(e) {
+  try {
+    const raw = (e && e.postData && e.postData.contents) || '';
+    if (!raw) return jsonOut({ ok: false, status: 'error', error: 'Empty POST body' });
+
+    const body = JSON.parse(raw);
+    if (!body.fileData || !body.fileName) {
+      return jsonOut({ ok: false, status: 'error', error: 'fileData / fileName missing in payload' });
+    }
+
+    const bytes = Utilities.base64Decode(body.fileData);
+    const rootName = clean_(body.folderName) || ROOT_FOLDER_NAME;
+    const root = getOrCreateFolder_(rootName);
+    const contractorFolder = getOrCreateFolder_(clean_(body.contractorName) || 'Unknown_Contractor', root);
+
+    const fileName = uniqueFileName_(contractorFolder, clean_(body.fileName) || 'invoice.xlsx');
+    const file = contractorFolder.createFile(fileName, bytes, body.mimeType || MimeType.XLSX);
+
+    return jsonOut({
+      ok: true,
+      status: 'success',
+      fileName: file.getName(),
+      fileId: file.getId(),
+      url: file.getUrl(),
+      size: file.getSize(),
+      folder: rootName + ' / ' + contractorFolder.getName(),
+      billNo: body.billNo || '',
+      savedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    return jsonOut({ ok: false, status: 'error', error: String((err && err.message) || err) });
+  }
+}
+
+function getOrCreateFolder_(name, parent) {
+  const it = parent ? parent.getFoldersByName(name) : DriveApp.getRootFolder().getFoldersByName(name);
+  if (it.hasNext()) return it.next();
+  return parent ? parent.createFolder(name) : DriveApp.createFolder(name);
+}
+
+function uniqueFileName_(folder, name) {
+  const it = folder.getFilesByName(name);
+  if (!it.hasNext()) return name;
+  const dot = name.lastIndexOf('.');
+  const base = dot > 0 ? name.substring(dot) : name;
+  const ext = dot > 0 ? name.substring(dot) : '';
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'ddMMyyyy_HHmmss');
+  return base + '_' + stamp + ext;
+}
+
+function clean_(s) {
+  return String(s == null ? '' : s).replace(/[\\/:*?"<>|]/g, '_').trim().substring(0, 120);
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+`;
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(code);
+                            this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
+                        } else {
+                            const ta = document.createElement('textarea');
+                            ta.value = code;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(ta);
+                            this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
+                        }
+                    } catch(e) {
+                        console.error('Copy script error:', e);
+                        this.showToast('Code copy nahi ho paya, please README.md se copy karein', '⚠️');
+                    }
+                },
                 saveGDriveSettings() {
-                    const url = (this.gdriveWebhookUrl || '').trim();
+                    let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
+                    if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
+                    else if (url.startsWith('script.google.com/')) url = 'https://' + url;
+                    this.gdriveWebhookUrl = url;
+
                     if (url) {
+                        if (url.includes('drive.google.com')) {
+                            alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" dabakar script.new par deploy karein.');
+                            return;
+                        }
+                        if (url.includes('/edit')) {
+                            alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
+                            return;
+                        }
+                        if (!url.startsWith('https://script.google.com/') || !url.includes('/exec')) {
+                            alert('⚠️ Invalid Webhook URL:\n\nURL format aisa hona chahiye:\nhttps://script.google.com/macros/s/.../exec\n\nPlease sahi Web App link paste karein.');
+                            return;
+                        }
                         localStorage.setItem('billing_gdrive_webhook_url', url);
                         if (!this.projectMeta) this.projectMeta = {};
                         this.projectMeta.gdriveWebhookUrl = url;
@@ -778,6 +915,7 @@ window.ExportModule = {
                         localStorage.removeItem('billing_gdrive_webhook_url');
                         if (this.projectMeta) delete this.projectMeta.gdriveWebhookUrl;
                         this.saveToStorage();
+                        this.showToast('Google Drive disconnected', 'ℹ️');
                     }
                     this.showGDriveModal = false;
                 },

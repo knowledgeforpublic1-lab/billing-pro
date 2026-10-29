@@ -216,11 +216,12 @@
 
         computed: {
             hasDriveConnected() {
-                const url = (this.gdriveWebhookUrl || '').trim()
+                const raw = (this.gdriveWebhookUrl || '').trim()
                     || localStorage.getItem('billing_gdrive_webhook_url')
                     || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
                     || '';
-                return !!url;
+                const u = raw.replace(/^["']|["']$/g, '');
+                return !!(u && (u.startsWith('https://script.google.com/') || u.startsWith('script.google.com/')) && u.includes('/exec'));
             },
             filteredSavedBills() {
                 const list = this.savedBillsList || [];

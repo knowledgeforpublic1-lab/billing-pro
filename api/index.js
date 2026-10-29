@@ -433,9 +433,33 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
 // Solves the GAS redirect CORS issue that blocks direct browser-to-GAS fetch calls.
 // Setup guide: google-drive/README.md | Script code: google-drive/BillingDriveWebApp.gs
 
+function sanitizeGasUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    let u = url.trim().replace(/^["']|["']$/g, '');
+    if (u.startsWith('http://script.google.com/')) {
+        u = 'https://' + u.slice('http://'.length);
+    } else if (u.startsWith('script.google.com/')) {
+        u = 'https://' + u;
+    }
+    return u;
+}
+
 function validateGasUrl(webhookUrl) {
-    if (!webhookUrl || typeof webhookUrl !== 'string' || !webhookUrl.startsWith('https://script.google.com/')) {
-        return 'Invalid webhook URL — script.google.com ka /exec URL lagao';
+    if (!webhookUrl || typeof webhookUrl !== 'string') {
+        return 'Google Drive Webhook URL missing hai — Settings me Apps Script Webhook URL lagayein';
+    }
+    const trimmed = webhookUrl.trim().replace(/^["']|["']$/g, '');
+    if (trimmed.includes('drive.google.com')) {
+        return 'Aapne Google Drive folder ka link dala hai (drive.google.com). Auto-save ke liye Apps Script Web App ka /exec URL chahiye (https://script.google.com/macros/s/.../exec).';
+    }
+    if (trimmed.includes('/edit')) {
+        return 'Aapne Apps Script Editor ka link dala hai (.../edit). Deploy > New deployment > Web app karke "/exec" wala URL copy karein.';
+    }
+    if (trimmed.endsWith('/dev')) {
+        return 'Aapne testing (/dev) link dala hai. New deployment > Web app karke production "/exec" wala link lagayein.';
+    }
+    if (!trimmed.startsWith('https://script.google.com/')) {
+        return 'Invalid webhook URL — URL https://script.google.com/macros/s/.../exec format me hona chahiye.';
     }
     return null;
 }
@@ -455,7 +479,7 @@ app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
     const ctx = 'GDRIVE-PING';
     try {
         const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
-        const effectiveWebhookUrl = rawUrl || (process.env.GDRIVE_WEBHOOK_URL ? String(process.env.GDRIVE_WEBHOOK_URL).trim() : '');
+        const effectiveWebhookUrl = sanitizeGasUrl(rawUrl || process.env.GDRIVE_WEBHOOK_URL);
         const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) return res.status(400).json({ success: false, error: bad });
 
@@ -489,7 +513,7 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
     const ctx = 'GDRIVE-PROXY';
     try {
         const { webhookUrl, folderName, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
-        const effectiveWebhookUrl = (webhookUrl && String(webhookUrl).trim()) || (process.env.GDRIVE_WEBHOOK_URL && String(process.env.GDRIVE_WEBHOOK_URL).trim());
+        const effectiveWebhookUrl = sanitizeGasUrl(webhookUrl || process.env.GDRIVE_WEBHOOK_URL);
 
         if (!effectiveWebhookUrl || !fileData || !fileName) {
             log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');
