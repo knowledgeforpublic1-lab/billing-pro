@@ -433,6 +433,8 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
 // Solves the GAS redirect CORS issue that blocks direct browser-to-GAS fetch calls.
 // Setup guide: google-drive/README.md | Script code: google-drive/BillingDriveWebApp.gs
 
+const DEFAULT_GDRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+
 function sanitizeGasUrl(url) {
     if (!url || typeof url !== 'string') return '';
     let u = url.trim().replace(/^["']|["']$/g, '');
@@ -479,7 +481,7 @@ app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
     const ctx = 'GDRIVE-PING';
     try {
         const rawUrl = (req.query && req.query.url ? String(req.query.url) : '').trim();
-        const effectiveWebhookUrl = sanitizeGasUrl(rawUrl || process.env.GDRIVE_WEBHOOK_URL);
+        const effectiveWebhookUrl = sanitizeGasUrl(rawUrl || process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
         const bad = validateGasUrl(effectiveWebhookUrl);
         if (bad) return res.status(400).json({ success: false, error: bad });
 
@@ -505,15 +507,15 @@ app.get('/api/gdrive-ping', requireApiKey, async (req, res) => {
 });
 
 app.get('/api/gdrive-config', requireApiKey, async (req, res) => {
-    const envUrl = (process.env.GDRIVE_WEBHOOK_URL || '').trim();
-    res.json({ success: true, hasEnvWebhook: !!envUrl, webhookUrl: envUrl });
+    const effectiveUrl = (process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL || '').trim();
+    res.json({ success: true, hasEnvWebhook: true, webhookUrl: effectiveUrl });
 });
 
 app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'GDRIVE-PROXY';
     try {
         const { webhookUrl, folderName, folderId, contractorName, billNo, fileName, fileData, mimeType } = req.body || {};
-        const effectiveWebhookUrl = sanitizeGasUrl(webhookUrl || process.env.GDRIVE_WEBHOOK_URL);
+        const effectiveWebhookUrl = sanitizeGasUrl(webhookUrl || process.env.GDRIVE_WEBHOOK_URL || DEFAULT_GDRIVE_WEBHOOK_URL);
 
         if (!effectiveWebhookUrl || !fileData || !fileName) {
             log.warn(ctx, 'Missing required fields: webhookUrl, fileData, or fileName');

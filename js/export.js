@@ -642,7 +642,7 @@ window.ExportModule = {
                     let u = (this.gdriveWebhookUrl || '').trim()
                         || localStorage.getItem('billing_gdrive_webhook_url')
                         || (this.projectMeta && this.projectMeta.gdriveWebhookUrl)
-                        || '';
+                        || 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
                     u = u.trim().replace(/^["']|["']$/g, '');
                     if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
                     else if (u.startsWith('script.google.com/')) u = 'https://' + u;

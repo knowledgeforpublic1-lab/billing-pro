@@ -639,9 +639,13 @@ window.SyncModule = {
                     this.projectMeta = parsed.projectMeta;
                     if (!this.projectMeta.contractValue) this.projectMeta.contractValue = 48550000;
                     if (!this.projectMeta.aaacDivisor) this.projectMeta.aaacDivisor = 3150;
-                    if (this.projectMeta.gdriveWebhookUrl) {
+                    if (this.projectMeta.gdriveWebhookUrl && this.projectMeta.gdriveWebhookUrl.includes('/exec')) {
                         this.gdriveWebhookUrl = this.projectMeta.gdriveWebhookUrl;
                         try { localStorage.setItem('billing_gdrive_webhook_url', this.projectMeta.gdriveWebhookUrl); } catch(e) {}
+                    } else {
+                        this.projectMeta.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                        this.gdriveWebhookUrl = 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec';
+                        try { localStorage.setItem('billing_gdrive_webhook_url', 'https://script.google.com/macros/s/AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx/exec'); } catch(e) {}
                     }
                 }
                 if (parsed.selectedCompanyId) this.selectedCompanyId = parsed.selectedCompanyId;
