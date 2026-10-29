@@ -623,8 +623,7 @@ window.ExportModule = {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    const cleanInvNo = (this.invoiceData.invoiceNo || 'Draft').replace(/[\/\\:*?"<>|]/g, '_');
-                    const fileName = `Tax_Invoice_${cleanInvNo}_All_Sheets.xlsx`;
+                    const fileName = this.getBillExportFileName('.xlsx');
                     a.download = fileName;
                     document.body.appendChild(a);
                     a.click();
@@ -637,6 +636,35 @@ window.ExportModule = {
                     if (webhookUrl) {
                         this.uploadBufferToGoogleDrive(buffer, fileName);
                     }
+                },
+                getBillExportFileName(ext = '.xlsx') {
+                    // 1. Contractor name
+                    let cName = this.selectedContractorName || (this.projectMeta && this.projectMeta.contractorName) || (this.invoiceData && this.invoiceData.contractorName) || 'Contractor';
+                    if (cName === 'Select Contractor...' || cName === '✏️ Custom') {
+                        cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Contractor';
+                    }
+                    cName = String(cName || 'Contractor').replace(/^M\/[sS]\.?\s*/i, '').replace(/[\/\\:*?"<>|]/g, '_').trim();
+                    if (!cName) cName = 'Contractor';
+
+                    // 2. RA No
+                    let ra = (this.effectiveRaNo || (this.projectMeta && this.projectMeta.raNo) || '').trim();
+                    if (!ra) {
+                        const b = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
+                        const m = b.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
+                        if (m && m[1]) ra = m[1];
+                        else if (b) ra = b.replace(/[\/\\:*?"<>|]/g, '_').trim();
+                        else ra = '01';
+                    }
+
+                    // Format as RA-<No>
+                    let raPart = ra;
+                    if (!/^RA[\s\-_]*/i.test(raPart)) {
+                        raPart = 'RA-' + raPart;
+                    } else {
+                        raPart = raPart.replace(/^RA[\s\-_]*/i, 'RA-');
+                    }
+
+                    return `${cName}_${raPart}${ext}`;
                 },
                 getEffectiveDriveWebhookUrl() {
                     let u = (this.gdriveWebhookUrl || '').trim()
@@ -661,8 +689,7 @@ window.ExportModule = {
                     try {
                         const { workbook } = await this.buildTaxInvoiceWorkbook();
                         const buffer = await workbook.xlsx.writeBuffer();
-                        const cleanInvNo = ((this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft').replace(/[\/\\:*?"<>|]/g, '_');
-                        const fileName = `Tax_Invoice_${cleanInvNo}_All_Sheets.xlsx`;
+                        const fileName = this.getBillExportFileName('.xlsx');
                         await this.uploadBufferToGoogleDrive(buffer, fileName);
                     } catch(e) {
                         console.error('Manual drive save error:', e);

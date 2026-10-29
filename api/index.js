@@ -123,6 +123,7 @@ function dbErrorHint(err) {
 const billingStateSchema = new mongoose.Schema({
     dataId: { type: String, default: 'main-billing-state', unique: true },
     billNo: { type: String, default: '' },
+    raNo: { type: String, default: '' },
     billDate: { type: String, default: '' },
     contractorName: { type: String, default: '' },
     projectName: { type: String, default: '' },
@@ -321,6 +322,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         }
 
         const metaBillNo = (dataToSave.projectMeta && dataToSave.projectMeta.billNo) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceNo) || 'Main Bill';
+        const metaRaNo = (dataToSave.projectMeta && dataToSave.projectMeta.raNo) || (dataToSave.invoiceData && dataToSave.invoiceData.raNo) || '';
         const metaBillDate = (dataToSave.projectMeta && dataToSave.projectMeta.billDate) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceDate) || '';
         const metaContractor = (dataToSave.projectMeta && dataToSave.projectMeta.contractorName) || (dataToSave.invoiceData && dataToSave.invoiceData.contractorName) || '';
         const metaProject = (dataToSave.projectMeta && dataToSave.projectMeta.projectName) || 'Billing Project';

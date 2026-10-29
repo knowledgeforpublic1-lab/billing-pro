@@ -60,22 +60,30 @@ window.SyncModule = {
         this.loadSavedBillsList();
     },
     openNewBillModal() {
-        let nextBill = 'RA/01';
+        let nextBill = 'RSL/RA/01';
+        let nextRa = '01';
         const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+        const curRa = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '');
+        if (curRa && /^\d+$/.test(curRa.trim())) {
+            const num = parseInt(curRa.trim(), 10) + 1;
+            nextRa = String(num).padStart(curRa.trim().length, '0');
+        }
         if (curBill) {
-            const numMatch = curBill.match(/^(.*?)(d+)(s*)$/);
+            const numMatch = curBill.match(/^(.*?)(\d+)(\s*)$/);
             if (numMatch) {
                 const prefix = numMatch[1];
                 const num = parseInt(numMatch[2], 10);
                 const padLen = numMatch[2].length;
                 const nextNum = String(num + 1).padStart(padLen, '0');
                 nextBill = prefix + nextNum + numMatch[3];
+                if (!curRa) nextRa = nextNum;
             } else {
                 nextBill = curBill + ' - 02';
             }
         }
         const today = new Date().toISOString().slice(0, 10);
         this.newBillForm = {
+            raNo: nextRa,
             billNo: nextBill,
             billDate: today,
             projectName: (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI',
@@ -85,6 +93,30 @@ window.SyncModule = {
         };
         this.showNewBillModal = true;
     },
+    updateRaNo(val) {
+        const clean = String(val || '').trim();
+        if (!this.projectMeta) this.projectMeta = {};
+        this.projectMeta.raNo = clean;
+        if (this.invoiceData) {
+            this.invoiceData.raNo = clean;
+        }
+        this.saveToStorage();
+        if (this._raSyncDebounce) clearTimeout(this._raSyncDebounce);
+        this._raSyncDebounce = setTimeout(() => {
+            try { this.syncToMongoNow({ manual: false }); } catch(e) {}
+        }, 1500);
+    },
+    onNewBillRaNoInput() {
+        if (!this.newBillForm) return;
+        const ra = (this.newBillForm.raNo || '').trim();
+        if (ra) {
+            const cur = this.newBillForm.billNo || '';
+            if (!cur || /^(?:RSL\/RA\/|RA[\-_])\d+$/i.test(cur.trim())) {
+                const prefix = (cur && cur.startsWith('RSL/RA/')) ? 'RSL/RA/' : 'RA-';
+                this.newBillForm.billNo = prefix + ra;
+            }
+        }
+    },
     async createNewBill() {
         const form = this.newBillForm;
         if (!form.billNo || !form.billNo.trim()) {
@@ -92,6 +124,7 @@ window.SyncModule = {
             return;
         }
         const cleanBillNo = form.billNo.trim();
+        const cleanRaNo = (form.raNo || '').trim();
         const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
 
         this.showToast('Saving current bill before creating new...', '⏳');
@@ -103,12 +136,14 @@ window.SyncModule = {
             this.isFinalized = false;
             if (!this.projectMeta) this.projectMeta = {};
             this.projectMeta.billNo = cleanBillNo;
+            this.projectMeta.raNo = cleanRaNo;
             this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
             this.projectMeta.projectName = form.projectName;
             this.selectedContractorId = form.selectedContractorId;
             this.selectedCompanyId = form.selectedCompanyId;
             if (!this.invoiceData) this.invoiceData = {};
             this.invoiceData.invoiceNo = cleanBillNo;
+            this.invoiceData.raNo = cleanRaNo;
             this.invoiceData.invoiceDate = form.billDate;
             this.invoiceData.items = [];
         } else if (form.mode === 'fresh_default') {

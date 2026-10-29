@@ -231,6 +231,16 @@
                 const u = raw.replace(/^["']|["']$/g, '');
                 return !!(u && (u.startsWith('https://script.google.com/') || u.startsWith('script.google.com/')) && u.includes('/exec'));
             },
+            effectiveRaNo() {
+                if (this.projectMeta && this.projectMeta.raNo) {
+                    return String(this.projectMeta.raNo).trim();
+                }
+                const b = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
+                const m = b.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
+                if (m && m[1]) return m[1];
+                if (/^\d+$/.test(b.trim())) return b.trim();
+                return '';
+            },
             filteredSavedBills() {
                 const list = this.savedBillsList || [];
                 const q = (this.savedBillsSearchQuery || '').trim().toLowerCase();

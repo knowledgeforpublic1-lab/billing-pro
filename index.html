@@ -89,6 +89,20 @@
                                 <span style="font-size: 0.65rem; opacity: 0.7;">▾</span>
                             </div>
 
+                            <!-- 🏷️ RA No Quick Edit Pill -->
+                            <div class="ra-no-pill"
+                                title="Current RA Bill Number. Click to edit."
+                                style="display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.4); user-select: none;">
+                                <span style="font-size: 0.8rem;">🏷️</span>
+                                <span>RA:</span>
+                                <input type="text"
+                                    :value="effectiveRaNo"
+                                    @input="updateRaNo($event.target.value)"
+                                    placeholder="12"
+                                    title="RA Bill No yahan change karein"
+                                    style="width: 44px; background: rgba(0,0,0,0.18); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 4px; padding: 1px 4px; font-size: 0.78rem; font-weight: 800; color: #34d399; text-align: center; outline: none; font-family: monospace;">
+                            </div>
+
                             <!-- Open Bill Button -->
                             <button class="btn btn-secondary" @click="openSavedBillsManager" title="Database se saved bills open karein" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px;">
                                 <span>📂</span>
@@ -647,9 +661,13 @@
                             <button type="button" @click="openContractorManager" class="btn-db-mini" title="Contractor Database" style="padding: 6px 10px; border: none; background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); border-radius: 6px; font-weight: 800; cursor: pointer; white-space: nowrap; height: 36px;">📁 DB</button>
                         </div>
                     </div>
-                    <div class="inv-tool-item" style="min-width: 100px;">
-                        <label>Invoice / RA No:</label>
-                        <input type="text" v-model="invoiceData.invoiceNo" placeholder="RA-01" @change="saveToStorage" :readonly="isFinalized">
+                    <div class="inv-tool-item" style="min-width: 80px;">
+                        <label>RA No:</label>
+                        <input type="text" :value="effectiveRaNo" @input="updateRaNo($event.target.value)" placeholder="12" :readonly="isFinalized" style="font-weight: 800; color: var(--accent-green); text-align: center; font-family: monospace;">
+                    </div>
+                    <div class="inv-tool-item" style="min-width: 130px;">
+                        <label>Invoice / Bill No:</label>
+                        <input type="text" v-model="invoiceData.invoiceNo" placeholder="RSL/RA/12" @change="saveToStorage" :readonly="isFinalized">
                     </div>
                     <div class="inv-tool-item" style="min-width: 140px;">
                         <label>Invoice Date:</label>
@@ -2338,6 +2356,9 @@
                                         <span style="font-size: 0.96rem; font-weight: 800; color: var(--text-main);">
                                             {{ b.billNo || 'Main Bill' }}
                                         </span>
+                                        <span v-if="b.raNo || b.billNo" style="font-size: 0.7rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); font-family: monospace;">
+                                            RA-{{ b.raNo || (b.billNo.match(/(?:RA|BILL)[\s\/\-_]*(\d+)/i) ? b.billNo.match(/(?:RA|BILL)[\s\/\-_]*(\d+)/i)[1] : (b.billNo.match(/\d+/) ? b.billNo.match(/\d+/)[0] : '01')) }}
+                                        </span>
                                         <span v-if="b.dataId === activeBillId" style="font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;">
                                             ACTIVE NOW
                                         </span>
@@ -2427,13 +2448,23 @@
 
                 <div class="modal-body" style="padding: 1.1rem; display: flex; flex-direction: column; gap: 14px;">
                     <!-- Form Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1.3fr 1.1fr; gap: 10px;">
+                        <!-- RA No -->
+                        <div>
+                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">
+                                RA NO *
+                            </label>
+                            <input type="text" v-model="newBillForm.raNo" placeholder="e.g. 12"
+                                @input="onNewBillRaNoInput"
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1.5px solid var(--accent-green); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.88rem; font-weight: 800; outline: none; font-family: monospace;">
+                        </div>
+
                         <!-- Bill No -->
                         <div>
                             <label style="display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">
                                 BILL / INVOICE NO *
                             </label>
-                            <input type="text" v-model="newBillForm.billNo" placeholder="e.g. RSL/RA/03"
+                            <input type="text" v-model="newBillForm.billNo" placeholder="e.g. RSL/RA/12"
                                 style="width: 100%; padding: 0.45rem 0.65rem; border: 1.5px solid var(--accent-indigo); border-radius: 6px; background: var(--bg-input); color: var(--text-main); font-size: 0.88rem; font-weight: 700; outline: none;">
                         </div>
 
