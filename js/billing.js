@@ -51,6 +51,16 @@ window.BillingModule = {
             actQty = q907 > 0 ? q907 : 1.00;
         }
 
+        if (!Array.isArray(this.invoiceData.items)) {
+            this.invoiceData.items = [];
+        }
+
+        // Remove ANY empty/blank placeholder rows (no actKey, empty desc, 0 amount)
+        this.invoiceData.items = this.invoiceData.items.filter(it => {
+            const isBlank = !it.actKey && (!it.desc || !it.desc.trim()) && (!it.amount || Number(it.amount) === 0);
+            return !isBlank;
+        });
+
         // Check if already in items
         const existing = this.invoiceData.items.find(it => it.actKey === actKey || this.keyOfInvoiceItem(it) === actKey);
         if (existing) {
@@ -64,21 +74,22 @@ window.BillingModule = {
             }
             this.showToast(`Activity ${actKey} already in invoice! Amount updated: ${this.formatCurrency(existing.amount)}`, 'Refresh');
         } else {
-            // Remove initial blank row if it exists
-            if (this.invoiceData.items.length === 1 && !this.invoiceData.items[0].desc && !this.invoiceData.items[0].amount) {
-                this.invoiceData.items = [];
-            }
-            const nextSr = (this.invoiceData.items.length + 1).toString();
             this.invoiceData.items.push({
-                srNo: nextSr,
+                srNo: (this.invoiceData.items.length + 1).toString(),
                 actKey: actKey,
                 desc: this.getActivityInvoiceDescription(actKey),
                 unit: uom,
                 qty: actQty,
-                amount: Math.round(amt85 * 100) / 100
+                amount: Math.round(amt85 * 100) / 100,
+                manual: false
             });
             this.showToast(`Activity ${actKey} added to invoice (${this.formatCurrency(amt85)})!`, 'Check');
         }
+
+        // Clean re-index Sr. No.
+        this.invoiceData.items.forEach((it, idx) => {
+            it.srNo = (idx + 1).toString();
+        });
         this.syncInvoiceLocationNames();
         this.saveToStorage();
     },
@@ -167,7 +178,11 @@ window.BillingModule = {
                 }
                 newItems.push(it);
             } else if (!k || !this.activities[k]) {
-                newItems.push(it);
+                // Check if this item is a blank placeholder (no desc AND 0/empty amount)
+                const isBlankPlaceholder = (!it.desc || !it.desc.trim()) && (!it.amount || Number(it.amount) === 0);
+                if (!isBlankPlaceholder) {
+                    newItems.push(it);
+                }
             }
         });
         billedKeys.forEach(k => {
@@ -187,9 +202,8 @@ window.BillingModule = {
         newItems.forEach((it, idx) => { it.srNo = (idx + 1).toString(); });
 
         if (newItems.length > 0) {
-            const same = newItems.length === this.invoiceData.items.length && newItems.every((it, i) => it === this.invoiceData.items[i]);
-            if (!same) this.invoiceData.items = newItems;
-        } else if (this.invoiceData.items.length === 0) {
+            this.invoiceData.items = newItems;
+        } else {
             this.invoiceData.items = [
                 {
                     srNo: '1',

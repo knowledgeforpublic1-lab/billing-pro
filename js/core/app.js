@@ -1022,6 +1022,20 @@
                 });
             }
             if (this.invoiceData && Array.isArray(this.invoiceData.items)) {
+                // If invoice has real activities/items, clean out any leftover blank rows
+                const hasRealItems = this.invoiceData.items.some(it => it.actKey || (it.desc && it.desc.trim()) || (it.amount && Number(it.amount) > 0));
+                if (hasRealItems && this.invoiceData.items.length > 1) {
+                    const beforeLen = this.invoiceData.items.length;
+                    this.invoiceData.items = this.invoiceData.items.filter(it => {
+                        const isBlank = !it.actKey && (!it.desc || !it.desc.trim()) && (!it.amount || Number(it.amount) === 0);
+                        return !isBlank;
+                    });
+                    if (this.invoiceData.items.length !== beforeLen) {
+                        this.invoiceData.items.forEach((it, idx) => { it.srNo = (idx + 1).toString(); });
+                        actTitlesFixed = true;
+                    }
+                }
+
                 this.invoiceData.items.forEach(it => {
                     const k = it.actKey || (typeof this.keyOfInvoiceItem === 'function' ? this.keyOfInvoiceItem(it) : ((it.desc && /^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i.test(it.desc)) ? it.desc.match(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:/i)[1] : ''));
                     if (k && this.activities && this.activities[k]) {
