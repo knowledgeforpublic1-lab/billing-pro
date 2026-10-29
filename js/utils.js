@@ -253,6 +253,7 @@ window.UtilsModule = {
  * @param {number} colIdx
  * @returns {string}
  */
+window.getColLetter = getColLetter;
 function getColLetter(colIdx) {
     let temp, letter = '';
     while (colIdx > 0) {
