@@ -153,15 +153,17 @@ window.ExportModule = {
                         row.getCell(2).value = rowObj.code;
                         row.getCell(3).value = rowObj.desc;
                         row.getCell(4).value = rowObj.uom;
-                        row.getCell(5).value = (rowObj.sapIssuedQty !== undefined && rowObj.sapIssuedQty !== null && rowObj.sapIssuedQty !== 0) ? rowObj.sapIssuedQty : (rowObj.totalQty || '');
+                        row.getCell(5).value = rowObj.sapGrossIssue || rowObj.sapIssuedQty || '';
+                        row.getCell(6).value = rowObj.sapMrnReturn || '';
+                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== 0) ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || rowObj.totalQty || '');
 
                         if (revOn) {
                             rcols.forEach((rc, cIdx) => {
-                                row.getCell(6 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
+                                row.getCell(8 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
                             });
                         } else {
                             pData.columns.forEach((col, cIdx) => {
-                                row.getCell(6 + cIdx).value = rowObj.activities[col] || '';
+                                row.getCell(8 + cIdx).value = rowObj.activities[col] || '';
                             });
                         }
                         
@@ -172,9 +174,9 @@ window.ExportModule = {
                             if (colNum === 3) {
                                 c.alignment.horizontal = 'left';
                                 c.alignment.wrapText = true;
-                            } else if (colNum === 5) {
+                            } else if (colNum === 5 || colNum === 6 || colNum === 7) {
                                 c.alignment.horizontal = 'right';
-                                c.font = { bold: true };
+                                c.font = { bold: colNum === 7 };
                             } else {
                                 c.alignment.horizontal = 'center';
                             }
@@ -182,10 +184,42 @@ window.ExportModule = {
                         row.height = 20;
                         rowIdx++;
                     });
+
+                    // Summary Total row
+                    const totalRow = ws.getRow(rowIdx);
+                    totalRow.getCell(1).value = `TOTAL / SUMMARY (${expRows.length} Items)`;
+                    ws.mergeCells(rowIdx, 1, rowIdx, 4);
+                    totalRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
+                    totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+                    totalRow.getCell(5).value = (this.reconTotals && this.reconTotals.grossIssue) || '';
+                    totalRow.getCell(6).value = (this.reconTotals && this.reconTotals.mrnReturn) || '';
+                    totalRow.getCell(7).value = (this.reconTotals && this.reconTotals.netIssue) || '';
+
+                    if (revOn) {
+                        rcols.forEach((rc, cIdx) => {
+                            totalRow.getCell(8 + cIdx).value = (this.reconTotals && this.reconTotals.reverseTotals && this.reconTotals.reverseTotals[rc.key]) || '';
+                        });
+                    } else {
+                        pData.columns.forEach((col, cIdx) => {
+                            totalRow.getCell(8 + cIdx).value = (this.reconTotals && this.reconTotals.activities && this.reconTotals.activities[col]) || '';
+                        });
+                    }
+
+                    totalRow.eachCell((c, colNum) => {
+                        c.border = headerBorder;
+                        c.font = { name: 'Calibri', size: 10, bold: true };
+                        if (colNum >= 5) {
+                            c.alignment = { horizontal: 'right', vertical: 'middle' };
+                            c.numFmt = '#,##0.00';
+                        }
+                    });
+                    totalRow.height = 22;
+                    rowIdx++;
                     
                     // Column Widths
                     const cols = [
-                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 10 }
+                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }
                     ];
                     (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 14 }));
                     ws.columns = cols;

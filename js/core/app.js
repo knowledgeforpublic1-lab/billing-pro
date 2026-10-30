@@ -376,7 +376,10 @@
                 // Pre-populate / inject all issued materials from SAP stock for this contractor
                 Object.keys(sapIssuesMap).forEach(matCode => {
                     const sItem = sapIssuesMap[matCode];
-                    const numQty = Number(sItem.issuedQty || 0);
+                    const numQty = Number(sItem.issuedQty || sItem.netIssue || 0);
+                    const grossQty = Number(sItem.grossIssue !== undefined ? sItem.grossIssue : numQty);
+                    const mrnQty = Number(sItem.mrnReturn !== undefined ? sItem.mrnReturn : 0);
+                    const netQty = Number(sItem.netIssue !== undefined ? sItem.netIssue : numQty);
                     if (!sapMap[matCode]) {
                         sapMap[matCode] = {
                             code: matCode,
@@ -384,10 +387,16 @@
                             uom: sItem.uom || 'No',
                             totalQty: 0,
                             sapIssuedQty: numQty,
+                            sapGrossIssue: grossQty,
+                            sapMrnReturn: mrnQty,
+                            sapNetIssue: netQty,
                             activities: {}
                         };
                     } else {
                         sapMap[matCode].sapIssuedQty = numQty;
+                        sapMap[matCode].sapGrossIssue = grossQty;
+                        sapMap[matCode].sapMrnReturn = mrnQty;
+                        sapMap[matCode].sapNetIssue = netQty;
                     }
                 });
 
@@ -418,12 +427,17 @@
                                     allActivityKeys.add(actKey);
                                     
                                     if (!sapMap[s.code]) {
+                                        const sStockItem = sapIssuesMap[s.code] || {};
+                                        const numQty = Number(sStockItem.issuedQty || sStockItem.netIssue || 0);
                                         sapMap[s.code] = {
                                             code: s.code,
                                             desc: s.desc || m.sapDescription || m.desc || s.code,
                                             uom: s.uom || m.sapUom || m.unit || 'No',
                                             totalQty: 0,
-                                            sapIssuedQty: (sapIssuesMap[s.code] && sapIssuesMap[s.code].issuedQty) || 0,
+                                            sapIssuedQty: numQty,
+                                            sapGrossIssue: Number(sStockItem.grossIssue !== undefined ? sStockItem.grossIssue : numQty),
+                                            sapMrnReturn: Number(sStockItem.mrnReturn || 0),
+                                            sapNetIssue: Number(sStockItem.netIssue !== undefined ? sStockItem.netIssue : numQty),
                                             activities: {}
                                         };
                                     }
@@ -547,14 +561,27 @@
                 let netIssue = 0;
                 const actTotals = {};
                 (this.pivotReconciliationData.columns || []).forEach(col => { actTotals[col] = 0; });
+                const revTotals = {};
+                if (this.reverseEntry && this.reverseReconColumns) {
+                    this.reverseReconColumns.forEach(rc => { revTotals[rc.key] = 0; });
+                }
 
                 rows.forEach(r => {
-                    grossIssue += Number(r.sapGrossIssue || (r.sapIssuedQty > 0 && !r.sapMrnReturn ? r.sapIssuedQty : 0));
-                    mrnReturn += Number(r.sapMrnReturn || 0);
-                    netIssue += Number(r.sapNetIssue !== undefined && r.sapNetIssue !== 0 ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                    const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : (r.sapIssuedQty > 0 ? r.sapIssuedQty : 0));
+                    const mrn = Number(r.sapMrnReturn || 0);
+                    const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                    grossIssue += gross;
+                    mrnReturn += mrn;
+                    netIssue += net;
                     if (r.activities) {
                         Object.keys(r.activities).forEach(k => {
                             actTotals[k] = (actTotals[k] || 0) + (Number(r.activities[k]) || 0);
+                        });
+                    }
+                    if (this.reverseEntry && this.reverseReconColumns) {
+                        this.reverseReconColumns.forEach(rc => {
+                            const val = Number(this.reconCellLoc(r.code, rc)) || 0;
+                            revTotals[rc.key] = (revTotals[rc.key] || 0) + val;
                         });
                     }
                 });
@@ -563,7 +590,8 @@
                     grossIssue: Math.round(grossIssue * 1000) / 1000,
                     mrnReturn: Math.round(mrnReturn * 1000) / 1000,
                     netIssue: Math.round(netIssue * 1000) / 1000,
-                    activities: actTotals
+                    activities: actTotals,
+                    reverseTotals: revTotals
                 };
             },
             reconRows() {
@@ -746,37 +774,64 @@
             },
             sortedFilteredContractors() {
                 let list = this.contractorsList || [];
-                if (!this.contractorDropdownSearch) {
-                    return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                }
-                const rawQ = String(this.contractorDropdownSearch).trim().toLowerCase();
+                const rawQ = String(this.contractorDropdownSearch || '').trim().toLowerCase();
                 const cleanQ = rawQ.replace(/^m\/s\.?\s*/i, '').trim();
-                const tokens = cleanQ.split(/\s+/).filter(Boolean);
 
-                return list.filter(f => {
-                    const name = (f.name || '').toLowerCase();
-                    const pan = (f.pan || '').toLowerCase();
-                    const gstin = (f.gstin || '').toLowerCase();
-                    const wo = String(f.workOrderNo || '').toLowerCase();
-                    const div = (f.divisionName || '').toLowerCase();
-                    const combined = name + ' ' + pan + ' ' + gstin + ' ' + wo + ' ' + div;
-                    
-                    if (combined.includes(rawQ) || combined.includes(cleanQ)) return true;
-                    return tokens.every(tok => combined.includes(tok));
-                }).sort((a, b) => {
+                if (rawQ) {
+                    const tokens = cleanQ.split(/\s+/).filter(Boolean);
+                    list = list.filter(f => {
+                        const name = (f.name || '').toLowerCase();
+                        const pan = (f.pan || '').toLowerCase();
+                        const gstin = (f.gstin || '').toLowerCase();
+                        const wo = String(f.workOrderNo || '').toLowerCase();
+                        const div = (f.divisionName || '').toLowerCase();
+                        const combined = name + ' ' + pan + ' ' + gstin + ' ' + wo + ' ' + div;
+                        
+                        if (combined.includes(rawQ) || combined.includes(cleanQ)) return true;
+                        return tokens.every(tok => combined.includes(tok));
+                    });
+                }
+
+                // ⚡ Deduplicate: Only drop identical duplicate records (same WO + PAN/Name, or same ID)
+                const seenKeys = new Set();
+                const uniqueList = [];
+
+                list.forEach(firm => {
+                    const id = firm.id || '';
+                    const rawWo = String(firm.workOrderNo || '').trim();
+                    const m = rawWo.match(/\b\d{8}\b/);
+                    const wo = m ? m[0] : (rawWo.length >= 6 ? rawWo : '');
+                    const pan = (firm.pan || '').trim().toUpperCase();
+                    const normName = (firm.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+
+                    const dedupeKey = wo ? (wo + '_' + (pan || normName)) : (id + '_' + normName);
+                    if (seenKeys.has(dedupeKey)) return;
+                    seenKeys.add(dedupeKey);
+                    uniqueList.push(firm);
+                });
+
+                return uniqueList.sort((a, b) => {
                     const aName = (a.name || '').toLowerCase();
                     const bName = (b.name || '').toLowerCase();
-                    const aStarts = aName.startsWith(cleanQ);
-                    const bStarts = bName.startsWith(cleanQ);
-                    if (aStarts && !bStarts) return -1;
-                    if (!aStarts && bStarts) return 1;
+                    if (cleanQ) {
+                        const aStarts = aName.startsWith(cleanQ);
+                        const bStarts = bName.startsWith(cleanQ);
+                        if (aStarts && !bStarts) return -1;
+                        if (!aStarts && bStarts) return 1;
+                    }
                     return aName.localeCompare(bName);
                 });
             },
             selectedContractorName() {
                 if (this.selectedContractorId === 'custom') return '✏️ Custom';
-                const firm = this.contractorsList.find(c => c.id === this.selectedContractorId);
-                return firm ? firm.name : 'Select Contractor...';
+                if (!this.selectedContractorId) {
+                    if (this.invoiceData && this.invoiceData.contractorName) {
+                        return this.invoiceData.contractorName;
+                    }
+                    return 'Select Contractor...';
+                }
+                const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+                return firm ? firm.name : ((this.invoiceData && this.invoiceData.contractorName) || 'Select Contractor...');
             },
             nutBoltGrandTotal() {
                 return this.nutBoltData.reduce((sum, item) => sum + (item.weight * (item.qty || 0)), 0).toFixed(3);

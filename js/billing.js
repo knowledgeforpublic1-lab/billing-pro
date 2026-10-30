@@ -501,29 +501,35 @@ window.BillingModule = {
         }
     },
 
+    applyFirmObject(firm) {
+        if (!firm) return;
+        this.selectedContractorId = firm.id;
+        const firmName = firm.name.startsWith('M/s') ? firm.name : `M/s ${firm.name}`;
+        this.invoiceData.contractorName = firmName;
+        this.invoiceData.contractorPan = firm.pan || '';
+        this.invoiceData.contractorGstin = firm.gstin || '';
+        this.invoiceData.bankAccountName = firm.bankAccountName || firmName;
+        this.invoiceData.bankAccountNo = firm.bankAccountNo || '';
+        this.invoiceData.bankIfsc = firm.bankIfsc || '';
+        this.invoiceData.bankName = firm.bankName || '';
+        if (firm.workOrderNo) this.invoiceData.workOrderNo = String(firm.workOrderNo);
+        if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
+        if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
+        if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
+        if (firm.feederName) this.invoiceData.feederName = firm.feederName;
+
+        this.projectMeta.contractorName = firmName;
+        if (firm.workOrderNo) this.projectMeta.workOrderNo = String(firm.workOrderNo);
+        this.checkAndApplyAutoGstRule();
+        this.saveToStorage();
+        this.showToast(`Applied Firm: ${firm.name} (WO: ${firm.workOrderNo || 'N/A'}, PAN: ${firm.pan || 'N/A'})`, 'Check');
+    },
+
     applyContractorProfile(firmId) {
         this.selectedContractorId = firmId;
-        const firm = this.contractorsList.find(c => c.id === firmId);
+        const firm = (this.contractorsList || []).find(c => c.id === firmId || (c.id && c.id.startsWith(firmId)));
         if (firm) {
-            const firmName = firm.name.startsWith('M/s') ? firm.name : `M/s ${firm.name}`;
-            this.invoiceData.contractorName = firmName;
-            this.invoiceData.contractorPan = firm.pan;
-            this.invoiceData.contractorGstin = firm.gstin;
-            this.invoiceData.bankAccountName = firm.bankAccountName || firmName;
-            this.invoiceData.bankAccountNo = firm.bankAccountNo || '';
-            this.invoiceData.bankIfsc = firm.bankIfsc || '';
-            this.invoiceData.bankName = firm.bankName || '';
-            // Selected firm ke work order aur location details apply karo
-            if (firm.workOrderNo) this.invoiceData.workOrderNo = firm.workOrderNo;
-            if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
-            if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
-            if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
-            if (firm.feederName) this.invoiceData.feederName = firm.feederName;
-
-            this.projectMeta.contractorName = firmName;
-            this.checkAndApplyAutoGstRule();
-            this.saveToStorage();
-            this.showToast(`Applied Firm: ${firm.name} (PAN: ${firm.pan || 'N/A'}, GST: ${firm.gstin || 'N/A'})`, 'Check');
+            this.applyFirmObject(firm);
         }
         this.showContractorModal = false;
     },
@@ -541,7 +547,20 @@ window.BillingModule = {
 
     closeContractorDropdown() {
         this.contractorDropdownOpen = false;
+        this.reconContractorDropdownOpen = false;
         this.contractorDropdownSearch = '';
+    },
+
+    selectContractorFirm(firm) {
+        if (!firm || firm === 'custom') {
+            this.selectedContractorId = 'custom';
+            this.closeContractorDropdown();
+            this.showToast('Custom Contractor Mode: Details directly editable.', 'Edit');
+            return;
+        }
+        this.selectedContractorId = firm.id;
+        this.closeContractorDropdown();
+        this.applyFirmObject(firm);
     },
 
     selectContractor(firmId) {
