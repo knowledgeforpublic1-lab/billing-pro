@@ -426,6 +426,164 @@ it('Export Filenames: Uses selected contractor name and never defaults to LK_Ele
     assert.strictEqual(cName2.includes('LK'), false);
 });
 
+
+// 14. SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red Highlight Logic
+it('SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red Highlight Logic', () => {
+    global.window = global;
+    eval(fs.readFileSync('js/data/default-activities.js', 'utf8').replace('const defaultActivities', 'global.defaultActivities'));
+    eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
+    eval(fs.readFileSync('js/mapping.js', 'utf8'));
+
+    const mockApp = {
+        activities: global.defaultActivities,
+        selectedContractorName: 'Ravindra Kapgate',
+        currentContractorSap: window.ContractorSapStock.byContractorNorm['ravindrakapgade'],
+        get allMappedSapCodesSet() {
+            const set = new Set();
+            if (!this.activities) return set;
+            Object.values(this.activities).forEach(act => {
+                if (act && Array.isArray(act.materials)) {
+                    act.materials.forEach(m => {
+                        if (Array.isArray(m.sapItems)) {
+                            m.sapItems.forEach(s => {
+                                const c = String((s && s.code) || '').trim();
+                                if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                            });
+                        }
+                    });
+                }
+            });
+            return set;
+        },
+        get allActivityMaterialsFlat() {
+            const list = [];
+            if (!this.activities) return list;
+            const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
+            Object.entries(this.activities).forEach(([actKey, act]) => {
+                if (act && Array.isArray(act.materials)) {
+                    act.materials.forEach((m, mIdx) => {
+                        const codes = [];
+                        if (Array.isArray(m.sapItems)) {
+                            m.sapItems.forEach(s => {
+                                const c = String((s && s.code) || '').trim();
+                                if (c && c !== 'N/A' && c !== 'NA') codes.push(c);
+                            });
+                        }
+                        const words = String(m.desc || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
+                        list.push({
+                            actKey,
+                            actTitle: act.title || '',
+                            matIdx: mIdx,
+                            matNo: m.no,
+                            desc: m.desc || '',
+                            unit: m.unit || '',
+                            mappedCodes: codes,
+                            words: words
+                        });
+                    });
+                }
+            });
+            return list;
+        },
+        get unmappedContractorIssuedItems() {
+            const contractorSap = this.currentContractorSap;
+            if (!contractorSap || !contractorSap.materials) return [];
+            const mappedSet = this.allMappedSapCodesSet;
+            const allMats = this.allActivityMaterialsFlat;
+            const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
+            const unmapped = [];
+
+            Object.entries(contractorSap.materials).forEach(([code, item]) => {
+                const gross = Number(item.grossIssue !== undefined ? item.grossIssue : (item.issuedQty || 0));
+                const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+                const isIssued = gross > 0 || net !== 0;
+
+                if (!isIssued) return;
+                if (mappedSet.has(code)) return;
+
+                const itemWords = String(item.desc || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
+                let potentialMatch = null;
+                let bestScore = 0;
+
+                allMats.forEach(m => {
+                    let common = 0;
+                    itemWords.forEach(w => {
+                        if (m.words.includes(w)) common++;
+                    });
+                    if (common >= 2 && common > bestScore) {
+                        bestScore = common;
+                        potentialMatch = {
+                            actKey: m.actKey,
+                            actTitle: m.actTitle,
+                            matNo: m.matNo,
+                            matIdx: m.matIdx,
+                            desc: m.desc,
+                            currentCodes: m.mappedCodes.join(', ')
+                        };
+                    }
+                });
+
+                const searchWords = itemWords.filter(w => w.length >= 4).slice(0, 2);
+                const searchKey = searchWords.join(' ') || item.desc || code;
+
+                unmapped.push({
+                    code: code,
+                    desc: item.desc || code,
+                    uom: item.uom || 'No',
+                    grossIssue: gross,
+                    mrnReturn: Number(item.mrnReturn || 0),
+                    netIssue: net,
+                    potentialMatch: potentialMatch,
+                    searchKey: searchKey
+                });
+            });
+
+            return unmapped.sort((a, b) => Math.abs(b.netIssue) - Math.abs(a.netIssue));
+        }
+    };
+
+    // Attach MappingModule methods
+    Object.assign(mockApp, window.MappingModule);
+
+    // 1. Verify allMappedSapCodesSet
+    const mappedSet = mockApp.allMappedSapCodesSet;
+    assert.ok(mappedSet.size >= 60, 'Should have >= 60 mapped SAP codes');
+    assert.strictEqual(mappedSet.has('17000004'), true, 'RSJ Pole 17000004 should be mapped in Act 907');
+    assert.strictEqual(mappedSet.has('17000195'), false, '17000195 is an unmapped issued cable code');
+
+    // 2. Verify isUnmappedSapCode
+    assert.strictEqual(mockApp.isUnmappedSapCode('17000004'), false, 'Mapped code should return false');
+    assert.strictEqual(mockApp.isUnmappedSapCode('17000195'), true, 'Unmapped code should return true');
+    assert.strictEqual(mockApp.isUnmappedSapCode('N/A'), false, 'N/A should return false');
+
+    // 3. Verify unmappedContractorIssuedItems
+    const unmappedItems = mockApp.unmappedContractorIssuedItems;
+    assert.ok(unmappedItems.length > 50, 'Ravindra Kapgate should have unmapped issued items identified');
+
+    // Verify critical cable item 17000195 is in unmapped list with issue quantity
+    const cable = unmappedItems.find(it => it.code === '17000195');
+    assert.ok(cable, 'Cable 17000195 should be in unmapped list');
+    assert.strictEqual(cable.netIssue, 348);
+    assert.ok(cable.potentialMatch, 'Cable should have a potential match with an Activity material');
+    assert.strictEqual(cable.potentialMatch.actKey, '916', 'Should match Activity 916 (XLPE Cable)');
+
+    // 4. Verify Strain Hardware mismatch 17000704
+    const strain = unmappedItems.find(it => it.code === '17000704');
+    assert.ok(strain, 'Strain Hardware 17000704 should be in unmapped list');
+    assert.strictEqual(strain.netIssue, 1702);
+    assert.ok(strain.potentialMatch, 'Strain Hardware should have potential match');
+    assert.strictEqual(strain.potentialMatch.actKey, '907', 'Should match Activity 907 (Strain Hardware)');
+
+    // 5. Verify isUnmappedContractorIssuedRow for Reconciliation row red highlighting
+    const unmappedIssuedRow = { code: '17000195', desc: 'CABLE AL 11KV XLPE', sapGrossIssue: 348, sapNetIssue: 348 };
+    const mappedIssuedRow = { code: '17000004', desc: 'RSJ POLE', sapGrossIssue: 348, sapNetIssue: 250 };
+    const zeroIssueUnmappedRow = { code: '99999999', desc: 'ZERO ITEM', sapGrossIssue: 0, sapNetIssue: 0, sapIssuedQty: 0 };
+
+    assert.strictEqual(mockApp.isUnmappedContractorIssuedRow(unmappedIssuedRow), true, 'Unmapped row with net issue must be highlighted (true)');
+    assert.strictEqual(mockApp.isUnmappedContractorIssuedRow(mappedIssuedRow), false, 'Mapped row with issue must NOT be highlighted as unmapped (false)');
+    assert.strictEqual(mockApp.isUnmappedContractorIssuedRow(zeroIssueUnmappedRow), false, 'Zero issue row must NOT be highlighted (false)');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

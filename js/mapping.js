@@ -473,6 +473,29 @@ window.MappingModule = {
             }
         }
 
+        // Fallback: search in ContractorSapStock if not yet in sapMaterialsMaster
+        if (!found && window.ContractorSapStock) {
+            const stock = window.ContractorSapStock;
+            const cStock = (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
+            if (cStock && cStock.materials && cStock.materials[targetCode]) {
+                const s = cStock.materials[targetCode];
+                found = { code: s.code, desc: s.desc, uom: s.uom || 'No' };
+            } else if (stock.byDocHeader) {
+                for (const dh of Object.values(stock.byDocHeader)) {
+                    if (dh.materials && dh.materials[targetCode]) {
+                        const s = dh.materials[targetCode];
+                        found = { code: s.code, desc: s.desc, uom: s.uom || 'No' };
+                        break;
+                    }
+                }
+            }
+            if (found && Array.isArray(this.sapMaterialsMaster)) {
+                if (!this.sapMaterialsMaster.find(s => s.code === found.code)) {
+                    this.sapMaterialsMaster.push(found);
+                }
+            }
+        }
+
         if (found) {
             sItem.code = found.code;
             sItem.desc = found.desc;
@@ -609,5 +632,148 @@ window.MappingModule = {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         this.showToast('SAP Material Mapping Master Excel downloaded! 🎉', '📗');
+    },
+
+    // ─── UNMAPPED / MISMATCHED SAP STOCK HELPERS ───
+    isUnmappedSapCode(code) {
+        if (!code || code === 'N/A' || code === 'NA') return false;
+        const set = this.allMappedSapCodesSet;
+        if (!set || typeof set.has !== 'function') return false;
+        return !set.has(String(code).trim());
+    },
+
+    isUnmappedContractorIssuedRow(row) {
+        if (!row || !row.code) return false;
+        const gross = Number(row.sapGrossIssue !== undefined ? row.sapGrossIssue : (row.sapIssuedQty || 0));
+        const net = Number(row.sapNetIssue !== undefined ? row.sapNetIssue : (row.sapIssuedQty || 0));
+        const hasIssue = gross > 0 || net !== 0;
+        return hasIssue && this.isUnmappedSapCode(row.code);
+    },
+
+    getContractorIssueForCode(code) {
+        const s = this.currentContractorSap;
+        if (!s || !s.materials || !code) return null;
+        const item = s.materials[code];
+        if (!item) return null;
+        const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+        return net !== 0 ? `${net} ${item.uom || ''}`.trim() : null;
+    },
+
+    goToMappingForCode(code, desc) {
+        if (typeof this.switchView === 'function') {
+            this.switchView('mapping');
+        } else {
+            this.currentView = 'mapping';
+        }
+        this.mappingActivityFilter = 'ALL';
+        const token = this.getSearchTokenForMapping(code, desc);
+        this.mappingSearchQuery = token;
+        this.showToast(`Mapping Master: Searching for "${token}" [SAP Code: ${code}]`, '🛠️');
+        this.$nextTick(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    },
+
+    goToMappingMasterAlert() {
+        if (typeof this.switchView === 'function') {
+            this.switchView('mapping');
+        } else {
+            this.currentView = 'mapping';
+        }
+        this.mappingActivityFilter = 'ALL';
+        this.mappingSearchQuery = '';
+        const count = (this.unmappedContractorIssuedItems && this.unmappedContractorIssuedItems.length) || 0;
+        this.showToast(`Mapping Master: ${count} unmapped issued items listed in Red Alert Card`, '🚨');
+        this.$nextTick(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    },
+
+    filterMappingBySearch(text) {
+        if (!text) return;
+        this.mappingActivityFilter = 'ALL';
+        this.mappingSearchQuery = String(text).trim();
+        this.showToast(`Filtering mapping table by: "${text}"`, '🔍');
+        this.$nextTick(() => {
+            const el = document.querySelector('.billing-table');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    },
+
+    getSearchTokenForMapping(code, desc) {
+        if (!desc) return code || '';
+        const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
+        const words = String(desc).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 4 && !stopWords.has(w));
+        return words.slice(0, 2).join(' ') || code || desc;
+    },
+
+    async copyTextToClipboard(text) {
+        if (!text) return;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(String(text));
+                this.showToast(`Copied [${text}] to clipboard! Paste in SAP Item box.`, '📋');
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = String(text);
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                this.showToast(`Copied [${text}] to clipboard!`, '📋');
+            }
+        } catch(e) {
+            this.showToast(`Code: ${text} (Use Ctrl+C to copy)`, '📋');
+        }
+    },
+
+    quickMapSapCodeToActivity(actKey, matNo, sapCode, sapDesc, sapUom) {
+        if (this.isFinalized) {
+            this.showToast('Bill locked hai — pehle Unlock karo', '🔒');
+            return;
+        }
+        const act = this.activities && this.activities[actKey];
+        if (!act || !act.materials) {
+            this.showToast(`Activity ${actKey} nahi mili`, '⚠️');
+            return;
+        }
+        const mat = act.materials.find(m => String(m.no) === String(matNo)) || act.materials[0];
+        if (!mat) {
+            this.showToast(`Material #${matNo} nahi mila`, '⚠️');
+            return;
+        }
+
+        const promptMsg = `Activity ${actKey} ke Material #${mat.no} (${mat.desc.substring(0, 40)}...)\n\nPar SAP Code [${sapCode}] (${sapDesc}) map karein?`;
+        if (!confirm(promptMsg)) return;
+
+        if (!Array.isArray(mat.sapItems) || mat.sapItems.length === 0) {
+            mat.sapItems = [{ code: sapCode, desc: sapDesc, uom: sapUom || mat.unit || 'No', qty: 1 }];
+        } else {
+            if (!mat.sapItems[0].code || mat.sapItems[0].code === 'N/A') {
+                mat.sapItems[0].code = sapCode;
+                mat.sapItems[0].desc = sapDesc;
+                mat.sapItems[0].uom = sapUom || mat.unit || 'No';
+            } else {
+                const existing = mat.sapItems.find(s => s.code === sapCode);
+                if (existing) {
+                    this.showToast(`Code [${sapCode}] pehle se mapped hai`, 'ℹ️');
+                    return;
+                }
+                mat.sapItems.push({ code: sapCode, desc: sapDesc, uom: sapUom || mat.unit || 'No', qty: 1 });
+            }
+        }
+        mat.itemCode = mat.sapItems[0].code;
+        mat.sapDescription = mat.sapItems[0].desc;
+        mat.sapUom = mat.sapItems[0].uom;
+
+        if (Array.isArray(this.sapMaterialsMaster)) {
+            if (!this.sapMaterialsMaster.find(s => s.code === sapCode)) {
+                this.sapMaterialsMaster.push({ code: sapCode, desc: sapDesc, uom: sapUom || 'No' });
+            }
+        }
+
+        this.saveToStorage();
+        if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
+        this.showToast(`Successfully mapped [${sapCode}] to Activity ${actKey} #${mat.no}!`, '✅');
     }
 };

@@ -66,10 +66,12 @@
                         <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
                             <span class="tab-dot" style="background: #6366f1;"></span>
                             SAP Mapping
+                            <span v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" class="badge" style="background: #ef4444; color: #ffffff; font-size: 0.62rem; padding: 1px 6px; border-radius: 999px; margin-left: 5px; font-weight: 800;" :title="unmappedContractorIssuedItems.length + ' unmapped issued items for selected contractor'">{{ unmappedContractorIssuedItems.length }}</span>
                         </button>
                         <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
                             <span class="tab-dot" style="background: #10b981;"></span>
                             Reconciliation Sheet
+                            <span v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" class="badge" style="background: #ef4444; color: #ffffff; font-size: 0.62rem; padding: 1px 6px; border-radius: 999px; margin-left: 5px; font-weight: 800;" :title="unmappedContractorIssuedItems.length + ' unmapped issued items'">⚠️ {{ unmappedContractorIssuedItems.length }}</span>
                         </button>
                         <button class="tab-item" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
                             <span class="tab-dot" style="background: #8b5cf6;"></span>
@@ -1062,6 +1064,80 @@
                         </div>
                     </div>
 
+                    <!-- 🚨 UNMAPPED CONTRACTOR ISSUED ITEMS ALERT HUB -->
+                    <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" class="no-print" style="margin: 12px 16px 16px 16px; background: linear-gradient(180deg, rgba(69, 10, 10, 0.90) 0%, rgba(30, 10, 10, 0.98) 100%); border: 1.5px solid #ef4444; border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.35); padding-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">🚨</span>
+                                <div>
+                                    <div style="font-size: 0.92rem; font-weight: 800; color: #ffffff;">
+                                        Contractor <span style="color: #fca5a5;">{{ selectedContractorName }}</span>: {{ unmappedContractorIssuedItems.length }} SAP Issued Items Mapping me Set Nahi Hain!
+                                    </div>
+                                    <div style="font-size: 0.74rem; color: #fca5a5; margin-top: 2px;">
+                                        Ye materials SAP stock se issue ho chuke hain, lekin niche activities mapping me inka code set nahi hai ya dusra code mapped hai.
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" @click="mappingActivityFilter = 'ALL'; mappingSearchQuery = ''" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.74rem; font-weight: 700; border-color: rgba(255,255,255,0.25); color: #f1f5f9;">
+                                    Clear Filter (Show All)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Scrollable Grid of Unmapped Items -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+                            <div v-for="uItem in unmappedContractorIssuedItems" :key="uItem.code" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(239, 68, 68, 0.5); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="font-mono font-bold" style="color: #ef4444; font-size: 0.85rem; background: rgba(239, 68, 68, 0.18); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.35);">
+                                        SAP Code: [{{ uItem.code }}]
+                                    </span>
+                                    <span style="font-size: 0.76rem; font-weight: 800; color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 2px 8px; border-radius: 999px;">
+                                        Net Issue: {{ uItem.netIssue }} {{ uItem.uom }}
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.82rem; font-weight: 700; color: #f8fafc; line-height: 1.3;">
+                                    {{ uItem.desc }}
+                                </div>
+                                <div v-if="uItem.potentialMatch" style="font-size: 0.72rem; color: #fbbf24; background: rgba(245, 158, 11, 0.12); padding: 5px 8px; border-radius: 5px; border-left: 3px solid #f59e0b;">
+                                    <span>💡 <strong>Potential Mismatch Hint:</strong> Activity {{ uItem.potentialMatch.actKey }} ({{ uItem.potentialMatch.desc }})</span>
+                                    <div style="margin-top: 2px; color: #fde047;">Current Mapped Code: <code>[{{ uItem.potentialMatch.currentCodes || 'None' }}]</code></div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                                    <button type="button" 
+                                        @click="filterMappingBySearch(uItem.code)" 
+                                        class="btn btn-secondary" 
+                                        style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700; border-color: #60a5fa; color: #93c5fd; background: rgba(59, 130, 246, 0.15);"
+                                        title="Filter Mapping Table by SAP Code">
+                                        🔍 Search Code [{{ uItem.code }}]
+                                    </button>
+                                    <button type="button" 
+                                        @click="filterMappingBySearch(uItem.searchKey || uItem.desc)" 
+                                        class="btn btn-secondary" 
+                                        style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700; border-color: #fbbf24; color: #fde047; background: rgba(245, 158, 11, 0.15);"
+                                        title="Search related material description in Mapping Table">
+                                        🔍 Find in Activities
+                                    </button>
+                                    <button type="button"
+                                        @click="copyTextToClipboard(uItem.code)"
+                                        class="btn btn-secondary"
+                                        style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700; border-color: #a855f7; color: #d8b4fe; background: rgba(168, 85, 247, 0.15);"
+                                        title="Copy SAP Code to Clipboard">
+                                        📋 Copy Code
+                                    </button>
+                                    <button v-if="uItem.potentialMatch"
+                                        type="button"
+                                        @click="quickMapSapCodeToActivity(uItem.potentialMatch.actKey, uItem.potentialMatch.matNo, uItem.code, uItem.desc, uItem.uom)"
+                                        class="btn btn-secondary"
+                                        style="padding: 2px 8px; font-size: 0.72rem; font-weight: 800; border-color: #22c55e; color: #86efac; background: rgba(34, 197, 94, 0.18);"
+                                        :title="'Click karke Activity ' + uItem.potentialMatch.actKey + ' ke material #' + uItem.potentialMatch.matNo + ' par ye SAP code auto-map karein'">
+                                        ⚡ Map to Act {{ uItem.potentialMatch.actKey }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="billing-table">
                             <thead>
@@ -1098,8 +1174,14 @@
                                                 </span>
                                                 <!-- Searchable Datalist for SAP Item -->
                                                 <div style="flex: 1; display: flex; flex-direction: column;">
-                                                    <input type="text" list="globalSapMaterialsList" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;'" :placeholder="mappingLocks.sap ? '🔒 Locked (Click 🔓 Item above to edit)' : 'Search SAP Code or Type...'">
-                                                    <span style="font-size: 0.75rem; color: var(--text-main); margin-top:2px; font-weight:600;">{{ sItem.desc }}</span>
+                                                    <input type="text" list="globalSapMaterialsList" :value="sItem.code ? '[' + sItem.code + '] ' + sItem.desc : ''" @change="onSapItemDropdownChange(row.item, sItem, $event)" :disabled="mappingLocks.sap || isFinalized" :readonly="mappingLocks.sap || isFinalized" :title="mappingLocks.sap ? 'Item locked hai — upar 🔓 Item dabakar edit karo' : 'Search SAP Code or Type...'" class="sap-select-dropdown" :style="(!sItem.code || sItem.code === 'N/A') ? 'width: 100%; padding: 4px; font-size: 0.85rem; border: 1.5px solid #ef4444; background: rgba(239, 68, 68, 0.08);' : (mappingLocks.sap ? 'width: 100%; padding: 4px; font-size: 0.85rem; opacity: 0.65; cursor: not-allowed;' : 'width: 100%; padding: 4px; font-size: 0.85rem;')" :placeholder="mappingLocks.sap ? '🔒 Locked (Click 🔓 Item above to edit)' : 'Search SAP Code or Type...'">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                                                        <span style="font-size: 0.75rem; color: var(--text-main); font-weight:600;">{{ sItem.desc }}</span>
+                                                        <div style="display: flex; gap: 4px; align-items: center;">
+                                                            <span v-if="!sItem.code || sItem.code === 'N/A'" style="font-size: 0.65rem; color: #ef4444; font-weight: 800; background: rgba(239, 68, 68, 0.15); padding: 1px 5px; border-radius: 4px;">⚠️ Unmapped</span>
+                                                            <span v-if="sItem.code && getContractorIssueForCode(sItem.code)" class="badge" style="background: rgba(16, 185, 129, 0.18); color: #34d399; font-size: 0.66rem; padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.35); font-weight: 800;" :title="'Current contractor net issue from SAP: ' + getContractorIssueForCode(sItem.code)">⚡ Stock Issue: {{ getContractorIssueForCode(sItem.code) }}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <!-- Qty / Mode Control -->
                                                 <div style="display: flex; align-items: center; gap: 4px;">
@@ -1253,6 +1335,15 @@
                         </div>
                         <div v-else style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.35); font-size: 0.78rem; font-weight: 700; color: #fbbf24;">
                             <span>ℹ️ Select a contractor above to view SAP Issue/MRN</span>
+                        </div>
+
+                        <!-- 🔴 RED GLOWING ALERT PILL FOR UNMAPPED ISSUES -->
+                        <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" 
+                            @click="goToMappingMasterAlert()" 
+                            style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(239, 68, 68, 0.22); border: 1.5px solid #ef4444; font-size: 0.78rem; font-weight: 800; color: #fca5a5; cursor: pointer; box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); transition: all 0.2s;"
+                            :title="'Click to open Mapping Master — ' + unmappedContractorIssuedItems.length + ' issued items are unmapped or mismatched in activities'">
+                            <span style="font-size: 0.85rem;">🔴</span>
+                            <span>{{ unmappedContractorIssuedItems.length }} Issued Items Unmapped / Mismatched (Fix in Mapping ➔)</span>
                         </div>
                     </div>
 
@@ -1409,11 +1500,28 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, idx) in reconRows" :key="row.code">
+                            <tr v-for="(row, idx) in reconRows" :key="row.code"
+                                :style="isUnmappedContractorIssuedRow(row) ? 'background: rgba(239, 68, 68, 0.14) !important; border-left: 4px solid #ef4444;' : ''">
                                 <td class="text-center">{{ idx + 1 }}</td>
-                                <td class="text-center font-mono font-bold" style="color: var(--primary);">{{ row.code }}</td>
+                                <td class="text-center font-mono font-bold" :style="isUnmappedContractorIssuedRow(row) ? 'color: #f87171;' : 'color: var(--primary);'">
+                                    <div>{{ row.code }}</div>
+                                    <span v-if="isUnmappedContractorIssuedRow(row)" class="badge" style="background: #dc2626; color: #ffffff; font-size: 0.58rem; padding: 1px 4px; border-radius: 4px; font-weight: 900; display: inline-block; margin-top: 2px; letter-spacing: 0.3px;">
+                                        🚨 UNMAPPED
+                                    </span>
+                                </td>
                                 <td>
-                                    <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">{{ row.desc }}</div>
+                                    <div style="font-weight: 700; font-size: 0.88rem;" :style="isUnmappedContractorIssuedRow(row) ? 'color: #fecaca;' : 'color: var(--text-main);'">
+                                        {{ row.desc }}
+                                    </div>
+                                    <!-- Red Alert Notice for Unmapped SAP Issued Item -->
+                                    <div v-if="isUnmappedContractorIssuedRow(row)" style="margin-top: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.22); border: 1px solid rgba(239, 68, 68, 0.45); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                        <div style="font-size: 0.72rem; color: #fca5a5; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                                            <span>⚠️ SAP Stock me Issue hai (Net: <strong style="color: #ffffff;">{{ row.sapNetIssue || row.sapGrossIssue }} {{ row.uom }}</strong>), lekin Mapping me ye Code kisi Activity se link nahi hai!</span>
+                                        </div>
+                                        <button type="button" @click.stop="goToMappingForCode(row.code, row.desc)" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.70rem; font-weight: 800; border-color: #ef4444; color: #ffffff; background: #dc2626; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                            <span>🛠️ Fix in Mapping ➔</span>
+                                        </button>
+                                    </div>
                                 </td>
                                 <td class="text-center font-mono" style="font-size: 0.82rem;">{{ row.uom }}</td>
                                 <!-- Col 5: ISSUE (Gross Issue from SAP) -->
@@ -2836,15 +2944,15 @@
     <script src="js/history.js?v=20261030_04"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261030_05"></script>
-    <script src="js/billing.js?v=20261030_05"></script>
-    <script src="js/mapping.js?v=20261030_04"></script>
+    <script src="js/sync.js?v=20261030_06"></script>
+    <script src="js/billing.js?v=20261030_06"></script>
+    <script src="js/mapping.js?v=20261030_06"></script>
     <script src="js/views.js?v=20261030_04"></script>
     <script src="js/export.js?v=20261030_04"></script>
-    <script src="js/stock-importer.js?v=20261030_05"></script>
+    <script src="js/stock-importer.js?v=20261030_06"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261030_05"></script>
+    <script src="js/core/app.js?v=20261030_06"></script>
 </body>
 
 </html>

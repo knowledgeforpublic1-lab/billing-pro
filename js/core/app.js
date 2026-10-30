@@ -560,6 +560,114 @@
                 const s = this.currentContractorSap;
                 return s && s.materials ? Object.keys(s.materials).length : 0;
             },
+
+            // 🏷️ Set of all mapped SAP codes across all activities
+            allMappedSapCodesSet() {
+                const set = new Set();
+                if (!this.activities) return set;
+                Object.values(this.activities).forEach(act => {
+                    if (act && Array.isArray(act.materials)) {
+                        act.materials.forEach(m => {
+                            if (Array.isArray(m.sapItems)) {
+                                m.sapItems.forEach(s => {
+                                    const c = String((s && s.code) || '').trim();
+                                    if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                                });
+                            }
+                        });
+                    }
+                });
+                return set;
+            },
+
+            // 📋 Flat list of all activity materials for quick searching & fuzzy mismatch detection
+            allActivityMaterialsFlat() {
+                const list = [];
+                if (!this.activities) return list;
+                const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
+                Object.entries(this.activities).forEach(([actKey, act]) => {
+                    if (act && Array.isArray(act.materials)) {
+                        act.materials.forEach((m, mIdx) => {
+                            const codes = [];
+                            if (Array.isArray(m.sapItems)) {
+                                m.sapItems.forEach(s => {
+                                    const c = String((s && s.code) || '').trim();
+                                    if (c && c !== 'N/A' && c !== 'NA') codes.push(c);
+                                });
+                            }
+                            const words = String(m.desc || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
+                            list.push({
+                                actKey,
+                                actTitle: act.title || '',
+                                matIdx: mIdx,
+                                matNo: m.no,
+                                desc: m.desc || '',
+                                unit: m.unit || '',
+                                mappedCodes: codes,
+                                words: words
+                            });
+                        });
+                    }
+                });
+                return list;
+            },
+
+            // 🚨 List of all materials issued in SAP stock for the selected contractor that are UNMAPPED or MISMATCHED
+            unmappedContractorIssuedItems() {
+                const contractorSap = this.currentContractorSap;
+                if (!contractorSap || !contractorSap.materials) return [];
+                const mappedSet = this.allMappedSapCodesSet;
+                const allMats = this.allActivityMaterialsFlat;
+                const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
+                const unmapped = [];
+
+                Object.entries(contractorSap.materials).forEach(([code, item]) => {
+                    const gross = Number(item.grossIssue !== undefined ? item.grossIssue : (item.issuedQty || 0));
+                    const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+                    const isIssued = gross > 0 || net !== 0;
+
+                    if (!isIssued) return;
+                    if (mappedSet.has(code)) return;
+
+                    const itemWords = String(item.desc || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
+                    let potentialMatch = null;
+                    let bestScore = 0;
+
+                    allMats.forEach(m => {
+                        let common = 0;
+                        itemWords.forEach(w => {
+                            if (m.words.includes(w)) common++;
+                        });
+                        if (common >= 2 && common > bestScore) {
+                            bestScore = common;
+                            potentialMatch = {
+                                actKey: m.actKey,
+                                actTitle: m.actTitle,
+                                matNo: m.matNo,
+                                matIdx: m.matIdx,
+                                desc: m.desc,
+                                currentCodes: m.mappedCodes.join(', ')
+                            };
+                        }
+                    });
+
+                    const searchWords = itemWords.filter(w => w.length >= 4).slice(0, 2);
+                    const searchKey = searchWords.join(' ') || item.desc || code;
+
+                    unmapped.push({
+                        code: code,
+                        desc: item.desc || code,
+                        uom: item.uom || 'No',
+                        grossIssue: gross,
+                        mrnReturn: Number(item.mrnReturn || 0),
+                        netIssue: net,
+                        potentialMatch: potentialMatch,
+                        searchKey: searchKey
+                    });
+                });
+
+                return unmapped.sort((a, b) => Math.abs(b.netIssue) - Math.abs(a.netIssue));
+            },
             
             reconTotals() {
                 const rows = this.reconRows || [];
