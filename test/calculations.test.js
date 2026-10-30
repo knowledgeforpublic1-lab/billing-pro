@@ -6,6 +6,7 @@
  */
 
 const assert = require('assert');
+const fs = require('fs');
 
 console.log('----------------------------------------------------');
 console.log('🧪 Running Billing Pro Unit Tests...');
@@ -14,10 +15,21 @@ console.log('----------------------------------------------------');
 let totalTests = 0;
 let passedTests = 0;
 
+const asyncTests = [];
 function it(name, fn) {
     totalTests++;
     try {
-        fn();
+        const res = fn();
+        if (res && typeof res.then === 'function') {
+            asyncTests.push(res.then(() => {
+                passedTests++;
+                console.log(`  ✅ PASS: ${name}`);
+            }).catch(err => {
+                console.error(`  ❌ FAIL: ${name}`);
+                console.error(err);
+            }));
+            return;
+        }
         passedTests++;
         console.log(`  ✅ PASS: ${name}`);
     } catch (err) {
@@ -322,11 +334,70 @@ it('Stock Importer: Successfully verifies StockImporterModule and contractor nam
     assert.strictEqual(window.StockImporterModule.normContractorName('M/s. Balaji Construction'), 'balajiconstruction');
 });
 
-console.log('----------------------------------------------------');
-console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
-console.log('----------------------------------------------------');
 
-if (passedTests !== totalTests) {
-    process.exit(1);
-}
+// 12. Direct Blank New Bill Workflow (No modal prompt, clean reset)
+it('New Bill Workflow: Directly blanks bill, increments RA/Bill No, and leaves contractor unselected', async () => {
+    global.window = global;
+    global.localStorage = {
+        _data: {},
+        getItem(k) { return this._data[k] || null; },
+        setItem(k, v) { this._data[k] = String(v); },
+        removeItem(k) { delete this._data[k]; }
+    };
+    eval(fs.readFileSync('js/sync.js', 'utf8'));
+
+    let syncCalled = false;
+    let savedToStorageCalled = false;
+
+    const mockApp = {
+        projectMeta: { billNo: 'RSL/RA/12', raNo: '12', contractorName: 'M/s Ravindra Kapgate', workOrderNo: '10000000008' },
+        invoiceData: { invoiceNo: 'RSL/RA/12', raNo: '12', contractorName: 'M/s Ravindra Kapgate', items: [{ desc: 'Test item', amount: 5000 }] },
+        selectedContractorId: 'ravindra_kapgate',
+        activityQuantities: { 'act_1': [['10', '20']] },
+        companiesList: [{ id: 'ashoka_buildcon', name: 'ASHOKA BUILDCON LTD.', address: 'Nagpur', gstin: '27AAACA1234A1Z5' }],
+        showNewBillModal: false,
+        showSavedBillsModal: false,
+        currentView: 'invoice',
+        showToast() {},
+        resetAllManualDataKeepMapping() {
+            this.activityQuantities = {};
+            if (this.invoiceData) this.invoiceData.items = [];
+        },
+        saveToStorage() { savedToStorageCalled = true; },
+        async syncToMongoNow() { syncCalled = true; return true; },
+        switchView(v) { this.currentView = v; }
+    };
+
+    // Execute startNewBlankBill via openNewBillModal
+    Object.assign(mockApp, window.SyncModule);
+    mockApp.syncToMongoNow = async () => { syncCalled = true; return true; };
+    mockApp.saveToStorage = () => { savedToStorageCalled = true; };
+    mockApp.loadSavedBillsList = () => {};
+    await mockApp.openNewBillModal();
+
+    // Assertions
+    assert.strictEqual(syncCalled, true, 'syncToMongoNow must be called to save prior bill');
+    assert.strictEqual(savedToStorageCalled, true, 'saveToStorage must be called');
+    assert.strictEqual(mockApp.showNewBillModal, false, 'showNewBillModal must remain FALSE (no modal popup)');
+    assert.strictEqual(mockApp.projectMeta.billNo, 'RSL/RA/13', 'Bill No must auto-increment to RSL/RA/13');
+    assert.strictEqual(mockApp.projectMeta.raNo, '13', 'RA No must auto-increment to 13');
+    assert.strictEqual(mockApp.selectedContractorId, '', 'selectedContractorId must be completely BLANK');
+    assert.strictEqual(mockApp.invoiceData.contractorName, '', 'Contractor Name in Invoice must be BLANK');
+    assert.strictEqual(mockApp.invoiceData.workOrderNo, '', 'Work Order No in Invoice must be BLANK');
+    assert.deepStrictEqual(mockApp.activityQuantities, {}, 'Activity quantities must be completely reset');
+    assert.deepStrictEqual(mockApp.invoiceData.items, [], 'Invoice items must be empty');
+});
+
+(async () => {
+    if (asyncTests.length > 0) {
+        await Promise.all(asyncTests);
+    }
+    console.log('----------------------------------------------------');
+    console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
+    console.log('----------------------------------------------------');
+
+    if (passedTests !== totalTests) {
+        process.exit(1);
+    }
+})();
 

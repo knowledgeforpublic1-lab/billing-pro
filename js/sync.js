@@ -486,39 +486,120 @@ window.SyncModule = {
             this.isParsingBillFile = false;
         }
     },
-    openNewBillModal() {
-        let nextBill = 'RSL/RA/01';
-        let nextRa = '01';
-        const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
-        const curRa = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '');
-        if (curRa && /^\d+$/.test(curRa.trim())) {
-            const num = parseInt(curRa.trim(), 10) + 1;
-            nextRa = String(num).padStart(curRa.trim().length, '0');
-        }
-        if (curBill) {
-            const numMatch = curBill.match(/^(.*?)(\d+)(\s*)$/);
-            if (numMatch) {
-                const prefix = numMatch[1];
-                const num = parseInt(numMatch[2], 10);
-                const padLen = numMatch[2].length;
-                const nextNum = String(num + 1).padStart(padLen, '0');
-                nextBill = prefix + nextNum + numMatch[3];
-                if (!curRa) nextRa = nextNum;
-            } else {
-                nextBill = curBill + ' - 02';
+    async openNewBillModal() {
+        return await this.startNewBlankBill();
+    },
+    async startNewBlankBill() {
+        if (this._isStartingNewBill) return;
+        this._isStartingNewBill = true;
+        try {
+            this.showToast('Saving current bill before starting new...', '⏳');
+            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
+
+            // Auto-calculate next clean RA and Bill Number
+            let nextBill = 'RSL/RA/01';
+            let nextRa = '01';
+            const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+            const curRa = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '');
+            if (curRa && /^\d+$/.test(curRa.trim())) {
+                const num = parseInt(curRa.trim(), 10) + 1;
+                nextRa = String(num).padStart(curRa.trim().length, '0');
             }
+            if (curBill) {
+                const numMatch = curBill.match(/^(.*?)(\d+)(\s*)$/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const num = parseInt(numMatch[2], 10);
+                    const padLen = numMatch[2].length;
+                    const nextNum = String(num + 1).padStart(padLen, '0');
+                    nextBill = prefix + nextNum + numMatch[3];
+                    if (!curRa) nextRa = nextNum;
+                } else {
+                    nextBill = curBill + ' - 02';
+                }
+            }
+
+            // 1. Reset all manual quantities, extra items, calculator inputs, and invoice entries
+            this.resetAllManualDataKeepMapping();
+
+            // 2. Blank out contractor so user can freely pick on the page
+            this.selectedContractorId = '';
+            this.contractorDropdownSearch = '';
+            this.reconContractorDropdownOpen = false;
+            this.contractorDropdownOpen = false;
+
+            const today = new Date().toISOString().slice(0, 10);
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.billNo = nextBill;
+            this.projectMeta.raNo = nextRa;
+            this.projectMeta.billDate = today;
+            this.projectMeta.contractorName = '';
+            this.projectMeta.workOrderNo = '';
+            if (!this.projectMeta.projectName) this.projectMeta.projectName = 'RDSS T-10 GADCHIROLI';
+
+            if (!this.invoiceData) this.invoiceData = {};
+            this.invoiceData.invoiceNo = nextBill;
+            this.invoiceData.raNo = nextRa;
+            this.invoiceData.invoiceDate = today;
+            this.invoiceData.contractorName = '';
+            this.invoiceData.workOrderNo = '';
+            this.invoiceData.workOrderDate = '';
+            this.invoiceData.contractorPan = '';
+            this.invoiceData.contractorGstin = '';
+            this.invoiceData.bankAccountName = '';
+            this.invoiceData.bankAccountNo = '';
+            this.invoiceData.bankIfsc = '';
+            this.invoiceData.bankName = '';
+            this.invoiceData.divisionName = '';
+            this.invoiceData.subDivName = '';
+            this.invoiceData.feederName = '';
+            this.invoiceData.items = [];
+            this.invoiceData.basicTotal = 0;
+            this.invoiceData.gstTotal = 0;
+            this.invoiceData.grandTotal = 0;
+            this.invoiceData.words = '';
+
+            // Keep default client company (Ashoka Buildcon Ltd.)
+            const comp = (this.companiesList || []).find(c => c.id === (this.selectedCompanyId || 'ashoka_buildcon'));
+            if (comp) {
+                this.selectedCompanyId = comp.id;
+                this.invoiceData.clientName = comp.name;
+                this.invoiceData.clientAddress = comp.address;
+                this.invoiceData.clientGstin = comp.gstin;
+            }
+
+            // 3. Generate unique activeBillId for clean isolation
+            const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            this.activeBillId = newBillId;
+            this.cloudRev = 0;
+            this.lastSentHash = '';
+            try { localStorage.setItem('lk_billing_active_bill_id', newBillId); } catch(e) {}
+
+            // 4. Save blank slate to local and cloud
+            this.saveToStorage();
+            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
+
+            // 5. Ensure modals are closed
+            this.showNewBillModal = false;
+            this.showSavedBillsModal = false;
+
+            // 6. Switch view if user was not already on invoice or reconciliation
+            if (this.currentView !== 'reconciliation' && this.currentView !== 'invoice') {
+                if (typeof this.switchView === 'function') {
+                    this.switchView('invoice');
+                } else {
+                    this.currentView = 'invoice';
+                }
+            }
+
+            if (typeof this.loadSavedBillsList === 'function') {
+                this.loadSavedBillsList();
+            }
+            if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
+            this.showToast('Pichla bill save ho gaya! Naya blank bill [' + nextBill + '] ready hai — apna contractor chunein.', '✅');
+        } finally {
+            this._isStartingNewBill = false;
         }
-        const today = new Date().toISOString().slice(0, 10);
-        this.newBillForm = {
-            raNo: nextRa,
-            billNo: nextBill,
-            billDate: today,
-            projectName: (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI',
-            selectedContractorId: this.selectedContractorId || (this.contractorsList && this.contractorsList[0] && this.contractorsList[0].id) || '',
-            selectedCompanyId: this.selectedCompanyId || 'ashoka_buildcon',
-            mode: 'copy_master'
-        };
-        this.showNewBillModal = true;
     },
     updateBillNo(val) {
         const clean = String(val || '').trim();

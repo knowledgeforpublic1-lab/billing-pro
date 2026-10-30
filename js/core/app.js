@@ -832,13 +832,13 @@
             selectedContractorName() {
                 if (this.selectedContractorId === 'custom') return '✏️ Custom';
                 if (!this.selectedContractorId) {
-                    if (this.invoiceData && this.invoiceData.contractorName) {
+                    if (this.invoiceData && this.invoiceData.contractorName && this.invoiceData.contractorName !== 'CONTRACTOR' && this.invoiceData.contractorName !== 'M/s CONTRACTOR') {
                         return this.invoiceData.contractorName;
                     }
                     return 'Select Contractor...';
                 }
                 const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
-                return firm ? firm.name : ((this.invoiceData && this.invoiceData.contractorName) || 'Select Contractor...');
+                return firm ? firm.name : ((this.invoiceData && this.invoiceData.contractorName && this.invoiceData.contractorName !== 'CONTRACTOR' && this.invoiceData.contractorName !== 'M/s CONTRACTOR') ? this.invoiceData.contractorName : 'Select Contractor...');
             },
             nutBoltGrandTotal() {
                 return this.nutBoltData.reduce((sum, item) => sum + (item.weight * (item.qty || 0)), 0).toFixed(3);
