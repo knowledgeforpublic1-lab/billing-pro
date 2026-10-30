@@ -1206,75 +1206,124 @@
         <!-- VIEW 5: RECONCILIATION SHEET -->
         <div class="view-section animate-fade-in" v-if="currentView === 'reconciliation'">
 
-            <!-- ↩️ Two-way control bar (print me nahi aayegi) — OFF = purana system -->
-            <div class="filter-bar-card no-print" style="border-color: var(--accent-indigo);">
-                <div class="filter-col" style="min-width: 200px; flex: unset; order: 1;">
-                    <label>Entry Mode</label>
-                    <button @click="toggleReverseEntry" :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo);">
-                        {{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}
-                    </button>
-                </div>
-                <div class="filter-col" style="flex: 1; justify-content: flex-end; order: 3;">
-                    <label>&nbsp;</label>
-                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                            {{ reverseEntry ? 'Enter qty in your location — activity + invoice will update. 🔩 Bolt: enter in nos, activity converts to kg' : 'Old system — enter in activity, this sheet builds automatically' }}
+            <!-- ================================================================ -->
+            <!-- 📊 RECONCILIATION CONTROL PANEL (Organized, Clean & Modern)     -->
+            <!-- ================================================================ -->
+            <div class="reco-control-card no-print" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 12px;">
+                
+                <!-- ROW 1: Contractor Selection & SAP Stock Master Hub -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px;">
+                    
+                    <!-- Left: Contractor Dropdown & Live Stock Badge -->
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>👷</span> Contractor:
                         </span>
-                        <!-- 👷 Quick Contractor Selector on Reco Sheet -->
-                        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(17, 24, 39, 0.7); border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 8px; padding: 2px 8px; position: relative;">
-                            <label style="font-size: 0.74rem; font-weight: 700; color: #93c5fd; white-space: nowrap; margin: 0;">👷 Contractor:</label>
-                            <div class="searchable-dropdown" v-click-outside="() => reconContractorDropdownOpen = false" style="min-width: 200px; max-width: 280px;">
-                                <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: none; background: transparent; padding: 2px 4px; height: 30px; cursor: pointer;">
-                                    <span class="trigger-text" style="font-weight: 700; font-size: 0.80rem; color: #ffffff;">{{ selectedContractorName }}</span>
-                                    <span class="trigger-arrow" style="color: #93c5fd;">▾</span>
+                        
+                        <!-- Searchable Contractor Dropdown -->
+                        <div class="searchable-dropdown" v-click-outside="() => reconContractorDropdownOpen = false" style="min-width: 240px; max-width: 320px;">
+                            <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: 1.5px solid rgba(99, 102, 241, 0.5); background: rgba(15, 23, 42, 0.85); padding: 5px 12px; border-radius: 8px; height: 34px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                                <span class="trigger-text" style="font-weight: 700; font-size: 0.82rem; color: #ffffff;">{{ selectedContractorName }}</span>
+                                <span class="trigger-arrow" style="color: #818cf8;">▾</span>
+                            </div>
+                            <div class="searchable-dropdown-panel" v-if="reconContractorDropdownOpen" style="width: 340px; z-index: 1000; left: 0; top: 100%; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                                <div class="searchable-dropdown-search">
+                                    <input type="text" v-model="contractorDropdownSearch" placeholder="Search contractor name, WO, PAN..." ref="reconContractorSearchInput">
                                 </div>
-                                <div class="searchable-dropdown-panel" v-if="reconContractorDropdownOpen" style="width: 320px; z-index: 1000; left: 0; top: 100%; margin-top: 4px;">
-                                    <div class="searchable-dropdown-search">
-                                        <input type="text" v-model="contractorDropdownSearch" placeholder="Search contractor name, WO, PAN..." ref="reconContractorSearchInput">
-                                    </div>
-                                    <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
-                                        <template v-if="sortedFilteredContractors.length">
-                                            <div v-for="firm in sortedFilteredContractors" :key="firm.id" class="searchable-dropdown-item" :class="{ selected: selectedContractorId === firm.id }" @click="selectContractorFirm(firm); reconContractorDropdownOpen = false;">
-                                                <div style="font-weight: 700; font-size: 0.82rem;">{{ firm.name }}</div>
-                                                <div style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
-                                                    <span v-if="firm.workOrderNo" style="color: #60a5fa;">WO: {{ firm.workOrderNo }}</span>
-                                                    <span v-if="firm.pan">PAN: {{ firm.pan }}</span>
-                                                </div>
+                                <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
+                                    <template v-if="sortedFilteredContractors.length">
+                                        <div v-for="firm in sortedFilteredContractors" :key="firm.id" class="searchable-dropdown-item" :class="{ selected: selectedContractorId === firm.id }" @click="selectContractorFirm(firm); reconContractorDropdownOpen = false;">
+                                            <div style="font-weight: 700; font-size: 0.82rem;">{{ firm.name }}</div>
+                                            <div style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
+                                                <span v-if="firm.workOrderNo" style="color: #60a5fa;">WO: {{ firm.workOrderNo }}</span>
+                                                <span v-if="firm.pan">PAN: {{ firm.pan }}</span>
                                             </div>
-                                        </template>
-                                        <div v-else class="searchable-dropdown-empty">No contractor found</div>
-                                    </div>
+                                        </div>
+                                    </template>
+                                    <div v-else class="searchable-dropdown-empty">No contractor found</div>
                                 </div>
                             </div>
                         </div>
 
-                        <button class="btn btn-secondary" @click="reconFilterZeroOnly = !reconFilterZeroOnly" :title="reconFilterZeroOnly ? 'Show all mapped materials (including zero qty)' : 'Hide zero qty rows'" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap; font-weight: 700;">
-                            {{ reconFilterZeroOnly ? '👁️ Showing: Only With Qty (' + reconNonZeroCount + ')' : '👁️ Showing: All Mapped Items (' + (pivotReconciliationData.rows ? pivotReconciliationData.rows.length : 0) + ')' }}
-                        </button>
-                        <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); font-size: 0.76rem; font-weight: 700; color: #93c5fd; white-space: nowrap;">
-                            ⚡ SAP Stock Synced: <span style="color: #ffffff;">{{ currentContractorSapInfo }}</span> ({{ currentContractorSapCount }} items)
-                            <span v-if="hasCustomStock" style="font-size: 0.64rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 800; margin-left: 4px;">CUSTOM</span>
+                        <!-- Live Stock Synced Status Pill -->
+                        <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); border: 1.5px solid rgba(59, 130, 246, 0.45); font-size: 0.78rem; font-weight: 700; color: #93c5fd;">
+                            <span style="font-size: 0.90rem;">⚡</span>
+                            <span>SAP Stock: <strong style="color: #ffffff;">{{ currentContractorSapInfo }}</strong> ({{ currentContractorSapCount }} items)</span>
+                            <span v-if="hasCustomStock" style="font-size: 0.65rem; background: #22c55e; color: #000; padding: 2px 7px; border-radius: 999px; font-weight: 900; margin-left: 4px; letter-spacing: 0.5px;">CUSTOM STOCK</span>
                         </div>
-                        <button class="btn btn-primary" @click="$refs.reconStockFileInput.click()" :disabled="stockUploading" title="Upload fresh stock Excel (.xlsx) file to update SAP stock issues" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap; font-weight: 700; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color: #2563eb; display: inline-flex; align-items: center; gap: 4px;">
-                            <span>{{ stockUploading ? '⏳' : '📥' }}</span>
-                            <span>{{ stockUploading ? 'Processing...' : 'Upload Stock (.xlsx)' }}</span>
-                        </button>
+                        <div v-else style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.35); font-size: 0.78rem; font-weight: 700; color: #fbbf24;">
+                            <span>ℹ️ Select a contractor above to view SAP Issue/MRN</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: STOCK EXCEL UPLOAD & RESET (Prominent Action Hub) -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <!-- Hidden File Input for .xlsx -->
                         <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
-                        <button v-if="hasCustomStock" class="btn btn-secondary" @click="resetToDefaultStock" title="Reset to default bundled SAP stock database" style="padding: 0.35rem 0.55rem; font-size: 0.72rem; color: #f87171; border-color: rgba(239, 68, 68, 0.4); white-space: nowrap;">
-                            ↺ Reset Stock
+                        
+                        <!-- 📥 BIG PROMINENT STOCK UPLOAD BUTTON -->
+                        <button type="button" 
+                            @click="$refs.reconStockFileInput.click()" 
+                            :disabled="stockUploading" 
+                            title="Naya Stock Excel (.xlsx) upload karein — sabhi contractors ka issue/return turant update ho jayega"
+                            style="padding: 7px 16px; font-size: 0.82rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: 1.5px solid #60a5fa; color: #ffffff; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4); transition: all 0.2s;">
+                            <span style="font-size: 1rem;">{{ stockUploading ? '⏳' : '📥' }}</span>
+                            <span>{{ stockUploading ? 'Uploading & Parsing...' : 'Upload Stock (.xlsx)' }}</span>
                         </button>
-                        <button class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
-                            📗 Export (.xlsx)
+
+                        <!-- ↺ RESET BUTTON (Visible when custom file is uploaded) -->
+                        <button v-if="hasCustomStock" type="button"
+                            @click="resetToDefaultStock" 
+                            title="Reset to default built-in stock database" 
+                            style="padding: 7px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                            <span>↺</span>
+                            <span>Reset Stock</span>
                         </button>
                     </div>
                 </div>
-                <div v-if="reverseEntry" class="filter-col no-print" style="min-width: 280px; flex: unset; order: 2;">
-                    <label>Select Item</label>
-                    <input type="text" list="reconSapItemsList" placeholder="-- All Materials / Select Items --"
+
+                <!-- ROW 2: Display Filters, Reverse Mode & Excel Export -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    
+                    <!-- Left: Reverse Mode Toggle & Explanation -->
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" @click="toggleReverseEntry" 
+                            :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" 
+                            style="height: 32px; padding: 0 12px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo); display: inline-flex; align-items: center; gap: 6px;">
+                            <span>{{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}</span>
+                        </button>
+                        <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">
+                            {{ reverseEntry ? 'Reverse Mode: Enter qty directly in reconciliation — Activity Sheet + Tax Invoice auto-update honge.' : 'Normal mode: Activity Sheet me entries karein, ye Reconciliation Sheet auto-generate hogi.' }}
+                        </span>
+                    </div>
+
+                    <!-- Right: Item Visibility Filter & Excel Export -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn btn-secondary" 
+                            @click="reconFilterZeroOnly = !reconFilterZeroOnly" 
+                            :title="reconFilterZeroOnly ? 'Show all mapped materials' : 'Hide zero quantity rows'" 
+                            style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>{{ reconFilterZeroOnly ? '👁️ Only With Qty (' + reconNonZeroCount + ')' : '👁️ All Mapped Items (' + (pivotReconciliationData.rows ? pivotReconciliationData.rows.length : 0) + ')' }}</span>
+                        </button>
+
+                        <button type="button" class="btn btn-excel" 
+                            @click="exportReconciliationExcel" 
+                            title="Export Reconciliation Sheet to Excel (.xlsx)" 
+                            style="padding: 6px 14px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; white-space: nowrap; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); cursor: pointer;">
+                            <span>📗</span>
+                            <span>Export (.xlsx)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ROW 3 (Only when Reverse Entry is ON): Quick Item Entry Bar -->
+                <div v-if="reverseEntry" style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <label style="font-size: 0.76rem; font-weight: 800; color: #a5b4fc; white-space: nowrap;">⚡ Quick Item Entry:</label>
+                    <input type="text" list="reconSapItemsList" placeholder="-- Search & Select SAP Material / Item Code --"
                         :disabled="isFinalized || reverseInvoiceActKeys.length === 0"
                         @change="onReconItemSelect($event)"
                         ref="reconItemInput"
-                        style="height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); width: 100%;">
+                        style="height: 34px; padding: 0 10px; border-radius: 6px; font-weight: 700; font-size: 0.80rem; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); flex: 1; min-width: 280px;">
                     <datalist id="reconSapItemsList">
                         <option v-for="r in reverseSapMenuList" :key="r.code" :value="r.code">
                             {{ r.code }} - {{ String(r.desc || '').substring(0, 50) }} ({{ r.uom }}){{ r.total > 0 ? ' | qty: ' + r.total : '' }}
@@ -1282,6 +1331,7 @@
                     </datalist>
                 </div>
             </div>
+
             <div v-if="reverseEntry && reverseInvoiceActKeys.length === 0" class="filter-bar-card no-print" style="border-color: var(--accent-amber);">
                 <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber);">Add activities to Tax Invoice first — only those will appear here.</div>
             </div>
@@ -2786,15 +2836,15 @@
     <script src="js/history.js?v=20261030_04"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261030_04"></script>
-    <script src="js/billing.js?v=20261030_04"></script>
+    <script src="js/sync.js?v=20261030_05"></script>
+    <script src="js/billing.js?v=20261030_05"></script>
     <script src="js/mapping.js?v=20261030_04"></script>
     <script src="js/views.js?v=20261030_04"></script>
     <script src="js/export.js?v=20261030_04"></script>
-    <script src="js/stock-importer.js?v=20261030_04"></script>
+    <script src="js/stock-importer.js?v=20261030_05"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261030_04"></script>
+    <script src="js/core/app.js?v=20261030_05"></script>
 </body>
 
 </html>
