@@ -659,6 +659,41 @@ it('Contractor Old Reconciliation: Baseline loading, matching, cumulative calcul
     assert.strictEqual(mockApp.getReconBalanceQty(mockRow), -8, 'Balance should be negative (-8) on over-consumption');
 });
 
+// 16. Fast Async Old Reconciliation Parser (Dense streaming, progress callback & early validation)
+it('Fast Async Old Reco: Ultra-fast streaming parser on 62-sheet workbook with live progress', async () => {
+    global.window = global;
+    const XLSX = require('xlsx');
+    global.XLSX = XLSX;
+    eval(fs.readFileSync('js/old-reco-importer.js', 'utf8'));
+
+    // Create 62-sheet workbook
+    const wb = XLSX.utils.book_new();
+    for (let i = 0; i < 62; i++) {
+        const ws = XLSX.utils.aoa_to_sheet([
+            ['Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'Total Consumption', 'BALANCE'],
+            ['17000004', 'RSJ Pole 9M', 'No', 282, 0, 282, 250, 32],
+            ['17000005', 'RSJ Pole 11M', 'No', 100, 0, 100, 90, 10]
+        ], { dense: true });
+        XLSX.utils.book_append_sheet(wb, ws, 'Contractor ' + i);
+    }
+    const arrayBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+    let progressCount = 0;
+    const startTime = Date.now();
+    const res = await window.OldRecoImporterModule.parseOldRecoExcelAsync(
+        arrayBuffer, 
+        'Contractor 0', 
+        (p) => { progressCount++; }
+    );
+    const duration = Date.now() - startTime;
+
+    assert.ok(duration < 2000, `Parser must finish within 2000ms (took ${duration}ms)`);
+    assert.strictEqual(res.processedContractors, 62, 'All 62 contractor sheets should be processed');
+    assert.ok(res.updatedDb.byContractorNorm['contractor0'], 'Contractor 0 should exist in parsed database');
+    assert.strictEqual(res.updatedDb.byContractorNorm['contractor0'].materials['17000004'].prevConsumption, 250);
+    assert.ok(progressCount > 0, 'Progress callback should be triggered during streaming');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

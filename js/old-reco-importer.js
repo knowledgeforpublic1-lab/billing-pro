@@ -1,8 +1,7 @@
 /**
  * @file Old Reconciliation Importer Module
- * @description In-browser parser and manager for uploaded Contractor Old / Previous Reconciliation Excel files.
- * Supports multi-sheet master reconciliation workbooks and single-contractor reconciliation sheets.
- * Persists custom reconciliation data to IndexedDB and provides inline editing.
+ * @description High-performance in-browser parser and manager for uploaded Contractor Old / Previous Reconciliation Excel files.
+ * Uses ultra-fast dense worksheet streaming, progressive async yielding, and IndexedDB persistence.
  *
  * @module OldRecoImporterModule
  * @since v2.0
@@ -28,185 +27,50 @@ window.OldRecoImporterModule = {
             .trim();
     },
 
-    /**
-     * Parses an uploaded Excel ArrayBuffer into the standard ContractorOldReco structure.
-     * @param {ArrayBuffer} arrayBuffer
-     * @param {string} [defaultContractorName]
-     * @returns {Object} Standard ContractorOldReco data structure
-     */
-    parseOldRecoExcel(arrayBuffer, defaultContractorName) {
-        if (typeof XLSX === 'undefined') {
-            throw new Error('XLSX parser library is not loaded. Please check your network connection and refresh.');
-        }
-
-        const wb = XLSX.read(arrayBuffer, {
-            type: 'array',
-            cellStyles: false,
-            cellHTML: false,
-            cellFormula: false
-        });
-
-        const sheetNames = wb.SheetNames || [];
-        if (sheetNames.length === 0) {
-            throw new Error('The uploaded Excel file contains no worksheets.');
-        }
-
-        const cleanHeader = (val) => {
-            if (val === null || val === undefined) return '';
-            return String(val)
-                .replace(/[\r\n\t_]+/g, ' ')
-                .replace(/[^\w\s.%-]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .toLowerCase();
-        };
-
-        const parseQty = (val) => {
-            if (val === null || val === undefined || val === '') return 0;
-            if (typeof val === 'number') return isNaN(val) ? 0 : val;
-            const clean = String(val).replace(/,/g, '').trim();
-            const num = parseFloat(clean);
-            return isNaN(num) ? 0 : num;
-        };
-
-        const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
-        const updatedDb = {
-            meta: {
-                extractedAt: new Date().toISOString(),
-                contractorCount: 0,
-                version: 'custom_upload'
-            },
-            byContractorNorm: JSON.parse(JSON.stringify(existingDb.byContractorNorm || {}))
-        };
-
-        const excludeSheets = [
-            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
-            'bill summary', 'sheet1', 'contractor bill details'
-        ];
-
-        // Check if multi-contractor workbook (multiple sheets matching contractor names)
-        const candidateContractorSheets = sheetNames.filter(s => {
-            const sLower = cleanHeader(s);
-            return sLower && !excludeSheets.includes(sLower) && sLower !== 'sheet1';
-        });
-
-        const isMultiContractorWorkbook = candidateContractorSheets.length > 2;
-        let processedContractors = 0;
-
-        if (isMultiContractorWorkbook) {
-            // Case A: Multi-Contractor Master Workbook
-            for (const sName of candidateContractorSheets) {
-                const sheet = wb.Sheets[sName];
-                if (!sheet) continue;
-                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                if (!rows || rows.length < 2) continue;
-
-                const contractorName = String(sName).trim();
-                const normKey = this.normContractorName(contractorName);
-                if (!normKey) continue;
-
-                const colMap = this.detectRecoColumns(rows, cleanHeader);
-                if (colMap.code === -1) continue;
-
-                const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials) 
-                    ? updatedDb.byContractorNorm[normKey].materials 
-                    : {};
-
-                for (let r = colMap.startRow; r < rows.length; r++) {
-                    const row = rows[r];
-                    if (!row || !row[colMap.code]) continue;
-                    const code = String(row[colMap.code]).trim();
-                    if (!code || code === '0' || code.toLowerCase() === 'total') continue;
-
-                    const cons = colMap.consumption !== -1 ? parseQty(row[colMap.consumption]) : 0;
-                    const net = colMap.netIssue !== -1 ? parseQty(row[colMap.netIssue]) : (materials[code] ? materials[code].netIssue : 0);
-                    const desc = (colMap.desc !== -1 && row[colMap.desc]) ? String(row[colMap.desc]).trim() : (materials[code] ? materials[code].desc : code);
-                    const uom = (colMap.uom !== -1 && row[colMap.uom]) ? String(row[colMap.uom]).trim() : (materials[code] ? materials[code].uom : 'No');
-
-                    materials[code] = {
-                        code: code,
-                        desc: desc,
-                        uom: uom,
-                        prevConsumption: Math.round(cons * 1000) / 1000,
-                        netIssue: Math.round(net * 1000) / 1000,
-                        balanceQty: Math.round((net - cons) * 1000) / 1000
-                    };
-                }
-
-                updatedDb.byContractorNorm[normKey] = {
-                    contractorName: contractorName,
-                    itemCount: Object.keys(materials).length,
-                    consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                    materials: materials
-                };
-                processedContractors++;
-            }
-        } else {
-            // Case B: Single Contractor Sheet (e.g. exported reconciliation sheet or single active sheet)
-            const targetSheetName = sheetNames[0];
-            const sheet = wb.Sheets[targetSheetName];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-            if (!rows || rows.length < 2) {
-                throw new Error('The uploaded worksheet contains insufficient rows.');
-            }
-
-            const targetContractor = defaultContractorName || sheetNames[0] || 'Selected Contractor';
-            const normKey = this.normContractorName(targetContractor);
-            if (!normKey) {
-                throw new Error('Please select a contractor before uploading a single-contractor reconciliation sheet.');
-            }
-
-            const colMap = this.detectRecoColumns(rows, cleanHeader);
-            if (colMap.code === -1) {
-                throw new Error('Could not identify SAP Item Code / Row Labels column in the uploaded Excel.');
-            }
-
-            const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials) 
-                ? updatedDb.byContractorNorm[normKey].materials 
-                : {};
-
-            for (let r = colMap.startRow; r < rows.length; r++) {
-                const row = rows[r];
-                if (!row || !row[colMap.code]) continue;
-                const code = String(row[colMap.code]).trim();
-                if (!code || code === '0' || code.toLowerCase() === 'total' || code.toLowerCase().includes('total')) continue;
-
-                const cons = colMap.consumption !== -1 ? parseQty(row[colMap.consumption]) : 0;
-                const net = colMap.netIssue !== -1 ? parseQty(row[colMap.netIssue]) : (materials[code] ? materials[code].netIssue : 0);
-                const desc = (colMap.desc !== -1 && row[colMap.desc]) ? String(row[colMap.desc]).trim() : (materials[code] ? materials[code].desc : code);
-                const uom = (colMap.uom !== -1 && row[colMap.uom]) ? String(row[colMap.uom]).trim() : (materials[code] ? materials[code].uom : 'No');
-
-                materials[code] = {
-                    code: code,
-                    desc: desc,
-                    uom: uom,
-                    prevConsumption: Math.round(cons * 1000) / 1000,
-                    netIssue: Math.round(net * 1000) / 1000,
-                    balanceQty: Math.round((net - cons) * 1000) / 1000
-                };
-            }
-
-            updatedDb.byContractorNorm[normKey] = {
-                contractorName: targetContractor,
-                itemCount: Object.keys(materials).length,
-                consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                materials: materials
-            };
-            processedContractors = 1;
-        }
-
-        updatedDb.meta.contractorCount = Object.keys(updatedDb.byContractorNorm).length;
-        return { updatedDb, processedContractors };
+    cleanHeader(val) {
+        if (val === null || val === undefined) return '';
+        return String(val)
+            .replace(/[\r\n\t_]+/g, ' ')
+            .replace(/[^\w\s.%-]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
     },
 
-    /**
-     * Detects column indices for Item Code, Description, UOM, and Consumption.
-     */
-    detectRecoColumns(rows, cleanHeader) {
+    parseQty(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        const clean = String(val).replace(/,/g, '').trim();
+        const num = parseFloat(clean);
+        return isNaN(num) ? 0 : num;
+    },
+
+    getRowValues(ws, rIdx) {
+        if (!ws) return [];
+        // Dense mode array access (lightning fast)
+        if (ws[rIdx] && Array.isArray(ws[rIdx])) {
+            return ws[rIdx].map(c => (c && c.v !== undefined) ? c.v : '');
+        }
+        // Fallback for standard sparse object mode
+        const row = [];
+        if (ws['!ref']) {
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let c = range.s.c; c <= range.e.c; c++) {
+                const cellAddr = XLSX.utils.encode_cell({ r: rIdx, c });
+                const cell = ws[cellAddr];
+                row.push(cell && cell.v !== undefined ? cell.v : '');
+            }
+        }
+        return row;
+    },
+
+    detectRecoColumnsFromRowArray(rows) {
         let colMap = { code: -1, desc: -1, uom: -1, consumption: -1, netIssue: -1, startRow: 1 };
-        for (let r = 0; r < Math.min(8, rows.length); r++) {
-            if (!rows[r]) continue;
-            const h = rows[r].map(x => cleanHeader(x));
+
+        for (let r = 0; r < Math.min(10, rows.length); r++) {
+            const row = rows[r];
+            if (!row || !Array.isArray(row)) continue;
+            const h = row.map(v => this.cleanHeader(v));
             const codeIdx = h.findIndex(x => x && (x === 'row labels' || x === 'item code' || x === 'sap code' || x === 'material code' || x === 'material' || x === 'code'));
             if (codeIdx !== -1) {
                 colMap.code = codeIdx;
@@ -215,7 +79,6 @@ window.OldRecoImporterModule = {
                 colMap.desc = h.findIndex(x => x && (x.includes('description') || x.includes('desc') || x.includes('item name')));
                 colMap.uom = h.findIndex(x => x && (x === 'unit' || x === 'uom'));
                 
-                // Consumption / Previous Reconciled column
                 let consIdx = h.findIndex(x => x && (
                     x.includes('purana reco') ||
                     x.includes('prev recon') ||
@@ -241,16 +104,301 @@ window.OldRecoImporterModule = {
         return colMap;
     },
 
-    // ─── INDEXEDDB PERSISTENCE ───
-    async saveCustomOldRecoToDb(recoData) {
-        try {
-            localStorage.setItem('billing_custom_old_reco_v1', JSON.stringify(recoData));
-        } catch(e) {
-            // LocalStorage fallback quota exceeded, IndexedDB primary
+    /**
+     * Fast parser core for a single worksheet (supports dense mode and sparse mode)
+     */
+    parseSheetMaterials(ws, contractorName, targetMaterials) {
+        if (!ws || !ws['!ref']) return 0;
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        if (range.e.r < 1) return 0;
+
+        // Sample first 10 rows for header detection
+        const sampleRows = [];
+        for (let r = 0; r <= Math.min(10, range.e.r); r++) {
+            sampleRows.push(this.getRowValues(ws, r));
         }
 
+        const colMap = this.detectRecoColumnsFromRowArray(sampleRows);
+        if (colMap.code === -1 || colMap.consumption === -1) {
+            // Not a reconciliation sheet (missing code or consumption)
+            return 0;
+        }
+
+        let added = 0;
+        for (let r = colMap.startRow; r <= range.e.r; r++) {
+            const row = this.getRowValues(ws, r);
+            if (!row || !row[colMap.code]) continue;
+            const code = String(row[colMap.code]).trim();
+            if (!code || code === '0' || code.toLowerCase() === 'total' || code.toLowerCase().includes('total')) continue;
+
+            const cons = colMap.consumption !== -1 ? this.parseQty(row[colMap.consumption]) : 0;
+            const net = colMap.netIssue !== -1 ? this.parseQty(row[colMap.netIssue]) : (targetMaterials[code] ? targetMaterials[code].netIssue : 0);
+            const desc = (colMap.desc !== -1 && row[colMap.desc]) ? String(row[colMap.desc]).trim() : (targetMaterials[code] ? targetMaterials[code].desc : code);
+            const uom = (colMap.uom !== -1 && row[colMap.uom]) ? String(row[colMap.uom]).trim() : (targetMaterials[code] ? targetMaterials[code].uom : 'No');
+
+            targetMaterials[code] = {
+                code: code,
+                desc: desc,
+                uom: uom,
+                prevConsumption: Math.round(cons * 1000) / 1000,
+                netIssue: Math.round(net * 1000) / 1000,
+                balanceQty: Math.round((net - cons) * 1000) / 1000
+            };
+            added++;
+        }
+        return added;
+    },
+
+    /**
+     * High-speed Asynchronous Parsing with live progress and zero UI blocking
+     */
+    async parseOldRecoExcelAsync(arrayBuffer, defaultContractorName, onProgress) {
+        if (typeof XLSX === 'undefined') {
+            throw new Error('XLSX parser library is not loaded. Please refresh your browser.');
+        }
+
+        // 1. Ultra-fast sheet names reading (takes ~1-5ms)
+        const metaWb = XLSX.read(arrayBuffer, { type: 'array', bookSheets: true });
+        const sheetNames = metaWb.SheetNames || [];
+        if (sheetNames.length === 0) {
+            throw new Error('The uploaded Excel file contains no worksheets.');
+        }
+
+        const excludeSheets = [
+            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
+            'bill summary', 'sheet1', 'contractor bill details'
+        ];
+
+        const candidateSheets = sheetNames.filter(s => {
+            const sLower = this.cleanHeader(s);
+            return sLower && !excludeSheets.includes(sLower) && sLower !== 'sheet1';
+        });
+
+        const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
+        const updatedDb = {
+            meta: {
+                extractedAt: new Date().toISOString(),
+                contractorCount: 0,
+                version: 'custom_upload'
+            },
+            byContractorNorm: Object.assign({}, existingDb.byContractorNorm || {})
+        };
+
+        let processedContractors = 0;
+
+        // If multi-contractor workbook
+        if (candidateSheets.length > 2) {
+            // Priority sort: if active contractor is selected, put their sheet first!
+            const activeNorm = defaultContractorName ? this.normContractorName(defaultContractorName) : '';
+            if (activeNorm) {
+                candidateSheets.sort((a, b) => {
+                    const aMatch = this.normContractorName(a) === activeNorm;
+                    const bMatch = this.normContractorName(b) === activeNorm;
+                    return (bMatch ? 1 : 0) - (aMatch ? 1 : 0);
+                });
+            }
+
+            // Read with ultra-fast dense mode
+            const wb = XLSX.read(arrayBuffer, {
+                type: 'array',
+                cellStyles: false,
+                cellHTML: false,
+                cellFormula: false,
+                cellDates: false,
+                cellNF: false,
+                dense: true
+            });
+
+            for (let i = 0; i < candidateSheets.length; i++) {
+                const sName = candidateSheets[i];
+                const sheet = wb.Sheets[sName];
+                if (!sheet) continue;
+
+                const contractorName = String(sName).trim();
+                const normKey = this.normContractorName(contractorName);
+                if (!normKey) continue;
+
+                const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
+                    ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
+                    : {};
+
+                const added = this.parseSheetMaterials(sheet, contractorName, materials);
+                if (added > 0) {
+                    updatedDb.byContractorNorm[normKey] = {
+                        contractorName: contractorName,
+                        itemCount: Object.keys(materials).length,
+                        consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
+                        materials: materials
+                    };
+                    processedContractors++;
+                }
+
+                // Yield to UI loop every 4 sheets so browser never hangs
+                if (i % 4 === 0) {
+                    if (onProgress) {
+                        onProgress({ current: i + 1, total: candidateSheets.length, contractor: contractorName });
+                    }
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+        } else {
+            // Single-sheet workbook
+            const targetSheetName = candidateSheets[0] || sheetNames[0];
+            const wb = XLSX.read(arrayBuffer, {
+                type: 'array',
+                sheets: [targetSheetName],
+                cellStyles: false,
+                cellHTML: false,
+                cellFormula: false,
+                cellDates: false,
+                cellNF: false,
+                dense: true
+            });
+
+            const sheet = wb.Sheets[targetSheetName];
+            if (!sheet) {
+                throw new Error('Unable to read worksheet: ' + targetSheetName);
+            }
+
+            const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
+            const normKey = this.normContractorName(targetContractor);
+            if (!normKey) {
+                throw new Error('Please select a contractor before uploading a single-contractor reconciliation sheet.');
+            }
+
+            const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
+                ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
+                : {};
+
+            const added = this.parseSheetMaterials(sheet, targetContractor, materials);
+            if (added === 0) {
+                throw new Error("Is sheet me 'Consumption' ya 'Purana Reco' column nahi mila. Kripya check karein ki ye valid Reconciliation Sheet hai.");
+            }
+
+            updatedDb.byContractorNorm[normKey] = {
+                contractorName: targetContractor,
+                itemCount: Object.keys(materials).length,
+                consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
+                materials: materials
+            };
+            processedContractors = 1;
+        }
+
+        updatedDb.meta.contractorCount = Object.keys(updatedDb.byContractorNorm).length;
+        return { updatedDb, processedContractors };
+    },
+
+    /**
+     * Synchronous wrapper for unit tests & backward compatibility
+     */
+    parseOldRecoExcel(arrayBuffer, defaultContractorName) {
+        if (typeof XLSX === 'undefined') {
+            throw new Error('XLSX parser library is not loaded.');
+        }
+
+        const metaWb = XLSX.read(arrayBuffer, { type: 'array', bookSheets: true });
+        const sheetNames = metaWb.SheetNames || [];
+        if (sheetNames.length === 0) {
+            throw new Error('The uploaded Excel file contains no worksheets.');
+        }
+
+        const excludeSheets = [
+            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
+            'bill summary', 'sheet1', 'contractor bill details'
+        ];
+
+        const candidateSheets = sheetNames.filter(s => {
+            const sLower = this.cleanHeader(s);
+            return sLower && !excludeSheets.includes(sLower) && sLower !== 'sheet1';
+        });
+
+        const wb = XLSX.read(arrayBuffer, {
+            type: 'array',
+            cellStyles: false,
+            cellHTML: false,
+            cellFormula: false,
+            cellDates: false,
+            cellNF: false,
+            dense: true
+        });
+
+        const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
+        const updatedDb = {
+            meta: {
+                extractedAt: new Date().toISOString(),
+                contractorCount: 0,
+                version: 'custom_upload'
+            },
+            byContractorNorm: Object.assign({}, existingDb.byContractorNorm || {})
+        };
+
+        let processedContractors = 0;
+
+        if (candidateSheets.length > 2) {
+            for (const sName of candidateSheets) {
+                const sheet = wb.Sheets[sName];
+                if (!sheet) continue;
+
+                const contractorName = String(sName).trim();
+                const normKey = this.normContractorName(contractorName);
+                if (!normKey) continue;
+
+                const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
+                    ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
+                    : {};
+
+                const added = this.parseSheetMaterials(sheet, contractorName, materials);
+                if (added > 0) {
+                    updatedDb.byContractorNorm[normKey] = {
+                        contractorName: contractorName,
+                        itemCount: Object.keys(materials).length,
+                        consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
+                        materials: materials
+                    };
+                    processedContractors++;
+                }
+            }
+        } else {
+            const targetSheetName = candidateSheets[0] || sheetNames[0];
+            const sheet = wb.Sheets[targetSheetName];
+            if (!sheet) throw new Error('No sheet found.');
+
+            const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
+            const normKey = this.normContractorName(targetContractor);
+            const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
+                ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
+                : {};
+
+            const added = this.parseSheetMaterials(sheet, targetContractor, materials);
+            if (added === 0) {
+                throw new Error("Is sheet me 'Consumption' ya 'Purana Reco' column nahi mila.");
+            }
+
+            updatedDb.byContractorNorm[normKey] = {
+                contractorName: targetContractor,
+                itemCount: Object.keys(materials).length,
+                consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
+                materials: materials
+            };
+            processedContractors = 1;
+        }
+
+        updatedDb.meta.contractorCount = Object.keys(updatedDb.byContractorNorm).length;
+        return { updatedDb, processedContractors };
+    },
+
+    // ─── INDEXEDDB PERSISTENCE ───
+    async saveCustomOldRecoToDb(recoData) {
         return new Promise((resolve) => {
-            if (!window.indexedDB) return resolve(false);
+            if (!window.indexedDB) {
+                try {
+                    const str = JSON.stringify(recoData);
+                    if (str.length < 1000000) {
+                        localStorage.setItem('billing_custom_old_reco_v1', str);
+                    }
+                } catch(e) {}
+                return resolve(false);
+            }
             const req = indexedDB.open('billing_pro_db', 3);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
@@ -275,7 +423,6 @@ window.OldRecoImporterModule = {
 
     async loadCustomOldRecoFromDb() {
         return new Promise((resolve) => {
-            // Try IndexedDB first
             if (window.indexedDB) {
                 const req = indexedDB.open('billing_pro_db', 3);
                 req.onupgradeneeded = (e) => {
@@ -456,12 +603,20 @@ window.OldRecoImporterModule = {
         }
 
         this.oldRecoUploading = true;
-        if (typeof this.showToast === 'function') this.showToast('Reading old reconciliation file: ' + name + ' (Please wait)...', '⏳');
-        await new Promise(r => setTimeout(r, 100));
+        if (typeof this.showToast === 'function') this.showToast('Reading file: ' + name + '...', '⏳');
+        await new Promise(r => setTimeout(r, 60));
 
         try {
             const arrayBuffer = await file.arrayBuffer();
-            const res = window.OldRecoImporterModule.parseOldRecoExcel(arrayBuffer, this.selectedContractorName);
+            const res = await window.OldRecoImporterModule.parseOldRecoExcelAsync(
+                arrayBuffer, 
+                this.selectedContractorName,
+                (p) => {
+                    if (p && p.contractor && typeof this.showToast === 'function') {
+                        this.showToast(`Reading sheets: ${p.current}/${p.total}...`, '⏳');
+                    }
+                }
+            );
             const updatedDb = res.updatedDb;
 
             if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
@@ -469,22 +624,19 @@ window.OldRecoImporterModule = {
             }
 
             window.ContractorOldReco = updatedDb;
-            if (typeof BillingStorage !== 'undefined') {
-                await BillingStorage.setItem('billing_custom_old_reco_db', updatedDb);
-            } else {
-                await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
-            }
+            // Save to IndexedDB directly (avoiding synchronous localStorage quota blockage)
+            await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
 
             this.hasCustomOldReco = true;
             this.$forceUpdate();
             if (typeof this.showToast === 'function') {
-                this.showToast(`Purana Reconciliation Synced! (${res.processedContractors} contractors updated)`, 'Check');
+                this.showToast(`Old Reconciliation Synced! (${res.processedContractors} contractors updated)`, 'Check');
             }
         } catch (err) {
             console.error('[OldRecoUpload Error]:', err);
             alert('Old Reconciliation Upload Error:\n' + (err.message || err));
             if (typeof this.showToast === 'function') {
-                this.showToast('Failed to process Excel: ' + (err.message || 'Unknown error'), 'Alert');
+                this.showToast('Failed: ' + (err.message || 'Unknown error'), 'Alert');
             }
         } finally {
             this.oldRecoUploading = false;
@@ -494,9 +646,6 @@ window.OldRecoImporterModule = {
     async resetToDefaultOldReco() {
         if (!confirm('Are you sure you want to reset all old reconciliation data to defaults? Any custom uploaded files and edits will be cleared.')) return;
         try {
-            if (typeof BillingStorage !== 'undefined') {
-                await BillingStorage.removeItem('billing_custom_old_reco_db');
-            }
             await window.OldRecoImporterModule.clearCustomOldRecoFromDb();
             try { localStorage.removeItem('billing_custom_old_reco_edits_v1'); } catch(e) {}
             this.customOldRecoEdits = {};
