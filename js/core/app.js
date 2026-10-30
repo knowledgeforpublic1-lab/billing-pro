@@ -413,6 +413,39 @@
                     }
                 });
 
+                // 📋 Auto-sync Contractor Old Reconciliation (Purana Reco baseline / custom upload)
+                const contractorOldReco = typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
+                const oldRecoMats = (contractorOldReco && contractorOldReco.materials) || {};
+
+                Object.keys(oldRecoMats).forEach(matCode => {
+                    const oItem = oldRecoMats[matCode];
+                    const oNet = Number(oItem.netIssue !== undefined ? oItem.netIssue : (oItem.issuedQty || 0));
+                    const oGross = Number(oItem.grossIssue !== undefined ? oItem.grossIssue : oNet);
+                    const oMrn = Number(oItem.mrnReturn !== undefined ? oItem.mrnReturn : 0);
+
+                    if (!sapMap[matCode]) {
+                        sapMap[matCode] = {
+                            code: matCode,
+                            desc: oItem.desc || oItem.description || matCode,
+                            uom: oItem.uom || oItem.unit || 'No',
+                            totalQty: 0,
+                            sapIssuedQty: oNet,
+                            sapGrossIssue: oGross,
+                            sapMrnReturn: oMrn,
+                            sapNetIssue: oNet,
+                            activities: {}
+                        };
+                    } else {
+                        // If sapMap has 0 net issue (e.g. not in active SAP dump), populate baseline net issue from purana reco
+                        if ((!sapMap[matCode].sapNetIssue || sapMap[matCode].sapNetIssue === 0) && oNet > 0) {
+                            sapMap[matCode].sapNetIssue = oNet;
+                            sapMap[matCode].sapGrossIssue = oGross;
+                            sapMap[matCode].sapMrnReturn = oMrn;
+                            sapMap[matCode].sapIssuedQty = oNet;
+                        }
+                    }
+                });
+
                 Object.keys(this.activities).forEach(actKey => {
                     const act = this.activities[actKey];
                     if (act && act.materials) {
@@ -782,7 +815,12 @@
             reconRows() {
                 if (!this.reverseEntry) {
                     if (this.reconFilterZeroOnly) {
-                        return this.pivotReconciliationData.rows.filter(r => (r.totalQty > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || (r.sapGrossIssue && r.sapGrossIssue !== 0)));
+                        return this.pivotReconciliationData.rows.filter(r => (
+                            r.totalQty > 0 || 
+                            (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
+                            (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
+                            ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
+                        ));
                     }
                     return this.pivotReconciliationData.rows;
                 }
@@ -793,13 +831,17 @@
                     if (this.reconFilterZeroOnly) {
                         let t = 0;
                         for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
-                        return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0));
+                        return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0));
                     }
                     return true;
                 });
             },
             reconNonZeroCount() {
-                return (this.pivotReconciliationData.rows || []).filter(r => r.totalQty > 0).length;
+                return (this.pivotReconciliationData.rows || []).filter(r => (
+                    r.totalQty > 0 || 
+                    (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
+                    ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
+                )).length;
             },
             // ↩️ "➕ Item ▾" dropdown: reconciliation wale SAP material (code + desc), search ke sath
             reverseSapMenuList() {

@@ -421,9 +421,31 @@ it('Export Filenames: Uses selected contractor name and never defaults to LK_Ele
     assert.strictEqual(cName2, 'Duskline_Infrastructure');
     assert.strictEqual(app2.getBillExportFileName(), 'Duskline_Infrastructure_RA-04.xlsx');
 
+    // Test Reconciliation Sheet download filename for Ravindra Kapgate
+    const reconFileName1 = app1.getRaCleanFileName()
+        ? `${cName1}_${app1.getRaCleanFileName()}_Material_Reconciliation_Sheet.xlsx`
+        : `${cName1}_Material_Reconciliation_Sheet.xlsx`;
+    assert.strictEqual(reconFileName1, 'Ravindra_Kapgate_RA-12_Material_Reconciliation_Sheet.xlsx');
+
+    // Test with blank RA No
+    const app3 = {
+        selectedContractorName: 'Ravindra Kapgate',
+        invoiceData: { contractorName: 'M/s Ravindra Kapgate' }
+    };
+    Object.assign(app3, window.ExportModule);
+    const cName3 = app3.getContractorCleanFileName();
+    const ra3 = app3.getRaCleanFileName();
+    const reconFileName3 = ra3
+        ? `${cName3}_${ra3}_Material_Reconciliation_Sheet.xlsx`
+        : `${cName3}_Material_Reconciliation_Sheet.xlsx`;
+    assert.strictEqual(reconFileName3, 'Ravindra_Kapgate_Material_Reconciliation_Sheet.xlsx');
+
     // Ensure neither contains "LK"
     assert.strictEqual(cName1.includes('LK'), false);
     assert.strictEqual(cName2.includes('LK'), false);
+    assert.strictEqual(cName3.includes('LK'), false);
+    assert.strictEqual(reconFileName1.includes('LK'), false);
+    assert.strictEqual(reconFileName3.includes('LK'), false);
 });
 
 
@@ -692,6 +714,43 @@ it('Fast Async Old Reco: Ultra-fast streaming parser on 62-sheet workbook with l
     assert.ok(res.updatedDb.byContractorNorm['contractor0'], 'Contractor 0 should exist in parsed database');
     assert.strictEqual(res.updatedDb.byContractorNorm['contractor0'].materials['17000004'].prevConsumption, 250);
     assert.ok(progressCount > 0, 'Progress callback should be triggered during streaming');
+});
+
+// 17. Robust Multi-Row Header & Auto-Derivation Extraction (Reconciliation Master Compatibility)
+it('Robust Old Reco Parser: Correctly extracts 2-row merged headers, title offset, and Sheet1 single sheets', async () => {
+    global.window = global;
+    const XLSX = require('xlsx');
+    global.XLSX = XLSX;
+    eval(fs.readFileSync('js/old-reco-importer.js', 'utf8'));
+
+    // Create workbook with Ashoka title rows and 2-row merged header at row 6-7
+    const wb = XLSX.utils.book_new();
+    const sheetData = [
+        ['ASHOKA BUILDCON LTD - RDSS GADCHIROLI'], // row 0 (title)
+        ['CONTRACTOR MATERIAL RECONCILIATION SHEET'], // row 1
+        ['Contractor: M/s Ravindra Kapgate'], // row 2
+        ['Work Order No: 31004925'], // row 3
+        ['Period: Up to March 2026'], // row 4
+        [], // row 5 (empty)
+        ['SR NO', 'ITEM CODE', 'MATERIAL DESCRIPTION', 'UNIT', 'ISSUED', 'MRN', 'NET', 'TOTAL', 'TOTAL'], // row 6 (header part 1)
+        ['', '', '', '', 'QTY', 'QTY', 'ISSUED', 'CONSUMPTIO', 'BALANCE'], // row 7 (header part 2)
+        [1, '17000004', 'RSJ POLE 9 MTR', 'NO', 348, 66, 282, 250, 32], // row 8 (data)
+        [2, '17000008', 'STREET LIGHT POLE', 'NO', 50, 0, 50, 45, 5], // row 9 (data)
+        ['TOTAL', '', '', '', 398, 66, 332, 295, 37] // row 10 (total row)
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const arrayBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+    const res = await window.OldRecoImporterModule.parseOldRecoExcelAsync(arrayBuffer, 'Ravindra Kapgate');
+    assert.strictEqual(res.processedContractors, 1, 'Should extract single contractor sheet');
+    const rk = res.updatedDb.byContractorNorm['ravindrakapgate'];
+    assert.ok(rk, 'Ravindra Kapgate record should exist');
+    assert.ok(rk.materials['17000004'], 'Item 17000004 should be extracted');
+    assert.strictEqual(rk.materials['17000004'].prevConsumption, 250, 'Consumption should be 250');
+    assert.strictEqual(rk.materials['17000004'].netIssue, 282, 'Net issue should be 282');
+    assert.strictEqual(rk.materials['17000004'].balanceQty, 32, 'Balance should be 32');
+    assert.strictEqual(rk.materials['17000008'].prevConsumption, 45, 'Item 17000008 consumption should be 45');
 });
 
 (async () => {

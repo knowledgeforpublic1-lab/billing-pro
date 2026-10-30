@@ -1,7 +1,8 @@
 /**
  * @file Old Reconciliation Importer Module
  * @description High-performance in-browser parser and manager for uploaded Contractor Old / Previous Reconciliation Excel files.
- * Uses ultra-fast dense worksheet streaming, progressive async yielding, and IndexedDB persistence.
+ * Uses the proven, robust 40-row multi-layer header detection from Reconciliation Master, supporting multi-sheet workbooks,
+ * single-contractor sheets, 2-row merged headers, and auto-derivation of consumption and net issue.
  *
  * @module OldRecoImporterModule
  * @since v2.0
@@ -27,7 +28,7 @@ window.OldRecoImporterModule = {
             .trim();
     },
 
-    cleanHeader(val) {
+    cleanHeaderStr(val) {
         if (val === null || val === undefined) return '';
         return String(val)
             .replace(/[\r\n\t_]+/g, ' ')
@@ -45,104 +46,221 @@ window.OldRecoImporterModule = {
         return isNaN(num) ? 0 : num;
     },
 
-    getRowValues(ws, rIdx) {
-        if (!ws) return [];
-        // Dense mode array access (lightning fast)
-        if (ws[rIdx] && Array.isArray(ws[rIdx])) {
-            return ws[rIdx].map(c => (c && c.v !== undefined) ? c.v : '');
-        }
-        // Fallback for standard sparse object mode
-        const row = [];
-        if (ws['!ref']) {
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for (let c = range.s.c; c <= range.e.c; c++) {
-                const cellAddr = XLSX.utils.encode_cell({ r: rIdx, c });
-                const cell = ws[cellAddr];
-                row.push(cell && cell.v !== undefined ? cell.v : '');
+    /**
+     * Proven 40-row header detection supporting 2-row merged headers & weighted matchers.
+     * Ported from Reconciliation Master engine for 100% format compatibility.
+     */
+    detectSheetColumnsRobust(sheetRows) {
+        const matchers = {
+            issue: (h) => {
+                if (!h) return 0;
+                if (h === 'issued qty' || h === 'issue qty' || h === 'issued quantity' || h === 'qty issued' || h === 'quantity issued' || h === 'issued nos') return 10;
+                if (['net', 'amount', 'rate', 'cost', 'value', 'rs', 'inr'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('issued qty') || h.includes('issue qty')) return 9;
+                if (h.startsWith('issued') || h.startsWith('issue') || h === 'issued') return 6;
+                return 0;
+            },
+            mrn: (h) => {
+                if (!h) return 0;
+                if (h === 'mrn qty' || h === 'mrn quantity' || h === 'qty mrn' || h === 'mrn nos' || h === 'mrn') return 10;
+                if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('mrn qty') || h.includes('mrn nos')) return 9;
+                if (h.includes('mrn') || h.includes('m r n') || h.includes('return')) return 7;
+                return 0;
+            },
+            netIssue: (h) => {
+                if (!h) return 0;
+                if (h === 'net issued' || h === 'net issue' || h === 'net issued qty' || h === 'net issue qty' || h === 'net qty issued' || h === 'net quantity') return 10;
+                if (['amount', 'rate', 'cost', 'value'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('net issued') || h.includes('net issue')) return 9;
+                if (h.includes('net') && (h.includes('issue') || h.includes('issued'))) return 7;
+                return 0;
+            },
+            consumption: (h) => {
+                if (!h) return 0;
+                if (h === 'total consumptio' || h === 'total consumption' || h === 'total consumtion' || h === 'total cosumption') return 10;
+                if (['amount', 'rate', 'cost', 'value', 'percent', '%'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('total consumptio') || h.includes('total consumption') || h.includes('total consumtion') || h.includes('purana reco') || h.includes('prev recon')) return 9;
+                if (h.includes('total') && (h.includes('consum') || h.includes('cosum') || h.includes('erect') || h.includes('reconcil'))) return 8;
+                if (h === 'consumption' || h === 'consumtion' || h === 'consumed qty' || h === 'total erected' || h === 'erected qty' || h === 'purana reco' || h === 'prev recon' || h === 'reconciled') return 7;
+                if (h.includes('consumption') || h.includes('consumtion') || h.includes('erected') || h.includes('reconcil')) return 5;
+                if (h === 'total' || h === 'total qty' || h === 'grand total') return 4;
+                return 0;
+            },
+            balance: (h) => {
+                if (!h) return 0;
+                if (h === 'total balance' || h === 'total bal' || h === 'total balance qty' || h === 'total bal qty') return 10;
+                if (['amount', 'rate', 'cost', 'value', 'debit'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('total balance') || h.includes('total bal')) return 9;
+                if (h === 'balance qty' || h === 'balance quantity' || h === 'balance stock' || h === 'balance material' || h === 'bal qty') return 8;
+                if (h.includes('balance') || h.includes('bal qty')) return 6;
+                return 0;
+            },
+            itemCode: (h) => {
+                if (!h) return 0;
+                if (h === 'item code' || h === 'itemcode' || h === 'material code' || h === 'mat code' || h === 'sap code' || h === 'mat no' || h === 'item no' || h === 'item no.' || h === 'row labels') return 10;
+                if (['desc', 'description', 'name'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('item code') || h.includes('material code') || h.includes('sap code') || h.includes('mat code') || h.includes('row labels')) return 9;
+                if (h === 'code') return 6;
+                return 0;
+            },
+            itemDesc: (h) => {
+                if (!h) return 0;
+                if (h === 'item description' || h === 'material description' || h === 'items description' || h === 'description of material' || h === 'item desc' || h === 'material desc' || h === 'description' || h === 'material' || h === 'items' || h === 'particulars') return 10;
+                if (['code', 'rate', 'uom', 'unit', 'cost', 'amount', 'val'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('description') || h.includes('material desc') || h.includes('item desc')) return 8;
+                if (h.includes('material') || h.includes('item name')) return 6;
+                return 0;
+            },
+            uom: (h) => {
+                if (!h) return 0;
+                if (h === 'uom' || h === 'unit' || h === 'unit of measurement' || h === 'u o m' || h === 'u.o.m') return 10;
+                if (['rate', 'cost', 'price', 'amount'].some(ex => h.includes(ex))) return 0;
+                if (h.includes('uom') || h.includes('unit')) return 7;
+                return 0;
+            }
+        };
+
+        const maxHeaderRows = Math.min(sheetRows.length, 40);
+        let bestScore = -1;
+        let bestColMap = null;
+        let bestStartRow = 1;
+
+        for (let r = 0; r < maxHeaderRows; r++) {
+            const row1 = sheetRows[r] || [];
+            const row2 = (r + 1 < maxHeaderRows) ? (sheetRows[r + 1] || []) : [];
+            const maxCols = Math.max(row1.length, row2.length);
+            if (maxCols === 0) continue;
+
+            const tests = [
+                {
+                    headerArr: Array.from({ length: maxCols }, (_, c) => this.cleanHeaderStr(row1[c])),
+                    nextRow: r + 1
+                }
+            ];
+            if (row2.length > 0) {
+                tests.push({
+                    headerArr: Array.from({ length: maxCols }, (_, c) => this.cleanHeaderStr(row1[c] + ' ' + row2[c])),
+                    nextRow: r + 2
+                });
+            }
+
+            for (const test of tests) {
+                const headers = test.headerArr;
+                const curColMap = {
+                    itemCode: -1,
+                    itemDesc: -1,
+                    uom: -1,
+                    issue: -1,
+                    mrn: -1,
+                    netIssue: -1,
+                    consumption: -1,
+                    balance: -1
+                };
+                let score = 0;
+
+                for (const key of Object.keys(matchers)) {
+                    let bestMatchScore = 0;
+                    let bestColIdx = -1;
+                    for (let c = 0; c < headers.length; c++) {
+                        const mScore = matchers[key](headers[c]);
+                        if (mScore > bestMatchScore) {
+                            bestMatchScore = mScore;
+                            bestColIdx = c;
+                        }
+                    }
+                    if (bestMatchScore > 0) {
+                        curColMap[key] = bestColIdx;
+                        score += bestMatchScore;
+                    }
+                }
+
+                if (curColMap.issue !== -1) score += 5;
+                if (curColMap.netIssue !== -1) score += 5;
+                if (curColMap.consumption !== -1) score += 5;
+                if (curColMap.balance !== -1) score += 5;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestColMap = curColMap;
+                    bestStartRow = test.nextRow;
+                }
             }
         }
-        return row;
-    },
 
-    detectRecoColumnsFromRowArray(rows) {
-        let colMap = { code: -1, desc: -1, uom: -1, consumption: -1, netIssue: -1, startRow: 1 };
+        let colMap = (bestColMap && bestScore >= 10) ? bestColMap : {
+            itemCode: -1, itemDesc: -1, uom: -1, issue: -1, mrn: -1, netIssue: -1, consumption: -1, balance: -1
+        };
+        let startRow = (bestColMap && bestScore >= 10) ? bestStartRow : 1;
 
-        for (let r = 0; r < Math.min(10, rows.length); r++) {
-            const row = rows[r];
-            if (!row || !Array.isArray(row)) continue;
-            const h = row.map(v => this.cleanHeader(v));
-            const codeIdx = h.findIndex(x => x && (x === 'row labels' || x === 'item code' || x === 'sap code' || x === 'material code' || x === 'material' || x === 'code'));
-            if (codeIdx !== -1) {
-                colMap.code = codeIdx;
-                colMap.startRow = r + 1;
-
-                colMap.desc = h.findIndex(x => x && (x.includes('description') || x.includes('desc') || x.includes('item name')));
-                colMap.uom = h.findIndex(x => x && (x === 'unit' || x === 'uom'));
-                
-                let consIdx = h.findIndex(x => x && (
-                    x.includes('purana reco') ||
-                    x.includes('prev recon') ||
-                    x.includes('previous recon') ||
-                    x.includes('pichla') ||
-                    x === 'total consumptio' ||
-                    x === 'total consumption' ||
-                    x === 'total consumtion' ||
-                    x === 'consumption' ||
-                    x === 'reconciled' ||
-                    x === 'total qty' ||
-                    x === 'consumed qty' ||
-                    x === 'total'
-                ));
-                if (consIdx !== -1) colMap.consumption = consIdx;
-
-                let netIdx = h.findIndex(x => x && (x.includes('net issue') || x.includes('net issued')));
-                if (netIdx !== -1) colMap.netIssue = netIdx;
-
-                break;
+        // Fallback heuristics for itemCode and itemDesc if not identified from header
+        if (colMap.itemCode === -1 || colMap.itemDesc === -1) {
+            for (let r = startRow; r < Math.min(sheetRows.length, startRow + 25); r++) {
+                const row = sheetRows[r];
+                if (!row) continue;
+                for (let c = 0; c < row.length; c++) {
+                    const valStr = String(row[c] || '').trim();
+                    if (colMap.itemCode === -1 && /^\d{6,10}$/.test(valStr)) {
+                        colMap.itemCode = c;
+                    }
+                    if (colMap.itemDesc === -1 && valStr.length > 4 && /[a-zA-Z]/.test(valStr) && c !== colMap.itemCode) {
+                        colMap.itemDesc = c;
+                    }
+                }
+                if (colMap.itemCode !== -1 && colMap.itemDesc !== -1) break;
             }
         }
-        return colMap;
+
+        return { colMap, startRow, score: bestScore };
     },
 
     /**
-     * Fast parser core for a single worksheet (supports dense mode and sparse mode)
+     * Extracts materials from a sheet using the detected columns and smart fallbacks.
      */
-    parseSheetMaterials(ws, contractorName, targetMaterials) {
-        if (!ws || !ws['!ref']) return 0;
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        if (range.e.r < 1) return 0;
-
-        // Sample first 10 rows for header detection
-        const sampleRows = [];
-        for (let r = 0; r <= Math.min(10, range.e.r); r++) {
-            sampleRows.push(this.getRowValues(ws, r));
-        }
-
-        const colMap = this.detectRecoColumnsFromRowArray(sampleRows);
-        if (colMap.code === -1 || colMap.consumption === -1) {
-            // Not a reconciliation sheet (missing code or consumption)
-            return 0;
-        }
+    extractMaterialsFromRows(sheetRows, targetMaterials) {
+        const { colMap, startRow } = this.detectSheetColumnsRobust(sheetRows);
+        if (colMap.itemCode === -1) return 0;
 
         let added = 0;
-        for (let r = colMap.startRow; r <= range.e.r; r++) {
-            const row = this.getRowValues(ws, r);
-            if (!row || !row[colMap.code]) continue;
-            const code = String(row[colMap.code]).trim();
-            if (!code || code === '0' || code.toLowerCase() === 'total' || code.toLowerCase().includes('total')) continue;
+        for (let r = startRow; r < sheetRows.length; r++) {
+            const row = sheetRows[r];
+            if (!row) continue;
 
-            const cons = colMap.consumption !== -1 ? this.parseQty(row[colMap.consumption]) : 0;
-            const net = colMap.netIssue !== -1 ? this.parseQty(row[colMap.netIssue]) : (targetMaterials[code] ? targetMaterials[code].netIssue : 0);
-            const desc = (colMap.desc !== -1 && row[colMap.desc]) ? String(row[colMap.desc]).trim() : (targetMaterials[code] ? targetMaterials[code].desc : code);
-            const uom = (colMap.uom !== -1 && row[colMap.uom]) ? String(row[colMap.uom]).trim() : (targetMaterials[code] ? targetMaterials[code].uom : 'No');
+            const codeStr = String(row[colMap.itemCode] || '').trim();
+            const descStr = String((colMap.itemDesc !== -1 ? row[colMap.itemDesc] : '') || '').trim();
+            if (!codeStr && !descStr) continue;
 
-            targetMaterials[code] = {
-                code: code,
-                desc: desc,
-                uom: uom,
+            // Skip title/header repeats or totals
+            const upperCode = codeStr.toUpperCase();
+            const upperDesc = descStr.toUpperCase();
+            if (upperCode === 'ITEM CODE' || upperCode === 'ITEM' || upperCode === 'CODE' || upperCode === 'SR. NO.' || upperCode === 'SR NO' || upperCode === 'ROW LABELS') continue;
+            if (upperDesc.startsWith('TOTAL') || upperDesc.startsWith('GRAND TOTAL') || upperDesc.startsWith('SUB TOTAL')) continue;
+            if (upperCode.startsWith('TOTAL') || upperCode.startsWith('GRAND TOTAL')) continue;
+
+            const issuedQty = colMap.issue !== -1 ? this.parseQty(row[colMap.issue]) : 0;
+            const mrnQty = colMap.mrn !== -1 ? this.parseQty(row[colMap.mrn]) : 0;
+            let netIssue = colMap.netIssue !== -1 ? this.parseQty(row[colMap.netIssue]) : 0;
+            if (netIssue === 0 && (issuedQty > 0 || mrnQty > 0)) {
+                netIssue = issuedQty - mrnQty;
+            }
+
+            let cons = colMap.consumption !== -1 ? this.parseQty(row[colMap.consumption]) : 0;
+            let bal = colMap.balance !== -1 ? this.parseQty(row[colMap.balance]) : (netIssue - cons);
+            if (colMap.consumption === -1 && colMap.balance !== -1 && netIssue > 0) {
+                cons = Math.max(0, netIssue - bal);
+            }
+
+            // Ensure clean material key
+            const matCode = codeStr || descStr;
+            if (!matCode) continue;
+
+            targetMaterials[matCode] = {
+                code: matCode,
+                desc: descStr || matCode,
+                uom: colMap.uom !== -1 ? String(row[colMap.uom] || 'No') : 'No',
                 prevConsumption: Math.round(cons * 1000) / 1000,
-                netIssue: Math.round(net * 1000) / 1000,
-                balanceQty: Math.round((net - cons) * 1000) / 1000
+                netIssue: Math.round(netIssue * 1000) / 1000,
+                balanceQty: Math.round(bal * 1000) / 1000
             };
             added++;
         }
@@ -157,21 +275,29 @@ window.OldRecoImporterModule = {
             throw new Error('XLSX parser library is not loaded. Please refresh your browser.');
         }
 
-        // 1. Ultra-fast sheet names reading (takes ~1-5ms)
-        const metaWb = XLSX.read(arrayBuffer, { type: 'array', bookSheets: true });
-        const sheetNames = metaWb.SheetNames || [];
+        const wb = XLSX.read(arrayBuffer, {
+            type: 'array',
+            cellStyles: false,
+            cellHTML: false,
+            cellFormula: false,
+            cellDates: false,
+            cellNF: false
+        });
+
+        const sheetNames = wb.SheetNames || [];
         if (sheetNames.length === 0) {
             throw new Error('The uploaded Excel file contains no worksheets.');
         }
 
         const excludeSheets = [
             'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
-            'bill summary', 'sheet1', 'contractor bill details'
+            'bill summary', 'contractor bill details'
         ];
 
+        // Multi-contractor check
         const candidateSheets = sheetNames.filter(s => {
-            const sLower = this.cleanHeader(s);
-            return sLower && !excludeSheets.includes(sLower) && sLower !== 'sheet1';
+            const sLower = this.cleanHeaderStr(s);
+            return sLower && !excludeSheets.includes(sLower);
         });
 
         const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
@@ -186,7 +312,6 @@ window.OldRecoImporterModule = {
 
         let processedContractors = 0;
 
-        // If multi-contractor workbook
         if (candidateSheets.length > 2) {
             // Priority sort: if active contractor is selected, put their sheet first!
             const activeNorm = defaultContractorName ? this.normContractorName(defaultContractorName) : '';
@@ -198,17 +323,6 @@ window.OldRecoImporterModule = {
                 });
             }
 
-            // Read with ultra-fast dense mode
-            const wb = XLSX.read(arrayBuffer, {
-                type: 'array',
-                cellStyles: false,
-                cellHTML: false,
-                cellFormula: false,
-                cellDates: false,
-                cellNF: false,
-                dense: true
-            });
-
             for (let i = 0; i < candidateSheets.length; i++) {
                 const sName = candidateSheets[i];
                 const sheet = wb.Sheets[sName];
@@ -218,11 +332,14 @@ window.OldRecoImporterModule = {
                 const normKey = this.normContractorName(contractorName);
                 if (!normKey) continue;
 
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                if (!rows || rows.length < 2) continue;
+
                 const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
                     ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                     : {};
 
-                const added = this.parseSheetMaterials(sheet, contractorName, materials);
+                const added = this.extractMaterialsFromRows(rows, materials);
                 if (added > 0) {
                     updatedDb.byContractorNorm[normKey] = {
                         contractorName: contractorName,
@@ -233,7 +350,6 @@ window.OldRecoImporterModule = {
                     processedContractors++;
                 }
 
-                // Yield to UI loop every 4 sheets so browser never hangs
                 if (i % 4 === 0) {
                     if (onProgress) {
                         onProgress({ current: i + 1, total: candidateSheets.length, contractor: contractorName });
@@ -242,37 +358,25 @@ window.OldRecoImporterModule = {
                 }
             }
         } else {
-            // Single-sheet workbook
+            // Single-sheet workbook or active sheet
             const targetSheetName = candidateSheets[0] || sheetNames[0];
-            const wb = XLSX.read(arrayBuffer, {
-                type: 'array',
-                sheets: [targetSheetName],
-                cellStyles: false,
-                cellHTML: false,
-                cellFormula: false,
-                cellDates: false,
-                cellNF: false,
-                dense: true
-            });
-
             const sheet = wb.Sheets[targetSheetName];
-            if (!sheet) {
-                throw new Error('Unable to read worksheet: ' + targetSheetName);
-            }
+            if (!sheet) throw new Error('Worksheet not found.');
+
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            if (!rows || rows.length < 2) throw new Error('Worksheet contains insufficient rows.');
 
             const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
             const normKey = this.normContractorName(targetContractor);
-            if (!normKey) {
-                throw new Error('Please select a contractor before uploading a single-contractor reconciliation sheet.');
-            }
+            if (!normKey) throw new Error('Please select a contractor before uploading.');
 
             const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
                 ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                 : {};
 
-            const added = this.parseSheetMaterials(sheet, targetContractor, materials);
+            const added = this.extractMaterialsFromRows(rows, materials);
             if (added === 0) {
-                throw new Error("Is sheet me 'Consumption' ya 'Purana Reco' column nahi mila. Kripya check karein ki ye valid Reconciliation Sheet hai.");
+                throw new Error("Unable to extract material reconciliation items from sheet '" + targetSheetName + "'. Please check the sheet headers.");
             }
 
             updatedDb.byContractorNorm[normKey] = {
@@ -296,30 +400,28 @@ window.OldRecoImporterModule = {
             throw new Error('XLSX parser library is not loaded.');
         }
 
-        const metaWb = XLSX.read(arrayBuffer, { type: 'array', bookSheets: true });
-        const sheetNames = metaWb.SheetNames || [];
-        if (sheetNames.length === 0) {
-            throw new Error('The uploaded Excel file contains no worksheets.');
-        }
-
-        const excludeSheets = [
-            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
-            'bill summary', 'sheet1', 'contractor bill details'
-        ];
-
-        const candidateSheets = sheetNames.filter(s => {
-            const sLower = this.cleanHeader(s);
-            return sLower && !excludeSheets.includes(sLower) && sLower !== 'sheet1';
-        });
-
         const wb = XLSX.read(arrayBuffer, {
             type: 'array',
             cellStyles: false,
             cellHTML: false,
             cellFormula: false,
             cellDates: false,
-            cellNF: false,
-            dense: true
+            cellNF: false
+        });
+
+        const sheetNames = wb.SheetNames || [];
+        if (sheetNames.length === 0) {
+            throw new Error('The uploaded Excel file contains no worksheets.');
+        }
+
+        const excludeSheets = [
+            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
+            'bill summary', 'contractor bill details'
+        ];
+
+        const candidateSheets = sheetNames.filter(s => {
+            const sLower = this.cleanHeaderStr(s);
+            return sLower && !excludeSheets.includes(sLower);
         });
 
         const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
@@ -343,11 +445,14 @@ window.OldRecoImporterModule = {
                 const normKey = this.normContractorName(contractorName);
                 if (!normKey) continue;
 
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                if (!rows || rows.length < 2) continue;
+
                 const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
                     ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                     : {};
 
-                const added = this.parseSheetMaterials(sheet, contractorName, materials);
+                const added = this.extractMaterialsFromRows(rows, materials);
                 if (added > 0) {
                     updatedDb.byContractorNorm[normKey] = {
                         contractorName: contractorName,
@@ -361,17 +466,21 @@ window.OldRecoImporterModule = {
         } else {
             const targetSheetName = candidateSheets[0] || sheetNames[0];
             const sheet = wb.Sheets[targetSheetName];
-            if (!sheet) throw new Error('No sheet found.');
+            if (!sheet) throw new Error('Worksheet not found.');
+
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            if (!rows || rows.length < 2) throw new Error('Worksheet contains insufficient rows.');
 
             const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
             const normKey = this.normContractorName(targetContractor);
+
             const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
                 ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                 : {};
 
-            const added = this.parseSheetMaterials(sheet, targetContractor, materials);
+            const added = this.extractMaterialsFromRows(rows, materials);
             if (added === 0) {
-                throw new Error("Is sheet me 'Consumption' ya 'Purana Reco' column nahi mila.");
+                throw new Error("Unable to extract materials from sheet '" + targetSheetName + "'.");
             }
 
             updatedDb.byContractorNorm[normKey] = {
@@ -488,6 +597,17 @@ window.OldRecoImporterModule = {
         const recoDb = window.ContractorOldReco || window.DefaultContractorOldReco;
         if (!recoDb || !recoDb.byContractorNorm) return null;
 
+        // 1. Try work order number from invoiceData / projectMeta
+        const wo = ((this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '').trim();
+        if (wo) {
+            for (const rec of Object.values(recoDb.byContractorNorm)) {
+                if (rec.workOrderNo && (rec.workOrderNo === wo || wo.includes(rec.workOrderNo))) {
+                    return rec;
+                }
+            }
+        }
+
+        // 2. Try contractor name from selectedContractorName / invoiceData / projectMeta
         let cName = this.selectedContractorName;
         if (!cName || cName === 'Select Contractor...' || cName.includes('Custom')) {
             cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
@@ -624,7 +744,6 @@ window.OldRecoImporterModule = {
             }
 
             window.ContractorOldReco = updatedDb;
-            // Save to IndexedDB directly (avoiding synchronous localStorage quota blockage)
             await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
 
             this.hasCustomOldReco = true;

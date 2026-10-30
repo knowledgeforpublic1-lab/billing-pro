@@ -703,17 +703,49 @@ window.ExportModule = {
                 },
                 getContractorCleanFileName() {
                     let cName = '';
+                    // 1. Current selected contractor computed property (if selected in dropdown)
                     if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
                         cName = this.selectedContractorName;
-                    } else {
-                        cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
                     }
+                    // 2. Firm matching selectedContractorId
+                    if (!cName && this.selectedContractorId && this.selectedContractorId !== 'custom') {
+                        const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+                        if (firm && firm.name) cName = firm.name;
+                    }
+                    // 3. Invoice data / Project metadata contractor name
+                    if (!cName) {
+                        const invC = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
+                        if (invC && !invC.toUpperCase().includes('CONTRACTOR') && !invC.includes('Select Contractor')) {
+                            cName = invC;
+                        }
+                    }
+                    // 4. Contractor display name helper
+                    if (!cName && typeof this.getContractorDisplayName === 'function') {
+                        const disp = this.getContractorDisplayName();
+                        if (disp && !disp.toUpperCase().includes('CONTRACTOR')) cName = disp;
+                    }
+                    // 5. Active SAP Stock synchronized contractor info (e.g. "Ravindra kapgade (WO: 31004925)")
+                    if (!cName && this.currentContractorSapInfo) {
+                        cName = String(this.currentContractorSapInfo).split('(')[0].trim();
+                    }
+                    // 6. Active Old Reconciliation contractor
+                    if (!cName && this.currentContractorOldReco && this.currentContractorOldReco.contractorName) {
+                        cName = this.currentContractorOldReco.contractorName;
+                    }
+
                     cName = String(cName || '')
                         .replace(/^M\/[sS]\.?\s*/i, '')
                         .replace(/[\/\\:*?"<>|]/g, '_')
                         .replace(/\s+/g, '_')
                         .replace(/_+/g, '_')
+                        .replace(/^_+|_+$/g, '')
                         .trim();
+
+                    // Absolute safeguard: Never let "LK" or "LK_Electricals" leak through if default
+                    if (cName.toLowerCase() === 'lk_electricals' && (!this.selectedContractorId || !this.selectedContractorId.includes('lk'))) {
+                        cName = '';
+                    }
+
                     return cName || 'Contractor';
                 },
                 getRaCleanFileName() {
