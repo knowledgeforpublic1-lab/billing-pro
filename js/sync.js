@@ -496,33 +496,10 @@ window.SyncModule = {
             this.showToast('Saving current bill before starting new...', '⏳');
             try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
 
-            // Auto-calculate next clean RA and Bill Number
-            let nextBill = 'RSL/RA/01';
-            let nextRa = '01';
-            const curBill = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
-            const curRa = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '');
-            if (curRa && /^\d+$/.test(curRa.trim())) {
-                const num = parseInt(curRa.trim(), 10) + 1;
-                nextRa = String(num).padStart(curRa.trim().length, '0');
-            }
-            if (curBill) {
-                const numMatch = curBill.match(/^(.*?)(\d+)(\s*)$/);
-                if (numMatch) {
-                    const prefix = numMatch[1];
-                    const num = parseInt(numMatch[2], 10);
-                    const padLen = numMatch[2].length;
-                    const nextNum = String(num + 1).padStart(padLen, '0');
-                    nextBill = prefix + nextNum + numMatch[3];
-                    if (!curRa) nextRa = nextNum;
-                } else {
-                    nextBill = curBill + ' - 02';
-                }
-            }
-
             // 1. Reset all manual quantities, extra items, calculator inputs, and invoice entries
             this.resetAllManualDataKeepMapping();
 
-            // 2. Blank out contractor so user can freely pick on the page
+            // 2. Completely blank out Bill No, RA No, Contractor, and Metadata
             this.selectedContractorId = '';
             this.contractorDropdownSearch = '';
             this.reconContractorDropdownOpen = false;
@@ -530,16 +507,16 @@ window.SyncModule = {
 
             const today = new Date().toISOString().slice(0, 10);
             if (!this.projectMeta) this.projectMeta = {};
-            this.projectMeta.billNo = nextBill;
-            this.projectMeta.raNo = nextRa;
+            this.projectMeta.billNo = '';
+            this.projectMeta.raNo = '';
             this.projectMeta.billDate = today;
             this.projectMeta.contractorName = '';
             this.projectMeta.workOrderNo = '';
             if (!this.projectMeta.projectName) this.projectMeta.projectName = 'RDSS T-10 GADCHIROLI';
 
             if (!this.invoiceData) this.invoiceData = {};
-            this.invoiceData.invoiceNo = nextBill;
-            this.invoiceData.raNo = nextRa;
+            this.invoiceData.invoiceNo = '';
+            this.invoiceData.raNo = '';
             this.invoiceData.invoiceDate = today;
             this.invoiceData.contractorName = '';
             this.invoiceData.workOrderNo = '';
@@ -558,6 +535,12 @@ window.SyncModule = {
             this.invoiceData.gstTotal = 0;
             this.invoiceData.grandTotal = 0;
             this.invoiceData.words = '';
+
+            if (this.newBillForm) {
+                this.newBillForm.billNo = '';
+                this.newBillForm.raNo = '';
+                this.newBillForm.selectedContractorId = '';
+            }
 
             // Keep default client company (Ashoka Buildcon Ltd.)
             const comp = (this.companiesList || []).find(c => c.id === (this.selectedCompanyId || 'ashoka_buildcon'));
@@ -596,7 +579,7 @@ window.SyncModule = {
                 this.loadSavedBillsList();
             }
             if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
-            this.showToast('Pichla bill save ho gaya! Naya blank bill [' + nextBill + '] ready hai — apna contractor chunein.', '✅');
+            this.showToast('Pichla bill save ho gaya! Naya bill puri tarah BLANK ready hai — Contractor aur Bill No bharein.', '✅');
         } finally {
             this._isStartingNewBill = false;
         }
@@ -683,6 +666,13 @@ window.SyncModule = {
                     const matCount = act.materials.length;
                     this.activityQuantities[actKey] = Array.from({ length: numLocs }, () => new Array(matCount).fill(''));
                 }
+            });
+        }
+
+        // 1b. Reset Master Abstract sheet quantities
+        if (Array.isArray(this.masterAbstractList)) {
+            this.masterAbstractList.forEach(item => {
+                item.qty = '';
             });
         }
 

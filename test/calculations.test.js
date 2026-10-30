@@ -379,8 +379,9 @@ it('New Bill Workflow: Directly blanks bill, increments RA/Bill No, and leaves c
     assert.strictEqual(syncCalled, true, 'syncToMongoNow must be called to save prior bill');
     assert.strictEqual(savedToStorageCalled, true, 'saveToStorage must be called');
     assert.strictEqual(mockApp.showNewBillModal, false, 'showNewBillModal must remain FALSE (no modal popup)');
-    assert.strictEqual(mockApp.projectMeta.billNo, 'RSL/RA/13', 'Bill No must auto-increment to RSL/RA/13');
-    assert.strictEqual(mockApp.projectMeta.raNo, '13', 'RA No must auto-increment to 13');
+    assert.strictEqual(mockApp.projectMeta.billNo, '', 'Bill No must be completely BLANK');
+    assert.strictEqual(mockApp.projectMeta.raNo, '', 'RA No must be completely BLANK');
+    assert.strictEqual(mockApp.invoiceData.invoiceNo, '', 'Invoice No must be completely BLANK');
     assert.strictEqual(mockApp.selectedContractorId, '', 'selectedContractorId must be completely BLANK');
     assert.strictEqual(mockApp.invoiceData.contractorName, '', 'Contractor Name in Invoice must be BLANK');
     assert.strictEqual(mockApp.invoiceData.workOrderNo, '', 'Work Order No in Invoice must be BLANK');

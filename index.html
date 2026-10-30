@@ -101,7 +101,7 @@
                                 <input type="text"
                                     :value="effectiveRaNo"
                                     @input="updateRaNo($event.target.value)"
-                                    placeholder="12"
+                                    placeholder="RA"
                                     title="RA Bill No yahan change karein"
                                     style="width: 44px; background: rgba(0,0,0,0.18); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 4px; padding: 1px 4px; font-size: 0.78rem; font-weight: 800; color: #34d399; text-align: center; outline: none; font-family: monospace;">
                             </div>
@@ -667,7 +667,7 @@
                     </div>
                     <div class="inv-tool-item" style="min-width: 150px;">
                         <label>Invoice / Bill No:</label>
-                        <input type="text" :value="effectiveBillNo" @input="updateBillNo($event.target.value)" placeholder="RSL/RA/12" :readonly="isFinalized" style="font-weight: 700;">
+                        <input type="text" :value="effectiveBillNo" @input="updateBillNo($event.target.value)" placeholder="Bill / Invoice No" :readonly="isFinalized" style="font-weight: 700;">
                     </div>
                     <div class="inv-tool-item" style="min-width: 140px;">
                         <label>Invoice Date:</label>
