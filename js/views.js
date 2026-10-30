@@ -426,7 +426,9 @@ window.ViewsModule = {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'LK_Electricals_Pivot_Reconciliation_Sheet.xlsx';
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+        const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
+        a.download = ra ? `${cName}_${ra}_Material_Reconciliation_Sheet.xlsx` : `${cName}_Material_Reconciliation_Sheet.xlsx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

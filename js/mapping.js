@@ -602,7 +602,8 @@ window.MappingModule = {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'LK_Electricals_SAP_Material_Mapping_Master.xlsx';
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : '';
+        a.download = (cName && cName !== 'Contractor') ? `${cName}_SAP_Material_Mapping_Master.xlsx` : 'SAP_Material_Mapping_Master.xlsx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

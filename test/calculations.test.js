@@ -389,6 +389,43 @@ it('New Bill Workflow: Directly blanks bill, increments RA/Bill No, and leaves c
     assert.deepStrictEqual(mockApp.invoiceData.items, [], 'Invoice items must be empty');
 });
 
+
+// 13. Dynamic Contractor Download Filenames (Never hardcoded to "LK")
+it('Export Filenames: Uses selected contractor name and never defaults to LK_Electricals', () => {
+    global.window = global;
+    eval(fs.readFileSync('js/export.js', 'utf8'));
+
+    // Test with Ravindra Kapgate
+    const app1 = {
+        selectedContractorName: 'Ravindra Kapgate',
+        effectiveRaNo: '12',
+        invoiceData: { invoiceNo: 'RSL/RA/12', contractorName: 'M/s Ravindra Kapgate' },
+        projectMeta: { raNo: '12', billNo: 'RSL/RA/12' }
+    };
+    Object.assign(app1, window.ExportModule);
+    const cName1 = app1.getContractorCleanFileName();
+    const ra1 = app1.getRaCleanFileName();
+    assert.strictEqual(cName1, 'Ravindra_Kapgate');
+    assert.strictEqual(ra1, 'RA-12');
+    assert.strictEqual(app1.getBillExportFileName(), 'Ravindra_Kapgate_RA-12.xlsx');
+
+    // Test with Duskline Infrastructure
+    const app2 = {
+        selectedContractorName: 'Duskline Infrastructure',
+        effectiveRaNo: '04',
+        invoiceData: { invoiceNo: 'RA-04', contractorName: 'M/s Duskline Infrastructure' },
+        projectMeta: { raNo: '04', billNo: 'RA-04' }
+    };
+    Object.assign(app2, window.ExportModule);
+    const cName2 = app2.getContractorCleanFileName();
+    assert.strictEqual(cName2, 'Duskline_Infrastructure');
+    assert.strictEqual(app2.getBillExportFileName(), 'Duskline_Infrastructure_RA-04.xlsx');
+
+    // Ensure neither contains "LK"
+    assert.strictEqual(cName1.includes('LK'), false);
+    assert.strictEqual(cName2.includes('LK'), false);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

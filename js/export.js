@@ -86,7 +86,8 @@ window.ExportModule = {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'LK_Electricals_SAP_Material_Mapping_Master.xlsx';
+                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : '';
+                    a.download = (cName && cName !== 'Contractor') ? `${cName}_SAP_Material_Mapping_Master.xlsx` : 'SAP_Material_Mapping_Master.xlsx';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -229,7 +230,9 @@ window.ExportModule = {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'LK_Electricals_Pivot_Reconciliation_Sheet.xlsx';
+                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+                    const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
+                    a.download = ra ? `${cName}_${ra}_Material_Reconciliation_Sheet.xlsx` : `${cName}_Material_Reconciliation_Sheet.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -678,36 +681,39 @@ window.ExportModule = {
                         this.uploadBufferToGoogleDrive(buffer, fileName);
                     }
                 },
-                getBillExportFileName(ext = '.xlsx') {
-                    // 1. Contractor name
+                getContractorCleanFileName() {
                     let cName = '';
                     if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
                         cName = this.selectedContractorName;
                     } else {
-                        cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Contractor';
+                        cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
                     }
-                    cName = String(cName || 'Contractor').replace(/^M\/[sS]\.?\s*/i, '').replace(/[\/\\:*?"<>|]/g, '_').trim();
-                    if (!cName) cName = 'Contractor';
-
-                    // 2. RA No
-                    let ra = (this.effectiveRaNo || (this.projectMeta && this.projectMeta.raNo) || '').trim();
+                    cName = String(cName || '')
+                        .replace(/^M\/[sS]\.?\s*/i, '')
+                        .replace(/[\/\\:*?"<>|]/g, '_')
+                        .replace(/\s+/g, '_')
+                        .replace(/_+/g, '_')
+                        .trim();
+                    return cName || 'Contractor';
+                },
+                getRaCleanFileName() {
+                    let ra = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '').trim();
                     if (!ra) {
                         const b = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
                         const m = b.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
                         if (m && m[1]) ra = m[1];
                         else if (b) ra = b.replace(/[\/\\:*?"<>|]/g, '_').trim();
-                        else ra = '01';
                     }
-
-                    // Format as RA-<No>
-                    let raPart = ra;
-                    if (!/^RA[\s\-_]*/i.test(raPart)) {
-                        raPart = 'RA-' + raPart;
-                    } else {
-                        raPart = raPart.replace(/^RA[\s\-_]*/i, 'RA-');
+                    if (ra) {
+                        if (!/^RA[\s\-_]*/i.test(ra)) ra = 'RA-' + ra;
+                        else ra = ra.replace(/^RA[\s\-_]*/i, 'RA-');
                     }
-
-                    return `${cName}_${raPart}${ext}`;
+                    return ra;
+                },
+                getBillExportFileName(ext = '.xlsx') {
+                    const cName = this.getContractorCleanFileName();
+                    const ra = this.getRaCleanFileName() || 'RA-01';
+                    return `${cName}_${ra}${ext}`;
                 },
                 getEffectiveDriveWebhookUrl() {
                     const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
@@ -1121,21 +1127,25 @@ function jsonOut(obj) {
 
                     let fileName = '';
 
+                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+                    const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
+                    const raSuffix = ra ? `_${ra}` : '';
+
                     if (exportMode === 'single_activity') {
                         this.showToast(`Exporting Activity ${this.selectedActivityKey} Excel...`, '⏳');
                         this.addStyledActivityDetailToWorkbook(workbook, this.selectedActivityKey);
-                        fileName = `Activity_${this.selectedActivityKey}_Billing.xlsx`;
+                        fileName = `${cName}${raSuffix}_Activity_${this.selectedActivityKey}_Billing.xlsx`;
                     } else if (exportMode === 'abstract_only') {
                         this.showToast('Exporting Master Abstract Excel...', '⏳');
                         this.addStyledMasterAbstractToWorkbook(workbook);
-                        fileName = `LK_Electrical_Master_Abstract.xlsx`;
+                        fileName = `${cName}${raSuffix}_Master_Abstract.xlsx`;
                     } else if (exportMode === 'all_activities') {
                         this.showToast('Exporting Complete Workbook (All Activities)...', '⏳');
                         this.addStyledMasterAbstractToWorkbook(workbook);
                         Object.keys(this.activities).forEach(actKey => {
                             this.addStyledActivityDetailToWorkbook(workbook, actKey);
                         });
-                        fileName = `LK_Electrical_Master_Billing_All_Activities.xlsx`;
+                        fileName = `${cName}${raSuffix}_Billing_All_Activities.xlsx`;
                     }
 
                     const buffer = await workbook.xlsx.writeBuffer();
