@@ -26,7 +26,8 @@
         window.BillingModule || {},
         window.MappingModule || {},
         window.ViewsModule || {},
-        window.ExportModule || {}
+        window.ExportModule || {},
+        window.StockImporterModule || {}
     );
 
     const app = Vue.createApp({
@@ -132,6 +133,9 @@
                     { desc: 'Jumpering', unit: 'Rmt', vol: 4.5, qty: '' }
                 ],
                 editingContractorId: null,
+                stockUploading: false,
+                hasCustomStock: false,
+                customStockMeta: null,
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
                 contractorForm: {
@@ -965,6 +969,27 @@
         async mounted() {
             this._isLoading = true;
             await this.loadFromStorage();
+            
+            // Backup default stock & check for custom uploaded stock in IndexedDB
+            if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
+                window.DefaultContractorSapStock = window.ContractorSapStock;
+            }
+            try {
+                if (typeof BillingStorage !== 'undefined') {
+                    const customStockJson = await BillingStorage.getItemAsync('billing_custom_sap_stock');
+                    if (customStockJson) {
+                        const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
+                        if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
+                            window.ContractorSapStock = customStock;
+                            this.hasCustomStock = true;
+                            this.customStockMeta = customStock.meta;
+                            console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[StockImporter] Error loading custom stock:', e);
+            }
             // Tab close/reload/switch par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
             window.addEventListener('pagehide', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
             window.addEventListener('beforeunload', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });

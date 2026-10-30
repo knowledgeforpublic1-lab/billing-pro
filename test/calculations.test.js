@@ -305,6 +305,23 @@ it('SAP Stock: Consolidates and sums multiple work orders for same contractor', 
     assert.strictEqual(duskMatch.totalNetIssue, 588418.238);
 });
 
+// 11. In-browser Stock Importer Module parsing & normalization
+it('Stock Importer: Successfully verifies StockImporterModule and contractor name normalizer', () => {
+    global.window = global;
+    const fs = require('fs');
+    const XLSX = require('xlsx');
+    global.XLSX = XLSX;
+    eval(fs.readFileSync('js/stock-importer.js', 'utf8'));
+
+    assert.ok(window.StockImporterModule, 'StockImporterModule should exist');
+    assert.strictEqual(typeof window.StockImporterModule.parseStockExcel, 'function');
+
+    // Test normalization helpers
+    assert.strictEqual(window.StockImporterModule.normContractorName('M/s DUSKLINE INFRASTRUCTURE'), 'dusklineinfrastructure');
+    assert.strictEqual(window.StockImporterModule.normContractorName('BABA CONSTRUCTION (VIKASH KUMAR DUBEY)'), 'babaconstruction');
+    assert.strictEqual(window.StockImporterModule.normContractorName('M/s. Balaji Construction'), 'balajiconstruction');
+});
+
 console.log('----------------------------------------------------');
 console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
 console.log('----------------------------------------------------');

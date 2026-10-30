@@ -14,6 +14,8 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <!-- ExcelJS for Super Styled Excel Export with Formulas -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <!-- SheetJS for Super Fast Stock Excel Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261030_03">
+    <link rel="stylesheet" href="css/style.css?v=20261030_04">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -1251,7 +1253,16 @@
                         </button>
                         <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); font-size: 0.76rem; font-weight: 700; color: #93c5fd; white-space: nowrap;">
                             ⚡ SAP Stock Synced: <span style="color: #ffffff;">{{ currentContractorSapInfo }}</span> ({{ currentContractorSapCount }} items)
+                            <span v-if="hasCustomStock" style="font-size: 0.64rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 800; margin-left: 4px;">CUSTOM</span>
                         </div>
+                        <button class="btn btn-primary" @click="$refs.reconStockFileInput.click()" :disabled="stockUploading" title="Upload fresh stock Excel (.xlsx) file to update SAP stock issues" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap; font-weight: 700; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color: #2563eb; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>{{ stockUploading ? '⏳' : '📥' }}</span>
+                            <span>{{ stockUploading ? 'Processing...' : 'Upload Stock (.xlsx)' }}</span>
+                        </button>
+                        <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
+                        <button v-if="hasCustomStock" class="btn btn-secondary" @click="resetToDefaultStock" title="Reset to default bundled SAP stock database" style="padding: 0.35rem 0.55rem; font-size: 0.72rem; color: #f87171; border-color: rgba(239, 68, 68, 0.4); white-space: nowrap;">
+                            ↺ Reset Stock
+                        </button>
                         <button class="btn btn-excel" @click="exportReconciliationExcel" title="Export Reconciliation Sheet Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                             📗 Export (.xlsx)
                         </button>
@@ -2759,30 +2770,31 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261030_03"></script>
-    <script src="js/data/contractor-sap-issues.js?v=20261030_03"></script>
-    <script src="js/data/default-activities.js?v=20261030_03"></script>
-    <script src="js/data/default-contractors.js?v=20261030_03"></script>
-    <script src="js/data/default-master-abstract.js?v=20261030_03"></script>
-    <script src="js/data/default-companies.js?v=20261030_03"></script>
-    <script src="js/data/default-invoice.js?v=20261030_03"></script>
+    <script src="js/data/default-sap-materials.js?v=20261030_04"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261030_04"></script>
+    <script src="js/data/default-activities.js?v=20261030_04"></script>
+    <script src="js/data/default-contractors.js?v=20261030_04"></script>
+    <script src="js/data/default-master-abstract.js?v=20261030_04"></script>
+    <script src="js/data/default-companies.js?v=20261030_04"></script>
+    <script src="js/data/default-invoice.js?v=20261030_04"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261030_03"></script>
+    <script src="js/core/storage.js?v=20261030_04"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261030_03"></script>
-    <script src="js/history.js?v=20261030_03"></script>
+    <script src="js/utils.js?v=20261030_04"></script>
+    <script src="js/history.js?v=20261030_04"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261030_03"></script>
-    <script src="js/billing.js?v=20261030_03"></script>
-    <script src="js/mapping.js?v=20261030_03"></script>
-    <script src="js/views.js?v=20261030_03"></script>
-    <script src="js/export.js?v=20261030_03"></script>
+    <script src="js/sync.js?v=20261030_04"></script>
+    <script src="js/billing.js?v=20261030_04"></script>
+    <script src="js/mapping.js?v=20261030_04"></script>
+    <script src="js/views.js?v=20261030_04"></script>
+    <script src="js/export.js?v=20261030_04"></script>
+    <script src="js/stock-importer.js?v=20261030_04"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261030_03"></script>
+    <script src="js/core/app.js?v=20261030_04"></script>
 </body>
 
 </html>
