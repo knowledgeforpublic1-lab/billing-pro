@@ -10,6 +10,36 @@
 
 const defaultContractorsList = [
   {
+    "id": "amruta_electrical_cont",
+    "name": "Amruta Electrical & Cont.",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Amruta Electrical & Cont.",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "31005613",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
+    "id": "duskline_infrastructure",
+    "name": "Duskline Infrastructure",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Duskline Infrastructure",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "31003359",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
     "id": "ab_enterprises",
     "name": "AB ENTERPRISES",
     "pan": "EKCPK5701G",

@@ -364,6 +364,9 @@
                             uom: sap.uom,
                             totalQty: 0,
                             sapIssuedQty: 0,
+                            sapGrossIssue: 0,
+                            sapMrnReturn: 0,
+                            sapNetIssue: 0,
                             activities: {}
                         };
                     });
@@ -475,7 +478,7 @@
                 
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const rows = Object.values(sapMap)
-                    .filter(row => Object.keys(row.activities).length > 0 || (row.sapIssuedQty && row.sapIssuedQty !== 0))
+                    .filter(row => Object.keys(row.activities).length > 0 || (row.sapIssuedQty && row.sapIssuedQty !== 0) || (row.sapGrossIssue && row.sapGrossIssue !== 0))
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
                 return { columns, rows };
@@ -597,7 +600,7 @@
             reconRows() {
                 if (!this.reverseEntry) {
                     if (this.reconFilterZeroOnly) {
-                        return this.pivotReconciliationData.rows.filter(r => (r.totalQty > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0)));
+                        return this.pivotReconciliationData.rows.filter(r => (r.totalQty > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || (r.sapGrossIssue && r.sapGrossIssue !== 0)));
                     }
                     return this.pivotReconciliationData.rows;
                 }
