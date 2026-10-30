@@ -12,6 +12,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node test/calculations.test.js"
+    "test": "node test/calculations.test.js",
+    "update-stock": "node scripts/build_stock_index.js"
   }
 }
