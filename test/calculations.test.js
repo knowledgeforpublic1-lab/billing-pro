@@ -584,6 +584,81 @@ it('SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red H
     assert.strictEqual(mockApp.isUnmappedContractorIssuedRow(zeroIssueUnmappedRow), false, 'Zero issue row must NOT be highlighted (false)');
 });
 
+// 15. Contractor Old Reconciliation (Purana Reco, Cumulative Recon, Balance & Inline Edits)
+it('Contractor Old Reconciliation: Baseline loading, matching, cumulative calculation, and custom edits', () => {
+    global.window = global;
+    if (!global.localStorage) {
+        global.localStorage = {
+            _data: {},
+            getItem(k) { return this._data[k] || null; },
+            setItem(k, v) { this._data[k] = String(v); },
+            removeItem(k) { delete this._data[k]; }
+        };
+    }
+
+    eval(fs.readFileSync('js/data/contractor-old-reconciliation.js', 'utf8'));
+    eval(fs.readFileSync('js/old-reco-importer.js', 'utf8'));
+
+    const oldRecoDb = window.ContractorOldReco || window.DefaultContractorOldReco;
+    assert.ok(oldRecoDb, 'ContractorOldReco database must exist');
+    assert.ok(oldRecoDb.byContractorNorm, 'ContractorOldReco must index by contractor norm');
+    assert.ok(Object.keys(oldRecoDb.byContractorNorm).length >= 60, 'Should have baseline for >= 60 contractors');
+
+    // 1. Verify Ravindra Kapgate baseline
+    const rkNorm = window.OldRecoImporterModule.normContractorName('Ravindra Kapgate');
+    assert.strictEqual(rkNorm, 'ravindrakapgate');
+    const rkRecord = oldRecoDb.byContractorNorm[rkNorm];
+    assert.ok(rkRecord, 'Ravindra Kapgate record must exist in baseline');
+    assert.ok(rkRecord.materials['17000004'], 'Item 17000004 (RSJ Pole 9M) must exist for Ravindra Kapgate');
+    assert.strictEqual(rkRecord.materials['17000004'].prevConsumption, 250);
+    assert.strictEqual(rkRecord.materials['17000004'].netIssue, 282);
+
+    // 2. Setup mock Vue instance with OldRecoImporterModule methods
+    const mockApp = Object.assign({
+        selectedContractorName: 'Ravindra Kapgate',
+        invoiceData: { contractorName: 'Ravindra Kapgate' },
+        projectMeta: { contractorName: 'Ravindra Kapgate' },
+        customOldRecoEdits: {},
+        $forceUpdate() {}
+    }, window.OldRecoImporterModule);
+
+    // 3. Test getContractorOldReco
+    const contractorReco = mockApp.getContractorOldReco();
+    assert.ok(contractorReco, 'getContractorOldReco must resolve contractor');
+    assert.strictEqual(contractorReco.contractorName, rkRecord.contractorName);
+
+    // 4. Test getPrevReconQty
+    const polePrevRecon = mockApp.getPrevReconQty('17000004');
+    assert.strictEqual(polePrevRecon, 250, 'Baseline prev consumption for 17000004 must be 250');
+
+    // 5. Test getCumulativeReconQty (Purana Reco + This Bill Qty)
+    const mockRow = {
+        code: '17000004',
+        desc: 'POLE RSJ 9 MTR',
+        sapGrossIssue: 282,
+        sapMrnReturn: 0,
+        sapNetIssue: 282,
+        totalQty: 10 // 10 units consumed in this bill
+    };
+    const cumulative = mockApp.getCumulativeReconQty(mockRow);
+    assert.strictEqual(cumulative, 260, 'Cumulative Recon must be 250 + 10 = 260');
+
+    // 6. Test getReconBalanceQty (Net Issue - Cumulative Recon)
+    const balance = mockApp.getReconBalanceQty(mockRow);
+    assert.strictEqual(balance, 22, 'Balance must be 282 - 260 = 22');
+
+    // 7. Test updatePrevReconQty (custom edit override)
+    mockApp.updatePrevReconQty('17000004', 270);
+    assert.strictEqual(mockApp.getPrevReconQty('17000004'), 270, 'Edited prev consumption should now be 270');
+    assert.strictEqual(mockApp.getCumulativeReconQty(mockRow), 280, 'Cumulative Recon should now be 270 + 10 = 280');
+    assert.strictEqual(mockApp.getReconBalanceQty(mockRow), 2, 'Balance should now be 282 - 280 = 2');
+
+    // 8. Test over-consumption alert condition (balance < 0)
+    mockApp.updatePrevReconQty('17000004', 280);
+    // Cumulative becomes 280 + 10 = 290. Net is 282 -> Balance is 282 - 290 = -8
+    assert.strictEqual(mockApp.getReconBalanceQty(mockRow), -8, 'Balance should be negative (-8) on over-consumption');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

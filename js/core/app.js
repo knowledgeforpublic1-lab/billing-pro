@@ -27,7 +27,8 @@
         window.MappingModule || {},
         window.ViewsModule || {},
         window.ExportModule || {},
-        window.StockImporterModule || {}
+        window.StockImporterModule || {},
+        window.OldRecoImporterModule || {}
     );
 
     const app = Vue.createApp({
@@ -136,6 +137,11 @@
                 stockUploading: false,
                 hasCustomStock: false,
                 customStockMeta: null,
+                oldRecoUploading: false,
+                showOldRecoModal: false,
+                oldRecoModalSearch: '',
+                hasCustomOldReco: false,
+                customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
                 contractorForm: {
@@ -561,6 +567,52 @@
                 return s && s.materials ? Object.keys(s.materials).length : 0;
             },
 
+            currentContractorOldReco() {
+                return (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+            },
+            currentContractorOldRecoInfo() {
+                const r = this.currentContractorOldReco;
+                if (!r) return '';
+                return r.contractorName || 'Old Reco Synced';
+            },
+            currentContractorOldRecoCount() {
+                const r = this.currentContractorOldReco;
+                return r && r.materials ? Object.keys(r.materials).length : 0;
+            },
+            currentContractorOldRecoConsumedCount() {
+                const r = this.currentContractorOldReco;
+                if (!r || !r.materials) return 0;
+                return Object.values(r.materials).filter(m => (Number(m.prevConsumption) || 0) > 0).length;
+            },
+            filteredOldRecoModalItems() {
+                const rows = this.reconRows || [];
+                const q = (this.oldRecoModalSearch || '').trim().toLowerCase();
+                let list = [];
+                if (rows.length > 0) {
+                    list = rows.map(r => ({
+                        code: r.code,
+                        desc: r.desc,
+                        uom: r.uom,
+                        netIssue: r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0)
+                    }));
+                } else {
+                    const oldR = this.currentContractorOldReco;
+                    if (oldR && oldR.materials) {
+                        list = Object.values(oldR.materials).map(m => ({
+                            code: m.code,
+                            desc: m.desc,
+                            uom: m.uom,
+                            netIssue: m.netIssue || 0
+                        }));
+                    }
+                }
+                if (!q) return list;
+                return list.filter(it => 
+                    (it.code && it.code.toLowerCase().includes(q)) || 
+                    (it.desc && it.desc.toLowerCase().includes(q))
+                );
+            },
+
             // 🏷️ Set of all mapped SAP codes across all activities
             allMappedSapCodesSet() {
                 const set = new Set();
@@ -674,6 +726,10 @@
                 let grossIssue = 0;
                 let mrnReturn = 0;
                 let netIssue = 0;
+                let prevReconTotal = 0;
+                let thisBillTotal = 0;
+                let cumulativeReconTotal = 0;
+                let balanceTotal = 0;
                 const actTotals = {};
                 (this.pivotReconciliationData.columns || []).forEach(col => { actTotals[col] = 0; });
                 const revTotals = {};
@@ -685,9 +741,19 @@
                     const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : (r.sapIssuedQty > 0 ? r.sapIssuedQty : 0));
                     const mrn = Number(r.sapMrnReturn || 0);
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
+                    const thisB = Number(r.totalQty) || 0;
+                    const cum = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(r) : (prevR + thisB);
+                    const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(r) : (net - cum);
+
                     grossIssue += gross;
                     mrnReturn += mrn;
                     netIssue += net;
+                    prevReconTotal += prevR;
+                    thisBillTotal += thisB;
+                    cumulativeReconTotal += cum;
+                    balanceTotal += bal;
+
                     if (r.activities) {
                         Object.keys(r.activities).forEach(k => {
                             actTotals[k] = (actTotals[k] || 0) + (Number(r.activities[k]) || 0);
@@ -705,6 +771,10 @@
                     grossIssue: Math.round(grossIssue * 1000) / 1000,
                     mrnReturn: Math.round(mrnReturn * 1000) / 1000,
                     netIssue: Math.round(netIssue * 1000) / 1000,
+                    prevRecon: Math.round(prevReconTotal * 1000) / 1000,
+                    thisBill: Math.round(thisBillTotal * 1000) / 1000,
+                    cumulativeRecon: Math.round(cumulativeReconTotal * 1000) / 1000,
+                    balance: Math.round(balanceTotal * 1000) / 1000,
                     activities: actTotals,
                     reverseTotals: revTotals
                 };
@@ -1081,6 +1151,26 @@
             // Backup default stock & check for custom uploaded stock in IndexedDB
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
                 window.DefaultContractorSapStock = window.ContractorSapStock;
+            }
+            if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
+                window.DefaultContractorOldReco = window.ContractorOldReco;
+            }
+            try {
+                if (typeof window.OldRecoImporterModule !== 'undefined') {
+                    const customOldReco = await window.OldRecoImporterModule.loadCustomOldRecoFromDb();
+                    if (customOldReco && customOldReco.byContractorNorm && Object.keys(customOldReco.byContractorNorm).length > 0) {
+                        window.ContractorOldReco = customOldReco;
+                        this.hasCustomOldReco = true;
+                        console.log('[OldRecoImporter] Custom old reco loaded from IndexedDB:', customOldReco.meta);
+                    }
+                }
+                const editsJson = localStorage.getItem('billing_custom_old_reco_edits_v1');
+                if (editsJson) {
+                    this.customOldRecoEdits = JSON.parse(editsJson);
+                    this.hasCustomOldReco = true;
+                }
+            } catch (e) {
+                console.warn('[OldRecoImporter] Error loading custom old reco:', e);
             }
             try {
                 if (typeof BillingStorage !== 'undefined') {
