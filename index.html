@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261030_02">
+    <link rel="stylesheet" href="css/style.css?v=20261030_03">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -1355,8 +1355,20 @@
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">{{ row.desc }}</div>
                                 </td>
                                 <td class="text-center font-mono" style="font-size: 0.82rem;">{{ row.uom }}</td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.08);" :title="(row.sapIssuedQty ? '⚡ SAP Issued: ' + row.sapIssuedQty : 'No SAP Issue') + (row.totalQty ? ' | Consumed: ' + row.totalQty : '')">
-                                    <span v-if="row.sapIssuedQty !== undefined && row.sapIssuedQty !== null && row.sapIssuedQty !== 0" style="color: #60a5fa; font-size: 0.92rem;">{{ row.sapIssuedQty }}</span>
+                                <!-- Col 5: ISSUE (Gross Issue from SAP) -->
+                                <td class="text-right font-mono" style="background: rgba(59, 130, 246, 0.04); font-size: 0.88rem; color: #94a3b8;" title="Gross Issue from SAP Stock">
+                                    <span v-if="row.sapGrossIssue !== undefined && row.sapGrossIssue !== null && row.sapGrossIssue !== 0">{{ row.sapGrossIssue }}</span>
+                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
+                                </td>
+                                <!-- Col 6: MRN (Return from Site) -->
+                                <td class="text-right font-mono" style="background: rgba(239, 68, 68, 0.04); font-size: 0.88rem; color: #f87171;" title="MRN (Material Return Note) / Site Return">
+                                    <span v-if="row.sapMrnReturn !== undefined && row.sapMrnReturn !== null && row.sapMrnReturn !== 0">{{ row.sapMrnReturn }}</span>
+                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
+                                </td>
+                                <!-- Col 7: NET ISSUE (⚡ Auto-Synced Net Issue from SAP) -->
+                                <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.12);" :title="(row.sapNetIssue ? '⚡ SAP Net Issued: ' + row.sapNetIssue : 'No SAP Issue') + (row.totalQty ? ' | Consumed: ' + row.totalQty : '')">
+                                    <span v-if="row.sapNetIssue !== undefined && row.sapNetIssue !== null && row.sapNetIssue !== 0" style="color: #60a5fa; font-size: 0.92rem;">{{ row.sapNetIssue }}</span>
+                                    <span v-else-if="row.sapIssuedQty !== undefined && row.sapIssuedQty !== null && row.sapIssuedQty !== 0" style="color: #60a5fa; font-size: 0.92rem;">{{ row.sapIssuedQty }}</span>
                                     <span v-else-if="row.totalQty > 0" style="color: var(--text-muted); opacity: 0.6;">{{ row.totalQty }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
@@ -2747,30 +2759,30 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261030_02"></script>
-    <script src="js/data/contractor-sap-issues.js?v=20261030_02"></script>
-    <script src="js/data/default-activities.js?v=20261030_02"></script>
-    <script src="js/data/default-contractors.js?v=20261030_02"></script>
-    <script src="js/data/default-master-abstract.js?v=20261030_02"></script>
-    <script src="js/data/default-companies.js?v=20261030_02"></script>
-    <script src="js/data/default-invoice.js?v=20261030_02"></script>
+    <script src="js/data/default-sap-materials.js?v=20261030_03"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261030_03"></script>
+    <script src="js/data/default-activities.js?v=20261030_03"></script>
+    <script src="js/data/default-contractors.js?v=20261030_03"></script>
+    <script src="js/data/default-master-abstract.js?v=20261030_03"></script>
+    <script src="js/data/default-companies.js?v=20261030_03"></script>
+    <script src="js/data/default-invoice.js?v=20261030_03"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261030_02"></script>
+    <script src="js/core/storage.js?v=20261030_03"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261030_02"></script>
-    <script src="js/history.js?v=20261030_02"></script>
+    <script src="js/utils.js?v=20261030_03"></script>
+    <script src="js/history.js?v=20261030_03"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261030_02"></script>
-    <script src="js/billing.js?v=20261030_02"></script>
-    <script src="js/mapping.js?v=20261030_02"></script>
-    <script src="js/views.js?v=20261030_02"></script>
-    <script src="js/export.js?v=20261030_02"></script>
+    <script src="js/sync.js?v=20261030_03"></script>
+    <script src="js/billing.js?v=20261030_03"></script>
+    <script src="js/mapping.js?v=20261030_03"></script>
+    <script src="js/views.js?v=20261030_03"></script>
+    <script src="js/export.js?v=20261030_03"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261030_02"></script>
+    <script src="js/core/app.js?v=20261030_03"></script>
 </body>
 
 </html>
