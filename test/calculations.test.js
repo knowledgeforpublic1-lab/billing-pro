@@ -259,6 +259,52 @@ it('SAP Stock: Verifies ISSUE, MRN, and NET ISSUE breakdown format', () => {
     assert.strictEqual(mtPole.netIssue, 326);
 });
 
+// 10. SAP Stock: Multi-work-order contractor consolidation
+it('SAP Stock: Consolidates and sums multiple work orders for same contractor', () => {
+    global.window = global;
+    const fs = require('fs');
+    eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
+    eval(fs.readFileSync('js/billing.js', 'utf8'));
+    const stock = window.ContractorSapStock;
+
+    // Duskline Infrastructure has 3 WOs: 31003359, 31003360, 31003362
+    const dusk = stock.byContractorNorm['dusklineinfrastructure'];
+    assert.ok(dusk, 'Duskline consolidated record must exist');
+    assert.deepStrictEqual(dusk.allWorkOrders.slice().sort(), ['31003359', '31003360', '31003362'].sort());
+    assert.strictEqual(dusk.totalGrossIssue, 1027046.87);
+    assert.strictEqual(dusk.totalMrnReturn, 438628.632);
+    assert.strictEqual(dusk.totalNetIssue, 588418.238);
+
+    // Verify all 3 WOs point to the same consolidated record
+    assert.strictEqual(stock.byDocHeader['31003359'].totalNetIssue, dusk.totalNetIssue);
+    assert.strictEqual(stock.byDocHeader['31003360'].totalNetIssue, dusk.totalNetIssue);
+    assert.strictEqual(stock.byDocHeader['31003362'].totalNetIssue, dusk.totalNetIssue);
+
+    // Verify AAAC sum: 22364 gross, 6769 mrn, 15595 net
+    assert.strictEqual(dusk.materials['17000625'].grossIssue, 22364);
+    assert.strictEqual(dusk.materials['17000625'].mrnReturn, 6769);
+    assert.strictEqual(dusk.materials['17000625'].netIssue, 15595);
+
+    // Verify Baba Construction (WOs: 31005619 and 31005621)
+    const baba = stock.byContractorNorm['babaconstruction'];
+    assert.ok(baba, 'Baba Construction consolidated record must exist');
+    assert.deepStrictEqual(baba.allWorkOrders.slice().sort(), ['31005619', '31005621'].sort());
+    assert.strictEqual(baba.totalGrossIssue, 13838.9);
+    assert.strictEqual(baba.totalMrnReturn, 2161.12);
+    assert.strictEqual(baba.totalNetIssue, 11677.78);
+    assert.strictEqual(stock.byDocHeader['31005619'].totalNetIssue, baba.totalNetIssue);
+    assert.strictEqual(stock.byDocHeader['31005621'].totalNetIssue, baba.totalNetIssue);
+
+    // Verify BillingModule lookup by contractor name returns consolidated sum
+    const mockAppDusk = {
+        selectedContractorName: 'DUSKLINE INFRASTRUCTURE',
+        invoiceData: { workOrderNo: '31003359' }
+    };
+    const duskMatch = window.BillingModule.getContractorSapIssues.call(mockAppDusk);
+    assert.strictEqual(duskMatch.contractorName, dusk.contractorName);
+    assert.strictEqual(duskMatch.totalNetIssue, 588418.238);
+});
+
 console.log('----------------------------------------------------');
 console.log(`Results: ${passedTests} of ${totalTests} tests passed.`);
 console.log('----------------------------------------------------');

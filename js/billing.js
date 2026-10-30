@@ -32,15 +32,20 @@ window.BillingModule = {
         }
         if (!cName) return null;
         
-        const norm = String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
-        if (!norm || !stock.byContractorNorm) return null;
+        const cleanName = String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '');
+        const norm = cleanName.replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
+        const rawNorm = cleanName.replace(/[^a-z0-9]/g, '');
+        if ((!norm && !rawNorm) || !stock.byContractorNorm) return null;
 
-        if (stock.byContractorNorm[norm]) {
+        if (norm && stock.byContractorNorm[norm]) {
             return stock.byContractorNorm[norm];
+        }
+        if (rawNorm && stock.byContractorNorm[rawNorm]) {
+            return stock.byContractorNorm[rawNorm];
         }
 
         for (const [k, v] of Object.entries(stock.byContractorNorm)) {
-            if (k.length >= 4 && (k.includes(norm) || norm.includes(k))) {
+            if (k.length >= 4 && ((norm && (k.includes(norm) || norm.includes(k))) || (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))))) {
                 return v;
             }
         }
