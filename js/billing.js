@@ -12,9 +12,30 @@ window.BillingModule = {
     getContractorSapIssues() {
         const stock = window.ContractorSapStock;
         if (!stock) return null;
-        
+
+        // 0. Direct match by selectedContractorId
+        if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
+            const rawId = String(this.selectedContractorId).toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (rawId && stock.byContractorNorm && stock.byContractorNorm[rawId]) {
+                return stock.byContractorNorm[rawId];
+            }
+            // Firm object lookup in contractorsList
+            const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+            if (firm) {
+                if (firm.workOrderNo) {
+                    const fWo = String(firm.workOrderNo).trim();
+                    if (stock.byDocHeader && stock.byDocHeader[fWo]) return stock.byDocHeader[fWo];
+                    const m = fWo.match(/\b\d{8}\b/);
+                    if (m && stock.byDocHeader && stock.byDocHeader[m[0]]) return stock.byDocHeader[m[0]];
+                }
+                const fNorm = String(firm.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
+                if (fNorm && stock.byContractorNorm && stock.byContractorNorm[fNorm]) return stock.byContractorNorm[fNorm];
+            }
+        }
+
         // 1. Try work order number from invoiceData / projectMeta
-        const wo = ((this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '').trim();
+        const rawWo = (this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '';
+        const wo = String(rawWo).trim();
         if (wo) {
             if (stock.byDocHeader && stock.byDocHeader[wo]) {
                 return stock.byDocHeader[wo];
@@ -31,7 +52,7 @@ window.BillingModule = {
             cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
         }
         if (!cName) return null;
-        
+
         const cleanName = String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '');
         const norm = cleanName.replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
         const rawNorm = cleanName.replace(/[^a-z0-9]/g, '');
@@ -517,14 +538,14 @@ window.BillingModule = {
         this.invoiceData.bankAccountNo = firm.bankAccountNo || '';
         this.invoiceData.bankIfsc = firm.bankIfsc || '';
         this.invoiceData.bankName = firm.bankName || '';
-        if (firm.workOrderNo) this.invoiceData.workOrderNo = String(firm.workOrderNo);
+        this.invoiceData.workOrderNo = firm.workOrderNo ? String(firm.workOrderNo) : '';
         if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
         if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
         if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
         if (firm.feederName) { this.invoiceData.feederName = firm.feederName; } else if (this.invoiceData.feederName === '11 KV Yenapur, Gogaon') { this.invoiceData.feederName = ''; }
 
         this.projectMeta.contractorName = firmName;
-        if (firm.workOrderNo) this.projectMeta.workOrderNo = String(firm.workOrderNo);
+        this.projectMeta.workOrderNo = firm.workOrderNo ? String(firm.workOrderNo) : '';
         this.checkAndApplyAutoGstRule();
         this.saveToStorage();
         this.showToast(`Applied Firm: ${firm.name} (WO: ${firm.workOrderNo || 'N/A'}, PAN: ${firm.pan || 'N/A'})`, 'Check');

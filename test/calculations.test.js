@@ -798,6 +798,49 @@ it('Feeder Name: Resolves dynamic feeder name, rejects dummy Yenapur/Gogaon, and
     assert.strictEqual(appD.getEffectiveFeederName('907'), '');
 });
 
+// 19. Robust Contractor SAP Stock Issue Resolution (Number WO, ID lookup, auto-clear)
+it('SAP Stock: Resolves contractor issue when workOrderNo is a number and matches direct contractor ID', () => {
+    global.window = global;
+    eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
+    eval(fs.readFileSync('js/data/default-contractors.js', 'utf8') + '; global.defaultContractorsList = defaultContractorsList;');
+    eval(fs.readFileSync('js/billing.js', 'utf8'));
+
+    // Case 1: Contractor with number workOrderNo (e.g. AB ENTERPRISES WO: 31007613)
+    const appNumberWo = {
+        selectedContractorId: 'ab_enterprises',
+        selectedContractorName: 'AB ENTERPRISES',
+        contractorsList: global.defaultContractorsList,
+        invoiceData: { contractorName: 'AB ENTERPRISES', workOrderNo: 31007613 },
+        projectMeta: { contractorName: 'AB ENTERPRISES', workOrderNo: 31007613 }
+    };
+    Object.assign(appNumberWo, window.BillingModule);
+    const sapIssue1 = appNumberWo.getContractorSapIssues();
+    assert.ok(sapIssue1, 'Must resolve SAP issue for AB ENTERPRISES without throwing on number WO .trim()');
+    assert.strictEqual(sapIssue1.contractorName, 'M/s AB ENTERPRISES');
+    assert.ok(sapIssue1.materials['17000004'], 'M Sand must be issued in SAP stock');
+
+    // Case 2: Direct lookup by contractor ID when workOrderNo is blank
+    const appById = {
+        selectedContractorId: 'alkamanojramteke',
+        selectedContractorName: 'Alka Manoj Ramteke',
+        contractorsList: global.defaultContractorsList,
+        invoiceData: { contractorName: 'Alka Manoj Ramteke', workOrderNo: '' },
+        projectMeta: { contractorName: 'Alka Manoj Ramteke', workOrderNo: '' }
+    };
+    Object.assign(appById, window.BillingModule);
+    const sapIssue2 = appById.getContractorSapIssues();
+    assert.ok(sapIssue2, 'Must resolve SAP issue for Alka Manoj Ramteke via direct normalized contractor ID');
+    assert.strictEqual(sapIssue2.contractorName, 'Alka Manoj Ramteke');
+
+    // Case 3: Verify applyFirmObject properly blanks workOrderNo when new firm has no work order
+    const firmWithNoWo = { id: 'divya_kapgate', name: 'Divya Kapgate', workOrderNo: '' };
+    appNumberWo.saveToStorage = () => {};
+    appNumberWo.checkAndApplyAutoGstRule = () => {};
+    appNumberWo.showToast = () => {};
+    appNumberWo.applyFirmObject(firmWithNoWo);
+    assert.strictEqual(appNumberWo.invoiceData.workOrderNo, '', 'Must clear old contractor work order when new firm has none');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

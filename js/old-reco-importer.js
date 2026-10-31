@@ -597,8 +597,30 @@ window.OldRecoImporterModule = {
         const recoDb = window.ContractorOldReco || window.DefaultContractorOldReco;
         if (!recoDb || !recoDb.byContractorNorm) return null;
 
+        // 0. Direct match by selectedContractorId
+        if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
+            const rawId = String(this.selectedContractorId).toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (rawId && recoDb.byContractorNorm[rawId]) {
+                return recoDb.byContractorNorm[rawId];
+            }
+            const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+            if (firm) {
+                if (firm.workOrderNo) {
+                    const fWo = String(firm.workOrderNo).trim();
+                    for (const rec of Object.values(recoDb.byContractorNorm)) {
+                        if (rec.workOrderNo && (rec.workOrderNo === fWo || fWo.includes(rec.workOrderNo))) {
+                            return rec;
+                        }
+                    }
+                }
+                const fNorm = String(firm.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
+                if (fNorm && recoDb.byContractorNorm[fNorm]) return recoDb.byContractorNorm[fNorm];
+            }
+        }
+
         // 1. Try work order number from invoiceData / projectMeta
-        const wo = ((this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '').trim();
+        const rawWo = (this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '';
+        const wo = String(rawWo).trim();
         if (wo) {
             for (const rec of Object.values(recoDb.byContractorNorm)) {
                 if (rec.workOrderNo && (rec.workOrderNo === wo || wo.includes(rec.workOrderNo))) {

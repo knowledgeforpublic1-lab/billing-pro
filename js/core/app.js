@@ -521,7 +521,13 @@
                 
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const rows = Object.values(sapMap)
-                    .filter(row => Object.keys(row.activities).length > 0 || (row.sapIssuedQty && row.sapIssuedQty !== 0) || (row.sapGrossIssue && row.sapGrossIssue !== 0))
+                    .filter(row => 
+                        Object.keys(row.activities).length > 0 || 
+                        (row.sapIssuedQty && row.sapIssuedQty !== 0) || 
+                        (row.sapGrossIssue && row.sapGrossIssue !== 0) ||
+                        (row.sapNetIssue && row.sapNetIssue !== 0) ||
+                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(row.code) > 0)
+                    )
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
                 return { columns, rows };
@@ -579,6 +585,12 @@
                 const sapStock = this.currentContractorSap;
                 if (sapStock && sapStock.materials) {
                     Object.keys(sapStock.materials).forEach(code => {
+                        if (set.indexOf(code) === -1) set.push(code);
+                    });
+                }
+                const oldReco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+                if (oldReco && oldReco.materials) {
+                    Object.keys(oldReco.materials).forEach(code => {
                         if (set.indexOf(code) === -1) set.push(code);
                     });
                 }
@@ -819,6 +831,7 @@
                             r.totalQty > 0 || 
                             (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
                             (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
+                            (r.sapNetIssue && r.sapNetIssue !== 0) ||
                             ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
                         ));
                     }

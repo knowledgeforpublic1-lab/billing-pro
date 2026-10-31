@@ -753,6 +753,13 @@ window.SyncModule = {
         this.invoiceData.invoiceDate = form.billDate || new Date().toISOString().slice(0, 10);
         this.invoiceData.items = [];
 
+        if (this.selectedContractorId) {
+            this.applyContractorProfile(this.selectedContractorId);
+        }
+        if (this.selectedCompanyId) {
+            this.onCompanySelect();
+        }
+
         this.activeBillId = newBillId;
         this.cloudRev = 0;
         this.lastSentHash = '';
