@@ -122,9 +122,9 @@ window.ExportModule = {
                     const rcols = revOn ? this.reverseReconColumns : [];
                     const expRows = this.reconRows;
                     const expHeaders = revOn
-                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'PURANA RECO'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE'])
-                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'PURANA RECO'].concat(pData.columns).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE']);
-                    const totalCols = 11 + (revOn ? rcols.length : pData.columns.length);
+                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1)))))
+                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(pData.columns);
+                    const totalCols = 7 + (revOn ? rcols.length : pData.columns.length);
                     
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
@@ -158,28 +158,15 @@ window.ExportModule = {
                         row.getCell(6).value = rowObj.sapMrnReturn || '';
                         row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== 0) ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || rowObj.totalQty || '');
 
-                        const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
-                        row.getCell(8).value = prevR || '';
-
-                        const midColStart = 9;
                         if (revOn) {
                             rcols.forEach((rc, cIdx) => {
-                                row.getCell(midColStart + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
+                                row.getCell(8 + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
                             });
                         } else {
                             pData.columns.forEach((col, cIdx) => {
-                                row.getCell(midColStart + cIdx).value = rowObj.activities[col] || '';
+                                row.getCell(8 + cIdx).value = rowObj.activities[col] || '';
                             });
                         }
-
-                        const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
-                        const thisB = Number(rowObj.totalQty) || 0;
-                        const cumR = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(rowObj) : (prevR + thisB);
-                        const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(rowObj) : (Number(rowObj.sapNetIssue || 0) - cumR);
-
-                        row.getCell(endColStart).value = thisB || '';
-                        row.getCell(endColStart + 1).value = cumR || '';
-                        row.getCell(endColStart + 2).value = bal;
                         
                         row.eachCell((c, colNum) => {
                             c.border = thinBorder;
@@ -187,9 +174,9 @@ window.ExportModule = {
                             if (colNum === 3) {
                                 c.alignment.horizontal = 'left';
                                 c.alignment.wrapText = true;
-                            } else if (colNum === 5 || colNum === 6 || colNum === 7 || colNum === 8 || colNum >= endColStart) {
+                            } else if (colNum === 5 || colNum === 6 || colNum === 7) {
                                 c.alignment.horizontal = 'right';
-                                c.font = { bold: colNum === 7 || colNum === endColStart + 1 || colNum === endColStart + 2 };
+                                c.font = { bold: colNum === 7 };
                             } else {
                                 c.alignment.horizontal = 'center';
                             }
@@ -208,23 +195,16 @@ window.ExportModule = {
                     totalRow.getCell(5).value = (this.reconTotals && this.reconTotals.grossIssue) || '';
                     totalRow.getCell(6).value = (this.reconTotals && this.reconTotals.mrnReturn) || '';
                     totalRow.getCell(7).value = (this.reconTotals && this.reconTotals.netIssue) || '';
-                    totalRow.getCell(8).value = (this.reconTotals && this.reconTotals.prevRecon) || '';
 
-                    const midColStart = 9;
                     if (revOn) {
                         rcols.forEach((rc, cIdx) => {
-                            totalRow.getCell(midColStart + cIdx).value = (this.reconTotals && this.reconTotals.reverseTotals && this.reconTotals.reverseTotals[rc.key]) || '';
+                            totalRow.getCell(8 + cIdx).value = (this.reconTotals && this.reconTotals.reverseTotals && this.reconTotals.reverseTotals[rc.key]) || '';
                         });
                     } else {
                         pData.columns.forEach((col, cIdx) => {
-                            totalRow.getCell(midColStart + cIdx).value = (this.reconTotals && this.reconTotals.activities && this.reconTotals.activities[col]) || '';
+                            totalRow.getCell(8 + cIdx).value = (this.reconTotals && this.reconTotals.activities && this.reconTotals.activities[col]) || '';
                         });
                     }
-
-                    const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
-                    totalRow.getCell(endColStart).value = (this.reconTotals && this.reconTotals.thisBill) || '';
-                    totalRow.getCell(endColStart + 1).value = (this.reconTotals && this.reconTotals.cumulativeRecon) || '';
-                    totalRow.getCell(endColStart + 2).value = (this.reconTotals && this.reconTotals.balance) || '';
 
                     totalRow.eachCell((c, colNum) => {
                         c.border = headerBorder;
@@ -239,10 +219,9 @@ window.ExportModule = {
                     
                     // Column Widths
                     const cols = [
-                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }, { width: 14 }
+                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }
                     ];
                     (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 14 }));
-                    cols.push({ width: 14 }, { width: 14 }, { width: 14 });
                     ws.columns = cols;
                     
                     const buffer = await workbook.xlsx.writeBuffer();
@@ -727,10 +706,6 @@ window.ExportModule = {
                     // 5. Active SAP Stock synchronized contractor info (e.g. "Ravindra kapgade (WO: 31004925)")
                     if (!cName && this.currentContractorSapInfo) {
                         cName = String(this.currentContractorSapInfo).split('(')[0].trim();
-                    }
-                    // 6. Active Old Reconciliation contractor
-                    if (!cName && this.currentContractorOldReco && this.currentContractorOldReco.contractorName) {
-                        cName = this.currentContractorOldReco.contractorName;
                     }
 
                     cName = String(cName || '')

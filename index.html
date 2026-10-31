@@ -1267,14 +1267,6 @@
                             <span>ℹ️ Select a contractor above to view SAP Issue/MRN</span>
                         </div>
 
-                        <!-- Contractor Purana Reco Status Pill -->
-                        <div v-if="currentContractorOldReco" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(168, 85, 247, 0.15); border: 1.5px solid rgba(168, 85, 247, 0.45); font-size: 0.78rem; font-weight: 700; color: #d8b4fe;" title="Contractor ka purana reconciled baseline / records">
-                            <span style="font-size: 0.90rem;">📋</span>
-                            <span>Purana Reco: <strong style="color: #ffffff;">{{ currentContractorOldRecoConsumedCount }} Consumed Items</strong></span>
-                            <span v-if="hasCustomOldReco" style="font-size: 0.65rem; background: #a855f7; color: #fff; padding: 2px 7px; border-radius: 999px; font-weight: 900; margin-left: 4px; letter-spacing: 0.5px;">CUSTOM RECO</span>
-                            <span v-else style="font-size: 0.65rem; background: rgba(255, 255, 255, 0.2); color: #fff; padding: 2px 7px; border-radius: 999px; font-weight: 800; margin-left: 4px;">BASELINE</span>
-                        </div>
-
                         <!-- 🔴 RED GLOWING ALERT PILL FOR UNMAPPED ISSUES -->
                         <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" 
                             @click="goToMappingMasterAlert()" 
@@ -1285,9 +1277,9 @@
                         </div>
                     </div>
 
-                    <!-- Right: STOCK EXCEL & OLD RECONCILIATION ACTION HUB -->
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <!-- Hidden File Input for Stock .xlsx -->
+                    <!-- Right: STOCK EXCEL UPLOAD & RESET (Prominent Action Hub) -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <!-- Hidden File Input for .xlsx -->
                         <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
                         
                         <!-- 📥 BIG PROMINENT STOCK UPLOAD BUTTON -->
@@ -1295,49 +1287,18 @@
                             @click="$refs.reconStockFileInput.click()" 
                             :disabled="stockUploading" 
                             title="Naya Stock Excel (.xlsx) upload karein — sabhi contractors ka issue/return turant update ho jayega"
-                            style="padding: 7px 13px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: 1.5px solid #60a5fa; color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
-                            <span style="font-size: 0.95rem;">{{ stockUploading ? '⏳' : '📥' }}</span>
-                            <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock (.xlsx)' }}</span>
+                            style="padding: 7px 16px; font-size: 0.82rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: 1.5px solid #60a5fa; color: #ffffff; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4); transition: all 0.2s;">
+                            <span style="font-size: 1rem;">{{ stockUploading ? '⏳' : '📥' }}</span>
+                            <span>{{ stockUploading ? 'Uploading & Parsing...' : 'Upload Stock (.xlsx)' }}</span>
                         </button>
 
-                        <!-- ↺ RESET STOCK BUTTON (Visible when custom file is uploaded) -->
+                        <!-- ↺ RESET BUTTON (Visible when custom file is uploaded) -->
                         <button v-if="hasCustomStock" type="button"
                             @click="resetToDefaultStock" 
                             title="Reset to default built-in stock database" 
-                            style="padding: 7px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                            style="padding: 7px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
                             <span>↺</span>
-                            <span>Reset Stock</span>
-                        </button>
-
-                        <!-- Hidden File Input for Purana Reco .xlsx -->
-                        <input type="file" ref="oldRecoFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleOldRecoFileUpload($event)">
-
-                        <!-- 📂 UPLOAD PURANA RECO BUTTON -->
-                        <button type="button" 
-                            @click="$refs.oldRecoFileInput.click()" 
-                            :disabled="oldRecoUploading" 
-                            title="Contractor ka Purana Reconciliation Excel (.xlsx) upload karein — multi-sheet master ya single sheet"
-                            style="padding: 7px 13px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border: 1.5px solid #a78bfa; color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3); transition: all 0.2s;">
-                            <span style="font-size: 0.95rem;">{{ oldRecoUploading ? '⏳' : '📂' }}</span>
-                            <span>{{ oldRecoUploading ? 'Uploading...' : 'Upload Purana Reco (.xlsx)' }}</span>
-                        </button>
-
-                        <!-- ✏️ EDIT PURANA RECO MODAL BUTTON -->
-                        <button type="button" 
-                            @click="openOldRecoModal()" 
-                            title="Contractor ka Pichla Reconciled Consumption view / edit karein"
-                            style="padding: 7px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; background: rgba(168, 85, 247, 0.15); border: 1.5px solid rgba(168, 85, 247, 0.45); color: #e9d5ff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s;">
-                            <span>✏️</span>
-                            <span>Edit Purana Reco</span>
-                        </button>
-
-                        <!-- ↺ RESET OLD RECO (Visible when custom data or edits present) -->
-                        <button v-if="hasCustomOldReco" type="button"
-                            @click="resetToDefaultOldReco" 
-                            title="Reset to default built-in old reconciliation baseline" 
-                            style="padding: 7px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
-                            <span>↺</span>
-                            <span>Reset Reco</span>
+                            <span>Reset Default Stock</span>
                         </button>
                     </div>
                 </div>
@@ -1434,7 +1395,7 @@
                         <table class="billing-table">
                         <thead>
                             <tr>
-                                <th :colspan="11 + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
+                                <th :colspan="7 + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
                                 </th>
                             </tr>
@@ -1455,10 +1416,7 @@
                                     NET ISSUE
                                     <div v-if="currentContractorSapInfo" style="font-size: 0.58rem; color: #60a5fa; font-weight: 700; text-transform: uppercase;">⚡ Net Issue</div>
                                 </th>
-                                <th style="width: 85px;" class="text-right" title="Contractor ka Pichla / Purana Reconciled Consumption (Click cell to edit)">
-                                    PURANA RECO
-                                    <div style="font-size: 0.58rem; color: #c084fc; font-weight: 700; text-transform: uppercase;">Prev Recon ✏️</div>
-                                </th>
+                                
                                 <template v-if="!reverseEntry">
                                 <th v-for="col in pivotReconciliationData.columns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
                                     {{ col }}
@@ -1470,18 +1428,7 @@
                                     <div style="font-weight: 600; color: var(--text-muted);">{{ getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '' }}</div>
                                 </th>
                                 </template>
-                                <th style="width: 80px;" class="text-right" title="Is Bill me Activity Consumption ka Total">
-                                    THIS BILL
-                                    <div style="font-size: 0.58rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase;">Is Bill Qty</div>
-                                </th>
-                                <th style="width: 88px;" class="text-right" title="Kul Reconciled Quantity = Purana Reco + This Bill">
-                                    TOTAL RECON
-                                    <div style="font-size: 0.58rem; color: #34d399; font-weight: 700; text-transform: uppercase;">Cumulative</div>
-                                </th>
-                                <th style="width: 85px;" class="text-right" title="Bacha hua Material = Net Issue - Total Recon">
-                                    BALANCE
-                                    <div style="font-size: 0.58rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">Net - Recon</div>
-                                </th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -1526,17 +1473,7 @@
                                     <span v-else-if="row.totalQty > 0" style="color: var(--text-muted); opacity: 0.6;">{{ row.totalQty }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
-                                <!-- Col 8: PURANA RECO (Editable inline input) -->
-                                <td class="text-right font-mono" style="background: rgba(168, 85, 247, 0.08); padding: 2px 4px;" title="Purana Reconciled Consumption (Click cell to edit)">
-                                    <input type="text" inputmode="decimal" class="qty-input font-mono"
-                                        style="width: 76px; text-align: right; background: transparent; border: 1px dashed rgba(168, 85, 247, 0.4); color: #e9d5ff; font-weight: 700; padding: 2px 4px; border-radius: 4px;"
-                                        :value="getPrevReconQty(row.code) || ''" 
-                                        placeholder="0" 
-                                        @change="updatePrevReconQty(row.code, $event.target.value)" 
-                                        @keydown.enter="$event.target.blur()"
-                                        :disabled="isFinalized"
-                                        title="Pichla reconciled consumption likhein">
-                                </td>
+                                
                                 <template v-if="!reverseEntry">
                                 <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono">
                                     {{ row.activities[col] > 0 ? row.activities[col] : '' }}
@@ -1547,23 +1484,7 @@
                                     <input type="text" inputmode="decimal" class="qty-input" style="min-width: 64px; text-align: center;" :value="reconCellLoc(row.code, rcol) || ''" placeholder="0" @change="applyReverseEntryLoc(row.code, rcol.actKey, rcol.locIdx, $event.target.value)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" :title="isFinalized ? 'Bill locked hai' : 'Qty likho — Activity ' + rcol.actKey + ' / ' + (getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '') + ' me jayegi'">
                                 </td>
                                 </template>
-                                <!-- THIS BILL -->
-                                <td class="text-right font-mono" style="background: rgba(99, 102, 241, 0.06); font-size: 0.88rem; color: #cbd5e1;" title="Is bill ka kul consumption">
-                                    <span v-if="row.totalQty > 0">{{ row.totalQty }}</span>
-                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
-                                </td>
-                                <!-- TOTAL RECON -->
-                                <td class="text-right font-mono font-bold" style="background: rgba(16, 185, 129, 0.10); font-size: 0.90rem; color: #34d399;" title="Kul Reconciled = Purana + This Bill">
-                                    <span v-if="getCumulativeReconQty(row) > 0">{{ getCumulativeReconQty(row) }}</span>
-                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
-                                </td>
-                                <!-- BALANCE -->
-                                <td class="text-right font-mono font-bold" 
-                                    :style="getReconBalanceQty(row) < 0 ? 'background: rgba(239, 68, 68, 0.20); color: #f87171;' : 'background: rgba(245, 158, 11, 0.08); color: #fbbf24;'" 
-                                    style="font-size: 0.90rem;"
-                                    :title="getReconBalanceQty(row) < 0 ? '⚠️ OVER-CONSUMPTION ALERT! Net Issue se jyada material reconcile ho chuka hai' : 'Bacha hua balance'">
-                                    <span>{{ getReconBalanceQty(row) }}</span>
-                                </td>
+                                
                             </tr>
                             <tr v-if="reconRows.length === 0">
                                 <td :colspan="11 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
@@ -1587,9 +1508,7 @@
                                 <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.22); color: #93c5fd; font-size: 0.94rem;">
                                     {{ reconTotals.netIssue > 0 ? reconTotals.netIssue.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                 </td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(168, 85, 247, 0.18); color: #e9d5ff; font-size: 0.92rem;">
-                                    {{ reconTotals.prevRecon > 0 ? reconTotals.prevRecon.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
+                                
                                 <template v-if="!reverseEntry">
                                     <td v-for="col in pivotReconciliationData.columns" :key="col" class="text-center font-mono font-bold" style="color: #cbd5e1; font-size: 0.85rem;">
                                         {{ reconTotals.activities[col] > 0 ? reconTotals.activities[col].toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
@@ -1600,15 +1519,7 @@
                                         {{ reconTotals.reverseTotals && reconTotals.reverseTotals[rcol.key] > 0 ? reconTotals.reverseTotals[rcol.key].toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                     </td>
                                 </template>
-                                <td class="text-right font-mono font-bold" style="background: rgba(99, 102, 241, 0.18); color: #c7d2fe; font-size: 0.92rem;">
-                                    {{ reconTotals.thisBill > 0 ? reconTotals.thisBill.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(16, 185, 129, 0.22); color: #6ee7b7; font-size: 0.94rem;">
-                                    {{ reconTotals.cumulativeRecon > 0 ? reconTotals.cumulativeRecon.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(245, 158, 11, 0.20); color: #fde68a; font-size: 0.94rem;">
-                                    {{ reconTotals.balance ? reconTotals.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
+                                
                             </tr>
                         </tfoot>
                     </table>
@@ -2938,82 +2849,6 @@
             </div>
         </div>
 
-        <!-- MODAL: EDIT PURANA RECONCILIATION -->
-        <div v-if="showOldRecoModal" class="modal-backdrop" @click.self="closeOldRecoModal" style="z-index: 9999;">
-            <div class="modal-dialog" style="max-width: 840px; width: 92%; max-height: 90vh; display: flex; flex-direction: column; background: #161b22; border: 1px solid #30363d; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
-                <div class="modal-header" style="padding: 1rem 1.25rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.25rem;">✏️</span>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #f0f6fc;">
-                                Contractor Purana Reconciliation Manager
-                            </h3>
-                            <div style="font-size: 0.75rem; color: #8b949e; margin-top: 2px;">
-                                Active Contractor: <strong style="color: #58a6ff;">{{ selectedContractorName || 'Selected Contractor' }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" @click="closeOldRecoModal" style="background: none; border: none; font-size: 1.25rem; color: #8b949e; cursor: pointer;">✕</button>
-                </div>
-                
-                <div style="padding: 0.75rem 1.25rem; background: #0d1117; border-bottom: 1px solid #30363d; display: flex; gap: 10px; align-items: center;">
-                    <input type="text" v-model="oldRecoModalSearch" placeholder="🔍 Search by Item Code or Description..." 
-                        style="flex: 1; padding: 7px 12px; font-size: 0.82rem; background: #161b22; border: 1px solid #30363d; color: #f0f6fc; border-radius: 6px;">
-                    <span style="font-size: 0.75rem; color: #8b949e; white-space: nowrap;">
-                        Showing {{ filteredOldRecoModalItems.length }} items
-                    </span>
-                </div>
-
-                <div class="modal-body" style="padding: 0; overflow-y: auto; flex: 1; max-height: 58vh;">
-                    <table class="billing-table" style="margin: 0;">
-                        <thead>
-                            <tr style="position: sticky; top: 0; z-index: 2; background: #1f242c;">
-                                <th style="width: 40px;" class="text-center">#</th>
-                                <th style="width: 95px;" class="text-center">Item Code</th>
-                                <th>Item Description</th>
-                                <th style="width: 50px;" class="text-center">UOM</th>
-                                <th style="width: 85px;" class="text-right">Net Issue</th>
-                                <th style="width: 130px;" class="text-right">Purana Reco Qty</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(it, idx) in filteredOldRecoModalItems" :key="it.code">
-                                <td class="text-center" style="font-size: 0.75rem; color: #8b949e;">{{ idx + 1 }}</td>
-                                <td class="text-center font-mono font-bold" style="color: #58a6ff; font-size: 0.80rem;">{{ it.code }}</td>
-                                <td style="font-size: 0.80rem; color: #c9d1d9;">{{ it.desc }}</td>
-                                <td class="text-center font-mono" style="font-size: 0.75rem; color: #8b949e;">{{ it.uom }}</td>
-                                <td class="text-right font-mono" style="font-size: 0.82rem; color: #79c0ff;">{{ it.netIssue || 0 }}</td>
-                                <td class="text-right" style="padding: 4px 8px;">
-                                    <input type="number" step="any" min="0" class="qty-input font-mono" 
-                                        style="width: 110px; text-align: right; background: #0d1117; border: 1.5px solid #a855f7; color: #f0f6fc; font-weight: 700; padding: 4px 6px; border-radius: 4px;"
-                                        :value="getPrevReconQty(it.code)" 
-                                        @change="updatePrevReconQty(it.code, $event.target.value)"
-                                        placeholder="0">
-                                </td>
-                            </tr>
-                            <tr v-if="filteredOldRecoModalItems.length === 0">
-                                <td colspan="6" class="text-center" style="padding: 2rem; color: #8b949e;">
-                                    No items found.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="modal-footer" style="padding: 0.85rem 1.25rem; border-top: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; background: #161b22;">
-                    <div style="font-size: 0.75rem; color: #8b949e;">
-                        💡 Values entered here save instantly and update all cumulative totals in the Reconciliation Sheet.
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn btn-primary" @click="closeOldRecoModal" 
-                            style="padding: 6px 16px; font-size: 0.82rem; font-weight: 800; background: #238636; border-color: #2ea043; color: white;">
-                            Done / Save
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Toast Notifications -->
         <div class="toast-container">
             <div v-for="(toast, idx) in toasts" :key="idx" class="toast">
@@ -3031,7 +2866,6 @@
     <!-- Data Constants (loaded first) -->
     <script src="js/data/default-sap-materials.js?v=20261030_04"></script>
     <script src="js/data/contractor-sap-issues.js?v=20261030_04"></script>
-    <script src="js/data/contractor-old-reconciliation.js?v=20261030_08"></script>
     <script src="js/data/default-activities.js?v=20261030_04"></script>
     <script src="js/data/default-contractors.js?v=20261030_04"></script>
     <script src="js/data/default-master-abstract.js?v=20261030_04"></script>
@@ -3052,8 +2886,6 @@
     <script src="js/views.js?v=20261031_01"></script>
     <script src="js/export.js?v=20261031_01"></script>
     <script src="js/stock-importer.js?v=20261031_01"></script>
-    <script src="js/old-reco-importer.js?v=20261031_01"></script>
-
     <!-- Core Application (creates and mounts Vue app) -->
     <script src="js/core/app.js?v=20261031_01"></script>
 </body>
