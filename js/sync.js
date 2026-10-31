@@ -531,6 +531,8 @@ window.SyncModule = {
             this.invoiceData.subDivName = '';
             this.invoiceData.feederName = '';
             this.invoiceData.items = [];
+        this.invoiceData.feederName = '';
+        this.invoiceData.locationName = '';
             this.invoiceData.basicTotal = 0;
             this.invoiceData.gstTotal = 0;
             this.invoiceData.grandTotal = 0;
@@ -1333,6 +1335,9 @@ window.SyncModule = {
                 }
                 if (parsed.invoiceData && typeof parsed.invoiceData === 'object') {
                     this.invoiceData = parsed.invoiceData;
+                    if (this.invoiceData.feederName === '11 KV Yenapur, Gogaon') {
+                        this.invoiceData.feederName = '';
+                    }
                 }
                 // Contractor name suraksha - agar khali ya default CONTRACTOR hai toh active firm se bharo
                 if (this.invoiceData && (!this.invoiceData.contractorName || this.invoiceData.contractorName === 'CONTRACTOR' || this.invoiceData.contractorName === 'M/s CONTRACTOR')) {

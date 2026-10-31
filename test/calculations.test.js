@@ -753,6 +753,51 @@ it('Robust Old Reco Parser: Correctly extracts 2-row merged headers, title offse
     assert.strictEqual(rk.materials['17000008'].prevConsumption, 45, 'Item 17000008 consumption should be 45');
 });
 
+
+// 18. Dynamic Feeder Name Resolution (No dummy Yenapur/Gogaon)
+it('Feeder Name: Resolves dynamic feeder name, rejects dummy Yenapur/Gogaon, and falls back to activity locations', () => {
+    global.window = global;
+    eval(fs.readFileSync('js/export.js', 'utf8'));
+
+    // Case A: User explicitly set a feeder name
+    const appA = {
+        invoiceData: { feederName: '11 KV Dhanora' },
+        getActLocations: () => [{ name: 'Loc 1' }]
+    };
+    Object.assign(appA, window.ExportModule);
+    assert.strictEqual(appA.getEffectiveFeederName(), '11 KV Dhanora');
+    assert.strictEqual(appA.getEffectiveFeederName('907'), '11 KV Dhanora');
+
+    // Case B: Old dummy Yenapur/Gogaon present - should reject dummy and use activity locations
+    const appB = {
+        invoiceData: { feederName: '11 KV Yenapur, Gogaon' },
+        getActLocations: (actKey) => [{ name: 'Ra-09 Bodhali' }, { name: 'Ra-09 Nawegaon' }],
+        locations: [{ name: 'Ra-09 Bodhali' }, { name: 'Ra-09 Nawegaon' }]
+    };
+    Object.assign(appB, window.ExportModule);
+    const resolvedB = appB.getEffectiveFeederName('907');
+    assert.strictEqual(resolvedB, 'Ra-09 Bodhali, Ra-09 Nawegaon');
+    assert.strictEqual(resolvedB.includes('Yenapur'), false);
+
+    // Case C: Blank feeder name with specific activity locations
+    const appC = {
+        invoiceData: { feederName: '' },
+        getActLocations: (actKey) => [{ name: '11 KV Chamorshi' }],
+        locations: []
+    };
+    Object.assign(appC, window.ExportModule);
+    assert.strictEqual(appC.getEffectiveFeederName('916'), '11 KV Chamorshi');
+
+    // Case D: Completely blank state
+    const appD = {
+        invoiceData: { feederName: '' },
+        getActLocations: () => [{ name: 'Location 1' }],
+        locations: []
+    };
+    Object.assign(appD, window.ExportModule);
+    assert.strictEqual(appD.getEffectiveFeederName('907'), '');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

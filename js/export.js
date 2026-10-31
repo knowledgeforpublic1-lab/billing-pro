@@ -328,7 +328,7 @@ window.ExportModule = {
                         ['Work Order No :', woCellText, 'GSTIN :', this.invoiceData.contractorGstin],
                         ['Invoice Date :', formattedInvDate, 'PAN No :', this.invoiceData.contractorPan],
                         ['Name of Division :', this.invoiceData.divisionName, 'Location :', this.invoiceData.locationName],
-                        ['Name of Sub-Div :', this.invoiceData.subDivName, 'Name of Feeder :', this.invoiceData.feederName]
+                        ['Name of Sub-Div :', this.invoiceData.subDivName, 'Name of Feeder :', (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName() : (this.invoiceData.feederName || ''))]
                     ];
 
                     let curRow = 7;
@@ -747,6 +747,40 @@ window.ExportModule = {
                     }
 
                     return cName || 'Contractor';
+                },
+                
+                getEffectiveFeederName(actKey) {
+                    // 1. Explicit user input from Invoice or Activity bar (ignoring old dummy default)
+                    let f = (this.invoiceData && this.invoiceData.feederName && this.invoiceData.feederName.trim()) || '';
+                    if (f && f.toLowerCase() !== '11 kv yenapur, gogaon') {
+                        return f;
+                    }
+
+                    // 2. Specific activity location names (if customized beyond Location 1, Location 2)
+                    if (actKey) {
+                        const actLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(actKey) : [];
+                        const customNames = actLocs
+                            .map(l => (l && l.name ? l.name.trim() : ''))
+                            .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
+                        if (customNames.length > 0) {
+                            return customNames.join(', ');
+                        }
+                    }
+
+                    // 3. All configured project locations
+                    const allLocs = (this.locations || [])
+                        .map(l => (l && l.name ? l.name.trim() : ''))
+                        .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
+                    if (allLocs.length > 0) {
+                        return allLocs.join(', ');
+                    }
+
+                    // 4. Fallback to locationName
+                    if (this.invoiceData && this.invoiceData.locationName && this.invoiceData.locationName.trim()) {
+                        return this.invoiceData.locationName.trim();
+                    }
+
+                    return '';
                 },
                 getRaCleanFileName() {
                     let ra = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '').trim();
@@ -1428,7 +1462,7 @@ function jsonOut(obj) {
                     const metaStartRow = 2;
                     const metaRows = [
                         { label: 'Name of Contractor :-', value: this.getContractorDisplayName() },
-                        { label: 'Name of Feeder:', value: this.invoiceData.feederName || '' },
+                        { label: 'Name of Feeder:', value: (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName(actKey) : (this.invoiceData.feederName || '')) },
                         { label: 'RA BILL NO.-', value: this.invoiceData.invoiceNo || '' }
                     ];
 

@@ -436,7 +436,7 @@ window.BillingModule = {
             workOrderDate: this.invoiceData.workOrderDate || '29.08.25',
             divisionName: this.invoiceData.divisionName || 'ALLAPALLI',
             subDivName: this.invoiceData.subDivName || 'Chamorshi',
-            feederName: this.invoiceData.feederName || '11 KV Yenapur, Gogaon'
+            feederName: this.invoiceData.feederName || ''
         };
         this.editingContractorId = null;
         this.contractorModalMode = 'form';
@@ -521,7 +521,7 @@ window.BillingModule = {
         if (firm.workOrderDate) this.invoiceData.workOrderDate = firm.workOrderDate;
         if (firm.divisionName) this.invoiceData.divisionName = firm.divisionName;
         if (firm.subDivName) this.invoiceData.subDivName = firm.subDivName;
-        if (firm.feederName) this.invoiceData.feederName = firm.feederName;
+        if (firm.feederName) { this.invoiceData.feederName = firm.feederName; } else if (this.invoiceData.feederName === '11 KV Yenapur, Gogaon') { this.invoiceData.feederName = ''; }
 
         this.projectMeta.contractorName = firmName;
         if (firm.workOrderNo) this.projectMeta.workOrderNo = String(firm.workOrderNo);

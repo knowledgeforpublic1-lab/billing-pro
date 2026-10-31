@@ -19,7 +19,7 @@ const defaultInvoiceData = {
     divisionName: '',
     subDivName: '',
     locationName: '',
-    feederName: '11 KV Yenapur, Gogaon',
+    feederName: '',
     bankAccountName: 'M/s Ranjeet Singh',
     bankAccountNo: '746520110000351',
     bankIfsc: 'BKID0007465',
