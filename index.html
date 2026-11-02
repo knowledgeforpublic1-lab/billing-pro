@@ -1443,28 +1443,11 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="font-size: 0.73rem; color: #a5b4fc; font-weight: 600;">
-                                    💡 Cell me Formula likhein: <code>=100+50</code> ya <code>=[ISSUE]-[MRN]</code>
+                                    💡 Tip: Direct numbers likhein ya simple math jaise <code>=100+50</code>
                                 </span>
                                 <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.70rem; font-weight: 700; border-color: var(--accent-indigo); color: var(--accent-indigo);" @click="showToast('Click a Qty cell first, then Ctrl+V to paste from Excel', '📋')" title="How to paste from Excel">
                                     📋 Paste
                                 </button>
-                            </div>
-                        </div>
-
-                        <!-- 🧮 Interactive Excel Formula Bar (fx:) when cell is selected -->
-                        <div v-if="activeRecoCell" class="reco-fx-bar no-print" style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: linear-gradient(90deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border-bottom: 1px solid rgba(168, 85, 247, 0.35);">
-                            <span style="font-weight: 900; color: #c084fc; font-size: 0.88rem; font-style: italic; letter-spacing: -0.5px;">fx</span>
-                            <span style="font-size: 0.72rem; font-weight: 800; color: #e2e8f0; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
-                                {{ activeRecoCell.code }} ({{ activeRecoCell.colName }})
-                            </span>
-                            <input type="text" v-model="activeRecoCellFormula" @change="applyActiveCellFormula" @keydown.enter="$event.target.blur()" placeholder="Formula likhein, e.g. =[ISSUE]-[MRN] ya =100+50" 
-                                style="flex: 1; height: 26px; padding: 0 8px; border-radius: 4px; border: 1px solid rgba(168, 85, 247, 0.6); background: rgba(15, 23, 42, 0.9); color: #38bdf8; font-family: monospace; font-size: 0.80rem; font-weight: 700;">
-                            <div style="display: flex; gap: 4px; align-items: center;">
-                                <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;">Link:</span>
-                                <button type="button" @click="insertFormulaToken('[ISSUE]')" title="Insert Gross Issue" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 3px; font-size: 0.66rem; font-weight: 800; padding: 2px 5px; cursor: pointer;">+ ISSUE</button>
-                                <button type="button" @click="insertFormulaToken('[MRN]')" title="Insert MRN Return" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 3px; font-size: 0.66rem; font-weight: 800; padding: 2px 5px; cursor: pointer;">- MRN</button>
-                                <button type="button" @click="insertFormulaToken('[NET ISSUE]')" title="Insert Net Issue" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 3px; font-size: 0.66rem; font-weight: 800; padding: 2px 5px; cursor: pointer;">+ NET</button>
-                                <button type="button" @click="activeRecoCell = null" title="Close fx bar" style="background: transparent; color: #94a3b8; border: none; font-size: 0.80rem; cursor: pointer; padding: 0 4px;">✕</button>
                             </div>
                         </div>
                         <table class="billing-table">
@@ -1591,22 +1574,10 @@
                                 <template v-if="visibleOldRecoColumns && visibleOldRecoColumns.length > 0">
                                     <td v-for="col in visibleOldRecoColumns" :key="col.name" class="text-right font-mono" 
                                         :style="{ background: col.isCalc ? 'rgba(168, 85, 247, 0.12)' : 'rgba(147, 51, 234, 0.05)', padding: '2px 4px' }" 
-                                        :title="getRecoCellTitle(row, col)">
-                                        <input type="text" class="qty-input font-mono"
-                                            :style="{
-                                                width: '78px',
-                                                textAlign: 'right',
-                                                background: hasRecoCellFormula(row.code, col.name) ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-                                                border: hasRecoCellFormula(row.code, col.name) ? '1.5px solid #38bdf8' : '1px dashed rgba(168, 85, 247, 0.4)',
-                                                color: hasRecoCellFormula(row.code, col.name) ? '#38bdf8' : '#e9d5ff',
-                                                fontWeight: '700',
-                                                padding: '2px 4px',
-                                                borderRadius: '4px'
-                                            }"
-                                            :value="getRecoCellDisplayVal(row, col.name)" 
+                                        :title="col.name">
+                                        <input type="text" class="qty-input font-mono reco-input-cell"
+                                            :value="(row._colVals && row._colVals[col.name]) || ''" 
                                             placeholder="0" 
-                                            @focus="onRecoCellFocus(row, col.name, $event)"
-                                            @blur="onRecoCellBlur(row, col.name, $event)"
                                             @change="updateRecoColVal(row.code, col.name, $event.target.value, row)" 
                                             @keydown.enter="$event.target.blur()"
                                             :disabled="isFinalized">
@@ -3252,20 +3223,20 @@
     <script src="js/core/storage.js?v=20261030_04"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261102_12"></script>
-    <script src="js/history.js?v=20261102_12"></script>
+    <script src="js/utils.js?v=20261102_13"></script>
+    <script src="js/history.js?v=20261102_13"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261102_12"></script>
-    <script src="js/billing.js?v=20261102_12"></script>
-    <script src="js/mapping.js?v=20261102_12"></script>
-    <script src="js/views.js?v=20261102_12"></script>
-    <script src="js/export.js?v=20261102_12"></script>
-    <script src="js/stock-importer.js?v=20261102_12"></script>
-    <script src="js/old-reco-importer.js?v=20261102_12"></script>
+    <script src="js/sync.js?v=20261102_13"></script>
+    <script src="js/billing.js?v=20261102_13"></script>
+    <script src="js/mapping.js?v=20261102_13"></script>
+    <script src="js/views.js?v=20261102_13"></script>
+    <script src="js/export.js?v=20261102_13"></script>
+    <script src="js/stock-importer.js?v=20261102_13"></script>
+    <script src="js/old-reco-importer.js?v=20261102_13"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261102_12"></script>
+    <script src="js/core/app.js?v=20261102_13"></script>
 </body>
 
 </html>

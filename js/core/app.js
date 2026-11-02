@@ -979,7 +979,11 @@
                     );
                 }
 
-                // Precompute _cum, _bal, and _isUnmapped once for fast 0-lag rendering
+                // ⚡ Precompute _cum, _bal, _isUnmapped & _colVals once for 60fps instant UI
+                const oldRecoCols = (typeof this.getVisibleOldRecoColumns === 'function') 
+                    ? this.getVisibleOldRecoColumns() 
+                    : (Array.isArray(this.visibleOldRecoColumns) ? this.visibleOldRecoColumns : []);
+
                 for (let i = 0; i < filtered.length; i++) {
                     const r = filtered[i];
                     const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
@@ -988,6 +992,14 @@
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
                     r._bal = Math.round((net - r._cum) * 1000) / 1000;
                     r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
+
+                    // Precompute column values so table renders in < 1ms with 0 lag
+                    r._colVals = {};
+                    for (let j = 0; j < oldRecoCols.length; j++) {
+                        const cName = oldRecoCols[j].name;
+                        const v = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, cName, r) : 0;
+                        r._colVals[cName] = (v !== 0 && v !== undefined && v !== null) ? v : '';
+                    }
                 }
 
                 return filtered;
