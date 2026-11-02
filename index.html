@@ -1316,10 +1316,19 @@
                         <button type="button" 
                             @click="$refs.oldRecoFileInput.click()" 
                             :disabled="oldRecoUploading" 
-                            title="Koi bhi Purana Reconciliation Excel (.xlsx) upload karein — Columns ko rakhne ya delete karne ka option milega"
+                            title="Koi bhi Purana Reconciliation Excel (.xlsx) upload karein — Purana issue naye issue se update hoga aur saare columns load honge"
                             style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border: 1.5px solid #a78bfa; color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3); transition: all 0.2s;">
                             <span style="font-size: 0.95rem;">{{ oldRecoUploading ? '⏳' : '📤' }}</span>
                             <span>{{ oldRecoUploading ? 'Uploading...' : 'Upload Purana Reco (.xlsx)' }}</span>
+                        </button>
+
+                        <!-- ➕ ADD COLUMN BUTTON -->
+                        <button type="button" 
+                            @click="addNewRecoColumn()" 
+                            title="Naya Purana Reco Column Add Karein (naam prompt me likhein)"
+                            style="padding: 7px 11px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: rgba(34, 197, 94, 0.18); border: 1.5px solid #4ade80; color: #86efac; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                            <span>➕</span>
+                            <span>Add Column</span>
                         </button>
 
                         <!-- ⚙️ RECO COLUMNS MANAGER BUTTON -->
@@ -1444,7 +1453,7 @@
                         <table class="billing-table">
                         <thead>
                             <tr>
-                                <th :colspan="10 + (visibleOldRecoColumns.length || 1) + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
+                                <th :colspan="10 + (visibleOldRecoColumns.length ? (visibleOldRecoColumns.length + 1) : 1) + reconColCount" style="background: #1a1a2e; color: #ffffff; text-align: center; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px; padding: 10px 14px; border: none; text-transform: uppercase;">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
                                 </th>
                             </tr>
@@ -1467,15 +1476,25 @@
                                 </th>
                                 <template v-if="visibleOldRecoColumns && visibleOldRecoColumns.length > 0">
                                     <th v-for="col in visibleOldRecoColumns" :key="col.name" class="text-right" 
-                                        :style="{ width: '85px', minWidth: '80px', background: col.isCalc ? 'rgba(168, 85, 247, 0.18)' : 'rgba(147, 51, 234, 0.08)' }" 
+                                        :style="{ minWidth: '95px', background: col.isCalc ? 'rgba(168, 85, 247, 0.22)' : 'rgba(147, 51, 234, 0.10)', padding: '4px 6px' }" 
                                         :title="col.isCalc ? 'Calculation Column (Purana Reco): ' + col.name : 'Historical Column: ' + col.name">
-                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
-                                            <span v-if="col.isCalc" title="Primary Calculation Column" style="font-size: 0.68rem;">🧮</span>
-                                            <span style="font-size: 0.74rem; text-transform: uppercase;">{{ col.name }}</span>
+                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+                                            <button type="button" @click.stop="deleteRecoColumn(col.name)" title="Is column ko sheet se delete karein" style="background: rgba(239, 68, 68, 0.3); border: 1px solid rgba(239, 68, 68, 0.55); color: #fca5a5; border-radius: 3px; font-size: 0.65rem; line-height: 1; padding: 2px 4px; cursor: pointer; font-weight: 800;">✕</button>
+                                            <span style="font-size: 0.74rem; text-transform: uppercase; font-weight: 800; color: #f3e8ff;">{{ col.name }}</span>
+                                            <span v-if="col.isCalc" title="Calculation Column (Total Recon me add hota hai)" style="font-size: 0.68rem;">🧮</span>
                                         </div>
-                                        <div style="font-size: 0.58rem; color: #c084fc; font-weight: 700; text-transform: uppercase;">
-                                            {{ col.isCalc ? 'Prev Recon ✏️' : 'Old Reco' }}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                                            <span style="font-size: 0.58rem; color: #d8b4fe; font-weight: 700; text-transform: uppercase;">
+                                                {{ col.isCalc ? 'Prev Recon ✏️' : 'Old Reco' }}
+                                            </span>
+                                            <a v-if="!col.isCalc" href="javascript:void(0)" @click.stop="setCalcColumn(col.name)" title="Is column ko Purana Reco calculation column banayein" style="font-size: 0.58rem; color: #a5b4fc; text-decoration: underline; font-weight: 700;">Set Calc</a>
                                         </div>
+                                    </th>
+                                    <!-- ➕ Col Button in Table Header -->
+                                    <th class="text-center" style="width: 44px; min-width: 44px; background: rgba(168, 85, 247, 0.08); vertical-align: middle; padding: 2px;">
+                                        <button type="button" @click="addNewRecoColumn()" title="Naya Column Add Karein" style="background: #7c3aed; border: 1.5px solid #a78bfa; color: white; border-radius: 4px; padding: 3px 6px; font-size: 0.70rem; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;">
+                                            <span>➕</span> Col
+                                        </button>
                                     </th>
                                 </template>
                                 <template v-else>
@@ -1565,6 +1584,8 @@
                                             :disabled="isFinalized"
                                             :title="col.name + ' quantity likhein'">
                                     </td>
+                                    <!-- Empty cell matching ➕ Col header -->
+                                    <td class="text-center" style="background: rgba(168, 85, 247, 0.03); opacity: 0.25; font-size: 0.65rem;">-</td>
                                 </template>
                                 <template v-else>
                                     <!-- Col 8: PURANA RECO (Editable inline input) -->
@@ -1608,7 +1629,7 @@
                                 </td>
                             </tr>
                             <tr v-if="reconRows.length === 0">
-                                <td :colspan="11 + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                                <td :colspan="10 + (visibleOldRecoColumns.length ? (visibleOldRecoColumns.length + 1) : 1) + reconColCount" class="text-center" style="padding: 2rem; color: var(--text-muted);">
                                     <span v-if="!reverseEntry">No SAP Materials mapped with quantities yet.</span>
                                     <span v-else-if="!reverseShownCodes.length">No materials mapped in invoice activities — add items from the dropdown above.</span>
                                     <span v-else>No entries yet — enter qty in the cells above (zero rows are hidden).</span>
@@ -1634,6 +1655,8 @@
                                         :style="{ background: col.isCalc ? 'rgba(168, 85, 247, 0.22)' : 'rgba(147, 51, 234, 0.12)', color: '#e9d5ff', fontSize: '0.90rem' }">
                                         {{ getRecoColTotal(col.name) > 0 ? getRecoColTotal(col.name).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                     </td>
+                                    <!-- Empty cell matching ➕ Col footer -->
+                                    <td class="text-center" style="background: rgba(168, 85, 247, 0.05); opacity: 0.25; font-size: 0.70rem;">-</td>
                                 </template>
                                 <template v-else>
                                     <td class="text-right font-mono font-bold" style="background: rgba(168, 85, 247, 0.18); color: #e9d5ff; font-size: 0.92rem;">
@@ -3191,20 +3214,20 @@
     <script src="js/core/storage.js?v=20261030_04"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261102_01"></script>
-    <script src="js/history.js?v=20261102_01"></script>
+    <script src="js/utils.js?v=20261102_02"></script>
+    <script src="js/history.js?v=20261102_02"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261102_01"></script>
-    <script src="js/billing.js?v=20261102_01"></script>
-    <script src="js/mapping.js?v=20261102_01"></script>
-    <script src="js/views.js?v=20261102_01"></script>
-    <script src="js/export.js?v=20261102_01"></script>
-    <script src="js/stock-importer.js?v=20261102_01"></script>
-    <script src="js/old-reco-importer.js?v=20261102_01"></script>
+    <script src="js/sync.js?v=20261102_02"></script>
+    <script src="js/billing.js?v=20261102_02"></script>
+    <script src="js/mapping.js?v=20261102_02"></script>
+    <script src="js/views.js?v=20261102_02"></script>
+    <script src="js/export.js?v=20261102_02"></script>
+    <script src="js/stock-importer.js?v=20261102_02"></script>
+    <script src="js/old-reco-importer.js?v=20261102_02"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261102_01"></script>
+    <script src="js/core/app.js?v=20261102_02"></script>
 </body>
 
 </html>

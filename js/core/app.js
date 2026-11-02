@@ -438,11 +438,11 @@
                             activities: {}
                         };
                     } else {
-                        // If sapMap has 0 net issue (e.g. not in active SAP dump), populate baseline net issue from purana reco
-                        if ((!sapMap[matCode].sapNetIssue || sapMap[matCode].sapNetIssue === 0) && oNet > 0) {
-                            sapMap[matCode].sapNetIssue = oNet;
+                        // 🔥 Naye uploaded reco ka issue purane issue se update kar do
+                        if (this.hasCustomOldReco || oNet > 0 || oGross > 0 || oMrn > 0) {
                             sapMap[matCode].sapGrossIssue = oGross;
                             sapMap[matCode].sapMrnReturn = oMrn;
+                            sapMap[matCode].sapNetIssue = oNet;
                             sapMap[matCode].sapIssuedQty = oNet;
                         }
                     }
@@ -615,20 +615,20 @@
             },
 
             visibleOldRecoColumns() {
-                if (typeof this.getContractorOldReco !== 'function') return [];
+                if (typeof this.getContractorOldReco !== 'function') return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
                 const reco = this.getContractorOldReco();
-                if (!reco || !Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
-                    return [];
+                if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+                    return reco.columnsConfig.filter(c => c && c.visible !== false);
                 }
-                return reco.columnsConfig.filter(c => c && c.visible !== false);
+                return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             allOldRecoColumns() {
-                if (typeof this.getContractorOldReco !== 'function') return [];
+                if (typeof this.getContractorOldReco !== 'function') return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
                 const reco = this.getContractorOldReco();
-                if (!reco || !Array.isArray(reco.columnsConfig)) {
-                    return [];
+                if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+                    return reco.columnsConfig;
                 }
-                return reco.columnsConfig;
+                return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             currentContractorOldReco() {
                 return (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;

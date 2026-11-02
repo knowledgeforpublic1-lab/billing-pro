@@ -344,8 +344,10 @@ window.OldRecoImporterModule = {
                 code: matCode,
                 desc: descStr || matCode,
                 uom: colMap.uom !== -1 ? String(row[colMap.uom] || 'No') : 'No',
-                prevConsumption: Math.round(cons * 1000) / 1000,
+                grossIssue: Math.round(issuedQty * 1000) / 1000,
+                mrnReturn: Math.round(mrnQty * 1000) / 1000,
                 netIssue: Math.round(netIssue * 1000) / 1000,
+                prevConsumption: Math.round(cons * 1000) / 1000,
                 balanceQty: Math.round(bal * 1000) / 1000,
                 customColumns: customColumnValues
             };
@@ -695,18 +697,42 @@ window.OldRecoImporterModule = {
     // ─── DYNAMIC RECO COLUMNS API ──────────────────────────────────────
     visibleOldRecoColumns() {
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-        if (!reco || !Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
-            return [];
+        if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+            return reco.columnsConfig.filter(c => c && c.visible !== false);
         }
-        return reco.columnsConfig.filter(c => c && c.visible !== false);
+        return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
     },
 
     allOldRecoColumns() {
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-        if (!reco || !Array.isArray(reco.columnsConfig)) {
-            return [];
+        if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+            return reco.columnsConfig;
         }
-        return reco.columnsConfig;
+        return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
+    },
+
+    ensureContractorColumnsConfig() {
+        let reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
+        if (!cKey) return null;
+
+        const db = window.ContractorOldReco || window.DefaultContractorOldReco;
+        if (!db) return null;
+        if (!db.byContractorNorm) db.byContractorNorm = {};
+        if (!db.byContractorNorm[cKey]) {
+            db.byContractorNorm[cKey] = {
+                contractorName: this.selectedContractorName || 'Selected Contractor',
+                materials: {},
+                columnsConfig: [{ name: 'PURANA RECO', visible: true, isCalc: true }],
+                customColumns: ['PURANA RECO']
+            };
+        }
+        reco = db.byContractorNorm[cKey];
+        if (!Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
+            reco.columnsConfig = [{ name: 'PURANA RECO', visible: true, isCalc: true }];
+            reco.customColumns = ['PURANA RECO'];
+        }
+        return reco;
     },
 
     openRecoColumnModal() {
@@ -729,9 +755,14 @@ window.OldRecoImporterModule = {
     },
 
     deleteRecoColumn(colName) {
-        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!colName) return;
+        const reco = this.ensureContractorColumnsConfig();
         if (!reco) return;
-        if (typeof confirm === 'function' && !confirm(`Are you sure you want to delete column "${colName}"?`)) return;
+
+        if (typeof confirm === 'function') {
+            const ok = confirm(`Kya aap sach me column "${colName}" ko sheet se delete karna chahte hain?`);
+            if (!ok) return;
+        }
 
         if (Array.isArray(reco.columnsConfig)) {
             const idx = reco.columnsConfig.findIndex(c => c.name === colName);
@@ -739,7 +770,8 @@ window.OldRecoImporterModule = {
                 const wasCalc = reco.columnsConfig[idx].isCalc;
                 reco.columnsConfig.splice(idx, 1);
                 if (wasCalc && reco.columnsConfig.length > 0) {
-                    reco.columnsConfig[0].isCalc = true;
+                    const nextVis = reco.columnsConfig.find(c => c.visible !== false) || reco.columnsConfig[0];
+                    if (nextVis) nextVis.isCalc = true;
                 }
             }
         }
@@ -763,15 +795,16 @@ window.OldRecoImporterModule = {
                 }
             });
         }
+        this.hasCustomOldReco = true;
         this.persistRecoColumnsConfig();
         this.$forceUpdate();
         if (typeof this.showToast === 'function') {
-            this.showToast(`Column "${colName}" deleted`, 'Check');
+            this.showToast(`Column "${colName}" delete ho gaya`, 'Check');
         }
     },
 
     setCalcColumn(colName) {
-        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        const reco = this.ensureContractorColumnsConfig();
         if (!reco || !Array.isArray(reco.columnsConfig)) return;
         reco.columnsConfig.forEach(c => {
             c.isCalc = (c.name === colName);
@@ -783,38 +816,51 @@ window.OldRecoImporterModule = {
                 }
             });
         }
+        this.hasCustomOldReco = true;
         this.persistRecoColumnsConfig();
         this.$forceUpdate();
         if (typeof this.showToast === 'function') {
-            this.showToast(`Set "${colName}" as calculation column`, 'Check');
+            this.showToast(`"${colName}" calculation column ban gaya`, 'Check');
         }
     },
 
     addNewRecoColumn(colName) {
-        const name = String(colName || this.newRecoColumnInput || '').trim();
+        let name = colName;
+        if (!name && this.newRecoColumnInput) {
+            name = this.newRecoColumnInput;
+        }
+        if (!name && typeof prompt === 'function') {
+            name = prompt('Naye Column ka naam likhein (e.g. BILL 2 RECO, STORE QTY, SCRAP):');
+        }
+        name = String(name || '').trim();
         if (!name) return;
-        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+
+        const reco = this.ensureContractorColumnsConfig();
         if (!reco) {
-            if (typeof this.showToast === 'function') this.showToast('Please select a contractor first', 'Alert');
+            if (typeof this.showToast === 'function') this.showToast('Kripya pehle ek contractor select karein', 'Alert');
             return;
         }
         if (!Array.isArray(reco.columnsConfig)) reco.columnsConfig = [];
         if (!Array.isArray(reco.customColumns)) reco.customColumns = [];
 
         if (reco.columnsConfig.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-            if (typeof this.showToast === 'function') this.showToast('Column already exists!', 'Alert');
+            if (typeof this.showToast === 'function') this.showToast(`Column "${name}" pehle se maujood hai!`, 'Alert');
             return;
         }
-        reco.columnsConfig.push({ name: name, visible: true, isCalc: reco.columnsConfig.length === 0 });
+        reco.columnsConfig.push({ name: name, visible: true, isCalc: false });
         reco.customColumns.push(name);
         this.newRecoColumnInput = '';
+        this.hasCustomOldReco = true;
         this.persistRecoColumnsConfig();
         this.$forceUpdate();
-        if (typeof this.showToast === 'function') this.showToast(`Column "${name}" added!`, 'Check');
+        if (typeof this.showToast === 'function') this.showToast(`Column "${name}" add ho gaya!`, 'Check');
     },
 
     getRecoColVal(code, colName) {
         if (!code || !colName) return 0;
+        if (colName === 'PURANA RECO') {
+            return this.getPrevReconQty(code);
+        }
         const cKey = this.getContractorNormKey();
         const editKey = code + '__' + colName;
         if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey] && this.customOldRecoEdits[cKey][editKey] !== undefined) {
@@ -838,6 +884,9 @@ window.OldRecoImporterModule = {
 
     updateRecoColVal(code, colName, rawVal) {
         if (!code || !colName) return;
+        if (colName === 'PURANA RECO') {
+            return this.updatePrevReconQty(code, rawVal);
+        }
         const cKey = this.getContractorNormKey();
         if (!cKey) return;
         const num = parseFloat(String(rawVal).replace(/,/g, '').trim());

@@ -944,6 +944,75 @@ it('Dynamic Purana Reco: Multi-column Excel upload, column keep/delete, and calc
     assert.strictEqual(mockApp.allOldRecoColumns().some(c => c.name === 'STORE QTY'), true, 'STORE QTY column should be added');
 });
 
+// 21. Dynamic Old Reco Issue Sync: Replaces old SAP issue with newly uploaded reco issue
+it('Dynamic Old Reco: Updates contractor gross/net issue from newly uploaded reco Excel', async () => {
+    global.window = global;
+    const XLSX = require('xlsx');
+    global.XLSX = XLSX;
+    eval(fs.readFileSync('js/old-reco-importer.js', 'utf8'));
+
+    // Create an Excel file where contractor has newly revised issue numbers
+    const testWb = XLSX.utils.book_new();
+    const sheetData = [
+        ['SR NO', 'ITEM CODE', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'PURANA RECO', 'STORE QTY'],
+        [1, '17000004', 'RSJ POLE 9 MTR', 'NO', 550, 50, 500, 320, 20],
+        [2, '17000005', 'RSJ POLE 11 MTR', 'NO', 250, 10, 240, 200, 10]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(testWb, ws, 'Ravindra Kapgate');
+    const arrayBuffer = XLSX.write(testWb, { type: 'array', bookType: 'xlsx' });
+
+    const res = await window.OldRecoImporterModule.parseOldRecoExcelAsync(arrayBuffer, 'Ravindra Kapgate');
+    const rkNorm = window.OldRecoImporterModule.normContractorName('Ravindra Kapgate');
+    const rec = res.updatedDb.byContractorNorm[rkNorm];
+    assert.ok(rec, 'Ravindra Kapgate record must exist in parsed data');
+
+    // Verify newly extracted grossIssue, mrnReturn, and netIssue
+    const pole = rec.materials['17000004'];
+    assert.strictEqual(pole.grossIssue, 550, 'Gross issue should be 550');
+    assert.strictEqual(pole.mrnReturn, 50, 'MRN should be 50');
+    assert.strictEqual(pole.netIssue, 500, 'Net issue should be 500');
+    assert.strictEqual(pole.prevConsumption, 320, 'Purana reco should be 320');
+
+    // Simulate pivotReconciliationData logic: when custom reco is active, sapMap must update with new issue
+    const sapMap = {
+        '17000004': {
+            code: '17000004',
+            desc: 'RSJ POLE 9 MTR',
+            uom: 'NO',
+            sapGrossIssue: 282, // Old baseline issue
+            sapMrnReturn: 0,
+            sapNetIssue: 282,
+            activities: {}
+        }
+    };
+
+    // Apply app.js update logic
+    const hasCustomOldReco = true;
+    Object.keys(rec.materials).forEach(code => {
+        const oItem = rec.materials[code];
+        const oNet = Number(oItem.netIssue !== undefined ? oItem.netIssue : (oItem.issuedQty || 0));
+        const oGross = Number(oItem.grossIssue !== undefined ? oItem.grossIssue : oNet);
+        const oMrn = Number(oItem.mrnReturn !== undefined ? oItem.mrnReturn : 0);
+
+        if (!sapMap[code]) {
+            sapMap[code] = { code, desc: oItem.desc, uom: oItem.uom, sapGrossIssue: oGross, sapMrnReturn: oMrn, sapNetIssue: oNet };
+        } else {
+            if (hasCustomOldReco || oNet > 0 || oGross > 0 || oMrn > 0) {
+                sapMap[code].sapGrossIssue = oGross;
+                sapMap[code].sapMrnReturn = oMrn;
+                sapMap[code].sapNetIssue = oNet;
+            }
+        }
+    });
+
+    assert.strictEqual(sapMap['17000004'].sapGrossIssue, 550, 'Old issue 282 should be updated to new issue 550');
+    assert.strictEqual(sapMap['17000004'].sapMrnReturn, 50, 'MRN should be updated to 50');
+    assert.strictEqual(sapMap['17000004'].sapNetIssue, 500, 'Net issue should be updated to 500');
+    assert.ok(sapMap['17000005'], 'Newly added item 17000005 should be injected into sapMap');
+    assert.strictEqual(sapMap['17000005'].sapNetIssue, 240);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
