@@ -796,6 +796,41 @@
 
                 return unmapped.sort((a, b) => Math.abs(b.netIssue) - Math.abs(a.netIssue));
             },
+
+            unmappedContractorIssuedRowsSet() {
+                const items = this.unmappedContractorIssuedItems || [];
+                const set = new Set();
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i] && items[i].code) set.add(items[i].code);
+                }
+                return set;
+            },
+
+            reconColumnsTotals() {
+                const _rev = this.recoRevision;
+                const totals = {};
+                const cols = (typeof this.getVisibleOldRecoColumns === 'function') 
+                    ? this.getVisibleOldRecoColumns() 
+                    : (Array.isArray(this.visibleOldRecoColumns) ? this.visibleOldRecoColumns : []);
+                for (let j = 0; j < cols.length; j++) {
+                    totals[cols[j].name] = 0;
+                }
+
+                const rows = this.reconRows || [];
+                for (let i = 0; i < rows.length; i++) {
+                    const r = rows[i];
+                    for (let j = 0; j < cols.length; j++) {
+                        const cName = cols[j].name;
+                        totals[cName] += (typeof this.getRecoColVal === 'function' ? (this.getRecoColVal(r.code, cName, r) || 0) : 0);
+                    }
+                }
+
+                const keys = Object.keys(totals);
+                for (let j = 0; j < keys.length; j++) {
+                    totals[keys[j]] = Math.round(totals[keys[j]] * 1000) / 1000;
+                }
+                return totals;
+            },
             
             reconTotals() {
                 const rows = this.reconRows || [];
