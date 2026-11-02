@@ -28,6 +28,22 @@ window.StockImporterModule = {
             .trim();
     },
 
+    normStem(s) {
+        if (!s) return '';
+        return String(s)
+            .toLowerCase()
+            .replace(/^m\/s\.?\s*/i, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/aa+/g, 'a')
+            .replace(/ee+/g, 'e')
+            .replace(/oo+/g, 'o')
+            .replace(/ii+/g, 'i')
+            .replace(/gate\b/g, 'gade')
+            .replace(/s\b/g, '')
+            .replace(/[^a-z0-9]/g, '')
+            .trim();
+    },
+
     /**
      * Parses an uploaded Excel ArrayBuffer into the standard ContractorSapStock object.
      * @param {ArrayBuffer} arrayBuffer
@@ -210,16 +226,71 @@ window.StockImporterModule = {
         let headerRowIdx = 0;
         let cNameCol = -1, woCol = -1, matCol = -1, descCol = -1, uomCol = -1, grossCol = -1, mrnCol = -1, netCol = -1;
 
-        for (let r = 0; r < Math.min(rows.length, 5); r++) {
+        for (let r = 0; r < Math.min(rows.length, 10); r++) {
             const h = (rows[r] || []).map(cell => String(cell || '').toLowerCase().trim());
-            cNameCol = h.findIndex(c => c.includes('contractor') || c.includes('vendor') || c.includes('party'));
-            woCol = h.findIndex(c => c.includes('work order') || c.includes('wo') || c.includes('order no') || c.includes('doc header'));
-            matCol = h.findIndex(c => c.includes('material') || c.includes('sap code') || c.includes('item code') || c.includes('row label'));
-            descCol = h.findIndex(c => c.includes('description') || c.includes('item name') || c.includes('particular'));
+            cNameCol = h.findIndex(c => c.includes('contractor') || c.includes('vendor') || c.includes('party') || c.includes('firm'));
+            woCol = h.findIndex(c => c.includes('work order') || c.includes('wo') || c.includes('order no') || c.includes('doc header') || c.includes('header text'));
+            matCol = h.findIndex(c => 
+                c.includes('material') || 
+                c.includes('sap code') || 
+                c.includes('item code') || 
+                c.includes('mat code') || 
+                c.includes('row label') || 
+                c.includes('item no') || 
+                c.includes('mat no') || 
+                c === 'code' || 
+                c === 'item' || 
+                c === 'material'
+            );
+            descCol = h.findIndex(c => c.includes('description') || c.includes('item name') || c.includes('particular') || c.includes('details'));
             uomCol = h.findIndex(c => c.includes('unit') || c.includes('uom'));
-            grossCol = h.findIndex(c => (c.includes('gross') && c.includes('issue')) || c === 'issue' || c === 'gross');
-            mrnCol = h.findIndex(c => c.includes('mrn') || c.includes('return'));
-            netCol = h.findIndex(c => c.includes('net issue') || c === 'net' || c.includes('total issue'));
+            
+            // Net Issue column
+            netCol = h.findIndex(c => 
+                c.includes('net issue') || 
+                c.includes('net qty') || 
+                c.includes('net quantity') || 
+                c.includes('total net') || 
+                c.includes('balance issue') ||
+                c === 'net' ||
+                c === 'net issue'
+            );
+
+            // Gross Issue column
+            grossCol = h.findIndex(c => 
+                (c.includes('gross') && (c.includes('issue') || c.includes('qty'))) ||
+                c.includes('issue qty') ||
+                c.includes('issued qty') ||
+                c.includes('issue quantity') ||
+                c.includes('issued quantity') ||
+                c.includes('total issue') ||
+                c.includes('dispatched') ||
+                c === 'issue' ||
+                c === 'issued' ||
+                c === 'gross'
+            );
+
+            // MRN / Return column
+            mrnCol = h.findIndex(c => 
+                c.includes('mrn') || 
+                c.includes('return') || 
+                c.includes('returned') || 
+                c.includes('site return')
+            );
+
+            // Fallback quantity if neither gross nor net matched
+            if (grossCol === -1 && netCol === -1) {
+                const genericQty = h.findIndex(c => 
+                    c.includes('qty') || 
+                    c.includes('quantity') || 
+                    c.includes('total') || 
+                    c.includes('stock')
+                );
+                if (genericQty !== -1) {
+                    grossCol = genericQty;
+                    netCol = genericQty;
+                }
+            }
 
             if (matCol !== -1 && (grossCol !== -1 || netCol !== -1)) {
                 headerRowIdx = r;
@@ -244,7 +315,8 @@ window.StockImporterModule = {
             const row = rows[r];
             if (!row || row.length === 0) continue;
 
-            const mat = String(row[matCol] || '').trim();
+            let mat = String(row[matCol] !== undefined ? row[matCol] : '').trim();
+            mat = mat.replace(/\.0+$/, '');
             if (!mat || mat.toLowerCase() === 'total' || mat.toLowerCase() === 'sum') continue;
 
             const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : fallbackName;
@@ -379,6 +451,8 @@ window.StockImporterModule = {
                 if (g.rawNorms) {
                     g.rawNorms.forEach(rn => { outputData.byContractorNorm[rn] = cRecord; });
                 }
+                const stemKey = this.normStem(cRecord.contractorName || key);
+                if (stemKey) outputData.byContractorNorm[stemKey] = cRecord;
                 wosArray.forEach(wo => { outputData.byDocHeader[wo] = cRecord; });
                 dhsArray.forEach(dh => { outputData.byDocHeader[dh] = cRecord; });
             }
@@ -436,6 +510,12 @@ window.StockImporterModule = {
 
             if (typeof this.saveToStorage === 'function') {
                 this.saveToStorage();
+            }
+
+            if (!stockData || !stockData.meta || stockData.meta.matchedTxns === 0) {
+                this.showToast('Warning: No items found in uploaded file. Please check Excel headers.', 'Alert');
+                alert('Stock File Warning:\nNo material rows or quantities could be recognized in the uploaded Excel.\n\nPlease ensure your Excel has columns like:\n- Material (or SAP Code / Item Code)\n- Issue (or Issue Qty / Net Issue / Qty)');
+                return;
             }
 
             this.$forceUpdate();
