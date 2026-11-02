@@ -143,6 +143,7 @@
                 showRecoColumnModal: false,
                 newRecoColumnInput: '',
                 hasCustomOldReco: false,
+                recoRevision: 0,
                 customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
@@ -365,6 +366,7 @@
                 );
             },
             pivotReconciliationData() {
+                const _rev = this.recoRevision;
                 const sapMap = {}; // mapping by sap code
                 const allActivityKeys = new Set();
                 
@@ -615,22 +617,29 @@
             },
 
             visibleOldRecoColumns() {
-                if (typeof this.getContractorOldReco !== 'function') return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
-                const reco = this.getContractorOldReco();
-                if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+                const _rev = this.recoRevision;
+                if (typeof this.getVisibleOldRecoColumns === 'function') {
+                    return this.getVisibleOldRecoColumns();
+                }
+                const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+                if (reco && Array.isArray(reco.columnsConfig)) {
                     return reco.columnsConfig.filter(c => c && c.visible !== false);
                 }
                 return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             allOldRecoColumns() {
-                if (typeof this.getContractorOldReco !== 'function') return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
-                const reco = this.getContractorOldReco();
-                if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+                const _rev = this.recoRevision;
+                if (typeof this.getAllOldRecoColumns === 'function') {
+                    return this.getAllOldRecoColumns();
+                }
+                const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+                if (reco && Array.isArray(reco.columnsConfig)) {
                     return reco.columnsConfig;
                 }
                 return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             currentContractorOldReco() {
+                const _rev = this.recoRevision;
                 return (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
             },
             currentContractorOldRecoInfo() {

@@ -695,43 +695,79 @@ window.OldRecoImporterModule = {
     },
 
     // ─── DYNAMIC RECO COLUMNS API ──────────────────────────────────────
-    visibleOldRecoColumns() {
+    getVisibleOldRecoColumns() {
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-        if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+        if (reco && Array.isArray(reco.columnsConfig)) {
             return reco.columnsConfig.filter(c => c && c.visible !== false);
         }
         return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
     },
 
-    allOldRecoColumns() {
+    visibleOldRecoColumns() {
+        return this.getVisibleOldRecoColumns();
+    },
+
+    getAllOldRecoColumns() {
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-        if (reco && Array.isArray(reco.columnsConfig) && reco.columnsConfig.length > 0) {
+        if (reco && Array.isArray(reco.columnsConfig)) {
             return reco.columnsConfig;
         }
         return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
     },
 
-    ensureContractorColumnsConfig() {
-        let reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
-        if (!cKey) return null;
+    allOldRecoColumns() {
+        return this.getAllOldRecoColumns();
+    },
 
-        const db = window.ContractorOldReco || window.DefaultContractorOldReco;
-        if (!db) return null;
-        if (!db.byContractorNorm) db.byContractorNorm = {};
-        if (!db.byContractorNorm[cKey]) {
-            db.byContractorNorm[cKey] = {
-                contractorName: this.selectedContractorName || 'Selected Contractor',
-                materials: {},
-                columnsConfig: [{ name: 'PURANA RECO', visible: true, isCalc: true }],
-                customColumns: ['PURANA RECO']
-            };
+    ensureContractorColumnsConfig() {
+        if (!window.ContractorOldReco) {
+            window.ContractorOldReco = window.DefaultContractorOldReco
+                ? JSON.parse(JSON.stringify(window.DefaultContractorOldReco))
+                : { meta: {}, byContractorNorm: {} };
         }
-        reco = db.byContractorNorm[cKey];
-        if (!Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
-            reco.columnsConfig = [{ name: 'PURANA RECO', visible: true, isCalc: true }];
-            reco.customColumns = ['PURANA RECO'];
+        if (!window.ContractorOldReco.byContractorNorm) {
+            window.ContractorOldReco.byContractorNorm = {};
         }
+
+        let reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+
+        let cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
+        if (!cKey && this.selectedContractorId) {
+            cKey = String(this.selectedContractorId).toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+        if (!cKey) cKey = 'default_contractor';
+
+        if (reco) {
+            if (!window.ContractorOldReco.byContractorNorm[cKey]) {
+                window.ContractorOldReco.byContractorNorm[cKey] = reco;
+            }
+        } else {
+            if (!window.ContractorOldReco.byContractorNorm[cKey]) {
+                window.ContractorOldReco.byContractorNorm[cKey] = {
+                    contractorName: this.selectedContractorName || 'Selected Contractor',
+                    materials: {},
+                    columnsConfig: [{ name: 'PURANA RECO', visible: true, isCalc: true }],
+                    customColumns: ['PURANA RECO']
+                };
+            }
+            reco = window.ContractorOldReco.byContractorNorm[cKey];
+        }
+
+        if (!Array.isArray(reco.columnsConfig)) {
+            if (Array.isArray(reco.customColumns) && reco.customColumns.length > 0) {
+                reco.columnsConfig = reco.customColumns.map((c, i) => ({
+                    name: c,
+                    visible: true,
+                    isCalc: (i === 0)
+                }));
+            } else {
+                reco.columnsConfig = [{ name: 'PURANA RECO', visible: true, isCalc: true }];
+            }
+        }
+        if (!Array.isArray(reco.customColumns)) {
+            reco.customColumns = reco.columnsConfig.map(c => c.name);
+        }
+
         return reco;
     },
 
@@ -744,83 +780,108 @@ window.OldRecoImporterModule = {
     },
 
     toggleRecoColumn(colName) {
-        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!colName) return;
+        const targetName = String(colName).trim().toLowerCase();
+        const reco = this.ensureContractorColumnsConfig();
         if (!reco || !Array.isArray(reco.columnsConfig)) return;
-        const col = reco.columnsConfig.find(c => c.name === colName);
+        const col = reco.columnsConfig.find(c => String(c.name).trim().toLowerCase() === targetName);
         if (col) {
             col.visible = (col.visible === false) ? true : false;
+            if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
             this.persistRecoColumnsConfig();
-            this.$forceUpdate();
+            if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
         }
     },
 
     deleteRecoColumn(colName) {
         if (!colName) return;
+        const targetName = String(colName).trim();
+        const targetLower = targetName.toLowerCase();
         const reco = this.ensureContractorColumnsConfig();
         if (!reco) return;
 
-        if (typeof confirm === 'function') {
-            const ok = confirm(`Kya aap sach me column "${colName}" ko sheet se delete karna chahte hain?`);
-            if (!ok) return;
-        }
-
+        let deleted = false;
         if (Array.isArray(reco.columnsConfig)) {
-            const idx = reco.columnsConfig.findIndex(c => c.name === colName);
+            const idx = reco.columnsConfig.findIndex(c => String(c.name).trim().toLowerCase() === targetLower);
             if (idx !== -1) {
                 const wasCalc = reco.columnsConfig[idx].isCalc;
                 reco.columnsConfig.splice(idx, 1);
+                deleted = true;
                 if (wasCalc && reco.columnsConfig.length > 0) {
                     const nextVis = reco.columnsConfig.find(c => c.visible !== false) || reco.columnsConfig[0];
                     if (nextVis) nextVis.isCalc = true;
                 }
             }
         }
+
         if (Array.isArray(reco.customColumns)) {
-            const cIdx = reco.customColumns.indexOf(colName);
-            if (cIdx !== -1) reco.customColumns.splice(cIdx, 1);
+            const cIdx = reco.customColumns.findIndex(c => String(c).trim().toLowerCase() === targetLower);
+            if (cIdx !== -1) {
+                reco.customColumns.splice(cIdx, 1);
+                deleted = true;
+            }
         }
+
         if (reco.materials) {
             Object.values(reco.materials).forEach(m => {
-                if (m.customColumns && m.customColumns[colName] !== undefined) {
-                    delete m.customColumns[colName];
+                if (m.customColumns) {
+                    Object.keys(m.customColumns).forEach(k => {
+                        if (k.trim().toLowerCase() === targetLower) {
+                            delete m.customColumns[k];
+                        }
+                    });
                 }
             });
         }
-        const cKey = this.getContractorNormKey();
-        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey]) {
-            delete this.customOldRecoEdits[cKey]['__col_' + colName];
-            Object.keys(this.customOldRecoEdits[cKey]).forEach(k => {
-                if (k.endsWith('__' + colName)) {
-                    delete this.customOldRecoEdits[cKey][k];
+
+        if (this.customOldRecoEdits) {
+            Object.keys(this.customOldRecoEdits).forEach(kNorm => {
+                const cEdits = this.customOldRecoEdits[kNorm];
+                if (cEdits) {
+                    delete cEdits['__col_' + targetName];
+                    Object.keys(cEdits).forEach(k => {
+                        if (k.toLowerCase().endsWith('__' + targetLower)) {
+                            delete cEdits[k];
+                        }
+                    });
                 }
             });
         }
+
         this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
         this.persistRecoColumnsConfig();
-        this.$forceUpdate();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
+
         if (typeof this.showToast === 'function') {
-            this.showToast(`Column "${colName}" delete ho gaya`, 'Check');
+            this.showToast(`Column "${targetName}" delete ho gaya`, '🗑️');
         }
     },
 
     setCalcColumn(colName) {
+        if (!colName) return;
+        const targetName = String(colName).trim().toLowerCase();
         const reco = this.ensureContractorColumnsConfig();
         if (!reco || !Array.isArray(reco.columnsConfig)) return;
         reco.columnsConfig.forEach(c => {
-            c.isCalc = (c.name === colName);
+            c.isCalc = (String(c.name).trim().toLowerCase() === targetName);
         });
         if (reco.materials) {
             Object.values(reco.materials).forEach(m => {
-                if (m.customColumns && m.customColumns[colName] !== undefined) {
-                    m.prevConsumption = Number(m.customColumns[colName]) || 0;
+                if (m.customColumns) {
+                    const foundKey = Object.keys(m.customColumns).find(k => k.trim().toLowerCase() === targetName);
+                    if (foundKey) {
+                        m.prevConsumption = Number(m.customColumns[foundKey]) || 0;
+                    }
                 }
             });
         }
         this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
         this.persistRecoColumnsConfig();
-        this.$forceUpdate();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
         if (typeof this.showToast === 'function') {
-            this.showToast(`"${colName}" calculation column ban gaya`, 'Check');
+            this.showToast(`"${colName}" calculation column ban gaya`, '🧮');
         }
     },
 
@@ -847,12 +908,16 @@ window.OldRecoImporterModule = {
             if (typeof this.showToast === 'function') this.showToast(`Column "${name}" pehle se maujood hai!`, 'Alert');
             return;
         }
-        reco.columnsConfig.push({ name: name, visible: true, isCalc: false });
-        reco.customColumns.push(name);
+        const isFirst = reco.columnsConfig.length === 0;
+        reco.columnsConfig.push({ name: name, visible: true, isCalc: isFirst });
+        if (!reco.customColumns.includes(name)) {
+            reco.customColumns.push(name);
+        }
         this.newRecoColumnInput = '';
         this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
         this.persistRecoColumnsConfig();
-        this.$forceUpdate();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
         if (typeof this.showToast === 'function') this.showToast(`Column "${name}" add ho gaya!`, 'Check');
     },
 
