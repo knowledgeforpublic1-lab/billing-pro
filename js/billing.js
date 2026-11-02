@@ -67,9 +67,48 @@ window.BillingModule = {
             return stock.byContractorNorm[rawNorm];
         }
 
+        function normStem(s) {
+            if (!s) return '';
+            return String(s)
+                .toLowerCase()
+                .replace(/^m\/s\.?\s*/i, '')
+                .replace(/\(.*?\)/g, '')
+                .replace(/aa+/g, 'a')
+                .replace(/ee+/g, 'e')
+                .replace(/oo+/g, 'o')
+                .replace(/ii+/g, 'i')
+                .replace(/gate\b/g, 'gade')
+                .replace(/s\b/g, '')
+                .replace(/[^a-z0-9]/g, '')
+                .trim();
+        }
+
+        const stem = normStem(cName);
+        if (stem && stock.byContractorNorm[stem]) {
+            return stock.byContractorNorm[stem];
+        }
+
         for (const [k, v] of Object.entries(stock.byContractorNorm)) {
-            if (k.length >= 4 && ((norm && (k.includes(norm) || norm.includes(k))) || (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))))) {
-                return v;
+            if (k.length >= 4) {
+                const kStem = normStem(k);
+                if (
+                    (norm && (k.includes(norm) || norm.includes(k))) ||
+                    (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))) ||
+                    (stem && (k.includes(stem) || stem.includes(k) || kStem === stem))
+                ) {
+                    return v;
+                }
+            }
+        }
+
+        const words = cleanName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 4);
+        if (words.length > 0) {
+            for (const [k, v] of Object.entries(stock.byContractorNorm)) {
+                const allWordsInK = words.every(w => {
+                    const wStem = normStem(w);
+                    return k.includes(w) || (wStem && k.includes(wStem));
+                });
+                if (allWordsInK) return v;
             }
         }
 

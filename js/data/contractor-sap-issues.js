@@ -1,11 +1,11 @@
 /**
  * Auto-generated SAP Stock Material Issues Database from stock.xlsx
  * Features consolidated contractor aggregation (all work orders & aliases for same contractor summed together)
- * Generated: 2026-11-02T11:35:19.274Z
+ * Generated: 2026-11-02T12:45:17.555Z
  */
 window.ContractorSapStock = {
   "meta": {
-    "generatedAt": "2026-11-02T11:35:19.262Z",
+    "generatedAt": "2026-11-02T12:45:17.542Z",
     "source": "stock.xlsx",
     "matchedTxns": 48100,
     "contractorsWithIssues": 109,
@@ -300093,3 +300093,5 @@ window.ContractorSapStock = {
     }
   }
 };
+
+window.DefaultContractorSapStock = window.ContractorSapStock;

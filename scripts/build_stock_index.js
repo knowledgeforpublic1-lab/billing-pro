@@ -21,8 +21,13 @@ function normRawKey(n) {
 }
 
 async function buildStockIndex() {
+  const stockFilePath = fs.existsSync('stock.xlsx') ? 'stock.xlsx' : (fs.existsSync('stock1.xlsx') ? 'stock1.xlsx' : null);
+  if (!stockFilePath) {
+    throw new Error('Stock file not found! Please ensure stock.xlsx or stock1.xlsx exists in project root.');
+  }
+  console.log(`Using stock file: ${stockFilePath}`);
   console.log('1. Reading SAP Code sheet for contractor mappings...');
-  const stream1 = fs.createReadStream('stock.xlsx');
+  const stream1 = fs.createReadStream(stockFilePath);
   const reader1 = new ExcelJS.stream.xlsx.WorkbookReader(stream1, {});
 
   const groups = {}; // groupKey -> { key, displayName, vendorCode, wos: Set, dhs: Set, rawNorms: Set }
@@ -90,7 +95,7 @@ async function buildStockIndex() {
   console.log(`Mapped ${Object.keys(dhToGroupKey).length} docHeaders and ${Object.keys(woToGroupKey).length} 8-digit WOs to ${Object.keys(groups).length} unique Contractor Groups.`);
 
   console.log('2. Streaming Sheet1 (152,860 rows) and summing into consolidated Contractor Groups...');
-  const stream2 = fs.createReadStream('stock.xlsx');
+  const stream2 = fs.createReadStream(stockFilePath);
   const reader2 = new ExcelJS.stream.xlsx.WorkbookReader(stream2, {});
 
   const groupMaterials = {};
@@ -231,7 +236,7 @@ async function buildStockIndex() {
     }
   }
 
-  const jsContent = '/**\n * Auto-generated SAP Stock Material Issues Database from stock.xlsx\n * Features consolidated contractor aggregation (all work orders & aliases for same contractor summed together)\n * Generated: ' + new Date().toISOString() + '\n */\nwindow.ContractorSapStock = ' + JSON.stringify(outputData, null, 2) + ';\n';
+  const jsContent = '/**\n * Auto-generated SAP Stock Material Issues Database from stock.xlsx\n * Features consolidated contractor aggregation (all work orders & aliases for same contractor summed together)\n * Generated: ' + new Date().toISOString() + '\n */\nwindow.ContractorSapStock = ' + JSON.stringify(outputData, null, 2) + ';\nwindow.DefaultContractorSapStock = window.ContractorSapStock;\n';
   fs.writeFileSync('js/data/contractor-sap-issues.js', jsContent, 'utf8');
 
   const stats = fs.statSync('js/data/contractor-sap-issues.js');
