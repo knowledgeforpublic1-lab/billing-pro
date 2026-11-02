@@ -1091,6 +1091,74 @@ it('Activity 6723: Per-Activity Dynamic Location Renaming & Isolation', () => {
     assert.strictEqual(app.getActLocations('907').length, 3);
 });
 
+// 24. SAP Stock: Custom stock upload reactivity, fallback matching, and reset to default
+it('SAP Stock: Custom stock upload reactivity, fallback matching, and reset to default', () => {
+    global.window = global;
+    eval(fs.readFileSync('js/billing.js', 'utf8'));
+
+    // Default stock
+    const defaultStock = {
+        meta: { source: 'Built-in' },
+        byDocHeader: {},
+        byContractorNorm: {
+            'maakali': { contractorName: 'Maa Kali Enterprises', materials: { '17000004': { code: '17000004', issuedQty: 50 } } }
+        }
+    };
+    window.ContractorSapStock = defaultStock;
+    window.DefaultContractorSapStock = defaultStock;
+
+    const mockApp = Object.assign({
+        selectedContractorId: 'maa_kali',
+        selectedContractorName: 'Maa Kali Enterprises',
+        recoRevision: 0,
+        hasCustomStock: false,
+        customStockMeta: null,
+        get currentContractorSap() {
+            const _rev = this.recoRevision;
+            const _cust = this.hasCustomStock;
+            return this.getContractorSapIssues();
+        }
+    }, window.BillingModule);
+
+    // Initial check
+    assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 50);
+
+    // 1. Simulate Custom Stock Upload with updated quantities
+    const customStock = {
+        meta: { source: 'Uploaded Excel', matchedTxns: 10 },
+        byDocHeader: {},
+        byContractorNorm: {
+            'maakali': { contractorName: 'Maa Kali Enterprises', materials: { '17000004': { code: '17000004', issuedQty: 120 } } }
+        }
+    };
+    window.ContractorSapStock = customStock;
+    mockApp.hasCustomStock = true;
+    mockApp.customStockMeta = customStock.meta;
+    mockApp.recoRevision++;
+
+    // Computed property must now return updated 120 qty!
+    assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 120);
+
+    // 2. Simulate Single-Contractor Upload without contractor name (fallback to 'uploadedstock')
+    const genericUploadedStock = {
+        meta: { source: 'Generic Sheet', matchedTxns: 5 },
+        byDocHeader: {},
+        byContractorNorm: {
+            'uploadedstock': { contractorName: 'Uploaded Stock', materials: { '17000004': { code: '17000004', issuedQty: 999 } } }
+        }
+    };
+    window.ContractorSapStock = genericUploadedStock;
+    mockApp.recoRevision++;
+    assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 999, 'Single-contractor uploadedstock must fallback seamlessly');
+
+    // 3. Simulate Reset to Default
+    window.ContractorSapStock = window.DefaultContractorSapStock;
+    mockApp.hasCustomStock = false;
+    mockApp.customStockMeta = null;
+    mockApp.recoRevision++;
+    assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 50, 'Reset must restore default stock');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

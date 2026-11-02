@@ -637,6 +637,9 @@
             },
             
             currentContractorSap() {
+                const _rev = this.recoRevision;
+                const _cust = this.hasCustomStock;
+                const _meta = this.customStockMeta;
                 return (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
             },
             currentContractorSapInfo() {
@@ -1402,6 +1405,10 @@
             } catch (e) {
                 console.warn('[OldRecoImporter] Error loading custom old reco:', e);
             }
+            // Preserve default built-in stock before loading custom stock
+            if (window.ContractorSapStock && !window.DefaultContractorSapStock) {
+                window.DefaultContractorSapStock = window.ContractorSapStock;
+            }
             try {
                 if (typeof BillingStorage !== 'undefined') {
                     const customStockJson = await BillingStorage.getItemAsync('billing_custom_sap_stock');
@@ -1411,6 +1418,7 @@
                             window.ContractorSapStock = customStock;
                             this.hasCustomStock = true;
                             this.customStockMeta = customStock.meta;
+                            this.recoRevision = (this.recoRevision || 0) + 1;
                             console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
                         }
                     }

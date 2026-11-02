@@ -31,9 +31,10 @@ window.StockImporterModule = {
     /**
      * Parses an uploaded Excel ArrayBuffer into the standard ContractorSapStock object.
      * @param {ArrayBuffer} arrayBuffer
+     * @param {Object} [opts={}]
      * @returns {Object} Standard ContractorSapStock data structure
      */
-    parseStockExcel(arrayBuffer) {
+    parseStockExcel(arrayBuffer, opts = {}) {
         if (typeof XLSX === 'undefined') {
             throw new Error('XLSX parser library is not loaded. Please check your internet connection and refresh.');
         }
@@ -59,7 +60,7 @@ window.StockImporterModule = {
         if (sapCodeSheetName && txnSheetName) {
             return this.parseFullSapDump(wb, sapCodeSheetName, txnSheetName);
         } else {
-            return this.parseGenericStockSheet(wb, sheetNames[0]);
+            return this.parseGenericStockSheet(wb, sheetNames[0], opts);
         }
     },
 
@@ -197,7 +198,7 @@ window.StockImporterModule = {
     /**
      * Format 2: Generic / Single-Sheet Stock Summary
      */
-    parseGenericStockSheet(wb, sheetName) {
+    parseGenericStockSheet(wb, sheetName, opts = {}) {
         const ws = wb.Sheets[sheetName];
         if (!ws) throw new Error(`Worksheet "${sheetName}" could not be opened.`);
 
@@ -230,6 +231,10 @@ window.StockImporterModule = {
             throw new Error('Could not identify Material Code column in uploaded sheet. Please ensure headers like "Material", "Issue", "MRN", "Net Issue" exist.');
         }
 
+        const fallbackName = opts.activeContractorName || 'Uploaded Stock';
+        const fallbackWo = opts.activeWorkOrderNo || '';
+        const fallbackId = opts.activeContractorId || '';
+
         const groups = {};
         const dhToGroupKey = {};
         const groupMaterials = {};
@@ -242,8 +247,8 @@ window.StockImporterModule = {
             const mat = String(row[matCol] || '').trim();
             if (!mat || mat.toLowerCase() === 'total' || mat.toLowerCase() === 'sum') continue;
 
-            const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : 'Uploaded Stock';
-            const wo = woCol !== -1 ? String(row[woCol] || '').trim() : '';
+            const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : fallbackName;
+            const wo = woCol !== -1 ? String(row[woCol] || '').trim() : fallbackWo;
             const desc = descCol !== -1 ? String(row[descCol] || '').trim() : mat;
             const uom = uomCol !== -1 ? String(row[uomCol] || '').trim() : 'No';
 
@@ -255,13 +260,21 @@ window.StockImporterModule = {
 
             const key = this.normContractorName(name) || 'uploadedstock';
             if (!groups[key]) {
+                const rawNormsSet = new Set([this.normRawKey(name), key, 'uploadedstock']);
+                if (fallbackId) {
+                    rawNormsSet.add(fallbackId.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                }
+                if (opts.activeContractorName) {
+                    rawNormsSet.add(this.normContractorName(opts.activeContractorName));
+                    rawNormsSet.add(this.normRawKey(opts.activeContractorName));
+                }
                 groups[key] = {
                     key,
                     displayName: name,
                     vendorCode: '',
                     wos: new Set(),
                     dhs: new Set(),
-                    rawNorms: new Set([this.normRawKey(name), key])
+                    rawNorms: rawNormsSet
                 };
             }
 
@@ -269,6 +282,14 @@ window.StockImporterModule = {
                 groups[key].dhs.add(wo);
                 dhToGroupKey[wo] = key;
                 const m = wo.match(/\b\d{8}\b/);
+                if (m) {
+                    groups[key].wos.add(m[0]);
+                    dhToGroupKey[m[0]] = key;
+                }
+            } else if (fallbackWo) {
+                groups[key].dhs.add(fallbackWo);
+                dhToGroupKey[fallbackWo] = key;
+                const m = fallbackWo.match(/\b\d{8}\b/);
                 if (m) {
                     groups[key].wos.add(m[0]);
                     dhToGroupKey[m[0]] = key;
@@ -390,7 +411,15 @@ window.StockImporterModule = {
 
         try {
             const arrayBuffer = await file.arrayBuffer();
-            const stockData = window.StockImporterModule.parseStockExcel(arrayBuffer);
+            const activeContractorName = this.selectedContractorName || (this.invoiceData && this.invoiceData.contractorName) || '';
+            const activeContractorId = this.selectedContractorId || '';
+            const activeWorkOrderNo = (this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '';
+
+            const stockData = window.StockImporterModule.parseStockExcel(arrayBuffer, {
+                activeContractorName,
+                activeContractorId,
+                activeWorkOrderNo
+            });
 
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
                 window.DefaultContractorSapStock = window.ContractorSapStock;
@@ -403,6 +432,11 @@ window.StockImporterModule = {
             window.ContractorSapStock = stockData;
             this.hasCustomStock = true;
             this.customStockMeta = stockData.meta;
+            this.recoRevision = (this.recoRevision || 0) + 1;
+
+            if (typeof this.saveToStorage === 'function') {
+                this.saveToStorage();
+            }
 
             this.$forceUpdate();
             const count = stockData.meta.contractorsWithIssues || Object.keys(stockData.byContractorNorm || {}).length;
@@ -427,6 +461,10 @@ window.StockImporterModule = {
             }
             this.hasCustomStock = false;
             this.customStockMeta = null;
+            this.recoRevision = (this.recoRevision || 0) + 1;
+            if (typeof this.saveToStorage === 'function') {
+                this.saveToStorage();
+            }
             this.$forceUpdate();
             this.showToast('Reset to default built-in stock database.', 'Check');
         } catch (e) {

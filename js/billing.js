@@ -10,6 +10,8 @@
 window.BillingModule = {
     // ─── SAP STOCK MATERIAL ISSUES AUTO-SYNC ────
     getContractorSapIssues() {
+        const _rev = this.recoRevision;
+        const _cust = this.hasCustomStock;
         const stock = window.ContractorSapStock;
         if (!stock) return null;
 
@@ -68,6 +70,17 @@ window.BillingModule = {
         for (const [k, v] of Object.entries(stock.byContractorNorm)) {
             if (k.length >= 4 && ((norm && (k.includes(norm) || norm.includes(k))) || (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))))) {
                 return v;
+            }
+        }
+
+        // 3. Fallback: If stock only has 1 contractor or contains 'uploadedstock'
+        if (stock.byContractorNorm) {
+            if (stock.byContractorNorm['uploadedstock']) {
+                return stock.byContractorNorm['uploadedstock'];
+            }
+            const distinctRecords = Array.from(new Set(Object.values(stock.byContractorNorm)));
+            if (distinctRecords.length === 1 && distinctRecords[0]) {
+                return distinctRecords[0];
             }
         }
         return null;
