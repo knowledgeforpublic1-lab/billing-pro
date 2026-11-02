@@ -105,7 +105,7 @@ window.SyncModule = {
     },
     openSavedBillsManager(tab) {
         this.savedBillsSearchQuery = '';
-        this.savedBillsModalTab = tab || 'drive'; // Directly connect & open Google Drive tab by default
+        this.savedBillsModalTab = tab || 'database'; // Open MongoDB Database bills by default
         this.showSavedBillsModal = true;
         if (this.savedBillsModalTab === 'drive') {
             this.fetchGoogleDriveFiles();
@@ -1167,7 +1167,7 @@ window.SyncModule = {
           // Cloud copy lao (fail ho to null — phir local hi jeetega)
           let serverRaw = null;
           let serverUpdatedAt = 0;
-          const targetBillId = (opts && opts.dataId) || this.activeBillId || localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state';
+          const targetBillId = (opts && opts.dataId) || this.activeBillId || localStorage.getItem('lk_billing_active_bill_id') || 'latest';
           this.activeBillId = targetBillId;
           try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}
           try {
