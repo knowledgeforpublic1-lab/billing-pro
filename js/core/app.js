@@ -226,6 +226,7 @@
                 editingSapKey: null, // mapping me jis SAP input par focus hai — sirf uska datalist render hoga (perf)
                 quickSelectedActivityKey: '',
                 selectedColumnLocIdx: null,
+                showRightSidebar: true,
                 historyStack: [],
                 historyIndex: -1,
                 isPerformingHistoryAction: false,

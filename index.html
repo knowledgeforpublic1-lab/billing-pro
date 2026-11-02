@@ -63,6 +63,10 @@
                             <span class="tab-dot" style="background: #3b82f6;"></span>
                             Activity Billing
                         </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'abstract' }" @click="switchView('abstract')">
+                            <span class="tab-dot" style="background: #ec4899;"></span>
+                            Master Abstract
+                        </button>
                         <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
                             <span class="tab-dot" style="background: #6366f1;"></span>
                             SAP Mapping
@@ -227,6 +231,9 @@
                                         </button>
                                         <button class="btn-filter-add" @click="showAddMaterialModal = true" :disabled="isFinalized" title="Add extra item to this activity">
                                             ➕ Extra Item
+                                        </button>
+                                        <button class="btn-filter-reset" @click="showRightSidebar = !showRightSidebar" :title="showRightSidebar ? 'Sidebar hide karke table full width karein' : 'Sidebar show karein'" :style="!showRightSidebar ? 'border-color: #38bdf8; color: #38bdf8;' : ''">
+                                            <span>{{ showRightSidebar ? '↔️ Full Width' : '📊 Sidebar' }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1742,7 +1749,7 @@
     </main>
 
     <!-- RIGHT SIDEBAR -->
-    <aside class="right-sidebar-panel no-print" v-if="currentView === 'detail'">
+    <aside class="right-sidebar-panel no-print" v-if="currentView === 'detail' && showRightSidebar">
         <!-- Quick Actions Card -->
         <div class="rs-card">
             <div class="rs-card-title">
@@ -3256,7 +3263,7 @@
     <script src="js/old-reco-importer.js?v=20261102_13"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261102_13"></script>
+    <script src="js/core/app.js?v=20261102_15"></script>
 </body>
 
 </html>
