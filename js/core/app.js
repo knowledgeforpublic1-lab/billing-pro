@@ -31,10 +31,35 @@
         window.OldRecoImporterModule || {}
     );
 
+        // 🛡️ Error Recovery Method
+    allMethods.recoverSection = function(sectionName) {
+        console.log('[Recover Section Triggered]:', sectionName);
+        if (this.sectionErrors) {
+            this.sectionErrors[sectionName] = null;
+        }
+        if (sectionName === 'reconciliation') {
+            this.recoRevision = (this.recoRevision || 0) + 1;
+            this.recoSearchQuery = '';
+            this.activeRecoCell = null;
+        }
+        this.$forceUpdate();
+        if (typeof this.showToast === 'function') {
+            this.showToast((sectionName ? sectionName.toUpperCase() : 'Section') + ' recovered', '✅');
+        }
+    };
+
     const app = Vue.createApp({
         data() {
             return {
                 isFinalized: false,
+                // 🛡️ Section-level Error Isolation: agar kisi tab me error ho to sirf wahi isolate ho
+                sectionErrors: {
+                    reconciliation: null,
+                    detail: null,
+                    abstract: null,
+                    mapping: null,
+                    invoice: null
+                },
                 currentView: (function() { try { return localStorage.getItem('billing_current_view') || 'detail'; } catch(e) { return 'detail'; } })(),
                 selectedActivityKey: '1220',
                 searchQuery: '',
@@ -569,7 +594,12 @@
                 return out;
             },
             reconColCount() {
-                return this.reverseEntry ? this.reverseReconColumns.length : this.pivotReconciliationData.columns.length;
+                try {
+                    if (this.reverseEntry) return (this.reverseReconColumns && this.reverseReconColumns.length) || 0;
+                    return (this.pivotReconciliationData && this.pivotReconciliationData.columns && this.pivotReconciliationData.columns.length) || 0;
+                } catch(e) {
+                    return 0;
+                }
             },
             // Detail view: chuni activity me dikhne wali locations (global idx ke sath)
             visibleDetailLocs() {
@@ -963,17 +993,27 @@
                 return filtered;
             },
             reconNonZeroCount() {
-                return (this.pivotReconciliationData.rows || []).filter(r => (
-                    r.totalQty > 0 || 
-                    (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
-                    ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
-                )).length;
+                try {
+                    const rows = (this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : [];
+                    return rows.filter(r => (
+                        r.totalQty > 0 || 
+                        (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
+                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
+                    )).length;
+                } catch(e) {
+                    return 0;
+                }
             },
             // ↩️ "➕ Item ▾" dropdown: reconciliation wale SAP material (code + desc), search ke sath
             reverseSapMenuList() {
-                return this.pivotReconciliationData.rows
-                    .map(r => ({ code: r.code, desc: r.desc, uom: r.uom, total: Math.round((Number(r.totalQty) || 0) * 100) / 100, acts: this.reverseActsForCode(r.code) }))
-                    .sort((a, b) => String(a.code).localeCompare(String(b.code)));
+                try {
+                    const rows = (this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : [];
+                    return rows
+                        .map(r => ({ code: r.code, desc: r.desc, uom: r.uom, total: Math.round((Number(r.totalQty) || 0) * 100) / 100, acts: this.reverseActsForCode(r.code) }))
+                        .sort((a, b) => String(a.code).localeCompare(String(b.code)));
+                } catch(e) {
+                    return [];
+                }
             },
             // Dropdown se chuna SAP code: uski row, invoice activities, location
             reverseSelCodeDesc() {
@@ -1311,6 +1351,15 @@
         },
 
         methods: allMethods,
+
+        errorCaptured(err, target, info) {
+            console.error('[Vue errorCaptured on root component]:', err, info);
+            if (this.sectionErrors) {
+                const sec = this.currentView || 'reconciliation';
+                this.sectionErrors[sec] = (err && (err.message || String(err))) || 'Component render issue';
+            }
+            return false; // Stop propagation, prevent app crash
+        },
 
         async mounted() {
             this._isLoading = true;
@@ -1751,7 +1800,43 @@
         }
     });
 
-    // Mount the app
-    window.vm = app.mount('#app');
-    window.app = app;
+        // 🛡️ Global Vue Error Handler (isolates crashes to specific sections)
+    app.config.errorHandler = function(err, vm, info) {
+        console.error('[Vue app.config.errorHandler Caught]:', err, info);
+        try {
+            if (vm && vm.sectionErrors) {
+                const sec = vm.currentView || 'reconciliation';
+                vm.sectionErrors[sec] = (err && (err.message || String(err))) || 'Component render issue';
+            }
+        } catch(e) {}
+    };
+
+    // 🛡️ Safe Root Mount with Emergency Fallback
+    try {
+        window.vm = app.mount('#app');
+        window.app = app;
+    } catch(mountErr) {
+        console.error('[Vue Fatal Mount Error]:', mountErr);
+        const appEl = document.getElementById('app');
+        if (appEl) {
+            appEl.innerHTML = `
+                <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; color: #f8fafc; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 24px;">
+                    <div style="max-width: 540px; background: #1e293b; border: 1.5px solid #ef4444; border-radius: 12px; padding: 28px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); text-align: center;">
+                        <div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>
+                        <h2 style="font-size: 1.4rem; margin-bottom: 8px; color: #f87171; font-weight: 800;">Billing Pro — Safety Recovery</h2>
+                        <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+                            Ek error ki wajah se page load nahi ho saka. Screen black hone se bacha li gayi hai.
+                        </p>
+                        <div style="font-size: 0.78rem; color: #fca5a5; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); padding: 10px; border-radius: 6px; margin-bottom: 20px; word-break: break-all; font-family: monospace; text-align: left;">
+                            ${mountErr.message || mountErr}
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button onclick="location.reload();" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Normal Reload</button>
+                            <button onclick="localStorage.removeItem('billing_custom_old_reco_v1'); localStorage.removeItem('billing_custom_old_reco_edits_v1'); location.reload();" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Reset Reco Cache</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
 })();
