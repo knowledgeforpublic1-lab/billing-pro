@@ -1219,93 +1219,62 @@
         <div class="view-section animate-fade-in" v-if="currentView === 'reconciliation'">
 
             <!-- ================================================================ -->
-            <!-- 📊 RECONCILIATION CONTROL PANEL (Organized, Clean & Modern)     -->
+            <!-- 📊 RECONCILIATION CONTROL PANEL (Clean, Streamlined & Modern)     -->
             <!-- ================================================================ -->
-            <div class="reco-control-card no-print" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 10px;">
+            <div class="reco-control-card no-print" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 8px;">
                 
-                <!-- ================================================================ -->
-                <!-- ROW 1: Contractor Profile & Live Sync Status Badges              -->
-                <!-- ================================================================ -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px;">
-                    
-                    <!-- Left: Contractor Dropdown + Status Pills -->
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
-                            <span>👷</span> Contractor:
-                        </span>
-                        
-                        <!-- Searchable Contractor Dropdown -->
-                        <div class="searchable-dropdown" v-click-outside="() => reconContractorDropdownOpen = false" style="min-width: 240px; max-width: 320px;">
-                            <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: 1.5px solid rgba(99, 102, 241, 0.5); background: rgba(15, 23, 42, 0.85); padding: 5px 12px; border-radius: 8px; height: 32px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
-                                <span class="trigger-text" style="font-weight: 700; font-size: 0.82rem; color: #ffffff;">{{ selectedContractorName }}</span>
-                                <span class="trigger-arrow" style="color: #818cf8;">▾</span>
-                            </div>
-                            <div class="searchable-dropdown-panel" v-if="reconContractorDropdownOpen" style="width: 340px; z-index: 1000; left: 0; top: 100%; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                                <div class="searchable-dropdown-search">
-                                    <input type="text" v-model="contractorDropdownSearch" placeholder="Search contractor name, WO, PAN..." ref="reconContractorSearchInput">
-                                </div>
-                                <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
-                                    <template v-if="sortedFilteredContractors.length">
-                                        <div v-for="firm in sortedFilteredContractors" :key="firm.id" class="searchable-dropdown-item" :class="{ selected: selectedContractorId === firm.id }" @click="selectContractorFirm(firm); reconContractorDropdownOpen = false;">
-                                            <div style="font-weight: 700; font-size: 0.82rem;">{{ firm.name }}</div>
-                                            <div style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
-                                                <span v-if="firm.workOrderNo" style="color: #60a5fa;">WO: {{ firm.workOrderNo }}</span>
-                                                <span v-if="firm.pan">PAN: {{ firm.pan }}</span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                    <div v-else class="searchable-dropdown-empty">No contractor found</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Live Stock Synced Status Pill -->
-                        <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); font-size: 0.76rem; font-weight: 700; color: #93c5fd;">
-                            <span>⚡</span>
-                            <span>SAP Stock: <strong style="color: #ffffff;">{{ currentContractorSapInfo }}</strong> ({{ currentContractorSapCount }} items)</span>
-                            <span v-if="hasCustomStock" style="font-size: 0.65rem; background: #22c55e; color: #000; padding: 1px 6px; border-radius: 999px; font-weight: 900; margin-left: 2px;">CUSTOM STOCK</span>
-                        </div>
-                        <div v-else style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.76rem; font-weight: 700; color: #fbbf24;">
-                            <span>ℹ️ Select a contractor to view SAP Issue/MRN</span>
-                        </div>
-
-                        <!-- Contractor Purana Reco Status Pill -->
-                        <div v-if="currentContractorOldReco" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); font-size: 0.76rem; font-weight: 700; color: #d8b4fe;" title="Contractor ka purana reconciled baseline / records">
-                            <span>📋</span>
-                            <span>Purana Reco: <strong style="color: #ffffff;">{{ currentContractorOldRecoConsumedCount }} Consumed Items</strong></span>
-                            <span v-if="hasCustomOldReco" style="font-size: 0.65rem; background: #a855f7; color: #fff; padding: 1px 6px; border-radius: 999px; font-weight: 900; margin-left: 2px;">CUSTOM RECO</span>
-                            <span v-else style="font-size: 0.65rem; background: rgba(255, 255, 255, 0.2); color: #fff; padding: 1px 6px; border-radius: 999px; font-weight: 800; margin-left: 2px;">BASELINE</span>
-                        </div>
-                    </div>
-
-                    <!-- Right: Alert Pill for Unmapped Items -->
-                    <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" 
-                        @click="goToMappingMasterAlert()" 
-                        style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; font-size: 0.76rem; font-weight: 800; color: #fca5a5; cursor: pointer; box-shadow: 0 0 10px rgba(239, 68, 68, 0.35); transition: all 0.2s;"
-                        :title="'Click to open Mapping Master — ' + unmappedContractorIssuedItems.length + ' issued items are unmapped or mismatched in activities'">
-                        <span style="font-size: 0.82rem;">🔴</span>
-                        <span>{{ unmappedContractorIssuedItems.length }} Unmapped Items (Fix in Mapping ➔)</span>
-                    </div>
-                </div>
-
-                <!-- ================================================================ -->
-                <!-- ROW 2: Unified Command Toolbar (Stock + Reco + Export)          -->
-                <!-- ================================================================ -->
+                <!-- MAIN UNIFIED TOOLBAR: Contractor + Stock + Reco + Actions in Single Compact Row -->
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     
-                    <!-- Left: Grouped Functional Toolbars -->
+                    <!-- Left Section: Contractor Selector + Stock Tools + Reco Tools -->
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         
+                        <!-- Contractor Selector -->
+                        <div style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 3px;">
+                                <span>👷</span> Contractor:
+                            </span>
+                            
+                            <!-- Searchable Contractor Dropdown -->
+                            <div class="searchable-dropdown" v-click-outside="() => reconContractorDropdownOpen = false" style="min-width: 220px; max-width: 280px;">
+                                <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: 1.5px solid rgba(99, 102, 241, 0.5); background: rgba(15, 23, 42, 0.85); padding: 5px 10px; border-radius: 8px; height: 32px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                                    <span class="trigger-text" style="font-weight: 700; font-size: 0.82rem; color: #ffffff;">{{ selectedContractorName }}</span>
+                                    <span class="trigger-arrow" style="color: #818cf8;">▾</span>
+                                </div>
+                                <div class="searchable-dropdown-panel" v-if="reconContractorDropdownOpen" style="width: 320px; z-index: 1000; left: 0; top: 100%; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                                    <div class="searchable-dropdown-search">
+                                        <input type="text" v-model="contractorDropdownSearch" placeholder="Search contractor name, WO, PAN..." ref="reconContractorSearchInput">
+                                    </div>
+                                    <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
+                                        <template v-if="sortedFilteredContractors.length">
+                                            <div v-for="firm in sortedFilteredContractors" :key="firm.id" class="searchable-dropdown-item" :class="{ selected: selectedContractorId === firm.id }" @click="selectContractorFirm(firm); reconContractorDropdownOpen = false;">
+                                                <div style="font-weight: 700; font-size: 0.82rem;">{{ firm.name }}</div>
+                                                <div style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
+                                                    <span v-if="firm.workOrderNo" style="color: #60a5fa;">WO: {{ firm.workOrderNo }}</span>
+                                                    <span v-if="firm.pan">PAN: {{ firm.pan }}</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <div v-else class="searchable-dropdown-empty">No contractor found</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vertical Divider -->
+                        <div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12);"></div>
+
                         <!-- 📦 GROUP A: SAP STOCK HUB (Blue Pill) -->
                         <div style="display: inline-flex; align-items: center; background: rgba(30, 58, 138, 0.22); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 2px;">
                             <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
                             <button type="button" 
                                 @click="$refs.reconStockFileInput.click()" 
                                 :disabled="stockUploading" 
-                                title="Naya Stock Excel (.xlsx) upload karein — Sabhi contractors ka issue/return turant update ho jayega"
+                                :title="currentContractorSapInfo ? ('SAP Stock: ' + currentContractorSapInfo + ' (' + currentContractorSapCount + ' items)') : 'Naya Stock Excel (.xlsx) upload karein'"
                                 style="height: 30px; padding: 0 12px; font-size: 0.76rem; font-weight: 800; border: none; border-radius: 6px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
                                 <span>{{ stockUploading ? '⏳' : '📥' }}</span>
                                 <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock' }}</span>
+                                <span v-if="hasCustomStock" style="font-size: 0.62rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; margin-left: 2px;">CUSTOM</span>
                             </button>
                             <button v-if="hasCustomStock" type="button"
                                 @click="resetToDefaultStock" 
@@ -1327,10 +1296,11 @@
                             <button type="button" 
                                 @click="$refs.oldRecoFileInput.click()" 
                                 :disabled="oldRecoUploading" 
-                                title="Koi bhi Purana Reconciliation Excel (.xlsx) upload karein — Purana issue naye issue se update hoga aur columns load honge"
+                                :title="currentContractorOldReco ? ('Purana Reco: ' + currentContractorOldRecoConsumedCount + ' Consumed Items') : 'Koi bhi Purana Reconciliation Excel (.xlsx) upload karein'"
                                 style="height: 30px; padding: 0 12px; font-size: 0.76rem; font-weight: 800; border: none; border-radius: 6px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3); transition: all 0.2s;">
                                 <span>{{ oldRecoUploading ? '⏳' : '📤' }}</span>
                                 <span>{{ oldRecoUploading ? 'Uploading...' : 'Upload Reco' }}</span>
+                                <span v-if="hasCustomOldReco" style="font-size: 0.62rem; background: #a855f7; color: #fff; padding: 1px 5px; border-radius: 4px; font-weight: 900; margin-left: 2px;">CUSTOM</span>
                             </button>
 
                             <!-- ➕ Add Column -->
@@ -3220,20 +3190,20 @@
     <script src="js/core/storage.js?v=20261030_04"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261102_03"></script>
-    <script src="js/history.js?v=20261102_03"></script>
+    <script src="js/utils.js?v=20261102_04"></script>
+    <script src="js/history.js?v=20261102_04"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261102_03"></script>
-    <script src="js/billing.js?v=20261102_03"></script>
-    <script src="js/mapping.js?v=20261102_03"></script>
-    <script src="js/views.js?v=20261102_03"></script>
-    <script src="js/export.js?v=20261102_03"></script>
-    <script src="js/stock-importer.js?v=20261102_03"></script>
-    <script src="js/old-reco-importer.js?v=20261102_03"></script>
+    <script src="js/sync.js?v=20261102_04"></script>
+    <script src="js/billing.js?v=20261102_04"></script>
+    <script src="js/mapping.js?v=20261102_04"></script>
+    <script src="js/views.js?v=20261102_04"></script>
+    <script src="js/export.js?v=20261102_04"></script>
+    <script src="js/stock-importer.js?v=20261102_04"></script>
+    <script src="js/old-reco-importer.js?v=20261102_04"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261102_03"></script>
+    <script src="js/core/app.js?v=20261102_04"></script>
 </body>
 
 </html>
