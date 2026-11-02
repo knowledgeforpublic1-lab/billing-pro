@@ -841,6 +841,109 @@ it('SAP Stock: Resolves contractor issue when workOrderNo is a number and matche
     assert.strictEqual(appNumberWo.invoiceData.workOrderNo, '', 'Must clear old contractor work order when new firm has none');
 });
 
+// 20. Dynamic Purana Reco: Multi-column extraction, keep/delete columns, and calculation selection
+it('Dynamic Purana Reco: Multi-column Excel upload, column keep/delete, and calculation selection', async () => {
+    global.window = global;
+    const XLSX = require('xlsx');
+    global.XLSX = XLSX;
+    eval(fs.readFileSync('js/old-reco-importer.js', 'utf8'));
+
+    // Create an Excel file with multiple historical columns
+    const testWorkbook = XLSX.utils.book_new();
+    const sheetData = [
+        ['ASHOKA BUILDCON LTD - RDSS GADCHIROLI'],
+        ['CONTRACTOR MATERIAL RECONCILIATION SHEET'],
+        ['Contractor: M/s New Age Builders'],
+        [],
+        ['SR NO', 'ITEM CODE', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'BILL 1 RECO', 'BILL 2 RECO', 'TOTAL RECO', 'BALANCE'],
+        [1, '17000004', 'RSJ POLE 9 MTR', 'NO', 300, 20, 280, 100, 150, 250, 30],
+        [2, '17000005', 'RSJ POLE 11 MTR', 'NO', 100, 0, 100, 40, 50, 90, 10],
+        ['TOTAL', '', '', '', 400, 20, 380, 140, 200, 340, 40]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(testWorkbook, ws, 'New Age Builders');
+    const arrayBuffer = XLSX.write(testWorkbook, { type: 'array', bookType: 'xlsx' });
+
+    // 1. Parse Excel
+    const res = await window.OldRecoImporterModule.parseOldRecoExcelAsync(arrayBuffer, 'New Age Builders');
+    assert.strictEqual(res.processedContractors, 1, 'Should process 1 contractor sheet');
+    const rec = res.updatedDb.byContractorNorm['newagebuilders'];
+    assert.ok(rec, 'Record for New Age Builders must exist');
+    assert.ok(Array.isArray(rec.columnsConfig), 'columnsConfig must be an array');
+    assert.strictEqual(rec.columnsConfig.length, 4, 'Should detect 4 custom columns (BILL 1 RECO, BILL 2 RECO, TOTAL RECO, BALANCE)');
+
+    // Verify all 4 columns detected
+    const colNames = rec.columnsConfig.map(c => c.name);
+    assert.deepStrictEqual(colNames, ['BILL 1 RECO', 'BILL 2 RECO', 'TOTAL RECO', 'BALANCE']);
+
+    // Verify default calc column is TOTAL RECO
+    const calcCol = rec.columnsConfig.find(c => c.isCalc);
+    assert.ok(calcCol, 'A calculation column must be set');
+    assert.strictEqual(calcCol.name, 'TOTAL RECO', 'Default calc column should be TOTAL RECO');
+
+    // Verify material values extracted as-is
+    const pole = rec.materials['17000004'];
+    assert.ok(pole, 'Material 17000004 must exist');
+    assert.strictEqual(pole.customColumns['BILL 1 RECO'], 100);
+    assert.strictEqual(pole.customColumns['BILL 2 RECO'], 150);
+    assert.strictEqual(pole.customColumns['TOTAL RECO'], 250);
+    assert.strictEqual(pole.customColumns['BALANCE'], 30);
+    assert.strictEqual(pole.prevConsumption, 250, 'prevConsumption should match calc column TOTAL RECO');
+
+    // 2. Setup mock Vue instance to test Column Manager operations
+    window.ContractorOldReco = res.updatedDb;
+    const mockApp = Object.assign({
+        selectedContractorName: 'New Age Builders',
+        invoiceData: { contractorName: 'New Age Builders' },
+        projectMeta: { contractorName: 'New Age Builders' },
+        customOldRecoEdits: {},
+        reconRows: [pole],
+        showToast() {},
+        $forceUpdate() {}
+    }, window.OldRecoImporterModule);
+
+    // Initial visible columns
+    assert.strictEqual(mockApp.visibleOldRecoColumns().length, 4, 'Initially all 4 columns should be visible');
+    assert.strictEqual(mockApp.getPrevReconQty('17000004'), 250);
+
+    // 3. Test Hide/Delete Column logic
+    // Toggle (hide) BALANCE column
+    mockApp.toggleRecoColumn('BALANCE');
+    assert.strictEqual(mockApp.visibleOldRecoColumns().length, 3, 'After hiding BALANCE, 3 columns visible');
+    assert.strictEqual(mockApp.allOldRecoColumns().find(c => c.name === 'BALANCE').visible, false);
+
+    // Delete BILL 1 RECO column
+    global.confirm = () => true;
+    mockApp.deleteRecoColumn('BILL 1 RECO');
+    assert.strictEqual(mockApp.allOldRecoColumns().length, 3, 'After deleting BILL 1 RECO, 3 columns remain in allOldRecoColumns');
+    assert.strictEqual(mockApp.allOldRecoColumns().some(c => c.name === 'BILL 1 RECO'), false);
+
+    // 4. Test Switching Calculation Column
+    mockApp.setCalcColumn('BILL 2 RECO');
+    assert.strictEqual(mockApp.getPrevReconQty('17000004'), 150, 'getPrevReconQty should now use BILL 2 RECO (150)');
+
+    // 5. Test Cumulative and Balance calculation with new calc column
+    const mockRow = {
+        code: '17000004',
+        desc: 'RSJ POLE 9 MTR',
+        sapNetIssue: 280,
+        totalQty: 20 // 20 units in this bill
+    };
+    const cum = mockApp.getCumulativeReconQty(mockRow);
+    assert.strictEqual(cum, 170, 'Cumulative should be 150 + 20 = 170');
+    const bal = mockApp.getReconBalanceQty(mockRow);
+    assert.strictEqual(bal, 110, 'Balance should be 280 - 170 = 110');
+
+    // 6. Test Cell Editing for a specific custom column
+    mockApp.updateRecoColVal('17000004', 'BILL 2 RECO', 160);
+    assert.strictEqual(mockApp.getRecoColVal('17000004', 'BILL 2 RECO'), 160, 'Edited cell should return 160');
+    assert.strictEqual(mockApp.getPrevReconQty('17000004'), 160, 'getPrevReconQty should update to 160 because BILL 2 RECO is the active calc column');
+
+    // 7. Test Add New Custom Column
+    mockApp.addNewRecoColumn('STORE QTY');
+    assert.strictEqual(mockApp.allOldRecoColumns().some(c => c.name === 'STORE QTY'), true, 'STORE QTY column should be added');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

@@ -2,7 +2,7 @@
  * @file Old Reconciliation Importer Module
  * @description High-performance in-browser parser and manager for uploaded Contractor Old / Previous Reconciliation Excel files.
  * Uses the proven, robust 40-row multi-layer header detection from Reconciliation Master, supporting multi-sheet workbooks,
- * single-contractor sheets, 2-row merged headers, and auto-derivation of consumption and net issue.
+ * single-contractor sheets, 2-row merged headers, dynamic column extraction (keep/delete columns), and auto-derivation of consumption and net issue.
  *
  * @module OldRecoImporterModule
  * @since v2.0
@@ -48,7 +48,7 @@ window.OldRecoImporterModule = {
 
     /**
      * Proven 40-row header detection supporting 2-row merged headers & weighted matchers.
-     * Ported from Reconciliation Master engine for 100% format compatibility.
+     * Ported from Reconciliation Master engine with dynamic column header extraction.
      */
     detectSheetColumnsRobust(sheetRows) {
         const matchers = {
@@ -80,10 +80,10 @@ window.OldRecoImporterModule = {
                 if (!h) return 0;
                 if (h === 'total consumptio' || h === 'total consumption' || h === 'total consumtion' || h === 'total cosumption') return 10;
                 if (['amount', 'rate', 'cost', 'value', 'percent', '%'].some(ex => h.includes(ex))) return 0;
-                if (h.includes('total consumptio') || h.includes('total consumption') || h.includes('total consumtion') || h.includes('purana reco') || h.includes('prev recon')) return 9;
-                if (h.includes('total') && (h.includes('consum') || h.includes('cosum') || h.includes('erect') || h.includes('reconcil'))) return 8;
-                if (h === 'consumption' || h === 'consumtion' || h === 'consumed qty' || h === 'total erected' || h === 'erected qty' || h === 'purana reco' || h === 'prev recon' || h === 'reconciled') return 7;
-                if (h.includes('consumption') || h.includes('consumtion') || h.includes('erected') || h.includes('reconcil')) return 5;
+                if (h.includes('total consumptio') || h.includes('total consumption') || h.includes('total consumtion') || h.includes('purana reco') || h.includes('prev recon') || h.includes('total reco')) return 9;
+                if (h.includes('total') && (h.includes('consum') || h.includes('cosum') || h.includes('erect') || h.includes('reconcil') || h.includes('reco'))) return 8;
+                if (h === 'consumption' || h === 'consumtion' || h === 'consumed qty' || h === 'total erected' || h === 'erected qty' || h === 'purana reco' || h === 'prev recon' || h === 'reconciled' || h === 'reco') return 7;
+                if (h.includes('consumption') || h.includes('consumtion') || h.includes('erected') || h.includes('reconcil') || h.includes('reco')) return 5;
                 if (h === 'total' || h === 'total qty' || h === 'grand total') return 4;
                 return 0;
             },
@@ -125,6 +125,7 @@ window.OldRecoImporterModule = {
         let bestScore = -1;
         let bestColMap = null;
         let bestStartRow = 1;
+        let bestHeaderIndices = [];
 
         for (let r = 0; r < maxHeaderRows; r++) {
             const row1 = sheetRows[r] || [];
@@ -135,13 +136,15 @@ window.OldRecoImporterModule = {
             const tests = [
                 {
                     headerArr: Array.from({ length: maxCols }, (_, c) => this.cleanHeaderStr(row1[c])),
-                    nextRow: r + 1
+                    nextRow: r + 1,
+                    indices: [r]
                 }
             ];
             if (row2.length > 0) {
                 tests.push({
                     headerArr: Array.from({ length: maxCols }, (_, c) => this.cleanHeaderStr(row1[c] + ' ' + row2[c])),
-                    nextRow: r + 2
+                    nextRow: r + 2,
+                    indices: [r, r + 1]
                 });
             }
 
@@ -184,6 +187,7 @@ window.OldRecoImporterModule = {
                     bestScore = score;
                     bestColMap = curColMap;
                     bestStartRow = test.nextRow;
+                    bestHeaderIndices = test.indices;
                 }
             }
         }
@@ -211,15 +215,85 @@ window.OldRecoImporterModule = {
             }
         }
 
-        return { colMap, startRow, score: bestScore };
+        // Extract raw header names for all columns
+        const maxCols = Math.max(...sheetRows.slice(0, 35).map(r => r ? r.length : 0), 0);
+        const headerNames = [];
+        if (bestHeaderIndices && bestHeaderIndices.length > 0) {
+            const r1 = bestHeaderIndices[0];
+            const r2 = bestHeaderIndices.length > 1 ? bestHeaderIndices[1] : null;
+            for (let c = 0; c < maxCols; c++) {
+                const p1 = (sheetRows[r1] && sheetRows[r1][c] !== undefined && sheetRows[r1][c] !== null) ? String(sheetRows[r1][c]).trim() : '';
+                const p2 = (r2 !== null && sheetRows[r2] && sheetRows[r2][c] !== undefined && sheetRows[r2][c] !== null) ? String(sheetRows[r2][c]).trim() : '';
+                let h = (p1 && p2) ? (p1 + ' ' + p2) : (p1 || p2);
+                h = h.replace(/\s+/g, ' ').trim();
+                headerNames.push(h);
+            }
+        }
+
+        return { colMap, startRow, score: bestScore, headerNames, headerRowIndices: bestHeaderIndices };
     },
 
     /**
      * Extracts materials from a sheet using the detected columns and smart fallbacks.
+     * Preserves all extra/historical columns dynamically into customColumns and columnsConfig.
      */
-    extractMaterialsFromRows(sheetRows, targetMaterials) {
-        const { colMap, startRow } = this.detectSheetColumnsRobust(sheetRows);
-        if (colMap.itemCode === -1) return 0;
+    extractMaterialsFromRows(sheetRows, targetMaterials, outMeta = {}) {
+        const { colMap, startRow, headerNames } = this.detectSheetColumnsRobust(sheetRows);
+        if (colMap.itemCode === -1) {
+            outMeta.columnsConfig = [];
+            outMeta.customColumns = [];
+            return 0;
+        }
+
+        // Identify custom data columns from headerNames
+        const reservedIndices = new Set();
+        if (colMap.itemCode !== -1) reservedIndices.add(colMap.itemCode);
+        if (colMap.itemDesc !== -1) reservedIndices.add(colMap.itemDesc);
+        if (colMap.uom !== -1) reservedIndices.add(colMap.uom);
+        if (colMap.issue !== -1) reservedIndices.add(colMap.issue);
+        if (colMap.mrn !== -1) reservedIndices.add(colMap.mrn);
+        if (colMap.netIssue !== -1) reservedIndices.add(colMap.netIssue);
+
+        const customCols = [];
+        if (Array.isArray(headerNames)) {
+            for (let c = 0; c < headerNames.length; c++) {
+                if (reservedIndices.has(c)) continue;
+                const rawH = headerNames[c] || '';
+                const cleanH = this.cleanHeaderStr(rawH);
+                if (!rawH && !cleanH) continue;
+                if (['sr no', 'sr. no', 'sr. no.', 'sr', 's no', 'sl no', 'sl. no', 'sl. no.', 's.no'].includes(cleanH)) continue;
+                customCols.push({ index: c, name: rawH || ('Column ' + (c + 1)), clean: cleanH });
+            }
+        }
+
+        // Determine calculation column (the primary Purana Reco column for cumulative calculations)
+        let calcColName = '';
+        if (colMap.consumption !== -1) {
+            const found = customCols.find(c => c.index === colMap.consumption);
+            if (found) calcColName = found.name;
+        }
+        if (!calcColName && customCols.length > 0) {
+            const found = customCols.find(c => 
+                c.clean.includes('consum') || c.clean.includes('cosum') || 
+                c.clean.includes('reco') || c.clean.includes('erect') || c.clean.includes('prev')
+            );
+            if (found) calcColName = found.name;
+        }
+        if (!calcColName && customCols.length > 0) {
+            calcColName = customCols[0].name;
+        }
+
+        const columnsConfig = customCols.map(c => ({
+            name: c.name,
+            visible: true,
+            isCalc: (c.name === calcColName)
+        }));
+        if (columnsConfig.length > 0 && !columnsConfig.some(c => c.isCalc)) {
+            columnsConfig[0].isCalc = true;
+        }
+
+        outMeta.columnsConfig = columnsConfig;
+        outMeta.customColumns = customCols.map(c => c.name);
 
         let added = 0;
         for (let r = startRow; r < sheetRows.length; r++) {
@@ -250,6 +324,18 @@ window.OldRecoImporterModule = {
                 cons = Math.max(0, netIssue - bal);
             }
 
+            // Extract all custom column values
+            const customColumnValues = {};
+            for (const col of customCols) {
+                const val = this.parseQty(row[col.index]);
+                customColumnValues[col.name] = Math.round(val * 1000) / 1000;
+            }
+
+            // If calcColName is set and present, use its value as prevConsumption
+            if (calcColName && customColumnValues[calcColName] !== undefined) {
+                cons = customColumnValues[calcColName];
+            }
+
             // Ensure clean material key
             const matCode = codeStr || descStr;
             if (!matCode) continue;
@@ -260,7 +346,8 @@ window.OldRecoImporterModule = {
                 uom: colMap.uom !== -1 ? String(row[colMap.uom] || 'No') : 'No',
                 prevConsumption: Math.round(cons * 1000) / 1000,
                 netIssue: Math.round(netIssue * 1000) / 1000,
-                balanceQty: Math.round(bal * 1000) / 1000
+                balanceQty: Math.round(bal * 1000) / 1000,
+                customColumns: customColumnValues
             };
             added++;
         }
@@ -339,18 +426,21 @@ window.OldRecoImporterModule = {
                     ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                     : {};
 
-                const added = this.extractMaterialsFromRows(rows, materials);
+                const sheetMeta = {};
+                const added = this.extractMaterialsFromRows(rows, materials, sheetMeta);
                 if (added > 0) {
                     updatedDb.byContractorNorm[normKey] = {
                         contractorName: contractorName,
                         itemCount: Object.keys(materials).length,
-                        consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                        materials: materials
+                        consumedCount: Object.values(materials).filter(m => (m.prevConsumption > 0 || Object.values(m.customColumns || {}).some(v => v > 0))).length,
+                        materials: materials,
+                        columnsConfig: sheetMeta.columnsConfig || [],
+                        customColumns: sheetMeta.customColumns || []
                     };
                     processedContractors++;
                 }
 
-                if (i % 4 === 0) {
+                if (i % 8 === 0) {
                     if (onProgress) {
                         onProgress({ current: i + 1, total: candidateSheets.length, contractor: contractorName });
                     }
@@ -374,7 +464,8 @@ window.OldRecoImporterModule = {
                 ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
                 : {};
 
-            const added = this.extractMaterialsFromRows(rows, materials);
+            const sheetMeta = {};
+            const added = this.extractMaterialsFromRows(rows, materials, sheetMeta);
             if (added === 0) {
                 throw new Error("Unable to extract material reconciliation items from sheet '" + targetSheetName + "'. Please check the sheet headers.");
             }
@@ -382,8 +473,10 @@ window.OldRecoImporterModule = {
             updatedDb.byContractorNorm[normKey] = {
                 contractorName: targetContractor,
                 itemCount: Object.keys(materials).length,
-                consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                materials: materials
+                consumedCount: Object.values(materials).filter(m => (m.prevConsumption > 0 || Object.values(m.customColumns || {}).some(v => v > 0))).length,
+                materials: materials,
+                columnsConfig: sheetMeta.columnsConfig || [],
+                customColumns: sheetMeta.customColumns || []
             };
             processedContractors = 1;
         }
@@ -399,104 +492,38 @@ window.OldRecoImporterModule = {
         if (typeof XLSX === 'undefined') {
             throw new Error('XLSX parser library is not loaded.');
         }
-
-        const wb = XLSX.read(arrayBuffer, {
-            type: 'array',
-            cellStyles: false,
-            cellHTML: false,
-            cellFormula: false,
-            cellDates: false,
-            cellNF: false
-        });
-
+        const wb = XLSX.read(arrayBuffer, { type: 'array' });
         const sheetNames = wb.SheetNames || [];
-        if (sheetNames.length === 0) {
-            throw new Error('The uploaded Excel file contains no worksheets.');
-        }
+        if (sheetNames.length === 0) throw new Error('Empty workbook.');
 
-        const excludeSheets = [
-            'debit rate', 'gadchiroli t-10__1458', 'non working 30.06.2026', 
-            'bill summary', 'contractor bill details'
-        ];
-
-        const candidateSheets = sheetNames.filter(s => {
-            const sLower = this.cleanHeaderStr(s);
-            return sLower && !excludeSheets.includes(sLower);
-        });
+        const targetSheetName = sheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[targetSheetName], { header: 1, defval: '' });
+        const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
+        const normKey = this.normContractorName(targetContractor);
 
         const existingDb = window.ContractorOldReco || window.DefaultContractorOldReco || { byContractorNorm: {} };
         const updatedDb = {
-            meta: {
-                extractedAt: new Date().toISOString(),
-                contractorCount: 0,
-                version: 'custom_upload'
-            },
+            meta: { extractedAt: new Date().toISOString(), contractorCount: 1, version: 'custom_sync' },
             byContractorNorm: Object.assign({}, existingDb.byContractorNorm || {})
         };
 
-        let processedContractors = 0;
-
-        if (candidateSheets.length > 2) {
-            for (const sName of candidateSheets) {
-                const sheet = wb.Sheets[sName];
-                if (!sheet) continue;
-
-                const contractorName = String(sName).trim();
-                const normKey = this.normContractorName(contractorName);
-                if (!normKey) continue;
-
-                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                if (!rows || rows.length < 2) continue;
-
-                const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
-                    ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
-                    : {};
-
-                const added = this.extractMaterialsFromRows(rows, materials);
-                if (added > 0) {
-                    updatedDb.byContractorNorm[normKey] = {
-                        contractorName: contractorName,
-                        itemCount: Object.keys(materials).length,
-                        consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                        materials: materials
-                    };
-                    processedContractors++;
-                }
-            }
-        } else {
-            const targetSheetName = candidateSheets[0] || sheetNames[0];
-            const sheet = wb.Sheets[targetSheetName];
-            if (!sheet) throw new Error('Worksheet not found.');
-
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-            if (!rows || rows.length < 2) throw new Error('Worksheet contains insufficient rows.');
-
-            const targetContractor = defaultContractorName || targetSheetName || 'Selected Contractor';
-            const normKey = this.normContractorName(targetContractor);
-
-            const materials = (updatedDb.byContractorNorm[normKey] && updatedDb.byContractorNorm[normKey].materials)
-                ? Object.assign({}, updatedDb.byContractorNorm[normKey].materials)
-                : {};
-
-            const added = this.extractMaterialsFromRows(rows, materials);
-            if (added === 0) {
-                throw new Error("Unable to extract materials from sheet '" + targetSheetName + "'.");
-            }
-
+        const materials = {};
+        const sheetMeta = {};
+        const added = this.extractMaterialsFromRows(rows, materials, sheetMeta);
+        if (added > 0) {
             updatedDb.byContractorNorm[normKey] = {
                 contractorName: targetContractor,
                 itemCount: Object.keys(materials).length,
-                consumedCount: Object.values(materials).filter(m => m.prevConsumption > 0).length,
-                materials: materials
+                consumedCount: Object.values(materials).filter(m => (m.prevConsumption > 0 || Object.values(m.customColumns || {}).some(v => v > 0))).length,
+                materials: materials,
+                columnsConfig: sheetMeta.columnsConfig || [],
+                customColumns: sheetMeta.customColumns || []
             };
-            processedContractors = 1;
         }
-
-        updatedDb.meta.contractorCount = Object.keys(updatedDb.byContractorNorm).length;
-        return { updatedDb, processedContractors };
+        return { updatedDb, processedContractors: 1 };
     },
 
-    // ─── INDEXEDDB PERSISTENCE ───
+    // ─── INDEXEDDB STORAGE INTEGRATION ─────────────────────────────────
     async saveCustomOldRecoToDb(recoData) {
         return new Promise((resolve) => {
             if (!window.indexedDB) {
@@ -665,6 +692,213 @@ window.OldRecoImporterModule = {
         return String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '').trim();
     },
 
+    // ─── DYNAMIC RECO COLUMNS API ──────────────────────────────────────
+    visibleOldRecoColumns() {
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco || !Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
+            return [];
+        }
+        return reco.columnsConfig.filter(c => c && c.visible !== false);
+    },
+
+    allOldRecoColumns() {
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco || !Array.isArray(reco.columnsConfig)) {
+            return [];
+        }
+        return reco.columnsConfig;
+    },
+
+    openRecoColumnModal() {
+        this.showRecoColumnModal = true;
+    },
+
+    closeRecoColumnModal() {
+        this.showRecoColumnModal = false;
+    },
+
+    toggleRecoColumn(colName) {
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco || !Array.isArray(reco.columnsConfig)) return;
+        const col = reco.columnsConfig.find(c => c.name === colName);
+        if (col) {
+            col.visible = (col.visible === false) ? true : false;
+            this.persistRecoColumnsConfig();
+            this.$forceUpdate();
+        }
+    },
+
+    deleteRecoColumn(colName) {
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco) return;
+        if (typeof confirm === 'function' && !confirm(`Are you sure you want to delete column "${colName}"?`)) return;
+
+        if (Array.isArray(reco.columnsConfig)) {
+            const idx = reco.columnsConfig.findIndex(c => c.name === colName);
+            if (idx !== -1) {
+                const wasCalc = reco.columnsConfig[idx].isCalc;
+                reco.columnsConfig.splice(idx, 1);
+                if (wasCalc && reco.columnsConfig.length > 0) {
+                    reco.columnsConfig[0].isCalc = true;
+                }
+            }
+        }
+        if (Array.isArray(reco.customColumns)) {
+            const cIdx = reco.customColumns.indexOf(colName);
+            if (cIdx !== -1) reco.customColumns.splice(cIdx, 1);
+        }
+        if (reco.materials) {
+            Object.values(reco.materials).forEach(m => {
+                if (m.customColumns && m.customColumns[colName] !== undefined) {
+                    delete m.customColumns[colName];
+                }
+            });
+        }
+        const cKey = this.getContractorNormKey();
+        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey]) {
+            delete this.customOldRecoEdits[cKey]['__col_' + colName];
+            Object.keys(this.customOldRecoEdits[cKey]).forEach(k => {
+                if (k.endsWith('__' + colName)) {
+                    delete this.customOldRecoEdits[cKey][k];
+                }
+            });
+        }
+        this.persistRecoColumnsConfig();
+        this.$forceUpdate();
+        if (typeof this.showToast === 'function') {
+            this.showToast(`Column "${colName}" deleted`, 'Check');
+        }
+    },
+
+    setCalcColumn(colName) {
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco || !Array.isArray(reco.columnsConfig)) return;
+        reco.columnsConfig.forEach(c => {
+            c.isCalc = (c.name === colName);
+        });
+        if (reco.materials) {
+            Object.values(reco.materials).forEach(m => {
+                if (m.customColumns && m.customColumns[colName] !== undefined) {
+                    m.prevConsumption = Number(m.customColumns[colName]) || 0;
+                }
+            });
+        }
+        this.persistRecoColumnsConfig();
+        this.$forceUpdate();
+        if (typeof this.showToast === 'function') {
+            this.showToast(`Set "${colName}" as calculation column`, 'Check');
+        }
+    },
+
+    addNewRecoColumn(colName) {
+        const name = String(colName || this.newRecoColumnInput || '').trim();
+        if (!name) return;
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (!reco) {
+            if (typeof this.showToast === 'function') this.showToast('Please select a contractor first', 'Alert');
+            return;
+        }
+        if (!Array.isArray(reco.columnsConfig)) reco.columnsConfig = [];
+        if (!Array.isArray(reco.customColumns)) reco.customColumns = [];
+
+        if (reco.columnsConfig.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+            if (typeof this.showToast === 'function') this.showToast('Column already exists!', 'Alert');
+            return;
+        }
+        reco.columnsConfig.push({ name: name, visible: true, isCalc: reco.columnsConfig.length === 0 });
+        reco.customColumns.push(name);
+        this.newRecoColumnInput = '';
+        this.persistRecoColumnsConfig();
+        this.$forceUpdate();
+        if (typeof this.showToast === 'function') this.showToast(`Column "${name}" added!`, 'Check');
+    },
+
+    getRecoColVal(code, colName) {
+        if (!code || !colName) return 0;
+        const cKey = this.getContractorNormKey();
+        const editKey = code + '__' + colName;
+        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey] && this.customOldRecoEdits[cKey][editKey] !== undefined) {
+            const v = Number(this.customOldRecoEdits[cKey][editKey]);
+            return isNaN(v) ? 0 : v;
+        }
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (reco && reco.materials && reco.materials[code]) {
+            const m = reco.materials[code];
+            if (m.customColumns && m.customColumns[colName] !== undefined) {
+                const v = Number(m.customColumns[colName]);
+                return isNaN(v) ? 0 : v;
+            }
+            const colCfg = Array.isArray(reco.columnsConfig) ? reco.columnsConfig.find(c => c.name === colName) : null;
+            if (colCfg && colCfg.isCalc && m.prevConsumption !== undefined) {
+                return Number(m.prevConsumption) || 0;
+            }
+        }
+        return 0;
+    },
+
+    updateRecoColVal(code, colName, rawVal) {
+        if (!code || !colName) return;
+        const cKey = this.getContractorNormKey();
+        if (!cKey) return;
+        const num = parseFloat(String(rawVal).replace(/,/g, '').trim());
+        const finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
+
+        if (!this.customOldRecoEdits) this.customOldRecoEdits = {};
+        if (!this.customOldRecoEdits[cKey]) this.customOldRecoEdits[cKey] = {};
+        this.customOldRecoEdits[cKey][code + '__' + colName] = finalVal;
+
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (reco) {
+            if (!reco.materials) reco.materials = {};
+            if (!reco.materials[code]) {
+                reco.materials[code] = { code, desc: code, uom: 'No', prevConsumption: 0, customColumns: {} };
+            }
+            if (!reco.materials[code].customColumns) reco.materials[code].customColumns = {};
+            reco.materials[code].customColumns[colName] = finalVal;
+
+            const colCfg = Array.isArray(reco.columnsConfig) ? reco.columnsConfig.find(c => c.name === colName) : null;
+            if (colCfg && colCfg.isCalc) {
+                reco.materials[code].prevConsumption = finalVal;
+                this.customOldRecoEdits[cKey][code] = finalVal;
+            }
+        }
+
+        this.hasCustomOldReco = true;
+        this.persistRecoColumnsConfig();
+        this.$forceUpdate();
+    },
+
+    getRecoColTotal(colName) {
+        if (!colName) return 0;
+        const rows = this.reconRows || [];
+        let tot = 0;
+        for (let i = 0; i < rows.length; i++) {
+            tot += (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(rows[i].code, colName) : 0;
+        }
+        return Math.round(tot * 1000) / 1000;
+    },
+
+    hasAnyRecoQty(code) {
+        if (!code) return false;
+        if (typeof this.getPrevReconQty === 'function' && this.getPrevReconQty(code) > 0) return true;
+        const cols = (typeof this.visibleOldRecoColumns === 'function') ? this.visibleOldRecoColumns() : [];
+        for (let i = 0; i < cols.length; i++) {
+            if (typeof this.getRecoColVal === 'function' && this.getRecoColVal(code, cols[i].name) > 0) return true;
+        }
+        return false;
+    },
+
+    persistRecoColumnsConfig() {
+        try {
+            if (this.customOldRecoEdits) {
+                localStorage.setItem('billing_custom_old_reco_edits_v1', JSON.stringify(this.customOldRecoEdits));
+            }
+            if (window.ContractorOldReco) {
+                window.OldRecoImporterModule.saveCustomOldRecoToDb(window.ContractorOldReco);
+            }
+        } catch(e) {}
+    },
+
     getPrevReconQty(code) {
         if (!code) return 0;
         const cKey = this.getContractorNormKey();
@@ -675,6 +909,13 @@ window.OldRecoImporterModule = {
         const oldReco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
         if (oldReco && oldReco.materials && oldReco.materials[code]) {
             const m = oldReco.materials[code];
+            if (Array.isArray(oldReco.columnsConfig) && oldReco.columnsConfig.length > 0) {
+                const calcCol = oldReco.columnsConfig.find(c => c.isCalc);
+                if (calcCol && m.customColumns && m.customColumns[calcCol.name] !== undefined) {
+                    const cVal = Number(m.customColumns[calcCol.name]);
+                    return isNaN(cVal) ? 0 : cVal;
+                }
+            }
             const val = Number(m.prevConsumption !== undefined ? m.prevConsumption : (m.consumption !== undefined ? m.consumption : 0));
             return isNaN(val) ? 0 : val;
         }
@@ -707,15 +948,14 @@ window.OldRecoImporterModule = {
                     uom: 'No',
                     prevConsumption: finalVal,
                     netIssue: 0,
-                    balanceQty: -finalVal
+                    balanceQty: -finalVal,
+                    customColumns: {}
                 };
             }
         }
 
         this.hasCustomOldReco = true;
-        try {
-            localStorage.setItem('billing_custom_old_reco_edits_v1', JSON.stringify(this.customOldRecoEdits));
-        } catch(e) {}
+        this.persistRecoColumnsConfig();
         this.$forceUpdate();
     },
 
@@ -770,8 +1010,18 @@ window.OldRecoImporterModule = {
 
             this.hasCustomOldReco = true;
             this.$forceUpdate();
+
+            const cKey = this.getContractorNormKey();
+            const activeReco = updatedDb.byContractorNorm[cKey];
+            const colCount = (activeReco && activeReco.columnsConfig && activeReco.columnsConfig.length) || 0;
+
             if (typeof this.showToast === 'function') {
-                this.showToast(`Old Reconciliation Synced! (${res.processedContractors} contractors updated)`, 'Check');
+                this.showToast(`Purana Reco Uploaded! (${res.processedContractors} contractors, ${colCount} columns)`, 'Check');
+            }
+
+            // Auto-open column manager modal if multiple columns exist so user can select columns
+            if (colCount > 1) {
+                this.showRecoColumnModal = true;
             }
         } catch (err) {
             console.error('[OldRecoUpload Error]:', err);
@@ -785,7 +1035,7 @@ window.OldRecoImporterModule = {
     },
 
     async resetToDefaultOldReco() {
-        if (!confirm('Are you sure you want to reset all old reconciliation data to defaults? Any custom uploaded files and edits will be cleared.')) return;
+        if (typeof confirm === 'function' && !confirm('Are you sure you want to reset all old reconciliation data to defaults? Any custom uploaded files and edits will be cleared.')) return;
         try {
             await window.OldRecoImporterModule.clearCustomOldRecoFromDb();
             try { localStorage.removeItem('billing_custom_old_reco_edits_v1'); } catch(e) {}
@@ -794,17 +1044,18 @@ window.OldRecoImporterModule = {
                 window.ContractorOldReco = JSON.parse(JSON.stringify(window.DefaultContractorOldReco));
             }
             this.hasCustomOldReco = false;
+            this.showRecoColumnModal = false;
             this.$forceUpdate();
             if (typeof this.showToast === 'function') {
                 this.showToast('Reset to default built-in old reconciliation baseline.', 'Check');
             }
-        } catch(e) {
-            console.error('Reset old reco error:', e);
+        } catch (err) {
+            console.error('[ResetOldReco Error]:', err);
+            if (typeof this.showToast === 'function') this.showToast('Reset error: ' + err.message, 'Alert');
         }
     },
 
     openOldRecoModal() {
-        this.oldRecoModalSearch = '';
         this.showOldRecoModal = true;
     },
 

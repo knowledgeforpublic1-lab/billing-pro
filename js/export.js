@@ -117,14 +117,22 @@ window.ExportModule = {
                     };
                     
                     const pData = this.pivotReconciliationData;
-                    // ↩️ Reverse ON ho to screen wali sheet export karo (invoice-activity × location columns, filtered rows)
+                    // ↩️ Dynamic Old Reco Columns & Reverse ON handling
                     const revOn = !!this.reverseEntry;
                     const rcols = revOn ? this.reverseReconColumns : [];
                     const expRows = this.reconRows;
+
+                    const recoCols = (typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0)
+                        ? this.visibleOldRecoColumns()
+                        : (Array.isArray(this.visibleOldRecoColumns) && this.visibleOldRecoColumns.length > 0)
+                            ? this.visibleOldRecoColumns
+                            : [{ name: 'PURANA RECO', isCalc: true }];
+                    const recoColNames = recoCols.map(c => c.name);
+
                     const expHeaders = revOn
-                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'PURANA RECO'].concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE'])
-                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE', 'PURANA RECO'].concat(pData.columns).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE']);
-                    const totalCols = 11 + (revOn ? rcols.length : pData.columns.length);
+                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(recoColNames).concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE'])
+                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(recoColNames).concat(pData.columns).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE']);
+                    const totalCols = 7 + recoColNames.length + (revOn ? rcols.length : pData.columns.length) + 3;
                     
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
@@ -159,9 +167,19 @@ window.ExportModule = {
                         row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== 0) ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || rowObj.totalQty || '');
 
                         const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
-                        row.getCell(8).value = prevR || '';
+                        recoCols.forEach((orc, ocIdx) => {
+                            const cIdx = 8 + ocIdx;
+                            if (orc.name === 'PURANA RECO') {
+                                row.getCell(cIdx).value = prevR || '';
+                            } else if (typeof this.getRecoColVal === 'function') {
+                                const val = this.getRecoColVal(rowObj.code, orc.name);
+                                row.getCell(cIdx).value = val || '';
+                            } else {
+                                row.getCell(cIdx).value = '';
+                            }
+                        });
 
-                        const midColStart = 9;
+                        const midColStart = 8 + recoCols.length;
                         if (revOn) {
                             rcols.forEach((rc, cIdx) => {
                                 row.getCell(midColStart + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
@@ -208,9 +226,19 @@ window.ExportModule = {
                     totalRow.getCell(5).value = (this.reconTotals && this.reconTotals.grossIssue) || '';
                     totalRow.getCell(6).value = (this.reconTotals && this.reconTotals.mrnReturn) || '';
                     totalRow.getCell(7).value = (this.reconTotals && this.reconTotals.netIssue) || '';
-                    totalRow.getCell(8).value = (this.reconTotals && this.reconTotals.prevRecon) || '';
 
-                    const midColStart = 9;
+                    recoCols.forEach((orc, ocIdx) => {
+                        const cIdx = 8 + ocIdx;
+                        if (orc.name === 'PURANA RECO') {
+                            totalRow.getCell(cIdx).value = (this.reconTotals && this.reconTotals.prevRecon) || '';
+                        } else if (typeof this.getRecoColTotal === 'function') {
+                            totalRow.getCell(cIdx).value = this.getRecoColTotal(orc.name) || '';
+                        } else {
+                            totalRow.getCell(cIdx).value = '';
+                        }
+                    });
+
+                    const midColStart = 8 + recoCols.length;
                     if (revOn) {
                         rcols.forEach((rc, cIdx) => {
                             totalRow.getCell(midColStart + cIdx).value = (this.reconTotals && this.reconTotals.reverseTotals && this.reconTotals.reverseTotals[rc.key]) || '';

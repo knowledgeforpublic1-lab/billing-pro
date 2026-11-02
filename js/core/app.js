@@ -140,6 +140,8 @@
                 oldRecoUploading: false,
                 showOldRecoModal: false,
                 oldRecoModalSearch: '',
+                showRecoColumnModal: false,
+                newRecoColumnInput: '',
                 hasCustomOldReco: false,
                 customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
@@ -526,7 +528,7 @@
                         (row.sapIssuedQty && row.sapIssuedQty !== 0) || 
                         (row.sapGrossIssue && row.sapGrossIssue !== 0) ||
                         (row.sapNetIssue && row.sapNetIssue !== 0) ||
-                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(row.code) > 0)
+                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(row.code) > 0) || ((typeof this.hasAnyRecoQty === 'function') && this.hasAnyRecoQty(row.code))
                     )
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
@@ -612,6 +614,22 @@
                 return s && s.materials ? Object.keys(s.materials).length : 0;
             },
 
+            visibleOldRecoColumns() {
+                if (typeof this.getContractorOldReco !== 'function') return [];
+                const reco = this.getContractorOldReco();
+                if (!reco || !Array.isArray(reco.columnsConfig) || reco.columnsConfig.length === 0) {
+                    return [];
+                }
+                return reco.columnsConfig.filter(c => c && c.visible !== false);
+            },
+            allOldRecoColumns() {
+                if (typeof this.getContractorOldReco !== 'function') return [];
+                const reco = this.getContractorOldReco();
+                if (!reco || !Array.isArray(reco.columnsConfig)) {
+                    return [];
+                }
+                return reco.columnsConfig;
+            },
             currentContractorOldReco() {
                 return (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
             },
