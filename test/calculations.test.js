@@ -1013,6 +1013,40 @@ it('Dynamic Old Reco: Updates contractor gross/net issue from newly uploaded rec
     assert.strictEqual(sapMap['17000005'].sapNetIssue, 240);
 });
 
+it('Excel Formula & Cell Linking: Evaluates math expressions, column references, and dynamic links', () => {
+    const mockApp = Object.assign({
+        selectedContractorName: 'Test Contractor',
+        customOldRecoEdits: {},
+        reconRows: [],
+        showToast() {},
+        $forceUpdate() {}
+    }, window.OldRecoImporterModule);
+
+    const row = {
+        code: '17000004',
+        desc: 'RSJ POLE 9 MTR',
+        sapGrossIssue: 250,
+        sapMrnReturn: 30,
+        sapNetIssue: 220,
+        totalQty: 20
+    };
+
+    // 1. Math formulas
+    assert.strictEqual(mockApp.evaluateRecoFormula('=100 + 50', row), 150);
+    assert.strictEqual(mockApp.evaluateRecoFormula('=250 * 2', row), 500);
+
+    // 2. Column references
+    assert.strictEqual(mockApp.evaluateRecoFormula('=[ISSUE] - [MRN]', row), 220);
+    assert.strictEqual(mockApp.evaluateRecoFormula('=ISSUE - MRN', row), 220);
+    assert.strictEqual(mockApp.evaluateRecoFormula('=[NET ISSUE] - 100', row), 120);
+    assert.strictEqual(mockApp.evaluateRecoFormula('=NET * 0.5', row), 110);
+
+    // 3. Update cell with formula
+    mockApp.updateRecoColVal('17000004', 'PURANA RECO', '=[ISSUE] - [MRN]', row);
+    assert.strictEqual(mockApp.getRecoFormula('17000004', 'PURANA RECO'), '=[ISSUE] - [MRN]');
+    assert.strictEqual(mockApp.getRecoColVal('17000004', 'PURANA RECO', row), 220);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

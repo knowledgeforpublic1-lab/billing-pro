@@ -144,6 +144,10 @@
                 newRecoColumnInput: '',
                 hasCustomOldReco: false,
                 recoRevision: 0,
+                recoSearchQuery: '',
+                activeRecoCell: null,
+                activeRecoCellFormula: '',
+                focusedRecoInput: null,
                 customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
@@ -809,14 +813,15 @@
                     this.reverseReconColumns.forEach(rc => { revTotals[rc.key] = 0; });
                 }
 
-                rows.forEach(r => {
+                for (let i = 0; i < rows.length; i++) {
+                    const r = rows[i];
                     const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : (r.sapIssuedQty > 0 ? r.sapIssuedQty : 0));
                     const mrn = Number(r.sapMrnReturn || 0);
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
                     const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
                     const thisB = Number(r.totalQty) || 0;
-                    const cum = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(r) : (prevR + thisB);
-                    const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(r) : (net - cum);
+                    const cum = (r._cum !== undefined) ? r._cum : (prevR + thisB);
+                    const bal = (r._bal !== undefined) ? r._bal : (net - cum);
 
                     grossIssue += gross;
                     mrnReturn += mrn;
@@ -827,17 +832,20 @@
                     balanceTotal += bal;
 
                     if (r.activities) {
-                        Object.keys(r.activities).forEach(k => {
+                        const aKeys = Object.keys(r.activities);
+                        for (let j = 0; j < aKeys.length; j++) {
+                            const k = aKeys[j];
                             actTotals[k] = (actTotals[k] || 0) + (Number(r.activities[k]) || 0);
-                        });
+                        }
                     }
                     if (this.reverseEntry && this.reverseReconColumns) {
-                        this.reverseReconColumns.forEach(rc => {
+                        for (let j = 0; j < this.reverseReconColumns.length; j++) {
+                            const rc = this.reverseReconColumns[j];
                             const val = Number(this.reconCellLoc(r.code, rc)) || 0;
                             revTotals[rc.key] = (revTotals[rc.key] || 0) + val;
-                        });
+                        }
                     }
-                });
+                }
 
                 return {
                     grossIssue: Math.round(grossIssue * 1000) / 1000,
@@ -852,9 +860,16 @@
                 };
             },
             reconRows() {
+                const _rev = this.recoRevision;
+                const rows = (this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : [];
+                const unmappedSet = this.unmappedContractorIssuedRowsSet;
+                const q = (this.recoSearchQuery || '').trim().toLowerCase();
+
+                let filtered = rows;
+
                 if (!this.reverseEntry) {
                     if (this.reconFilterZeroOnly) {
-                        return this.pivotReconciliationData.rows.filter(r => (
+                        filtered = rows.filter(r => (
                             r.totalQty > 0 || 
                             (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
                             (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
@@ -862,19 +877,39 @@
                             ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
                         ));
                     }
-                    return this.pivotReconciliationData.rows;
+                } else {
+                    const codes = this.reverseShownCodes || [];
+                    const cols = this.reverseReconColumns || [];
+                    filtered = rows.filter(r => {
+                        if (codes.indexOf(r.code) === -1) return false;
+                        if (this.reconFilterZeroOnly) {
+                            let t = 0;
+                            for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
+                            return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0));
+                        }
+                        return true;
+                    });
                 }
-                const codes = this.reverseShownCodes;
-                const cols = this.reverseReconColumns;
-                return this.pivotReconciliationData.rows.filter(r => {
-                    if (codes.indexOf(r.code) === -1) return false;
-                    if (this.reconFilterZeroOnly) {
-                        let t = 0;
-                        for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
-                        return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0));
-                    }
-                    return true;
-                });
+
+                if (q) {
+                    filtered = filtered.filter(r => 
+                        (r.code && r.code.toLowerCase().includes(q)) || 
+                        (r.desc && r.desc.toLowerCase().includes(q))
+                    );
+                }
+
+                // Precompute _cum, _bal, and _isUnmapped once for fast 0-lag rendering
+                for (let i = 0; i < filtered.length; i++) {
+                    const r = filtered[i];
+                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
+                    const thisB = Number(r.totalQty) || 0;
+                    r._cum = Math.round((prevR + thisB) * 1000) / 1000;
+                    const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                    r._bal = Math.round((net - r._cum) * 1000) / 1000;
+                    r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
+                }
+
+                return filtered;
             },
             reconNonZeroCount() {
                 return (this.pivotReconciliationData.rows || []).filter(r => (

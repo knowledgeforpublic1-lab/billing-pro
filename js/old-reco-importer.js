@@ -921,18 +921,191 @@ window.OldRecoImporterModule = {
         if (typeof this.showToast === 'function') this.showToast(`Column "${name}" add ho gaya!`, 'Check');
     },
 
-    getRecoColVal(code, colName) {
-        if (!code || !colName) return 0;
-        if (colName === 'PURANA RECO') {
-            return this.getPrevReconQty(code);
+    // ─── EXCEL FORMULA & CELL LINKING ENGINE ───────────────────────────
+    evaluateRecoFormula(formulaStr, row, colName) {
+        if (!formulaStr || typeof formulaStr !== 'string') return 0;
+        let expr = formulaStr.trim();
+        if (expr.startsWith('=')) expr = expr.substring(1).trim();
+        if (!expr) return 0;
+
+        const targetRow = row || (this.reconRows || []).find(r => r.code === (row && row.code)) || {};
+
+        const getVal = (col) => {
+            const cNorm = String(col).trim().toLowerCase();
+            if (cNorm === 'issue' || cNorm === 'gross' || cNorm === 'gross issue') {
+                return Number(targetRow.sapGrossIssue || 0);
+            }
+            if (cNorm === 'mrn' || cNorm === 'return') {
+                return Number(targetRow.sapMrnReturn || 0);
+            }
+            if (cNorm === 'net' || cNorm === 'net issue' || cNorm === 'netissue') {
+                return Number(targetRow.sapNetIssue !== undefined ? targetRow.sapNetIssue : (targetRow.sapIssuedQty || 0));
+            }
+            if (cNorm === 'this bill' || cNorm === 'thisbill' || cNorm === 'current bill') {
+                return Number(targetRow.totalQty || 0);
+            }
+            if (targetRow.customColumns && targetRow.customColumns[col] !== undefined) {
+                return Number(targetRow.customColumns[col]) || 0;
+            }
+            if (colName && col === colName) return 0; // Avoid self-recursion
+            return this.getRecoColVal(targetRow.code, col, targetRow);
+        };
+
+        // Replace bracketed column references e.g. [ISSUE], [MRN], [NET ISSUE], [BILL 1 RECO]
+        expr = expr.replace(/\[(.*?)\]/g, (match, p1) => {
+            return getVal(p1);
+        });
+
+        // Replace standard keywords without brackets
+        expr = expr.replace(/\b(gross\s*issue|gross|net\s*issue|net|issue|mrn|return|this\s*bill)\b/gi, (match) => {
+            return getVal(match);
+        });
+
+        // Safe mathematical evaluation (only numbers, +, -, *, /, %, (, ), ., spaces)
+        if (!/^[0-9+\-*/().\s%]+$/.test(expr)) {
+            return 0;
         }
-        const cKey = this.getContractorNormKey();
-        const editKey = code + '__' + colName;
-        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey] && this.customOldRecoEdits[cKey][editKey] !== undefined) {
-            const v = Number(this.customOldRecoEdits[cKey][editKey]);
-            return isNaN(v) ? 0 : v;
+
+        try {
+            const res = Function('"use strict"; return (' + expr + ');')();
+            const num = Number(res);
+            return isNaN(num) || !isFinite(num) ? 0 : Math.round(num * 1000) / 1000;
+        } catch (e) {
+            return 0;
+        }
+    },
+
+    getRecoFormula(code, colName) {
+        if (!code || !colName) return '';
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
+        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey]) {
+            const formKey = '__formula__' + code + '__' + colName;
+            if (this.customOldRecoEdits[cKey][formKey]) {
+                return this.customOldRecoEdits[cKey][formKey];
+            }
         }
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (reco && Array.isArray(reco.columnsConfig)) {
+            const colCfg = reco.columnsConfig.find(c => c.name === colName);
+            if (colCfg && colCfg.formula) {
+                return colCfg.formula;
+            }
+        }
+        return '';
+    },
+
+    hasRecoCellFormula(code, colName) {
+        return Boolean(this.getRecoFormula(code, colName));
+    },
+
+    getRecoCellDisplayVal(row, colName) {
+        if (!row || !colName) return '';
+        if (this.activeRecoCell && this.activeRecoCell.code === row.code && this.activeRecoCell.colName === colName) {
+            const form = this.getRecoFormula(row.code, colName);
+            if (form) return form;
+        }
+        const val = this.getRecoColVal(row.code, colName, row);
+        return (val !== 0 && val !== undefined && val !== null) ? val : '';
+    },
+
+    getRecoCellTitle(row, col) {
+        const form = this.getRecoFormula(row.code, col.name);
+        if (form) {
+            const val = this.getRecoColVal(row.code, col.name, row);
+            return 'fx: ' + form + ' (Result: ' + val + ')';
+        }
+        return col.isCalc ? ('Calculation Column: ' + col.name) : col.name;
+    },
+
+    onRecoCellFocus(row, colName, event) {
+        this.activeRecoCell = {
+            code: row.code,
+            desc: row.desc,
+            colName: colName,
+            uom: row.uom
+        };
+        const form = this.getRecoFormula(row.code, colName);
+        const val = this.getRecoColVal(row.code, colName, row);
+        this.activeRecoCellFormula = form || (val ? String(val) : '');
+        this.focusedRecoInput = event.target;
+        if (form) {
+            event.target.value = form;
+        }
+    },
+
+    onRecoCellBlur(row, colName, event) {
+        const raw = (event.target.value || '').trim();
+        if (raw.startsWith('=')) {
+            this.updateRecoColVal(row.code, colName, raw, row);
+        }
+    },
+
+    insertFormulaToken(token) {
+        if (!this.activeRecoCell) return;
+        let cur = (this.activeRecoCellFormula || '').trim();
+        if (!cur.startsWith('=')) {
+            cur = '=' + (cur ? cur + ' + ' : '') + token;
+        } else {
+            cur = cur + ' ' + token;
+        }
+        this.activeRecoCellFormula = cur;
+        if (this.focusedRecoInput) {
+            this.focusedRecoInput.value = cur;
+        }
+        this.applyActiveCellFormula();
+    },
+
+    applyActiveCellFormula() {
+        if (!this.activeRecoCell) return;
+        const { code, colName } = this.activeRecoCell;
+        const val = this.activeRecoCellFormula;
+        this.updateRecoColVal(code, colName, val);
+    },
+
+    onColumnFormulaChange(col) {
+        if (!col || !col.name) return;
+        this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
+        this.persistRecoColumnsConfig();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
+        if (typeof this.showToast === 'function') {
+            this.showToast('Column "' + col.name + '" formula updated!', '🧮');
+        }
+    },
+
+    getRecoColVal(code, colName, rowObj) {
+        if (!code || !colName) return 0;
+        if (colName === 'PURANA RECO') {
+            return this.getPrevReconQty(code, rowObj);
+        }
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
+        const editKey = code + '__' + colName;
+        const formKey = '__formula__' + code + '__' + colName;
+
+        // 1. Cell-level manual edit or cell formula
+        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey]) {
+            const form = this.customOldRecoEdits[cKey][formKey];
+            if (form) {
+                const targetRow = rowObj || (this.reconRows || []).find(x => x.code === code) || { code };
+                return this.evaluateRecoFormula(form, targetRow, colName);
+            }
+            if (this.customOldRecoEdits[cKey][editKey] !== undefined) {
+                const v = Number(this.customOldRecoEdits[cKey][editKey]);
+                return isNaN(v) ? 0 : v;
+            }
+        }
+
+        // 2. Column-level formula from columnsConfig
+        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+        if (reco && Array.isArray(reco.columnsConfig)) {
+            const colCfg = reco.columnsConfig.find(c => c.name === colName);
+            if (colCfg && colCfg.formula) {
+                const targetRow = rowObj || (this.reconRows || []).find(x => x.code === code) || { code };
+                return this.evaluateRecoFormula(colCfg.formula, targetRow, colName);
+            }
+        }
+
+        // 3. Stored value in material
         if (reco && reco.materials && reco.materials[code]) {
             const m = reco.materials[code];
             if (m.customColumns && m.customColumns[colName] !== undefined) {
@@ -947,19 +1120,35 @@ window.OldRecoImporterModule = {
         return 0;
     },
 
-    updateRecoColVal(code, colName, rawVal) {
+    updateRecoColVal(code, colName, rawVal, rowObj) {
         if (!code || !colName) return;
         if (colName === 'PURANA RECO') {
             return this.updatePrevReconQty(code, rawVal);
         }
-        const cKey = this.getContractorNormKey();
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
         if (!cKey) return;
-        const num = parseFloat(String(rawVal).replace(/,/g, '').trim());
-        const finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
 
         if (!this.customOldRecoEdits) this.customOldRecoEdits = {};
         if (!this.customOldRecoEdits[cKey]) this.customOldRecoEdits[cKey] = {};
-        this.customOldRecoEdits[cKey][code + '__' + colName] = finalVal;
+
+        const str = String(rawVal || '').trim();
+        const editKey = code + '__' + colName;
+        const formKey = '__formula__' + code + '__' + colName;
+
+        let finalVal = 0;
+        if (str.startsWith('=')) {
+            // Excel Formula
+            this.customOldRecoEdits[cKey][formKey] = str;
+            const targetRow = rowObj || (this.reconRows || []).find(r => r.code === code) || { code };
+            finalVal = this.evaluateRecoFormula(str, targetRow, colName);
+            this.customOldRecoEdits[cKey][editKey] = finalVal;
+        } else {
+            // Direct Number: remove any formula
+            delete this.customOldRecoEdits[cKey][formKey];
+            const num = parseFloat(str.replace(/,/g, '').trim());
+            finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
+            this.customOldRecoEdits[cKey][editKey] = finalVal;
+        }
 
         const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
         if (reco) {
@@ -978,8 +1167,9 @@ window.OldRecoImporterModule = {
         }
 
         this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
         this.persistRecoColumnsConfig();
-        this.$forceUpdate();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
     },
 
     getRecoColTotal(colName) {
@@ -1013,12 +1203,19 @@ window.OldRecoImporterModule = {
         } catch(e) {}
     },
 
-    getPrevReconQty(code) {
+    getPrevReconQty(code, rowObj) {
         if (!code) return 0;
-        const cKey = this.getContractorNormKey();
-        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey] && this.customOldRecoEdits[cKey][code] !== undefined) {
-            const editVal = Number(this.customOldRecoEdits[cKey][code]);
-            return isNaN(editVal) ? 0 : editVal;
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
+        if (cKey && this.customOldRecoEdits && this.customOldRecoEdits[cKey]) {
+            const formKey = '__formula__' + code + '__PURANA RECO';
+            if (this.customOldRecoEdits[cKey][formKey]) {
+                const targetRow = rowObj || (this.reconRows || []).find(r => r.code === code) || { code };
+                return this.evaluateRecoFormula(this.customOldRecoEdits[cKey][formKey], targetRow, 'PURANA RECO');
+            }
+            if (this.customOldRecoEdits[cKey][code] !== undefined) {
+                const editVal = Number(this.customOldRecoEdits[cKey][code]);
+                return isNaN(editVal) ? 0 : editVal;
+            }
         }
         const oldReco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
         if (oldReco && oldReco.materials && oldReco.materials[code]) {
@@ -1036,19 +1233,32 @@ window.OldRecoImporterModule = {
         return 0;
     },
 
-    updatePrevReconQty(code, rawVal) {
+    updatePrevReconQty(code, rawVal, rowObj) {
         if (!code) return;
-        const cKey = this.getContractorNormKey();
+        const cKey = (typeof this.getContractorNormKey === 'function') ? this.getContractorNormKey() : '';
         if (!cKey) {
             if (typeof this.showToast === 'function') this.showToast('Please select a contractor first', 'Alert');
             return;
         }
-        const num = parseFloat(String(rawVal).replace(/,/g, '').trim());
-        const finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
 
         if (!this.customOldRecoEdits) this.customOldRecoEdits = {};
         if (!this.customOldRecoEdits[cKey]) this.customOldRecoEdits[cKey] = {};
-        this.customOldRecoEdits[cKey][code] = finalVal;
+
+        const str = String(rawVal || '').trim();
+        const formKey = '__formula__' + code + '__PURANA RECO';
+
+        let finalVal = 0;
+        if (str.startsWith('=')) {
+            this.customOldRecoEdits[cKey][formKey] = str;
+            const targetRow = rowObj || (this.reconRows || []).find(r => r.code === code) || { code };
+            finalVal = this.evaluateRecoFormula(str, targetRow, 'PURANA RECO');
+            this.customOldRecoEdits[cKey][code] = finalVal;
+        } else {
+            delete this.customOldRecoEdits[cKey][formKey];
+            const num = parseFloat(str.replace(/,/g, '').trim());
+            finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
+            this.customOldRecoEdits[cKey][code] = finalVal;
+        }
 
         const recoDb = window.ContractorOldReco;
         if (recoDb && recoDb.byContractorNorm && recoDb.byContractorNorm[cKey]) {
@@ -1069,8 +1279,9 @@ window.OldRecoImporterModule = {
         }
 
         this.hasCustomOldReco = true;
+        if (typeof this.recoRevision !== 'undefined') this.recoRevision++;
         this.persistRecoColumnsConfig();
-        this.$forceUpdate();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
     },
 
     getCumulativeReconQty(row) {
