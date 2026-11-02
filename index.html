@@ -1221,12 +1221,14 @@
             <!-- ================================================================ -->
             <!-- 📊 RECONCILIATION CONTROL PANEL (Organized, Clean & Modern)     -->
             <!-- ================================================================ -->
-            <div class="reco-control-card no-print" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 12px;">
+            <div class="reco-control-card no-print" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 10px;">
                 
-                <!-- ROW 1: Contractor Selection & SAP Stock Master Hub -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px;">
+                <!-- ================================================================ -->
+                <!-- ROW 1: Contractor Profile & Live Sync Status Badges              -->
+                <!-- ================================================================ -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px;">
                     
-                    <!-- Left: Contractor Dropdown & Live Stock Badge -->
+                    <!-- Left: Contractor Dropdown + Status Pills -->
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
                             <span>👷</span> Contractor:
@@ -1234,7 +1236,7 @@
                         
                         <!-- Searchable Contractor Dropdown -->
                         <div class="searchable-dropdown" v-click-outside="() => reconContractorDropdownOpen = false" style="min-width: 240px; max-width: 320px;">
-                            <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: 1.5px solid rgba(99, 102, 241, 0.5); background: rgba(15, 23, 42, 0.85); padding: 5px 12px; border-radius: 8px; height: 34px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                            <div class="searchable-dropdown-trigger" :class="{ open: reconContractorDropdownOpen }" @click="reconContractorDropdownOpen = !reconContractorDropdownOpen" style="border: 1.5px solid rgba(99, 102, 241, 0.5); background: rgba(15, 23, 42, 0.85); padding: 5px 12px; border-radius: 8px; height: 32px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
                                 <span class="trigger-text" style="font-weight: 700; font-size: 0.82rem; color: #ffffff;">{{ selectedContractorName }}</span>
                                 <span class="trigger-arrow" style="color: #818cf8;">▾</span>
                             </div>
@@ -1258,137 +1260,141 @@
                         </div>
 
                         <!-- Live Stock Synced Status Pill -->
-                        <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); border: 1.5px solid rgba(59, 130, 246, 0.45); font-size: 0.78rem; font-weight: 700; color: #93c5fd;">
-                            <span style="font-size: 0.90rem;">⚡</span>
+                        <div v-if="currentContractorSapInfo" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); font-size: 0.76rem; font-weight: 700; color: #93c5fd;">
+                            <span>⚡</span>
                             <span>SAP Stock: <strong style="color: #ffffff;">{{ currentContractorSapInfo }}</strong> ({{ currentContractorSapCount }} items)</span>
-                            <span v-if="hasCustomStock" style="font-size: 0.65rem; background: #22c55e; color: #000; padding: 2px 7px; border-radius: 999px; font-weight: 900; margin-left: 4px; letter-spacing: 0.5px;">CUSTOM STOCK</span>
+                            <span v-if="hasCustomStock" style="font-size: 0.65rem; background: #22c55e; color: #000; padding: 1px 6px; border-radius: 999px; font-weight: 900; margin-left: 2px;">CUSTOM STOCK</span>
                         </div>
-                        <div v-else style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.35); font-size: 0.78rem; font-weight: 700; color: #fbbf24;">
-                            <span>ℹ️ Select a contractor above to view SAP Issue/MRN</span>
+                        <div v-else style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.76rem; font-weight: 700; color: #fbbf24;">
+                            <span>ℹ️ Select a contractor to view SAP Issue/MRN</span>
                         </div>
 
                         <!-- Contractor Purana Reco Status Pill -->
-                        <div v-if="currentContractorOldReco" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(168, 85, 247, 0.15); border: 1.5px solid rgba(168, 85, 247, 0.45); font-size: 0.78rem; font-weight: 700; color: #d8b4fe;" title="Contractor ka purana reconciled baseline / records">
-                            <span style="font-size: 0.90rem;">📋</span>
+                        <div v-if="currentContractorOldReco" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); font-size: 0.76rem; font-weight: 700; color: #d8b4fe;" title="Contractor ka purana reconciled baseline / records">
+                            <span>📋</span>
                             <span>Purana Reco: <strong style="color: #ffffff;">{{ currentContractorOldRecoConsumedCount }} Consumed Items</strong></span>
-                            <span v-if="hasCustomOldReco" style="font-size: 0.65rem; background: #a855f7; color: #fff; padding: 2px 7px; border-radius: 999px; font-weight: 900; margin-left: 4px; letter-spacing: 0.5px;">CUSTOM RECO</span>
-                            <span v-else style="font-size: 0.65rem; background: rgba(255, 255, 255, 0.2); color: #fff; padding: 2px 7px; border-radius: 999px; font-weight: 800; margin-left: 4px;">BASELINE</span>
-                        </div>
-
-                        <!-- 🔴 RED GLOWING ALERT PILL FOR UNMAPPED ISSUES -->
-                        <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" 
-                            @click="goToMappingMasterAlert()" 
-                            style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(239, 68, 68, 0.22); border: 1.5px solid #ef4444; font-size: 0.78rem; font-weight: 800; color: #fca5a5; cursor: pointer; box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); transition: all 0.2s;"
-                            :title="'Click to open Mapping Master — ' + unmappedContractorIssuedItems.length + ' issued items are unmapped or mismatched in activities'">
-                            <span style="font-size: 0.85rem;">🔴</span>
-                            <span>{{ unmappedContractorIssuedItems.length }} Issued Items Unmapped / Mismatched (Fix in Mapping ➔)</span>
+                            <span v-if="hasCustomOldReco" style="font-size: 0.65rem; background: #a855f7; color: #fff; padding: 1px 6px; border-radius: 999px; font-weight: 900; margin-left: 2px;">CUSTOM RECO</span>
+                            <span v-else style="font-size: 0.65rem; background: rgba(255, 255, 255, 0.2); color: #fff; padding: 1px 6px; border-radius: 999px; font-weight: 800; margin-left: 2px;">BASELINE</span>
                         </div>
                     </div>
 
-                    <!-- Right: STOCK EXCEL & OLD RECONCILIATION ACTION HUB -->
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <!-- Hidden File Input for Stock .xlsx -->
-                        <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
-                        
-                        <!-- 📥 BIG PROMINENT STOCK UPLOAD BUTTON -->
-                        <button type="button" 
-                            @click="$refs.reconStockFileInput.click()" 
-                            :disabled="stockUploading" 
-                            title="Naya Stock Excel (.xlsx) upload karein — sabhi contractors ka issue/return turant update ho jayega"
-                            style="padding: 7px 13px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: 1.5px solid #60a5fa; color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
-                            <span style="font-size: 0.95rem;">{{ stockUploading ? '⏳' : '📥' }}</span>
-                            <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock (.xlsx)' }}</span>
-                        </button>
-
-                        <!-- ↺ RESET STOCK BUTTON (Visible when custom file is uploaded) -->
-                        <button v-if="hasCustomStock" type="button"
-                            @click="resetToDefaultStock" 
-                            title="Reset to default built-in stock database" 
-                            style="padding: 7px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
-                            <span>↺</span>
-                            <span>Reset Stock</span>
-                        </button>
-
-                        <!-- Hidden File Input for Purana Reco .xlsx -->
-                        <input type="file" ref="oldRecoFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleOldRecoFileUpload($event)">
-
-                        <!-- 📤 UPLOAD PURANA RECO BUTTON -->
-                        <button type="button" 
-                            @click="$refs.oldRecoFileInput.click()" 
-                            :disabled="oldRecoUploading" 
-                            title="Koi bhi Purana Reconciliation Excel (.xlsx) upload karein — Purana issue naye issue se update hoga aur saare columns load honge"
-                            style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border: 1.5px solid #a78bfa; color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3); transition: all 0.2s;">
-                            <span style="font-size: 0.95rem;">{{ oldRecoUploading ? '⏳' : '📤' }}</span>
-                            <span>{{ oldRecoUploading ? 'Uploading...' : 'Upload Purana Reco (.xlsx)' }}</span>
-                        </button>
-
-                        <!-- ➕ ADD COLUMN BUTTON -->
-                        <button type="button" 
-                            @click="addNewRecoColumn()" 
-                            title="Naya Purana Reco Column Add Karein (naam prompt me likhein)"
-                            style="padding: 7px 11px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: rgba(34, 197, 94, 0.18); border: 1.5px solid #4ade80; color: #86efac; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
-                            <span>➕</span>
-                            <span>Add Column</span>
-                        </button>
-
-                        <!-- ⚙️ RECO COLUMNS MANAGER BUTTON -->
-                        <button type="button" 
-                            @click="openRecoColumnModal()" 
-                            title="Purana Reconciliation Columns Manage karein — Kaunsa column rakhna hai ya delete karna hai"
-                            style="padding: 7px 11px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; background: rgba(168, 85, 247, 0.18); border: 1.5px solid #c084fc; color: #f3e8ff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s;">
-                            <span>⚙️</span>
-                            <span>Columns</span>
-                            <span v-if="allOldRecoColumns.length" style="background: #a855f7; color: white; border-radius: 999px; padding: 1px 6px; font-size: 0.68rem; font-weight: 900;">{{ visibleOldRecoColumns.length }}/{{ allOldRecoColumns.length }}</span>
-                        </button>
-
-                        <!-- ✏️ EDIT PURANA RECO MODAL BUTTON -->
-                        <button type="button" 
-                            @click="openOldRecoModal()" 
-                            title="Contractor ka Pichla Reconciled Consumption view / edit karein"
-                            style="padding: 7px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; background: rgba(168, 85, 247, 0.15); border: 1.5px solid rgba(168, 85, 247, 0.45); color: #e9d5ff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s;">
-                            <span>✏️</span>
-                            <span>Edit Purana Reco</span>
-                        </button>
-
-                        <!-- ↺ RESET OLD RECO (Visible when custom data or edits present) -->
-                        <button v-if="hasCustomOldReco" type="button"
-                            @click="resetToDefaultOldReco" 
-                            title="Reset to default built-in old reconciliation baseline" 
-                            style="padding: 7px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
-                            <span>↺</span>
-                            <span>Reset Reco</span>
-                        </button>
+                    <!-- Right: Alert Pill for Unmapped Items -->
+                    <div v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length > 0" 
+                        @click="goToMappingMasterAlert()" 
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; font-size: 0.76rem; font-weight: 800; color: #fca5a5; cursor: pointer; box-shadow: 0 0 10px rgba(239, 68, 68, 0.35); transition: all 0.2s;"
+                        :title="'Click to open Mapping Master — ' + unmappedContractorIssuedItems.length + ' issued items are unmapped or mismatched in activities'">
+                        <span style="font-size: 0.82rem;">🔴</span>
+                        <span>{{ unmappedContractorIssuedItems.length }} Unmapped Items (Fix in Mapping ➔)</span>
                     </div>
                 </div>
 
-                <!-- ROW 2: Display Filters, Reverse Mode & Excel Export -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <!-- ================================================================ -->
+                <!-- ROW 2: Unified Command Toolbar (Stock + Reco + Export)          -->
+                <!-- ================================================================ -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     
-                    <!-- Left: Reverse Mode Toggle & Explanation -->
+                    <!-- Left: Grouped Functional Toolbars -->
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" @click="toggleReverseEntry" 
-                            :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" 
-                            style="height: 32px; padding: 0 12px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo); display: inline-flex; align-items: center; gap: 6px;">
-                            <span>{{ reverseEntry ? '↩️ Reverse Entry: ON' : '↩️ Reverse Entry: OFF' }}</span>
-                        </button>
-                        <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">
-                            {{ reverseEntry ? 'Reverse Mode: Enter qty directly in reconciliation — Activity Sheet + Tax Invoice auto-update honge.' : 'Normal mode: Activity Sheet me entries karein, ye Reconciliation Sheet auto-generate hogi.' }}
-                        </span>
+                        
+                        <!-- 📦 GROUP A: SAP STOCK HUB (Blue Pill) -->
+                        <div style="display: inline-flex; align-items: center; background: rgba(30, 58, 138, 0.22); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 2px;">
+                            <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
+                            <button type="button" 
+                                @click="$refs.reconStockFileInput.click()" 
+                                :disabled="stockUploading" 
+                                title="Naya Stock Excel (.xlsx) upload karein — Sabhi contractors ka issue/return turant update ho jayega"
+                                style="height: 30px; padding: 0 12px; font-size: 0.76rem; font-weight: 800; border: none; border-radius: 6px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
+                                <span>{{ stockUploading ? '⏳' : '📥' }}</span>
+                                <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock' }}</span>
+                            </button>
+                            <button v-if="hasCustomStock" type="button"
+                                @click="resetToDefaultStock" 
+                                title="Reset to default built-in stock database" 
+                                style="height: 30px; padding: 0 8px; font-size: 0.72rem; font-weight: 700; border: none; background: transparent; color: #fca5a5; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; transition: all 0.2s; border-left: 1px solid rgba(59, 130, 246, 0.3); margin-left: 2px;">
+                                <span>↺</span>
+                                <span>Reset</span>
+                            </button>
+                        </div>
+
+                        <!-- Vertical Divider -->
+                        <div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12);"></div>
+
+                        <!-- 📋 GROUP B: PURANA RECO SUITE (Unified Violet Capsule) -->
+                        <div style="display: inline-flex; align-items: center; background: rgba(88, 28, 135, 0.22); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 8px; padding: 2px; gap: 2px;">
+                            <input type="file" ref="oldRecoFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleOldRecoFileUpload($event)">
+                            
+                            <!-- 📤 Upload Reco Button -->
+                            <button type="button" 
+                                @click="$refs.oldRecoFileInput.click()" 
+                                :disabled="oldRecoUploading" 
+                                title="Koi bhi Purana Reconciliation Excel (.xlsx) upload karein — Purana issue naye issue se update hoga aur columns load honge"
+                                style="height: 30px; padding: 0 12px; font-size: 0.76rem; font-weight: 800; border: none; border-radius: 6px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3); transition: all 0.2s;">
+                                <span>{{ oldRecoUploading ? '⏳' : '📤' }}</span>
+                                <span>{{ oldRecoUploading ? 'Uploading...' : 'Upload Reco' }}</span>
+                            </button>
+
+                            <!-- ➕ Add Column -->
+                            <button type="button" 
+                                @click="addNewRecoColumn()" 
+                                title="Naya Purana Reco Column Add Karein"
+                                style="height: 30px; padding: 0 9px; font-size: 0.74rem; font-weight: 700; border: none; border-radius: 6px; background: rgba(168, 85, 247, 0.16); color: #e9d5ff; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                                <span style="color: #4ade80;">➕</span>
+                                <span>Add Col</span>
+                            </button>
+
+                            <!-- ⚙️ Columns Manager -->
+                            <button type="button" 
+                                @click="openRecoColumnModal()" 
+                                title="Purana Reconciliation Columns Manage karein — Kaunsa column rakhna hai ya delete karna hai"
+                                style="height: 30px; padding: 0 9px; font-size: 0.74rem; font-weight: 700; border: none; border-radius: 6px; background: rgba(168, 85, 247, 0.16); color: #e9d5ff; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                                <span>⚙️</span>
+                                <span>Columns</span>
+                                <span v-if="allOldRecoColumns.length" style="background: #a855f7; color: white; border-radius: 999px; padding: 1px 5px; font-size: 0.65rem; font-weight: 900;">{{ visibleOldRecoColumns.length }}/{{ allOldRecoColumns.length }}</span>
+                            </button>
+
+                            <!-- ✏️ Edit Values -->
+                            <button type="button" 
+                                @click="openOldRecoModal()" 
+                                title="Contractor ka Pichla Reconciled Consumption view / edit karein"
+                                style="height: 30px; padding: 0 9px; font-size: 0.74rem; font-weight: 700; border: none; border-radius: 6px; background: rgba(168, 85, 247, 0.16); color: #e9d5ff; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;">
+                                <span>✏️</span>
+                                <span>Edit</span>
+                            </button>
+
+                            <!-- ↺ Reset Reco -->
+                            <button v-if="hasCustomOldReco" type="button"
+                                @click="resetToDefaultOldReco" 
+                                title="Reset to default built-in old reconciliation baseline" 
+                                style="height: 30px; padding: 0 8px; font-size: 0.72rem; font-weight: 700; border: none; border-radius: 6px; background: rgba(239, 68, 68, 0.16); color: #fca5a5; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; transition: all 0.2s; margin-left: 2px;">
+                                <span>↺</span>
+                                <span>Reset</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Right: Item Visibility Filter & Excel Export -->
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <!-- Right: Reverse Mode, Filter & Excel Export -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        
+                        <!-- ↩️ Reverse Entry Mode Toggle -->
+                        <button type="button" @click="toggleReverseEntry" 
+                            :title="reverseEntry ? 'Reverse ON — reconciliation se activity me likho' : 'Reverse OFF — sirf activity se entry (purana system)'" 
+                            style="height: 30px; padding: 0 10px; border-radius: 7px; font-weight: 800; font-size: 0.76rem; cursor: pointer; border: 1.5px solid var(--accent-indigo); background: var(--accent-indigo-bg); color: var(--accent-indigo); display: inline-flex; align-items: center; gap: 5px;">
+                            <span>{{ reverseEntry ? '↩️ Reverse: ON' : '↩️ Reverse: OFF' }}</span>
+                        </button>
+
+                        <!-- 👁️ Row Filter Button -->
                         <button type="button" class="btn btn-secondary" 
                             @click="reconFilterZeroOnly = !reconFilterZeroOnly" 
                             :title="reconFilterZeroOnly ? 'Show all mapped materials' : 'Hide zero quantity rows'" 
-                            style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
-                            <span>{{ reconFilterZeroOnly ? '👁️ Only With Qty (' + reconNonZeroCount + ')' : '👁️ All Mapped Items (' + (pivotReconciliationData.rows ? pivotReconciliationData.rows.length : 0) + ')' }}</span>
+                            style="height: 30px; padding: 0 10px; font-size: 0.76rem; font-weight: 700; border-radius: 7px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>{{ reconFilterZeroOnly ? '👁️ With Qty (' + reconNonZeroCount + ')' : '👁️ All Items (' + (pivotReconciliationData.rows ? pivotReconciliationData.rows.length : 0) + ')' }}</span>
                         </button>
 
+                        <!-- 📗 Excel Export Button -->
                         <button type="button" class="btn btn-excel" 
                             @click="exportReconciliationExcel" 
                             title="Export Reconciliation Sheet to Excel (.xlsx)" 
-                            style="padding: 6px 14px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; white-space: nowrap; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); cursor: pointer;">
+                            style="height: 30px; padding: 0 12px; font-size: 0.76rem; font-weight: 800; border-radius: 7px; white-space: nowrap; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
                             <span>📗</span>
                             <span>Export (.xlsx)</span>
                         </button>
@@ -3214,20 +3220,20 @@
     <script src="js/core/storage.js?v=20261030_04"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261102_02"></script>
-    <script src="js/history.js?v=20261102_02"></script>
+    <script src="js/utils.js?v=20261102_03"></script>
+    <script src="js/history.js?v=20261102_03"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261102_02"></script>
-    <script src="js/billing.js?v=20261102_02"></script>
-    <script src="js/mapping.js?v=20261102_02"></script>
-    <script src="js/views.js?v=20261102_02"></script>
-    <script src="js/export.js?v=20261102_02"></script>
-    <script src="js/stock-importer.js?v=20261102_02"></script>
-    <script src="js/old-reco-importer.js?v=20261102_02"></script>
+    <script src="js/sync.js?v=20261102_03"></script>
+    <script src="js/billing.js?v=20261102_03"></script>
+    <script src="js/mapping.js?v=20261102_03"></script>
+    <script src="js/views.js?v=20261102_03"></script>
+    <script src="js/export.js?v=20261102_03"></script>
+    <script src="js/stock-importer.js?v=20261102_03"></script>
+    <script src="js/old-reco-importer.js?v=20261102_03"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261102_02"></script>
+    <script src="js/core/app.js?v=20261102_03"></script>
 </body>
 
 </html>
