@@ -323,8 +323,17 @@ window.ViewsModule = {
         this.showToast(sapCode + ' → Activity ' + actKey + ' / ' + locName + (converted ? ' (converted to kg)' : '') + ' (invoice updated)', '✅');
     },
     getActLocations(actKey) {
-        if (this.activityLocations && this.activityLocations[actKey]) return this.activityLocations[actKey];
-        return this.locations || [];
+        if (!actKey) return this.locations || [];
+        if (!this.activityLocations) this.activityLocations = {};
+        if (this.activityLocations[actKey] && Array.isArray(this.activityLocations[actKey]) && this.activityLocations[actKey].length > 0) {
+            return this.activityLocations[actKey];
+        }
+        // Initialize an independent editable copy for this specific activity
+        const base = (this.locations && Array.isArray(this.locations) && this.locations.length > 0)
+            ? JSON.parse(JSON.stringify(this.locations))
+            : [{ name: 'Location 1' }];
+        this.activityLocations[actKey] = base;
+        return this.activityLocations[actKey];
     },
     addLocation() {
         if (this.isFinalized) {
@@ -332,9 +341,11 @@ window.ViewsModule = {
             return;
         }
         const actKey = this.selectedActivityKey;
+        if (!actKey) return;
         const curLocs = this.getActLocations(actKey);
         const locName = `Location ${curLocs.length + 1}`;
-        if (!this.activityLocations[actKey]) {
+        if (!this.activityLocations) this.activityLocations = {};
+        if (!this.activityLocations[actKey] || !Array.isArray(this.activityLocations[actKey])) {
             this.activityLocations[actKey] = JSON.parse(JSON.stringify(curLocs));
         }
         this.activityLocations[actKey].push({ name: locName });
@@ -343,8 +354,9 @@ window.ViewsModule = {
             this.activityQuantities[actKey] = [];
         }
         this.activityQuantities[actKey].push(new Array(matCount).fill(''));
+        this.activityLocations = Object.assign({}, this.activityLocations);
         this.saveToStorage();
-        this.showToast(`Added location "${locName}" in activity ${this.selectedActivityKey}`, '📍');
+        this.showToast(`Added location "${locName}" in activity ${actKey}`, '📍');
     },
     removeLocation(index) {
         if (this.isFinalized) {
@@ -352,29 +364,77 @@ window.ViewsModule = {
             return;
         }
         const actKey = this.selectedActivityKey;
+        if (!actKey) return;
         const curLocs = this.getActLocations(actKey);
-        if (curLocs.length <= 1) return;
-        const name = curLocs[index].name;
-        if (this.activityLocations[actKey]) {
-            this.activityLocations[actKey].splice(index, 1);
-        } else {
-            this.locations.splice(index, 1);
+        if (curLocs.length <= 1) {
+            this.showToast('Kam se kam 1 location honi zaroori hai', '⚠️');
+            return;
         }
+        const name = curLocs[index].name;
+        if (!this.activityLocations) this.activityLocations = {};
+        if (!this.activityLocations[actKey] || !Array.isArray(this.activityLocations[actKey])) {
+            this.activityLocations[actKey] = JSON.parse(JSON.stringify(curLocs));
+        }
+        this.activityLocations[actKey].splice(index, 1);
         if (this.activityQuantities[actKey] && this.activityQuantities[actKey][index]) {
             this.activityQuantities[actKey].splice(index, 1);
         }
+        this.activityLocations = Object.assign({}, this.activityLocations);
         this.saveToStorage();
         this.showToast(`Removed location "${name}" from activity ${actKey}`, '🗑️');
     },
     renameLocation(locIdx, newName) {
+        if (this.isFinalized) {
+            this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒');
+            return;
+        }
         const actKey = this.selectedActivityKey;
-        const curLocs = this.getActLocations(actKey);
-        if (curLocs[locIdx]) {
-            if (!this.activityLocations[actKey]) {
-                this.activityLocations[actKey] = JSON.parse(JSON.stringify(curLocs));
-            }
+        if (!actKey) return;
+        if (!this.activityLocations) this.activityLocations = {};
+        if (!this.activityLocations[actKey] || !Array.isArray(this.activityLocations[actKey])) {
+            this.activityLocations[actKey] = JSON.parse(JSON.stringify(this.getActLocations(actKey)));
+        }
+        if (this.activityLocations[actKey][locIdx]) {
+            const clean = (newName !== undefined && newName !== null) ? String(newName).trim() : '';
+            this.activityLocations[actKey][locIdx].name = clean || `Location ${locIdx + 1}`;
+        }
+        this.activityLocations = Object.assign({}, this.activityLocations);
+        this.saveToStorage();
+    },
+    onLocationInput(locIdx, newName) {
+        const actKey = this.selectedActivityKey;
+        if (!actKey) return;
+        if (!this.activityLocations) this.activityLocations = {};
+        if (!this.activityLocations[actKey] || !Array.isArray(this.activityLocations[actKey])) {
+            this.activityLocations[actKey] = JSON.parse(JSON.stringify(this.getActLocations(actKey)));
+        }
+        if (this.activityLocations[actKey][locIdx]) {
             this.activityLocations[actKey][locIdx].name = newName;
-            this.saveToStorage();
+        }
+    },
+    editCurrentLocationPrompt() {
+        if (this.isFinalized) {
+            this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒');
+            return;
+        }
+        const actKey = this.selectedActivityKey;
+        const locs = this.getActLocations(actKey);
+        let targetIdx = 0;
+        if (this.selectedLocationIdx !== 'ALL' && this.selectedLocationIdx !== null && this.selectedLocationIdx !== undefined) {
+            targetIdx = Number(this.selectedLocationIdx);
+            if (isNaN(targetIdx) || targetIdx < 0 || targetIdx >= locs.length) targetIdx = 0;
+        }
+        const curName = (locs[targetIdx] && locs[targetIdx].name) || `Location ${targetIdx + 1}`;
+        const newName = prompt(`Activity ${actKey} — Location ${targetIdx + 1} ka naya naam likhein:`, curName);
+        if (newName !== null && newName.trim() !== '') {
+            this.renameLocation(targetIdx, newName.trim());
+            this.showToast(`Location renamed to "${newName.trim()}"`, '✏️');
+        }
+    },
+    onActivityChange() {
+        this.selectedLocationIdx = 'ALL';
+        if (typeof this.initQuantitiesForActivity === 'function') {
+            this.initQuantitiesForActivity(this.selectedActivityKey);
         }
     },
     onExtraItemCodeSearch() {

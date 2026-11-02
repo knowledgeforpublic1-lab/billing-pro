@@ -1047,6 +1047,50 @@ it('Excel Formula & Cell Linking: Evaluates math expressions, column references,
     assert.strictEqual(mockApp.getRecoColVal('17000004', 'PURANA RECO', row), 220);
 });
 
+it('Activity 6723: Per-Activity Dynamic Location Renaming & Isolation', () => {
+    // Load ViewsModule
+    require('../js/views.js');
+
+    const app = {
+        selectedActivityKey: '6723',
+        locations: [
+            { name: 'Ra-09 Bodhali' },
+            { name: 'Ra-09 Gogaon' },
+            { name: 'Ra-09 Nawegaon' }
+        ],
+        activityLocations: {},
+        activityQuantities: {},
+        activities: { '6723': { materials: [{}, {}] }, '907': { materials: [{}] } },
+        isFinalized: false,
+        saveToStorage() {},
+        showToast() {}
+    };
+
+    Object.assign(app, window.ViewsModule);
+
+    // 1. Initially 6723 gets an independent copy of locations
+    const locs6723 = app.getActLocations('6723');
+    assert.strictEqual(locs6723.length, 3);
+    assert.strictEqual(locs6723[0].name, 'Ra-09 Bodhali');
+
+    // 2. Rename location in 6723 to custom DP switch location
+    app.renameLocation(0, '11kV AB Switch DP Location 1');
+    assert.strictEqual(app.getActLocations('6723')[0].name, '11kV AB Switch DP Location 1');
+
+    // 3. Verify Activity 907 and global fallback locations are unchanged
+    assert.strictEqual(app.getActLocations('907')[0].name, 'Ra-09 Bodhali');
+    assert.strictEqual(app.locations[0].name, 'Ra-09 Bodhali');
+
+    // 4. Remove extra locations for 6723 (leaving 1 DP location)
+    app.removeLocation(2);
+    app.removeLocation(1);
+    assert.strictEqual(app.getActLocations('6723').length, 1);
+    assert.strictEqual(app.getActLocations('6723')[0].name, '11kV AB Switch DP Location 1');
+
+    // 5. Activity 907 still has all 3 locations
+    assert.strictEqual(app.getActLocations('907').length, 3);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

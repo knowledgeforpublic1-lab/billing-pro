@@ -200,6 +200,9 @@
                                                     {{ loc.name }}
                                                 </option>
                                             </select>
+                                            <button class="btn-filter-add" @click="editCurrentLocationPrompt" :disabled="isFinalized" title="Rename Selected Location" style="padding: 4px 8px; font-size: 0.8rem; white-space: nowrap; background: #6366f1; border-color: #6366f1;">
+                                                ✏️ Rename
+                                            </button>
                                             <button class="btn-filter-add" @click="addLocation" :disabled="isFinalized" title="Add New Location" style="padding: 4px 8px; font-size: 0.8rem; white-space: nowrap;">
                                                 ➕
                                             </button>
@@ -287,14 +290,17 @@
                                     <th style="width: 82px;" class="text-center" rowspan="2">SAP Item Code</th>
                                     <th style="width: 44px;" class="text-center" rowspan="2">Unit</th>
 
-                                    <th v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="locIdx"
+                                    <th v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="selectedActivityKey + '_loc_' + locIdx"
                                         class="th-location text-center">
                                         <div class="loc-header-box">
                                             <div
                                                 style="display: flex; width: 100%; gap: 4px; align-items: center; justify-content: center;">
-                                                <input type="text" :value="loc.name" class="loc-header-input"
+                                                <input type="text" v-model="loc.name" class="loc-header-input"
                                                     placeholder="Location Name" @focus="$event.target.select()"
-                                                    @change="renameLocation(locIdx, $event.target.value)">
+                                                    @input="onLocationInput(locIdx, $event.target.value)"
+                                                    @change="renameLocation(locIdx, loc.name)"
+                                                    @keydown.enter="$event.target.blur()"
+                                                    :title="'Edit Location ' + (locIdx + 1) + ' Name'">
                                                 <button v-if="getActLocations(selectedActivityKey).length > 1" class="btn-danger"
                                                     style="padding: 2px 5px; font-size: 0.7rem; border-radius: 4px;"
                                                     @click="removeLocation(locIdx)" title="Remove Location">✕</button>
@@ -1509,7 +1515,7 @@
                                 </th>
                                 </template>
                                 <template v-else>
-                                <th v-for="rcol in reverseReconColumns" :key="rcol.key" class="text-center" style="min-width: 86px; font-size: 0.72rem; padding: 0.25rem 0.2rem; background: rgba(163, 113, 247, 0.12);">
+                                <th v-for="rcol in reverseReconColumns" :key="rcol.key + '_' + (getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '')" class="text-center" style="min-width: 86px; font-size: 0.72rem; padding: 0.25rem 0.2rem; background: rgba(163, 113, 247, 0.12);">
                                     <div style="font-weight: 800;">{{ rcol.actKey }}</div>
                                     <div style="font-weight: 600; color: var(--text-muted);">{{ getActLocations(rcol.actKey)[rcol.locIdx] ? getActLocations(rcol.actKey)[rcol.locIdx].name : '' }}</div>
                                 </th>
@@ -3230,7 +3236,7 @@
     <script src="js/sync.js?v=20261102_13"></script>
     <script src="js/billing.js?v=20261102_13"></script>
     <script src="js/mapping.js?v=20261102_13"></script>
-    <script src="js/views.js?v=20261102_13"></script>
+    <script src="js/views.js?v=20261102_14"></script>
     <script src="js/export.js?v=20261102_13"></script>
     <script src="js/stock-importer.js?v=20261102_13"></script>
     <script src="js/old-reco-importer.js?v=20261102_13"></script>
