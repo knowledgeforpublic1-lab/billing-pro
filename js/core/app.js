@@ -621,26 +621,42 @@
             },
 
             visibleOldRecoColumns() {
-                const _rev = this.recoRevision;
-                if (typeof this.getVisibleOldRecoColumns === 'function') {
-                    return this.getVisibleOldRecoColumns();
+                try {
+                    const _rev = this.recoRevision;
+                    let cols = null;
+                    if (typeof this.getVisibleOldRecoColumns === 'function') {
+                        cols = this.getVisibleOldRecoColumns();
+                    } else {
+                        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+                        if (reco && Array.isArray(reco.columnsConfig)) {
+                            cols = reco.columnsConfig.filter(c => c && c.visible !== false);
+                        }
+                    }
+                    if (Array.isArray(cols) && cols.length > 0) return cols;
+                    return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
+                } catch(e) {
+                    console.warn('[reco] visibleOldRecoColumns error:', e);
+                    return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
                 }
-                const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-                if (reco && Array.isArray(reco.columnsConfig)) {
-                    return reco.columnsConfig.filter(c => c && c.visible !== false);
-                }
-                return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             allOldRecoColumns() {
-                const _rev = this.recoRevision;
-                if (typeof this.getAllOldRecoColumns === 'function') {
-                    return this.getAllOldRecoColumns();
+                try {
+                    const _rev = this.recoRevision;
+                    let cols = null;
+                    if (typeof this.getAllOldRecoColumns === 'function') {
+                        cols = this.getAllOldRecoColumns();
+                    } else {
+                        const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
+                        if (reco && Array.isArray(reco.columnsConfig)) {
+                            cols = reco.columnsConfig;
+                        }
+                    }
+                    if (Array.isArray(cols) && cols.length > 0) return cols;
+                    return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
+                } catch(e) {
+                    console.warn('[reco] allOldRecoColumns error:', e);
+                    return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
                 }
-                const reco = (typeof this.getContractorOldReco === 'function') ? this.getContractorOldReco() : null;
-                if (reco && Array.isArray(reco.columnsConfig)) {
-                    return reco.columnsConfig;
-                }
-                return [{ name: 'PURANA RECO', visible: true, isCalc: true }];
             },
             currentContractorOldReco() {
                 const _rev = this.recoRevision;
@@ -1736,5 +1752,6 @@
     });
 
     // Mount the app
-    app.mount('#app');
+    window.vm = app.mount('#app');
+    window.app = app;
 })();
