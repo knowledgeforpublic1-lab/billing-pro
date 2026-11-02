@@ -956,12 +956,41 @@ table.billing-table tbody tr:hover {
 
 .loc-header-input {
     width: 100%;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-input);
-    color: var(--text-main);
-    border-radius: 4px;
-    padding: 0.18rem 0.25rem;
-    font-size: 0.72rem;
+    border: 1.5px solid rgba(99, 102, 241, 0.35);
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 0.24rem 0.45rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.loc-header-input:hover {
+    border-color: rgba(99, 102, 241, 0.75);
+    background: rgba(30, 41, 59, 0.95);
+    cursor: text;
+}
+
+.loc-header-input:focus {
+    border-color: #818cf8;
+    background: #0f172a;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+
+.loc-header-box .btn-danger {
+    opacity: 0.75;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.loc-header-box:hover .btn-danger {
+    opacity: 1;
+}
+
+.loc-header-box .btn-danger:hover {
+    transform: scale(1.1);
 }
 
 /* ===================== SIDEBAR DASHBOARD LAYOUT ===================== */
