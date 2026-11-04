@@ -61,7 +61,7 @@
                     mapping: null,
                     invoice: null
                 },
-                currentView: (function() { try { return localStorage.getItem('billing_current_view') || 'detail'; } catch(e) { return 'detail'; } })(),
+                currentView: (function() { try { const v = localStorage.getItem('billing_current_view'); return (v === 'mapping' ? 'poleSchedule' : (v || 'poleSchedule')); } catch(e) { return 'poleSchedule'; } })(),
                 selectedPoleScheduleKey: (function() { try { return localStorage.getItem('billing_selected_pole_schedule_key') || '907'; } catch(e) { return '907'; } })(),
                 poleScheduleSubTab: 'schedule',
                 poleScheduleLocations: {},
@@ -1771,6 +1771,15 @@
                             { code: '17005059', desc: 'MS-11KV TOP CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' }
                         ];
                     }
+                }
+            } catch(e) {}
+
+            // ⚡ Auto-sync any existing Pole Schedule entries into Billing & Reconciliation
+            try {
+                if (this.poleScheduleQuantities && typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                    Object.keys(this.poleScheduleQuantities).forEach(k => {
+                        this.syncPoleScheduleToBillingAndReconciliation(k);
+                    });
                 }
             } catch(e) {}
 

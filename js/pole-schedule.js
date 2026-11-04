@@ -238,6 +238,106 @@ window.PoleScheduleModule = {
         try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch(e) {}
     },
 
+    getPoleScheduleItemTotalQtyByKey(key, mIdx) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations() : []);
+        let total = 0;
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
+        locs.forEach((_, lIdx) => {
+            const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
+            if (raw !== '' && raw !== null && raw !== undefined) {
+                const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                if (!isNaN(n)) total += n;
+            }
+        });
+        return Math.round(total * 1000) / 1000;
+    },
+
+    hasPoleScheduleQuantities(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
+        if (!qMatrix) return false;
+        for (const lIdx in qMatrix) {
+            const row = qMatrix[lIdx];
+            if (row) {
+                for (const mIdx in row) {
+                    const raw = row[mIdx];
+                    if (raw !== '' && raw !== null && raw !== undefined) {
+                        const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                        if (!isNaN(n) && n > 0) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    },
+
+    syncPoleScheduleToBillingAndReconciliation(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+
+        // 1. Locations sync
+        if (this.poleScheduleLocations && this.poleScheduleLocations[k]) {
+            if (!this.activityLocations) this.activityLocations = {};
+            this.activityLocations[k] = this.poleScheduleLocations[k];
+        }
+
+        // 2. Sync values into activityQuantities for matching materials
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        const act = this.activities && this.activities[k];
+        if (sched && Array.isArray(sched.materials) && act && Array.isArray(act.materials)) {
+            if (!this.activityQuantities) this.activityQuantities = {};
+            const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations() : []);
+            if (!this.activityQuantities[k] || !Array.isArray(this.activityQuantities[k])) {
+                this.activityQuantities[k] = Array.from({ length: locs.length }, () => new Array(act.materials.length).fill(''));
+            }
+            while (this.activityQuantities[k].length < locs.length) {
+                this.activityQuantities[k].push(new Array(act.materials.length).fill(''));
+            }
+
+            const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
+            if (qMatrix) {
+                sched.materials.forEach((sm, smIdx) => {
+                    if (sm.isSection || sm.isSpan) return;
+                    let actMatIdx = act.materials.findIndex(am => {
+                        if (am.itemCode && sm.itemCode && am.itemCode === sm.itemCode) return true;
+                        if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
+                        return false;
+                    });
+                    if (actMatIdx !== -1) {
+                        locs.forEach((_, lIdx) => {
+                            const val = (qMatrix[lIdx] && qMatrix[lIdx][smIdx] !== undefined) ? qMatrix[lIdx][smIdx] : '';
+                            if (this.activityQuantities[k][lIdx]) {
+                                this.activityQuantities[k][lIdx][actMatIdx] = val;
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        // 3. Update Master Abstract if present
+        if (this.masterAbstractList && typeof this.getPoleScheduleTotalsByKey === 'function') {
+            const absItem = this.masterAbstractList.find(a => a.code === k);
+            if (absItem) {
+                const psTotals = this.getPoleScheduleTotalsByKey(k);
+                if (psTotals && psTotals.totalAmt100 > 0) {
+                    if (k === '907' && typeof this.getActivity907InvoiceQty === 'function') {
+                        const q907 = this.getActivity907InvoiceQty();
+                        if (q907 > 0) absItem.qty = q907;
+                    }
+                }
+            }
+        }
+
+        // 4. Update Tax Invoice immediately
+        if (typeof this.updateSyncTaxInvoiceFromActivities === 'function') {
+            this.updateSyncTaxInvoiceFromActivities();
+        }
+
+        // 5. Trigger Reconciliation Sheet re-calculation
+        this.recoRevision = (this.recoRevision || 0) + 1;
+    },
+
     exportPoleScheduleExcel() {
         if (typeof XLSX === 'undefined') {
             this.showToast('XLSX library not loaded', '❌');

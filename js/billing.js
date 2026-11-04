@@ -799,22 +799,30 @@ window.BillingModule = {
     },
 
     getActivityTotals(actKey) {
-        const act = this.activities[actKey];
         let amt100 = 0;
-        if (act && act.materials && this.activityQuantities[actKey]) {
-            const qMatrix = this.activityQuantities[actKey];
-            for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
-                let itemQty = 0;
-                for (let locIdx = 0; locIdx < this.getActLocations(actKey).length; locIdx++) {
-                    if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
-                        const v = parseFloat(qMatrix[locIdx][mIdx]);
-                        if (!isNaN(v)) itemQty += v;
-                    }
-                }
-                amt100 += itemQty * (Number(act.materials[mIdx].rate) || 0);
+        if (typeof this.getPoleScheduleTotalsByKey === 'function') {
+            const psTotals = this.getPoleScheduleTotalsByKey(actKey);
+            if (psTotals && psTotals.totalAmt100 > 0) {
+                amt100 = psTotals.totalAmt100;
             }
         }
         if (amt100 === 0) {
+            const act = this.activities && this.activities[actKey];
+            if (act && act.materials && this.activityQuantities && this.activityQuantities[actKey]) {
+                const qMatrix = this.activityQuantities[actKey];
+                for (let mIdx = 0; mIdx < act.materials.length; mIdx++) {
+                    let itemQty = 0;
+                    for (let locIdx = 0; locIdx < this.getActLocations(actKey).length; locIdx++) {
+                        if (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '') {
+                            const v = parseFloat(qMatrix[locIdx][mIdx]);
+                            if (!isNaN(v)) itemQty += v;
+                        }
+                    }
+                    amt100 += itemQty * (Number(act.materials[mIdx].rate) || 0);
+                }
+            }
+        }
+        if (amt100 === 0 && this.masterAbstractList) {
             const absItem = this.masterAbstractList.find(a => a.code === actKey);
             if (absItem && Number(absItem.qty) > 0) {
                 amt100 = (Number(absItem.qty) || 0) * (Number(absItem.rate) || 0);
@@ -834,6 +842,20 @@ window.BillingModule = {
     },
 
     getActivity907AaacTotalRmt() {
+        if (typeof this.getPoleScheduleItemTotalQtyByKey === 'function') {
+            const psSched = (this.poleSchedules && this.poleSchedules['907']) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules['907']);
+            if (psSched && psSched.materials) {
+                const aaacIdx = psSched.materials.findIndex(m => {
+                    if (!m || !m.desc) return false;
+                    const d = m.desc.toUpperCase();
+                    return d.includes('AAAC') && (d.includes('55') || (m.unit || '').toUpperCase().includes('RMT') || (m.unit || '').toUpperCase().includes('MTR'));
+                });
+                if (aaacIdx !== -1) {
+                    const psQty = this.getPoleScheduleItemTotalQtyByKey('907', aaacIdx);
+                    if (psQty > 0) return psQty;
+                }
+            }
+        }
         const act = this.activities && this.activities['907'];
         if (!act || !act.materials) return 0;
         let matIdx = act.materials.findIndex(m => {
