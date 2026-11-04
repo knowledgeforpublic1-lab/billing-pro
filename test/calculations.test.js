@@ -456,25 +456,45 @@ it('SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red H
     eval(fs.readFileSync('js/data/contractor-sap-issues.js', 'utf8'));
     eval(fs.readFileSync('js/mapping.js', 'utf8'));
 
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
     const mockApp = {
         activities: global.defaultActivities,
+        poleSchedules: defaultPoleSchedules,
         selectedContractorName: 'Ravindra Kapgate',
         currentContractorSap: window.ContractorSapStock.byContractorNorm['ravindrakapgade'],
         get allMappedSapCodesSet() {
             const set = new Set();
-            if (!this.activities) return set;
-            Object.values(this.activities).forEach(act => {
-                if (act && Array.isArray(act.materials)) {
-                    act.materials.forEach(m => {
-                        if (Array.isArray(m.sapItems)) {
-                            m.sapItems.forEach(s => {
-                                const c = String((s && s.code) || '').trim();
+            if (this.activities) {
+                Object.values(this.activities).forEach(act => {
+                    if (act && Array.isArray(act.materials)) {
+                        act.materials.forEach(m => {
+                            if (Array.isArray(m.sapItems)) {
+                                m.sapItems.forEach(s => {
+                                    const c = String((s && s.code) || '').trim();
+                                    if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            if (this.poleSchedules) {
+                Object.values(this.poleSchedules).forEach(sched => {
+                    if (sched && Array.isArray(sched.materials)) {
+                        sched.materials.forEach(m => {
+                            if (Array.isArray(m.sapItems)) {
+                                m.sapItems.forEach(s => {
+                                    const c = String((s && s.code) || '').trim();
+                                    if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                                });
+                            } else if (m.itemCode) {
+                                const c = String(m.itemCode).trim();
                                 if (c && c !== 'N/A' && c !== 'NA') set.add(c);
-                            });
-                        }
-                    });
-                }
-            });
+                            }
+                        });
+                    }
+                });
+            }
             return set;
         },
         get allActivityMaterialsFlat() {
@@ -1155,16 +1175,31 @@ it('SAP Stock: Custom stock upload reactivity, fallback matching, and reset to d
     assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 50, 'Reset must restore default stock');
 });
 
-it('Activity 922: 45-Item Pole Schedule with SAP Code Mapping & Section Headers', () => {
+it('Activity 922 Restored to 18 Contract Items & Pole Schedules Configured (907: 53 items, 922: 45 items)', () => {
     eval(fs.readFileSync('js/data/default-activities.js', 'utf8').replace('const defaultActivities', 'global.defaultActivities'));
-    const act = global.defaultActivities['922'];
+    const poleSchedules = require('../js/data/default-pole-schedules.js');
 
-    assert.ok(act, 'Activity 922 must exist');
-    assert.strictEqual(act.materials.length, 45, 'Must have 45 items in pole schedule');
-    assert.strictEqual(act.materials[0].itemCode, '17001243');
-    assert.strictEqual(act.materials[44].itemCode, '17000651');
-    assert.strictEqual(act.materials.filter(m => m.isExtra).length, 4);
-    assert.strictEqual(act.materials.filter(m => m.isSection).length, 6);
+    const act922 = global.defaultActivities['922'];
+    const act907 = global.defaultActivities['907'];
+
+    // Activity 922 must be restored to original 18 items
+    assert.ok(act922, 'Activity 922 must exist');
+    assert.strictEqual(act922.materials.length, 18, 'Activity 922 must have original 18 items');
+
+    // Activity 907 must have 25 items
+    assert.ok(act907, 'Activity 907 must exist');
+    assert.strictEqual(act907.materials.length, 25, 'Activity 907 must have 25 items');
+
+    // Pole Schedules must have 53 items for 907 and 45 items for 922
+    assert.ok(poleSchedules['907'], 'Pole Schedule 907 must exist');
+    assert.strictEqual(poleSchedules['907'].materials.length, 53, 'Pole Schedule 907 must have 53 items');
+
+    assert.ok(poleSchedules['922'], 'Pole Schedule 922 must exist');
+    assert.strictEqual(poleSchedules['922'].materials.length, 45, 'Pole Schedule 922 must have 45 items');
+    assert.strictEqual(poleSchedules['922'].materials[0].itemCode, '17001243');
+    assert.strictEqual(poleSchedules['922'].materials[44].itemCode, '17000651');
+    assert.strictEqual(poleSchedules['922'].materials.filter(m => m.isExtra).length, 4);
+    assert.strictEqual(poleSchedules['922'].materials.filter(m => m.isSection).length, 6);
 });
 
 (async () => {

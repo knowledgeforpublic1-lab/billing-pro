@@ -1,0 +1,281 @@
+/**
+ * @file Pole Schedule Module
+ * @description Dedicated module for managing 11 KV Pole Schedules (Activity 907 & Activity 922),
+ * location-wise quantity entries, formula evaluation, SAP code mappings, and Excel export.
+ * 
+ * @module PoleScheduleModule
+ * @since v2.0
+ */
+
+window.PoleScheduleModule = {
+    getCurrentPoleSchedule() {
+        const key = this.selectedPoleScheduleKey || '907';
+        if (this.poleSchedules && this.poleSchedules[key]) {
+            return this.poleSchedules[key];
+        }
+        if (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) {
+            return defaultPoleSchedules[key];
+        }
+        return { title: 'Pole Schedule', materials: [] };
+    },
+
+    getPoleScheduleMaterials() {
+        const s = this.getCurrentPoleSchedule();
+        return (s && s.materials) ? s.materials : [];
+    },
+
+    getFilteredPoleScheduleMaterials() {
+        const mats = this.getPoleScheduleMaterials();
+        const q = (this.poleScheduleSearchQuery || '').trim().toLowerCase();
+        if (!q) return mats.map((m, idx) => Object.assign({}, m, { origIndex: idx }));
+        return mats
+            .map((m, idx) => Object.assign({}, m, { origIndex: idx }))
+            .filter(m => {
+                if (m.isSection) return true;
+                const code = String(m.itemCode || '').toLowerCase();
+                const desc = String(m.desc || '').toLowerCase();
+                const sapDesc = String(m.sapDescription || '').toLowerCase();
+                return code.includes(q) || desc.includes(q) || sapDesc.includes(q);
+            });
+    },
+
+    getPoleScheduleLocations() {
+        const key = this.selectedPoleScheduleKey || '907';
+        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
+        if (!Array.isArray(this.poleScheduleLocations[key]) || this.poleScheduleLocations[key].length === 0) {
+            if (this.locations && this.locations.length > 0) {
+                this.poleScheduleLocations[key] = JSON.parse(JSON.stringify(this.locations));
+            } else {
+                this.poleScheduleLocations[key] = [
+                    { name: 'Ra-09 Bodhali' },
+                    { name: 'Ra-09 Gogaon' },
+                    { name: 'Ra-09 Nawegaon' }
+                ];
+            }
+        }
+        return this.poleScheduleLocations[key];
+    },
+
+    ensurePoleScheduleQuantities(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
+        if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
+        const locs = this.getPoleScheduleLocations();
+        locs.forEach((loc, lIdx) => {
+            if (!this.poleScheduleQuantities[k][lIdx]) {
+                this.poleScheduleQuantities[k][lIdx] = {};
+            }
+        });
+        return this.poleScheduleQuantities[k];
+    },
+
+    getPoleScheduleCellQty(lIdx, mIdx) {
+        const k = this.selectedPoleScheduleKey || '907';
+        if (!this.poleScheduleQuantities || !this.poleScheduleQuantities[k] || !this.poleScheduleQuantities[k][lIdx]) return '';
+        return this.poleScheduleQuantities[k][lIdx][mIdx] || '';
+    },
+
+    setPoleScheduleCellQty(lIdx, mIdx, val) {
+        const k = this.selectedPoleScheduleKey || '907';
+        this.ensurePoleScheduleQuantities(k);
+        this.poleScheduleQuantities[k][lIdx][mIdx] = val;
+        this.debouncedSave();
+    },
+
+    onPoleScheduleQtyInput(lIdx, mIdx, event) {
+        if (this.isFinalized) return;
+        const val = event.target.value;
+        this.setPoleScheduleCellQty(lIdx, mIdx, val);
+    },
+
+    onPoleScheduleQtyBlur(lIdx, mIdx, event) {
+        const raw = event.target.value.trim();
+        if (raw.startsWith('=')) {
+            const evaluated = typeof this.evalGridFormula === 'function' ? this.evalGridFormula(raw) : raw;
+            this.setPoleScheduleCellQty(lIdx, mIdx, evaluated);
+        }
+        this.saveToStorage();
+    },
+
+    getPoleScheduleItemTotalQty(mIdx) {
+        const k = this.selectedPoleScheduleKey || '907';
+        const locs = this.getPoleScheduleLocations();
+        let total = 0;
+        locs.forEach((_, lIdx) => {
+            const raw = this.getPoleScheduleCellQty(lIdx, mIdx);
+            if (raw !== '' && raw !== null && raw !== undefined) {
+                const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                if (!isNaN(n)) total += n;
+            }
+        });
+        return Math.round(total * 1000) / 1000;
+    },
+
+    getPoleScheduleItemAmount100(item, mIdx) {
+        if (!item || item.isSection || item.isSpan) return 0;
+        const qty = this.getPoleScheduleItemTotalQty(mIdx);
+        const rate = Number(item.rate) || 0;
+        return qty * rate;
+    },
+
+    getPoleScheduleItemAmountStage1(item, mIdx) {
+        const amt100 = this.getPoleScheduleItemAmount100(item, mIdx);
+        const pct = (Number(this.pctStage1) || 85) / 100;
+        return amt100 * pct;
+    },
+
+    getPoleScheduleTotals() {
+        const mats = this.getPoleScheduleMaterials();
+        let totalQty = 0;
+        let totalAmt100 = 0;
+        let totalAmtStage1 = 0;
+        mats.forEach((m, idx) => {
+            if (!m.isSection && !m.isSpan) {
+                const q = this.getPoleScheduleItemTotalQty(idx);
+                totalQty += q;
+                const amt100 = q * (Number(m.rate) || 0);
+                totalAmt100 += amt100;
+                totalAmtStage1 += amt100 * ((Number(this.pctStage1) || 85) / 100);
+            }
+        });
+        return {
+            totalQty: Math.round(totalQty * 1000) / 1000,
+            totalAmt100: Math.round(totalAmt100 * 100) / 100,
+            totalAmtStage1: Math.round(totalAmtStage1 * 100) / 100
+        };
+    },
+
+    addPoleScheduleLocation() {
+        if (this.isFinalized) {
+            this.showToast('⚠️ Bill finalized hai. Pehle unlock karein.', '🔒');
+            return;
+        }
+        const k = this.selectedPoleScheduleKey || '907';
+        const locs = this.getPoleScheduleLocations();
+        const nextNum = locs.length + 1;
+        const name = prompt(`Enter Location Name for Schedule ${k}:`, `Loc ${nextNum}`);
+        if (!name || !name.trim()) return;
+        locs.push({ name: name.trim() });
+        this.saveToStorage();
+        this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k}`, '📍');
+    },
+
+    renamePoleScheduleLocation(lIdx) {
+        if (this.isFinalized) return;
+        const k = this.selectedPoleScheduleKey || '907';
+        const locs = this.getPoleScheduleLocations();
+        if (!locs[lIdx]) return;
+        const currentName = locs[lIdx].name || `Loc ${lIdx + 1}`;
+        const newName = prompt(`Rename Location:`, currentName);
+        if (newName && newName.trim() && newName.trim() !== currentName) {
+            locs[lIdx].name = newName.trim();
+            this.saveToStorage();
+            this.showToast(`Renamed to "${newName.trim()}"`, '✏️');
+        }
+    },
+
+    removePoleScheduleLocation(lIdx) {
+        if (this.isFinalized) return;
+        const k = this.selectedPoleScheduleKey || '907';
+        const locs = this.getPoleScheduleLocations();
+        if (locs.length <= 1) {
+            alert('Kam se kam 1 location honi chahiye.');
+            return;
+        }
+        const name = locs[lIdx].name || `Loc ${lIdx + 1}`;
+        if (!confirm(`Kya aap Pole Schedule ${k} se location "${name}" delete karna chahte hain?`)) return;
+
+        locs.splice(lIdx, 1);
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+            delete this.poleScheduleQuantities[k][lIdx];
+            const newObj = {};
+            locs.forEach((_, idx) => {
+                const oldIdx = idx >= lIdx ? idx + 1 : idx;
+                newObj[idx] = this.poleScheduleQuantities[k][oldIdx] || {};
+            });
+            this.poleScheduleQuantities[k] = newObj;
+        }
+        this.saveToStorage();
+        this.showToast(`Location "${name}" removed`, '🗑️');
+    },
+
+    onPoleScheduleChange(key) {
+        this.selectedPoleScheduleKey = key;
+        this.ensurePoleScheduleQuantities(key);
+        try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch(e) {}
+    },
+
+    exportPoleScheduleExcel() {
+        if (typeof XLSX === 'undefined') {
+            this.showToast('XLSX library not loaded', '❌');
+            return;
+        }
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        const mats = this.getPoleScheduleMaterials();
+        const locs = this.getPoleScheduleLocations();
+        const contractorName = typeof this.getContractorDisplayName === 'function' ? this.getContractorDisplayName() : 'CONTRACTOR';
+        const billNo = this.effectiveBillNo || 'BILL';
+
+        const rows = [];
+        rows.push([`ASHOKA BUILDCON LIMITED — RDSS T-10 GADCHIROLI`]);
+        rows.push([`${sched.title || ('Pole Schedule ' + k)}`]);
+        rows.push([`Contractor: ${contractorName} | Bill No: ${billNo} | Date: ${new Date().toLocaleDateString('en-IN')}`]);
+        rows.push([]);
+
+        // Header row
+        const header = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
+        locs.forEach(loc => header.push(loc.name || 'Location'));
+        header.push('Total Qty', 'Unit Rate', '100% Amount', `${this.pctStage1}% Amount`);
+        rows.push(header);
+
+        // Data rows
+        mats.forEach((m, mIdx) => {
+            if (m.isSection) {
+                const secRow = ['', '', m.desc || '', m.unit || ''];
+                locs.forEach(() => secRow.push(''));
+                secRow.push('', '', '', '');
+                rows.push(secRow);
+                return;
+            }
+            const row = [
+                m.no || '',
+                m.itemCode || '',
+                m.desc || '',
+                m.unit || ''
+            ];
+            locs.forEach((_, lIdx) => {
+                const q = this.getPoleScheduleCellQty(lIdx, mIdx);
+                const num = q !== '' ? (typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(q))) : parseFloat(q)) : '';
+                row.push(num !== '' && !isNaN(num) ? num : '');
+            });
+            const totQty = this.getPoleScheduleItemTotalQty(mIdx);
+            const amt100 = this.getPoleScheduleItemAmount100(m, mIdx);
+            const amtStage1 = this.getPoleScheduleItemAmountStage1(m, mIdx);
+            row.push(totQty > 0 ? totQty : '');
+            row.push(m.rate || 0);
+            row.push(amt100 > 0 ? amt100 : '');
+            row.push(amtStage1 > 0 ? amtStage1 : '');
+            rows.push(row);
+        });
+
+        // Total row
+        const totals = this.getPoleScheduleTotals();
+        const totalRow = ['TOTAL', '', '', ''];
+        locs.forEach(() => totalRow.push(''));
+        totalRow.push(totals.totalQty, '', totals.totalAmt100, totals.totalAmtStage1);
+        rows.push(totalRow);
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, `Pole_Schedule_${k}`);
+
+        const filename = `Pole_Schedule_${k}_${contractorName.replace(/[^a-zA-Z0-9]/g, '_')}_${billNo}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        this.showToast(`Excel exported: ${filename}`, '📗');
+    }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = window.PoleScheduleModule;
+}

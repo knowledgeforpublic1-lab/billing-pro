@@ -1,0 +1,317 @@
+{
+  "title": "Activity 922 : Double pole cut point Structure for 11kv line on RSJ 116x100, 11 m long pole",
+  "materials": [
+    {
+      "no": "1",
+      "desc": "RSJ 116x100, 11 m long",
+      "unit": "No.",
+      "rate": 2500,
+      "itemCode": "17001243",
+      "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+      "sapUom": "NO",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17001243",
+          "desc": "RSJ POLE 100X116 MM 11 MTR",
+          "uom": "NO",
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "2",
+      "desc": "M.S. Flats for stay & C clamps(50 X 10mm)",
+      "unit": "Nos",
+      "rate": 10,
+      "itemCode": "17001294",
+      "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+      "sapUom": "NOS",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17001294",
+          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+          "uom": "NOS",
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "3",
+      "desc": "MS Top Channel 100x50x6 mm",
+      "unit": "No",
+      "rate": 250,
+      "itemCode": "17002007",
+      "sapDescription": "MS CHANNEL 100X50X6 MM",
+      "sapUom": "NO",
+      "docHeader": "CUST PURCHASED TO CLINET",
+      "sapItems": [
+        {
+          "code": "17002007",
+          "desc": "MS CHANNEL 100X50X6 MM",
+          "uom": "NO",
+          "docHeader": "CUST PURCHASED TO CLINET"
+        }
+      ]
+    },
+    {
+      "no": "4",
+      "desc": "M.S. Bottom Channel 75x40x6 mm",
+      "unit": "No",
+      "rate": 250,
+      "itemCode": "17001391",
+      "sapDescription": "MS CHANNEL 75X40X6 MM",
+      "sapUom": "NO",
+      "docHeader": "0031006330",
+      "sapItems": [
+        {
+          "code": "17001391",
+          "desc": "MS CHANNEL 75X40X6 MM",
+          "uom": "NO",
+          "docHeader": "0031006330"
+        }
+      ]
+    },
+    {
+      "no": "5",
+      "desc": "MS Bracing angle 50x50x6 mm",
+      "unit": "No",
+      "rate": 150,
+      "itemCode": "",
+      "sapDescription": "",
+      "sapUom": "",
+      "docHeader": "",
+      "sapItems": []
+    },
+    {
+      "no": "6",
+      "desc": "Strain Hardware for Dog0.1 or Equ.AAAC.",
+      "unit": "No.",
+      "rate": 20,
+      "itemCode": "17000702",
+      "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
+      "sapUom": "SET",
+      "docHeader": "0031007012",
+      "sapItems": [
+        {
+          "code": "17000702",
+          "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
+          "uom": "SET",
+          "docHeader": "0031007012"
+        }
+      ]
+    },
+    {
+      "no": "7",
+      "desc": "Disc Insulator 11 KV 70 KN",
+      "unit": "No.",
+      "rate": 30,
+      "itemCode": "17000046",
+      "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+      "sapUom": "NO",
+      "docHeader": "0031007012",
+      "sapItems": [
+        {
+          "code": "17000046",
+          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+          "uom": "NO",
+          "docHeader": "0031007012"
+        }
+      ]
+    },
+    {
+      "no": "8",
+      "desc": "H.T.Stay Set",
+      "unit": "No.",
+      "rate": 400,
+      "itemCode": "17005052",
+      "sapDescription": "MS-HT STAY SET 20 MM",
+      "sapUom": "SET",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17005052",
+          "desc": "MS-HT STAY SET 20 MM",
+          "uom": "SET",
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "9",
+      "desc": "G.I.Stay Wire 7/4mm(8 SWG)",
+      "unit": "Kg.",
+      "rate": 5,
+      "itemCode": "17000239",
+      "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
+      "sapUom": "KG",
+      "docHeader": "0031007012",
+      "sapItems": [
+        {
+          "code": "17000239",
+          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+          "uom": "KG",
+          "docHeader": "0031007012"
+        }
+      ]
+    },
+    {
+      "no": "10",
+      "desc": "Earthing Sets H.T",
+      "unit": "No",
+      "rate": 285,
+      "itemCode": "17001369",
+      "sapDescription": "EARTHING SET LT",
+      "sapUom": "SET",
+      "docHeader": "0031007012",
+      "sapItems": [
+        {
+          "code": "17001369",
+          "desc": "EARTHING SET LT",
+          "uom": "SET",
+          "docHeader": "0031007012"
+        }
+      ]
+    },
+    {
+      "no": "11",
+      "desc": "G.I.Wire 8 SWG/ 6 SWG",
+      "unit": "kg.",
+      "rate": 4,
+      "itemCode": "17000243",
+      "sapDescription": "GI WIRE 8 SWG",
+      "sapUom": "KG",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17000243",
+          "desc": "GI WIRE 8 SWG",
+          "uom": "KG",
+          "qty": 1,
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "12",
+      "desc": "G.I.Barbed Wire A' type.",
+      "unit": "kg.",
+      "rate": 3,
+      "itemCode": "17000237",
+      "sapDescription": "GI BARBED WIRE A TYPE",
+      "sapUom": "KG",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17000237",
+          "desc": "GI BARBED WIRE A TYPE",
+          "uom": "KG",
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "13",
+      "desc": "Danger Board in yard.",
+      "unit": "No.",
+      "rate": 10,
+      "itemCode": "17000751",
+      "sapDescription": "DANGER BOARD 11 KV 250X200 MM",
+      "sapUom": "NO",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17000751",
+          "desc": "DANGER BOARD 11 KV 250X200 MM",
+          "uom": "NO",
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "14",
+      "desc": "Black Bituminus Paint",
+      "unit": "Ltr.",
+      "rate": 10,
+      "itemCode": "17000776",
+      "sapDescription": "PAINT BLACK BITUMINUS",
+      "sapUom": "L",
+      "docHeader": "0031006347",
+      "sapItems": [
+        {
+          "code": "17000776",
+          "desc": "PAINT BLACK BITUMINUS",
+          "uom": "L",
+          "qty": 1,
+          "docHeader": "0031006347"
+        }
+      ]
+    },
+    {
+      "no": "15",
+      "desc": "Red Oxide Paint for 1 coats",
+      "unit": "Ltr.",
+      "rate": 14,
+      "itemCode": "17000778",
+      "sapDescription": "RED OXIDE",
+      "sapUom": "LTR",
+      "docHeader": "0031007244",
+      "sapItems": [
+        {
+          "code": "17000778",
+          "desc": "RED OXIDE",
+          "uom": "LTR",
+          "docHeader": "0031007244"
+        }
+      ]
+    },
+    {
+      "no": "16",
+      "desc": "Aluminium Paint for 1 coat",
+      "unit": "Ltr.",
+      "rate": 14,
+      "itemCode": "17000775",
+      "sapDescription": "PAINT ALUMINIUM",
+      "sapUom": "L",
+      "docHeader": "0031007244",
+      "sapItems": [
+        {
+          "code": "17000775",
+          "desc": "PAINT ALUMINIUM",
+          "uom": "L",
+          "docHeader": "0031007244"
+        }
+      ]
+    },
+    {
+      "no": "17",
+      "desc": "Concreting ratio 1:3 6",
+      "unit": "Cmt.",
+      "rate": 2700,
+      "itemCode": "11000336",
+      "sapDescription": "CEMENT GRADE OPC 53",
+      "sapUom": "CMT",
+      "docHeader": "0031003360",
+      "sapItems": [
+        {
+          "code": "11000336",
+          "desc": "CEMENT GRADE OPC 53",
+          "uom": "CMT",
+          "docHeader": "0031003360"
+        }
+      ]
+    },
+    {
+      "no": "18",
+      "desc": "Sundries",
+      "unit": "L.S.",
+      "rate": 0,
+      "itemCode": "",
+      "sapDescription": "",
+      "sapUom": "",
+      "docHeader": "",
+      "sapItems": []
+    }
+  ]
+}

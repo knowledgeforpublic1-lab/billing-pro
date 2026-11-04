@@ -1022,10 +1022,10 @@ const defaultActivities = {
     "materials": [
       {
         "no": "1",
-        "itemCode": "17001243",
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No.",
         "rate": 2500,
+        "itemCode": "17001243",
         "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
@@ -1040,406 +1040,111 @@ const defaultActivities = {
       },
       {
         "no": "2",
-        "itemCode": "",
-        "desc": "MS Channel 100x50x6 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSection": true,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "3",
-        "itemCode": "17005040",
-        "desc": "Top Channel (DP)",
-        "unit": "No.",
-        "rate": 250,
-        "sapDescription": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005040",
-            "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "4",
-        "itemCode": "",
-        "desc": "M.S.Channel 75x40x6 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSection": true,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "5",
-        "itemCode": "17005039",
-        "desc": "Guarding Cross Arm Channel (DP)",
-        "unit": "No.",
-        "rate": 350,
-        "sapDescription": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005039",
-            "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "6",
-        "itemCode": "",
-        "desc": "Top Cleat (Extension)",
-        "unit": "No.",
-        "rate": 50,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "7",
-        "itemCode": "17005042",
-        "desc": "SPCP Channel",
-        "unit": "No",
-        "rate": 350,
-        "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005042",
-            "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "8",
-        "itemCode": "17005050",
-        "desc": "V-cross With Clamp",
-        "unit": "No",
-        "rate": 50,
-        "sapDescription": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005050",
-            "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "9",
-        "itemCode": "17005041",
-        "desc": "Top Cleat With Clamp",
-        "unit": "No",
-        "rate": 20,
-        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005041",
-            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "10",
-        "itemCode": "",
-        "desc": "MS angle 50x50x6 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSection": true,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "11",
-        "itemCode": "17005043",
-        "desc": "11 KV Bracing for SPCP /Tie",
-        "unit": "No.",
-        "rate": 150,
-        "sapDescription": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005043",
-            "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "12",
-        "itemCode": "17005044",
-        "desc": "Belting Angle",
-        "unit": "No.",
-        "rate": 150,
-        "sapDescription": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005044",
-            "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "13",
-        "itemCode": "17005045",
-        "desc": "Breasing Angle",
-        "unit": "No.",
-        "rate": 200,
-        "sapDescription": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005045",
-            "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "14",
-        "itemCode": "17005049",
-        "desc": "Fish plate",
-        "unit": "No.",
-        "rate": 30,
-        "sapDescription": "MS-FISH PLATE-50X10X254-0.99KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005049",
-            "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "15",
-        "itemCode": "",
-        "desc": "M.S. Flats(50 X 10mm)",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSection": true,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "16",
-        "itemCode": "17005046",
-        "desc": "Black clamp A type",
-        "unit": "No.",
-        "rate": 40,
-        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005046",
-            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "17",
-        "itemCode": "17005085",
-        "desc": "Black clamp B type",
-        "unit": "No.",
-        "rate": 40,
-        "sapDescription": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005085",
-            "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "18",
-        "itemCode": "17005047",
-        "desc": "Stay Set clamp A type",
-        "unit": "Pair",
-        "rate": 50,
-        "sapDescription": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005047",
-            "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "19",
-        "itemCode": "17005048",
-        "desc": "Stay Set clamp B type",
-        "unit": "Pair",
-        "rate": 50,
-        "sapDescription": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005048",
-            "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "20",
-        "itemCode": "",
-        "desc": "MS Flat 25x3 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSection": true,
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "21",
+        "desc": "M.S. Flats for stay & C clamps(50 X 10mm)",
+        "unit": "Nos",
+        "rate": 10,
         "itemCode": "17001294",
-        "desc": "Barbed wire clamp",
-        "unit": "Pair",
-        "rate": 15,
         "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-        "sapUom": "NO",
+        "sapUom": "NOS",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001294",
             "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-            "uom": "NO",
+            "uom": "NOS",
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "22",
-        "itemCode": "17001300",
-        "desc": "Danger Board clamp",
-        "unit": "No.",
-        "rate": 15,
-        "sapDescription": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
+        "no": "3",
+        "desc": "MS Top Channel 100x50x6 mm",
+        "unit": "No",
+        "rate": 250,
+        "itemCode": "17002007",
+        "sapDescription": "MS CHANNEL 100X50X6 MM",
         "sapUom": "NO",
-        "docHeader": "0031006347",
+        "docHeader": "CUST PURCHASED TO CLINET",
         "sapItems": [
           {
-            "code": "17001300",
-            "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
+            "code": "17002007",
+            "desc": "MS CHANNEL 100X50X6 MM",
             "uom": "NO",
-            "docHeader": "0031006347"
+            "docHeader": "CUST PURCHASED TO CLINET"
           }
         ]
       },
       {
-        "no": "23",
-        "itemCode": "17001397",
-        "desc": "11 kV Pin Insulators polymer",
+        "no": "4",
+        "desc": "M.S. Bottom Channel 75x40x6 mm",
+        "unit": "No",
+        "rate": 250,
+        "itemCode": "17001391",
+        "sapDescription": "MS CHANNEL 75X40X6 MM",
+        "sapUom": "NO",
+        "docHeader": "0031006330",
+        "sapItems": [
+          {
+            "code": "17001391",
+            "desc": "MS CHANNEL 75X40X6 MM",
+            "uom": "NO",
+            "docHeader": "0031006330"
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "desc": "MS Bracing angle 50x50x6 mm",
+        "unit": "No",
+        "rate": 150,
+        "itemCode": "",
+        "sapDescription": "",
+        "sapUom": "",
+        "docHeader": "",
+        "sapItems": []
+      },
+      {
+        "no": "6",
+        "desc": "Strain Hardware for Dog0.1 or Equ.AAAC.",
         "unit": "No.",
-        "rate": 45,
-        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "rate": 20,
+        "itemCode": "17000702",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
         "sapUom": "SET",
-        "docHeader": "0031006347",
+        "docHeader": "0031007012",
         "sapItems": [
           {
-            "code": "17001397",
-            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "code": "17000702",
+            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
-            "docHeader": "0031006347"
+            "docHeader": "0031007012"
           }
         ]
       },
       {
-        "no": "24",
-        "itemCode": "17000704",
-        "desc": "Strain Hardware for Dog0.1 or Equ.AAAC",
+        "no": "7",
+        "desc": "Disc Insulator 11 KV 70 KN",
         "unit": "No.",
-        "rate": 35,
-        "sapDescription": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000704",
-            "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "25",
+        "rate": 30,
         "itemCode": "17000046",
-        "desc": "Disc Insulator 11 KV 70 KN Polymer",
-        "unit": "No.",
-        "rate": 75,
-        "highlightColor": "#fef08a",
         "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
         "sapUom": "NO",
-        "docHeader": "0031006347",
+        "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000046",
             "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
             "uom": "NO",
-            "docHeader": "0031006347"
+            "docHeader": "0031007012"
           }
         ]
       },
       {
-        "no": "26",
-        "itemCode": "17005052",
+        "no": "8",
         "desc": "H.T.Stay Set",
         "unit": "No.",
         "rate": 400,
+        "itemCode": "17005052",
         "sapDescription": "MS-HT STAY SET 20 MM",
         "sapUom": "SET",
         "docHeader": "0031006347",
@@ -1453,50 +1158,47 @@ const defaultActivities = {
         ]
       },
       {
-        "no": "27",
-        "itemCode": "17000239",
+        "no": "9",
         "desc": "G.I.Stay Wire 7/4mm(8 SWG)",
         "unit": "Kg.",
-        "rate": 70,
-        "highlightColor": "#fef08a",
+        "rate": 5,
+        "itemCode": "17000239",
         "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
         "sapUom": "KG",
-        "docHeader": "0031006347",
+        "docHeader": "0031007012",
         "sapItems": [
           {
             "code": "17000239",
             "desc": "GI STAY WIRE 7/4 MM 8 SWG",
             "uom": "KG",
-            "docHeader": "0031006347"
+            "docHeader": "0031007012"
           }
         ]
       },
       {
-        "no": "28",
-        "itemCode": "17005053",
+        "no": "10",
         "desc": "Earthing Sets H.T",
-        "unit": "No.",
+        "unit": "No",
         "rate": 285,
-        "highlightColor": "#fef08a",
-        "sapDescription": "EARTHING SET HT 20 MM X 1.91 MTR",
+        "itemCode": "17001369",
+        "sapDescription": "EARTHING SET LT",
         "sapUom": "SET",
-        "docHeader": "0031006347",
+        "docHeader": "0031007012",
         "sapItems": [
           {
-            "code": "17005053",
-            "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
+            "code": "17001369",
+            "desc": "EARTHING SET LT",
             "uom": "SET",
-            "docHeader": "0031006347"
+            "docHeader": "0031007012"
           }
         ]
       },
       {
-        "no": "29",
-        "itemCode": "17000243",
+        "no": "11",
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "kg.",
-        "rate": 65,
-        "highlightColor": "#fef08a",
+        "rate": 4,
+        "itemCode": "17000243",
         "sapDescription": "GI WIRE 8 SWG",
         "sapUom": "KG",
         "docHeader": "0031006347",
@@ -1505,17 +1207,17 @@ const defaultActivities = {
             "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "30",
-        "itemCode": "17000237",
-        "desc": "G.I.Barbed Wire 'A' type.",
+        "no": "12",
+        "desc": "G.I.Barbed Wire A' type.",
         "unit": "kg.",
-        "rate": 65,
-        "highlightColor": "#fef08a",
+        "rate": 3,
+        "itemCode": "17000237",
         "sapDescription": "GI BARBED WIRE A TYPE",
         "sapUom": "KG",
         "docHeader": "0031006347",
@@ -1529,12 +1231,11 @@ const defaultActivities = {
         ]
       },
       {
-        "no": "31",
-        "itemCode": "17000751",
+        "no": "13",
         "desc": "Danger Board in yard.",
         "unit": "No.",
         "rate": 10,
-        "highlightColor": "#fef08a",
+        "itemCode": "17000751",
         "sapDescription": "DANGER BOARD 11 KV 250X200 MM",
         "sapUom": "NO",
         "docHeader": "0031006347",
@@ -1548,11 +1249,11 @@ const defaultActivities = {
         ]
       },
       {
-        "no": "32",
-        "itemCode": "17000776",
+        "no": "14",
         "desc": "Black Bituminus Paint",
         "unit": "Ltr.",
-        "rate": 120,
+        "rate": 10,
+        "itemCode": "17000776",
         "sapDescription": "PAINT BLACK BITUMINUS",
         "sapUom": "L",
         "docHeader": "0031006347",
@@ -1561,234 +1262,75 @@ const defaultActivities = {
             "code": "17000776",
             "desc": "PAINT BLACK BITUMINUS",
             "uom": "L",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "33",
-        "itemCode": "17000778",
-        "desc": "Red Oxide Paint for 2 coats",
+        "no": "15",
+        "desc": "Red Oxide Paint for 1 coats",
         "unit": "Ltr.",
-        "rate": 140,
+        "rate": 14,
+        "itemCode": "17000778",
         "sapDescription": "RED OXIDE",
-        "sapUom": "L",
-        "docHeader": "0031006347",
+        "sapUom": "LTR",
+        "docHeader": "0031007244",
         "sapItems": [
           {
             "code": "17000778",
             "desc": "RED OXIDE",
-            "uom": "L",
-            "docHeader": "0031006347"
+            "uom": "LTR",
+            "docHeader": "0031007244"
           }
         ]
       },
       {
-        "no": "34",
-        "itemCode": "17000775",
+        "no": "16",
         "desc": "Aluminium Paint for 1 coat",
         "unit": "Ltr.",
-        "rate": 140,
+        "rate": 14,
+        "itemCode": "17000775",
         "sapDescription": "PAINT ALUMINIUM",
         "sapUom": "L",
-        "docHeader": "0031006347",
+        "docHeader": "0031007244",
         "sapItems": [
           {
             "code": "17000775",
             "desc": "PAINT ALUMINIUM",
             "uom": "L",
-            "docHeader": "0031006347"
+            "docHeader": "0031007244"
           }
         ]
       },
       {
-        "no": "35",
-        "itemCode": "",
-        "desc": "Concreting ration 1:3:6",
+        "no": "17",
+        "desc": "Concreting ratio 1:3 6",
         "unit": "Cmt.",
         "rate": 2700,
-        "highlightColor": "#fef08a",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
+        "itemCode": "11000336",
+        "sapDescription": "CEMENT GRADE OPC 53",
+        "sapUom": "CMT",
+        "docHeader": "0031003360",
+        "sapItems": [
+          {
+            "code": "11000336",
+            "desc": "CEMENT GRADE OPC 53",
+            "uom": "CMT",
+            "docHeader": "0031003360"
+          }
+        ]
       },
       {
-        "no": "36",
+        "no": "18",
+        "desc": "Sundries",
+        "unit": "L.S.",
+        "rate": 0,
         "itemCode": "",
-        "desc": "G.I.Nut Bolts",
-        "unit": "Kg",
-        "rate": 85,
-        "isSection": true,
         "sapDescription": "",
         "sapUom": "",
         "docHeader": "",
         "sapItems": []
-      },
-      {
-        "no": "37",
-        "itemCode": "17000636",
-        "desc": "N/B 16*150 (6 Inch)",
-        "unit": "No",
-        "rate": 35,
-        "highlightColor": "#fef08a",
-        "sapDescription": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-        "sapUom": "SET",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000636",
-            "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-            "uom": "SET",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "38",
-        "itemCode": "17000625",
-        "desc": "N/B 16*75 (3 Inch)",
-        "unit": "No",
-        "rate": 25,
-        "highlightColor": "#fef08a",
-        "sapDescription": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-        "sapUom": "SET",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000625",
-            "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-            "uom": "SET",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "39",
-        "itemCode": "",
-        "desc": "N/B 16*50 (2 Inch)",
-        "unit": "No",
-        "rate": 20,
-        "highlightColor": "#fef08a",
-        "sapDescription": "",
-        "sapUom": "",
-        "docHeader": "",
-        "sapItems": []
-      },
-      {
-        "no": "40",
-        "itemCode": "17000620",
-        "desc": "N/B 16*35 (1 1/2 Inch)",
-        "unit": "No",
-        "rate": 15,
-        "highlightColor": "#fef08a",
-        "sapDescription": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-        "sapUom": "SET",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000620",
-            "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-            "uom": "SET",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "41",
-        "itemCode": "17000627",
-        "desc": "N/B 6*50 (2 Inch)",
-        "unit": "No",
-        "rate": 10,
-        "highlightColor": "#fef08a",
-        "sapDescription": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-        "sapUom": "SET",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000627",
-            "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-            "uom": "SET",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "42",
-        "itemCode": "17000004",
-        "desc": "RSJ 116*100 09m Pole",
-        "unit": "No.",
-        "rate": 2100,
-        "isExtra": true,
-        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000004",
-            "desc": "RSJ POLE 100X116 MM 9 MTR",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "43",
-        "itemCode": "17005037",
-        "desc": "RSJ 116*100 08m Pole",
-        "unit": "No.",
-        "rate": 1500,
-        "isExtra": true,
-        "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17005037",
-            "desc": "RSJ POLE 100X116 MM 8 MTR",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "44",
-        "itemCode": "17001356",
-        "desc": "Wedge Connector",
-        "unit": "No.",
-        "rate": 50,
-        "isExtra": true,
-        "sapDescription": "WEDGE CONNECTOR RABBIT TO RABBIT",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17001356",
-            "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "45",
-        "itemCode": "17000651",
-        "desc": "Lugs 70sqmm",
-        "unit": "No.",
-        "rate": 15,
-        "isExtra": true,
-        "highlightColor": "#fecdd3",
-        "sapDescription": "LUG AL RING 70 SQMM",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000651",
-            "desc": "LUG AL RING 70 SQMM",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
       }
     ]
   },
@@ -4224,3 +3766,11 @@ const defaultActivities = {
     ]
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.defaultActivities = defaultActivities;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = defaultActivities;
+}
+

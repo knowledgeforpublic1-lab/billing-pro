@@ -28,7 +28,8 @@
         window.ViewsModule || {},
         window.ExportModule || {},
         window.StockImporterModule || {},
-        window.OldRecoImporterModule || {}
+        window.OldRecoImporterModule || {},
+        window.PoleScheduleModule || {}
     );
 
         // 🛡️ Error Recovery Method
@@ -61,6 +62,21 @@
                     invoice: null
                 },
                 currentView: (function() { try { return localStorage.getItem('billing_current_view') || 'detail'; } catch(e) { return 'detail'; } })(),
+                selectedPoleScheduleKey: (function() { try { return localStorage.getItem('billing_selected_pole_schedule_key') || '907'; } catch(e) { return '907'; } })(),
+                poleScheduleSubTab: 'schedule',
+                poleScheduleLocations: {},
+                poleScheduleQuantities: {},
+                poleScheduleSearchQuery: '',
+                poleSchedules: (function() {
+                    try {
+                        const raw = localStorage.getItem('lk_billing_pole_schedules_v1');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return parsed;
+                        }
+                    } catch(e) {}
+                    return (typeof defaultPoleSchedules !== 'undefined') ? JSON.parse(JSON.stringify(defaultPoleSchedules)) : {};
+                })(),
                 selectedActivityKey: '1220',
                 searchQuery: '',
                 selectedLocationIdx: 'ALL',
@@ -213,7 +229,7 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed && parsed.activities && typeof parsed.activities === 'object' && Object.keys(parsed.activities).length > 0) {
-                                if (parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length < (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 45))) {
+                                if (parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length !== (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 18))) {
                                     parsed.activities['922'] = JSON.parse(JSON.stringify(defaultActivities['922']));
                                 }
                                 return parsed.activities;
@@ -277,6 +293,15 @@
 
         computed: {
             appsScriptRawCode() { return window.APPS_SCRIPT_SOURCE_CODE || ""; },
+            currentPoleSchedule() {
+                return typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : { title: 'Pole Schedule', materials: [] };
+            },
+            currentPoleScheduleMaterials() {
+                return typeof this.getFilteredPoleScheduleMaterials === 'function' ? this.getFilteredPoleScheduleMaterials() : [];
+            },
+            poleScheduleTotals() {
+                return typeof this.getPoleScheduleTotals === 'function' ? this.getPoleScheduleTotals() : { totalQty: 0, totalAmt100: 0, totalAmtStage1: 0 };
+            },
             hasDriveConnected() {
                 const raw = (this.gdriveWebhookUrl || '').trim()
                     || localStorage.getItem('billing_gdrive_webhook_url')
@@ -742,22 +767,40 @@
                 );
             },
 
-            // 🏷️ Set of all mapped SAP codes across all activities
+            // 🏷️ Set of all mapped SAP codes across all activities & pole schedules
             allMappedSapCodesSet() {
                 const set = new Set();
-                if (!this.activities) return set;
-                Object.values(this.activities).forEach(act => {
-                    if (act && Array.isArray(act.materials)) {
-                        act.materials.forEach(m => {
-                            if (Array.isArray(m.sapItems)) {
-                                m.sapItems.forEach(s => {
-                                    const c = String((s && s.code) || '').trim();
+                if (this.activities) {
+                    Object.values(this.activities).forEach(act => {
+                        if (act && Array.isArray(act.materials)) {
+                            act.materials.forEach(m => {
+                                if (Array.isArray(m.sapItems)) {
+                                    m.sapItems.forEach(s => {
+                                        const c = String((s && s.code) || '').trim();
+                                        if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                if (this.poleSchedules) {
+                    Object.values(this.poleSchedules).forEach(sched => {
+                        if (sched && Array.isArray(sched.materials)) {
+                            sched.materials.forEach(m => {
+                                if (Array.isArray(m.sapItems)) {
+                                    m.sapItems.forEach(s => {
+                                        const c = String((s && s.code) || '').trim();
+                                        if (c && c !== 'N/A' && c !== 'NA') set.add(c);
+                                    });
+                                } else if (m.itemCode) {
+                                    const c = String(m.itemCode).trim();
                                     if (c && c !== 'N/A' && c !== 'NA') set.add(c);
-                                });
-                            }
-                        });
-                    }
-                });
+                                }
+                            });
+                        }
+                    });
+                }
                 return set;
             },
 

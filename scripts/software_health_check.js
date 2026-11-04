@@ -192,39 +192,53 @@ check('Deployment Security: Vercel routes & ignore protect contractor PII files'
     assert.ok(vercelIgnore.includes('Reconciliation master/upload.php'), '.vercelignore must exclude upload.php');
 });
 
-// 11. Activity 922 Pole Schedule Verification
-check('Activity 922: Complete 45-Item Pole Schedule with SAP Mapping & Extra Materials', () => {
-    const code = fs.readFileSync('js/data/default-activities.js', 'utf8');
-    const fn = new Function(code + '; return defaultActivities;');
-    const acts = fn();
+// 11. Activity 922 Restored & Pole Schedules (907 & 922) Verification
+check('Activity 922 Restored (18 items) & Pole Schedules Configured (907: 53 items, 922: 45 items)', () => {
+    const actCode = fs.readFileSync('js/data/default-activities.js', 'utf8');
+    const actFn = new Function(actCode + '; return defaultActivities;');
+    const acts = actFn();
     const act922 = acts['922'];
+    const act907 = acts['907'];
 
+    // Standard billing activities integrity
     assert.ok(act922, 'Activity 922 must exist in defaultActivities');
-    assert.strictEqual(act922.materials.length, 45, 'Activity 922 must have exactly 45 materials matching site schedule');
+    assert.strictEqual(act922.materials.length, 18, 'Activity 922 must be restored to original 18 contract items');
+    assert.ok(act907, 'Activity 907 must exist in defaultActivities');
+    assert.strictEqual(act907.materials.length, 25, 'Activity 907 must have 25 contract items');
 
-    const reg = act922.materials.filter(m => !m.isExtra);
-    const ext = act922.materials.filter(m => m.isExtra);
-    assert.strictEqual(reg.length, 41, 'Must have 41 regular materials');
-    assert.strictEqual(ext.length, 4, 'Must have 4 extra materials');
+    // Pole Schedules Master Data integrity
+    const schedCode = fs.readFileSync('js/data/default-pole-schedules.js', 'utf8');
+    const schedFn = new Function(schedCode + '; return defaultPoleSchedules;');
+    const scheds = schedFn();
 
-    // Key item codes verification
-    assert.strictEqual(act922.materials[0].itemCode, '17001243', 'Item 1 must be RSJ 11m (17001243)');
-    assert.strictEqual(act922.materials[2].itemCode, '17005040', 'Item 3 must be Top Channel (17005040)');
-    assert.strictEqual(act922.materials[4].itemCode, '17005039', 'Item 5 must be Guarding Cross Arm (17005039)');
-    assert.strictEqual(act922.materials[6].itemCode, '17005042', 'Item 7 must be SPCP Channel (17005042)');
-    assert.strictEqual(act922.materials[7].itemCode, '17005050', 'Item 8 must be V-cross (17005050)');
-    assert.strictEqual(act922.materials[8].itemCode, '17005041', 'Item 9 must be Top Cleat (17005041)');
-    assert.strictEqual(act922.materials[10].itemCode, '17005043', 'Item 11 must be Bracing (17005043)');
-    assert.strictEqual(act922.materials[15].itemCode, '17005046', 'Item 16 must be Black Clamp A (17005046)');
-    assert.strictEqual(act922.materials[16].itemCode, '17005085', 'Item 17 must be Black Clamp B (17005085)');
-    assert.strictEqual(act922.materials[17].itemCode, '17005047', 'Item 18 must be Stay Set Clamp A (17005047)');
-    assert.strictEqual(act922.materials[18].itemCode, '17005048', 'Item 19 must be Stay Set Clamp B (17005048)');
-    assert.strictEqual(act922.materials[24].itemCode, '17000046', 'Item 25 must be Disc Insulator (17000046)');
-    assert.strictEqual(act922.materials[26].itemCode, '17000239', 'Item 27 must be Stay Wire (17000239)');
-    assert.strictEqual(act922.materials[27].itemCode, '17005053', 'Item 28 must be Earthing Sets (17005053)');
-    assert.strictEqual(act922.materials[36].itemCode, '17000636', 'Item 37 must be N/B 16*150 (17000636)');
-    assert.strictEqual(act922.materials[41].itemCode, '17000004', 'Extra 1 must be RSJ 9m (17000004)');
-    assert.strictEqual(act922.materials[44].itemCode, '17000651', 'Extra 4 must be Lugs 70sqmm (17000651)');
+    // 907 Pole Schedule (53 rows from site sheet)
+    const sched907 = scheds['907'];
+    assert.ok(sched907, 'Pole Schedule 907 must exist');
+    assert.strictEqual(sched907.materials.length, 53, 'Pole Schedule 907 must have 53 items');
+    assert.strictEqual(sched907.materials[2].itemCode, '17001243', 'RSJ 11m must be 17001243');
+    assert.strictEqual(sched907.materials[6].isSection, true, 'Guarding channel must be section header');
+
+    // 922 Pole Schedule (45 rows from site sheet)
+    const sched922 = scheds['922'];
+    assert.ok(sched922, 'Pole Schedule 922 must exist');
+    assert.strictEqual(sched922.materials.length, 45, 'Pole Schedule 922 must have 45 items');
+    assert.strictEqual(sched922.materials[0].itemCode, '17001243', 'Item 1 must be RSJ 11m (17001243)');
+    assert.strictEqual(sched922.materials[2].itemCode, '17005040', 'Item 3 must be Top Channel (17005040)');
+    assert.strictEqual(sched922.materials[4].itemCode, '17005039', 'Item 5 must be Guarding Cross Arm (17005039)');
+    assert.strictEqual(sched922.materials[6].itemCode, '17005042', 'Item 7 must be SPCP Channel (17005042)');
+    assert.strictEqual(sched922.materials[7].itemCode, '17005050', 'Item 8 must be V-cross (17005050)');
+    assert.strictEqual(sched922.materials[8].itemCode, '17005041', 'Item 9 must be Top Cleat (17005041)');
+    assert.strictEqual(sched922.materials[10].itemCode, '17005043', 'Item 11 must be Bracing (17005043)');
+    assert.strictEqual(sched922.materials[15].itemCode, '17005046', 'Item 16 must be Black Clamp A (17005046)');
+    assert.strictEqual(sched922.materials[16].itemCode, '17005085', 'Item 17 must be Black Clamp B (17005085)');
+    assert.strictEqual(sched922.materials[17].itemCode, '17005047', 'Item 18 must be Stay Set Clamp A (17005047)');
+    assert.strictEqual(sched922.materials[18].itemCode, '17005048', 'Item 19 must be Stay Set Clamp B (17005048)');
+    assert.strictEqual(sched922.materials[24].itemCode, '17000046', 'Item 25 must be Disc Insulator (17000046)');
+    assert.strictEqual(sched922.materials[26].itemCode, '17000239', 'Item 27 must be Stay Wire (17000239)');
+    assert.strictEqual(sched922.materials[27].itemCode, '17005053', 'Item 28 must be Earthing Sets (17005053)');
+    assert.strictEqual(sched922.materials[36].itemCode, '17000636', 'Item 37 must be N/B 16*150 (17000636)');
+    assert.strictEqual(sched922.materials[41].itemCode, '17000004', 'Extra 1 must be RSJ 9m (17000004)');
+    assert.strictEqual(sched922.materials[44].itemCode, '17000651', 'Extra 4 must be Lugs 70sqmm (17000651)');
 });
 
 console.log('\n====================================================');

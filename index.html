@@ -63,9 +63,9 @@
                             <span class="tab-dot" style="background: #3b82f6;"></span>
                             Activity Billing
                         </button>
-                        <button class="tab-item" :class="{ 'active': currentView === 'abstract' }" @click="switchView('abstract')">
-                            <span class="tab-dot" style="background: #ec4899;"></span>
-                            Master Abstract
+                        <button class="tab-item" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
+                            <span class="tab-dot" style="background: #f59e0b;"></span>
+                            Pole Schedule
                         </button>
                         <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
                             <span class="tab-dot" style="background: #6366f1;"></span>
@@ -526,8 +526,183 @@
                 </div>
             </div>
 
-            <!-- VIEW 2: MASTER ABSTRACT VIEW (11 ITEMS OVERVIEW) -->
-            <div v-if="currentView === 'abstract'" class="animate-fade-in">
+            <!-- VIEW 2: POLE SCHEDULE & MASTER ABSTRACT -->
+            <div v-if="currentView === 'poleSchedule' || currentView === 'abstract'" class="animate-fade-in">
+                <!-- Navigation Sub-Toggle Strip -->
+                <div class="no-print" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <button class="btn" :class="poleScheduleSubTab !== 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'schedule'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px;">
+                            <span>📋 11 KV Pole Schedule (907 & 922)</span>
+                        </button>
+                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px;">
+                            <span>📊 Master Abstract (11 Activities)</span>
+                        </button>
+                    </div>
+                    <div v-if="poleScheduleSubTab !== 'abstract'" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Active Schedule:</span>
+                        <div class="btn-group" style="display: flex; gap: 4px;">
+                            <button class="btn" :class="selectedPoleScheduleKey === '907' ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="font-weight: 700; font-size: 0.85rem; padding: 5px 12px;">
+                                ⚡ Activity 907 (RSJ Line - 53 Items)
+                            </button>
+                            <button class="btn" :class="selectedPoleScheduleKey === '922' ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="font-weight: 700; font-size: 0.85rem; padding: 5px 12px;">
+                                ⚡ Activity 922 (DP Structure - 45 Items)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW A: POLE SCHEDULE MEASUREMENT GRID -->
+                <div v-if="poleScheduleSubTab !== 'abstract'">
+                    <!-- Summary Metric Cards -->
+                    <div class="no-print" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-amber);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Schedule</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Activity {{ selectedPoleScheduleKey }}</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Items & Locations</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
+                                {{ getPoleScheduleMaterials().length }} Items • {{ getPoleScheduleLocations().length }} Locs
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-green);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-green); text-transform: uppercase;">Total Material Qty</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
+                                {{ poleScheduleTotals.totalQty }}
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-indigo);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-indigo); text-transform: uppercase;">100% Value / {{ pctStage1 }}% Value</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
+                                {{ formatCurrency(poleScheduleTotals.totalAmt100) }} / <span style="color: var(--accent-green);">{{ formatCurrency(poleScheduleTotals.totalAmtStage1) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pole Schedule Card -->
+                    <div class="abstract-card">
+                        <div class="table-header-strip" style="background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.2);">
+                            <div class="table-title">
+                                <span style="font-size: 1rem; font-weight: 800; color: #fbbf24;">⚡ {{ currentPoleSchedule.title || ('Pole Schedule ' + selectedPoleScheduleKey) }}</span>
+                            </div>
+                            <div class="table-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <div class="search-box" style="margin: 0; min-width: 220px;">
+                                    <input type="text" v-model="poleScheduleSearchQuery" placeholder="Filter item or SAP code..." class="form-input" style="padding: 4px 10px; font-size: 0.85rem;">
+                                </div>
+                                <button class="btn btn-secondary" @click="addPoleScheduleLocation" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 700;">
+                                    ➕ Add Location
+                                </button>
+                                <button class="btn btn-excel" @click="exportPoleScheduleExcel" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 700;">
+                                    📗 Export Schedule Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 72vh; overflow-y: auto;">
+                            <table class="billing-table">
+                                <thead style="position: sticky; top: 0; z-index: 10;">
+                                    <tr>
+                                        <th class="text-center" style="width: 55px;">Item No</th>
+                                        <th class="text-center" style="width: 95px;">SAP Code</th>
+                                        <th style="min-width: 240px;">Description of Material</th>
+                                        <th class="text-center" style="width: 50px;">Unit</th>
+                                        <!-- Dynamic Location Columns -->
+                                        <th v-for="(loc, lIdx) in getPoleScheduleLocations()" :key="lIdx" class="text-center" style="min-width: 90px; position: relative;">
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                                <span :title="loc.name" style="cursor: pointer;" @click="renamePoleScheduleLocation(lIdx)">{{ loc.name || ('Loc ' + (lIdx+1)) }}</span>
+                                                <button class="no-print" @click.stop="renamePoleScheduleLocation(lIdx)" title="Rename Location" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.7rem; padding: 0 2px;">✏️</button>
+                                                <button v-if="getPoleScheduleLocations().length > 1" class="no-print" @click.stop="removePoleScheduleLocation(lIdx)" title="Remove Location" style="background: none; border: none; cursor: pointer; color: #ef4444; font-size: 0.75rem; padding: 0 2px;">✕</button>
+                                            </div>
+                                        </th>
+                                        <th class="text-right" style="width: 80px;">Total Qty</th>
+                                        <th class="text-right" style="width: 85px;">Unit Rate</th>
+                                        <th class="text-right" style="width: 95px;">100% Amt</th>
+                                        <th class="text-right" style="width: 95px;">{{ pctStage1 }}% Amt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(item, rowIdx) in currentPoleScheduleMaterials" :key="item.origIndex"
+                                        :style="item.isSection ? { background: 'rgba(180, 140, 50, 0.22)', fontWeight: '800' } : (item.highlightColor ? { background: item.highlightColor, color: '#111827' } : {})">
+                                        <!-- Section Header Row -->
+                                        <template v-if="item.isSection">
+                                            <td class="text-center font-bold" style="color: #fbbf24;">—</td>
+                                            <td class="text-center font-mono text-muted">—</td>
+                                            <td :colspan="2 + getPoleScheduleLocations().length + 4" style="color: #fef08a; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
+                                                {{ item.desc }} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted); text-transform: none;">({{ item.unit }})</span>
+                                            </td>
+                                        </template>
+
+                                        <!-- Normal Material Row -->
+                                        <template v-else>
+                                            <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
+                                            <td class="text-center font-mono">
+                                                <span v-if="item.itemCode" class="badge badge-sap" :title="item.sapDescription" style="cursor: pointer;" @click="openSapItemManager(item, item.origIndex)">
+                                                    {{ item.itemCode }}
+                                                </span>
+                                                <span v-else class="text-muted" style="font-size: 0.75rem;">—</span>
+                                            </td>
+                                            <td>
+                                                <div style="font-weight: 600;">{{ item.desc }}</div>
+                                                <div v-if="item.sapDescription && item.sapDescription !== item.desc" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
+                                                    SAP: {{ item.sapDescription }}
+                                                </div>
+                                            </td>
+                                            <td class="text-center font-mono font-semibold">{{ item.unit }}</td>
+
+                                            <!-- Dynamic Location Quantity Input Cells -->
+                                            <td v-for="(loc, lIdx) in getPoleScheduleLocations()" :key="lIdx" class="text-right">
+                                                <input type="text"
+                                                    :value="getPoleScheduleCellQty(lIdx, item.origIndex)"
+                                                    @input="onPoleScheduleQtyInput(lIdx, item.origIndex, $event)"
+                                                    @blur="onPoleScheduleQtyBlur(lIdx, item.origIndex, $event)"
+                                                    @focus="$event.target.select()"
+                                                    class="editable-cell text-right font-mono"
+                                                    :placeholder="item.isSpan ? 'Span' : '0'"
+                                                    style="width: 100%; min-width: 65px;">
+                                            </td>
+
+                                            <!-- Total Qty -->
+                                            <td class="text-right font-mono font-bold" style="color: var(--accent-green); background: rgba(16, 185, 129, 0.05);">
+                                                {{ getPoleScheduleItemTotalQty(item.origIndex) > 0 ? getPoleScheduleItemTotalQty(item.origIndex) : '—' }}
+                                            </td>
+
+                                            <!-- Rate -->
+                                            <td class="text-right font-mono text-muted">
+                                                {{ item.rate ? formatCurrency(item.rate) : '—' }}
+                                            </td>
+
+                                            <!-- 100% Amount -->
+                                            <td class="text-right font-mono font-semibold">
+                                                {{ getPoleScheduleItemAmount100(item, item.origIndex) > 0 ? formatCurrency(getPoleScheduleItemAmount100(item, item.origIndex)) : '—' }}
+                                            </td>
+
+                                            <!-- Stage 1 (85%) Amount -->
+                                            <td class="text-right font-mono font-semibold" style="color: var(--accent-amber);">
+                                                {{ getPoleScheduleItemAmountStage1(item, item.origIndex) > 0 ? formatCurrency(getPoleScheduleItemAmountStage1(item, item.origIndex)) : '—' }}
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </tbody>
+                                <tfoot style="position: sticky; bottom: 0; background: var(--bg-card); z-index: 10; font-weight: 800; border-top: 2px solid var(--border-color);">
+                                    <tr>
+                                        <th colspan="4" class="text-right">TOTAL (ACTIVITY {{ selectedPoleScheduleKey }})</th>
+                                        <th :colspan="getPoleScheduleLocations().length" class="text-center text-muted" style="font-size: 0.8rem;">
+                                            Across {{ getPoleScheduleLocations().length }} Locations
+                                        </th>
+                                        <th class="text-right font-mono" style="color: var(--accent-green);">{{ poleScheduleTotals.totalQty }}</th>
+                                        <th class="text-right text-muted">—</th>
+                                        <th class="text-right font-mono">{{ formatCurrency(poleScheduleTotals.totalAmt100) }}</th>
+                                        <th class="text-right font-mono" style="color: var(--accent-amber);">{{ formatCurrency(poleScheduleTotals.totalAmtStage1) }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW B: ORIGINAL 11 ACTIVITIES MASTER ABSTRACT -->
+                <div v-else>
+
                 <!-- Executive Summary Metric Cards -->
                 <div class="no-print"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
@@ -3241,6 +3416,7 @@
     <script src="js/data/contractor-sap-issues.js?v=20261102_18"></script>
     <script src="js/data/contractor-old-reconciliation.js?v=20261030_08"></script>
     <script src="js/data/default-activities.js?v=20261104_02"></script>
+    <script src="js/data/default-pole-schedules.js?v=20261104_03"></script>
     <script src="js/data/default-contractors.js?v=20261030_04"></script>
     <script src="js/data/default-master-abstract.js?v=20261030_04"></script>
     <script src="js/data/default-companies.js?v=20261030_04"></script>
@@ -3259,6 +3435,7 @@
     <script src="js/mapping.js?v=20261102_13"></script>
     <script src="js/views.js?v=20261102_15"></script>
     <script src="js/export.js?v=20261104_01"></script>
+    <script src="js/pole-schedule.js?v=20261104_03"></script>
     <script src="js/stock-importer.js?v=20261102_18"></script>
     <script src="js/old-reco-importer.js?v=20261102_13"></script>
 

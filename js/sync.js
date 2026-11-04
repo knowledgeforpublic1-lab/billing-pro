@@ -904,6 +904,11 @@ window.SyncModule = {
             activityQuantities: this.activityQuantities,
             invoiceData: this.invoiceData,
             mappingLocks: this.mappingLocks,
+            selectedPoleScheduleKey: this.selectedPoleScheduleKey || '907',
+            poleScheduleSubTab: this.poleScheduleSubTab || 'schedule',
+            poleScheduleLocations: this.poleScheduleLocations || {},
+            poleScheduleQuantities: this.poleScheduleQuantities || {},
+            poleSchedules: this.poleSchedules || {},
             mappingRoundMode: this.mappingRoundMode || 'none',
             sapMaterialsMaster: this.sapMaterialsMaster,
             savedAt: Date.now(),
@@ -1161,6 +1166,11 @@ window.SyncModule = {
                 activityQuantities: this.activityQuantities,
                 invoiceData: this.invoiceData,
                 mappingLocks: this.mappingLocks,
+                selectedPoleScheduleKey: this.selectedPoleScheduleKey || '907',
+                poleScheduleSubTab: this.poleScheduleSubTab || 'schedule',
+                poleScheduleLocations: this.poleScheduleLocations || {},
+                poleScheduleQuantities: this.poleScheduleQuantities || {},
+                poleSchedules: this.poleSchedules || {},
                 mappingRoundMode: this.mappingRoundMode || 'none',
                 sapMaterialsMaster: this.sapMaterialsMaster,
                 savedAt: Date.now(),
@@ -1327,7 +1337,7 @@ window.SyncModule = {
                 if (parsed.activities && typeof parsed.activities === 'object') {
                     this.activities = parsed.activities;
                     Object.keys(defaultActivities).forEach(k => {
-                        if (!this.activities[k] || (k === '922' && (!this.activities[k].materials || this.activities[k].materials.length < defaultActivities['922'].materials.length))) {
+                        if (!this.activities[k] || (k === '922' && (!this.activities[k].materials || this.activities[k].materials.length !== defaultActivities['922'].materials.length))) {
                             this.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
                         } else if (defaultActivities[k] && defaultActivities[k].materials) {
                             while (this.activities[k].materials.length < defaultActivities[k].materials.length) {
@@ -1364,6 +1374,11 @@ window.SyncModule = {
                         }
                     });
                 }
+                if (parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = parsed.selectedPoleScheduleKey;
+                if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
+                if (parsed.poleScheduleLocations && typeof parsed.poleScheduleLocations === 'object') this.poleScheduleLocations = parsed.poleScheduleLocations;
+                if (parsed.poleScheduleQuantities && typeof parsed.poleScheduleQuantities === 'object') this.poleScheduleQuantities = parsed.poleScheduleQuantities;
+                if (parsed.poleSchedules && typeof parsed.poleSchedules === 'object') this.poleSchedules = parsed.poleSchedules;
                 if (parsed.masterAbstractList && Array.isArray(parsed.masterAbstractList) && parsed.masterAbstractList.length > 0) {
                     this.masterAbstractList = parsed.masterAbstractList;
                 }
