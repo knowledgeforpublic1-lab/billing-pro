@@ -531,21 +531,27 @@
                 <!-- Navigation Sub-Toggle Strip -->
                 <div class="no-print" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '907') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
-                            <span>⚡ Pole Schedule 907 (RSJ Line - 53 Items)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '907') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 907 (RSJ Line)</span>
                         </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '922') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
-                            <span>⚡ Pole Schedule 922 (Double Pole DP - 45 Items)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '922') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 922 (Double Pole DP)</span>
                         </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && (selectedPoleScheduleKey === '1425A' || selectedPoleScheduleKey === '1425a')) ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1425A')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
-                            <span>⚡ Pole Schedule 1425A (PSC Pole LT Line - 41 Items)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && (selectedPoleScheduleKey === '1425A' || selectedPoleScheduleKey === '1425a')) ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1425A')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 1425A (PSC Pole LT)</span>
                         </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '1220') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1220')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
-                            <span>⚡ Pole Schedule 1220 (100 KVA DTC - 72 Items)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '1220') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1220')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 1220 (100 KVA DTC)</span>
+                        </button>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '6723') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('6723')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 6723 (AB Switch DP)</span>
+                        </button>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '919') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('919')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
+                            <span>⚡ Pole Schedule 919 (River Crossing)</span>
                         </button>
                     </div>
                     <div>
-                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px; font-size: 0.88rem;">
                             <span>📊 Master Abstract (11 Activities)</span>
                         </button>
                     </div>
@@ -622,7 +628,7 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="(item, rowIdx) in currentPoleScheduleMaterials" :key="item.origIndex"
-                                        :style="item.isSection ? { background: 'rgba(180, 140, 50, 0.22)', fontWeight: '800' } : (item.highlightColor ? { background: item.highlightColor, color: '#111827' } : {})">
+                                        :style="item.isSection ? { background: 'rgba(180, 140, 50, 0.22)', fontWeight: '800' } : {}">
                                         <!-- Section Header Row -->
                                         <template v-if="item.isSection">
                                             <td class="text-center font-bold" style="color: #fbbf24;">—</td>
