@@ -118,8 +118,607 @@ const defaultPoleSchedules = {
       { no: "38", itemCode: "17001356", desc: "Wedge Connector", unit: "No.", rate: 50, isExtra: true, sapDescription: "WEDGE CONNECTOR RABBIT TO RABBIT", sapUom: "NO", docHeader: "0031007012", sapItems: [{ code: "17001356", desc: "WEDGE CONNECTOR RABBIT TO RABBIT", uom: "NO", docHeader: "0031007012" }] },
       { no: "39", itemCode: "17000651", desc: "Lugs 70sqmm", unit: "No.", rate: 15, isExtra: true, highlightColor: "#fecdd3", sapDescription: "LUG AL RING 70 SQMM", sapUom: "NO", docHeader: "0031006347", sapItems: [{ code: "17000651", desc: "LUG AL RING 70 SQMM", uom: "NO", docHeader: "0031006347" }] }
     ]
-  }
+  },
+  "1425A": {
+    "title": "Activity 1425A Pole Schedule — 3 Phase 5 Wire LT Line with AAAC 55 sqmm & ACSR Weasel on PSC Pole 8 Mtr (140 KG)",
+    "activityCode": "1425A",
+    "materials": [
+        {
+            "no": "",
+            "itemCode": "",
+            "desc": "Span",
+            "unit": "",
+            "rate": 0,
+            "isSpan": true
+        },
+        {
+            "no": "1",
+            "itemCode": "17001240",
+            "desc": "PSC Pole 8 Mtr (140 KG)",
+            "unit": "No",
+            "rate": 1000,
+            "sapDescription": "PSC POLE 8 MTR 140 KGS",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17001240",
+                    "desc": "PSC POLE 8 MTR 140 KGS",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "2",
+            "itemCode": "17001261",
+            "desc": "AAAC 55 mm2",
+            "unit": "Rmt",
+            "rate": 3,
+            "highlightColor": "#fef08a",
+            "sapDescription": "AAAC RABBIT CONDUCTOR",
+            "sapUom": "KM",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17001261",
+                    "desc": "AAAC RABBIT CONDUCTOR",
+                    "uom": "KM",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "3",
+            "itemCode": "17000120",
+            "desc": "ACSR Weasel",
+            "unit": "Rmt",
+            "rate": 2,
+            "highlightColor": "#fef08a",
+            "sapDescription": "ACSR WEASEL CONDUCTOR",
+            "sapUom": "KM",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000120",
+                    "desc": "ACSR WEASEL CONDUCTOR",
+                    "uom": "KM",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "",
+            "itemCode": "",
+            "desc": "MS angle 50x50x6 mm",
+            "unit": "Kg",
+            "rate": 0,
+            "isSection": true
+        },
+        {
+            "no": "4",
+            "itemCode": "17005078",
+            "desc": "LT Vertical Angle 5-Pin",
+            "unit": "No",
+            "rate": 120,
+            "sapDescription": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005078",
+                    "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "5",
+            "itemCode": "17005078",
+            "desc": "LT Vertical Angle 4-Pin",
+            "unit": "No",
+            "rate": 100,
+            "sapDescription": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005078",
+                    "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "6",
+            "itemCode": "17005077",
+            "desc": "LT Guarding Cross Arm (2 Pin)",
+            "unit": "No",
+            "rate": 80,
+            "sapDescription": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005077",
+                    "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "",
+            "itemCode": "",
+            "desc": "M.S. Flats (50 X 6mm)",
+            "unit": "Kg",
+            "rate": 0,
+            "isSection": true
+        },
+        {
+            "no": "7",
+            "itemCode": "17005082",
+            "desc": "D-Clamp",
+            "unit": "No.",
+            "rate": 25,
+            "sapDescription": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005082",
+                    "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "8",
+            "itemCode": "",
+            "desc": "PSC Stay Clamp A Type (Top)",
+            "unit": "Pair",
+            "rate": 45,
+            "sapDescription": "PSC STAY CLAMP A TYPE TOP",
+            "sapUom": "PAIR",
+            "sapItems": []
+        },
+        {
+            "no": "9",
+            "itemCode": "",
+            "desc": "PSC Stay Clamp B Type (Top)",
+            "unit": "Pair",
+            "rate": 45,
+            "sapDescription": "PSC STAY CLAMP B TYPE TOP",
+            "sapUom": "PAIR",
+            "sapItems": []
+        },
+        {
+            "no": "10",
+            "itemCode": "",
+            "desc": "PSC Stay Clamp A Type (Bottom)",
+            "unit": "Pair",
+            "rate": 45,
+            "sapDescription": "PSC STAY CLAMP A TYPE BOTTOM",
+            "sapUom": "PAIR",
+            "sapItems": []
+        },
+        {
+            "no": "11",
+            "itemCode": "",
+            "desc": "PSC Stay Clamp B Type (Bottom)",
+            "unit": "Pair",
+            "rate": 45,
+            "sapDescription": "PSC STAY CLAMP B TYPE BOTTOM",
+            "sapUom": "PAIR",
+            "sapItems": []
+        },
+        {
+            "no": "12",
+            "itemCode": "",
+            "desc": "PSC Side Clamp A Type (Top)",
+            "unit": "No",
+            "rate": 30,
+            "sapDescription": "PSC SIDE CLAMP A TYPE TOP",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "13",
+            "itemCode": "",
+            "desc": "PSC Side Clamp B Type (Top)",
+            "unit": "No",
+            "rate": 30,
+            "sapDescription": "PSC SIDE CLAMP B TYPE TOP",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "14",
+            "itemCode": "",
+            "desc": "PSC Side Clamp A Type (Bottom)",
+            "unit": "No",
+            "rate": 30,
+            "sapDescription": "PSC SIDE CLAMP A TYPE BOTTOM",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "15",
+            "itemCode": "",
+            "desc": "PSC Side Clamp B Type (Bottom)",
+            "unit": "No",
+            "rate": 30,
+            "sapDescription": "PSC SIDE CLAMP B TYPE BOTTOM",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "16",
+            "itemCode": "17000056",
+            "desc": "L.T.Shackle Insulator",
+            "unit": "No",
+            "rate": 6,
+            "sapDescription": "LT SHACKLE INSULATOR",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000056",
+                    "desc": "LT SHACKLE INSULATOR",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "17",
+            "itemCode": "17001150",
+            "desc": "Aluminium Bobbins for neutral",
+            "unit": "No.",
+            "rate": 2,
+            "sapDescription": "ALUMINIUM BOBBINS",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17001150",
+                    "desc": "ALUMINIUM BOBBINS",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "18",
+            "itemCode": "17000696",
+            "desc": "L.T.Shackle hardware",
+            "unit": "Pair",
+            "rate": 3,
+            "sapDescription": "LT SHACKLE HARDWARE",
+            "sapUom": "PAIR",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000696",
+                    "desc": "LT SHACKLE HARDWARE",
+                    "uom": "PAIR",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "19",
+            "itemCode": "",
+            "desc": "Jointing Sleeves for AAC",
+            "unit": "No",
+            "rate": 5,
+            "sapDescription": "JOINTING SLEEVES FOR AAC",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "20",
+            "itemCode": "",
+            "desc": "PG Clamp",
+            "unit": "No",
+            "rate": 8,
+            "sapDescription": "PG CLAMP",
+            "sapUom": "NO",
+            "sapItems": []
+        },
+        {
+            "no": "21",
+            "itemCode": "17001369",
+            "desc": "Earthing Sets L.T.",
+            "unit": "Set",
+            "rate": 285,
+            "sapDescription": "EARTHING SET LT",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17001369",
+                    "desc": "EARTHING SET LT",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "22",
+            "itemCode": "17005091",
+            "desc": "L.T. Stay sets",
+            "unit": "Set",
+            "rate": 400,
+            "sapDescription": "MS-LT STAY SET 16 MM",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005091",
+                    "desc": "MS-LT STAY SET 16 MM",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "23",
+            "itemCode": "17000238",
+            "desc": "G.I.Stay Wire 7/3.15mm(10SWG)",
+            "unit": "Kg.",
+            "rate": 8,
+            "highlightColor": "#fef08a",
+            "sapDescription": "GI STAY WIRE 7/3.15 MM 10 SWG",
+            "sapUom": "KG",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000238",
+                    "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
+                    "uom": "KG",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "24",
+            "itemCode": "17000058",
+            "desc": "Stay Insulators",
+            "unit": "No",
+            "rate": 4,
+            "highlightColor": "#fef08a",
+            "sapDescription": "LT STAY INSULATOR",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000058",
+                    "desc": "LT STAY INSULATOR",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "25",
+            "itemCode": "",
+            "desc": "Binding Wire",
+            "unit": "Kg",
+            "rate": 2.5,
+            "sapDescription": "BINDING WIRE",
+            "sapUom": "KG",
+            "sapItems": []
+        },
+        {
+            "no": "26",
+            "itemCode": "",
+            "desc": "Binding Tape",
+            "unit": "Kg",
+            "rate": 2.5,
+            "sapDescription": "BINDING TAPE",
+            "sapUom": "KG",
+            "sapItems": []
+        },
+        {
+            "no": "27",
+            "itemCode": "17000243",
+            "desc": "G.I.Wire 8 SWG/ 6 SWG",
+            "unit": "Kg.",
+            "rate": 4,
+            "highlightColor": "#fef08a",
+            "sapDescription": "GI WIRE 8 SWG",
+            "sapUom": "KG",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000243",
+                    "desc": "GI WIRE 8 SWG",
+                    "uom": "KG",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "28",
+            "itemCode": "",
+            "desc": "Red Oxide Paint for 2 coats",
+            "unit": "Ltr",
+            "rate": 140,
+            "sapDescription": "RED OXIDE PAINT",
+            "sapUom": "L",
+            "sapItems": []
+        },
+        {
+            "no": "29",
+            "itemCode": "17000057",
+            "desc": "L.T.Spacers",
+            "unit": "No",
+            "rate": 12,
+            "sapDescription": "LT SPACER",
+            "sapUom": "NO",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000057",
+                    "desc": "LT SPACER",
+                    "uom": "NO",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "",
+            "itemCode": "",
+            "desc": "G.I.Nut Bolts",
+            "unit": "Kg",
+            "rate": 0,
+            "isSection": true
+        },
+        {
+            "no": "30",
+            "itemCode": "17000614",
+            "desc": "N/B 12*35 (1.5 Inch)",
+            "unit": "No",
+            "rate": 12,
+            "highlightColor": "#fef08a",
+            "sapDescription": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000614",
+                    "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "31",
+            "itemCode": "17000617",
+            "desc": "N/B 12*65 (3 Inch)",
+            "unit": "No",
+            "rate": 15,
+            "highlightColor": "#fef08a",
+            "sapDescription": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000617",
+                    "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "32",
+            "itemCode": "17000613",
+            "desc": "N/B 12*150 (6 Inch)",
+            "unit": "No",
+            "rate": 22,
+            "highlightColor": "#fef08a",
+            "sapDescription": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000613",
+                    "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "33",
+            "itemCode": "17000632",
+            "desc": "N/B 12*175 (7 Inch)",
+            "unit": "No",
+            "rate": 25,
+            "highlightColor": "#fef08a",
+            "sapDescription": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17000632",
+                    "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "34",
+            "itemCode": "17005513",
+            "desc": "N/B 12*190 (9 Inch)",
+            "unit": "No",
+            "rate": 28,
+            "highlightColor": "#fef08a",
+            "sapDescription": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
+            "sapUom": "SET",
+            "docHeader": "0031006347",
+            "sapItems": [
+                {
+                    "code": "17005513",
+                    "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
+                    "uom": "SET",
+                    "docHeader": "0031006347"
+                }
+            ]
+        },
+        {
+            "no": "35",
+            "itemCode": "17001356",
+            "desc": "Wedge connectors",
+            "unit": "No",
+            "rate": 50,
+            "sapDescription": "WEDGE CONNECTOR RABBIT TO RABBIT",
+            "sapUom": "NO",
+            "docHeader": "0031007012",
+            "sapItems": [
+                {
+                    "code": "17001356",
+                    "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
+                    "uom": "NO",
+                    "docHeader": "0031007012"
+                }
+            ]
+        },
+        {
+            "no": "36",
+            "itemCode": "",
+            "desc": "Sundries",
+            "unit": "LS",
+            "rate": 0,
+            "highlightColor": "#fef08a",
+            "sapDescription": "SUNDRIES",
+            "sapUom": "LS",
+            "sapItems": []
+        },
+        {
+            "no": "37",
+            "itemCode": "",
+            "desc": "Concreting ration 1:3:6",
+            "unit": "L.S.",
+            "rate": 2700,
+            "highlightColor": "#fef08a",
+            "sapDescription": "CONCRETING",
+            "sapUom": "LS",
+            "sapItems": []
+        }
+    ]
+}
 };
+
+
+defaultPoleSchedules["1425a"] = defaultPoleSchedules["1425A"];
 
 if (typeof window !== 'undefined') {
   window.defaultPoleSchedules = defaultPoleSchedules;

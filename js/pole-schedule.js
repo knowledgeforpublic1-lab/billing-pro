@@ -201,6 +201,7 @@ window.PoleScheduleModule = {
 
     onPoleScheduleChange(key) {
         this.selectedPoleScheduleKey = key;
+        this.poleScheduleSubTab = 'schedule';
         this.ensurePoleScheduleQuantities(key);
         try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch(e) {}
     },

@@ -531,23 +531,20 @@
                 <!-- Navigation Sub-Toggle Strip -->
                 <div class="no-print" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <button class="btn" :class="poleScheduleSubTab !== 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'schedule'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px;">
-                            <span>📋 11 KV Pole Schedule (907 & 922)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '907') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                            <span>⚡ Pole Schedule 907 (RSJ Line - 53 Items)</span>
                         </button>
-                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px;">
-                            <span>📊 Master Abstract (11 Activities)</span>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '922') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                            <span>⚡ Pole Schedule 922 (Double Pole DP - 45 Items)</span>
+                        </button>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && (selectedPoleScheduleKey === '1425A' || selectedPoleScheduleKey === '1425a')) ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1425A')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                            <span>⚡ Pole Schedule 1425A (PSC Pole LT Line - 41 Items)</span>
                         </button>
                     </div>
-                    <div v-if="poleScheduleSubTab !== 'abstract'" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Active Schedule:</span>
-                        <div class="btn-group" style="display: flex; gap: 4px;">
-                            <button class="btn" :class="selectedPoleScheduleKey === '907' ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="font-weight: 700; font-size: 0.85rem; padding: 5px 12px;">
-                                ⚡ Activity 907 (RSJ Line - 53 Items)
-                            </button>
-                            <button class="btn" :class="selectedPoleScheduleKey === '922' ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="font-weight: 700; font-size: 0.85rem; padding: 5px 12px;">
-                                ⚡ Activity 922 (DP Structure - 45 Items)
-                            </button>
-                        </div>
+                    <div>
+                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                            <span>📊 Master Abstract (11 Activities)</span>
+                        </button>
                     </div>
                 </div>
 

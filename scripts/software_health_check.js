@@ -239,6 +239,19 @@ check('Activity 922 Restored (18 items) & Pole Schedules Configured (907: 53 ite
     assert.strictEqual(sched922.materials[36].itemCode, '17000636', 'Item 37 must be N/B 16*150 (17000636)');
     assert.strictEqual(sched922.materials[41].itemCode, '17000004', 'Extra 1 must be RSJ 9m (17000004)');
     assert.strictEqual(sched922.materials[44].itemCode, '17000651', 'Extra 4 must be Lugs 70sqmm (17000651)');
+
+    // 1425A Pole Schedule (41 rows from site sheet)
+    const sched1425a = scheds['1425A'];
+    assert.ok(sched1425a, 'Pole Schedule 1425A must exist');
+    assert.strictEqual(sched1425a.materials.length, 41, 'Pole Schedule 1425A must have 41 items');
+    assert.strictEqual(sched1425a.materials[1].itemCode, '17001240', 'Item 1 must be PSC Pole 8m');
+    assert.strictEqual(sched1425a.materials[2].itemCode, '17001261', 'Item 2 must be AAAC 55 mm2');
+    assert.strictEqual(sched1425a.materials[3].itemCode, '17000120', 'Item 3 must be ACSR Weasel');
+    assert.strictEqual(sched1425a.materials[9].itemCode, '17005082', 'Item 7 must be D-Clamp (17005082)');
+    assert.strictEqual(sched1425a.materials[18].itemCode, '17000056', 'Item 16 must be LT Shackle Insulator (17000056)');
+    assert.strictEqual(sched1425a.materials[23].itemCode, '17001369', 'Item 21 must be Earthing Set LT (17001369)');
+    assert.strictEqual(sched1425a.materials[33].itemCode, '17000614', 'Item 30 must be N/B 12*35 (17000614)');
+    assert.strictEqual(sched1425a.materials[38].itemCode, '17001356', 'Item 35 must be Wedge Connector (17001356)');
 });
 
 console.log('\n====================================================');

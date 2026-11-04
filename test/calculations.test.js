@@ -1200,6 +1200,15 @@ it('Activity 922 Restored to 18 Contract Items & Pole Schedules Configured (907:
     assert.strictEqual(poleSchedules['922'].materials[44].itemCode, '17000651');
     assert.strictEqual(poleSchedules['922'].materials.filter(m => m.isExtra).length, 4);
     assert.strictEqual(poleSchedules['922'].materials.filter(m => m.isSection).length, 6);
+
+    // Pole Schedule 1425A must have 41 items
+    assert.ok(poleSchedules['1425A'], 'Pole Schedule 1425A must exist');
+    assert.strictEqual(poleSchedules['1425A'].materials.length, 41, 'Pole Schedule 1425A must have 41 items');
+    assert.strictEqual(poleSchedules['1425A'].materials[1].itemCode, '17001240', 'Item 1 must be PSC Pole 8m');
+    assert.strictEqual(poleSchedules['1425A'].materials[2].itemCode, '17001261', 'Item 2 must be AAAC 55 mm2');
+    assert.strictEqual(poleSchedules['1425A'].materials[3].itemCode, '17000120', 'Item 3 must be ACSR Weasel');
+    assert.strictEqual(poleSchedules['1425A'].materials[9].itemCode, '17005082', 'Item 7 must be D-Clamp (17005082)');
+    assert.strictEqual(poleSchedules['1425A'].materials.filter(m => m.isSection).length, 3);
 });
 
 (async () => {
