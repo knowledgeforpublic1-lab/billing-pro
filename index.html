@@ -55,7 +55,7 @@
                     </div>
                     <div class="tabs-divider"></div>
                     <div class="tabs-nav">
-                        <button class="tab-item" :class="{ 'active': currentView === 'invoice' }" @click="switchView('invoice')">
+                        <button class="tab-item" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
                             <span class="tab-dot" style="background: #f59e0b;"></span>
                             Tax Invoice
                         </button>
@@ -612,10 +612,12 @@
                                         <template v-else>
                                             <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
                                             <td class="text-center font-mono">
-                                                <span v-if="item.itemCode" class="badge badge-sap" :title="item.sapDescription" style="cursor: pointer;" @click="openSapItemManager(item, item.origIndex)">
+                                                <span v-if="item.itemCode" class="badge badge-sap" :title="item.sapDescription ? (item.sapDescription + ' (Click to edit SAP Code)') : 'Click to edit SAP Code'" style="cursor: pointer;" @click="openSapItemManager(item, item.origIndex)">
                                                     {{ item.itemCode }}
                                                 </span>
-                                                <span v-else class="text-muted" style="font-size: 0.75rem;">—</span>
+                                                <span v-else class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); font-size: 0.72rem; cursor: pointer; padding: 2px 6px;" title="Click to map SAP code" @click="openSapItemManager(item, item.origIndex)">
+                                                    + Map
+                                                </span>
                                             </td>
                                             <td>
                                                 <div style="font-weight: 600;">{{ item.desc }}</div>
@@ -767,7 +769,7 @@
             </div>
 
             <!-- VIEW 3: EXACT TAX INVOICE REPLICA FORMAT -->
-            <div v-if="currentView === 'invoice'" class="animate-fade-in">
+            <div v-if="currentView === 'invoice' || currentView === 'taxInvoice'" class="animate-fade-in">
                 <!-- INVOICE TOOLBAR -->
                 <div class="invoice-toolbar no-print">
                     <div class="inv-tool-item">

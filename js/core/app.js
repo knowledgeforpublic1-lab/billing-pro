@@ -398,6 +398,38 @@
                         });
                     }
                 });
+                // ⚡ Include Pole Schedule materials in Material Mapping list
+                if (this.poleSchedules) {
+                    const psKeys = ['907', '919', '922', '924', '934A', '1220', '1230', '1425A', '6723'];
+                    psKeys.forEach(psKey => {
+                        const filterKey = 'PS_' + psKey;
+                        if (this.mappingActivityFilter !== 'ALL' && this.mappingActivityFilter !== filterKey) return;
+                        const sched = this.poleSchedules[psKey];
+                        if (sched && Array.isArray(sched.materials)) {
+                            sched.materials.forEach((m, mIdx) => {
+                                if (m.isSection || m.isSpan) return;
+                                if (!m.sapItems || m.sapItems.length === 0) {
+                                    m.sapItems = [{
+                                        code: m.itemCode || '',
+                                        desc: m.sapDescription || m.desc || '',
+                                        uom: m.sapUom || m.unit || 'No',
+                                        qty: 1,
+                                        docHeader: m.docHeader || '0031006347'
+                                    }];
+                                }
+                                list.push({
+                                    actKey: 'PS ' + psKey,
+                                    actTitle: sched.title || ('Pole Schedule ' + psKey),
+                                    item: m,
+                                    isPoleSchedule: true,
+                                    poleScheduleKey: psKey,
+                                    origIndex: mIdx
+                                });
+                            });
+                        }
+                    });
+                }
+
                 if (!this.mappingSearchQuery) return list;
                 const q = this.mappingSearchQuery.toLowerCase();
                 return list.filter(r => {

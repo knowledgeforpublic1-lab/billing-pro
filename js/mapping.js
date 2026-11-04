@@ -732,7 +732,16 @@ window.MappingModule = {
             this.showToast('Bill locked hai — pehle Unlock karo', '🔒');
             return;
         }
-        const act = this.activities && this.activities[actKey];
+        let act = this.activities && this.activities[actKey];
+        let isPS = false;
+        if (!act && actKey && String(actKey).startsWith('PS')) {
+            const psKey = String(actKey).replace(/^PS[_\s]*/, '');
+            act = this.poleSchedules && this.poleSchedules[psKey];
+            isPS = true;
+        } else if (!act && this.poleSchedules && this.poleSchedules[actKey]) {
+            act = this.poleSchedules[actKey];
+            isPS = true;
+        }
         if (!act || !act.materials) {
             this.showToast(`Activity ${actKey} nahi mili`, '⚠️');
             return;

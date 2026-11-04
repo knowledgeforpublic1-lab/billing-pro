@@ -124,6 +124,38 @@ window.PoleScheduleModule = {
         return amt100 * pct;
     },
 
+    getPoleScheduleTotalsByKey(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return { totalQty: 0, totalAmt100: 0, totalAmtStage1: 0 };
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
+        let totalQty = 0;
+        let totalAmt100 = 0;
+        let totalAmtStage1 = 0;
+        const pct1 = (Number(this.pctStage1) || 85) / 100;
+        sched.materials.forEach((m, mIdx) => {
+            if (m.isSection || m.isSpan) return;
+            let mQty = 0;
+            Object.keys(qMatrix).forEach(lIdx => {
+                const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
+                if (raw !== '' && raw !== null && raw !== undefined) {
+                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                    if (!isNaN(n)) mQty += n;
+                }
+            });
+            const rate = Number(m.rate) || 0;
+            const itemAmt = mQty * rate;
+            totalQty += mQty;
+            totalAmt100 += itemAmt;
+            totalAmtStage1 += itemAmt * pct1;
+        });
+        return {
+            totalQty: Math.round(totalQty * 1000) / 1000,
+            totalAmt100: Math.round(totalAmt100 * 100) / 100,
+            totalAmtStage1: Math.round(totalAmtStage1 * 100) / 100
+        };
+    },
+
     getPoleScheduleTotals() {
         const mats = this.getPoleScheduleMaterials();
         let totalQty = 0;

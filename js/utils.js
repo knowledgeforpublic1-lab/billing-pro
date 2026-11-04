@@ -296,6 +296,7 @@ window.UtilsModule = {
                     });
                 },
                 switchView(viewName) {
+                    if (viewName === 'taxInvoice') viewName = 'invoice';
                     this.currentView = viewName;
                     try { localStorage.setItem('billing_current_view', viewName); } catch(e) {}
                     if (viewName === 'invoice') {

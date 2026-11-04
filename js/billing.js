@@ -339,16 +339,35 @@ window.BillingModule = {
             this.invoiceData.items = newItems;
             this.cleanInvoicePlaceholderRows();
         } else {
-            this.invoiceData.items = [
-                {
-                    srNo: '1',
-                    desc: '',
-                    unit: 'Nos',
-                    qty: 1,
-                    amount: 0,
-                    manual: true
-                }
-            ];
+            // Protect existing items: only initialize if items list is completely empty
+            const hasRealExisting = Array.isArray(this.invoiceData.items) && this.invoiceData.items.some(it => it.actKey || (it.desc && it.desc.trim()) || (it.amount && Number(it.amount) > 0));
+            if (!hasRealExisting) {
+                const defaultActs = ['907', '922', '1425A', '1220', '6723', '919', '934A', '924', '1230'];
+                const fallback = [];
+                defaultActs.forEach((k, idx) => {
+                    if (this.activities && this.activities[k]) {
+                        fallback.push({
+                            srNo: (idx + 1).toString(),
+                            actKey: k,
+                            desc: this.getActivityInvoiceDescription(k),
+                            unit: this.getActivityUom(k),
+                            qty: 1,
+                            amount: Math.round(this.getActivityBilled85Amount(k) * 100) / 100,
+                            manual: false
+                        });
+                    }
+                });
+                this.invoiceData.items = fallback.length > 0 ? fallback : [
+                    {
+                        srNo: '1',
+                        desc: '',
+                        unit: 'Nos',
+                        qty: 1,
+                        amount: 0,
+                        manual: true
+                    }
+                ];
+            }
         }
         this.syncInvoiceLocationNames();
     },
@@ -762,11 +781,18 @@ window.BillingModule = {
                 totalAmt100 += itemQty * (Number(act.materials[mIdx].rate) || 0);
             }
         }
-        // Fallback: If no location quantity entered in detail, check if master abstract has quantity
-        if (totalAmt100 === 0) {
+        // Fallback 1: If no location quantity entered in detail, check if master abstract has quantity
+        if (totalAmt100 === 0 && this.masterAbstractList) {
             const absItem = this.masterAbstractList.find(a => a.code === actKey);
             if (absItem && Number(absItem.qty) > 0) {
                 totalAmt100 = (Number(absItem.qty) || 0) * (Number(absItem.rate) || 0);
+            }
+        }
+        // Fallback 2: Check if Pole Schedule has quantities entered for this activity
+        if (totalAmt100 === 0 && typeof this.getPoleScheduleTotalsByKey === 'function') {
+            const psTotals = this.getPoleScheduleTotalsByKey(actKey);
+            if (psTotals && psTotals.totalAmt100 > 0) {
+                totalAmt100 = psTotals.totalAmt100;
             }
         }
         return totalAmt100 * (this.pctStage1 / 100);

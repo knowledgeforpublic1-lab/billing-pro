@@ -735,7 +735,23 @@ window.ViewsModule = {
             this.activeSapManagerItem.sapUom = items[0].uom || this.activeSapManagerItem.unit;
         }
         
-        if (this.currentActivity && this.currentActivity.materials && this.activeSapManagerOrigIndex >= 0) {
+        // Update current pole schedule if in pole schedule view
+        if (this.currentView === 'poleSchedule' || this.selectedPoleScheduleKey) {
+            const curSched = typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : (this.poleSchedules && this.poleSchedules[this.selectedPoleScheduleKey]);
+            if (curSched && curSched.materials && this.activeSapManagerOrigIndex >= 0) {
+                const targetMat = curSched.materials[this.activeSapManagerOrigIndex];
+                if (targetMat) {
+                    targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
+                    targetMat.itemCode = this.activeSapManagerItem.itemCode;
+                    targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
+                    targetMat.sapUom = this.activeSapManagerItem.sapUom;
+                    if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
+                }
+            }
+        }
+
+        // Update current activity if in activity billing view
+        if (this.currentActivity && this.currentActivity.materials && this.activeSapManagerOrigIndex >= 0 && this.currentView !== 'poleSchedule') {
             const targetMat = this.currentActivity.materials[this.activeSapManagerOrigIndex];
             if (targetMat) {
                 targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
