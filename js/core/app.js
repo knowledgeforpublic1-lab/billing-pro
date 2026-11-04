@@ -213,6 +213,9 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed && parsed.activities && typeof parsed.activities === 'object' && Object.keys(parsed.activities).length > 0) {
+                                if (parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length < (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 45))) {
+                                    parsed.activities['922'] = JSON.parse(JSON.stringify(defaultActivities['922']));
+                                }
                                 return parsed.activities;
                             }
                         }

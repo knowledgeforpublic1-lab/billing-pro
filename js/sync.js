@@ -1327,9 +1327,13 @@ window.SyncModule = {
                 if (parsed.activities && typeof parsed.activities === 'object') {
                     this.activities = parsed.activities;
                     Object.keys(defaultActivities).forEach(k => {
-                        if (!this.activities[k]) {
+                        if (!this.activities[k] || (k === '922' && (!this.activities[k].materials || this.activities[k].materials.length < defaultActivities['922'].materials.length))) {
                             this.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
                         } else if (defaultActivities[k] && defaultActivities[k].materials) {
+                            while (this.activities[k].materials.length < defaultActivities[k].materials.length) {
+                                const nextIdx = this.activities[k].materials.length;
+                                this.activities[k].materials.push(JSON.parse(JSON.stringify(defaultActivities[k].materials[nextIdx])));
+                            }
                             defaultActivities[k].materials.forEach((defMat, mIdx) => {
                                 if (this.activities[k].materials && this.activities[k].materials[mIdx]) {
                                     const cur = this.activities[k].materials[mIdx];

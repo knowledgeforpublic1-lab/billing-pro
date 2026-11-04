@@ -589,12 +589,8 @@ it('SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red H
     assert.ok(cable.potentialMatch, 'Cable should have a potential match with an Activity material');
     assert.strictEqual(cable.potentialMatch.actKey, '916', 'Should match Activity 916 (XLPE Cable)');
 
-    // 4. Verify Strain Hardware mismatch 17000704
-    const strain = unmappedItems.find(it => it.code === '17000704');
-    assert.ok(strain, 'Strain Hardware 17000704 should be in unmapped list');
-    assert.strictEqual(strain.netIssue, 1702);
-    assert.ok(strain.potentialMatch, 'Strain Hardware should have potential match');
-    assert.strictEqual(strain.potentialMatch.actKey, '907', 'Should match Activity 907 (Strain Hardware)');
+    // 4. Verify Strain Hardware 17000704 is now officially mapped in Activity 922
+    assert.strictEqual(mappedSet.has('17000704'), true, 'Strain Hardware 17000704 should be mapped in Activity 922');
 
     // 5. Verify isUnmappedContractorIssuedRow for Reconciliation row red highlighting
     const unmappedIssuedRow = { code: '17000195', desc: 'CABLE AL 11KV XLPE', sapGrossIssue: 348, sapNetIssue: 348 };
@@ -1157,6 +1153,18 @@ it('SAP Stock: Custom stock upload reactivity, fallback matching, and reset to d
     mockApp.customStockMeta = null;
     mockApp.recoRevision++;
     assert.strictEqual(mockApp.currentContractorSap.materials['17000004'].issuedQty, 50, 'Reset must restore default stock');
+});
+
+it('Activity 922: 45-Item Pole Schedule with SAP Code Mapping & Section Headers', () => {
+    eval(fs.readFileSync('js/data/default-activities.js', 'utf8').replace('const defaultActivities', 'global.defaultActivities'));
+    const act = global.defaultActivities['922'];
+
+    assert.ok(act, 'Activity 922 must exist');
+    assert.strictEqual(act.materials.length, 45, 'Must have 45 items in pole schedule');
+    assert.strictEqual(act.materials[0].itemCode, '17001243');
+    assert.strictEqual(act.materials[44].itemCode, '17000651');
+    assert.strictEqual(act.materials.filter(m => m.isExtra).length, 4);
+    assert.strictEqual(act.materials.filter(m => m.isSection).length, 6);
 });
 
 (async () => {
