@@ -528,63 +528,30 @@
 
             <!-- VIEW 2: POLE SCHEDULE & MASTER ABSTRACT -->
             <div v-if="currentView === 'poleSchedule' || currentView === 'abstract'" class="animate-fade-in">
-                <!-- Navigation Sub-Toggle Strip -->
-                <div class="no-print" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
-                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '907') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('907')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 907 (RSJ Line)</span>
-                        </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '922') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('922')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 922 (Double Pole DP)</span>
-                        </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && (selectedPoleScheduleKey === '1425A' || selectedPoleScheduleKey === '1425a')) ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1425A')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 1425A (PSC Pole LT)</span>
-                        </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '1220') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1220')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 1220 (100 KVA DTC)</span>
-                        </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '6723') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('6723')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 6723 (AB Switch DP)</span>
-                        </button>
-                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '919') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('919')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; font-size: 0.85rem;">
-                            <span>⚡ Pole Schedule 919 (River Crossing)</span>
-                        </button>
+                <!-- Navigation Dropdown Strip -->
+                <div class="no-print" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-size: 0.92rem; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span>⚡ Select Pole Schedule:</span>
+                        </label>
+                        <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input" style="font-weight: 700; font-size: 0.95rem; min-width: 420px; max-width: 550px; padding: 8px 14px; background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                            <option value="907">⚡ Activity 907 — RSJ Line with V-Cross Arm (53 Items)</option>
+                            <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
+                            <option value="1425A">⚡ Activity 1425A — 3 Phase 5 Wire LT Line on PSC Pole (41 Items)</option>
+                            <option value="1220">⚡ Activity 1220 — 100 KVA Dist. Transformer Center (72 Items)</option>
+                            <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
+                            <option value="919">⚡ Activity 919 — River Crossing DP on RSJ 152x152 (37 Items)</option>
+                        </select>
                     </div>
-                    <div>
-                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px; font-size: 0.88rem;">
-                            <span>📊 Master Abstract (11 Activities)</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = (poleScheduleSubTab === 'abstract' ? 'schedule' : 'abstract')" style="font-weight: 700; font-size: 0.88rem; padding: 7px 16px;">
+                            <span>{{ poleScheduleSubTab === 'abstract' ? '📋 Back to Pole Schedule' : '📊 Master Abstract (11 Activities)' }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- SUB-VIEW A: POLE SCHEDULE MEASUREMENT GRID -->
                 <div v-if="poleScheduleSubTab !== 'abstract'">
-                    <!-- Summary Metric Cards -->
-                    <div class="no-print" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-amber);">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Schedule</div>
-                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Activity {{ selectedPoleScheduleKey }}</div>
-                        </div>
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary);">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Items & Locations</div>
-                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                                {{ getPoleScheduleMaterials().length }} Items • {{ getPoleScheduleLocations().length }} Locs
-                            </div>
-                        </div>
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-green);">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-green); text-transform: uppercase;">Total Material Qty</div>
-                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                                {{ poleScheduleTotals.totalQty }}
-                            </div>
-                        </div>
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-indigo);">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-indigo); text-transform: uppercase;">100% Value / {{ pctStage1 }}% Value</div>
-                            <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                                {{ formatCurrency(poleScheduleTotals.totalAmt100) }} / <span style="color: var(--accent-green);">{{ formatCurrency(poleScheduleTotals.totalAmtStage1) }}</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Pole Schedule Card -->
                     <div class="abstract-card">
                         <div class="table-header-strip" style="background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.2);">
@@ -708,47 +675,6 @@
 
                 <!-- SUB-VIEW B: ORIGINAL 11 ACTIVITIES MASTER ABSTRACT -->
                 <div v-else>
-
-                <!-- Executive Summary Metric Cards -->
-                <div class="no-print"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                    <div
-                        style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary);">
-                        <div
-                            style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                            Total 100% Value</div>
-                        <div
-                            style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                            {{ formatCurrency(abstractTotals.amt100) }}</div>
-                    </div>
-                    <div
-                        style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-green);">
-                        <div
-                            style="font-size: 0.75rem; font-weight: 700; color: var(--accent-green); text-transform: uppercase; letter-spacing: 0.5px;">
-                            Stage 1 ({{ pctStage1 }}%) Amount</div>
-                        <div
-                            style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                            {{ formatCurrency(abstractTotals.amtStage1) }}</div>
-                    </div>
-                    <div
-                        style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-amber);">
-                        <div
-                            style="font-size: 0.75rem; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.5px;">
-                            Stage 2 ({{ pctStage2 }}%) Amount</div>
-                        <div
-                            style="font-size: 1.4rem; font-weight: 800; color: var(--accent-amber); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                            {{ formatCurrency(abstractTotals.amtStage2) }}</div>
-                    </div>
-                    <div
-                        style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-indigo);">
-                        <div
-                            style="font-size: 0.75rem; font-weight: 700; color: var(--accent-indigo); text-transform: uppercase; letter-spacing: 0.5px;">
-                            Stage 3 ({{ pctStage3 }}%) Amount</div>
-                        <div
-                            style="font-size: 1.4rem; font-weight: 800; color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-                            {{ formatCurrency(abstractTotals.amtStage3) }}</div>
-                    </div>
-                </div>
 
                 <div class="abstract-card">
                     <div class="table-header-strip">
