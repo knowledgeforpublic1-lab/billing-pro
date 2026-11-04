@@ -277,7 +277,7 @@ window.BillingModule = {
     },
 
     updateSyncTaxInvoiceFromActivities() {
-        if (!this.invoiceData.autoSync) return;
+        if (!this.invoiceData || !this.invoiceData.autoSync) return;
         if (!this.invoiceData.excludedActKeys) {
             this.invoiceData.excludedActKeys = [];
         }
@@ -837,7 +837,8 @@ window.BillingModule = {
     },
 
     getActivityUom(actKey) {
-        const found = this.masterAbstractList.find(a => a.code === actKey);
+        const list = this.masterAbstractList || (typeof defaultMasterAbstract !== 'undefined' ? defaultMasterAbstract : []);
+        const found = Array.isArray(list) ? list.find(a => a.code === actKey) : null;
         return found ? found.uom : 'Nos';
     },
 

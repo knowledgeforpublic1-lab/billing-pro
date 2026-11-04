@@ -615,14 +615,15 @@
 
                                     let finalQty = 0;
                                     if (s.isManual) {
-                                        const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
+                                        const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : ((s.qty !== undefined && s.qty !== null && s.qty !== '') ? s.qty : 1);
                                         const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
                                         const mq = Number(evalVal);
                                         finalQty = isNaN(mq) ? 0 : mq;
                                     } else {
-                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                        const qRaw = (s.qty !== undefined && s.qty !== null && s.qty !== '') ? s.qty : 1;
+                                        const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(qRaw) : qRaw;
                                         let _mq = Number(evalVal);
-                                        const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
+                                        const mappingSheetQty = (isNaN(_mq) || _mq <= 0) ? 1 : _mq;
                                         const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
                                         const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                         finalQty = _conv ? (itemTotalQty * mappingSheetQty / _conv) : (itemTotalQty * mappingSheetQty);
@@ -686,14 +687,15 @@
 
                                         let finalQty = 0;
                                         if (s.isManual) {
-                                            const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
+                                            const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : ((s.qty !== undefined && s.qty !== null && s.qty !== '') ? s.qty : 1);
                                             const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
                                             const mq = Number(evalVal);
                                             finalQty = isNaN(mq) ? 0 : mq;
                                         } else {
-                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                            const qRaw = (s.qty !== undefined && s.qty !== null && s.qty !== '') ? s.qty : 1;
+                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(qRaw) : qRaw;
                                             let _mq = Number(evalVal);
-                                            const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
+                                            const mappingSheetQty = (isNaN(_mq) || _mq <= 0) ? 1 : _mq;
                                             const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
                                             const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                             finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);

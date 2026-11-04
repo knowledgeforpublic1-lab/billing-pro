@@ -39,28 +39,30 @@ window.PoleScheduleModule = {
             });
     },
 
-    getPoleScheduleLocations() {
-        const key = this.selectedPoleScheduleKey || '907';
+    getPoleScheduleLocations(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
         if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
-        if (!Array.isArray(this.poleScheduleLocations[key]) || this.poleScheduleLocations[key].length === 0) {
-            if (this.locations && this.locations.length > 0) {
-                this.poleScheduleLocations[key] = JSON.parse(JSON.stringify(this.locations));
+        if (!Array.isArray(this.poleScheduleLocations[k]) || this.poleScheduleLocations[k].length === 0) {
+            if (this.activityLocations && Array.isArray(this.activityLocations[k]) && this.activityLocations[k].length > 0) {
+                this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(this.activityLocations[k]));
+            } else if (this.locations && this.locations.length > 0) {
+                this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(this.locations));
             } else {
-                this.poleScheduleLocations[key] = [
+                this.poleScheduleLocations[k] = [
                     { name: 'Ra-09 Bodhali' },
                     { name: 'Ra-09 Gogaon' },
                     { name: 'Ra-09 Nawegaon' }
                 ];
             }
         }
-        return this.poleScheduleLocations[key];
+        return this.poleScheduleLocations[k];
     },
 
     ensurePoleScheduleQuantities(key) {
         const k = key || this.selectedPoleScheduleKey || '907';
         if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
         if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
-        const locs = this.getPoleScheduleLocations();
+        const locs = this.getPoleScheduleLocations(k);
         locs.forEach((loc, lIdx) => {
             if (!this.poleScheduleQuantities[k][lIdx]) {
                 this.poleScheduleQuantities[k][lIdx] = {};
@@ -278,11 +280,12 @@ window.PoleScheduleModule = {
     syncPoleScheduleToBillingAndReconciliation(key) {
         const k = key || this.selectedPoleScheduleKey || '907';
 
-        // 1. Ensure locations synchronization
-        if (this.poleScheduleLocations && this.poleScheduleLocations[k]) {
-            if (!this.activityLocations) this.activityLocations = {};
-            this.activityLocations[k] = this.poleScheduleLocations[k];
-        }
+        // 1. Ensure locations synchronization across both Pole Schedule & Activity Billing
+        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : [{ name: 'Location 1' }]);
+        if (!this.activityLocations) this.activityLocations = {};
+        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
+        this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(locs));
 
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
         if (!sched || !Array.isArray(sched.materials)) return;
@@ -299,13 +302,11 @@ window.PoleScheduleModule = {
         const act = this.activities[k];
         if (!Array.isArray(act.materials)) act.materials = [];
 
-        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations() : [{ name: 'Location 1' }]);
-
         // Synchronize all materials from Pole Schedule into act.materials so Activity Billing has all items
         sched.materials.forEach((sm, smIdx) => {
             if (sm.isSection || sm.isSpan) return;
             let actMatIdx = act.materials.findIndex(am => {
-                if (am.itemCode && sm.itemCode && am.itemCode === sm.itemCode) return true;
+                if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
                 if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
                 return false;
             });
@@ -324,7 +325,6 @@ window.PoleScheduleModule = {
                     ]
                 });
             } else {
-                // Ensure SAP codes and rates are updated from Pole Schedule
                 if (!act.materials[actMatIdx].itemCode && sm.itemCode) act.materials[actMatIdx].itemCode = sm.itemCode;
                 if ((!act.materials[actMatIdx].sapItems || act.materials[actMatIdx].sapItems.length === 0) && sm.sapItems && sm.sapItems.length > 0) {
                     act.materials[actMatIdx].sapItems = JSON.parse(JSON.stringify(sm.sapItems));
@@ -341,13 +341,17 @@ window.PoleScheduleModule = {
         while (this.activityQuantities[k].length < locs.length) {
             this.activityQuantities[k].push(new Array(act.materials.length).fill(''));
         }
+        // Pad all rows
+        this.activityQuantities[k].forEach(row => {
+            while (row.length < act.materials.length) row.push('');
+        });
 
         const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
         if (qMatrix) {
             sched.materials.forEach((sm, smIdx) => {
                 if (sm.isSection || sm.isSpan) return;
                 const actMatIdx = act.materials.findIndex(am => {
-                    if (am.itemCode && sm.itemCode && am.itemCode === sm.itemCode) return true;
+                    if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
                     if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
                     return false;
                 });
@@ -362,48 +366,54 @@ window.PoleScheduleModule = {
             });
         }
 
-        // Vue 2 Reactivity trigger
-        if (this.$set) {
-            this.$set(this.activityQuantities, k, this.activityQuantities[k].map(r => [...r]));
-            this.$set(this.activities, k, Object.assign({}, act));
-        }
+        // Vue 3 reactivity trigger
+        this.activityQuantities[k] = this.activityQuantities[k].map(row => [...row]);
+        this.activityQuantities = { ...this.activityQuantities };
+        this.activities = { ...this.activities };
 
         // 3. Update Master Abstract if present
-        if (this.masterAbstractList && typeof this.getPoleScheduleTotalsByKey === 'function') {
-            const absItem = this.masterAbstractList.find(a => a.code === k);
-            if (absItem) {
-                const psTotals = this.getPoleScheduleTotalsByKey(k);
-                if (psTotals && psTotals.totalAmt100 > 0) {
-                    if (k === '907' && typeof this.getActivity907InvoiceQty === 'function') {
-                        const q907 = this.getActivity907InvoiceQty();
-                        if (q907 > 0) absItem.qty = q907;
+        try {
+            if (this.masterAbstractList && Array.isArray(this.masterAbstractList) && typeof this.getPoleScheduleTotalsByKey === 'function') {
+                const absItem = this.masterAbstractList.find(a => a.code === k);
+                if (absItem) {
+                    const psTotals = this.getPoleScheduleTotalsByKey(k);
+                    if (psTotals && psTotals.totalAmt100 > 0) {
+                        if (k === '907' && typeof this.getActivity907InvoiceQty === 'function') {
+                            const q907 = this.getActivity907InvoiceQty();
+                            if (q907 > 0) absItem.qty = q907;
+                        }
                     }
                 }
             }
-        }
+        } catch(e) {}
 
         // 4. Update Tax Invoice immediately
-        if (typeof this.updateSyncTaxInvoiceFromActivities === 'function') {
-            this.updateSyncTaxInvoiceFromActivities();
-        }
+        try {
+            if (typeof this.updateSyncTaxInvoiceFromActivities === 'function') {
+                this.updateSyncTaxInvoiceFromActivities();
+            }
+        } catch(e) {}
 
         // 5. Trigger Reconciliation Sheet re-calculation
         this.recoRevision = (this.recoRevision || 0) + 1;
     },
 
-        syncActivityBillingToPoleSchedule(key) {
+    syncActivityBillingToPoleSchedule(key) {
         const k = key || this.selectedActivityKey || '907';
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
         const act = this.activities && this.activities[k];
         if (!sched || !act || !this.activityQuantities || !this.activityQuantities[k]) return;
 
         this.ensurePoleScheduleQuantities(k);
-        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations() : []);
+        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : []);
+
+        if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
+        if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
 
         sched.materials.forEach((sm, smIdx) => {
             if (sm.isSection || sm.isSpan) return;
             const actMatIdx = act.materials.findIndex(am => {
-                if (am.itemCode && sm.itemCode && am.itemCode === sm.itemCode) return true;
+                if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
                 if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
                 return false;
             });
@@ -412,12 +422,17 @@ window.PoleScheduleModule = {
                     const val = (this.activityQuantities[k][lIdx] && this.activityQuantities[k][lIdx][actMatIdx] !== undefined)
                         ? this.activityQuantities[k][lIdx][actMatIdx]
                         : '';
-                    if (this.poleScheduleQuantities[k][lIdx]) {
-                        this.poleScheduleQuantities[k][lIdx][smIdx] = val;
+                    if (!this.poleScheduleQuantities[k][lIdx]) {
+                        this.poleScheduleQuantities[k][lIdx] = {};
                     }
+                    this.poleScheduleQuantities[k][lIdx][smIdx] = val;
                 });
             }
         });
+
+        // Vue 3 reactivity trigger
+        this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
+        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
         this.recoRevision = (this.recoRevision || 0) + 1;
     },
 
