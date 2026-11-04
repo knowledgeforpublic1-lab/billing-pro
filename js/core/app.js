@@ -540,32 +540,63 @@
                     }
                 });
 
-                Object.keys(this.activities).forEach(actKey => {
-                    const act = this.activities[actKey];
-                    if (act && act.materials) {
-                        act.materials.forEach((m, mIdx) => {
-                            let activitySheetQty = 0;
-                            const qMatrix = this.activityQuantities[actKey] || [];
-                            const numLocs = this.getActLocations(actKey).length;
-                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
-                                const val = (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '')
-                                    ? parseFloat(qMatrix[locIdx][mIdx])
-                                    : 0;
-                                activitySheetQty += val;
-                            }
+                // ⚡ Process all activities including Pole Schedules
+                const candidateActKeys = new Set([
+                    ...Object.keys(this.activities || {}),
+                    ...Object.keys(this.poleSchedules || {}),
+                    ...Object.keys(this.poleScheduleQuantities || {})
+                ]);
 
-                            // ✏️ Ensure SAP mapping exists for extra items or any unmapped items
-                            if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
-                                if (typeof this.ensureMaterialSap === 'function') {
-                                    this.ensureMaterialSap(m, mIdx);
+                candidateActKeys.forEach(actKey => {
+                    // Check if this activity has Pole Schedule entries
+                    const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[actKey];
+                    let hasPsQty = false;
+                    if (qMatrix) {
+                        for (const lIdx in qMatrix) {
+                            const row = qMatrix[lIdx];
+                            if (row) {
+                                for (const mIdx in row) {
+                                    const raw = row[mIdx];
+                                    if (raw !== '' && raw !== null && raw !== undefined) {
+                                        const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                                        if (!isNaN(n) && n > 0) { hasPsQty = true; break; }
+                                    }
                                 }
                             }
+                            if (hasPsQty) break;
+                        }
+                    }
 
-                            if (m.sapItems && m.sapItems.length > 0) {
-                                m.sapItems.forEach(s => {
-                                    if (!s.code) return;
+                    if (hasPsQty) {
+                        // Direct Pole Schedule Reconciliation processing
+                        const sched = (this.poleSchedules && this.poleSchedules[actKey]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[actKey]);
+                        if (sched && Array.isArray(sched.materials)) {
+                            sched.materials.forEach((m, mIdx) => {
+                                if (m.isSection || m.isSpan) return;
+                                let itemTotalQty = 0;
+                                for (const lIdx in qMatrix) {
+                                    const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
+                                    if (raw !== '' && raw !== null && raw !== undefined) {
+                                        const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                                        if (!isNaN(n)) itemTotalQty += n;
+                                    }
+                                }
+                                if (itemTotalQty <= 0) return;
+
+                                let sItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [];
+                                if (sItems.length === 0 && m.itemCode && m.itemCode !== 'N/A' && m.itemCode !== '—') {
+                                    sItems = [{
+                                        code: m.itemCode,
+                                        desc: m.sapDescription || m.desc || m.itemCode,
+                                        uom: m.sapUom || m.unit || 'No',
+                                        qty: 1
+                                    }];
+                                }
+
+                                sItems.forEach(s => {
+                                    if (!s.code || s.code === 'N/A' || s.code === '—') return;
                                     allActivityKeys.add(actKey);
-                                    
+
                                     if (!sapMap[s.code]) {
                                         const sStockItem = sapIssuesMap[s.code] || {};
                                         const numQty = Number(sStockItem.issuedQty || sStockItem.netIssue || 0);
@@ -581,7 +612,7 @@
                                             activities: {}
                                         };
                                     }
-                                    
+
                                     let finalQty = 0;
                                     if (s.isManual) {
                                         const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
@@ -592,27 +623,100 @@
                                         const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
                                         let _mq = Number(evalVal);
                                         const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
-                                        const _bw = this.nutBoltWeightForCode(s.code);
-                                        const _conv = (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
-                                        finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                        const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
+                                        const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
+                                        finalQty = _conv ? (itemTotalQty * mappingSheetQty / _conv) : (itemTotalQty * mappingSheetQty);
                                     }
                                     const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
                                     if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
                                         finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                     }
-                                    
+
+                                    finalQty = Math.round(finalQty * 1000) / 1000;
                                     sapMap[s.code].totalQty += finalQty;
-                                    
+
                                     if (!sapMap[s.code].activities[actKey]) {
                                         sapMap[s.code].activities[actKey] = 0;
                                     }
                                     sapMap[s.code].activities[actKey] += finalQty;
                                 });
-                            }
-                        });
+                            });
+                        }
+                    } else {
+                        // Standard Activity Billing path
+                        const act = this.activities && this.activities[actKey];
+                        if (act && act.materials) {
+                            act.materials.forEach((m, mIdx) => {
+                                let activitySheetQty = 0;
+                                const qMatrix = (this.activityQuantities && this.activityQuantities[actKey]) || [];
+                                const numLocs = (typeof this.getActLocations === 'function' && this.getActLocations(actKey).length) || 1;
+                                for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                                    const val = (qMatrix[locIdx] && qMatrix[locIdx][mIdx] !== undefined && qMatrix[locIdx][mIdx] !== '')
+                                        ? parseFloat(qMatrix[locIdx][mIdx])
+                                        : 0;
+                                    activitySheetQty += val;
+                                }
+
+                                if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
+                                    if (typeof this.ensureMaterialSap === 'function') {
+                                        this.ensureMaterialSap(m, mIdx);
+                                    }
+                                }
+
+                                if (m.sapItems && m.sapItems.length > 0) {
+                                    m.sapItems.forEach(s => {
+                                        if (!s.code) return;
+                                        allActivityKeys.add(actKey);
+
+                                        if (!sapMap[s.code]) {
+                                            const sStockItem = sapIssuesMap[s.code] || {};
+                                            const numQty = Number(sStockItem.issuedQty || sStockItem.netIssue || 0);
+                                            sapMap[s.code] = {
+                                                code: s.code,
+                                                desc: s.desc || m.sapDescription || m.desc || s.code,
+                                                uom: s.uom || m.sapUom || m.unit || 'No',
+                                                totalQty: 0,
+                                                sapIssuedQty: numQty,
+                                                sapGrossIssue: Number(sStockItem.grossIssue !== undefined ? sStockItem.grossIssue : numQty),
+                                                sapMrnReturn: Number(sStockItem.mrnReturn || 0),
+                                                sapNetIssue: Number(sStockItem.netIssue !== undefined ? sStockItem.netIssue : numQty),
+                                                activities: {}
+                                            };
+                                        }
+
+                                        let finalQty = 0;
+                                        if (s.isManual) {
+                                            const mRaw = (s.manualQty !== undefined && s.manualQty !== null && s.manualQty !== '') ? s.manualQty : s.qty;
+                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(mRaw) : mRaw;
+                                            const mq = Number(evalVal);
+                                            finalQty = isNaN(mq) ? 0 : mq;
+                                        } else {
+                                            const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(s.qty) : s.qty;
+                                            let _mq = Number(evalVal);
+                                            const mappingSheetQty = isNaN(_mq) ? 1 : _mq;
+                                            const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
+                                            const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
+                                            finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+                                        }
+                                        const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
+                                        if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
+                                            finalQty = this.applyRoundValue(finalQty, itemRoundMode);
+                                        }
+
+                                        finalQty = Math.round(finalQty * 1000) / 1000;
+                                        sapMap[s.code].totalQty += finalQty;
+
+                                        if (!sapMap[s.code].activities[actKey]) {
+                                            sapMap[s.code].activities[actKey] = 0;
+                                        }
+                                        sapMap[s.code].activities[actKey] += finalQty;
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
-                
+
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const rows = Object.values(sapMap)
                     .filter(row => 
@@ -1771,6 +1875,15 @@
                             { code: '17005059', desc: 'MS-11KV TOP CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' }
                         ];
                     }
+                }
+            } catch(e) {}
+
+            // ⚡ Auto-sync any existing Pole Schedule entries into Billing & Reconciliation
+            try {
+                if (this.poleScheduleQuantities && typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                    Object.keys(this.poleScheduleQuantities).forEach(k => {
+                        this.syncPoleScheduleToBillingAndReconciliation(k);
+                    });
                 }
             } catch(e) {}
 

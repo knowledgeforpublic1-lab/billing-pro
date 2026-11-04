@@ -128,6 +128,9 @@ window.UtilsModule = {
                         if (this.activityQuantities[this.selectedActivityKey] && this.activityQuantities[this.selectedActivityKey][locIdx]) {
                             this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = '';
                         }
+                        if (typeof this.syncActivityBillingToPoleSchedule === 'function') {
+                            this.syncActivityBillingToPoleSchedule(this.selectedActivityKey);
+                        }
                         this.saveToStorage();
                         return;
                     }
@@ -137,6 +140,9 @@ window.UtilsModule = {
                         this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = finalVal;
                     }
                     event.target.value = finalVal;
+                    if (typeof this.syncActivityBillingToPoleSchedule === 'function') {
+                        this.syncActivityBillingToPoleSchedule(this.selectedActivityKey);
+                    }
                     this.saveToStorage();
                 },
                 onQtyCellBlur(event, rowIdx, locIdx) {
