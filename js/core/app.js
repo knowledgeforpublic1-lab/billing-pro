@@ -1108,23 +1108,23 @@
                 return sum;
             },
             calculatedInvoiceCgst() {
-                return this.calculatedInvoiceBasic * 0.09;
+                return Math.round(this.calculatedInvoiceBasic * 0.09 * 100) / 100;
             },
             calculatedInvoiceSgst() {
-                return this.calculatedInvoiceBasic * 0.09;
+                return Math.round(this.calculatedInvoiceBasic * 0.09 * 100) / 100;
             },
             calculatedInvoiceIgst() {
-                return this.calculatedInvoiceBasic * 0.18;
+                return Math.round(this.calculatedInvoiceBasic * 0.18 * 100) / 100;
             },
             calculatedInvoiceGst() {
                 if (this.invoiceData.gstType === 'NONE') return 0; // GSTIN nahi → GST zero
                 if (this.invoiceData.gstType === 'CGST_SGST') {
-                    return this.calculatedInvoiceCgst + this.calculatedInvoiceSgst;
+                    return Math.round((this.calculatedInvoiceCgst + this.calculatedInvoiceSgst) * 100) / 100;
                 }
                 return this.calculatedInvoiceIgst;
             },
             calculatedInvoiceGrandTotal() {
-                return this.calculatedInvoiceBasic + this.calculatedInvoiceGst;
+                return Math.round((this.calculatedInvoiceBasic + this.calculatedInvoiceGst) * 100) / 100;
             },
             overallProgressPct() {
                 const contractValue = Number(this.projectMeta.contractValue) || 0;
@@ -1764,9 +1764,7 @@
                     const payload = this.buildSyncPayload();
                     const json = JSON.stringify(payload);
                     if (json.length <= 4 * 1024 * 1024) {
-                        let h = 0;
-                        for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-                        const hash = json.length + ':' + h;
+                        const hash = typeof this.stableStateHash === 'function' ? this.stableStateHash(payload) : (typeof window !== 'undefined' && window.computeFullHash ? window.computeFullHash(json) : json.length + ':' + json.slice(0, 100));
                         if (hash !== this.lastSentHash) {
                             console.info('Heartbeat: unsynced change detected, pushing to cloud');
                             await this.syncToMongoNow();

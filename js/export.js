@@ -9,6 +9,15 @@ window.APPS_SCRIPT_SOURCE_CODE = "/**\n * BILLING APP → Google Drive Backup & 
  */
 
 window.ExportModule = {
+    colNumToLetter(c) {
+        let temp, letter = '';
+        while (c > 0) {
+            temp = (c - 1) % 26;
+            letter = String.fromCharCode(temp + 65) + letter;
+            c = Math.floor((c - temp - 1) / 26);
+        }
+        return letter || 'A';
+    },
                 async exportMaterialMappingExcel() {
                     const workbook = new ExcelJS.Workbook();
                     workbook.creator = 'Billing Pro Studio';
@@ -459,7 +468,7 @@ window.ExportModule = {
                         rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(4).value = 'CGST @ 9%';
                         rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).value = { formula: `E${basicRowIdx}*0.09`, result: this.calculatedInvoiceCgst };
+                        rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceCgst };
                         rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).numFmt = '#,##0.00';
                         rBank2.getCell(5).alignment = { horizontal: 'right' };
@@ -475,7 +484,7 @@ window.ExportModule = {
                         rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(4).value = 'SGST @ 9%';
                         rBank3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank3.getCell(5).value = { formula: `E${basicRowIdx}*0.09`, result: this.calculatedInvoiceSgst };
+                        rBank3.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceSgst };
                         rBank3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(5).numFmt = '#,##0.00';
                         rBank3.getCell(5).alignment = { horizontal: 'right' };
@@ -506,7 +515,7 @@ window.ExportModule = {
                         rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(4).value = 'IGST @ 18%';
                         rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).value = { formula: `E${basicRowIdx}*0.18`, result: this.calculatedInvoiceIgst };
+                        rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.18, 2)`, result: this.calculatedInvoiceIgst };
                         rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
                         rBank2.getCell(5).numFmt = '#,##0.00';
                         rBank2.getCell(5).alignment = { horizontal: 'right' };
@@ -1204,7 +1213,7 @@ function jsonOut(obj) {
                             row.getCell(actColIdx).value = val;
                         });
 
-                        const actEndCol = String.fromCharCode(64 + 5 + columns.length);
+                        const actEndCol = this.colNumToLetter(5 + columns.length);
                         row.getCell(5).value = { formula: `SUM(F${rowIdx}:${actEndCol}${rowIdx})` };
 
                         row.eachCell((c, colNum) => {

@@ -26,8 +26,12 @@ app.get(['/mobile', '/mobile.html'], (req, res) => res.sendFile(path.join(__dirn
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use((req, res, next) => {
-  const p = decodeURI(req.url);
+  let p = '';
+  try { p = decodeURI(req.url); } catch(e) { p = req.url; }
   if (p.startsWith('/Reconciliation master')) {
+    if (p.includes('data.js') || p.includes('data.json') || p.includes('upload.php')) {
+      return res.status(403).send('Forbidden: Sensitive dataset is protected.');
+    }
     return express.static(path.join(__dirname, 'Reconciliation master'))(
       Object.assign(req, { url: p.replace('/Reconciliation master', '') || '/' }),
       res,

@@ -297,13 +297,13 @@ window.BillingModule = {
             if (k && billedSet.has(k) && !seen.has(k)) {
                 seen.add(k);
                 if (it === this.editingInvoiceRow) { newItems.push(it); return; }
+                if (it.manual) { newItems.push(it); return; } // Honor user's manual edits
                 it.actKey = k;
                 // Auto sync: always ensure correct format "Activity [k] : ..."
                 it.desc = this.getActivityInvoiceDescription(k);
                 it.unit = this.getActivityUom(k);
                 it.qty = qtyFor(k);
                 it.amount = Math.round(this.getActivityBilled85Amount(k) * 100) / 100;
-                it.manual = false;
                 newItems.push(it);
             } else if (k && this.activities[k] && !seen.has(k)) {
                 seen.add(k);
@@ -839,9 +839,10 @@ window.BillingModule = {
     },
 
     getActivity907InvoiceQty() {
-        const rmt = this.getActivity907AaacTotalRmt();
-        const div = Number(this.projectMeta.aaacDivisor) || 3150;
-        if (rmt > 0) {
+        const rmt = Math.max(0, Number(this.getActivity907AaacTotalRmt()) || 0);
+        let div = Number(this.projectMeta && this.projectMeta.aaacDivisor);
+        if (!div || isNaN(div) || div <= 0) div = 3150;
+        if (rmt > 0 && div > 0) {
             return Math.round((rmt / div) * 1000) / 1000;
         }
         return 0;

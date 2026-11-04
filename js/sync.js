@@ -790,8 +790,11 @@ window.SyncModule = {
         this.lastSentHash = '';
         try { localStorage.setItem('lk_billing_active_bill_id', dataId); } catch(e) {}
 
-        await this.loadFromStorage({ forceServer: true, dataId });
-        this._isLoading = false;
+        try {
+            await this.loadFromStorage({ forceServer: true, dataId });
+        } finally {
+            this._isLoading = false;
+        }
         this.showSavedBillsModal = false;
         this.historyStack = [];
         this.historyIndex = -1;
@@ -904,9 +907,15 @@ window.SyncModule = {
             const c = Object.assign({}, obj);
             delete c.savedAt; delete c.baseRev;
             const json = JSON.stringify(c);
-            let h = 0;
-            for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-            return json.length + ':' + h;
+            if (typeof window !== 'undefined' && typeof window.computeFullHash === 'function') {
+                return window.computeFullHash(json);
+            }
+            let h = 0x811c9dc5;
+            for (let i = 0, len = json.length; i < len; i++) {
+                h ^= json.charCodeAt(i);
+                h = Math.imul(h, 0x01000193);
+            }
+            return json.length + ':' + (h >>> 0).toString(36);
         } catch(e) { return ''; }
     },
     getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
@@ -938,9 +947,7 @@ window.SyncModule = {
                 this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped', '⚠️');
                 return false;
             }
-            let h = 0;
-            for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-            const hash = json.length + ':' + h;
+            const hash = this.stableStateHash(payload);
             if (hash === this.lastSentHash) {
                 if (manual) this.showToast('Already synced — Refresh on other PC', '☁️');
                 return true;

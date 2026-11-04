@@ -6,7 +6,21 @@
  * @since v2.0
  */
 
+function computeFullHash(str) {
+    if (!str || typeof str !== 'string') return '';
+    let h = 0x811c9dc5;
+    for (let i = 0, len = str.length; i < len; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return str.length + ':' + (h >>> 0).toString(36);
+}
+if (typeof window !== 'undefined') {
+    window.computeFullHash = computeFullHash;
+}
+
 window.UtilsModule = {
+    computeFullHash,
     formatDateToDDMMYYYY(val) {
         if (!val) return '';
         if (val instanceof Date && !isNaN(val)) {
@@ -102,6 +116,12 @@ window.UtilsModule = {
                     }
                 },
                 commitGridFormula(event, rowIdx, locIdx) {
+                    if (this.isFinalized) {
+                        if (typeof this.showToast === 'function') {
+                            this.showToast('Bill is finalized and locked (Read-Only). Unlock to edit.', '🔒');
+                        }
+                        return;
+                    }
                     if (!event || !event.target) return;
                     const rawVal = event.target.value;
                     if (rawVal === '' || rawVal === null || rawVal === undefined) {
@@ -166,9 +186,12 @@ window.UtilsModule = {
                     return numberToWordsIndian(val);
                 },
                 showToast(msg, icon = '✅') {
+                    if (!this.toasts || !Array.isArray(this.toasts)) this.toasts = [];
                     const toast = { msg, icon };
                     this.toasts.push(toast);
+                    if (this.toasts.length > 5) this.toasts.shift();
                     setTimeout(() => {
+                        if (!this.toasts) return;
                         const idx = this.toasts.indexOf(toast);
                         if (idx > -1) this.toasts.splice(idx, 1);
                     }, 3500);
@@ -318,7 +341,10 @@ function getColLetter(colIdx) {
  */
 function numberToWordsIndian(num) {
     if (!num || isNaN(num)) return 'Zero Rupees Only/-';
-    num = Math.round(num);
+    const absNum = Math.abs(num);
+    const rupees = Math.floor(absNum);
+    const paise = Math.round((absNum - rupees) * 100);
+
     const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
     const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
@@ -334,6 +360,14 @@ function numberToWordsIndian(num) {
         str += (n_array[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n_array[5])] || b[n_array[5][0]] + ' ' + a[n_array[5][1]]) : '';
         return str;
     }
-    const res = inWords(num);
-    return res ? (res.trim() + ' Rupees Only/-') : 'Zero Rupees Only/-';
+
+    const rWords = rupees > 0 ? inWords(rupees).trim() : (paise > 0 ? '' : 'Zero');
+    const pWords = paise > 0 ? inWords(paise).trim() : '';
+
+    let res = '';
+    if (rWords) res += rWords + ' Rupees';
+    if (paise > 0) {
+        res += (rWords ? ' and ' : '') + pWords + ' Paise';
+    }
+    return res ? (res.trim() + ' Only/-') : 'Zero Rupees Only/-';
 }
