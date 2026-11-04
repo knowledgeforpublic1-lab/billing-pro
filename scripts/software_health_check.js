@@ -172,6 +172,26 @@ check('Contractor Stock Matching: Maa Kali Enterprises <-> MA KALI ENTERPRISE', 
     assert.strictEqual(match.contractorName, 'MA KALI ENTERPRISE');
 });
 
+// 9. Workbook Import: View set to valid 'taxInvoice' string
+check('Workbook Import: currentView is set to valid taxInvoice string', () => {
+    const syncCode = fs.readFileSync('js/sync.js', 'utf8');
+    assert.ok(!syncCode.includes('this.currentView = 3;'), 'currentView must never be set to integer 3');
+    assert.ok(syncCode.includes('this.currentView = \'taxInvoice\';') || syncCode.includes('this.currentView = "taxInvoice";'), 'currentView must be string taxInvoice');
+});
+
+// 10. Deployment Security: PII and Upload Route Protection in vercel.json & .vercelignore
+check('Deployment Security: Vercel routes & ignore protect contractor PII files', () => {
+    const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+    const routes = vercelConfig.routes || [];
+    const has403Block = routes.some(r => r.status === 403 && (r.src.includes('data') || r.src.includes('upload')));
+    assert.ok(has403Block, 'vercel.json must have 403 status rule blocking sensitive files');
+
+    const vercelIgnore = fs.readFileSync('.vercelignore', 'utf8');
+    assert.ok(vercelIgnore.includes('Reconciliation master/data.js'), '.vercelignore must exclude data.js');
+    assert.ok(vercelIgnore.includes('Reconciliation master/data.json'), '.vercelignore must exclude data.json');
+    assert.ok(vercelIgnore.includes('Reconciliation master/upload.php'), '.vercelignore must exclude upload.php');
+});
+
 console.log('\n====================================================');
 console.log(`Audit Summary: ${passCount} passed, ${failCount} failed.`);
 console.log('====================================================');

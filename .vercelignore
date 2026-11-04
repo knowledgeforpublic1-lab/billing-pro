@@ -1,0 +1,7 @@
+# Prevent accidental deployment of contractor confidential data & server scripts
+Reconciliation master/data.js
+Reconciliation master/data.json
+Reconciliation master/upload.php
+contractor_data.json
+*.env*
+.env

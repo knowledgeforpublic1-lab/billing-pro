@@ -478,8 +478,13 @@ window.SyncModule = {
                 });
             }
 
-            // Switch to Tax Invoice view and close modal
-            this.currentView = 3;
+            // Reset sync state for new bill and switch to Tax Invoice view
+            this.cloudRev = 0;
+            this.lastSentHash = '';
+            if (typeof this.syncToMongoNow === 'function') {
+                try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
+            }
+            this.currentView = 'taxInvoice';
             this.showSavedBillsModal = false;
             this.showToast(`Invoice [${this.projectMeta.billNo || fileName}] successfully opened! 🎉`, '✅');
         } finally {
@@ -835,14 +840,28 @@ window.SyncModule = {
 
         const headers = { 'Content-Type': 'application/json' };
         try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-        await fetch('/api/billing', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(Object.assign(billState, { dataId: newBillId, force: true, baseRev: 0 }))
-        });
+        try {
+            const res = await fetch('/api/billing', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(Object.assign(billState, { dataId: newBillId, force: true, baseRev: 0 }))
+            });
+            const resJson = await res.json().catch(() => null);
+            if (!res.ok || (resJson && resJson.success === false)) {
+                const errMsg = (resJson && resJson.message) || (resJson && resJson.error) || res.statusText || 'Server error';
+                this.showToast(`Failed to create duplicate bill: ${errMsg}`, '⚠️');
+                return;
+            }
+        } catch (err) {
+            this.showToast(`Network error duplicating bill: ${err.message}`, '⚠️');
+            return;
+        }
 
         this.showToast(`Duplicate bill [${newBillNo.trim()}] created! Opening...`, '📋');
         await this.openBill(newBillId);
+        if (typeof this.loadSavedBillsList === 'function') {
+            try { await this.loadSavedBillsList(); } catch(e) {}
+        }
     },
     async deleteBill(b) {
         if (!b) return;
