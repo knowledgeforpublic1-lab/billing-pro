@@ -540,6 +540,9 @@
                         <button class="btn" :class="(poleScheduleSubTab === 'schedule' && (selectedPoleScheduleKey === '1425A' || selectedPoleScheduleKey === '1425a')) ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1425A')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
                             <span>⚡ Pole Schedule 1425A (PSC Pole LT Line - 41 Items)</span>
                         </button>
+                        <button class="btn" :class="(poleScheduleSubTab === 'schedule' && selectedPoleScheduleKey === '1220') ? 'btn-primary' : 'btn-secondary'" @click="onPoleScheduleChange('1220')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">
+                            <span>⚡ Pole Schedule 1220 (100 KVA DTC - 72 Items)</span>
+                        </button>
                     </div>
                     <div>
                         <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = 'abstract'" style="display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 7px 14px; font-size: 0.88rem;">

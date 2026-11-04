@@ -252,6 +252,14 @@ check('Activity 922 Restored (18 items) & Pole Schedules Configured (907: 53 ite
     assert.strictEqual(sched1425a.materials[23].itemCode, '17001369', 'Item 21 must be Earthing Set LT (17001369)');
     assert.strictEqual(sched1425a.materials[33].itemCode, '17000614', 'Item 30 must be N/B 12*35 (17000614)');
     assert.strictEqual(sched1425a.materials[38].itemCode, '17001356', 'Item 35 must be Wedge Connector (17001356)');
+
+    // 1220 Pole Schedule (72 rows from site sheet)
+    const sched1220 = scheds['1220'];
+    assert.ok(sched1220, 'Pole Schedule 1220 must exist');
+    assert.strictEqual(sched1220.materials.length, 72, 'Pole Schedule 1220 must have 72 items');
+    assert.strictEqual(sched1220.materials[0].itemCode, '17000081', 'Item 1 must be 100 KVA Transformer');
+    assert.strictEqual(sched1220.materials[1].itemCode, '17001243', 'Item 2 must be RSJ 11m (17001243)');
+    assert.strictEqual(sched1220.materials[14].itemCode, '17000023', 'Item 15 must be 11KV AB Switch');
 });
 
 console.log('\n====================================================');
