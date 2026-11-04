@@ -260,6 +260,26 @@ check('Activity 922 Restored (18 items) & Pole Schedules Configured (907: 53 ite
     assert.strictEqual(sched1220.materials[0].itemCode, '17000081', 'Item 1 must be 100 KVA Transformer');
     assert.strictEqual(sched1220.materials[1].itemCode, '17001243', 'Item 2 must be RSJ 11m (17001243)');
     assert.strictEqual(sched1220.materials[14].itemCode, '17000023', 'Item 15 must be 11KV AB Switch');
+
+    // 6723 Pole Schedule (41 rows from site sheet)
+    assert.ok(scheds['6723'], 'Pole Schedule 6723 must exist');
+    assert.strictEqual(scheds['6723'].materials.length, 41, 'Pole Schedule 6723 must have 41 items');
+
+    // 919 Pole Schedule (37 rows from site sheet)
+    assert.ok(scheds['919'], 'Pole Schedule 919 must exist');
+    assert.strictEqual(scheds['919'].materials.length, 37, 'Pole Schedule 919 must have 37 items');
+
+    // 934A Pole Schedule (43 rows from site sheet)
+    assert.ok(scheds['934A'], 'Pole Schedule 934A must exist');
+    assert.strictEqual(scheds['934A'].materials.length, 43, 'Pole Schedule 934A must have 43 items');
+
+    // 924 Pole Schedule (43 rows from site sheet)
+    assert.ok(scheds['924'], 'Pole Schedule 924 must exist');
+    assert.strictEqual(scheds['924'].materials.length, 43, 'Pole Schedule 924 must have 43 items');
+
+    // 1230 Pole Schedule (54 rows from site sheet)
+    assert.ok(scheds['1230'], 'Pole Schedule 1230 must exist');
+    assert.strictEqual(scheds['1230'].materials.length, 54, 'Pole Schedule 1230 must have 54 items');
 });
 
 console.log('\n====================================================');

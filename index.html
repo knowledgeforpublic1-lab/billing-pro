@@ -534,13 +534,16 @@
                         <label style="font-size: 0.92rem; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
                             <span>⚡ Select Pole Schedule:</span>
                         </label>
-                        <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input" style="font-weight: 700; font-size: 0.95rem; min-width: 420px; max-width: 550px; padding: 8px 14px; background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                        <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input" style="font-weight: 700; font-size: 0.95rem; min-width: 420px; max-width: 580px; padding: 8px 14px; background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
                             <option value="907">⚡ Activity 907 — RSJ Line with V-Cross Arm (53 Items)</option>
-                            <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
-                            <option value="1425A">⚡ Activity 1425A — 3 Phase 5 Wire LT Line on PSC Pole (41 Items)</option>
-                            <option value="1220">⚡ Activity 1220 — 100 KVA Dist. Transformer Center (72 Items)</option>
-                            <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
                             <option value="919">⚡ Activity 919 — River Crossing DP on RSJ 152x152 (37 Items)</option>
+                            <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
+                            <option value="924">⚡ Activity 924 — Single Pole Cut Point Structure (43 Items)</option>
+                            <option value="934A">⚡ Activity 934A — 11 KV Single Circuit Pin Type on RSJ (43 Items)</option>
+                            <option value="1220">⚡ Activity 1220 — 100 KVA Dist. Transformer Center (72 Items)</option>
+                            <option value="1230">⚡ Activity 1230 — 11 KV Specially Designed Transformer with DP Structure (54 Items)</option>
+                            <option value="1425A">⚡ Activity 1425A — 3 Phase 5 Wire LT Line on PSC Pole (41 Items)</option>
+                            <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
                         </select>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
