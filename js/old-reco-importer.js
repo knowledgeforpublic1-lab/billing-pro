@@ -328,7 +328,7 @@ window.OldRecoImporterModule = {
             const customColumnValues = {};
             for (const col of customCols) {
                 const val = this.parseQty(row[col.index]);
-                customColumnValues[col.name] = Math.round(val * 1000) / 1000;
+                customColumnValues[col.name] = Math.round(val  * 100) / 100;
             }
 
             // If calcColName is set and present, use its value as prevConsumption
@@ -344,11 +344,11 @@ window.OldRecoImporterModule = {
                 code: matCode,
                 desc: descStr || matCode,
                 uom: colMap.uom !== -1 ? String(row[colMap.uom] || 'No') : 'No',
-                grossIssue: Math.round(issuedQty * 1000) / 1000,
-                mrnReturn: Math.round(mrnQty * 1000) / 1000,
-                netIssue: Math.round(netIssue * 1000) / 1000,
-                prevConsumption: Math.round(cons * 1000) / 1000,
-                balanceQty: Math.round(bal * 1000) / 1000,
+                grossIssue: Math.round(issuedQty  * 100) / 100,
+                mrnReturn: Math.round(mrnQty  * 100) / 100,
+                netIssue: Math.round(netIssue  * 100) / 100,
+                prevConsumption: Math.round(cons  * 100) / 100,
+                balanceQty: Math.round(bal  * 100) / 100,
                 customColumns: customColumnValues
             };
             added++;
@@ -969,7 +969,7 @@ window.OldRecoImporterModule = {
         try {
             const res = Function('"use strict"; return (' + expr + ');')();
             const num = Number(res);
-            return isNaN(num) || !isFinite(num) ? 0 : Math.round(num * 1000) / 1000;
+            return isNaN(num) || !isFinite(num) ? 0 : Math.round(num  * 100) / 100;
         } catch (e) {
             return 0;
         }
@@ -1146,7 +1146,7 @@ window.OldRecoImporterModule = {
             // Direct Number: remove any formula
             delete this.customOldRecoEdits[cKey][formKey];
             const num = parseFloat(str.replace(/,/g, '').trim());
-            finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
+            finalVal = isNaN(num) ? 0 : Math.round(num  * 100) / 100;
             this.customOldRecoEdits[cKey][editKey] = finalVal;
         }
 
@@ -1179,7 +1179,7 @@ window.OldRecoImporterModule = {
         for (let i = 0; i < rows.length; i++) {
             tot += (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(rows[i].code, colName) : 0;
         }
-        return Math.round(tot * 1000) / 1000;
+        return Math.round(tot  * 100) / 100;
     },
 
     hasAnyRecoQty(code) {
@@ -1256,7 +1256,7 @@ window.OldRecoImporterModule = {
         } else {
             delete this.customOldRecoEdits[cKey][formKey];
             const num = parseFloat(str.replace(/,/g, '').trim());
-            finalVal = isNaN(num) ? 0 : Math.round(num * 1000) / 1000;
+            finalVal = isNaN(num) ? 0 : Math.round(num  * 100) / 100;
             this.customOldRecoEdits[cKey][code] = finalVal;
         }
 

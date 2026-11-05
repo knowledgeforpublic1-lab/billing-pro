@@ -121,7 +121,7 @@ window.PoleScheduleModule = {
                 if (!isNaN(n)) total += n;
             }
         });
-        return Math.round(total * 1000) / 1000;
+        return Math.round(total * 100) / 100;
     },
 
     getPoleScheduleItemAmount100(item, mIdx) {
@@ -163,7 +163,7 @@ window.PoleScheduleModule = {
             totalAmtStage1 += itemAmt * pct1;
         });
         return {
-            totalQty: Math.round(totalQty * 1000) / 1000,
+            totalQty: Math.round(totalQty * 100) / 100,
             totalAmt100: Math.round(totalAmt100 * 100) / 100,
             totalAmtStage1: Math.round(totalAmtStage1 * 100) / 100
         };
@@ -184,7 +184,7 @@ window.PoleScheduleModule = {
             }
         });
         return {
-            totalQty: Math.round(totalQty * 1000) / 1000,
+            totalQty: Math.round(totalQty * 100) / 100,
             totalAmt100: Math.round(totalAmt100 * 100) / 100,
             totalAmtStage1: Math.round(totalAmtStage1 * 100) / 100
         };
@@ -263,7 +263,7 @@ window.PoleScheduleModule = {
                 if (!isNaN(n)) total += n;
             }
         });
-        return Math.round(total * 1000) / 1000;
+        return Math.round(total * 100) / 100;
     },
 
     hasPoleScheduleQuantities(key) {

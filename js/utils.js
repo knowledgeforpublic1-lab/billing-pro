@@ -321,6 +321,13 @@ window.UtilsModule = {
                 printView() {
                     window.print();
                 },
+                format2Dec(val) {
+                    if (val === undefined || val === null || val === '') return '';
+                    const n = Number(val);
+                    if (isNaN(n)) return val;
+                    if (n === 0) return '0';
+                    return Number((Math.round(n * 100) / 100).toFixed(2));
+                },
                 getActivityCleanDesc(title) {
                     if (!title || typeof title !== 'string') return '';
                     const clean = title.replace(/^(?:Activity\s+)?([A-Za-z0-9]+)\s*:\s*/i, '').trim();

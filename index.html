@@ -67,6 +67,10 @@
                             <span class="tab-dot" style="background: #f59e0b;"></span>
                             Pole Schedule
                         </button>
+                        <button class="tab-item" :class="{ 'active': currentView === 'mapping' }" @click="switchView('mapping')">
+                            <span class="tab-dot" style="background: #6366f1;"></span>
+                            SAP Mapping
+                        </button>
                         <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
                             <span class="tab-dot" style="background: #10b981;"></span>
                             Reconciliation Sheet
@@ -651,7 +655,7 @@
 
                                             <!-- Total Qty -->
                                             <td class="text-right font-mono font-bold" style="color: var(--accent-green); background: rgba(16, 185, 129, 0.05);">
-                                                {{ getPoleScheduleItemTotalQty(item.origIndex) > 0 ? getPoleScheduleItemTotalQty(item.origIndex) : '—' }}
+                                                {{ getPoleScheduleItemTotalQty(item.origIndex) > 0 ? format2Dec(getPoleScheduleItemTotalQty(item.origIndex)) : '—' }}
                                             </td>
 
                                             <!-- Rate -->
@@ -677,7 +681,7 @@
                                         <th :colspan="getPoleScheduleLocations().length" class="text-center text-muted" style="font-size: 0.8rem;">
                                             Across {{ getPoleScheduleLocations().length }} Locations
                                         </th>
-                                        <th class="text-right font-mono" style="color: var(--accent-green);">{{ poleScheduleTotals.totalQty }}</th>
+                                        <th class="text-right font-mono" style="color: var(--accent-green);">{{ format2Dec(poleScheduleTotals.totalQty) }}</th>
                                         <th class="text-right text-muted">—</th>
                                         <th class="text-right font-mono">{{ formatCurrency(poleScheduleTotals.totalAmt100) }}</th>
                                         <th class="text-right font-mono" style="color: var(--accent-amber);">{{ formatCurrency(poleScheduleTotals.totalAmtStage1) }}</th>
@@ -1757,7 +1761,7 @@
                                 </template>
                                 <template v-if="!reverseEntry">
                                 <td v-for="col in reconColumns" :key="col" class="text-center font-mono">
-                                    {{ row.activities[col] > 0 ? row.activities[col] : '' }}
+                                    {{ row.activities[col] > 0 ? format2Dec(row.activities[col]) : '' }}
                                 </td>
                                 </template>
                                 <template v-else>
@@ -1767,12 +1771,12 @@
                                 </template>
                                 <!-- THIS BILL -->
                                 <td class="text-right font-mono" style="background: rgba(99, 102, 241, 0.06); font-size: 0.88rem; color: #cbd5e1;" title="Is bill ka kul consumption">
-                                    <span v-if="row.totalQty > 0">{{ row.totalQty }}</span>
+                                    <span v-if="row.totalQty > 0">{{ format2Dec(row.totalQty) }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
                                 <!-- TOTAL RECON -->
                                 <td class="text-right font-mono font-bold" style="background: rgba(16, 185, 129, 0.10); font-size: 0.90rem; color: #34d399;" title="Kul Reconciled = Purana + This Bill">
-                                    <span v-if="row._cum > 0">{{ row._cum }}</span>
+                                    <span v-if="row._cum > 0">{{ format2Dec(row._cum) }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
                                 <!-- BALANCE -->
@@ -1780,7 +1784,7 @@
                                     :style="row._bal < 0 ? 'background: rgba(239, 68, 68, 0.20); color: #f87171;' : 'background: rgba(245, 158, 11, 0.08); color: #fbbf24;'" 
                                     style="font-size: 0.90rem;"
                                     :title="row._bal < 0 ? '⚠️ OVER-CONSUMPTION ALERT! Net Issue se jyada material reconcile ho chuka hai' : 'Bacha hua balance'">
-                                    <span>{{ row._bal }}</span>
+                                    <span>{{ format2Dec(row._bal) }}</span>
                                 </td>
                             </tr>
                             <tr v-if="reconRows.length === 0">

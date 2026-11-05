@@ -700,7 +700,7 @@
                                         finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                     }
 
-                                    finalQty = Math.round(finalQty * 1000) / 1000;
+                                    finalQty = Math.round(finalQty * 100) / 100;
                                     sapMap[s.code].totalQty += finalQty;
 
                                     if (!sapMap[s.code].activities[actKey]) {
@@ -773,7 +773,7 @@
                                             finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                         }
 
-                                        finalQty = Math.round(finalQty * 1000) / 1000;
+                                        finalQty = Math.round(finalQty * 100) / 100;
                                         sapMap[s.code].totalQty += finalQty;
 
                                         if (!sapMap[s.code].activities[actKey]) {
@@ -1145,7 +1145,7 @@
 
                 const keys = Object.keys(totals);
                 for (let j = 0; j < keys.length; j++) {
-                    totals[keys[j]] = Math.round(totals[keys[j]] * 1000) / 1000;
+                    totals[keys[j]] = Math.round(totals[keys[j]] * 100) / 100;
                 }
                 return totals;
             },
@@ -1201,13 +1201,13 @@
                 }
 
                 return {
-                    grossIssue: Math.round(grossIssue * 1000) / 1000,
-                    mrnReturn: Math.round(mrnReturn * 1000) / 1000,
-                    netIssue: Math.round(netIssue * 1000) / 1000,
-                    prevRecon: Math.round(prevReconTotal * 1000) / 1000,
-                    thisBill: Math.round(thisBillTotal * 1000) / 1000,
-                    cumulativeRecon: Math.round(cumulativeReconTotal * 1000) / 1000,
-                    balance: Math.round(balanceTotal * 1000) / 1000,
+                    grossIssue: Math.round(grossIssue * 100) / 100,
+                    mrnReturn: Math.round(mrnReturn * 100) / 100,
+                    netIssue: Math.round(netIssue * 100) / 100,
+                    prevRecon: Math.round(prevReconTotal * 100) / 100,
+                    thisBill: Math.round(thisBillTotal * 100) / 100,
+                    cumulativeRecon: Math.round(cumulativeReconTotal * 100) / 100,
+                    balance: Math.round(balanceTotal * 100) / 100,
                     activities: actTotals,
                     reverseTotals: revTotals
                 };
@@ -1260,9 +1260,9 @@
                     const r = filtered[i];
                     const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
                     const thisB = Number(r.totalQty) || 0;
-                    r._cum = Math.round((prevR + thisB) * 1000) / 1000;
+                    r._cum = Math.round((prevR + thisB) * 100) / 100;
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
-                    r._bal = Math.round((net - r._cum) * 1000) / 1000;
+                    r._bal = Math.round((net - r._cum) * 100) / 100;
                     r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
 
                     // Precompute column values so table renders in < 1ms with 0 lag
