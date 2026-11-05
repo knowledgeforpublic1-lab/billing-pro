@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261105_v1793873284309">
+    <link rel="stylesheet" href="css/style.css?v=20261105_v1793875957324">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -46,53 +46,100 @@
             <div class="main-area">
                 <!-- Tabs Bar -->
                 <div class="tabs-bar">
-                    <div class="tabs-brand">
-                        <div class="tabs-brand-icon">⚡</div>
-                        <div class="tabs-brand-text">
-                            <div class="tabs-brand-name">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }} <span class="badge-active">ACTIVE</span></div>
-                            <div class="tabs-brand-client">{{ selectedCompanyId === 'ashoka_buildcon' ? 'ASHOKA BUILDCON LTD.' : (selectedCompanyId === 'ashoka_endurance' ? 'ASHOKA ENDURANCE ROAD DEV.' : 'Client Entity') }} • <span style="color: var(--accent-amber); font-weight: 800;">{{ getContractorDisplayName() }}</span></div>
+                    <!-- Row 1: Top Navigation Bar (Identity + Navigation Tabs + Status/Profile) -->
+                    <div class="header-main-row">
+                        <!-- Left: Brand & Project Name -->
+                        <div class="header-brand">
+                            <div class="brand-logo">⚡</div>
+                            <div class="brand-title">
+                                <span class="project-title">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}</span>
+                                <span class="badge-active">ACTIVE</span>
+                            </div>
+                        </div>
+
+                        <!-- Center: Modern Navigation Tabs -->
+                        <nav class="header-nav">
+                            <button class="nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
+                                <span class="tab-icon">📄</span>
+                                <span>Tax Invoice</span>
+                            </button>
+                            <button class="nav-tab" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
+                                <span class="tab-icon">⚡</span>
+                                <span>Activity Billing</span>
+                            </button>
+                            <button class="nav-tab" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
+                                <span class="tab-icon">📐</span>
+                                <span>Pole Schedule</span>
+                            </button>
+                            <button class="nav-tab" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
+                                <span class="tab-icon">📊</span>
+                                <span>Reconciliation Sheet</span>
+                            </button>
+                            <button class="nav-tab" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
+                                <span class="tab-icon">🌐</span>
+                                <span>Master Reconciliation</span>
+                            </button>
+                        </nav>
+
+                        <!-- Right: Cloud Sync Status & User Profile -->
+                        <div class="header-user-hub">
+                            <!-- ☁️ Live Cloud Sync Pill -->
+                            <div class="cloud-sync-pill"
+                                @click="syncToMongoNow({ manual: true })"
+                                :title="'Cloud Sync: ' + (syncStatus === 'synced' ? 'All changes saved to Cloud! Click to re-sync now.' : (syncStatus === 'syncing' ? 'Syncing with MongoDB cloud...' : 'Click to save now.'))"
+                                style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
+                                :style="syncStatus === 'synced' 
+                                    ? 'background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.35);' 
+                                    : (syncStatus === 'syncing' 
+                                        ? 'background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1.5px solid var(--accent-amber);' 
+                                        : 'background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1.5px solid rgba(239, 68, 68, 0.4);')">
+                                <span :class="{ 'spin-anim': syncStatus === 'syncing' }" style="font-size: 0.85rem;">
+                                    {{ syncStatus === 'synced' ? '☁️' : (syncStatus === 'syncing' ? '🔄' : '⚠️') }}
+                                </span>
+                                <span>
+                                    {{ syncStatus === 'synced' ? ('Cloud Synced' + (lastSyncAt ? ' (' + lastSyncAt + ')' : '')) : (syncStatus === 'syncing' ? 'Saving Online...' : 'Save Online') }}
+                                </span>
+                            </div>
+
+                            <!-- User Profile Pill -->
+                            <div class="user-profile-pill" title="Billing Engineer">
+                                <div class="user-avatar">RK</div>
+                                <div class="user-info-text">
+                                    <div class="uname">Rakesh Kushawaha</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="tabs-divider"></div>
-                    <div class="tabs-nav">
-                        <button class="tab-item" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
-                            <span class="tab-dot" style="background: #f59e0b;"></span>
-                            Tax Invoice
-                        </button>
-                        <button class="tab-item" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
-                            <span class="tab-dot" style="background: #3b82f6;"></span>
-                            Activity Billing
-                        </button>
-                        <button class="tab-item" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
-                            <span class="tab-dot" style="background: #f59e0b;"></span>
-                            Pole Schedule
-                        </button>
-                        <button class="tab-item" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
-                            <span class="tab-dot" style="background: #10b981;"></span>
-                            Reconciliation Sheet
-                        </button>
-                        <button class="tab-item" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
-                            <span class="tab-dot" style="background: #8b5cf6;"></span>
-                            Master Reconciliation
-                        </button>
-                    </div>
 
-                    <!-- Cloud Sync Pill + User Profile Pill -->
-                    <div class="tabs-export-group" style="display: flex; align-items: center; gap: 8px;">
-                        <!-- 🗄️ Saved Bills & New Bill Group -->
-                        <div class="tabs-bill-group" style="display: flex; align-items: center; gap: 6px;">
+                    <!-- Row 2: Context & Action Bar (Client/Contractor Context on Left + Bill Actions on Right) -->
+                    <div class="header-sub-row">
+                        <!-- Left: Client & Contractor Identity (eliminates empty left void) -->
+                        <div class="sub-contractor-info">
+                            <span class="info-pill client-pill">
+                                <span class="pill-label">Client</span>
+                                <span class="pill-val">{{ selectedCompanyId === 'ashoka_buildcon' ? 'ASHOKA BUILDCON LTD.' : (selectedCompanyId === 'ashoka_endurance' ? 'ASHOKA ENDURANCE ROAD DEV.' : 'Client Entity') }}</span>
+                            </span>
+                            <span class="info-divider">•</span>
+                            <span class="info-pill contractor-pill">
+                                <span class="pill-label">Contractor</span>
+                                <span class="pill-val highlight-contractor">{{ getContractorDisplayName() }}</span>
+                            </span>
+                        </div>
+
+                        <!-- Right: Bill Actions -->
+                        <div class="sub-bill-actions">
                             <!-- Open File Button (Connects to Google Drive & Opens Saved Bills) -->
                             <div class="active-bill-pill"
                                 @click="openSavedBillsManager('database')"
                                 :title="'Open Saved Bills (MongoDB). Active: ' + (effectiveBillNo || 'Main Bill')"
                                 style="display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; cursor: pointer; background: rgba(99, 102, 241, 0.14); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.4); user-select: none; transition: all 0.2s;">
                                 <span>📂</span>
-                                <span>Open File</span>
-                                <span v-if="effectiveBillNo" style="opacity: 0.9; font-size: 0.72rem; font-family: monospace; background: rgba(0,0,0,0.22); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(129, 140, 248, 0.25);">{{ effectiveBillNo }}</span>
-                                <span style="font-size: 0.65rem; opacity: 0.7;">▾</span>
+                                <span>Open Bill</span>
+                                <span v-if="effectiveBillNo" class="bill-badge">{{ effectiveBillNo }}</span>
+                                <span class="pill-arrow">▾</span>
                             </div>
 
-                            <!-- 🏷️ RA No Quick Edit Pill -->
+                            <!-- RA No Quick Edit Pill -->
                             <div class="ra-no-pill"
                                 title="Current RA Bill Number. Click to edit."
                                 style="display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.4); user-select: none;">
@@ -107,46 +154,21 @@
                             </div>
 
                             <!-- New Bill Button -->
-                            <button class="btn btn-primary" @click="openNewBillModal" title="Naya Bill / RA Bill banayein" style="padding: 4px 11px; font-size: 0.75rem; font-weight: 700; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; color: white;">
+                            <button class="btn-new-bill" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
                                 <span>➕</span>
                                 <span>New Bill</span>
                             </button>
-                        </div>
 
-                        <!-- ☁️ Live Cloud Sync Status Pill -->
-                        <div class="cloud-sync-pill"
-                            @click="syncToMongoNow({ manual: true })"
-                            :title="'Cloud Sync: ' + (syncStatus === 'synced' ? 'All changes saved to Cloud! Click to re-sync now.' : (syncStatus === 'syncing' ? 'Syncing with MongoDB cloud...' : 'Click to save now.'))"
-                            style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
-                            :style="syncStatus === 'synced' 
-                                ? 'background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.35);' 
-                                : (syncStatus === 'syncing' 
-                                    ? 'background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1.5px solid var(--accent-amber);' 
-                                    : 'background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1.5px solid rgba(239, 68, 68, 0.4);')">
-                            <span :class="{ 'spin-anim': syncStatus === 'syncing' }" style="font-size: 0.85rem;">
-                                {{ syncStatus === 'synced' ? '☁️' : (syncStatus === 'syncing' ? '🔄' : '⚠️') }}
-                            </span>
-                            <span>
-                                {{ syncStatus === 'synced' ? ('Cloud Synced' + (lastSyncAt ? ' (' + lastSyncAt + ')' : '')) : (syncStatus === 'syncing' ? 'Saving Online...' : 'Save Online') }}
-                            </span>
-                        </div>
-
-                        <!-- 📂 Google Drive Save Pill -->
-                        <div class="cloud-sync-pill gdrive-pill"
-                            @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
-                            :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook to Google Drive.' : 'Google Drive not connected. Click to enter Google Apps Script Webhook URL.'"
-                            style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
-                            :style="hasDriveConnected 
-                                ? 'background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35);' 
-                                : 'background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1.5px dashed rgba(148, 163, 184, 0.4);'">
-                            <span style="font-size: 0.85rem;">📁</span>
-                            <span>{{ hasDriveConnected ? 'Save to Drive' : 'Connect Drive' }}</span>
-                        </div>
-                        <div class="user-profile-pill" title="User Profile">
-                            <div class="user-avatar">RK</div>
-                            <div class="user-info-text">
-                                <div class="uname">Rakesh Kushawaha</div>
-                                <div class="urole">Billing Engineer</div>
+                            <!-- Google Drive Save Pill -->
+                            <div class="cloud-sync-pill gdrive-pill"
+                                @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
+                                :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook to Google Drive.' : 'Google Drive not connected. Click to enter Google Apps Script Webhook URL.'"
+                                style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
+                                :style="hasDriveConnected 
+                                    ? 'background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35);' 
+                                    : 'background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1.5px dashed rgba(148, 163, 184, 0.4);'">
+                                <span style="font-size: 0.85rem;">📁</span>
+                                <span>{{ hasDriveConnected ? 'Drive Backup' : 'Connect Drive' }}</span>
                             </div>
                         </div>
                     </div>
@@ -3285,35 +3307,35 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-activities.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-pole-schedules.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-contractors.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-master-abstract.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-companies.js?v=20261105_v1793873284309"></script>
-    <script src="js/data/default-invoice.js?v=20261105_v1793873284309"></script>
+    <script src="js/data/default-sap-materials.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-activities.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-pole-schedules.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-contractors.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-master-abstract.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-companies.js?v=20261105_v1793875957324"></script>
+    <script src="js/data/default-invoice.js?v=20261105_v1793875957324"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261105_v1793873284309"></script>
+    <script src="js/core/storage.js?v=20261105_v1793875957324"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261105_v1793873284309"></script>
-    <script src="js/history.js?v=20261105_v1793873284309"></script>
+    <script src="js/utils.js?v=20261105_v1793875957324"></script>
+    <script src="js/history.js?v=20261105_v1793875957324"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261105_v1793873284309"></script>
-    <script src="js/billing.js?v=20261105_v1793873284309"></script>
-    <script src="js/mapping.js?v=20261105_v1793873284309"></script>
-    <script src="js/views.js?v=20261105_v1793873284309"></script>
-    <script src="js/export.js?v=20261105_v1793873284309"></script>
-    <script src="js/pole-schedule.js?v=20261105_v1793873284309"></script>
-    <script src="js/stock-importer.js?v=20261105_v1793873284309"></script>
-    <script src="js/old-reco-importer.js?v=20261105_v1793873284309"></script>
+    <script src="js/sync.js?v=20261105_v1793875957324"></script>
+    <script src="js/billing.js?v=20261105_v1793875957324"></script>
+    <script src="js/mapping.js?v=20261105_v1793875957324"></script>
+    <script src="js/views.js?v=20261105_v1793875957324"></script>
+    <script src="js/export.js?v=20261105_v1793875957324"></script>
+    <script src="js/pole-schedule.js?v=20261105_v1793875957324"></script>
+    <script src="js/stock-importer.js?v=20261105_v1793875957324"></script>
+    <script src="js/old-reco-importer.js?v=20261105_v1793875957324"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261105_v1793873284309"></script>
+    <script src="js/core/app.js?v=20261105_v1793875957324"></script>
 </body>
 
 </html>
