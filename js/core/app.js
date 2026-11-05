@@ -1888,9 +1888,30 @@
                         this._isLoading = false;
                         this.saveToStorage();
                     }
-                    localStorage.setItem('patch_remove_10_sap_items_v1', 'true');
+                                        localStorage.setItem('patch_remove_10_sap_items_v1', 'true');
                 } catch(e) {
                     console.warn('patch_remove_10_sap_items_v1 error:', e);
+                }
+            }
+
+            // PATCH: Replace Activity 1220 Pole Schedule with user's exact specification from image
+            if (!localStorage.getItem('patch_1220_exact_spec_v2')) {
+                try {
+                    if (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules['1220']) {
+                        if (!this.poleSchedules) this.poleSchedules = {};
+                        this.poleSchedules['1220'] = JSON.parse(JSON.stringify(defaultPoleSchedules['1220']));
+                        try {
+                            localStorage.setItem('lk_billing_pole_schedules_v1', JSON.stringify(this.poleSchedules));
+                        } catch(e) {}
+                        if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
+                            this.persistPoleSchedulesToMasterFile(true);
+                        }
+                        this._isLoading = false;
+                        this.saveToStorage();
+                    }
+                    localStorage.setItem('patch_1220_exact_spec_v2', 'true');
+                } catch(e) {
+                    console.warn('patch_1220_exact_spec_v2 error:', e);
                 }
             }
 

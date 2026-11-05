@@ -1024,7 +1024,28 @@ window.PoleScheduleModule = {
         }
     },
 
-exportPoleScheduleExcel() {
+    resetPoleScheduleToDefault(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        if (typeof defaultPoleSchedules === 'undefined' || !defaultPoleSchedules[k]) {
+            if (typeof this.showToast === 'function') this.showToast('Default schedule for ' + k + ' not found', '⚠️');
+            return;
+        }
+        const count = defaultPoleSchedules[k].materials ? defaultPoleSchedules[k].materials.length : 0;
+        if (!confirm('Kya aap Pole Schedule ' + k + ' ko official default master data se reset karna chahte hain?\n\n(Total ' + count + ' items load honge)')) return;
+        if (!this.poleSchedules) this.poleSchedules = {};
+        this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+        if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
+            this.persistPoleSchedulesToMasterFile(true);
+        }
+        if (typeof this.showToast === 'function') this.showToast('Pole Schedule ' + k + ' successfully reset to official default master (' + count + ' items)!', '✅');
+    },
+
+    exportPoleScheduleExcel() {
         if (typeof XLSX === 'undefined') {
             this.showToast('XLSX library not loaded', '❌');
             return;
