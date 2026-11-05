@@ -3219,9 +3219,12 @@ body.dark-mode {
     color: #f1f5f9 !important;
 }
 
-/* 🧭 Glassmorphic Top Navigation Bar (Sleek Two-Tier Pro SaaS Design) */
+/* 🧭 Glassmorphic Top Navigation Bar (Sleek Two-Tier Executive SaaS Design) */
 .tabs-bar {
-    background: rgba(11, 18, 32, 0.96) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    background: #090e1a !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -3229,48 +3232,52 @@ body.dark-mode {
     position: sticky !important;
     top: 0 !important;
     z-index: 1000 !important;
-    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.65) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Tier 1: Main Header Row */
 .header-main-row {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 0.45rem 1.25rem !important;
+    width: 100% !important;
+    padding: 0.48rem 1.5rem !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-    gap: 1rem !important;
+    background: linear-gradient(180deg, rgba(20, 29, 47, 0.5) 0%, rgba(11, 18, 32, 0.7) 100%) !important;
+    box-sizing: border-box !important;
+    gap: 1.25rem !important;
 }
 
 /* Brand Identity */
 .header-brand {
     display: flex !important;
     align-items: center !important;
-    gap: 0.65rem !important;
+    gap: 0.75rem !important;
     flex-shrink: 0 !important;
 }
 
 .brand-logo {
     width: 32px !important;
     height: 32px !important;
-    border-radius: 9px !important;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-size: 1.05rem !important;
-    box-shadow: 0 0 14px rgba(99, 102, 241, 0.45) !important;
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.45) !important;
     flex-shrink: 0 !important;
 }
 
 .brand-title {
     display: flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 8px !important;
 }
 
 .project-title {
-    font-size: 0.88rem !important;
+    font-size: 0.90rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.2px !important;
     color: #ffffff !important;
@@ -3278,14 +3285,15 @@ body.dark-mode {
 }
 
 .badge-active {
-    background: linear-gradient(135deg, #059669, #10b981) !important;
-    color: #ffffff !important;
+    background: rgba(16, 185, 129, 0.16) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
     font-size: 0.60rem !important;
     font-weight: 800 !important;
-    padding: 2px 6px !important;
+    padding: 2px 7px !important;
     border-radius: 4px !important;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
-    letter-spacing: 0.5px !important;
+    letter-spacing: 0.6px !important;
+    text-transform: uppercase !important;
 }
 
 /* Center Floating Segmented Nav */
@@ -3293,19 +3301,20 @@ body.dark-mode {
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
-    background: rgba(255, 255, 255, 0.035) !important;
+    background: rgba(15, 23, 42, 0.75) !important;
     padding: 3px 4px !important;
-    border-radius: 11px !important;
+    border-radius: 10px !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4) !important;
     flex-shrink: 0 !important;
 }
 
 .nav-tab {
     display: flex !important;
     align-items: center !important;
-    gap: 0.45rem !important;
-    padding: 0.42rem 0.90rem !important;
-    border-radius: 8px !important;
+    gap: 0.48rem !important;
+    padding: 0.42rem 0.95rem !important;
+    border-radius: 7px !important;
     border: 1px solid transparent !important;
     background: transparent !important;
     color: #94a3b8 !important;
@@ -3325,9 +3334,9 @@ body.dark-mode {
 
 .nav-tab.active {
     color: #ffffff !important;
-    background: linear-gradient(180deg, rgba(99, 102, 241, 0.28) 0%, rgba(99, 102, 241, 0.12) 100%) !important;
-    border-color: rgba(129, 140, 248, 0.45) !important;
-    box-shadow: 0 0 16px -2px rgba(99, 102, 241, 0.35) !important;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.38) 0%, rgba(79, 70, 229, 0.48) 100%) !important;
+    border-color: rgba(129, 140, 248, 0.5) !important;
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3) !important;
     font-weight: 700 !important;
 }
 
@@ -3340,19 +3349,32 @@ body.dark-mode {
 .header-user-hub {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
     flex-shrink: 0 !important;
+}
+
+.cloud-sync-pill {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 11px !important;
+    border-radius: 7px !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    user-select: none !important;
 }
 
 .user-profile-pill {
     display: flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 8px !important;
     cursor: pointer !important;
-    padding: 2px 10px 2px 2px !important;
+    padding: 3px 12px 3px 3px !important;
     border-radius: 999px !important;
     background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     transition: all 0.2s !important;
 }
 
@@ -3364,7 +3386,7 @@ body.dark-mode {
 .user-avatar {
     width: 28px !important;
     height: 28px !important;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
@@ -3372,11 +3394,11 @@ body.dark-mode {
     color: white !important;
     font-weight: 800 !important;
     font-size: 0.72rem !important;
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.4) !important;
 }
 
 .user-info-text .uname {
-    font-size: 0.75rem !important;
+    font-size: 0.76rem !important;
     font-weight: 700 !important;
     color: #f1f5f9 !important;
     line-height: 1.2 !important;
@@ -3386,13 +3408,16 @@ body.dark-mode {
     display: none !important;
 }
 
-/* Tier 2: Sub-row (Contractor Context on Left + Bill Actions on Right) */
+/* Tier 2: Sub-row (Workspace Command Deck - Edge-to-Edge) */
 .header-sub-row {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 0.32rem 1.25rem !important;
-    background: rgba(15, 23, 42, 0.60) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.32rem 1.5rem !important;
+    background: rgba(15, 23, 42, 0.65) !important;
     gap: 1rem !important;
 }
 
@@ -3400,30 +3425,36 @@ body.dark-mode {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    font-size: 0.76rem !important;
+    flex-shrink: 0 !important;
 }
 
 .info-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    padding: 3px 10px !important;
+    gap: 7px !important;
+    padding: 3px 11px !important;
     border-radius: 6px !important;
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: rgba(255, 255, 255, 0.035) !important;
     border: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 .pill-label {
     font-size: 0.64rem !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     color: #64748b !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.4px !important;
+    letter-spacing: 0.5px !important;
 }
 
 .pill-val {
+    font-size: 0.78rem !important;
     font-weight: 700 !important;
     color: #cbd5e1 !important;
+}
+
+.contractor-pill {
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.22) !important;
 }
 
 .highlight-contractor {
@@ -3439,16 +3470,89 @@ body.dark-mode {
 .sub-bill-actions {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
     flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+.active-bill-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 12px !important;
+    border-radius: 6px !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    background: rgba(99, 102, 241, 0.12) !important;
+    color: #a5b4fc !important;
+    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+    user-select: none !important;
+    transition: all 0.2s !important;
+}
+
+.active-bill-pill:hover {
+    background: rgba(99, 102, 241, 0.22) !important;
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
+.bill-badge {
+    opacity: 0.95 !important;
+    font-size: 0.70rem !important;
+    font-family: monospace !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: #e0e7ff !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(129, 140, 248, 0.35) !important;
+}
+
+.pill-arrow {
+    font-size: 0.65rem !important;
+    opacity: 0.7 !important;
+}
+
+.ra-no-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 9px !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    background: rgba(16, 185, 129, 0.10) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
+    user-select: none !important;
+}
+
+.ra-no-pill input {
+    width: 44px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    border-radius: 4px !important;
+    padding: 1px 4px !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    color: #34d399 !important;
+    text-align: center !important;
+    outline: none !important;
+    font-family: monospace !important;
+}
+
+.ra-no-pill input:focus {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4) !important;
 }
 
 .btn-new-bill {
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
-    padding: 4px 14px !important;
-    border-radius: 999px !important;
+    padding: 4px 13px !important;
+    border-radius: 6px !important;
     font-size: 0.75rem !important;
     font-weight: 800 !important;
     color: #ffffff !important;
@@ -3462,21 +3566,20 @@ body.dark-mode {
 .btn-new-bill:hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45) !important;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
 }
 
-.bill-badge {
-    opacity: 0.95 !important;
-    font-size: 0.70rem !important;
-    font-family: monospace !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    padding: 1px 6px !important;
-    border-radius: 4px !important;
-    border: 1px solid rgba(129, 140, 248, 0.3) !important;
-}
-
-.pill-arrow {
-    font-size: 0.65rem !important;
-    opacity: 0.7 !important;
+.gdrive-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    user-select: none !important;
 }
 
 /* 📱 Responsive Handling */

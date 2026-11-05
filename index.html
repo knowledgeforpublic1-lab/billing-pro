@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261105_v1793879865007">
+    <link rel="stylesheet" href="css/style.css?v=20261105_v1793882681891">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -113,14 +113,14 @@
 
                     <!-- Row 2: Context & Action Bar (Client/Contractor Context on Left + Bill Actions on Right) -->
                     <div class="header-sub-row">
-                        <!-- Left: Client & Contractor Identity (eliminates empty left void) -->
+                        <!-- Left: Client & Contractor Identity -->
                         <div class="sub-contractor-info">
-                            <span class="info-pill client-pill">
+                            <span class="info-pill client-pill" title="Billing Client Entity">
                                 <span class="pill-label">Client</span>
                                 <span class="pill-val">{{ selectedCompanyId === 'ashoka_buildcon' ? 'ASHOKA BUILDCON LTD.' : (selectedCompanyId === 'ashoka_endurance' ? 'ASHOKA ENDURANCE ROAD DEV.' : 'Client Entity') }}</span>
                             </span>
                             <span class="info-divider">•</span>
-                            <span class="info-pill contractor-pill">
+                            <span class="info-pill contractor-pill" title="Active Assigned Contractor">
                                 <span class="pill-label">Contractor</span>
                                 <span class="pill-val highlight-contractor">{{ getContractorDisplayName() }}</span>
                             </span>
@@ -131,8 +131,7 @@
                             <!-- Open File Button (Connects to Google Drive & Opens Saved Bills) -->
                             <div class="active-bill-pill"
                                 @click="openSavedBillsManager('database')"
-                                :title="'Open Saved Bills (MongoDB). Active: ' + (effectiveBillNo || 'Main Bill')"
-                                style="display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; cursor: pointer; background: rgba(99, 102, 241, 0.14); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.4); user-select: none; transition: all 0.2s;">
+                                :title="'Open Saved Bills (MongoDB). Active: ' + (effectiveBillNo || 'Main Bill')">
                                 <span>📂</span>
                                 <span>Open Bill</span>
                                 <span v-if="effectiveBillNo" class="bill-badge">{{ effectiveBillNo }}</span>
@@ -140,9 +139,7 @@
                             </div>
 
                             <!-- RA No Quick Edit Pill -->
-                            <div class="ra-no-pill"
-                                title="Current RA Bill Number. Click to edit."
-                                style="display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1.5px solid rgba(16, 185, 129, 0.4); user-select: none;">
+                            <div class="ra-no-pill" title="Current RA Bill Number. Click to edit.">
                                 <span style="font-size: 0.8rem;">🏷️</span>
                                 <span>RA:</span>
                                 <input type="text"
@@ -150,7 +147,7 @@
                                     @input="updateRaNo($event.target.value)"
                                     placeholder="RA"
                                     title="RA Bill No yahan change karein"
-                                    style="width: 44px; background: rgba(0,0,0,0.18); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 4px; padding: 1px 4px; font-size: 0.78rem; font-weight: 800; color: #34d399; text-align: center; outline: none; font-family: monospace;">
+                                    class="font-mono">
                             </div>
 
                             <!-- New Bill Button -->
@@ -163,10 +160,9 @@
                             <div class="cloud-sync-pill gdrive-pill"
                                 @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
                                 :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook to Google Drive.' : 'Google Drive not connected. Click to enter Google Apps Script Webhook URL.'"
-                                style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; user-select: none;"
                                 :style="hasDriveConnected 
-                                    ? 'background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1.5px solid rgba(99, 102, 241, 0.35);' 
-                                    : 'background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1.5px dashed rgba(148, 163, 184, 0.4);'">
+                                    ? 'background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35);' 
+                                    : 'background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.4);'">
                                 <span style="font-size: 0.85rem;">📁</span>
                                 <span>{{ hasDriveConnected ? 'Drive Backup' : 'Connect Drive' }}</span>
                             </div>
@@ -3313,35 +3309,35 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-activities.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-pole-schedules.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-contractors.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-master-abstract.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-companies.js?v=20261105_v1793879865007"></script>
-    <script src="js/data/default-invoice.js?v=20261105_v1793879865007"></script>
+    <script src="js/data/default-sap-materials.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-activities.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-pole-schedules.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-contractors.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-master-abstract.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-companies.js?v=20261105_v1793882681891"></script>
+    <script src="js/data/default-invoice.js?v=20261105_v1793882681891"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261105_v1793879865007"></script>
+    <script src="js/core/storage.js?v=20261105_v1793882681891"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261105_v1793879865007"></script>
-    <script src="js/history.js?v=20261105_v1793879865007"></script>
+    <script src="js/utils.js?v=20261105_v1793882681891"></script>
+    <script src="js/history.js?v=20261105_v1793882681891"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261105_v1793879865007"></script>
-    <script src="js/billing.js?v=20261105_v1793879865007"></script>
-    <script src="js/mapping.js?v=20261105_v1793879865007"></script>
-    <script src="js/views.js?v=20261105_v1793879865007"></script>
-    <script src="js/export.js?v=20261105_v1793879865007"></script>
-    <script src="js/pole-schedule.js?v=20261105_v1793879865007"></script>
-    <script src="js/stock-importer.js?v=20261105_v1793879865007"></script>
-    <script src="js/old-reco-importer.js?v=20261105_v1793879865007"></script>
+    <script src="js/sync.js?v=20261105_v1793882681891"></script>
+    <script src="js/billing.js?v=20261105_v1793882681891"></script>
+    <script src="js/mapping.js?v=20261105_v1793882681891"></script>
+    <script src="js/views.js?v=20261105_v1793882681891"></script>
+    <script src="js/export.js?v=20261105_v1793882681891"></script>
+    <script src="js/pole-schedule.js?v=20261105_v1793882681891"></script>
+    <script src="js/stock-importer.js?v=20261105_v1793882681891"></script>
+    <script src="js/old-reco-importer.js?v=20261105_v1793882681891"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261105_v1793879865007"></script>
+    <script src="js/core/app.js?v=20261105_v1793882681891"></script>
 </body>
 
 </html>
