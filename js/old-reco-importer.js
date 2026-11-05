@@ -626,6 +626,13 @@ window.OldRecoImporterModule = {
         const recoDb = window.ContractorOldReco || window.DefaultContractorOldReco;
         if (!recoDb || !recoDb.byContractorNorm) return null;
 
+        const cacheKey = (this.selectedContractorId || '') + '__' + (this.selectedContractorName || '') + '__' + (this.recoRevision || 0) + '__' + (this.hasCustomOldReco ? '1' : '0');
+        if (this._memoContractorOldReco && this._memoContractorOldRecoKey === cacheKey) {
+            return this._memoContractorOldReco;
+        }
+
+        let result = null;
+
         // 0. Direct match by selectedContractorId
         if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
             const rawId = String(this.selectedContractorId).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -679,19 +686,30 @@ window.OldRecoImporterModule = {
 
         for (const [k, v] of Object.entries(recoDb.byContractorNorm)) {
             if (k.length >= 4 && ((norm && (k.includes(norm) || norm.includes(k))) || (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))))) {
-                return v;
+                result = v;
+                break;
             }
         }
-        return null;
+
+        this._memoContractorOldRecoKey = cacheKey;
+        this._memoContractorOldReco = result;
+        return result;
     },
 
     getContractorNormKey() {
+        const cacheKey = (this.selectedContractorName || '') + '__' + ((this.invoiceData && this.invoiceData.contractorName) || '') + '__' + ((this.projectMeta && this.projectMeta.contractorName) || '');
+        if (this._memoContractorNormKey && this._memoContractorNormKeyKey === cacheKey) {
+            return this._memoContractorNormKey;
+        }
         let cName = this.selectedContractorName;
         if (!cName || cName === 'Select Contractor...' || cName.includes('Custom')) {
             cName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
         }
         if (!cName) return '';
-        return String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '').trim();
+        const res = String(cName).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '').trim();
+        this._memoContractorNormKeyKey = cacheKey;
+        this._memoContractorNormKey = res;
+        return res;
     },
 
     // ─── DYNAMIC RECO COLUMNS API ──────────────────────────────────────

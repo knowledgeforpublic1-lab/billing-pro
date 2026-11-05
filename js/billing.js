@@ -15,23 +15,36 @@ window.BillingModule = {
         const stock = window.ContractorSapStock;
         if (!stock) return null;
 
+        const cacheKey = (this.selectedContractorId || '') + '__' + (this.selectedContractorName || '') + '__' + (_rev || 0) + '__' + (_cust ? '1' : '0');
+        if (this._memoContractorSap && this._memoContractorSapKey === cacheKey) {
+            return this._memoContractorSap;
+        }
+
+        let result = null;
+
+        const setMemo = (val) => {
+            this._memoContractorSapKey = cacheKey;
+            this._memoContractorSap = val;
+            return val;
+        };
+
         // 0. Direct match by selectedContractorId
         if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
             const rawId = String(this.selectedContractorId).toLowerCase().replace(/[^a-z0-9]/g, '');
             if (rawId && stock.byContractorNorm && stock.byContractorNorm[rawId]) {
-                return stock.byContractorNorm[rawId];
+                return setMemo(stock.byContractorNorm[rawId]);
             }
             // Firm object lookup in contractorsList
             const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
             if (firm) {
                 if (firm.workOrderNo) {
                     const fWo = String(firm.workOrderNo).trim();
-                    if (stock.byDocHeader && stock.byDocHeader[fWo]) return stock.byDocHeader[fWo];
+                    if (stock.byDocHeader && stock.byDocHeader[fWo]) return setMemo(stock.byDocHeader[fWo]);
                     const m = fWo.match(/\b\d{8}\b/);
-                    if (m && stock.byDocHeader && stock.byDocHeader[m[0]]) return stock.byDocHeader[m[0]];
+                    if (m && stock.byDocHeader && stock.byDocHeader[m[0]]) return setMemo(stock.byDocHeader[m[0]]);
                 }
                 const fNorm = String(firm.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
-                if (fNorm && stock.byContractorNorm && stock.byContractorNorm[fNorm]) return stock.byContractorNorm[fNorm];
+                if (fNorm && stock.byContractorNorm && stock.byContractorNorm[fNorm]) return setMemo(stock.byContractorNorm[fNorm]);
             }
         }
 
@@ -40,11 +53,11 @@ window.BillingModule = {
         const wo = String(rawWo).trim();
         if (wo) {
             if (stock.byDocHeader && stock.byDocHeader[wo]) {
-                return stock.byDocHeader[wo];
+                return setMemo(stock.byDocHeader[wo]);
             }
             const m = wo.match(/\b\d{8}\b/);
             if (m && stock.byDocHeader && stock.byDocHeader[m[0]]) {
-                return stock.byDocHeader[m[0]];
+                return setMemo(stock.byDocHeader[m[0]]);
             }
         }
 
@@ -61,7 +74,7 @@ window.BillingModule = {
         if ((!norm && !rawNorm) || !stock.byContractorNorm) return null;
 
         if (norm && stock.byContractorNorm[norm]) {
-            return stock.byContractorNorm[norm];
+            return setMemo(stock.byContractorNorm[norm]);
         }
         if (rawNorm && stock.byContractorNorm[rawNorm]) {
             return stock.byContractorNorm[rawNorm];
@@ -85,7 +98,7 @@ window.BillingModule = {
 
         const stem = normStem(cName);
         if (stem && stock.byContractorNorm[stem]) {
-            return stock.byContractorNorm[stem];
+            return setMemo(stock.byContractorNorm[stem]);
         }
 
         for (const [k, v] of Object.entries(stock.byContractorNorm)) {
@@ -96,7 +109,7 @@ window.BillingModule = {
                     (rawNorm && (k.includes(rawNorm) || rawNorm.includes(k))) ||
                     (stem && (k.includes(stem) || stem.includes(k) || kStem === stem))
                 ) {
-                    return v;
+                    return setMemo(v);
                 }
             }
         }
@@ -108,21 +121,21 @@ window.BillingModule = {
                     const wStem = normStem(w);
                     return k.includes(w) || (wStem && k.includes(wStem));
                 });
-                if (allWordsInK) return v;
+                if (allWordsInK) return setMemo(v);
             }
         }
 
         // 3. Fallback: If stock only has 1 contractor or contains 'uploadedstock'
         if (stock.byContractorNorm) {
             if (stock.byContractorNorm['uploadedstock']) {
-                return stock.byContractorNorm['uploadedstock'];
+                return setMemo(stock.byContractorNorm['uploadedstock']);
             }
             const distinctRecords = Array.from(new Set(Object.values(stock.byContractorNorm)));
             if (distinctRecords.length === 1 && distinctRecords[0]) {
-                return distinctRecords[0];
+                return setMemo(distinctRecords[0]);
             }
         }
-        return null;
+        return setMemo(null);
     },
 
 

@@ -1057,35 +1057,63 @@
                 const stopWords = new Set(['and', 'with', 'for', 'the', 'nos', 'mtr', 'mtrs', 'set', 'sets', 'type', 'grade', 'long', 'size', 'allied', 'material', 'activity', 'sqmm', 'mm', 'sq']);
                 const unmapped = [];
 
-                Object.entries(contractorSap.materials).forEach(([code, item]) => {
+                // ⚡ Inverted index of words -> materials for O(1) matching instead of 150,000 loop comparisons
+                const wordIndex = new Map();
+                for (let i = 0; i < allMats.length; i++) {
+                    const m = allMats[i];
+                    if (!m.words) continue;
+                    for (let j = 0; j < m.words.length; j++) {
+                        const w = m.words[j];
+                        let list = wordIndex.get(w);
+                        if (!list) {
+                            list = [];
+                            wordIndex.set(w, list);
+                        }
+                        list.push(m);
+                    }
+                }
+
+                const entries = Object.entries(contractorSap.materials);
+                for (let i = 0; i < entries.length; i++) {
+                    const code = entries[i][0];
+                    const item = entries[i][1];
                     const gross = Number(item.grossIssue !== undefined ? item.grossIssue : (item.issuedQty || 0));
                     const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
                     const isIssued = gross > 0 || net !== 0;
 
-                    if (!isIssued) return;
-                    if (mappedSet.has(code)) return;
+                    if (!isIssued) continue;
+                    if (mappedSet && mappedSet.has(code)) continue;
 
                     const itemWords = String(item.desc || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
                     let potentialMatch = null;
-                    let bestScore = 0;
+                    let bestScore = 1;
 
-                    allMats.forEach(m => {
-                        let common = 0;
-                        itemWords.forEach(w => {
-                            if (m.words.includes(w)) common++;
-                        });
-                        if (common >= 2 && common > bestScore) {
-                            bestScore = common;
-                            potentialMatch = {
-                                actKey: m.actKey,
-                                actTitle: m.actTitle,
-                                matNo: m.matNo,
-                                matIdx: m.matIdx,
-                                desc: m.desc,
-                                currentCodes: m.mappedCodes.join(', ')
-                            };
+                    if (itemWords.length > 0) {
+                        const matCounts = new Map();
+                        for (let j = 0; j < itemWords.length; j++) {
+                            const w = itemWords[j];
+                            const matchedMats = wordIndex.get(w);
+                            if (matchedMats) {
+                                for (let k = 0; k < matchedMats.length; k++) {
+                                    const m = matchedMats[k];
+                                    matCounts.set(m, (matCounts.get(m) || 0) + 1);
+                                }
+                            }
                         }
-                    });
+                        for (const [m, common] of matCounts.entries()) {
+                            if (common >= 2 && common > bestScore) {
+                                bestScore = common;
+                                potentialMatch = {
+                                    actKey: m.actKey,
+                                    actTitle: m.actTitle,
+                                    matNo: m.matNo,
+                                    matIdx: m.matIdx,
+                                    desc: m.desc,
+                                    currentCodes: m.mappedCodes.join(', ')
+                                };
+                            }
+                        }
+                    }
 
                     const searchWords = itemWords.filter(w => w.length >= 4).slice(0, 2);
                     const searchKey = searchWords.join(' ') || item.desc || code;
@@ -1100,7 +1128,7 @@
                         potentialMatch: potentialMatch,
                         searchKey: searchKey
                     });
-                });
+                }
 
                 return unmapped.sort((a, b) => Math.abs(b.netIssue) - Math.abs(a.netIssue));
             },
