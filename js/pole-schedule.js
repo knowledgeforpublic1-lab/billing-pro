@@ -95,6 +95,25 @@ window.PoleScheduleModule = {
         this.debouncedSave();
     },
 
+    commitPoleScheduleCell(lIdx, mIdx, rawVal) {
+        if (this.isFinalized) return;
+        if (rawVal === '' || rawVal === null || rawVal === undefined) {
+            this.setPoleScheduleCellQty(lIdx, mIdx, '');
+            return '';
+        }
+        const str = String(rawVal).trim();
+        let evaluated = str;
+        if (typeof this.evalFormula === 'function') {
+            evaluated = this.evalFormula(str);
+        } else if (typeof this.evalGridFormula === 'function') {
+            evaluated = this.evalGridFormula(str);
+        }
+        const num = Number(evaluated);
+        const finalVal = (evaluated === '' || isNaN(num)) ? (isNaN(Number(str)) ? str : Number(str)) : (Math.round(num * 100) / 100);
+        this.setPoleScheduleCellQty(lIdx, mIdx, finalVal);
+        return finalVal;
+    },
+
     onPoleScheduleQtyInput(lIdx, mIdx, event) {
         if (this.isFinalized) return;
         const val = event.target.value;
@@ -102,12 +121,111 @@ window.PoleScheduleModule = {
     },
 
     onPoleScheduleQtyBlur(lIdx, mIdx, event) {
-        const raw = event.target.value.trim();
-        if (raw.startsWith('=')) {
-            const evaluated = typeof this.evalGridFormula === 'function' ? this.evalGridFormula(raw) : raw;
-            this.setPoleScheduleCellQty(lIdx, mIdx, evaluated);
+        if (!event || !event.target) return;
+        const finalVal = this.commitPoleScheduleCell(lIdx, mIdx, event.target.value);
+        if (finalVal !== undefined) {
+            event.target.value = finalVal;
         }
         this.saveToStorage();
+    },
+
+    onPoleScheduleQtyChange(lIdx, mIdx, event) {
+        this.onPoleScheduleQtyBlur(lIdx, mIdx, event);
+    },
+
+    handlePoleScheduleKeyNav(event, mIdx, lIdx, direction) {
+        if (event && event.target) {
+            this.onPoleScheduleQtyBlur(lIdx, mIdx, event);
+        }
+        let targetMIdx = mIdx;
+        let targetLIdx = lIdx;
+        const mats = this.getPoleScheduleMaterials();
+        const locs = this.getPoleScheduleLocations();
+
+        if (direction === 'down') {
+            targetMIdx = mIdx + 1;
+            while (targetMIdx < mats.length && mats[targetMIdx].isSection) targetMIdx++;
+        } else if (direction === 'up') {
+            targetMIdx = mIdx - 1;
+            while (targetMIdx >= 0 && mats[targetMIdx].isSection) targetMIdx--;
+        } else if (direction === 'right') {
+            targetLIdx = lIdx + 1;
+            if (targetLIdx >= locs.length) {
+                targetLIdx = 0;
+                targetMIdx = mIdx + 1;
+                while (targetMIdx < mats.length && mats[targetMIdx].isSection) targetMIdx++;
+            }
+        } else if (direction === 'left') {
+            targetLIdx = lIdx - 1;
+            if (targetLIdx < 0) {
+                targetLIdx = locs.length - 1;
+                targetMIdx = mIdx - 1;
+                while (targetMIdx >= 0 && mats[targetMIdx].isSection) targetMIdx--;
+            }
+        }
+
+        if (targetLIdx < 0) targetLIdx = 0;
+        if (targetLIdx >= locs.length) targetLIdx = locs.length - 1;
+        if (targetMIdx < 0) targetMIdx = 0;
+        if (targetMIdx >= mats.length) targetMIdx = mats.length - 1;
+
+        this.$nextTick(() => {
+            const targetEl = document.querySelector(`input[data-ps-row="${targetMIdx}"][data-ps-loc="${targetLIdx}"]`);
+            if (targetEl) {
+                targetEl.focus();
+                targetEl.select();
+            }
+        });
+    },
+
+    handlePoleSchedulePaste(event, startMIdx, startLIdx) {
+        if (this.isFinalized) {
+            this.showToast('Bill locked — unlock to edit', '🔒');
+            return;
+        }
+        const text = (event.clipboardData || window.clipboardData).getData('text');
+        if (!text) return;
+        event.preventDefault();
+        const rows = text.split(/\r?\n/).filter(r => r.length > 0);
+        const mats = this.getPoleScheduleMaterials();
+        const locs = this.getPoleScheduleLocations();
+        if (!mats.length || !locs.length) return;
+
+        let pasted = 0;
+        let curMIdx = startMIdx;
+
+        for (let r = 0; r < rows.length; r++) {
+            while (curMIdx < mats.length && mats[curMIdx].isSection) {
+                curMIdx++;
+            }
+            if (curMIdx >= mats.length) break;
+
+            const cells = rows[r].split('\t');
+            for (let c = 0; c < cells.length; c++) {
+                const curLIdx = startLIdx + c;
+                if (curLIdx >= locs.length) break;
+
+                const raw = cells[c].trim().replace(/,/g, '');
+                let evaluated = raw;
+                if (typeof this.evalFormula === 'function') {
+                    evaluated = this.evalFormula(raw);
+                }
+                const num = Number(evaluated);
+                const val = (raw === '' || isNaN(num)) ? '' : (Math.round(num * 100) / 100);
+                this.setPoleScheduleCellQty(curLIdx, curMIdx, val);
+                pasted++;
+            }
+            curMIdx++;
+        }
+
+        if (pasted > 0) {
+            this.showToast(`Pasted ${pasted} values into Pole Schedule`, '📋');
+            const k = this.selectedPoleScheduleKey || '907';
+            if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                this.syncPoleScheduleToBillingAndReconciliation(k);
+            }
+            this.saveToStorage();
+        }
     },
 
     getPoleScheduleItemTotalQty(mIdx) {
