@@ -67,6 +67,20 @@
                 poleScheduleLocations: {},
                 poleScheduleQuantities: {},
                 poleScheduleSearchQuery: '',
+                showPsAddMaterialModal: false,
+                showPsExtraItemSuggest: false,
+                psExtraItemSuggestions: [],
+                psNewMaterial: {
+                    no: '',
+                    desc: '',
+                    unit: 'No.',
+                    rate: 0,
+                    codeSearch: '',
+                    sapCode: '',
+                    sapDescription: '',
+                    sapUom: 'No',
+                    insertAfterIdx: -1
+                },
                 poleSchedules: (function() {
                     let base = (typeof defaultPoleSchedules !== 'undefined') ? JSON.parse(JSON.stringify(defaultPoleSchedules)) : {};
                     try {

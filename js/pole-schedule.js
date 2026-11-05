@@ -440,6 +440,219 @@ window.PoleScheduleModule = {
         this.recoRevision = (this.recoRevision || 0) + 1;
     },
 
+
+    openPoleScheduleAddMaterialModal(insertAfterIdx = -1) {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
+            return;
+        }
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        let suggestedNo = '';
+        if (insertAfterIdx >= 0 && sched && sched.materials && sched.materials[insertAfterIdx]) {
+            const prev = sched.materials[insertAfterIdx];
+            if (prev.no) {
+                suggestedNo = prev.no + 'a';
+            }
+        } else if (sched && sched.materials) {
+            suggestedNo = (sched.materials.length + 1).toString();
+        }
+        this.psNewMaterial = {
+            no: suggestedNo,
+            desc: '',
+            unit: 'No.',
+            rate: 0,
+            codeSearch: '',
+            sapCode: '',
+            sapDescription: '',
+            sapUom: 'No',
+            insertAfterIdx: insertAfterIdx !== undefined ? insertAfterIdx : -1
+        };
+        this.psExtraItemSuggestions = [];
+        this.showPsExtraItemSuggest = false;
+        this.showPsAddMaterialModal = true;
+    },
+
+    onPsExtraItemCodeSearch() {
+        const query = (this.psNewMaterial && this.psNewMaterial.codeSearch || '').trim().toLowerCase();
+        if (!query) {
+            this.psExtraItemSuggestions = (this.sapMaterialsMaster || []).slice(0, 15);
+            this.showPsExtraItemSuggest = true;
+            return;
+        }
+        const list = this.sapMaterialsMaster || [];
+        this.psExtraItemSuggestions = list.filter(s => {
+            const c = String(s.code || '').toLowerCase();
+            const d = String(s.desc || '').toLowerCase();
+            return c.includes(query) || d.includes(query);
+        }).slice(0, 20);
+        this.showPsExtraItemSuggest = true;
+    },
+
+    selectPsExtraItemCode(mat) {
+        if (!mat) return;
+        const code = mat.code || mat.itemCode || '';
+        const desc = mat.desc || mat.sapDescription || '';
+        const uom = mat.uom || mat.sapUom || 'No.';
+        this.psNewMaterial.sapCode = code;
+        this.psNewMaterial.codeSearch = code ? `[${code}] ${desc}` : desc;
+        if (!this.psNewMaterial.desc || this.psNewMaterial.desc === '') {
+            this.psNewMaterial.desc = desc;
+        }
+        this.psNewMaterial.sapDescription = desc;
+        this.psNewMaterial.unit = uom;
+        this.psNewMaterial.sapUom = uom;
+        this.showPsExtraItemSuggest = false;
+    },
+
+    submitAddPoleScheduleMaterial() {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
+            return;
+        }
+        if (!this.psNewMaterial || !this.psNewMaterial.desc || !this.psNewMaterial.desc.trim()) {
+            alert('Please enter Material Description');
+            return;
+        }
+
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        if (!sched || !Array.isArray(sched.materials)) return;
+
+        let code = (this.psNewMaterial.sapCode || '').trim();
+        if (!code && this.psNewMaterial.codeSearch) {
+            const match = this.psNewMaterial.codeSearch.match(/^\[(.*?)\]/);
+            if (match) {
+                code = match[1].trim();
+            } else if (/^\d{6,10}$/.test(this.psNewMaterial.codeSearch.trim())) {
+                code = this.psNewMaterial.codeSearch.trim();
+            }
+        }
+
+        let sapItem = null;
+        if (code && this.sapMaterialsMaster) {
+            sapItem = this.sapMaterialsMaster.find(s => s.code === code);
+        }
+        if (!sapItem && this.psNewMaterial.desc && this.sapMaterialsMaster) {
+            const descNorm = this.psNewMaterial.desc.trim().toLowerCase();
+            sapItem = this.sapMaterialsMaster.find(s => s.desc && s.desc.trim().toLowerCase() === descNorm);
+            if (sapItem && !code) code = sapItem.code;
+        }
+
+        const sDesc = (sapItem && sapItem.desc) || this.psNewMaterial.sapDescription || this.psNewMaterial.desc.trim();
+        const sUom = (sapItem && sapItem.uom) || this.psNewMaterial.sapUom || this.psNewMaterial.unit || 'No.';
+        const itemNo = this.psNewMaterial.no || (sched.materials.length + 1).toString();
+
+        const newMat = {
+            no: itemNo,
+            desc: this.psNewMaterial.desc.trim(),
+            unit: this.psNewMaterial.unit || sUom || 'No.',
+            rate: parseFloat(this.psNewMaterial.rate) || 0,
+            itemCode: code,
+            sapDescription: sDesc,
+            sapUom: sUom,
+            docHeader: '0031006347',
+            sapItems: code ? [{
+                code: code,
+                desc: sDesc,
+                uom: sUom,
+                qty: 1,
+                docHeader: '0031006347'
+            }] : [],
+            isExtra: true,
+            isCustom: true
+        };
+
+        const insertAfterIdx = Number(this.psNewMaterial.insertAfterIdx);
+        if (insertAfterIdx >= 0 && insertAfterIdx < sched.materials.length) {
+            const insertIdx = insertAfterIdx + 1;
+            sched.materials.splice(insertIdx, 0, newMat);
+
+            // Shift poleScheduleQuantities index keys
+            if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+                const qMat = this.poleScheduleQuantities[k];
+                Object.keys(qMat).forEach(lIdx => {
+                    const row = qMat[lIdx];
+                    if (row) {
+                        const newRow = {};
+                        Object.keys(row).forEach(mStr => {
+                            const m = Number(mStr);
+                            if (m < insertIdx) {
+                                newRow[m] = row[m];
+                            } else {
+                                newRow[m + 1] = row[m];
+                            }
+                        });
+                        qMat[lIdx] = newRow;
+                    }
+                });
+            }
+        } else {
+            sched.materials.push(newMat);
+        }
+
+        // Reactive updates
+        if (this.poleSchedules) {
+            this.poleSchedules[k] = sched;
+            this.poleSchedules = { ...this.poleSchedules };
+        }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.showPsAddMaterialModal = false;
+        this.saveToStorage();
+        this.showToast(`Item "${newMat.desc}" added with SAP Code [${code || 'N/A'}]! 🎉`, '✅');
+    },
+
+    removePoleScheduleMaterial(mIdx) {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
+            return;
+        }
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        if (!sched || !Array.isArray(sched.materials)) return;
+        const mat = sched.materials[mIdx];
+        if (!mat) return;
+
+        const name = mat.desc || (`Item ${mIdx + 1}`);
+        if (!confirm(`Kya aap "${name}" ko Pole Schedule ${k} se delete karna chahte hain?`)) return;
+
+        sched.materials.splice(mIdx, 1);
+
+        // Adjust quantities index keys
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+            const qMat = this.poleScheduleQuantities[k];
+            Object.keys(qMat).forEach(lIdx => {
+                const row = qMat[lIdx];
+                if (row) {
+                    const newRow = {};
+                    Object.keys(row).forEach(mStr => {
+                        const m = Number(mStr);
+                        if (m < mIdx) {
+                            newRow[m] = row[m];
+                        } else if (m > mIdx) {
+                            newRow[m - 1] = row[m];
+                        }
+                    });
+                    qMat[lIdx] = newRow;
+                }
+            });
+        }
+
+        if (this.poleSchedules) {
+            this.poleSchedules[k] = sched;
+            this.poleSchedules = { ...this.poleSchedules };
+        }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+        this.showToast(`Item "${name}" removed from Pole Schedule ${k}`, '🗑️');
+    },
+
     exportPoleScheduleExcel() {
         if (typeof XLSX === 'undefined') {
             this.showToast('XLSX library not loaded', '❌');

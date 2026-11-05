@@ -561,6 +561,9 @@
                                 <div class="search-box" style="margin: 0; min-width: 220px;">
                                     <input type="text" v-model="poleScheduleSearchQuery" placeholder="Filter item or SAP code..." class="form-input" style="padding: 4px 10px; font-size: 0.85rem;">
                                 </div>
+                                <button class="btn btn-primary" @click="openPoleScheduleAddMaterialModal(-1)" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                                    ➕ Add Row
+                                </button>
                                 <button class="btn btn-secondary" @click="addPoleScheduleLocation" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 700;">
                                     ➕ Add Location
                                 </button>
@@ -574,6 +577,7 @@
                             <table class="billing-table">
                                 <thead style="position: sticky; top: 0; z-index: 10;">
                                     <tr>
+                                        <th class="text-center no-print" style="width: 58px;" title="Insert / Delete Row">Action</th>
                                         <th class="text-center" style="width: 55px;">Item No</th>
                                         <th class="text-center" style="width: 95px;">SAP Code</th>
                                         <th style="min-width: 240px;">Description of Material</th>
@@ -597,6 +601,9 @@
                                         :style="item.isSection ? { background: 'rgba(99, 102, 241, 0.12)', fontWeight: '800' } : {}">
                                         <!-- Section Header Row -->
                                         <template v-if="item.isSection">
+                                            <td class="text-center no-print">
+                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Insert Row under this section" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 5px; font-size: 0.70rem; cursor: pointer; font-weight: 800;">➕</button>
+                                            </td>
                                             <td class="text-center font-bold" style="color: var(--accent-indigo);">—</td>
                                             <td class="text-center font-mono text-muted">—</td>
                                             <td :colspan="2 + getPoleScheduleLocations().length + 4" style="color: var(--text-main); font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
@@ -606,6 +613,10 @@
 
                                         <!-- Normal Material Row -->
                                         <template v-else>
+                                            <td class="text-center no-print" style="white-space: nowrap;">
+                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Niche naya row insert karein (+ Row Below)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 5px; font-size: 0.70rem; cursor: pointer; font-weight: 800;">➕</button>
+                                                <button v-if="item.isExtra || item.isCustom" type="button" @click.stop="removePoleScheduleMaterial(item.origIndex)" title="Is row ko delete karein" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; border-radius: 4px; padding: 2px 5px; font-size: 0.70rem; cursor: pointer; font-weight: 800; margin-left: 2px;">🗑️</button>
+                                            </td>
                                             <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
                                             <td class="text-center font-mono">
                                                 <span v-if="item.itemCode" class="badge badge-sap" :title="item.sapDescription ? (item.sapDescription + ' (Click to edit SAP Code)') : 'Click to edit SAP Code'" style="cursor: pointer;" @click="openSapItemManager(item, item.origIndex)">
@@ -2234,6 +2245,89 @@
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
                         <button class="btn btn-secondary" @click="showAddMaterialModal = false">Cancel</button>
                         <button class="btn btn-primary" @click="submitAddMaterial">Add Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: ADD / INSERT ROW IN POLE SCHEDULE -->
+        <div class="modal-overlay" v-if="showPsAddMaterialModal" @click.self="showPsAddMaterialModal = false">
+            <div class="modal-content" style="max-width: 560px;">
+                <div class="modal-header" style="border-bottom: 1.5px solid rgba(99, 102, 241, 0.25); background: rgba(99, 102, 241, 0.08);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.25rem;">➕</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">Add / Insert Row in Pole Schedule {{ selectedPoleScheduleKey }}</h3>
+                            <div style="font-size: 0.75rem; color: #a5b4fc;">With SAP Code, Rate & Auto-Reconciliation Mapping</div>
+                        </div>
+                    </div>
+                    <button class="btn-icon" @click="showPsAddMaterialModal = false">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 1.25rem;">
+                    <!-- Insert Position Indicator -->
+                    <div style="margin-bottom: 1rem; padding: 7px 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; font-size: 0.82rem; color: #c7d2fe; display: flex; justify-content: space-between; align-items: center;">
+                        <span>📍 <strong>Position:</strong> {{ psNewMaterial.insertAfterIdx >= 0 ? ('Row ' + (psNewMaterial.insertAfterIdx + 1) + ' ke theek niche insert hoga') : 'Pole Schedule ke aakhiri (Bottom) me add hoga' }}</span>
+                        <a href="javascript:void(0)" @click="psNewMaterial.insertAfterIdx = -1" v-if="psNewMaterial.insertAfterIdx >= 0" style="color: #fbbf24; font-size: 0.75rem; font-weight: 700; text-decoration: underline;">Change to End</a>
+                    </div>
+
+                    <!-- SAP Material Search / Code -->
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Item Code (SAP Code)</label>
+                        <div style="position: relative;">
+                            <input type="text" v-model="psNewMaterial.codeSearch" 
+                                @input="onPsExtraItemCodeSearch" 
+                                @focus="onPsExtraItemCodeSearch" 
+                                placeholder="Search by SAP Code (e.g. 17001243) or Description..." 
+                                style="width: 100%; padding: 0.5rem 0.75rem; border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem; font-weight: 600;">
+                            
+                            <!-- Dropdown suggestions -->
+                            <div v-if="psExtraItemSuggestions.length && showPsExtraItemSuggest" class="suggest-pop" style="position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1.5px solid #6366f1; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 220px; overflow-y: auto; z-index: 50;">
+                                <div v-for="mat in psExtraItemSuggestions" :key="(mat.code || mat.itemCode) + mat.desc" 
+                                    @mousedown.prevent="selectPsExtraItemCode(mat)" 
+                                    style="padding: 7px 12px; cursor: pointer; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center;"
+                                    onmouseover="this.style.background='rgba(99, 102, 241, 0.25)'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <span style="flex: 1; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <strong style="color: #818cf8; font-family: monospace; margin-right: 6px;">[{{ mat.code || mat.itemCode }}]</strong>{{ mat.desc }}
+                                    </span>
+                                    <span style="color: #94a3b8; font-size: 0.72rem; margin-left: 8px; font-weight: 700;">{{ mat.uom }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description of Material -->
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Material Description *</label>
+                        <input type="text" v-model="psNewMaterial.desc" placeholder="Material ka poora naam likhein..." 
+                            style="width: 100%; padding: 0.5rem 0.75rem; border: 1.5px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
+                    </div>
+
+                    <!-- Row Grid: Item No, Unit, Rate -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Item No</label>
+                            <input type="text" v-model="psNewMaterial.no" placeholder="Auto" 
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Unit</label>
+                            <input type="text" v-model="psNewMaterial.unit" placeholder="No. / Set / Kg." 
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Unit Rate (₹)</label>
+                            <input type="number" step="any" v-model.number="psNewMaterial.rate" placeholder="0" 
+                                style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+                        <button class="btn btn-secondary" @click="showPsAddMaterialModal = false">Cancel</button>
+                        <button class="btn btn-primary" @click="submitAddPoleScheduleMaterial" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); font-weight: 800; padding: 6px 16px;">
+                            ➕ Add Row to Schedule
+                        </button>
                     </div>
                 </div>
             </div>
