@@ -400,7 +400,7 @@
                 });
                 // ⚡ Include Pole Schedule materials in Material Mapping list
                 if (this.poleSchedules) {
-                    const psKeys = ['907', '919', '922', '924', '934A', '1220', '1230', '1425A', '6723'];
+                    const psKeys = Object.keys(this.poleSchedules);
                     psKeys.forEach(psKey => {
                         const filterKey = 'PS_' + psKey;
                         if (this.mappingActivityFilter !== 'ALL' && this.mappingActivityFilter !== filterKey) return;
@@ -436,12 +436,14 @@
                     const m = r.item;
                     const descMatch = m.desc && m.desc.toLowerCase().includes(q);
                     const actMatch = r.actKey && r.actKey.toLowerCase().includes(q);
+                    const codeMatch = m.itemCode && String(m.itemCode).toLowerCase().includes(q);
+                    const sapDescMatch = m.sapDescription && String(m.sapDescription).toLowerCase().includes(q);
                     const sapMatch = (m.sapItems || []).some(s =>
                         (s.code && s.code.toLowerCase().includes(q)) ||
                         (s.desc && s.desc.toLowerCase().includes(q)) ||
                         (s.docHeader && s.docHeader.toLowerCase().includes(q))
                     );
-                    return descMatch || actMatch || sapMatch;
+                    return descMatch || actMatch || codeMatch || sapDescMatch || sapMatch;
                 });
             },
             // 📚 SAP Master editor ka filtered list — same object references (edit direct master par)

@@ -594,12 +594,12 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="(item, rowIdx) in currentPoleScheduleMaterials" :key="item.origIndex"
-                                        :style="item.isSection ? { background: 'rgba(180, 140, 50, 0.22)', fontWeight: '800' } : {}">
+                                        :style="item.isSection ? { background: 'rgba(99, 102, 241, 0.12)', fontWeight: '800' } : {}">
                                         <!-- Section Header Row -->
                                         <template v-if="item.isSection">
-                                            <td class="text-center font-bold" style="color: #fbbf24;">—</td>
+                                            <td class="text-center font-bold" style="color: var(--accent-indigo);">—</td>
                                             <td class="text-center font-mono text-muted">—</td>
-                                            <td :colspan="2 + getPoleScheduleLocations().length + 4" style="color: #fef08a; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
+                                            <td :colspan="2 + getPoleScheduleLocations().length + 4" style="color: var(--text-main); font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
                                                 {{ item.desc }} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted); text-transform: none;">({{ item.unit }})</span>
                                             </td>
                                         </template>
@@ -1149,11 +1149,18 @@
                     <div class="table-header-strip">
                         <div class="table-title" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                             <span>📦 Material Mapping</span>
-                            <select v-model="mappingActivityFilter" style="padding: 4px 10px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; border: 1.5px solid var(--primary); background: var(--bg-surface); color: var(--text-main); cursor: pointer;">
-                                <option value="ALL">📁 All 11 Activities</option>
-                                <option v-for="(act, key) in activities" :key="key" :value="key">
-                                    Activity {{ key }} : {{ act.title.substring(0, 45) }}...
-                                </option>
+                            <select v-model="mappingActivityFilter" style="padding: 4px 10px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; border: 1.5px solid var(--primary); background: var(--bg-surface); color: var(--text-main); cursor: pointer; max-width: 380px;">
+                                <option value="ALL">📊 All Contract Activities & Pole Schedules</option>
+                                <optgroup label="📋 Contract Work Order Activities">
+                                    <option v-for="(act, key) in activities" :key="key" :value="key">
+                                        Activity {{ key }} : {{ act.title.substring(0, 42) }}...
+                                    </option>
+                                </optgroup>
+                                <optgroup label="⚡ Pole Schedules">
+                                    <option v-for="(sched, psKey) in poleSchedules" :key="psKey" :value="'PS_' + psKey">
+                                        ⚡ Pole Schedule {{ psKey }} ({{ (sched.materials || []).filter(m => !m.isSection && !m.isSpan).length }} Items)
+                                    </option>
+                                </optgroup>
                             </select>
                             <input type="text" v-model="mappingSearchQuery" placeholder="🔍 Search material / SAP code..." style="padding: 4px 10px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--bg-input); color: var(--text-main); outline: none; min-width: 200px;">
                         </div>

@@ -1237,6 +1237,109 @@ it('Activity 922 Restored to 18 Contract Items & Pole Schedules Configured (907:
     assert.strictEqual(poleSchedules['1230'].materials.length, 54, 'Pole Schedule 1230 must have 54 items');
 });
 
+// 26. SAP Material Mapping: Pole Schedules Integration & Reactivity
+it('SAP Material Mapping: Integrates all 9 Pole Schedules into Mapping View & Dropdown', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+
+    // Simulate Vue app state and filteredMappingMasterList computed property
+    const mockApp = {
+        activities: defaultActivities,
+        poleSchedules: defaultPoleSchedules,
+        mappingActivityFilter: 'ALL',
+        mappingSearchQuery: '',
+        filteredMappingMasterList() {
+            let list = [];
+            Object.keys(this.activities).forEach(actKey => {
+                if (this.mappingActivityFilter !== 'ALL' && this.mappingActivityFilter !== actKey) return;
+                const act = this.activities[actKey];
+                if (act && act.materials) {
+                    act.materials.forEach(m => {
+                        list.push({ actKey, actTitle: act.title, item: m });
+                    });
+                }
+            });
+            if (this.poleSchedules) {
+                const psKeys = Object.keys(this.poleSchedules);
+                psKeys.forEach(psKey => {
+                    const filterKey = 'PS_' + psKey;
+                    if (this.mappingActivityFilter !== 'ALL' && this.mappingActivityFilter !== filterKey) return;
+                    const sched = this.poleSchedules[psKey];
+                    if (sched && Array.isArray(sched.materials)) {
+                        sched.materials.forEach((m, mIdx) => {
+                            if (m.isSection || m.isSpan) return;
+                            if (!m.sapItems || m.sapItems.length === 0) {
+                                m.sapItems = [{
+                                    code: m.itemCode || '',
+                                    desc: m.sapDescription || m.desc || '',
+                                    uom: m.sapUom || m.unit || 'No',
+                                    qty: 1,
+                                    docHeader: m.docHeader || '0031006347'
+                                }];
+                            }
+                            list.push({
+                                actKey: 'PS ' + psKey,
+                                actTitle: sched.title || ('Pole Schedule ' + psKey),
+                                item: m,
+                                isPoleSchedule: true,
+                                poleScheduleKey: psKey,
+                                origIndex: mIdx
+                            });
+                        });
+                    }
+                });
+            }
+            if (!this.mappingSearchQuery) return list;
+            const q = this.mappingSearchQuery.toLowerCase();
+            return list.filter(r => {
+                const m = r.item;
+                const descMatch = m.desc && m.desc.toLowerCase().includes(q);
+                const actMatch = r.actKey && r.actKey.toLowerCase().includes(q);
+                const codeMatch = m.itemCode && String(m.itemCode).toLowerCase().includes(q);
+                const sapDescMatch = m.sapDescription && String(m.sapDescription).toLowerCase().includes(q);
+                const sapMatch = (m.sapItems || []).some(s =>
+                    (s.code && s.code.toLowerCase().includes(q)) ||
+                    (s.desc && s.desc.toLowerCase().includes(q)) ||
+                    (s.docHeader && s.docHeader.toLowerCase().includes(q))
+                );
+                return descMatch || actMatch || codeMatch || sapDescMatch || sapMatch;
+            });
+        }
+    };
+
+    // 1. ALL filter includes both activities and all pole schedules
+    const allList = mockApp.filteredMappingMasterList();
+    assert.ok(allList.length > 500, 'All list must contain contract activities + all pole schedules (> 500 items)');
+    const ps907Items = allList.filter(r => r.actKey === 'PS 907');
+    assert.ok(ps907Items.length >= 40, 'Must have PS 907 items in mapping list');
+
+    // 2. Specific Pole Schedule filter
+    mockApp.mappingActivityFilter = 'PS_907';
+    const list907 = mockApp.filteredMappingMasterList();
+    assert.strictEqual(list907.length, ps907Items.length, 'Filter by PS_907 must return only 907 items');
+    assert.ok(list907.every(r => r.actKey === 'PS 907'));
+
+    mockApp.mappingActivityFilter = 'PS_1220';
+    const list1220 = mockApp.filteredMappingMasterList();
+    assert.ok(list1220.length >= 50, 'Filter by PS_1220 must return 1220 items');
+    assert.ok(list1220.every(r => r.actKey === 'PS 1220'));
+
+    // 3. Search query test (Search for RSJ or 17001243)
+    mockApp.mappingActivityFilter = 'ALL';
+    mockApp.mappingSearchQuery = '17001243'; // RSJ 11m
+    const searchRes = mockApp.filteredMappingMasterList();
+    assert.ok(searchRes.length > 0, 'Search by code 17001243 must return matching rows');
+    assert.ok(searchRes.some(r => r.item.itemCode === '17001243'));
+
+    // 4. Object reference mutation check: editing row.item modifies poleSchedules
+    const targetRow = list907[0];
+    const originalRate = targetRow.item.rate;
+    targetRow.item.rate = 9999.50;
+    assert.strictEqual(defaultPoleSchedules['907'].materials[targetRow.origIndex].rate, 9999.50, 'Direct mutation on row.item must update underlying pole schedule object');
+    // Restore
+    targetRow.item.rate = originalRate;
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
