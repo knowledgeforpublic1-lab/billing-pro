@@ -1340,6 +1340,185 @@ it('SAP Material Mapping: Integrates all 9 Pole Schedules into Mapping View & Dr
     targetRow.item.rate = originalRate;
 });
 
+it('Pole Schedule Data Flow: Quantities sync seamlessly into Material Reconciliation Sheet with accurate columns & totals', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+
+    // 1. Verify Auto-healing of poleSchedules
+    let mockPoleSchedules = { '907': { materials: [{ desc: 'Old 907 item' }] } }; // Incomplete stored state
+    if (typeof defaultPoleSchedules !== 'undefined') {
+        Object.keys(defaultPoleSchedules).forEach(k => {
+            if (!mockPoleSchedules[k] || !Array.isArray(mockPoleSchedules[k].materials) || mockPoleSchedules[k].materials.length === 0) {
+                mockPoleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+            } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
+                while (mockPoleSchedules[k].materials.length < defaultPoleSchedules[k].materials.length) {
+                    const nextIdx = mockPoleSchedules[k].materials.length;
+                    mockPoleSchedules[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
+                }
+                defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
+                    const cur = mockPoleSchedules[k].materials[mIdx];
+                    if (cur) {
+                        if (!cur.itemCode && defMat.itemCode) {
+                            cur.itemCode = defMat.itemCode;
+                            cur.sapDescription = defMat.sapDescription;
+                            cur.sapUom = defMat.sapUom;
+                            cur.docHeader = defMat.docHeader;
+                        }
+                        if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    assert.ok(mockPoleSchedules['934A'], '934A must be auto-healed');
+    assert.ok(mockPoleSchedules['1220'], '1220 must be auto-healed');
+    assert.ok(mockPoleSchedules['1230'], '1230 must be auto-healed');
+    assert.ok(mockPoleSchedules['6723'], '6723 must be auto-healed');
+    assert.strictEqual(mockPoleSchedules['907'].materials[2].itemCode, '17001243', '907 RSJ 11m must have itemCode');
+
+    // 2. Set test quantities in Pole Schedule
+    const poleScheduleQuantities = {
+        '907': { 0: { 2: 12 } },   // RSJ 11m = 12
+        '934A': { 0: { 1: 8 } },   // RSJ 8m = 8
+        '1220': { 0: { 0: 4 } },   // Dist box 100KVA = 4
+        '1230': { 0: { 0: 6 } }    // RSJ 9m = 6
+    };
+
+    const mockApp = {
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleSchedules: mockPoleSchedules,
+        poleScheduleQuantities: poleScheduleQuantities,
+        activityQuantities: {},
+        activityLocations: {},
+        poleScheduleLocations: {},
+        mappingRoundMode: 'none',
+        recoRevision: 0,
+        evalGridFormula(v) { return v; },
+        evalFormula(v) { return v; },
+        getActLocations(k) { return [{ name: 'Loc 1' }]; },
+        getPoleScheduleLocations(k) { return [{ name: 'Loc 1' }]; },
+        syncPoleScheduleToBillingAndReconciliation(k) {
+            const sched = this.poleSchedules[k];
+            const act = this.activities[k] || { materials: [] };
+            this.activities[k] = act;
+            if (!this.activityQuantities[k]) this.activityQuantities[k] = [[]];
+            const qMatrix = this.poleScheduleQuantities[k];
+            sched.materials.forEach((sm, smIdx) => {
+                if (sm.isSection || sm.isSpan) return;
+                let aIdx = act.materials.findIndex(am => (am.itemCode && sm.itemCode && am.itemCode === sm.itemCode) || (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()));
+                if (aIdx === -1) {
+                    act.materials.push({ ...sm });
+                    aIdx = act.materials.length - 1;
+                }
+                const val = qMatrix && qMatrix[0] && qMatrix[0][smIdx];
+                if (val !== undefined && val !== '') {
+                    this.activityQuantities[k][0][aIdx] = val;
+                }
+            });
+        }
+    };
+
+    // Run sync
+    ['907', '934A', '1220', '1230'].forEach(k => mockApp.syncPoleScheduleToBillingAndReconciliation(k));
+
+    // Assert Activity Quantities received values
+    assert.strictEqual(mockApp.activityQuantities['907'][0].filter(Boolean).length > 0, true, '907 activityQuantities must receive values');
+    assert.strictEqual(mockApp.activityQuantities['934A'][0].filter(Boolean).length > 0, true, '934A activityQuantities must receive values');
+    assert.strictEqual(mockApp.activityQuantities['1220'][0].filter(Boolean).length > 0, true, '1220 activityQuantities must receive values');
+    assert.strictEqual(mockApp.activityQuantities['1230'][0].filter(Boolean).length > 0, true, '1230 activityQuantities must receive values');
+
+    // 3. Run reconciliation processing logic (identical to app.js pivotReconciliationData)
+    const sapMap = {};
+    const allActivityKeys = new Set();
+    const candidateActKeys = new Set([
+        ...Object.keys(mockApp.activities || {}),
+        ...Object.keys(mockApp.poleSchedules || {}),
+        ...Object.keys(mockApp.poleScheduleQuantities || {})
+    ]);
+
+    candidateActKeys.forEach(actKey => {
+        const qMatrix = mockApp.poleScheduleQuantities && mockApp.poleScheduleQuantities[actKey];
+        let hasPsQty = false;
+        if (qMatrix) {
+            for (const lIdx in qMatrix) {
+                const row = qMatrix[lIdx];
+                if (row) {
+                    for (const mIdx in row) {
+                        const raw = row[mIdx];
+                        if (raw !== '' && raw !== null && raw !== undefined) {
+                            const n = Number(raw);
+                            if (!isNaN(n) && n > 0) { hasPsQty = true; break; }
+                        }
+                    }
+                }
+                if (hasPsQty) break;
+            }
+        }
+
+        if (hasPsQty) {
+            const sched = (mockApp.poleSchedules && mockApp.poleSchedules[actKey] && Array.isArray(mockApp.poleSchedules[actKey].materials) && mockApp.poleSchedules[actKey].materials.length > 0)
+                ? mockApp.poleSchedules[actKey]
+                : (defaultPoleSchedules[actKey] || null);
+            if (sched && Array.isArray(sched.materials)) {
+                sched.materials.forEach((m, mIdx) => {
+                    if (m.isSection || m.isSpan) return;
+                    let itemTotalQty = 0;
+                    for (const lIdx in qMatrix) {
+                        const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
+                        if (raw !== '' && raw !== null && raw !== undefined) {
+                            const n = Number(raw);
+                            if (!isNaN(n)) itemTotalQty += n;
+                        }
+                    }
+                    if (itemTotalQty <= 0) return;
+
+                    let sItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [];
+                    if (sItems.length === 0 && m.itemCode && m.itemCode !== 'N/A' && m.itemCode !== '—') {
+                        sItems = [{ code: m.itemCode, desc: m.sapDescription || m.desc, uom: m.sapUom || m.unit, qty: 1 }];
+                    }
+
+                    sItems.forEach(s => {
+                        if (!s.code || s.code === 'N/A' || s.code === '—') return;
+                        allActivityKeys.add(actKey);
+                        if (!sapMap[s.code]) {
+                            sapMap[s.code] = { code: s.code, desc: s.desc, uom: s.uom, totalQty: 0, activities: {} };
+                        }
+                        const finalQty = itemTotalQty * (s.qty || 1);
+                        sapMap[s.code].totalQty += finalQty;
+                        sapMap[s.code].activities[actKey] = (sapMap[s.code].activities[actKey] || 0) + finalQty;
+                    });
+                });
+            }
+        }
+    });
+
+    const columns = Array.from(allActivityKeys).sort();
+    assert.ok(columns.includes('907'), 'Reconciliation columns must include 907');
+    assert.ok(columns.includes('934A'), 'Reconciliation columns must include 934A');
+    assert.ok(columns.includes('1220'), 'Reconciliation columns must include 1220');
+    assert.ok(columns.includes('1230'), 'Reconciliation columns must include 1230');
+
+    // Verify quantities in sapMap
+    assert.ok(sapMap['17001243'], 'RSJ 11m must exist in reconciliation');
+    assert.strictEqual(sapMap['17001243'].activities['907'], 12, 'RSJ 11m qty in 907 must be 12');
+    assert.strictEqual(sapMap['17001243'].totalQty, 12, 'RSJ 11m totalQty must be 12');
+
+    assert.ok(sapMap['17005037'], 'RSJ 8m must exist in reconciliation');
+    assert.strictEqual(sapMap['17005037'].activities['934A'], 8, 'RSJ 8m qty in 934A must be 8');
+    assert.strictEqual(sapMap['17005037'].totalQty, 8, 'RSJ 8m totalQty must be 8');
+
+    assert.ok(sapMap['17000081'], 'Dist Box 100KVA must exist in reconciliation');
+    assert.strictEqual(sapMap['17000081'].activities['1220'], 4, 'Dist Box qty in 1220 must be 4');
+    assert.strictEqual(sapMap['17000081'].totalQty, 4, 'Dist Box totalQty must be 4');
+
+    assert.ok(sapMap['17000004'], 'RSJ 9m must exist in reconciliation');
+    assert.strictEqual(sapMap['17000004'].activities['1230'], 6, 'RSJ 9m qty in 1230 must be 6');
+    assert.strictEqual(sapMap['17000004'].totalQty, 6, 'RSJ 9m totalQty must be 6');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

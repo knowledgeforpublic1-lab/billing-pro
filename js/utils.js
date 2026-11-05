@@ -305,6 +305,9 @@ window.UtilsModule = {
                     if (viewName === 'taxInvoice') viewName = 'invoice';
                     this.currentView = viewName;
                     try { localStorage.setItem('billing_current_view', viewName); } catch(e) {}
+                    if (viewName === 'reconciliation') {
+                        this.recoRevision = (this.recoRevision || 0) + 1;
+                    }
                     if (viewName === 'invoice') {
                         // Ensure contractor name is populated only when a firm is actually selected
                         if (this.selectedContractorId && this.selectedContractorId !== 'custom' && this.invoiceData && (!this.invoiceData.contractorName || this.invoiceData.contractorName === 'CONTRACTOR' || this.invoiceData.contractorName === 'M/s CONTRACTOR')) {

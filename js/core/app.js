@@ -68,14 +68,49 @@
                 poleScheduleQuantities: {},
                 poleScheduleSearchQuery: '',
                 poleSchedules: (function() {
+                    let base = (typeof defaultPoleSchedules !== 'undefined') ? JSON.parse(JSON.stringify(defaultPoleSchedules)) : {};
                     try {
                         const raw = localStorage.getItem('lk_billing_pole_schedules_v1');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return parsed;
+                            if (parsed && typeof parsed === 'object') {
+                                Object.keys(parsed).forEach(k => {
+                                    if (base[k] && parsed[k] && Array.isArray(parsed[k].materials)) {
+                                        base[k] = parsed[k];
+                                    } else if (parsed[k]) {
+                                        base[k] = parsed[k];
+                                    }
+                                });
+                            }
                         }
                     } catch(e) {}
-                    return (typeof defaultPoleSchedules !== 'undefined') ? JSON.parse(JSON.stringify(defaultPoleSchedules)) : {};
+                    if (typeof defaultPoleSchedules !== 'undefined') {
+                        Object.keys(defaultPoleSchedules).forEach(k => {
+                            if (!base[k] || !Array.isArray(base[k].materials) || base[k].materials.length === 0) {
+                                base[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+                            } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
+                                while (base[k].materials.length < defaultPoleSchedules[k].materials.length) {
+                                    const nextIdx = base[k].materials.length;
+                                    base[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
+                                }
+                                defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
+                                    const cur = base[k].materials[mIdx];
+                                    if (cur) {
+                                        if (!cur.itemCode && defMat.itemCode) {
+                                            cur.itemCode = defMat.itemCode;
+                                            cur.sapDescription = defMat.sapDescription;
+                                            cur.sapUom = defMat.sapUom;
+                                            cur.docHeader = defMat.docHeader;
+                                        }
+                                        if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    return base;
                 })(),
                 selectedActivityKey: '1220',
                 searchQuery: '',
@@ -571,7 +606,9 @@
 
                     if (hasPsQty) {
                         // Direct Pole Schedule Reconciliation processing
-                        const sched = (this.poleSchedules && this.poleSchedules[actKey]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[actKey]);
+                        const sched = (this.poleSchedules && this.poleSchedules[actKey] && Array.isArray(this.poleSchedules[actKey].materials) && this.poleSchedules[actKey].materials.length > 0)
+                            ? this.poleSchedules[actKey]
+                            : ((typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[actKey]) ? defaultPoleSchedules[actKey] : null);
                         if (sched && Array.isArray(sched.materials)) {
                             sched.materials.forEach((m, mIdx) => {
                                 if (m.isSection || m.isSpan) return;
@@ -583,7 +620,54 @@
                                         if (!isNaN(n)) itemTotalQty += n;
                                     }
                                 }
+
+                                // Cross fallback: if 0 in qMatrix, check this.activityQuantities[actKey]
+                                if (itemTotalQty <= 0 && this.activityQuantities && this.activityQuantities[actKey]) {
+                                    const actQ = this.activityQuantities[actKey];
+                                    const act = this.activities && this.activities[actKey];
+                                    if (act && Array.isArray(act.materials)) {
+                                        const aIdx = act.materials.findIndex(am => (am.itemCode && m.itemCode && String(am.itemCode).trim() === String(m.itemCode).trim()) || (am.desc && m.desc && am.desc.trim().toLowerCase() === m.desc.trim().toLowerCase()));
+                                        if (aIdx !== -1) {
+                                            for (let l = 0; l < actQ.length; l++) {
+                                                const val = actQ[l] && actQ[l][aIdx];
+                                                if (val !== '' && val !== null && val !== undefined) {
+                                                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
+                                                    if (!isNaN(n)) itemTotalQty += n;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                                 if (itemTotalQty <= 0) return;
+
+                                // Auto-heal missing SAP items from defaultPoleSchedules or activities
+                                if (!m.itemCode || !m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
+                                    const defSched = (typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null;
+                                    const defMat = defSched && defSched.materials && defSched.materials[mIdx];
+                                    if (defMat) {
+                                        if (!m.itemCode && defMat.itemCode) m.itemCode = defMat.itemCode;
+                                        if (!m.sapDescription && defMat.sapDescription) m.sapDescription = defMat.sapDescription;
+                                        if (!m.sapUom && defMat.sapUom) m.sapUom = defMat.sapUom;
+                                        if ((!m.sapItems || m.sapItems.length === 0) && defMat.sapItems) {
+                                            m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                                        }
+                                    }
+                                    if (!m.itemCode || !m.sapItems || m.sapItems.length === 0) {
+                                        const act = this.activities && this.activities[actKey];
+                                        if (act && Array.isArray(act.materials)) {
+                                            const matchActMat = act.materials.find(am => am.desc && m.desc && am.desc.trim().toLowerCase() === m.desc.trim().toLowerCase());
+                                            if (matchActMat) {
+                                                if (!m.itemCode && matchActMat.itemCode) m.itemCode = matchActMat.itemCode;
+                                                if (!m.sapDescription && matchActMat.sapDescription) m.sapDescription = matchActMat.sapDescription;
+                                                if (!m.sapUom && matchActMat.sapUom) m.sapUom = matchActMat.sapUom;
+                                                if ((!m.sapItems || m.sapItems.length === 0) && matchActMat.sapItems && matchActMat.sapItems.length > 0) {
+                                                    m.sapItems = JSON.parse(JSON.stringify(matchActMat.sapItems));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 
                                 let sItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [];
                                 if (sItems.length === 0 && m.itemCode && m.itemCode !== 'N/A' && m.itemCode !== '—') {
@@ -658,6 +742,24 @@
                                         ? parseFloat(qMatrix[locIdx][mIdx])
                                         : 0;
                                     activitySheetQty += val;
+                                }
+                                if (activitySheetQty === 0 && this.poleScheduleQuantities && this.poleScheduleQuantities[actKey]) {
+                                    const psQ = this.poleScheduleQuantities[actKey];
+                                    const sched = (this.poleSchedules && this.poleSchedules[actKey] && Array.isArray(this.poleSchedules[actKey].materials))
+                                        ? this.poleSchedules[actKey]
+                                        : ((typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null);
+                                    if (sched && Array.isArray(sched.materials)) {
+                                        const sIdx = sched.materials.findIndex(sm => (sm.itemCode && m.itemCode && String(sm.itemCode).trim() === String(m.itemCode).trim()) || (sm.desc && m.desc && sm.desc.trim().toLowerCase() === m.desc.trim().toLowerCase()));
+                                        if (sIdx !== -1) {
+                                            for (const l in psQ) {
+                                                const v = psQ[l] && psQ[l][sIdx];
+                                                if (v !== '' && v !== null && v !== undefined) {
+                                                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(v))) : parseFloat(v);
+                                                    if (!isNaN(n)) activitySheetQty += n;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
 
                                 if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
@@ -1882,11 +1984,33 @@
                 }
             } catch(e) {}
 
-            // ⚡ Auto-sync any existing Pole Schedule entries into Billing & Reconciliation
+            // Auto-heal poleSchedules from defaultPoleSchedules
             try {
-                if (this.poleScheduleQuantities && typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
-                    Object.keys(this.poleScheduleQuantities).forEach(k => {
-                        this.syncPoleScheduleToBillingAndReconciliation(k);
+                if (typeof defaultPoleSchedules !== 'undefined') {
+                    if (!this.poleSchedules || typeof this.poleSchedules !== 'object') this.poleSchedules = {};
+                    Object.keys(defaultPoleSchedules).forEach(k => {
+                        if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
+                            this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+                        } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
+                            while (this.poleSchedules[k].materials.length < defaultPoleSchedules[k].materials.length) {
+                                const nextIdx = this.poleSchedules[k].materials.length;
+                                this.poleSchedules[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
+                            }
+                            defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
+                                const cur = this.poleSchedules[k].materials[mIdx];
+                                if (cur) {
+                                    if (!cur.itemCode && defMat.itemCode) {
+                                        cur.itemCode = defMat.itemCode;
+                                        cur.sapDescription = defMat.sapDescription;
+                                        cur.sapUom = defMat.sapUom;
+                                        cur.docHeader = defMat.docHeader;
+                                    }
+                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                                    }
+                                }
+                            });
+                        }
                     });
                 }
             } catch(e) {}

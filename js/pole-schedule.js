@@ -81,9 +81,13 @@ window.PoleScheduleModule = {
         const k = this.selectedPoleScheduleKey || '907';
         this.ensurePoleScheduleQuantities(k);
         this.poleScheduleQuantities[k][lIdx][mIdx] = val;
+        // Vue 3 reactivity triggers
+        this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
+        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
         if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
             this.syncPoleScheduleToBillingAndReconciliation(k);
         }
+        this.recoRevision = (this.recoRevision || 0) + 1;
         this.debouncedSave();
     },
 

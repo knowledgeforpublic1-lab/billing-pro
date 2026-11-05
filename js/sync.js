@@ -1378,7 +1378,37 @@ window.SyncModule = {
                 if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
                 if (parsed.poleScheduleLocations && typeof parsed.poleScheduleLocations === 'object') this.poleScheduleLocations = parsed.poleScheduleLocations;
                 if (parsed.poleScheduleQuantities && typeof parsed.poleScheduleQuantities === 'object') this.poleScheduleQuantities = parsed.poleScheduleQuantities;
-                if (parsed.poleSchedules && typeof parsed.poleSchedules === 'object') this.poleSchedules = parsed.poleSchedules;
+                if (parsed.poleSchedules && typeof parsed.poleSchedules === 'object') {
+                    this.poleSchedules = parsed.poleSchedules;
+                }
+                // Auto-heal poleSchedules from defaultPoleSchedules to ensure all 9 schedules & SAP mappings exist
+                if (typeof defaultPoleSchedules !== 'undefined') {
+                    if (!this.poleSchedules || typeof this.poleSchedules !== 'object') this.poleSchedules = {};
+                    Object.keys(defaultPoleSchedules).forEach(k => {
+                        if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
+                            this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+                        } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
+                            while (this.poleSchedules[k].materials.length < defaultPoleSchedules[k].materials.length) {
+                                const nextIdx = this.poleSchedules[k].materials.length;
+                                this.poleSchedules[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
+                            }
+                            defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
+                                if (this.poleSchedules[k].materials && this.poleSchedules[k].materials[mIdx]) {
+                                    const cur = this.poleSchedules[k].materials[mIdx];
+                                    if (!cur.itemCode && defMat.itemCode) {
+                                        cur.itemCode = defMat.itemCode;
+                                        cur.sapDescription = defMat.sapDescription;
+                                        cur.sapUom = defMat.sapUom;
+                                        cur.docHeader = defMat.docHeader;
+                                    }
+                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
                 if (parsed.masterAbstractList && Array.isArray(parsed.masterAbstractList) && parsed.masterAbstractList.length > 0) {
                     this.masterAbstractList = parsed.masterAbstractList;
                 }
