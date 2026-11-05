@@ -748,6 +748,9 @@ window.ViewsModule = {
                     if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
                 }
             }
+            if (typeof this.persistPoleSchedulesToMasterFile === "function") {
+                this.persistPoleSchedulesToMasterFile(true);
+            }
         }
 
         // Update current activity if in activity billing view

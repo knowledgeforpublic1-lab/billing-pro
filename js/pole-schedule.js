@@ -764,6 +764,7 @@ window.PoleScheduleModule = {
         }
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
+        if (typeof this.persistPoleSchedulesToMasterFile === "function") this.persistPoleSchedulesToMasterFile(true);
         this.showToast(`Item "${newMat.desc}" duplicated below! 📋`, '✅');
     },
 
@@ -921,10 +922,109 @@ window.PoleScheduleModule = {
         }
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
+        if (typeof this.persistPoleSchedulesToMasterFile === "function") this.persistPoleSchedulesToMasterFile(true);
         this.showToast(`Item "${name}" removed from Pole Schedule ${k}`, '🗑️');
     },
 
-    exportPoleScheduleExcel() {
+        async persistPoleSchedulesToMasterFile(silent = false) {
+        try {
+            if (!this.poleSchedules || typeof this.poleSchedules !== "object" || Object.keys(this.poleSchedules).length === 0) {
+                if (!silent && typeof this.showToast === "function") this.showToast("No pole schedules found to save", "⚠️");
+                return false;
+            }
+
+            // 1. Keep localStorage updated
+            try {
+                localStorage.setItem("lk_billing_pole_schedules_v1", JSON.stringify(this.poleSchedules));
+            } catch(e) {}
+
+            // 2. Keep in-memory window.defaultPoleSchedules updated
+            if (typeof window !== "undefined") {
+                window.defaultPoleSchedules = JSON.parse(JSON.stringify(this.poleSchedules));
+            }
+
+            // 3. Send to API to hardcode directly to js/data/default-pole-schedules.js on disk & Cloud
+            let savedToFile = false;
+            const payload = JSON.stringify({ poleSchedules: this.poleSchedules });
+            const headers = { "Content-Type": "application/json" };
+            try {
+                const k = localStorage.getItem("billing_api_key");
+                if (k) headers["x-api-key"] = k;
+            } catch(e) {}
+
+            const endpoints = [
+                "/api/save-default-pole-schedules",
+                "http://localhost:3000/api/save-default-pole-schedules"
+            ];
+
+            for (const ep of endpoints) {
+                try {
+                    const res = await fetch(ep, {
+                        method: "POST",
+                        headers,
+                        body: payload
+                    });
+                    if (res.ok) {
+                        const json = await res.json().catch(() => null);
+                        if (json && json.success) {
+                            savedToFile = true;
+                            break;
+                        }
+                    }
+                } catch(netErr) {}
+            }
+
+            // 4. Also trigger background sync to MongoDB Cloud so all PCs get it immediately
+            if (typeof this.syncToMongoNow === "function") {
+                try { this.syncToMongoNow({ manual: false }); } catch(e) {}
+            }
+
+            if (savedToFile) {
+                if (!silent && typeof this.showToast === "function") {
+                    this.showToast("💾 Default master pole schedules hard-coded to disk & cloud successfully!", "✅");
+                }
+                return true;
+            } else {
+                if (!silent) {
+                    this.downloadDefaultPoleSchedulesFile();
+                    if (typeof this.showToast === "function") {
+                        this.showToast("💾 Downloaded default-pole-schedules.js. Replace file in js/data/ to hard-code.", "ℹ️");
+                    }
+                }
+                return false;
+            }
+        } catch(err) {
+            console.error("persistPoleSchedulesToMasterFile error:", err);
+            if (!silent && typeof this.showToast === "function") {
+                this.showToast("Save failed: " + (err.message || "Unknown error"), "❌");
+            }
+            return false;
+        }
+    },
+
+    downloadDefaultPoleSchedulesFile() {
+        try {
+            if (!this.poleSchedules || typeof this.poleSchedules !== "object") {
+                if (typeof this.showToast === "function") this.showToast("No pole schedules to download", "⚠️");
+                return;
+            }
+            const content = "/**\n * @file Default Pole Schedules Master Data\n * @description Standard bill-of-materials pole schedules for 11 KV RSJ/PSC line activities.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping).\n */\n\nconst defaultPoleSchedules = " + JSON.stringify(this.poleSchedules, null, 2) + ";\n\nif (typeof window !== \"undefined\") {\n    window.defaultPoleSchedules = defaultPoleSchedules;\n}\nif (typeof module !== \"undefined\" && module.exports) {\n    module.exports = defaultPoleSchedules;\n}\n";
+            const blob = new Blob([content], { type: "application/javascript;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "default-pole-schedules.js";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        } catch(err) {
+            console.error("downloadDefaultPoleSchedulesFile error:", err);
+            if (typeof this.showToast === "function") this.showToast("Download failed: " + (err.message || "Unknown"), "❌");
+        }
+    },
+
+exportPoleScheduleExcel() {
         if (typeof XLSX === 'undefined') {
             this.showToast('XLSX library not loaded', '❌');
             return;

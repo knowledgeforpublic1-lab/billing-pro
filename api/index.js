@@ -687,6 +687,84 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
     }
 });
 
+// POST: Save pole schedules permanently to js/data/default-pole-schedules.js on disk & Cloud
+app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
+    const ctx = 'SAVE-DEFAULT-POLE-SCHEDULES';
+    try {
+        const { poleSchedules } = req.body || {};
+        if (!poleSchedules || typeof poleSchedules !== 'object' || Object.keys(poleSchedules).length === 0) {
+            return res.status(400).json({ success: false, error: 'poleSchedules object is required' });
+        }
+        const fsMod = require('fs');
+        const pathMod = require('path');
+        const targetPath = pathMod.join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
+
+        const content = '/**\n * @file Default Pole Schedules Master Data\n * @description Standard bill-of-materials pole schedules for 11 KV RSJ/PSC line activities.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping).\n */\n\nconst defaultPoleSchedules = ' + JSON.stringify(poleSchedules, null, 2) + ';\n\nif (typeof window !== \'undefined\') {\n    window.defaultPoleSchedules = defaultPoleSchedules;\n}\nif (typeof module !== \'undefined\' && module.exports) {\n    module.exports = defaultPoleSchedules;\n}\n';
+        
+        try {
+            fsMod.writeFileSync(targetPath, content, 'utf8');
+            log.info(ctx, `Successfully written ${Object.keys(poleSchedules).length} pole schedules to default-pole-schedules.js on disk`);
+        } catch (fsErr) {
+            log.warn(ctx, `Disk file write failed (e.g. read-only serverless environment): ${fsErr.message}`);
+        }
+
+        // Also persist to MongoDB for cross-PC synchronization
+        try {
+            await connectToDatabase();
+            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
+                key: { type: String, unique: true },
+                data: { type: Object },
+                updatedAt: { type: Date, default: Date.now }
+            }));
+            await DefaultConfig.findOneAndUpdate(
+                { key: 'poleSchedulesMaster' },
+                { key: 'poleSchedulesMaster', data: poleSchedules, updatedAt: new Date() },
+                { upsert: true, new: true }
+            );
+            log.info(ctx, 'Successfully synced pole schedules to MongoDB Atlas for cross-PC default persistence');
+        } catch (dbErr) {
+            log.warn(ctx, `MongoDB backup skipped/failed: ${dbErr.message}`);
+        }
+
+        return res.json({
+            success: true,
+            message: 'Hard-coded default-pole-schedules.js updated on disk & cloud successfully!',
+            count: Object.keys(poleSchedules).length
+        });
+    } catch (err) {
+        log.error(ctx, 'Failed to save default-pole-schedules.js', err);
+        return res.status(500).json({ success: false, error: err.message || 'Unknown error' });
+    }
+});
+
+// GET: Fetch default pole schedules from Cloud or File
+app.get('/api/default-pole-schedules', async (req, res) => {
+    try {
+        try {
+            await connectToDatabase();
+            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
+                key: { type: String, unique: true },
+                data: { type: Object },
+                updatedAt: { type: Date, default: Date.now }
+            }));
+            const record = await DefaultConfig.findOne({ key: 'poleSchedulesMaster' });
+            if (record && record.data && Object.keys(record.data).length > 0) {
+                return res.json({ success: true, poleSchedules: record.data, source: 'mongodb' });
+            }
+        } catch (e) {}
+
+        const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
+        if (require('fs').existsSync(targetPath)) {
+            delete require.cache[require.resolve(targetPath)];
+            const fileData = require(targetPath);
+            return res.json({ success: true, poleSchedules: fileData, source: 'disk' });
+        }
+        res.status(404).json({ success: false, error: 'Default pole schedules not found' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Express JSON body errors (jaise 5MB limit) → Hinglish JSON message (HTML ki jagah)
 app.use((err, req, res, next) => {
     if (err && err.type === 'entity.too.large') {

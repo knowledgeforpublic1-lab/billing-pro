@@ -1519,6 +1519,20 @@ it('Pole Schedule Data Flow: Quantities sync seamlessly into Material Reconcilia
     assert.strictEqual(sapMap['17000004'].totalQty, 6, 'RSJ 9m totalQty must be 6');
 });
 
+// 28. Default Pole Schedules Hard-Coded Master Persistence & API
+it('Default Pole Schedules: Hard-coded Master Persistence & API Endpoint Verification', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    assert.ok(defaultPoleSchedules, 'defaultPoleSchedules must be exported');
+    assert.strictEqual(typeof defaultPoleSchedules, 'object');
+    assert.ok(defaultPoleSchedules['907'], 'Activity 907 must be defined in master defaults');
+    assert.ok(defaultPoleSchedules['922'], 'Activity 922 must be defined in master defaults');
+
+    // PoleScheduleModule has persistPoleSchedulesToMasterFile and downloadDefaultPoleSchedulesFile
+    const psModule = require('../js/pole-schedule.js');
+    assert.strictEqual(typeof psModule.persistPoleSchedulesToMasterFile, 'function', 'persistPoleSchedulesToMasterFile must be a function');
+    assert.strictEqual(typeof psModule.downloadDefaultPoleSchedulesFile, 'function', 'downloadDefaultPoleSchedulesFile must be a function');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

@@ -93,6 +93,9 @@ window.MappingModule = {
         this.mappingRoundMode = newMode || 'none';
         try { localStorage.setItem('lk_billing_mapping_round_mode', this.mappingRoundMode); } catch(e) {}
         this.saveToStorage();
+        if (isPS && typeof this.persistPoleSchedulesToMasterFile === 'function') {
+            this.persistPoleSchedulesToMasterFile(true);
+        }
         if (typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
         const modeLabels = {
             'none': 'Off (Exact Values)',
@@ -422,6 +425,11 @@ window.MappingModule = {
             mat.sapDescription = (mat.sapItems && mat.sapItems[0] && mat.sapItems[0] !== sItem) ? mat.sapItems[0].desc : '';
             mat.sapUom = mat.unit || 'No';
             this.saveToStorage();
+            if (this.currentView === 'mapping' && (String(this.selectedActivityKey || '').startsWith('PS') || (this.poleSchedules && this.poleSchedules[this.selectedActivityKey]))) {
+                if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
+                    this.persistPoleSchedulesToMasterFile(true);
+                }
+            }
             this.scheduleMappingSync();
             return;
         }
@@ -510,6 +518,11 @@ window.MappingModule = {
             }
             if (event) event.target.value = '[' + found.code + '] ' + found.desc;
             this.saveToStorage();
+            if (this.currentView === 'mapping' && (String(this.selectedActivityKey || '').startsWith('PS') || (this.poleSchedules && this.poleSchedules[this.selectedActivityKey]))) {
+                if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
+                    this.persistPoleSchedulesToMasterFile(true);
+                }
+            }
             this.scheduleMappingSync();
         } else {
             if (event) event.target.value = sItem.code ? '[' + sItem.code + '] ' + sItem.desc : '';
