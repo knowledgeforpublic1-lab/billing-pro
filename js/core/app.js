@@ -145,7 +145,7 @@
                     } catch(e) {}
                     return { rate: true, sap: false, qty: true };
                 })(),
-                reconFilterZeroOnly: false,
+                reconFilterZeroOnly: true,
                 // ☁️ Mongo sync status (kam space kharch ho isliye debounce + change-check ke sath)
                 syncStatus: 'local',
                 lastSyncAt: '',
@@ -621,27 +621,9 @@
                                     }
                                 }
 
-                                // Cross fallback: if 0 in qMatrix, check this.activityQuantities[actKey]
-                                if (itemTotalQty <= 0 && this.activityQuantities && this.activityQuantities[actKey]) {
-                                    const actQ = this.activityQuantities[actKey];
-                                    const act = this.activities && this.activities[actKey];
-                                    if (act && Array.isArray(act.materials)) {
-                                        const aIdx = act.materials.findIndex(am => (am.itemCode && m.itemCode && String(am.itemCode).trim() === String(m.itemCode).trim()) || (am.desc && m.desc && am.desc.trim().toLowerCase() === m.desc.trim().toLowerCase()));
-                                        if (aIdx !== -1) {
-                                            for (let l = 0; l < actQ.length; l++) {
-                                                const val = actQ[l] && actQ[l][aIdx];
-                                                if (val !== '' && val !== null && val !== undefined) {
-                                                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
-                                                    if (!isNaN(n)) itemTotalQty += n;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
                                 if (itemTotalQty <= 0) return;
 
-                                // Auto-heal missing SAP items from defaultPoleSchedules or activities
+                                // Auto-heal missing SAP items in O(1) from defaultPoleSchedules if missing
                                 if (!m.itemCode || !m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
                                     const defSched = (typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null;
                                     const defMat = defSched && defSched.materials && defSched.materials[mIdx];
@@ -650,21 +632,7 @@
                                         if (!m.sapDescription && defMat.sapDescription) m.sapDescription = defMat.sapDescription;
                                         if (!m.sapUom && defMat.sapUom) m.sapUom = defMat.sapUom;
                                         if ((!m.sapItems || m.sapItems.length === 0) && defMat.sapItems) {
-                                            m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                        }
-                                    }
-                                    if (!m.itemCode || !m.sapItems || m.sapItems.length === 0) {
-                                        const act = this.activities && this.activities[actKey];
-                                        if (act && Array.isArray(act.materials)) {
-                                            const matchActMat = act.materials.find(am => am.desc && m.desc && am.desc.trim().toLowerCase() === m.desc.trim().toLowerCase());
-                                            if (matchActMat) {
-                                                if (!m.itemCode && matchActMat.itemCode) m.itemCode = matchActMat.itemCode;
-                                                if (!m.sapDescription && matchActMat.sapDescription) m.sapDescription = matchActMat.sapDescription;
-                                                if (!m.sapUom && matchActMat.sapUom) m.sapUom = matchActMat.sapUom;
-                                                if ((!m.sapItems || m.sapItems.length === 0) && matchActMat.sapItems && matchActMat.sapItems.length > 0) {
-                                                    m.sapItems = JSON.parse(JSON.stringify(matchActMat.sapItems));
-                                                }
-                                            }
+                                            m.sapItems = defMat.sapItems;
                                         }
                                     }
                                 }
@@ -743,24 +711,7 @@
                                         : 0;
                                     activitySheetQty += val;
                                 }
-                                if (activitySheetQty === 0 && this.poleScheduleQuantities && this.poleScheduleQuantities[actKey]) {
-                                    const psQ = this.poleScheduleQuantities[actKey];
-                                    const sched = (this.poleSchedules && this.poleSchedules[actKey] && Array.isArray(this.poleSchedules[actKey].materials))
-                                        ? this.poleSchedules[actKey]
-                                        : ((typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null);
-                                    if (sched && Array.isArray(sched.materials)) {
-                                        const sIdx = sched.materials.findIndex(sm => (sm.itemCode && m.itemCode && String(sm.itemCode).trim() === String(m.itemCode).trim()) || (sm.desc && m.desc && sm.desc.trim().toLowerCase() === m.desc.trim().toLowerCase()));
-                                        if (sIdx !== -1) {
-                                            for (const l in psQ) {
-                                                const v = psQ[l] && psQ[l][sIdx];
-                                                if (v !== '' && v !== null && v !== undefined) {
-                                                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(v))) : parseFloat(v);
-                                                    if (!isNaN(n)) activitySheetQty += n;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+
 
                                 if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
                                     if (typeof this.ensureMaterialSap === 'function') {
@@ -824,13 +775,16 @@
                 });
 
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
+                const hasCustomEdits = (this.customOldRecoEdits && Object.keys(this.customOldRecoEdits).length > 0);
                 const rows = Object.values(sapMap)
                     .filter(row => 
+                        row.totalQty > 0 || 
                         Object.keys(row.activities).length > 0 || 
                         (row.sapIssuedQty && row.sapIssuedQty !== 0) || 
                         (row.sapGrossIssue && row.sapGrossIssue !== 0) ||
                         (row.sapNetIssue && row.sapNetIssue !== 0) ||
-                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(row.code) > 0) || ((typeof this.hasAnyRecoQty === 'function') && this.hasAnyRecoQty(row.code))
+                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(row.code) > 0) ||
+                        (hasCustomEdits && (typeof this.hasAnyRecoQty === 'function') && this.hasAnyRecoQty(row.code))
                     )
                     .sort((a, b) => a.code.localeCompare(b.code));
                 
@@ -854,6 +808,9 @@
             },
             // ↩️ Reverse columns: invoice wali activity × uski locations (907 me 2 location to 907 do baar)
             // 📍 Location scope ka samman — sirf wahi location jo is activity me dikhti hai
+            reconColumns() {
+                return (this.pivotReconciliationData && this.pivotReconciliationData.columns) || [];
+            },
             reverseReconColumns() {
                 if (!this.reverseEntry) return [];
                 const out = [];
@@ -1136,10 +1093,19 @@
             },
 
             unmappedContractorIssuedRowsSet() {
-                const items = this.unmappedContractorIssuedItems || [];
+                const contractorSap = this.currentContractorSap;
+                if (!contractorSap || !contractorSap.materials) return new Set();
+                const mappedSet = this.allMappedSapCodesSet;
                 const set = new Set();
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i] && items[i].code) set.add(items[i].code);
+                const entries = Object.entries(contractorSap.materials);
+                for (let i = 0; i < entries.length; i++) {
+                    const code = entries[i][0];
+                    const item = entries[i][1];
+                    const gross = Number(item.grossIssue !== undefined ? item.grossIssue : (item.issuedQty || 0));
+                    const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+                    if ((gross > 0 || net !== 0) && mappedSet && !mappedSet.has(code)) {
+                        set.add(code);
+                    }
                 }
                 return set;
             },
@@ -1159,7 +1125,8 @@
                     const r = rows[i];
                     for (let j = 0; j < cols.length; j++) {
                         const cName = cols[j].name;
-                        totals[cName] += (typeof this.getRecoColVal === 'function' ? (this.getRecoColVal(r.code, cName, r) || 0) : 0);
+                        const v = (r._colVals && r._colVals[cName] !== undefined && r._colVals[cName] !== '') ? r._colVals[cName] : 0;
+                        totals[cName] += Number(v) || 0;
                     }
                 }
 
