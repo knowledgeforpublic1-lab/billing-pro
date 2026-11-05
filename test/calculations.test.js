@@ -1212,8 +1212,8 @@ it('Activity 922 Restored to 18 Contract Items & Pole Schedules Configured (907:
 
     // Pole Schedule 1220 must have 72 items
     assert.ok(poleSchedules['1220'], 'Pole Schedule 1220 must exist');
-    assert.strictEqual(poleSchedules['1220'].materials.length, 72, 'Pole Schedule 1220 must have 72 items');
-    assert.strictEqual(poleSchedules['1220'].materials[0].itemCode, '17000081', 'Item 1 must be 100 KVA Transformer');
+    assert.strictEqual(poleSchedules['1220'].materials.length, 73, 'Pole Schedule 1220 must have 73 items');
+    assert.strictEqual(poleSchedules['1220'].materials[0].itemCode, '17004662', 'Item 1 must be 100 KVA Transformer (17004662)');
     assert.strictEqual(poleSchedules['1220'].materials[1].itemCode, '17001243', 'Item 2 must be RSJ 11m');
 
     // Pole Schedule 6723 must have 41 items
@@ -1510,9 +1510,9 @@ it('Pole Schedule Data Flow: Quantities sync seamlessly into Material Reconcilia
     assert.strictEqual(sapMap['17005037'].activities['934A'], 8, 'RSJ 8m qty in 934A must be 8');
     assert.strictEqual(sapMap['17005037'].totalQty, 8, 'RSJ 8m totalQty must be 8');
 
-    assert.ok(sapMap['17000081'], 'Dist Box 100KVA must exist in reconciliation');
-    assert.strictEqual(sapMap['17000081'].activities['1220'], 4, 'Dist Box qty in 1220 must be 4');
-    assert.strictEqual(sapMap['17000081'].totalQty, 4, 'Dist Box totalQty must be 4');
+    assert.ok(sapMap['17004662'], '100 KVA Transformer must exist in reconciliation');
+    assert.strictEqual(sapMap['17004662'].activities['1220'], 4, '100 KVA Transformer qty in 1220 must be 4');
+    assert.strictEqual(sapMap['17004662'].totalQty, 4, '100 KVA Transformer totalQty must be 4');
 
     assert.ok(sapMap['17000004'], 'RSJ 9m must exist in reconciliation');
     assert.strictEqual(sapMap['17000004'].activities['1230'], 6, 'RSJ 9m qty in 1230 must be 6');

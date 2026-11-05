@@ -1,17 +1,7 @@
 /**
  * @file Default Pole Schedules Master Data
  * @description Standard bill-of-materials pole schedules for 11 KV RSJ/PSC line activities.
- * 
- * Available Schedules:
- * - Activity 907: 11 KV RSJ Line with V-Cross Arm (53 Items)
- * - Activity 919: River Crossing DP Structure on RSJ 152x152 (37 Items)
- * - Activity 922: 11 KV Double Pole (DP) Cut Point Structure on RSJ 116x100 (45 Items)
- * - Activity 924: 11 KV Single Pole Cut Point Structure (43 Items)
- * - Activity 934A: 11 KV Single Circuit Pin Type on RSJ (43 Items)
- * - Activity 1220: 100 KVA Dist. Transformer Center on RSJ 116x100 (72 Items)
- * - Activity 1230: 11 KV Specially Designed Transformer with DP Structure (54 Items)
- * - Activity 1425A: 3 Phase 5 Wire LT Line on PSC Pole (41 Items)
- * - Activity 6723: 11 kV A.B. Switch DP Structure on RSJ 116x100 (41 Items)
+ * Hard-coded Master Defaults (Auto-updated from UI Mapping).
  */
 
 const defaultPoleSchedules = {
@@ -3688,18 +3678,19 @@ const defaultPoleSchedules = {
     "materials": [
       {
         "no": "1",
-        "itemCode": "17000081",
+        "itemCode": "17004662",
         "desc": "Dist. Transformer 100 KVA, 11/0.43 kv",
         "unit": "No.",
         "rate": 125000,
-        "sapDescription": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+        "sapDescription": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000081",
-            "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+            "code": "17004662",
+            "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -3718,84 +3709,63 @@ const defaultPoleSchedules = {
             "code": "17001243",
             "desc": "RSJ POLE 100X116 MM 11 MTR",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "3",
-        "itemCode": "17002007",
+        "itemCode": "",
         "desc": "MS Channel 100x50x6 mm",
         "unit": "Kg.",
         "rate": 80,
-        "sapDescription": "MS CHANNEL 100X50X6 MM",
-        "sapUom": "MT",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17002007",
-            "desc": "MS CHANNEL 100X50X6 MM",
-            "uom": "MT",
-            "docHeader": "0031006347"
-          }
-        ]
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "4",
-        "itemCode": "17001391",
+        "itemCode": "",
         "desc": "M.S.Channel 75x40x6 mm",
         "unit": "kg.",
         "rate": 80,
-        "sapDescription": "MS CHANNEL 75X40X6 MM",
-        "sapUom": "MT",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17001391",
-            "desc": "MS CHANNEL 75X40X6 MM",
-            "uom": "MT",
-            "docHeader": "0031006347"
-          }
-        ]
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "5",
-        "itemCode": "17001315",
+        "itemCode": "",
         "desc": "MS angle 50x50x6 mm",
         "unit": "kg.",
         "rate": 80,
-        "sapDescription": "SUPPORT ANGLE FOR AB SW 50X50X6X500 MM",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17001315",
-            "desc": "SUPPORT ANGLE FOR AB SW 50X50X6X500 MM",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "6",
-        "itemCode": "17001393",
+        "itemCode": "",
         "desc": "M.S.Flat 50 x 10mm",
         "unit": "kg.",
         "rate": 80,
-        "sapDescription": "MS FLAT 50X10 MM",
-        "sapUom": "MT",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17001393",
-            "desc": "MS FLAT 50X10 MM",
-            "uom": "MT",
-            "docHeader": "0031006347"
-          }
-        ]
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "7",
+        "itemCode": "",
+        "desc": "MS Flat 25x3 mm",
+        "unit": "Kg.",
+        "rate": 80,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
+        "no": "8",
         "itemCode": "17001397",
         "desc": "11 kV Pin Insulators with G.I. Pins",
         "unit": "NO.",
@@ -3808,30 +3778,51 @@ const defaultPoleSchedules = {
             "code": "17001397",
             "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
             "uom": "SET",
-            "docHeader": "0031007012"
-          }
-        ]
-      },
-      {
-        "no": "8",
-        "itemCode": "17000702",
-        "desc": "Strain Hardware for Dog0.1 or Equ.AAAC.",
-        "unit": "No.",
-        "rate": 40,
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
-        "sapUom": "SET",
-        "docHeader": "0031007012",
-        "sapItems": [
-          {
-            "code": "17000702",
-            "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
-            "uom": "SET",
+            "qty": 1,
             "docHeader": "0031007012"
           }
         ]
       },
       {
         "no": "9",
+        "itemCode": "17000046",
+        "desc": "11 KV Disc Insulator 70KN B& S Polymer",
+        "unit": "No.",
+        "rate": 75,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware for Dog0.1 or Equ.AAAC.",
+        "unit": "No.",
+        "rate": 40,
+        "sapDescription": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+        "sapUom": "NO",
+        "docHeader": "0031007012",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031007012"
+          }
+        ]
+      },
+      {
+        "no": "11",
         "itemCode": "17000081",
         "desc": "L.T.Dist.Boxes 100 KVA with MCCB",
         "unit": "No.",
@@ -3844,12 +3835,13 @@ const defaultPoleSchedules = {
             "code": "17000081",
             "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "10",
+        "no": "12",
         "itemCode": "17000128",
         "desc": "L.As. 11 KV (Gapless type) with disconector",
         "unit": "No.",
@@ -3862,15 +3854,16 @@ const defaultPoleSchedules = {
             "code": "17000128",
             "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "11",
+        "no": "13",
         "itemCode": "17005052",
         "desc": "H.T.Stay Set",
-        "unit": "No.",
+        "unit": "No",
         "rate": 400,
         "sapDescription": "MS-HT STAY SET 20 MM",
         "sapUom": "SET",
@@ -3880,30 +3873,32 @@ const defaultPoleSchedules = {
             "code": "17005052",
             "desc": "MS-HT STAY SET 20 MM",
             "uom": "SET",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "12",
+        "no": "14",
         "itemCode": "17000239",
         "desc": "G.I.Stay Wire 7/4mm(8 SWG)",
         "unit": "kg.",
         "rate": 70,
         "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
         "sapUom": "KG",
-        "docHeader": "0031007012",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17000239",
             "desc": "GI STAY WIRE 7/4 MM 8 SWG",
             "uom": "KG",
-            "docHeader": "0031007012"
+            "qty": 1,
+            "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "13",
+        "no": "15",
         "itemCode": "17005053",
         "desc": "Earthing Sets H.T",
         "unit": "No.",
@@ -3916,30 +3911,32 @@ const defaultPoleSchedules = {
             "code": "17005053",
             "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
             "uom": "SET",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "14",
+        "no": "16",
         "itemCode": "17000026",
         "desc": "11KV H.G.Fuses",
-        "unit": "Set",
+        "unit": "Set.",
         "rate": 650,
-        "sapDescription": "11 KV HG FUSE SET",
+        "sapDescription": "HORN GAP FUSE 11 KV",
         "sapUom": "SET",
         "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17000026",
-            "desc": "11 KV HG FUSE SET",
+            "desc": "HORN GAP FUSE 11 KV",
             "uom": "SET",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "15",
+        "no": "17",
         "itemCode": "17000023",
         "desc": "11KV A.B. Switch",
         "unit": "Set.",
@@ -3952,12 +3949,13 @@ const defaultPoleSchedules = {
             "code": "17000023",
             "desc": "AB SWITCH 11 KV 400 AMP",
             "uom": "SET",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "16",
+        "no": "18",
         "itemCode": "17000751",
         "desc": "Danger Board in yard.",
         "unit": "No.",
@@ -3970,12 +3968,13 @@ const defaultPoleSchedules = {
             "code": "17000751",
             "desc": "DANGER BOARD 11 KV 250X200 MM",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "17",
+        "no": "19",
         "itemCode": "17000243",
         "desc": "G.I.Wire 8 SWG/ 6 SWG",
         "unit": "Kg.",
@@ -3988,15 +3987,16 @@ const defaultPoleSchedules = {
             "code": "17000243",
             "desc": "GI WIRE 8 SWG",
             "uom": "KG",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "18",
+        "no": "20",
         "itemCode": "17000237",
         "desc": "G.I.Barbed Wire 'A' type.",
-        "unit": "kg.",
+        "unit": "kg",
         "rate": 65,
         "sapDescription": "GI BARBED WIRE A TYPE",
         "sapUom": "KG",
@@ -4006,108 +4006,65 @@ const defaultPoleSchedules = {
             "code": "17000237",
             "desc": "GI BARBED WIRE A TYPE",
             "uom": "KG",
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "19",
-        "itemCode": "11000336",
-        "desc": "Concreting ration 1:4:8",
-        "unit": "CMT.",
-        "rate": 2500,
-        "sapDescription": "CEMENT GRADE OPC 53",
-        "sapUom": "CMT",
-        "docHeader": "0031003360",
-        "sapItems": [
-          {
-            "code": "11000336",
-            "desc": "CEMENT GRADE OPC 53",
-            "uom": "CMT",
-            "docHeader": "0031003360"
-          }
-        ]
-      },
-      {
-        "no": "20",
-        "itemCode": "",
-        "desc": "Painting/Hardware & support with numbering of pole",
-        "unit": "L.S.",
-        "rate": 500,
-        "sapDescription": "PAINTING & HARDWARE",
-        "sapUom": "LS",
-        "sapItems": []
-      },
-      {
-        "no": "21",
-        "itemCode": "N/A",
-        "desc": "Sundries",
-        "unit": "L.S.",
-        "rate": 0,
-        "sapDescription": "SUNDRIES",
-        "sapUom": "LS",
-        "sapItems": [
-          {
-            "code": "N/A",
-            "desc": "SUNDRIES",
-            "uom": "LS",
             "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
+        "no": "21",
+        "itemCode": "",
+        "desc": "Concreting ration",
+        "unit": "CMT.",
+        "rate": 0,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
         "no": "22",
-        "itemCode": "17000108",
-        "desc": "DTC Metring with Box, single core L.T. XLPE cable (70 sq.mm., 1...",
-        "unit": "No",
-        "rate": 4500,
-        "sapDescription": "LT CT METER BOX FOR 100 KVA DTC",
-        "sapUom": "NO",
-        "docHeader": "0031006347",
-        "sapItems": [
-          {
-            "code": "17000108",
-            "desc": "LT CT METER BOX FOR 100 KVA DTC",
-            "uom": "NO",
-            "docHeader": "0031006347"
-          }
-        ]
+        "itemCode": "",
+        "desc": "Painting/Hardware & support with numbering of pole",
+        "unit": "L.S.",
+        "rate": 500,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "23",
-        "itemCode": "",
-        "desc": "Single core L.T. XLPE 120 sqmm cable 32 mtr length and other allie...",
+        "itemCode": "17004596",
+        "desc": "Single core L.T. XLPE 120 sqmm cable  32 mtr length",
         "unit": "mtr",
         "rate": 180,
-        "isExtra": true,
-        "sapDescription": "CABLE AL 11KV XLPE",
-        "sapUom": "MTR",
+        "sapDescription": "CABLE AL LT XLPE 1X120 SQMM ARM",
+        "sapUom": "M",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "",
-            "desc": "CABLE AL 11KV XLPE",
-            "uom": "MTR",
+            "code": "17004596",
+            "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
+            "uom": "M",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "24",
-        "itemCode": "17000194",
-        "desc": "Single core L.T. XLPE 70 sqmm cable 22 mtr length and other allie...",
+        "itemCode": "17005188",
+        "desc": "Single core L.T. XLPE 70 sqmm cable  22 mtr length",
         "unit": "mtr",
         "rate": 120,
-        "isExtra": true,
-        "sapDescription": "CABLE AL 1.1KV XLPE 70 SQMM",
-        "sapUom": "MTR",
+        "sapDescription": "CABLE AL LT XLPE 1X70 SQMM ARM",
+        "sapUom": "M",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000194",
-            "desc": "CABLE AL 1.1KV XLPE 70 SQMM",
-            "uom": "MTR",
+            "code": "17005188",
+            "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
+            "uom": "M",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -4118,7 +4075,6 @@ const defaultPoleSchedules = {
         "desc": "100/5 A CT Operated meter (3 phase)",
         "unit": "No",
         "rate": 3500,
-        "isExtra": true,
         "sapDescription": "ENERGY METER LT CT 100/5 AMP",
         "sapUom": "NO",
         "docHeader": "0031006347",
@@ -4127,6 +4083,7 @@ const defaultPoleSchedules = {
             "code": "17005508",
             "desc": "ENERGY METER LT CT 100/5 AMP",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -4137,7 +4094,6 @@ const defaultPoleSchedules = {
         "desc": "SMC Three phase AMR meter box (Without Modem)",
         "unit": "No",
         "rate": 1800,
-        "isExtra": true,
         "sapDescription": "LT CT METER BOX FOR 100 KVA DTC",
         "sapUom": "NO",
         "docHeader": "0031006347",
@@ -4146,6 +4102,7 @@ const defaultPoleSchedules = {
             "code": "17000108",
             "desc": "LT CT METER BOX FOR 100 KVA DTC",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -4156,7 +4113,6 @@ const defaultPoleSchedules = {
         "desc": "LT CT 200/5 Amp",
         "unit": "No",
         "rate": 450,
-        "isExtra": true,
         "sapDescription": "CT LT RING TYPE 200/5A",
         "sapUom": "NO",
         "docHeader": "0031006347",
@@ -4165,68 +4121,53 @@ const defaultPoleSchedules = {
             "code": "17001264",
             "desc": "CT LT RING TYPE 200/5A",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "28",
-        "itemCode": "17001394",
-        "desc": "MS Flat 25x3 mm",
-        "unit": "Kg.",
+        "itemCode": "17001261",
+        "desc": "AAAC Conductor",
+        "unit": "mtr",
         "rate": 80,
-        "isExtra": true,
-        "sapDescription": "MS FLAT 25X3 MM",
-        "sapUom": "MT",
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapUom": "KM",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001394",
-            "desc": "MS FLAT 25X3 MM",
-            "uom": "MT",
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "KM",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "29",
-        "itemCode": "17000046",
-        "desc": "11 KV Disc Insulator 70KN B& S Polymer",
-        "unit": "No.",
-        "rate": 75,
-        "isExtra": true,
-        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-        "sapUom": "NO",
-        "docHeader": "0031007012",
-        "sapItems": [
-          {
-            "code": "17000046",
-            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-            "uom": "NO",
-            "docHeader": "0031007012"
-          }
-        ]
-      },
-      {
-        "no": "",
         "itemCode": "",
-        "desc": "Weight For M.S.Channel 100x50x6 mm:",
-        "unit": "Unit",
-        "rate": 0,
-        "isSection": true
+        "desc": "Nut Boult",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
       },
       {
         "no": "30",
-        "itemCode": "17005060",
-        "desc": "Transformer Base Channel",
-        "unit": "Nos",
-        "rate": 550,
-        "sapDescription": "TRANSFORMER BASE CHANNEL 100X50X6 MM",
+        "itemCode": "17000651",
+        "desc": "Lugs 70sqmm",
+        "unit": "No.",
+        "rate": 15,
+        "sapDescription": "LUG AL RING 70 SQMM",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005060",
-            "desc": "TRANSFORMER BASE CHANNEL 100X50X6 MM",
+            "code": "17000651",
+            "desc": "LUG AL RING 70 SQMM",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -4235,16 +4176,17 @@ const defaultPoleSchedules = {
       },
       {
         "no": "31",
-        "itemCode": "17005059",
-        "desc": "Transformer Top Channel",
-        "unit": "Nos",
-        "rate": 450,
-        "sapDescription": "TRANSFORMER TOP CHANNEL 100X50X6 MM",
+        "itemCode": "17001356",
+        "desc": "Wedge Connector",
+        "unit": "No.",
+        "rate": 60,
+        "sapDescription": "WEDGE CONNECTOR RABBIT TO RABBIT",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005059",
-            "desc": "TRANSFORMER TOP CHANNEL 100X50X6 MM",
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -4254,27 +4196,66 @@ const defaultPoleSchedules = {
       {
         "no": "",
         "itemCode": "",
-        "desc": "Total M.S.Channel 100x50x6 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSubtotal": true
-      },
-      {
-        "no": "",
-        "itemCode": "",
-        "desc": "Weight For M.S.Channel 75x40x6 mm:",
+        "desc": "Weight For M.S.Channel 100x50x6 mm",
         "unit": "Unit",
         "rate": 0,
         "isSection": true
       },
       {
-        "no": "32",
+        "no": "1",
+        "itemCode": "17005060",
+        "desc": "Transformer Base Channel",
+        "unit": "Nos",
+        "rate": 550,
+        "sapDescription": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005060",
+            "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17005059",
+        "desc": "Transformer Top Channel",
+        "unit": "Nos",
+        "rate": 450,
+        "sapDescription": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005059",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Weight For M.S.Channel 75x40x6 mm",
+        "unit": "Unit",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
         "itemCode": "17005061",
         "desc": "AB Switch/ HG Fuse Channel",
         "unit": "Nos",
         "rate": 400,
         "sapDescription": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005061",
@@ -4286,23 +4267,33 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "33",
-        "itemCode": "",
+        "no": "2",
+        "itemCode": "17005063",
         "desc": "Channel for AB Opreating Handle",
         "unit": "Nos",
         "rate": 200,
-        "sapDescription": "CHANNEL FOR AB OPERATING HANDLE",
+        "sapDescription": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005063",
+            "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "34",
+        "no": "3",
         "itemCode": "17005050",
         "desc": "Channel for 11 KV V-Cross Arm",
         "unit": "Nos",
         "rate": 350,
         "sapDescription": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005050",
@@ -4314,13 +4305,14 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "35",
+        "no": "4",
         "itemCode": "17005041",
         "desc": "Top Cleat SPCP",
         "unit": "Nos",
         "rate": 35,
         "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005041",
@@ -4332,31 +4324,14 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "36",
-        "itemCode": "17005040",
-        "desc": "Top Channel SPCP",
-        "unit": "Nos",
-        "rate": 450,
-        "sapDescription": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-        "sapUom": "NO",
-        "sapItems": [
-          {
-            "code": "17005040",
-            "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-            "uom": "NO",
-            "qty": 1,
-            "docHeader": "0031006347"
-          }
-        ]
-      },
-      {
-        "no": "37",
+        "no": "5",
         "itemCode": "17005042",
-        "desc": "Bottom Channel SPCP",
+        "desc": "Top Channel SPCP",
         "unit": "Nos",
         "rate": 450,
         "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005042",
@@ -4368,13 +4343,24 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "38",
+        "no": "6",
+        "itemCode": "",
+        "desc": "Bottom Channel SPCP",
+        "unit": "Nos",
+        "rate": 450,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
+        "no": "7",
         "itemCode": "17004792",
         "desc": "Guarding Channel",
         "unit": "Nos",
         "rate": 500,
         "sapDescription": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
         "sapUom": "SET",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17004792",
@@ -4388,31 +4374,24 @@ const defaultPoleSchedules = {
       {
         "no": "",
         "itemCode": "",
-        "desc": "Total M.S.Channel 75x40x6 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSubtotal": true
-      },
-      {
-        "no": "",
-        "itemCode": "",
         "desc": "Weight For Angle (50x50x6) :",
         "unit": "Unit",
         "rate": 0,
         "isSection": true
       },
       {
-        "no": "39",
-        "itemCode": "17005044",
+        "no": "1",
+        "itemCode": "17005065",
         "desc": "Transformer Belting Angle (Long)",
         "unit": "Nos",
         "rate": 150,
-        "sapDescription": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+        "sapDescription": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005044",
-            "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+            "code": "17005065",
+            "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -4420,17 +4399,18 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "40",
-        "itemCode": "17005045",
+        "no": "2",
+        "itemCode": "17005067",
         "desc": "Transformer Belting Angle (Short)",
         "unit": "Nos",
         "rate": 120,
-        "sapDescription": "MS-BELTING ANGLE SHORT",
+        "sapDescription": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005045",
-            "desc": "MS-BELTING ANGLE SHORT",
+            "code": "17005067",
+            "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -4438,53 +4418,100 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "41",
+        "no": "3",
         "itemCode": "",
+        "desc": "HT LT Support Angle",
+        "unit": "Nos",
+        "rate": 120,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
+        "no": "4",
+        "itemCode": "17005066",
         "desc": "Angle for LT DB",
         "unit": "Nos",
         "rate": 140,
-        "sapDescription": "ANGLE FOR LT DB",
+        "sapDescription": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005066",
+            "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "42",
-        "itemCode": "",
+        "no": "5",
+        "itemCode": "17005069",
         "desc": "Tie for AB Opreating Handle (Bracing)",
         "unit": "Nos",
         "rate": 150,
-        "sapDescription": "TIE FOR AB OPERATING HANDLE",
+        "sapDescription": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005069",
+            "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "43",
-        "itemCode": "",
+        "no": "6",
+        "itemCode": "17005070",
         "desc": "Transformer & AB Switch Support Angle",
         "unit": "Nos",
         "rate": 180,
-        "sapDescription": "TRANSFORMER & AB SWITCH SUPPORT ANGLE",
+        "sapDescription": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005070",
+            "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "44",
-        "itemCode": "",
+        "no": "7",
+        "itemCode": "17001315",
         "desc": "AB Switch pipe Support Angle (I-Bolt)",
         "unit": "Nos",
         "rate": 90,
-        "sapDescription": "AB SWITCH PIPE SUPPORT ANGLE",
+        "sapDescription": "SUPPORT ANGLE FOR AB SW 50X50X6X500 MM",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17001315",
+            "desc": "SUPPORT ANGLE FOR AB SW 50X50X6X500 MM",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "45",
+        "no": "8",
         "itemCode": "17005043",
         "desc": "Support Angle SPCP Tie",
         "unit": "Nos",
         "rate": 150,
         "sapDescription": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005043",
@@ -4498,27 +4525,20 @@ const defaultPoleSchedules = {
       {
         "no": "",
         "itemCode": "",
-        "desc": "Total Angle (50x50x6)",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSubtotal": true
-      },
-      {
-        "no": "",
-        "itemCode": "",
         "desc": "Weight For M.S.Flat 50X10 mm",
         "unit": "Unit",
         "rate": 0,
         "isSection": true
       },
       {
-        "no": "46",
+        "no": "1",
         "itemCode": "17005047",
         "desc": "Stay Clamp A & B Type",
         "unit": "Pair",
         "rate": 50,
         "sapDescription": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005047",
@@ -4530,67 +4550,18 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "47",
-        "itemCode": "",
-        "desc": "Side Clamp For Top Channels",
-        "unit": "Nos",
-        "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR TOP CHANNELS",
-        "sapUom": "NO",
-        "sapItems": []
-      },
-      {
-        "no": "48",
-        "itemCode": "",
-        "desc": "Side Clamp For LA Angle",
-        "unit": "Nos",
-        "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR LA ANGLE",
-        "sapUom": "NO",
-        "sapItems": []
-      },
-      {
-        "no": "49",
-        "itemCode": "",
-        "desc": "Side Clamp For DO Channel",
-        "unit": "Nos",
-        "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR DO CHANNEL",
-        "sapUom": "NO",
-        "sapItems": []
-      },
-      {
-        "no": "50",
-        "itemCode": "",
+        "no": "2",
+        "itemCode": "17005046",
         "desc": "Side Clamp for Pipe Support Channel",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR PIPE SUPPORT CHANNEL",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
-        "sapItems": []
-      },
-      {
-        "no": "51",
-        "itemCode": "",
-        "desc": "Side Clamp for Transformer Belt",
-        "unit": "Nos",
-        "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR TRANSFORMER BELT",
-        "sapUom": "NO",
-        "sapItems": []
-      },
-      {
-        "no": "52",
-        "itemCode": "17005060",
-        "desc": "Side Clamp for Transformer Base Channel",
-        "unit": "Nos",
-        "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR TRANSFORMER BASE CHANNEL",
-        "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005060",
-            "desc": "SIDE CLAMP FOR TRANSFORMER BASE CHANNEL",
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -4598,43 +4569,90 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "53",
-        "itemCode": "",
+        "no": "3",
+        "itemCode": "17005046",
+        "desc": "Side Clamp for Transformer Belt",
+        "unit": "Nos",
+        "rate": 40,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005046",
         "desc": "Side clamp For Box Angle",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR BOX ANGLE",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "54",
-        "itemCode": "",
+        "no": "5",
+        "itemCode": "17005046",
         "desc": "Side Clamp For AB Switch Handel",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "SIDE CLAMP FOR AB SWITCH HANDLE",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
-        "sapItems": []
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "55",
-        "itemCode": "",
-        "desc": "Side Clamp For AB Switch Handel Tie",
-        "unit": "Pair",
-        "rate": 50,
-        "sapDescription": "SIDE CLAMP FOR AB SWITCH HANDLE TIE",
-        "sapUom": "PAIR",
-        "sapItems": []
+        "no": "6",
+        "itemCode": "17005046",
+        "desc": "Side Clamp",
+        "unit": "Nos",
+        "rate": 40,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
-        "no": "56",
+        "no": "7",
         "itemCode": "17005046",
         "desc": "Side Clamp For V-Cross Arm (Extension)",
         "unit": "Nos",
         "rate": 40,
         "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005046",
@@ -4646,13 +4664,14 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "57",
+        "no": "8",
         "itemCode": "17005046",
         "desc": "Side Clamp For Top-Clit (Extension)",
         "unit": "Nos",
         "rate": 40,
         "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005046",
@@ -4664,13 +4683,14 @@ const defaultPoleSchedules = {
         ]
       },
       {
-        "no": "58",
+        "no": "9",
         "itemCode": "17005049",
         "desc": "Fish Plate",
         "unit": "Nos",
         "rate": 30,
         "sapDescription": "MS-FISH PLATE-50X10X254-0.99KG",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17005049",
@@ -4684,90 +4704,175 @@ const defaultPoleSchedules = {
       {
         "no": "",
         "itemCode": "",
-        "desc": "Total M.S.Flat 50X10 mm",
-        "unit": "Kg.",
-        "rate": 0,
-        "isSubtotal": true
-      },
-      {
-        "no": "",
-        "itemCode": "",
         "desc": "Weight For M.S.Flat 25x3 mm",
         "unit": "Unit",
         "rate": 0,
         "isSection": true
       },
       {
-        "no": "59",
+        "no": "1",
         "itemCode": "17001300",
         "desc": "Danger Board Clamp",
         "unit": "Kg.",
         "rate": 15,
         "sapDescription": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
         "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
             "code": "17001300",
             "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-            "uom": "NO"
-          }
-        ]
-      },
-      {
-        "no": "60",
-        "itemCode": "17001294",
-        "desc": "Barbed Wire Clamp",
-        "unit": "Kg.",
-        "rate": 15,
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-        "sapUom": "NO",
-        "sapItems": [
-          {
-            "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-            "uom": "NO"
-          }
-        ]
-      },
-      {
-        "no": "",
-        "itemCode": "",
-        "desc": "Concreting ration 1:4:8",
-        "unit": "Unit",
-        "rate": 0,
-        "isSection": true
-      },
-      {
-        "no": "61",
-        "itemCode": "11000336",
-        "desc": "11M RSJ Pole",
-        "unit": "Cmt",
-        "rate": 2500,
-        "sapDescription": "CEMENT GRADE OPC 53",
-        "sapUom": "CMT",
-        "sapItems": [
-          {
-            "code": "11000336",
-            "desc": "CEMENT GRADE OPC 53",
-            "uom": "CMT",
+            "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
-        "no": "62",
-        "itemCode": "11000336",
+        "no": "2",
+        "itemCode": "17001294",
+        "desc": "Barbed Wire Clamp",
+        "unit": "Kg.",
+        "rate": 15,
+        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17001294",
+            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Concreting ration",
+        "unit": "Unit",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "",
+        "desc": "11M RSJ Pole",
+        "unit": "Cmt",
+        "rate": 2500,
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
+        "no": "2",
+        "itemCode": "",
         "desc": "HT Stay Set",
         "unit": "Cmt",
         "rate": 2500,
-        "sapDescription": "CEMENT GRADE OPC 53",
-        "sapUom": "CMT",
+        "sapDescription": "",
+        "sapUom": "",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Nut boult",
+        "unit": "Unit",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000636",
+        "desc": "nut boult 16x150",
+        "unit": "Nos",
+        "rate": 25,
+        "sapDescription": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "11000336",
-            "desc": "CEMENT GRADE OPC 53",
-            "uom": "CMT",
+            "code": "17000636",
+            "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17000625",
+        "desc": "nut boult 16x75",
+        "unit": "Nos",
+        "rate": 20,
+        "sapDescription": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000625",
+            "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17000627",
+        "desc": "nut boult 6x50",
+        "unit": "Nos",
+        "rate": 15,
+        "sapDescription": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000627",
+            "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17000620",
+        "desc": "nut boult 16x35",
+        "unit": "Nos",
+        "rate": 15,
+        "sapDescription": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
+        "sapUom": "SET",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17000620",
+            "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17001130",
+        "desc": "Lugs 120 sqmm",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "LUG AL RING 120 SQMM",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
+        "sapItems": [
+          {
+            "code": "17001130",
+            "desc": "LUG AL RING 120 SQMM",
+            "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
           }
@@ -9079,6 +9184,9 @@ const defaultPoleSchedules = {
   }
 };
 
+if (typeof window !== 'undefined') {
+    window.defaultPoleSchedules = defaultPoleSchedules;
+}
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = defaultPoleSchedules;
 }
