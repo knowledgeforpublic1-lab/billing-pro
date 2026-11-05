@@ -132,7 +132,7 @@
                 selectedLocationIdx: 'ALL',
                 // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
                 // (choice localStorage me yaad rehti hai; Mongo sync me nahi jati — sirf UI mode hai)
-                reverseEntry: (function() { try { return localStorage.getItem('lk_billing_reverse_entry') === '1'; } catch(e) { return false; } })(),
+                reverseEntry: false,
                 // ↩️ Reverse view ka "➕ Item ▾" dropdown + inline entry (reconciliation material)
                 showReverseAddMenu: false,
                 reverseAddSearch: '',
@@ -1248,28 +1248,14 @@
 
                 let filtered = rows;
 
-                if (!this.reverseEntry) {
-                    if (this.reconFilterZeroOnly) {
-                        filtered = rows.filter(r => (
-                            r.totalQty > 0 || 
-                            (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
-                            (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
-                            (r.sapNetIssue && r.sapNetIssue !== 0) ||
-                            ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
-                        ));
-                    }
-                } else {
-                    const codes = this.reverseShownCodes || [];
-                    const cols = this.reverseReconColumns || [];
-                    filtered = rows.filter(r => {
-                        if (codes.indexOf(r.code) === -1) return false;
-                        if (this.reconFilterZeroOnly) {
-                            let t = 0;
-                            for (let i = 0; i < cols.length; i++) t += Number(this.reconCellLoc(r.code, cols[i])) || 0;
-                            return (t > 0 || (r.sapIssuedQty && r.sapIssuedQty !== 0) || ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0));
-                        }
-                        return true;
-                    });
+                if (this.reconFilterZeroOnly) {
+                    filtered = rows.filter(r => (
+                        r.totalQty > 0 || 
+                        (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
+                        (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
+                        (r.sapNetIssue && r.sapNetIssue !== 0) ||
+                        ((typeof this.getPrevReconQty === 'function') && this.getPrevReconQty(r.code) > 0)
+                    ));
                 }
 
                 if (q) {
@@ -1279,11 +1265,6 @@
                     );
                 }
 
-                // ⚡ Precompute _cum, _bal, _isUnmapped & _colVals once for 60fps instant UI
-                const oldRecoCols = (typeof this.getVisibleOldRecoColumns === 'function') 
-                    ? this.getVisibleOldRecoColumns() 
-                    : (Array.isArray(this.visibleOldRecoColumns) ? this.visibleOldRecoColumns : []);
-
                 for (let i = 0; i < filtered.length; i++) {
                     const r = filtered[i];
                     const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
@@ -1292,14 +1273,6 @@
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
                     r._bal = Math.round((net - r._cum) * 100) / 100;
                     r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
-
-                    // Precompute column values so table renders in < 1ms with 0 lag
-                    r._colVals = {};
-                    for (let j = 0; j < oldRecoCols.length; j++) {
-                        const cName = oldRecoCols[j].name;
-                        const v = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, cName, r) : 0;
-                        r._colVals[cName] = (v !== 0 && v !== undefined && v !== null) ? v : '';
-                    }
                 }
 
                 return filtered;
@@ -1674,6 +1647,7 @@
         },
 
         async mounted() {
+        try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
             this._isLoading = true;
             await this.loadFromStorage();
             
