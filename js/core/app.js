@@ -1199,17 +1199,13 @@
                     const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : (r.sapIssuedQty > 0 ? r.sapIssuedQty : 0));
                     const mrn = Number(r.sapMrnReturn || 0);
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
-                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
                     const thisB = Number(r.totalQty) || 0;
-                    const cum = (r._cum !== undefined) ? r._cum : (prevR + thisB);
-                    const bal = (r._bal !== undefined) ? r._bal : (net - cum);
+                    const bal = (r._bal !== undefined) ? r._bal : (net - thisB);
 
                     grossIssue += gross;
                     mrnReturn += mrn;
                     netIssue += net;
-                    prevReconTotal += prevR;
                     thisBillTotal += thisB;
-                    cumulativeReconTotal += cum;
                     balanceTotal += bal;
 
                     if (r.activities) {
@@ -1267,11 +1263,10 @@
 
                 for (let i = 0; i < filtered.length; i++) {
                     const r = filtered[i];
-                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : 0;
                     const thisB = Number(r.totalQty) || 0;
-                    r._cum = Math.round((prevR + thisB) * 100) / 100;
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
-                    r._bal = Math.round((net - r._cum) * 100) / 100;
+                    r._cum = thisB;
+                    r._bal = Math.round((net - thisB) * 100) / 100;
                     r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
                 }
 

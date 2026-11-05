@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261105_v1793872041177">
+    <link rel="stylesheet" href="css/style.css?v=20261105_v1793873024686">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -1524,7 +1524,7 @@
                         <table class="billing-table">
                         <thead>
                             <tr>
-                                <th :colspan="10 + ((visibleOldRecoColumns && visibleOldRecoColumns.length) ? (visibleOldRecoColumns.length + 1) : 1) + (reconColCount || 0)" style="background: linear-gradient(90deg, #1e1b4b 0%, #1e293b 50%, #1e1b4b 100%); color: #ffffff; text-align: center; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.7px; padding: 9px 14px; border: none; text-transform: uppercase; border-bottom: 2px solid rgba(99, 102, 241, 0.4);">
+                                <th :colspan="9 + (reconColCount || 0)" style="background: linear-gradient(90deg, #1e1b4b 0%, #1e293b 50%, #1e1b4b 100%); color: #ffffff; text-align: center; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.7px; padding: 9px 14px; border: none; text-transform: uppercase; border-bottom: 2px solid rgba(99, 102, 241, 0.4);">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
                                 </th>
                             </tr>
@@ -1545,10 +1545,7 @@
                                     NET ISSUE
                                     <div v-if="currentContractorSapInfo" style="font-size: 0.58rem; color: #60a5fa; font-weight: 700; text-transform: uppercase;">⚡ Net Issue</div>
                                 </th>
-                                <th style="width: 85px; border-top: 3px solid #c084fc;" class="text-right" title="Contractor ka Pichla / Purana Reconciled Consumption (Click cell to edit)">
-                                    PURANA RECO
-                                    <div style="font-size: 0.58rem; color: #c084fc; font-weight: 700; text-transform: uppercase;">Prev Recon ✏️</div>
-                                </th>
+
                                 <th v-for="col in reconColumns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
                                     {{ col }}
                                 </th>
@@ -1556,13 +1553,10 @@
                                     THIS BILL
                                     <div style="font-size: 0.58rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase;">Is Bill Qty</div>
                                 </th>
-                                <th style="width: 88px; border-top: 3px solid #34d399;" class="text-right" title="Kul Reconciled Quantity = Purana Reco + This Bill">
-                                    TOTAL RECON
-                                    <div style="font-size: 0.58rem; color: #34d399; font-weight: 700; text-transform: uppercase;">Cumulative</div>
-                                </th>
-                                <th style="width: 85px; border-top: 3px solid #fbbf24;" class="text-right" title="Bacha hua Material = Net Issue - Total Recon">
+
+                                <th style="width: 85px; border-top: 3px solid #fbbf24;" class="text-right" title="Bacha hua Material = Net Issue - This Bill">
                                     BALANCE
-                                    <div style="font-size: 0.58rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">Net - Recon</div>
+                                    <div style="font-size: 0.58rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">Net - Bill</div>
                                 </th>
                             </tr>
                         </thead>
@@ -1608,17 +1602,7 @@
                                     <span v-else-if="row.totalQty > 0" style="color: var(--text-muted); opacity: 0.6;">{{ row.totalQty }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
-                                <!-- Col 8: PURANA RECO (Editable inline input) -->
-                                <td class="text-right font-mono" style="background: rgba(168, 85, 247, 0.08); padding: 2px 4px;" title="Purana Reconciled Consumption (Click cell to edit)">
-                                    <input type="text" class="qty-input font-mono"
-                                        style="width: 78px; text-align: right; background: transparent; border: 1px dashed rgba(168, 85, 247, 0.4); color: #e9d5ff; font-weight: 700; padding: 2px 4px; border-radius: 4px;"
-                                        :value="getPrevReconQty(row.code) || ''" 
-                                        placeholder="0" 
-                                        @change="updatePrevReconQty(row.code, $event.target.value)" 
-                                        @keydown.enter="$event.target.blur()"
-                                        :disabled="isFinalized"
-                                        title="Pichla reconciled consumption likhein">
-                                </td>
+
                                 <td v-for="col in reconColumns" :key="col" class="text-center font-mono">
                                     {{ row.activities[col] > 0 ? format2Dec(row.activities[col]) : '' }}
                                 </td>
@@ -1627,11 +1611,7 @@
                                     <span v-if="row.totalQty > 0">{{ format2Dec(row.totalQty) }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
-                                <!-- TOTAL RECON -->
-                                <td class="text-right font-mono font-bold" style="background: rgba(16, 185, 129, 0.10); font-size: 0.90rem; color: #34d399;" title="Kul Reconciled = Purana + This Bill">
-                                    <span v-if="row._cum > 0">{{ format2Dec(row._cum) }}</span>
-                                    <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
-                                </td>
+
                                 <!-- BALANCE -->
                                 <td class="text-right font-mono font-bold" 
                                     :style="row._bal < 0 ? 'background: rgba(239, 68, 68, 0.20); color: #f87171;' : 'background: rgba(245, 158, 11, 0.08); color: #fbbf24;'" 
@@ -1641,7 +1621,7 @@
                                 </td>
                             </tr>
                             <tr v-if="reconRows.length === 0">
-                                <td :colspan="10 + (reconColCount || 0)" class="text-center" style="padding: 2rem; color: var(--text-muted);">
+                                <td :colspan="9 + (reconColCount || 0)" class="text-center" style="padding: 2rem; color: var(--text-muted);">
                                     No SAP Materials mapped with quantities yet.
                                 </td></tr>
                         </tbody>
@@ -1659,18 +1639,14 @@
                                 <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.22); color: #93c5fd; font-size: 0.94rem;">
                                     {{ reconTotals.netIssue > 0 ? reconTotals.netIssue.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                 </td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(168, 85, 247, 0.18); color: #e9d5ff; font-size: 0.92rem;">
-                                    {{ reconTotals.prevRecon > 0 ? reconTotals.prevRecon.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
+
                                 <td v-for="col in reconColumns" :key="col" class="text-center font-mono font-bold" style="color: #cbd5e1; font-size: 0.85rem;">
                                     {{ reconTotals.activities[col] > 0 ? reconTotals.activities[col].toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                 </td>
                                 <td class="text-right font-mono font-bold" style="background: rgba(99, 102, 241, 0.18); color: #c7d2fe; font-size: 0.92rem;">
                                     {{ reconTotals.thisBill > 0 ? reconTotals.thisBill.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                 </td>
-                                <td class="text-right font-mono font-bold" style="background: rgba(16, 185, 129, 0.22); color: #6ee7b7; font-size: 0.94rem;">
-                                    {{ reconTotals.cumulativeRecon > 0 ? reconTotals.cumulativeRecon.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
-                                </td>
+
                                 <td class="text-right font-mono font-bold" style="background: rgba(245, 158, 11, 0.20); color: #fde68a; font-size: 0.94rem;">
                                     {{ reconTotals.balance ? reconTotals.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
                                 </td>
@@ -3309,35 +3285,35 @@
     <!-- ============================================ -->
 
     <!-- Data Constants (loaded first) -->
-    <script src="js/data/default-sap-materials.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-activities.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-pole-schedules.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-contractors.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-master-abstract.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-companies.js?v=20261105_v1793872041177"></script>
-    <script src="js/data/default-invoice.js?v=20261105_v1793872041177"></script>
+    <script src="js/data/default-sap-materials.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/contractor-old-reconciliation.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-activities.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-pole-schedules.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-contractors.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-master-abstract.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-companies.js?v=20261105_v1793873024686"></script>
+    <script src="js/data/default-invoice.js?v=20261105_v1793873024686"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script src="js/core/storage.js?v=20261105_v1793872041177"></script>
+    <script src="js/core/storage.js?v=20261105_v1793873024686"></script>
 
     <!-- Utility Modules -->
-    <script src="js/utils.js?v=20261105_v1793872041177"></script>
-    <script src="js/history.js?v=20261105_v1793872041177"></script>
+    <script src="js/utils.js?v=20261105_v1793873024686"></script>
+    <script src="js/history.js?v=20261105_v1793873024686"></script>
 
     <!-- Feature Modules -->
-    <script src="js/sync.js?v=20261105_v1793872041177"></script>
-    <script src="js/billing.js?v=20261105_v1793872041177"></script>
-    <script src="js/mapping.js?v=20261105_v1793872041177"></script>
-    <script src="js/views.js?v=20261105_v1793872041177"></script>
-    <script src="js/export.js?v=20261105_v1793872041177"></script>
-    <script src="js/pole-schedule.js?v=20261105_v1793872041177"></script>
-    <script src="js/stock-importer.js?v=20261105_v1793872041177"></script>
-    <script src="js/old-reco-importer.js?v=20261105_v1793872041177"></script>
+    <script src="js/sync.js?v=20261105_v1793873024686"></script>
+    <script src="js/billing.js?v=20261105_v1793873024686"></script>
+    <script src="js/mapping.js?v=20261105_v1793873024686"></script>
+    <script src="js/views.js?v=20261105_v1793873024686"></script>
+    <script src="js/export.js?v=20261105_v1793873024686"></script>
+    <script src="js/pole-schedule.js?v=20261105_v1793873024686"></script>
+    <script src="js/stock-importer.js?v=20261105_v1793873024686"></script>
+    <script src="js/old-reco-importer.js?v=20261105_v1793873024686"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script src="js/core/app.js?v=20261105_v1793872041177"></script>
+    <script src="js/core/app.js?v=20261105_v1793873024686"></script>
 </body>
 
 </html>
