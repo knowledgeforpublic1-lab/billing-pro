@@ -613,9 +613,12 @@
 
                                         <!-- Normal Material Row -->
                                         <template v-else>
-                                            <td class="text-center no-print" style="white-space: nowrap;">
-                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Niche naya row insert karein (+ Row Below)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 5px; font-size: 0.70rem; cursor: pointer; font-weight: 800;">➕</button>
-                                                <button v-if="item.isExtra || item.isCustom" type="button" @click.stop="removePoleScheduleMaterial(item.origIndex)" title="Is row ko delete karein" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; border-radius: 4px; padding: 2px 5px; font-size: 0.70rem; cursor: pointer; font-weight: 800; margin-left: 2px;">🗑️</button>
+                                            <td class="text-center no-print" style="white-space: nowrap; padding: 2px 4px;">
+                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Niche naya row insert karein (+ Row Below)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 3px; padding: 2px 4px; font-size: 0.68rem; cursor: pointer; font-weight: 800;">➕</button>
+                                                <button type="button" @click.stop="duplicatePoleScheduleMaterial(item.origIndex)" title="Is row ko duplicate karein" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; border-radius: 3px; padding: 2px 4px; font-size: 0.68rem; cursor: pointer; font-weight: 800; margin-left: 2px;">📋</button>
+                                                <button type="button" @click.stop="movePoleScheduleMaterialUp(item.origIndex)" :disabled="item.origIndex === 0" title="Move Up" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.72rem; padding: 0 1px;">⬆️</button>
+                                                <button type="button" @click.stop="movePoleScheduleMaterialDown(item.origIndex)" :disabled="item.origIndex >= (currentPoleSchedule.materials.length - 1)" title="Move Down" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.72rem; padding: 0 1px;">⬇️</button>
+                                                <button v-if="item.isExtra || item.isCustom" type="button" @click.stop="removePoleScheduleMaterial(item.origIndex)" title="Is custom row ko delete karein" style="background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.45); color: #f87171; border-radius: 3px; padding: 2px 4px; font-size: 0.68rem; cursor: pointer; font-weight: 800; margin-left: 2px;">🗑️</button>
                                             </td>
                                             <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
                                             <td class="text-center font-mono">
@@ -2265,13 +2268,25 @@
                 </div>
                 <div class="modal-body" style="padding: 1.25rem;">
                     <!-- Insert Position Indicator -->
+                    <!-- Row Type Toggle (Normal Material vs Section Header) -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 1rem; background: rgba(15, 23, 42, 0.6); padding: 4px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.25);">
+                        <button type="button" @click="psNewMaterial.rowType = 'material'" 
+                            :style="{ flex: 1, padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', border: 'none', transition: 'all 0.2s', background: psNewMaterial.rowType !== 'section' ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : 'transparent', color: psNewMaterial.rowType !== 'section' ? '#ffffff' : '#94a3b8' }">
+                            📦 Material Item
+                        </button>
+                        <button type="button" @click="psNewMaterial.rowType = 'section'" 
+                            :style="{ flex: 1, padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', border: 'none', transition: 'all 0.2s', background: psNewMaterial.rowType === 'section' ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' : 'transparent', color: psNewMaterial.rowType === 'section' ? '#ffffff' : '#94a3b8' }">
+                            📑 Section Divider / Header
+                        </button>
+                    </div>
+
                     <div style="margin-bottom: 1rem; padding: 7px 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; font-size: 0.82rem; color: #c7d2fe; display: flex; justify-content: space-between; align-items: center;">
                         <span>📍 <strong>Position:</strong> {{ psNewMaterial.insertAfterIdx >= 0 ? ('Row ' + (psNewMaterial.insertAfterIdx + 1) + ' ke theek niche insert hoga') : 'Pole Schedule ke aakhiri (Bottom) me add hoga' }}</span>
                         <a href="javascript:void(0)" @click="psNewMaterial.insertAfterIdx = -1" v-if="psNewMaterial.insertAfterIdx >= 0" style="color: #fbbf24; font-size: 0.75rem; font-weight: 700; text-decoration: underline;">Change to End</a>
                     </div>
 
-                    <!-- SAP Material Search / Code -->
-                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                    <!-- SAP Material Search / Code (Hidden for section headers) -->
+                    <div v-if="psNewMaterial.rowType !== 'section'" class="form-group" style="margin-bottom: 0.85rem;">
                         <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Item Code (SAP Code)</label>
                         <div style="position: relative;">
                             <input type="text" v-model="psNewMaterial.codeSearch" 
@@ -2304,9 +2319,9 @@
                     </div>
 
                     <!-- Row Grid: Item No, Unit, Rate -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.5rem;">
                         <div class="form-group">
-                            <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Item No</label>
+                            <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">{{ psNewMaterial.rowType === 'section' ? 'Section No' : 'Item No' }}</label>
                             <input type="text" v-model="psNewMaterial.no" placeholder="Auto" 
                                 style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
                         </div>
@@ -2315,11 +2330,21 @@
                             <input type="text" v-model="psNewMaterial.unit" placeholder="No. / Set / Kg." 
                                 style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" v-if="psNewMaterial.rowType !== 'section'">
                             <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; display: block; color: #cbd5e1;">Unit Rate (₹)</label>
                             <input type="number" step="any" v-model.number="psNewMaterial.rate" placeholder="0" 
                                 style="width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: #ffffff; font-size: 0.85rem;">
                         </div>
+                    </div>
+
+                    <!-- Quick UOM selection pills -->
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center;">
+                        <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 700;">Quick Unit:</span>
+                        <span v-for="u in ['No.', 'Set', 'Kg.', 'Rmt', 'Mtr', 'Cmt.', 'Pair', 'Lot']" :key="u"
+                            @click="psNewMaterial.unit = u"
+                            :style="{ cursor: 'pointer', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800, background: psNewMaterial.unit === u ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.06)', color: psNewMaterial.unit === u ? '#a5b4fc' : '#cbd5e1', border: psNewMaterial.unit === u ? '1px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.1)' }">
+                            {{ u }}
+                        </span>
                     </div>
 
                     <!-- Modal Actions -->

@@ -48,11 +48,15 @@ window.PoleScheduleModule = {
             } else if (this.locations && this.locations.length > 0) {
                 this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(this.locations));
             } else {
-                this.poleScheduleLocations[k] = [
-                    { name: 'Ra-09 Bodhali' },
-                    { name: 'Ra-09 Gogaon' },
-                    { name: 'Ra-09 Nawegaon' }
-                ];
+                this.poleScheduleLocations[k] = [{ name: 'Location 1' }];
+            }
+        }
+        if (Array.isArray(this.poleScheduleLocations[k]) && this.poleScheduleLocations[k].length === 3) {
+            const isDummyTrio = this.poleScheduleLocations[k][0].name === 'Ra-09 Bodhali' &&
+                this.poleScheduleLocations[k][1].name === 'Ra-09 Gogaon' &&
+                this.poleScheduleLocations[k][2].name === 'Ra-09 Nawegaon';
+            if (isDummyTrio && !this.hasPoleScheduleQuantities(k)) {
+                this.poleScheduleLocations[k] = [{ name: 'Location 1' }];
             }
         }
         return this.poleScheduleLocations[k];
@@ -452,7 +456,7 @@ window.PoleScheduleModule = {
         if (insertAfterIdx >= 0 && sched && sched.materials && sched.materials[insertAfterIdx]) {
             const prev = sched.materials[insertAfterIdx];
             if (prev.no) {
-                suggestedNo = prev.no + 'a';
+                suggestedNo = this.suggestNextPsItemNo(prev.no);
             }
         } else if (sched && sched.materials) {
             suggestedNo = (sched.materials.length + 1).toString();
@@ -505,6 +509,146 @@ window.PoleScheduleModule = {
         this.showPsExtraItemSuggest = false;
     },
 
+
+    suggestNextPsItemNo(currentNo) {
+        if (!currentNo) return '';
+        currentNo = String(currentNo).trim();
+        const matchLetter = currentNo.match(/^(\d+)([a-zA-Z])$/);
+        if (matchLetter) {
+            const prefix = matchLetter[1];
+            const nextChar = String.fromCharCode(matchLetter[2].charCodeAt(0) + 1);
+            return prefix + nextChar;
+        }
+        const matchNum = currentNo.match(/^(\d+)$/);
+        if (matchNum) {
+            return matchNum[1] + 'a';
+        }
+        return currentNo + 'a';
+    },
+
+    movePoleScheduleMaterialUp(mIdx) {
+        if (this.isFinalized || mIdx <= 0) return;
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        if (!sched || !Array.isArray(sched.materials)) return;
+
+        const prevIdx = mIdx - 1;
+        const tmp = sched.materials[mIdx];
+        sched.materials[mIdx] = sched.materials[prevIdx];
+        sched.materials[prevIdx] = tmp;
+
+        // Swap quantities
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+            const qMat = this.poleScheduleQuantities[k];
+            Object.keys(qMat).forEach(lIdx => {
+                const row = qMat[lIdx];
+                if (row) {
+                    const v1 = row[mIdx];
+                    const v2 = row[prevIdx];
+                    if (v2 !== undefined) row[mIdx] = v2; else delete row[mIdx];
+                    if (v1 !== undefined) row[prevIdx] = v1; else delete row[prevIdx];
+                }
+            });
+        }
+
+        if (this.poleSchedules) {
+            this.poleSchedules[k] = sched;
+            this.poleSchedules = { ...this.poleSchedules };
+        }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+    },
+
+    movePoleScheduleMaterialDown(mIdx) {
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        if (!sched || !Array.isArray(sched.materials)) return;
+        if (this.isFinalized || mIdx >= sched.materials.length - 1) return;
+
+        const nextIdx = mIdx + 1;
+        const tmp = sched.materials[mIdx];
+        sched.materials[mIdx] = sched.materials[nextIdx];
+        sched.materials[nextIdx] = tmp;
+
+        // Swap quantities
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+            const qMat = this.poleScheduleQuantities[k];
+            Object.keys(qMat).forEach(lIdx => {
+                const row = qMat[lIdx];
+                if (row) {
+                    const v1 = row[mIdx];
+                    const v2 = row[nextIdx];
+                    if (v2 !== undefined) row[mIdx] = v2; else delete row[mIdx];
+                    if (v1 !== undefined) row[nextIdx] = v1; else delete row[nextIdx];
+                }
+            });
+        }
+
+        if (this.poleSchedules) {
+            this.poleSchedules[k] = sched;
+            this.poleSchedules = { ...this.poleSchedules };
+        }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+    },
+
+    duplicatePoleScheduleMaterial(mIdx) {
+        if (this.isFinalized) {
+            this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
+            return;
+        }
+        const k = this.selectedPoleScheduleKey || '907';
+        const sched = this.getCurrentPoleSchedule();
+        if (!sched || !Array.isArray(sched.materials)) return;
+        const origMat = sched.materials[mIdx];
+        if (!origMat) return;
+
+        const newMat = JSON.parse(JSON.stringify(origMat));
+        newMat.no = this.suggestNextPsItemNo(origMat.no) || (origMat.no ? (origMat.no + 'a') : '');
+        newMat.isCustom = true;
+        newMat.isExtra = true;
+
+        const insertIdx = mIdx + 1;
+        sched.materials.splice(insertIdx, 0, newMat);
+
+        // Shift quantities keys
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) {
+            const qMat = this.poleScheduleQuantities[k];
+            Object.keys(qMat).forEach(lIdx => {
+                const row = qMat[lIdx];
+                if (row) {
+                    const newRow = {};
+                    Object.keys(row).forEach(mStr => {
+                        const m = Number(mStr);
+                        if (m < insertIdx) {
+                            newRow[m] = row[m];
+                        } else {
+                            newRow[m + 1] = row[m];
+                        }
+                    });
+                    qMat[lIdx] = newRow;
+                }
+            });
+        }
+
+        if (this.poleSchedules) {
+            this.poleSchedules[k] = sched;
+            this.poleSchedules = { ...this.poleSchedules };
+        }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+        }
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+        this.showToast(`Item "${newMat.desc}" duplicated below! 📋`, '✅');
+    },
+
     submitAddPoleScheduleMaterial() {
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
@@ -543,7 +687,16 @@ window.PoleScheduleModule = {
         const sUom = (sapItem && sapItem.uom) || this.psNewMaterial.sapUom || this.psNewMaterial.unit || 'No.';
         const itemNo = this.psNewMaterial.no || (sched.materials.length + 1).toString();
 
-        const newMat = {
+        const isSection = this.psNewMaterial.rowType === 'section';
+        const newMat = isSection ? {
+            no: '',
+            desc: this.psNewMaterial.desc.trim(),
+            unit: this.psNewMaterial.unit ? this.psNewMaterial.unit.trim() : 'Kg.',
+            rate: 0,
+            itemCode: '',
+            isSection: true,
+            isCustom: true
+        } : {
             no: itemNo,
             desc: this.psNewMaterial.desc.trim(),
             unit: this.psNewMaterial.unit || sUom || 'No.',

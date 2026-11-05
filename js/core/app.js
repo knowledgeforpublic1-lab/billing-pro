@@ -75,6 +75,7 @@
                     desc: '',
                     unit: 'No.',
                     rate: 0,
+                    rowType: 'material',
                     codeSearch: '',
                     sapCode: '',
                     sapDescription: '',
@@ -267,9 +268,7 @@
                     aaacDivisor: 3150
                 },
                 locations: [
-                    { name: 'Ra-09 Bodhali' },
-                    { name: 'Ra-09 Gogaon' },
-                    { name: 'Ra-09 Nawegaon' }
+                    { name: 'Location 1' }
                 ],
                 activityLocations: {},
                 activities: (function() {
@@ -2006,6 +2005,30 @@
             } catch(e) {}
 
             this._isLoading = false;
+            // Normalize dummy trio locations to single Location 1 if unused
+            try {
+                if (this.locations && this.locations.length === 3 &&
+                    this.locations[0].name === 'Ra-09 Bodhali' &&
+                    this.locations[1].name === 'Ra-09 Gogaon' &&
+                    this.locations[2].name === 'Ra-09 Nawegaon') {
+                    this.locations = [{ name: 'Location 1' }];
+                }
+                if (this.poleScheduleLocations && typeof this.poleScheduleLocations === 'object') {
+                    Object.keys(this.poleScheduleLocations).forEach(k => {
+                        const locs = this.poleScheduleLocations[k];
+                        if (Array.isArray(locs) && locs.length === 3 &&
+                            locs[0].name === 'Ra-09 Bodhali' &&
+                            locs[1].name === 'Ra-09 Gogaon' &&
+                            locs[2].name === 'Ra-09 Nawegaon') {
+                            const hasQty = typeof this.hasPoleScheduleQuantities === 'function' && this.hasPoleScheduleQuantities(k);
+                            if (!hasQty) {
+                                this.poleScheduleLocations[k] = [{ name: 'Location 1' }];
+                            }
+                        }
+                    });
+                }
+            } catch(e) {}
+
             // Initial history snapshot
             this.takeSnapshot();
 
