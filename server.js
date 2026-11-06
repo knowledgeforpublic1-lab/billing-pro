@@ -29,8 +29,8 @@ app.use((req, res, next) => {
   let p = '';
   try { p = decodeURI(req.url); } catch(e) { p = req.url; }
   if (p.startsWith('/Reconciliation master')) {
-    if (p.includes('data.js') || p.includes('data.json') || p.includes('upload.php')) {
-      return res.status(403).send('Forbidden: Sensitive dataset is protected.');
+    if (p.includes('upload.php')) {
+      return res.status(403).send('Forbidden: PHP execution disabled.');
     }
     return express.static(path.join(__dirname, 'Reconciliation master'))(
       Object.assign(req, { url: p.replace('/Reconciliation master', '') || '/' }),

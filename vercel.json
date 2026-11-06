@@ -27,11 +27,11 @@
   ],
   "routes": [
     {
-      "src": "^/Reconciliation[ %]20master/(data\\.(js|json)|upload\\.php)",
+      "src": "^/Reconciliation[ %]20master/(data\\.json|upload\\.php)",
       "status": 403
     },
     {
-      "src": "^/Reconciliation master/(data\\.(js|json)|upload\\.php)",
+      "src": "^/Reconciliation master/(data\\.json|upload\\.php)",
       "status": 403
     },
     {

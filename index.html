@@ -124,55 +124,99 @@
                         </div>
                     </div>
 
-                    <!-- Row 2: Sub-bar Context & Bill Actions -->
+                    <!-- Row 2: Sub-bar Context & Bill Actions (Cleanly scoped per active view) -->
                     <div class="saas-nav-row-sub">
-                        <!-- Left: Client & Contractor Meta -->
-                        <div class="sub-context-cluster">
-                            <span class="context-lbl">CLIENT</span>
-                            <span class="context-val">{{ projectMeta.clientName || 'ASHOKA BUILDCON LTD.' }}</span>
-                            <span class="context-sep">•</span>
-                            <span class="context-lbl">CONTRACTOR</span>
-                            <span class="context-val contractor-amber" @click="openSavedBillsManager('database')" title="Assigned Contractor (Click to switch)">
-                                {{ getContractorDisplayName() || 'M/s Ranjeet Singh' }}
-                            </span>
-                        </div>
-
-                        <!-- Right: Bill Controls (Open Bill, RA No, + New Bill, Drive Backup) -->
-                        <div class="sub-actions-cluster">
-                            <!-- Open Bill Pill -->
-                            <div class="saas-pill open-bill-pill" @click="openSavedBillsManager('database')" title="Search or Open Saved Bills (Click / ⌘K)">
-                                <span>📁</span>
-                                <span>Open Bill</span>
-                                <span class="bill-id-chip">{{ effectiveBillNo || 'RSL/RA/02' }}</span>
-                                <span class="dropdown-chevron">▾</span>
+                        <!-- 🌐 Context 1: Master Multi-Contractor Reconciliation Hub -->
+                        <template v-if="currentView === 'masterrecon'">
+                            <div class="sub-context-cluster">
+                                <span class="context-lbl">PROJECT</span>
+                                <span class="context-val">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}</span>
+                                <span class="context-sep">•</span>
+                                <span class="context-lbl">AUDIT SCOPE</span>
+                                <span class="context-val contractor-amber">ALL 62 CONTRACTOR PACKAGES</span>
+                                <span class="context-sep">•</span>
+                                <span class="context-lbl">PORTAL</span>
+                                <span class="context-val" style="color: #818cf8; font-weight: 700;">CROSS-PROJECT RECONCILIATION & LIABILITY HUB</span>
                             </div>
-
-                            <!-- RA No Pill -->
-                            <div class="saas-pill ra-pill" title="Current RA Bill Number. Click to edit.">
-                                <span>🏷️</span>
-                                <span class="ra-label">RA:</span>
-                                <input type="text"
-                                    :value="effectiveRaNo"
-                                    @input="updateRaNo($event.target.value)"
-                                    placeholder="02"
-                                    title="RA Bill No"
-                                    class="ra-input font-mono">
+                            <div class="sub-actions-cluster">
+                                <span class="saas-pill" style="pointer-events: none; opacity: 0.95; background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3); color: #a5b4fc;">
+                                    <span>🌐</span>
+                                    <span>Global Audit Scope</span>
+                                </span>
+                                <span class="saas-pill" style="pointer-events: none; opacity: 0.95; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+                                    <span>📦</span>
+                                    <span>62 Packages Tracked</span>
+                                </span>
                             </div>
+                        </template>
 
-                            <!-- Vibrant Emerald Primary CTA: + New Bill -->
-                            <button class="btn-new-bill-emerald" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
-                                <span class="plus-sign">+</span>
-                                <span>New Bill</span>
-                            </button>
-
-                            <!-- Google Drive Backup Pill -->
-                            <div class="saas-pill drive-pill-btn"
-                                @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
-                                :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook.' : 'Connect Google Drive'">
-                                <span>📁</span>
-                                <span>Drive Backup</span>
+                        <!-- 🏠 Context 2: Executive Dashboard Landing Page -->
+                        <template v-else-if="currentView === 'dashboard' || currentView === 'summary'">
+                            <div class="sub-context-cluster">
+                                <span class="context-lbl">CLIENT</span>
+                                <span class="context-val">{{ projectMeta.clientName || 'ASHOKA BUILDCON LTD.' }}</span>
+                                <span class="context-sep">•</span>
+                                <span class="context-lbl">ACTIVE WORKBOOK</span>
+                                <span class="context-val contractor-amber" @click="openSavedBillsManager('database')" title="Current active contractor workbook (Click to switch)">
+                                    {{ getContractorDisplayName() || 'M/s Ranjeet Singh' }}
+                                </span>
+                                <span class="context-sep">•</span>
+                                <span class="context-val" style="color: #94a3b8; font-size: 0.76rem;">({{ effectiveBillNo || 'RSL/RA/02' }})</span>
                             </div>
-                        </div>
+                            <div class="sub-actions-cluster">
+                                <div class="saas-pill open-bill-pill" @click="openSavedBillsManager('database')" title="Search or Open Saved Bills (Click / ⌘K)">
+                                    <span>📁</span>
+                                    <span>Open Bill</span>
+                                    <span class="bill-id-chip">{{ effectiveBillNo || 'RSL/RA/02' }}</span>
+                                    <span class="dropdown-chevron">▾</span>
+                                </div>
+                                <button class="btn-new-bill-emerald" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
+                                    <span class="plus-sign">+</span>
+                                    <span>New Bill</span>
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- 📄 Context 3: Bill Workbook Editing (Invoice, Activity, Pole Schedule, Reco Sheet) -->
+                        <template v-else>
+                            <div class="sub-context-cluster">
+                                <span class="context-lbl">CLIENT</span>
+                                <span class="context-val">{{ projectMeta.clientName || 'ASHOKA BUILDCON LTD.' }}</span>
+                                <span class="context-sep">•</span>
+                                <span class="context-lbl">CONTRACTOR</span>
+                                <span class="context-val contractor-amber" @click="openSavedBillsManager('database')" title="Assigned Contractor (Click to switch)">
+                                    {{ getContractorDisplayName() || 'M/s Ranjeet Singh' }}
+                                </span>
+                            </div>
+                            <div class="sub-actions-cluster">
+                                <div class="saas-pill open-bill-pill" @click="openSavedBillsManager('database')" title="Search or Open Saved Bills (Click / ⌘K)">
+                                    <span>📁</span>
+                                    <span>Open Bill</span>
+                                    <span class="bill-id-chip">{{ effectiveBillNo || 'RSL/RA/02' }}</span>
+                                    <span class="dropdown-chevron">▾</span>
+                                </div>
+                                <div class="saas-pill ra-pill" title="Current RA Bill Number. Click to edit.">
+                                    <span>🏷️</span>
+                                    <span class="ra-label">RA:</span>
+                                    <input type="text"
+                                        :value="effectiveRaNo"
+                                        @input="updateRaNo($event.target.value)"
+                                        placeholder="02"
+                                        title="RA Bill No"
+                                        class="ra-input font-mono">
+                                </div>
+                                <button class="btn-new-bill-emerald" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
+                                    <span class="plus-sign">+</span>
+                                    <span>New Bill</span>
+                                </button>
+                                <div class="saas-pill drive-pill-btn"
+                                    @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
+                                    :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook.' : 'Connect Google Drive'">
+                                    <span>📁</span>
+                                    <span>Drive Backup</span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </header>
 
@@ -181,7 +225,7 @@
                     <main class="center-content">
                         <div class="main-container">
                             <!-- Lock Status Alert Ribbon when Bill is Finalized -->
-                            <div v-if="isFinalized" class="no-print"
+                            <div v-if="isFinalized && currentView !== 'dashboard' && currentView !== 'summary' && currentView !== 'masterrecon'" class="no-print"
                                 style="margin-bottom: 1.25rem; background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; color: #b91c1c; padding: 0.75rem 1.25rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.88rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <span style="font-size: 1.1rem;">🔒</span>
@@ -1667,8 +1711,9 @@
                                 <span>Reset</span>
                             </button>
                         </div>
+                    </div>
 
-                        <!-- Right: Reverse Mode, Filter & Excel Export -->
+                    <!-- Right: Reverse Mode, Filter & Excel Export -->
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         
 
@@ -1860,7 +1905,7 @@
             </div>
 
         <!-- Footer Info Bar -->
-        <div class="footer-info-strip no-print">
+        <div class="footer-info-strip no-print" v-if="currentView !== 'masterrecon'">
             <div class="fi-item">
                 <span>⚡</span>
                 <strong>Billing Pro v6.0</strong>
