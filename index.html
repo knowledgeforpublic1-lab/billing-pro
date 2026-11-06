@@ -1998,16 +1998,6 @@
                             </div>
                         </div>
 
-                        <!-- 🔴 Unmapped Stock Items Alert Pill -->
-                        <button v-if="unmappedContractorIssuedItems && unmappedContractorIssuedItems.length" type="button" 
-                            @click="switchView('mapping')" 
-                            class="btn-unmapped-pill" 
-                            :title="unmappedContractorIssuedItems.length + ' unmapped SAP stock items found. Click to open SAP Mapping and map them.'" 
-                            style="height: 32px; padding: 0 10px; border-radius: 8px; font-weight: 800; font-size: 0.76rem; cursor: pointer; border: 1.5px solid rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.18); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>
-                            <span>{{ unmappedContractorIssuedItems.length }} Unmapped</span>
-                            <span style="font-size: 0.68rem; color: #f87171; text-decoration: underline; font-weight: 700;">Fix in Mapping ➔</span>
-                        </button>
 
                         <!-- Vertical Divider -->
                         <div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.12);"></div>
