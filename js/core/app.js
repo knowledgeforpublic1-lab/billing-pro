@@ -90,6 +90,14 @@
                 poleScheduleLocations: {},
                 poleScheduleQuantities: {},
                 poleScheduleSearchQuery: '',
+                poleScheduleFilterQty: 'ALL',
+                poleScheduleFilterSap: 'ALL',
+                poleScheduleFilterUnit: 'ALL',
+                poleScheduleColumnFilters: {},
+                poleScheduleActiveFilterCol: null,
+                poleScheduleSortCol: null,
+                poleScheduleSortDir: 'asc',
+                poleScheduleColSearch: '',
                 showPsAddMaterialModal: false,
                 showPsExtraItemSuggest: false,
                 psExtraItemSuggestions: [],
@@ -206,6 +214,8 @@
                 showNutBoltModal: false,
                 showConcretingModal: false,
                 selectedAugerSize: 22,
+                poleScheduleAutoConcreting: true,
+                stayConcretingUnitVol: 0.125,
                 nutBoltData: [
                     { size: '16×65', unit: 'nos', weight: 0.164, qty: '' },
                     { size: '16×35', unit: 'nos', weight: 0.119, qty: '' },
@@ -372,6 +382,17 @@
             },
             poleScheduleTotals() {
                 return typeof this.getPoleScheduleTotals === 'function' ? this.getPoleScheduleTotals() : { totalQty: 0, totalAmt100: 0, totalAmtStage1: 0 };
+            },
+            filteredPoleScheduleTotals() {
+                return typeof this.getFilteredPoleScheduleTotals === 'function' ? this.getFilteredPoleScheduleTotals() : { totalQty: 0, totalAmt100: 0, totalAmtStage1: 0, count: 0 };
+            },
+            isPoleScheduleFilterActive() {
+                return (this.poleScheduleFilterQty && this.poleScheduleFilterQty !== 'ALL') ||
+                       (this.poleScheduleFilterSap && this.poleScheduleFilterSap !== 'ALL') ||
+                       (this.poleScheduleFilterUnit && this.poleScheduleFilterUnit !== 'ALL') ||
+                       (this.poleScheduleSearchQuery && this.poleScheduleSearchQuery.trim() !== '') ||
+                       (this.poleScheduleColumnFilters && Object.keys(this.poleScheduleColumnFilters).some(k => this.poleScheduleColumnFilters[k])) ||
+                       (this.poleScheduleSortCol !== null);
             },
             hasDriveConnected() {
                 const raw = (this.gdriveWebhookUrl || '').trim()

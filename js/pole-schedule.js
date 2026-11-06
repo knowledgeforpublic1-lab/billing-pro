@@ -27,16 +27,292 @@ window.PoleScheduleModule = {
     getFilteredPoleScheduleMaterials() {
         const mats = this.getPoleScheduleMaterials();
         const q = (this.poleScheduleSearchQuery || '').trim().toLowerCase();
-        if (!q) return mats.map((m, idx) => Object.assign({}, m, { origIndex: idx }));
-        return mats
-            .map((m, idx) => Object.assign({}, m, { origIndex: idx }))
-            .filter(m => {
-                if (m.isSection) return true;
+        const qtyFilter = this.poleScheduleFilterQty || 'ALL';
+        const sapFilter = this.poleScheduleFilterSap || 'ALL';
+        const unitFilter = (this.poleScheduleFilterUnit || 'ALL').trim().toUpperCase();
+        const colFilters = this.poleScheduleColumnFilters || {};
+        const sortCol = this.poleScheduleSortCol;
+        const sortDir = this.poleScheduleSortDir || 'asc';
+
+        const isFiltering = !!(q || qtyFilter !== 'ALL' || sapFilter !== 'ALL' || unitFilter !== 'ALL' || Object.values(colFilters).some(v => v && String(v).trim()));
+
+        // Map items with origIndex
+        const mapped = mats.map((m, idx) => Object.assign({}, m, { origIndex: idx }));
+
+        if (!isFiltering && !sortCol) {
+            return mapped;
+        }
+
+        // Filter items
+        let filtered = mapped.filter(m => {
+            if (m.isSection) return true; // section header handled below
+
+            // 1. Text Search query (Item No, SAP Code, Description, SAP Description, Unit)
+            if (q) {
                 const code = String(m.itemCode || '').toLowerCase();
                 const desc = String(m.desc || '').toLowerCase();
                 const sapDesc = String(m.sapDescription || '').toLowerCase();
-                return code.includes(q) || desc.includes(q) || sapDesc.includes(q);
+                const no = String(m.no || '').toLowerCase();
+                const unit = String(m.unit || '').toLowerCase();
+                if (!code.includes(q) && !desc.includes(q) && !sapDesc.includes(q) && !no.includes(q) && !unit.includes(q)) {
+                    return false;
+                }
+            }
+
+            // 2. Quantity Filter
+            const totQty = this.getPoleScheduleItemTotalQty(m.origIndex);
+            if (qtyFilter === 'WITH_QTY') {
+                if (totQty <= 0) return false;
+            } else if (qtyFilter === 'ZERO_QTY') {
+                if (totQty > 0) return false;
+            }
+
+            // 3. SAP Mapping Filter
+            const hasSap = !!(m.itemCode && String(m.itemCode).trim());
+            if (sapFilter === 'MAPPED') {
+                if (!hasSap) return false;
+            } else if (sapFilter === 'UNMAPPED') {
+                if (hasSap) return false;
+            }
+
+            // 4. Unit Filter
+            if (unitFilter !== 'ALL') {
+                const mUnit = String(m.unit || '').trim().toUpperCase();
+                if (mUnit !== unitFilter) return false;
+            }
+
+            // 5. Individual Column Filters
+            if (colFilters.itemNo && String(m.no || '').toLowerCase().indexOf(String(colFilters.itemNo).toLowerCase()) === -1) return false;
+            if (colFilters.itemCode && String(m.itemCode || '').toLowerCase().indexOf(String(colFilters.itemCode).toLowerCase()) === -1) return false;
+            if (colFilters.desc && String(m.desc || '').toLowerCase().indexOf(String(colFilters.desc).toLowerCase()) === -1) return false;
+            if (colFilters.unit && String(m.unit || '').toLowerCase().indexOf(String(colFilters.unit).toLowerCase()) === -1) return false;
+            if (colFilters.totalQty) {
+                const cf = String(colFilters.totalQty).trim();
+                if (cf === '>0' && totQty <= 0) return false;
+                if (cf === '=0' && totQty > 0) return false;
+                if (!isNaN(parseFloat(cf)) && Math.abs(totQty - parseFloat(cf)) > 0.001) return false;
+            }
+            if (colFilters.rate) {
+                const cr = String(colFilters.rate).trim();
+                const r = Number(m.rate) || 0;
+                if (cr === '>0' && r <= 0) return false;
+                if (cr === '=0' && r > 0) return false;
+                if (!isNaN(parseFloat(cr)) && Math.abs(r - parseFloat(cr)) > 0.001) return false;
+            }
+            if (colFilters.amt100) {
+                const ca = String(colFilters.amt100).trim();
+                const a = this.getPoleScheduleItemAmount100(m, m.origIndex);
+                if (ca === '>0' && a <= 0) return false;
+                if (ca === '=0' && a > 0) return false;
+            }
+
+            return true;
+        });
+
+        // 6. Section Header Clean-up: If filtering is active, only show section headers that have at least 1 matching item underneath
+        if (isFiltering) {
+            const result = [];
+            let currentSection = null;
+            let sectionHasItems = false;
+
+            filtered.forEach(item => {
+                if (item.isSection) {
+                    currentSection = item;
+                    sectionHasItems = false;
+                } else {
+                    if (currentSection && !sectionHasItems) {
+                        result.push(currentSection);
+                        sectionHasItems = true;
+                    }
+                    result.push(item);
+                }
             });
+            filtered = result;
+        }
+
+        // 7. Column Sorting (if active)
+        if (sortCol) {
+            const nonSections = filtered.filter(m => !m.isSection);
+            nonSections.sort((a, b) => {
+                let vA, vB;
+                if (sortCol === 'no') {
+                    vA = parseFloat(a.no) || 0;
+                    vB = parseFloat(b.no) || 0;
+                } else if (sortCol === 'itemCode') {
+                    vA = String(a.itemCode || '');
+                    vB = String(b.itemCode || '');
+                } else if (sortCol === 'desc') {
+                    vA = String(a.desc || '').toLowerCase();
+                    vB = String(b.desc || '').toLowerCase();
+                } else if (sortCol === 'unit') {
+                    vA = String(a.unit || '').toLowerCase();
+                    vB = String(b.unit || '').toLowerCase();
+                } else if (sortCol === 'totalQty') {
+                    vA = this.getPoleScheduleItemTotalQty(a.origIndex);
+                    vB = this.getPoleScheduleItemTotalQty(b.origIndex);
+                } else if (sortCol === 'rate') {
+                    vA = Number(a.rate) || 0;
+                    vB = Number(b.rate) || 0;
+                } else if (sortCol === 'amt100') {
+                    vA = this.getPoleScheduleItemAmount100(a, a.origIndex);
+                    vB = this.getPoleScheduleItemAmount100(b, b.origIndex);
+                } else if (sortCol === 'amtStage1') {
+                    vA = this.getPoleScheduleItemAmountStage1(a, a.origIndex);
+                    vB = this.getPoleScheduleItemAmountStage1(b, b.origIndex);
+                }
+                if (vA < vB) return sortDir === 'asc' ? -1 : 1;
+                if (vA > vB) return sortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+            return nonSections;
+        }
+
+        return filtered;
+    },
+
+    getFilteredPoleScheduleTotals() {
+        const mats = typeof this.getFilteredPoleScheduleMaterials === 'function' ? this.getFilteredPoleScheduleMaterials() : [];
+        let totalQty = 0;
+        let totalAmt100 = 0;
+        let totalAmtStage1 = 0;
+        mats.forEach(m => {
+            if (!m.isSection && !m.isSpan) {
+                const q = this.getPoleScheduleItemTotalQty(m.origIndex);
+                totalQty += q;
+                const amt100 = this.getPoleScheduleItemAmount100(m, m.origIndex);
+                totalAmt100 += amt100;
+                totalAmtStage1 += this.getPoleScheduleItemAmountStage1(m, m.origIndex);
+            }
+        });
+        return {
+            totalQty: Math.round(totalQty * 100) / 100,
+            totalAmt100: Math.round(totalAmt100 * 100) / 100,
+            totalAmtStage1: Math.round(totalAmtStage1 * 100) / 100,
+            count: mats.filter(m => !m.isSection).length
+        };
+    },
+
+    getPoleScheduleUniqueUnits() {
+        const mats = this.getPoleScheduleMaterials();
+        const set = new Set();
+        mats.forEach(m => {
+            if (!m.isSection && m.unit && String(m.unit).trim()) {
+                set.add(String(m.unit).trim().toUpperCase());
+            }
+        });
+        return ['ALL', ...Array.from(set).sort()];
+    },
+
+    resetPoleScheduleFilters() {
+        this.poleScheduleSearchQuery = '';
+        this.poleScheduleFilterQty = 'ALL';
+        this.poleScheduleFilterSap = 'ALL';
+        this.poleScheduleFilterUnit = 'ALL';
+        this.poleScheduleColumnFilters = {};
+        this.poleScheduleActiveFilterCol = null;
+        this.poleScheduleSortCol = null;
+        this.poleScheduleSortDir = 'asc';
+        this.showToast('All filters reset (showing full schedule) 🔄', 'info');
+    },
+
+    togglePoleScheduleFilterCol(col) {
+        if (this.poleScheduleActiveFilterCol === col) {
+            this.poleScheduleActiveFilterCol = null;
+        } else {
+            this.poleScheduleActiveFilterCol = col;
+        }
+    },
+
+    closePoleScheduleColFilter() {
+        this.poleScheduleActiveFilterCol = null;
+    },
+
+    setPoleScheduleSort(col, dir) {
+        this.poleScheduleSortCol = col;
+        this.poleScheduleSortDir = dir || 'asc';
+        this.poleScheduleActiveFilterCol = null;
+    },
+
+    clearPoleScheduleSort() {
+        this.poleScheduleSortCol = null;
+        this.poleScheduleSortDir = 'asc';
+        this.poleScheduleActiveFilterCol = null;
+    },
+
+    setPoleScheduleColFilter(col, val) {
+        if (!this.poleScheduleColumnFilters) this.poleScheduleColumnFilters = {};
+        this.poleScheduleColumnFilters = Object.assign({}, this.poleScheduleColumnFilters, { [col]: val });
+        this.poleScheduleActiveFilterCol = null;
+    },
+
+    clearPoleScheduleColFilter(col) {
+        if (this.poleScheduleColumnFilters) {
+            const updated = Object.assign({}, this.poleScheduleColumnFilters);
+            delete updated[col];
+            this.poleScheduleColumnFilters = updated;
+        }
+        this.poleScheduleActiveFilterCol = null;
+    },
+
+    copyFilteredPoleScheduleToClipboard() {
+        const mats = (typeof this.getFilteredPoleScheduleMaterials === 'function' ? this.getFilteredPoleScheduleMaterials() : []).filter(m => !m.isSection);
+        if (mats.length === 0) {
+            this.showToast('No items to copy', '⚠️');
+            return;
+        }
+        const locs = this.getPoleScheduleLocations();
+        const header = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
+        locs.forEach(loc => header.push(loc.name || 'Location'));
+        header.push('Total Qty', 'Unit Rate', '100% Amount', (this.pctStage1 || 85) + '% Amount');
+
+        const rows = [header.join('\t')];
+        mats.forEach(m => {
+            const r = [
+                m.no || '',
+                m.itemCode || '',
+                m.desc || '',
+                m.unit || ''
+            ];
+            locs.forEach((_, lIdx) => {
+                const q = this.getPoleScheduleCellQty(lIdx, m.origIndex);
+                r.push(q !== '' && q !== null && q !== undefined ? q : '');
+            });
+            const totQty = this.getPoleScheduleItemTotalQty(m.origIndex);
+            const amt100 = this.getPoleScheduleItemAmount100(m, m.origIndex);
+            const amtStage1 = this.getPoleScheduleItemAmountStage1(m, m.origIndex);
+            r.push(totQty > 0 ? totQty : '');
+            r.push(m.rate || 0);
+            r.push(amt100 > 0 ? amt100 : '');
+            r.push(amtStage1 > 0 ? amtStage1 : '');
+            rows.push(r.join('\t'));
+        });
+
+        const text = rows.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.showToast('📋 ' + mats.length + ' Filtered items copied! Paste directly into Excel (Ctrl+V)', '✅');
+            }).catch(() => {
+                this.fallbackCopyToClipboard(text, mats.length);
+            });
+        } else {
+            this.fallbackCopyToClipboard(text, mats.length);
+        }
+    },
+
+    fallbackCopyToClipboard(text, count) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            this.showToast('📋 ' + count + ' Filtered items copied! Paste directly into Excel (Ctrl+V)', '✅');
+        } catch(e) {
+            this.showToast('Could not copy to clipboard', '❌');
+        }
     },
 
     getPoleScheduleLocations(key) {
@@ -81,10 +357,24 @@ window.PoleScheduleModule = {
         return this.poleScheduleQuantities[k][lIdx][mIdx] || '';
     },
 
-    setPoleScheduleCellQty(lIdx, mIdx, val) {
+    setPoleScheduleCellQty(lIdx, mIdx, val, skipAutoConcrete = false) {
         const k = this.selectedPoleScheduleKey || '907';
         this.ensurePoleScheduleQuantities(k);
         this.poleScheduleQuantities[k][lIdx][mIdx] = val;
+
+        // Auto-recalculate concreting if pole or stay item was changed
+        if (!skipAutoConcrete && this.poleScheduleAutoConcreting) {
+            const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+            if (sched && sched.materials && sched.materials[mIdx]) {
+                const item = sched.materials[mIdx];
+                if (typeof this.isPoleSchedulePoleItem === 'function' && typeof this.isPoleScheduleStayItem === 'function') {
+                    if (this.isPoleSchedulePoleItem(item) || this.isPoleScheduleStayItem(item)) {
+                        this.recalculatePoleScheduleLocationConcreting(k, lIdx);
+                    }
+                }
+            }
+        }
+
         // Vue 3 reactivity triggers
         this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
         this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
@@ -314,24 +604,66 @@ window.PoleScheduleModule = {
             return;
         }
         const k = this.selectedPoleScheduleKey || '907';
-        const locs = this.getPoleScheduleLocations();
+        const locs = this.getPoleScheduleLocations(k);
         const nextNum = locs.length + 1;
         const name = prompt(`Enter Location Name for Schedule ${k}:`, `Loc ${nextNum}`);
         if (!name || !name.trim()) return;
+
         locs.push({ name: name.trim() });
+
+        // Ensure poleScheduleQuantities has an entry for the new location
+        if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
+        if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
+        const newLIdx = locs.length - 1;
+        if (!this.poleScheduleQuantities[k][newLIdx]) {
+            this.poleScheduleQuantities[k][newLIdx] = {};
+        }
+
+        // Synchronize with activityLocations
+        if (!this.activityLocations) this.activityLocations = {};
+        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+
+        // Ensure activityQuantities has a row for this new location
+        if (!this.activityQuantities) this.activityQuantities = {};
+        if (!this.activityQuantities[k] || !Array.isArray(this.activityQuantities[k])) {
+            this.activityQuantities[k] = [];
+        }
+        const matCount = (this.activities && this.activities[k] && this.activities[k].materials) ? this.activities[k].materials.length : 0;
+        while (this.activityQuantities[k].length < locs.length) {
+            this.activityQuantities[k].push(new Array(matCount).fill(''));
+        }
+
+        // Trigger reactivity
+        this.poleScheduleLocations = { ...this.poleScheduleLocations };
+        this.activityLocations = { ...this.activityLocations };
+        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
+        this.activityQuantities = { ...this.activityQuantities };
+
+        // Recalculate concreting if active
+        if (this.poleScheduleAutoConcreting && typeof this.recalculatePoleScheduleLocationConcreting === 'function') {
+            this.recalculatePoleScheduleLocationConcreting(k, newLIdx);
+        }
+
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
-        this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k}`, '📍');
+        this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k} & Activity Billing`, '📍');
     },
 
     renamePoleScheduleLocation(lIdx) {
         if (this.isFinalized) return;
         const k = this.selectedPoleScheduleKey || '907';
-        const locs = this.getPoleScheduleLocations();
+        const locs = this.getPoleScheduleLocations(k);
         if (!locs[lIdx]) return;
         const currentName = locs[lIdx].name || `Loc ${lIdx + 1}`;
         const newName = prompt(`Rename Location:`, currentName);
         if (newName && newName.trim() && newName.trim() !== currentName) {
             locs[lIdx].name = newName.trim();
+            if (!this.activityLocations) this.activityLocations = {};
+            this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+            this.poleScheduleLocations = { ...this.poleScheduleLocations };
+            this.activityLocations = { ...this.activityLocations };
+            this.syncPoleScheduleToBillingAndReconciliation(k);
             this.saveToStorage();
             this.showToast(`Renamed to "${newName.trim()}"`, '✏️');
         }
@@ -340,7 +672,7 @@ window.PoleScheduleModule = {
     removePoleScheduleLocation(lIdx) {
         if (this.isFinalized) return;
         const k = this.selectedPoleScheduleKey || '907';
-        const locs = this.getPoleScheduleLocations();
+        const locs = this.getPoleScheduleLocations(k);
         if (locs.length <= 1) {
             alert('Kam se kam 1 location honi chahiye.');
             return;
@@ -358,6 +690,20 @@ window.PoleScheduleModule = {
             });
             this.poleScheduleQuantities[k] = newObj;
         }
+
+        if (!this.activityLocations) this.activityLocations = {};
+        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+        if (this.activityQuantities && this.activityQuantities[k] && Array.isArray(this.activityQuantities[k])) {
+            this.activityQuantities[k].splice(lIdx, 1);
+        }
+
+        this.poleScheduleLocations = { ...this.poleScheduleLocations };
+        this.activityLocations = { ...this.activityLocations };
+        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
+        this.activityQuantities = { ...this.activityQuantities };
+
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
         this.showToast(`Location "${name}" removed`, '🗑️');
     },
@@ -493,6 +839,8 @@ window.PoleScheduleModule = {
         }
 
         // Vue 3 reactivity trigger
+        this.activityLocations = { ...this.activityLocations };
+        this.poleScheduleLocations = { ...this.poleScheduleLocations };
         this.activityQuantities[k] = this.activityQuantities[k].map(row => [...row]);
         this.activityQuantities = { ...this.activityQuantities };
         this.activities = { ...this.activities };
@@ -531,7 +879,10 @@ window.PoleScheduleModule = {
         if (!sched || !act || !this.activityQuantities || !this.activityQuantities[k]) return;
 
         this.ensurePoleScheduleQuantities(k);
-        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : []);
+        const locs = (this.activityLocations && this.activityLocations[k]) || (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : []);
+
+        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
+        this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(locs));
 
         if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
         if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
@@ -557,9 +908,227 @@ window.PoleScheduleModule = {
         });
 
         // Vue 3 reactivity trigger
+        this.poleScheduleLocations = { ...this.poleScheduleLocations };
         this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
         this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
         this.recoRevision = (this.recoRevision || 0) + 1;
+    },
+
+    // =========================================================================
+    // 🧱 AUTO-CONCRETING & AUGER CALCULATION SUITE (User requested)
+    // =========================================================================
+
+    getPoleScheduleAugerRadius(size) {
+        const s = Number(size) || Number(this.selectedAugerSize) || 22;
+        return parseFloat((s * 0.0254 / 2).toFixed(4));
+    },
+
+    getPoleFoundationDepth(desc) {
+        const d = String(desc || '').toLowerCase();
+        if (d.includes('13 m') || d.includes('13m') || d.includes('13 mtr')) return 2.17;
+        if (d.includes('11 m') || d.includes('11m') || d.includes('11 mtr')) return 1.83;
+        if (d.includes('10 m') || d.includes('10m') || d.includes('10 mtr')) return 1.67;
+        if (d.includes('9 m') || d.includes('9m') || d.includes('9 mtr')) return 1.50;
+        if (d.includes('8 m') || d.includes('8m') || d.includes('8 mtr')) return 1.33;
+        return 1.83;
+    },
+
+    isPoleSchedulePoleItem(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const d = String(item.desc || '').toLowerCase();
+        if (d.includes('rsj') || d.includes('psc')) return true;
+        if (d.includes('pole') && !d.includes('earthing') && !d.includes('clamp') && !d.includes('top') && !d.includes('bracket') && !d.includes('cap')) {
+            return true;
+        }
+        return false;
+    },
+
+    isPoleScheduleStayItem(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const d = String(item.desc || '').toLowerCase();
+        if (d.includes('stay set') || (d.includes('stay') && !d.includes('wire') && !d.includes('clamp') && !d.includes('insulator') && !d.includes('bow'))) {
+            return true;
+        }
+        return false;
+    },
+
+    isPoleScheduleConcreteItem(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const d = String(item.desc || '').toLowerCase();
+        if (item.itemCode === '11000336') return true;
+        if (d.includes('concreting') || d.includes('cement concrete') || d.includes('concrete ratio') || d.includes('concreting ration')) {
+            return true;
+        }
+        return false;
+    },
+
+    calculateLocationConcreting(key, lIdx) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return { totalPoles: 0, poleVol: 0, totalStays: 0, stayVol: 0, totalVol: 0 };
+
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
+        const locRow = qMatrix[lIdx] || {};
+
+        const augerSize = Number(this.selectedAugerSize) || 22;
+        const r = parseFloat((augerSize * 0.0254 / 2).toFixed(4));
+        const stayUnitVol = Number(this.stayConcretingUnitVol) || 0.125;
+
+        let totalPoles = 0;
+        let poleVol = 0;
+        let totalStays = 0;
+        let stayVol = 0;
+
+        sched.materials.forEach((m, mIdx) => {
+            if (m.isSection || m.isSpan) return;
+            const raw = locRow[mIdx];
+            let q = 0;
+            if (raw !== '' && raw !== null && raw !== undefined) {
+                const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                if (!isNaN(n)) q = n;
+            }
+            if (q <= 0) return;
+
+            if (this.isPoleSchedulePoleItem(m)) {
+                totalPoles += q;
+                const h = this.getPoleFoundationDepth(m.desc);
+                poleVol += q * Math.PI * r * r * h;
+            } else if (this.isPoleScheduleStayItem(m)) {
+                totalStays += q;
+                stayVol += q * stayUnitVol;
+            }
+        });
+
+        const totalVol = Math.round((poleVol + stayVol) * 1000) / 1000;
+        return {
+            totalPoles,
+            poleVol: Math.round(poleVol * 1000) / 1000,
+            totalStays,
+            stayVol: Math.round(stayVol * 1000) / 1000,
+            totalVol,
+            augerSize,
+            r
+        };
+    },
+
+    recalculatePoleScheduleLocationConcreting(key, lIdx) {
+        if (!this.poleScheduleAutoConcreting) return;
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return;
+
+        const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
+        if (concreteIdx === -1) return;
+
+        this.ensurePoleScheduleQuantities(k);
+        const res = this.calculateLocationConcreting(k, lIdx);
+        this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+    },
+
+    recalculatePoleScheduleConcreting(key, force = false) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return;
+
+        const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
+        if (concreteIdx === -1) {
+            if (force) this.showToast('Schedule ' + k + ' me koi Concreting line item nahi mila', 'ℹ️');
+            return;
+        }
+
+        const locs = this.getPoleScheduleLocations(k);
+        this.ensurePoleScheduleQuantities(k);
+
+        let grandVol = 0;
+        locs.forEach((_, lIdx) => {
+            const res = this.calculateLocationConcreting(k, lIdx);
+            if (res.totalVol > 0 || force) {
+                this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+            }
+            grandVol += res.totalVol;
+        });
+
+        this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
+        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        this.saveToStorage();
+
+        if (force) {
+            this.showToast(`🧱 Auger ${this.selectedAugerSize}" Concreting: ${Math.round(grandVol * 1000) / 1000} m³ auto-calculated across ${locs.length} locations`, '✅');
+        }
+    },
+
+    getPoleScheduleConcretingSummary(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : []);
+        let totalPoles = 0;
+        let poleVol = 0;
+        let totalStays = 0;
+        let stayVol = 0;
+        let totalVol = 0;
+        locs.forEach((_, lIdx) => {
+            const res = this.calculateLocationConcreting(k, lIdx);
+            totalPoles += res.totalPoles;
+            poleVol += res.poleVol;
+            totalStays += res.totalStays;
+            stayVol += res.stayVol;
+            totalVol += res.totalVol;
+        });
+        return {
+            totalPoles,
+            poleVol: Math.round(poleVol * 1000) / 1000,
+            totalStays,
+            stayVol: Math.round(stayVol * 1000) / 1000,
+            totalVol: Math.round(totalVol * 1000) / 1000,
+            augerSize: Number(this.selectedAugerSize) || 22,
+            locCount: locs.length
+        };
+    },
+
+    getRecoCellTitle(row, col) {
+        if (!row || !row.activities || !row.activities[col]) return `Activity ${col}: 0 ${row.uom || ''}`;
+        const tot = typeof this.format2Dec === 'function' ? this.format2Dec(row.activities[col]) : row.activities[col];
+        const actLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(col) : [];
+        if (actLocs.length <= 1) {
+            return `Activity ${col}: ${tot} ${row.uom || ''}`;
+        }
+        const lines = [`Activity ${col} (Total: ${tot} ${row.uom || ''}):`];
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[col]) || null;
+        const actQ = (this.activityQuantities && this.activityQuantities[col]) || null;
+        const sched = (this.poleSchedules && this.poleSchedules[col]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[col]);
+        const act = this.activities && this.activities[col];
+
+        actLocs.forEach((loc, lIdx) => {
+            const locName = loc.name || `Loc ${lIdx + 1}`;
+            let lQty = 0;
+            if (qMatrix && sched && sched.materials) {
+                sched.materials.forEach((m, mIdx) => {
+                    if (m.isSection || m.isSpan) return;
+                    const hasCode = (m.sapItems && m.sapItems.some(s => s.code === row.code)) || m.itemCode === row.code;
+                    if (hasCode) {
+                        const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
+                        if (raw !== '' && raw !== null && raw !== undefined) {
+                            const n = Number(raw);
+                            if (!isNaN(n)) lQty += n;
+                        }
+                    }
+                });
+            } else if (actQ && act && act.materials && actQ[lIdx]) {
+                act.materials.forEach((m, mIdx) => {
+                    const hasCode = (m.sapItems && m.sapItems.some(s => s.code === row.code)) || m.itemCode === row.code;
+                    if (hasCode) {
+                        const raw = actQ[lIdx][mIdx];
+                        if (raw !== '' && raw !== null && raw !== undefined) {
+                            const n = Number(raw);
+                            if (!isNaN(n)) lQty += n;
+                        }
+                    }
+                });
+            }
+            lines.push(`• ${locName}: ${typeof this.format2Dec === 'function' ? this.format2Dec(lQty) : lQty} ${row.uom || ''}`);
+        });
+        return lines.join('\n');
     },
 
 
@@ -1052,32 +1621,39 @@ window.PoleScheduleModule = {
         if (typeof this.showToast === 'function') this.showToast('Pole Schedule ' + k + ' successfully reset to official default master (' + count + ' items)!', '✅');
     },
 
-    exportPoleScheduleExcel() {
+    exportPoleScheduleExcel(onlyFiltered = false) {
         if (typeof XLSX === 'undefined') {
             this.showToast('XLSX library not loaded', '❌');
             return;
         }
         const k = this.selectedPoleScheduleKey || '907';
         const sched = this.getCurrentPoleSchedule();
-        const mats = this.getPoleScheduleMaterials();
+        const mats = (onlyFiltered && typeof this.getFilteredPoleScheduleMaterials === 'function')
+            ? this.getFilteredPoleScheduleMaterials()
+            : this.getPoleScheduleMaterials();
         const locs = this.getPoleScheduleLocations();
         const contractorName = typeof this.getContractorDisplayName === 'function' ? this.getContractorDisplayName() : 'CONTRACTOR';
         const billNo = this.effectiveBillNo || 'BILL';
 
         const rows = [];
         rows.push([`ASHOKA BUILDCON LIMITED — RDSS T-10 GADCHIROLI`]);
-        rows.push([`${sched.title || ('Pole Schedule ' + k)}`]);
+        rows.push([`${sched.title || ('Pole Schedule ' + k)} ${onlyFiltered ? '(FILTERED ITEMS)' : ''}`]);
         rows.push([`Contractor: ${contractorName} | Bill No: ${billNo} | Date: ${new Date().toLocaleDateString('en-IN')}`]);
         rows.push([]);
 
         // Header row
         const header = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
         locs.forEach(loc => header.push(loc.name || 'Location'));
-        header.push('Total Qty', 'Unit Rate', '100% Amount', `${this.pctStage1}% Amount`);
+        header.push('Total Qty', 'Unit Rate', '100% Amount', `${this.pctStage1 || 85}% Amount`);
         rows.push(header);
+
+        let runningTotQty = 0;
+        let runningAmt100 = 0;
+        let runningAmtStage1 = 0;
 
         // Data rows
         mats.forEach((m, mIdx) => {
+            const origIdx = m.origIndex !== undefined ? m.origIndex : mIdx;
             if (m.isSection) {
                 const secRow = ['', '', m.desc || '', m.unit || ''];
                 locs.forEach(() => secRow.push(''));
@@ -1092,32 +1668,39 @@ window.PoleScheduleModule = {
                 m.unit || ''
             ];
             locs.forEach((_, lIdx) => {
-                const q = this.getPoleScheduleCellQty(lIdx, mIdx);
+                const q = this.getPoleScheduleCellQty(lIdx, origIdx);
                 const num = q !== '' ? (typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(q))) : parseFloat(q)) : '';
                 row.push(num !== '' && !isNaN(num) ? num : '');
             });
-            const totQty = this.getPoleScheduleItemTotalQty(mIdx);
-            const amt100 = this.getPoleScheduleItemAmount100(m, mIdx);
-            const amtStage1 = this.getPoleScheduleItemAmountStage1(m, mIdx);
+            const totQty = this.getPoleScheduleItemTotalQty(origIdx);
+            const amt100 = this.getPoleScheduleItemAmount100(m, origIdx);
+            const amtStage1 = this.getPoleScheduleItemAmountStage1(m, origIdx);
             row.push(totQty > 0 ? totQty : '');
             row.push(m.rate || 0);
             row.push(amt100 > 0 ? amt100 : '');
             row.push(amtStage1 > 0 ? amtStage1 : '');
             rows.push(row);
+
+            if (!m.isSection && !m.isSpan) {
+                runningTotQty += totQty;
+                runningAmt100 += amt100;
+                runningAmtStage1 += amtStage1;
+            }
         });
 
         // Total row
-        const totals = this.getPoleScheduleTotals();
-        const totalRow = ['TOTAL', '', '', ''];
+        const totalRow = [onlyFiltered ? 'TOTAL (FILTERED)' : 'TOTAL', '', '', ''];
         locs.forEach(() => totalRow.push(''));
-        totalRow.push(totals.totalQty, '', totals.totalAmt100, totals.totalAmtStage1);
+        totalRow.push(Math.round(runningTotQty * 100) / 100, '', Math.round(runningAmt100 * 100) / 100, Math.round(runningAmtStage1 * 100) / 100);
         rows.push(totalRow);
 
         const ws = XLSX.utils.aoa_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, `Pole_Schedule_${k}`);
+        const sheetName = onlyFiltered ? `Filtered_${k}` : `Pole_Schedule_${k}`;
+        XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
 
-        const filename = `Pole_Schedule_${k}_${contractorName.replace(/[^a-zA-Z0-9]/g, '_')}_${billNo}.xlsx`;
+        const filterSuffix = onlyFiltered ? `_Filtered_${mats.filter(m => !m.isSection).length}_Items` : '';
+        const filename = `Pole_Schedule_${k}_${contractorName.replace(/[^a-zA-Z0-9]/g, '_')}_${billNo}${filterSuffix}.xlsx`;
         XLSX.writeFile(wb, filename);
         this.showToast(`Excel exported: ${filename}`, '📗');
     }

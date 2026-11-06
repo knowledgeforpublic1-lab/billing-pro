@@ -325,6 +325,14 @@ window.ViewsModule = {
     getActLocations(actKey) {
         if (!actKey) return this.locations || [];
         if (!this.activityLocations) this.activityLocations = {};
+        // If this activity has poleScheduleLocations, ensure activityLocations matches
+        if (this.poleScheduleLocations && Array.isArray(this.poleScheduleLocations[actKey]) && this.poleScheduleLocations[actKey].length > 0) {
+            const psLocs = this.poleScheduleLocations[actKey];
+            if (!this.activityLocations[actKey] || this.activityLocations[actKey].length !== psLocs.length) {
+                this.activityLocations[actKey] = JSON.parse(JSON.stringify(psLocs));
+                this.activityLocations = { ...this.activityLocations };
+            }
+        }
         if (this.activityLocations[actKey] && Array.isArray(this.activityLocations[actKey]) && this.activityLocations[actKey].length > 0) {
             return this.activityLocations[actKey];
         }
@@ -355,6 +363,18 @@ window.ViewsModule = {
         }
         this.activityQuantities[actKey].push(new Array(matCount).fill(''));
         this.activityLocations = Object.assign({}, this.activityLocations);
+
+        // Synchronize with poleScheduleLocations if configured
+        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
+        this.poleScheduleLocations[actKey] = JSON.parse(JSON.stringify(this.activityLocations[actKey]));
+        this.poleScheduleLocations = { ...this.poleScheduleLocations };
+        if (this.poleScheduleQuantities && this.poleScheduleQuantities[actKey]) {
+            const newLIdx = this.activityLocations[actKey].length - 1;
+            if (!this.poleScheduleQuantities[actKey][newLIdx]) {
+                this.poleScheduleQuantities[actKey][newLIdx] = {};
+            }
+        }
+
         this.saveToStorage();
         this.showToast(`Added location "${locName}" in activity ${actKey}`, '📍');
     },
@@ -380,6 +400,22 @@ window.ViewsModule = {
             this.activityQuantities[actKey].splice(index, 1);
         }
         this.activityLocations = Object.assign({}, this.activityLocations);
+
+        // Synchronize with poleScheduleLocations
+        if (this.poleScheduleLocations && this.poleScheduleLocations[actKey]) {
+            this.poleScheduleLocations[actKey] = JSON.parse(JSON.stringify(this.activityLocations[actKey]));
+            this.poleScheduleLocations = { ...this.poleScheduleLocations };
+            if (this.poleScheduleQuantities && this.poleScheduleQuantities[actKey]) {
+                delete this.poleScheduleQuantities[actKey][index];
+                const newObj = {};
+                this.activityLocations[actKey].forEach((_, idx) => {
+                    const oldIdx = idx >= index ? idx + 1 : idx;
+                    newObj[idx] = this.poleScheduleQuantities[actKey][oldIdx] || {};
+                });
+                this.poleScheduleQuantities[actKey] = newObj;
+            }
+        }
+
         this.saveToStorage();
         this.showToast(`Removed location "${name}" from activity ${actKey}`, '🗑️');
     },
@@ -399,6 +435,13 @@ window.ViewsModule = {
             this.activityLocations[actKey][locIdx].name = clean || `Location ${locIdx + 1}`;
         }
         this.activityLocations = Object.assign({}, this.activityLocations);
+
+        // Synchronize with poleScheduleLocations
+        if (this.poleScheduleLocations && this.poleScheduleLocations[actKey]) {
+            this.poleScheduleLocations[actKey] = JSON.parse(JSON.stringify(this.activityLocations[actKey]));
+            this.poleScheduleLocations = { ...this.poleScheduleLocations };
+        }
+
         this.saveToStorage();
     },
     onLocationInput(locIdx, newName) {

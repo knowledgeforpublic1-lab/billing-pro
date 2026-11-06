@@ -1533,6 +1533,126 @@ it('Default Pole Schedules: Hard-coded Master Persistence & API Endpoint Verific
     assert.strictEqual(typeof psModule.downloadDefaultPoleSchedulesFile, 'function', 'downloadDefaultPoleSchedulesFile must be a function');
 });
 
+
+// 29. Multi-Location Pole Schedule & Location-Wise Sync to Activity Billing and Reconciliation
+it('Multi-Location Pole Schedule: Location addition, bidirectional sync to Activity Billing & Reconciliation summation', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Location 1' }] },
+        activityLocations: { '907': [{ name: 'Location 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [[]] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    // Add 2nd location (Loc 2)
+    mockApp.poleScheduleLocations['907'].push({ name: 'Loc 2' });
+    mockApp.poleScheduleQuantities['907'][1] = {};
+    mockApp.activityLocations['907'] = JSON.parse(JSON.stringify(mockApp.poleScheduleLocations['907']));
+    mockApp.syncPoleScheduleToBillingAndReconciliation('907');
+
+    assert.strictEqual(mockApp.activityLocations['907'].length, 2, 'activityLocations must have 2 locations');
+    assert.strictEqual(mockApp.activityQuantities['907'].length, 2, 'activityQuantities must have 2 location rows');
+
+    // Enter quantities: Loc 1 has 5 poles (idx 2), Loc 2 has 3 poles (idx 2)
+    mockApp.setPoleScheduleCellQty(0, 2, 5);
+    mockApp.setPoleScheduleCellQty(1, 2, 3);
+
+    // Verify location-wise sync in Activity Billing
+    // Index 2 is RSJ 11m pole (itemCode 17001243)
+    const act = mockApp.activities['907'];
+    const actPoleIdx = act.materials.findIndex(m => m.itemCode === '17001243');
+    assert.ok(actPoleIdx !== -1, 'RSJ 11m pole must exist in Activity 907');
+
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actPoleIdx], 5, 'Activity Billing Loc 1 must have 5 poles');
+    assert.strictEqual(mockApp.activityQuantities['907'][1][actPoleIdx], 3, 'Activity Billing Loc 2 must have 3 poles');
+
+    // Verify total across locations
+    const totalQty = mockApp.getPoleScheduleItemTotalQtyByKey('907', 2);
+    assert.strictEqual(totalQty, 8, 'Total pole qty across both locations must be 5 + 3 = 8');
+});
+
+// 30. Auto-Concreting & Auger Size (Pole Pad Foundation + Stay Concreting)
+it('Auto-Concreting & Auger Size: Calculates Pole Pad + Stay Concreting automatically across locations', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        selectedAugerSize: 22,
+        poleScheduleAutoConcreting: true,
+        stayConcretingUnitVol: 0.125,
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Loc 1' }, { name: 'Loc 2' }] },
+        activityLocations: { '907': [{ name: 'Loc 1' }, { name: 'Loc 2' }] },
+        poleScheduleQuantities: { '907': { 0: {}, 1: {} } },
+        activityQuantities: { '907': [[], []] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    // Schedule 907:
+    // Pole item: idx 2 (RSJ 11m, h=1.83m)
+    // Stay item: idx 39 (H.T.Stay Set)
+    // Concrete item: idx 44 (Concreting Cement Bag, itemCode 11000336)
+    assert.strictEqual(mockApp.isPoleSchedulePoleItem(mockApp.poleSchedules['907'].materials[2]), true, 'Item 2 must be Pole');
+    assert.strictEqual(mockApp.isPoleScheduleStayItem(mockApp.poleSchedules['907'].materials[39]), true, 'Item 39 must be Stay');
+    assert.strictEqual(mockApp.isPoleScheduleConcreteItem(mockApp.poleSchedules['907'].materials[44]), true, 'Item 44 must be Concrete');
+
+    // Set Location 1: 5 poles (idx 2), 2 stays (idx 39)
+    mockApp.setPoleScheduleCellQty(0, 2, 5);
+    mockApp.setPoleScheduleCellQty(0, 39, 2);
+
+    // Set Location 2: 3 poles (idx 2), 1 stay (idx 39)
+    mockApp.setPoleScheduleCellQty(1, 2, 3);
+    mockApp.setPoleScheduleCellQty(1, 39, 1);
+
+    // Radius for 22 inch auger = 22 * 0.0254 / 2 = 0.2794m
+    // Loc 1 Concreting = (5 * PI * 0.2794^2 * 1.83) + (2 * 0.125) = 2.244 + 0.250 = 2.494 m3
+    // Loc 2 Concreting = (3 * PI * 0.2794^2 * 1.83) + (1 * 0.125) = 1.346 + 0.125 = 1.471 m3
+    const loc1Concrete = mockApp.getPoleScheduleCellQty(0, 44);
+    const loc2Concrete = mockApp.getPoleScheduleCellQty(1, 44);
+
+    assert.strictEqual(loc1Concrete, 2.494, 'Location 1 concrete volume must be exactly 2.494 m3');
+    assert.strictEqual(loc2Concrete, 1.471, 'Location 2 concrete volume must be exactly 1.471 m3');
+
+    // Verify summary across both locations
+    const summary = mockApp.getPoleScheduleConcretingSummary('907');
+    assert.strictEqual(summary.totalPoles, 8, 'Total poles must be 8');
+    assert.strictEqual(summary.totalStays, 3, 'Total stays must be 3');
+    assert.strictEqual(summary.totalVol, 3.965, 'Grand total concrete volume must be 3.965 m3');
+
+    // Test changing auger size to 20 inch
+    mockApp.selectedAugerSize = 20;
+    mockApp.recalculatePoleScheduleConcreting('907', true);
+    // Radius for 20 inch auger = 0.254m
+    // Loc 1: (5 * PI * 0.254^2 * 1.83) + (2 * 0.125) = 1.854 + 0.250 = 2.104 m3
+    // Loc 2: (3 * PI * 0.254^2 * 1.83) + (1 * 0.125) = 1.113 + 0.125 = 1.238 m3
+    const loc1New = mockApp.getPoleScheduleCellQty(0, 44);
+    const loc2New = mockApp.getPoleScheduleCellQty(1, 44);
+    assert.strictEqual(loc1New, 2.105, 'With 20 inch auger, Loc 1 concrete volume must be 2.105 m3');
+    assert.strictEqual(loc2New, 1.238, 'With 20 inch auger, Loc 2 concrete volume must be 1.238 m3');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
