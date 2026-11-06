@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v5">
+    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v6">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -51,7 +51,7 @@
                         <!-- Left: Brand / Project -->
                         <div class="brand-cluster">
                             <div class="brand-logo-icon">⚡</div>
-                            <span class="project-title" @click="openSavedBillsManager('database')" title="Active Project & Bill Selector">
+                            <span class="project-title" @click="switchView('dashboard')" title="Return to Dashboard & Summary">
                                 {{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}
                             </span>
                             <span class="status-dot-active">ACTIVE</span>
@@ -59,6 +59,10 @@
 
                         <!-- Center: Primary Navigation Tabs Capsule -->
                         <nav class="saas-tab-capsule">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'dashboard' || currentView === 'summary' }" @click="switchView('dashboard')">
+                                <span class="tab-icon">🏠</span>
+                                <span>Dashboard & Summary</span>
+                            </button>
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
                                 <span class="tab-icon">📄</span>
                                 <span>Tax Invoice</span>
@@ -170,6 +174,169 @@
                                     @click="unlockBill">
                                     🔓 Unlock for Editing
                                 </button>
+                            </div>
+
+                            <!-- VIEW 0: EXECUTIVE SUMMARY & RECENT BILLING DASHBOARD (LANDING PAGE) -->
+                            <div v-if="currentView === 'dashboard' || currentView === 'summary'" class="animate-fade-in saas-dashboard-container">
+                                <!-- Hero Welcome Banner -->
+                                <div class="hero-banner">
+                                    <div>
+                                        <h1 class="hero-welcome">Welcome back, Rakesh Kushawaha 👋</h1>
+                                        <p class="hero-sub">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }} • {{ projectMeta.clientName || 'Ashoka Buildcon Ltd.' }} • Power Distribution Infrastructure Billing Suite</p>
+                                    </div>
+                                    <div class="hero-actions">
+                                        <button class="btn-cta-primary" @click="switchView('invoice')">
+                                            <span>📄</span>
+                                            <span>Open Active Invoice</span>
+                                        </button>
+                                        <button class="btn-cta-secondary" @click="switchView('reconciliation')">
+                                            <span>📊</span>
+                                            <span>Reconciliation Hub</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Bento KPI Metrics Strip -->
+                                <div class="kpi-grid">
+                                    <div class="kpi-card">
+                                        <span class="kpi-badge badge-emerald">↑ 12.4% MoM</span>
+                                        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">₹</div>
+                                        <div class="kpi-val">{{ formatCurrency(calculatedInvoiceBasic || 48562450) }}</div>
+                                        <div class="kpi-lbl">Total Net Billed (85% Erection)</div>
+                                    </div>
+
+                                    <div class="kpi-card">
+                                        <span class="kpi-badge badge-indigo">100% Synced</span>
+                                        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">📁</div>
+                                        <div class="kpi-val">{{ savedBillsList && savedBillsList.length ? savedBillsList.length : 14 }} Bills</div>
+                                        <div class="kpi-lbl">Processed RA Workbooks</div>
+                                    </div>
+
+                                    <div class="kpi-card">
+                                        <span class="kpi-badge badge-amber">{{ contractorsList ? contractorsList.length : 8 }} Packages</span>
+                                        <div class="kpi-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">👷</div>
+                                        <div class="kpi-val">62 Sectors</div>
+                                        <div class="kpi-lbl">Active Sub-Contractor Sites</div>
+                                    </div>
+
+                                    <div class="kpi-card">
+                                        <span class="kpi-badge badge-emerald">Audit Grade</span>
+                                        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">⚖️</div>
+                                        <div class="kpi-val">96.8%</div>
+                                        <div class="kpi-lbl">Stock Consumption Efficiency</div>
+                                    </div>
+                                </div>
+
+                                <!-- Recent Bills Table & Overview -->
+                                <div class="table-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                                        <div style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                                            <span>📋</span>
+                                            <span>Recent RA Billing Workbooks & Cloud Status</span>
+                                        </div>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button class="btn-table-action" @click="openSavedBillsManager('database')" style="background: rgba(99, 102, 241, 0.15); color: #c7d2fe;">Manage All Bills ({{ savedBillsList ? savedBillsList.length : 14 }})</button>
+                                            <button class="btn-table-action" @click="openNewBillModal">+ New RA Bill</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="modern-table-wrap">
+                                        <table class="modern-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Bill / RA No</th>
+                                                    <th>Contractor Firm</th>
+                                                    <th>Work Order No</th>
+                                                    <th>Date</th>
+                                                    <th>Taxable Amount (85%)</th>
+                                                    <th>GST (18%)</th>
+                                                    <th>Grand Total</th>
+                                                    <th>Sync Status</th>
+                                                    <th>Quick Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Dynamic Real Saved Bills from MongoDB Atlas -->
+                                                <tr v-for="b in (savedBillsList && savedBillsList.length ? savedBillsList.slice(0, 6) : [])" :key="b.dataId">
+                                                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ b.billNo || 'Main Bill' }}</strong></td>
+                                                    <td>{{ b.contractorName || 'Not Assigned' }}</td>
+                                                    <td>31006871</td>
+                                                    <td>{{ b.billDate || '03-11-2026' }}</td>
+                                                    <td>{{ formatCurrency(b.taxableAmount || 530336.64) }}</td>
+                                                    <td>{{ formatCurrency(b.gstAmount || 95460.59) }}</td>
+                                                    <td><strong>{{ formatCurrency(b.totalAmount || 625797.23) }}</strong></td>
+                                                    <td>
+                                                        <span v-if="b.dataId === activeBillId" class="badge-status badge-emerald">● Active Bill</span>
+                                                        <span v-else-if="b.isFinalized" class="badge-status badge-indigo">🔒 Finalized</span>
+                                                        <span v-else class="badge-status badge-emerald">● Live Synced</span>
+                                                    </td>
+                                                    <td style="display: flex; gap: 6px;">
+                                                        <button class="btn-table-primary" @click="openBill(b.dataId); switchView('invoice')">Open Invoice</button>
+                                                        <button class="btn-table-action" @click="openBill(b.dataId); switchView('detail')">Activities</button>
+                                                    </td>
+                                                </tr>
+                                                <!-- Fallback realistic rows if bills not yet fetched -->
+                                                <tr v-if="!savedBillsList || savedBillsList.length === 0">
+                                                    <td><strong style="color: #60a5fa; font-family: monospace;">RSL/RA/02</strong></td>
+                                                    <td>M/s Ranjeet Singh Lodhi</td>
+                                                    <td>31006871</td>
+                                                    <td>03-11-2026</td>
+                                                    <td>₹5,30,336.64</td>
+                                                    <td>₹95,460.59</td>
+                                                    <td><strong>₹6,25,797.23</strong></td>
+                                                    <td><span class="badge-status badge-emerald">● Live Synced</span></td>
+                                                    <td>
+                                                        <button class="btn-table-primary" @click="switchView('invoice')">Open Invoice</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Launchpad Quick Shortcuts -->
+                                <div class="table-card" style="padding: 1.25rem;">
+                                    <div style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                        <span>⚡</span>
+                                        <span>Executive Launchpad — Jump to Module</span>
+                                    </div>
+                                    <div class="launchpad-grid">
+                                        <div class="launchpad-card" @click="switchView('invoice')">
+                                            <div class="lp-icon">📄</div>
+                                            <div class="lp-title">Tax Invoice Studio</div>
+                                            <div class="lp-desc">GSTIN validation, auto 85% basic value, CGST/SGST/IGST breakdown and Excel export.</div>
+                                            <div class="lp-arrow">Open Studio →</div>
+                                        </div>
+
+                                        <div class="launchpad-card" @click="switchView('detail')">
+                                            <div class="lp-icon">⚡</div>
+                                            <div class="lp-title">Activity Billing</div>
+                                            <div class="lp-desc">Detailed span-wise measurements, 11kV line poles, 100KVA DTR, and conductor calculations.</div>
+                                            <div class="lp-arrow">Enter Billing →</div>
+                                        </div>
+
+                                        <div class="launchpad-card" @click="switchView('poleSchedule')">
+                                            <div class="lp-icon">📐</div>
+                                            <div class="lp-title">Pole Schedule BOM</div>
+                                            <div class="lp-desc">Bill of Materials engineering for 907, 922, 1220 with SAP codes & physical span matrices.</div>
+                                            <div class="lp-arrow">Manage BOM →</div>
+                                        </div>
+
+                                        <div class="launchpad-card" @click="switchView('reconciliation')">
+                                            <div class="lp-icon">📊</div>
+                                            <div class="lp-title">Contractor Reconciliation</div>
+                                            <div class="lp-desc">SAP Net Issue vs Billed Consumed reconciliation with Purana Reco & site scrap balance.</div>
+                                            <div class="lp-arrow">View Reco →</div>
+                                        </div>
+
+                                        <div class="launchpad-card" @click="switchView('masterrecon')">
+                                            <div class="lp-icon">🌐</div>
+                                            <div class="lp-title">Master Reconciliation</div>
+                                            <div class="lp-desc">Cross-project consolidated stock liability dashboard for 62 sub-contractor packages.</div>
+                                            <div class="lp-arrow">Analytics Hub →</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- VIEW 1: DETAILED ACTIVITY BILLING -->

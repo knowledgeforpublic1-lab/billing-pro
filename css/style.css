@@ -3848,3 +3848,316 @@ tr[style*="rgba(99, 102, 241"] {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(99, 102, 241, 0.5) !important;
 }
+
+
+/* =========================================================================
+   🌟 MODERN SAAS DASHBOARD & LANDING PAGE STYLES
+   ========================================================================= */
+.saas-dashboard-container {
+    padding-bottom: 2rem;
+}
+
+.hero-banner {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%),
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 50%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 1.75rem 2rem !important;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+    gap: 1.5rem !important;
+    flex-wrap: wrap !important;
+}
+
+.hero-welcome {
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    margin-bottom: 0.35rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.hero-sub {
+    font-size: 0.88rem !important;
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+}
+
+.hero-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+.btn-cta-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    border: 1px solid rgba(129, 140, 248, 0.4) !important;
+    color: #ffffff !important;
+    padding: 8px 18px !important;
+    border-radius: 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+    transition: all 0.2s !important;
+}
+
+.btn-cta-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5) !important;
+}
+
+.btn-cta-secondary {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    padding: 8px 16px !important;
+    border-radius: 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.btn-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Bento KPI Metrics Grid */
+.kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.kpi-card {
+    background: rgba(14, 21, 38, 0.78) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.kpi-icon-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 0.85rem !important;
+}
+
+.kpi-val {
+    font-size: 1.55rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    margin-bottom: 0.25rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+.kpi-lbl {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+}
+
+.kpi-badge {
+    position: absolute !important;
+    top: 1.25rem !important;
+    right: 1.25rem !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
+}
+
+/* Tables & Data Grids */
+.modern-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.modern-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 0.82rem !important;
+    text-align: left !important;
+}
+
+.modern-table th {
+    background: #111827 !important;
+    color: #94a3b8 !important;
+    font-weight: 700 !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    text-transform: uppercase !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.05em !important;
+}
+
+.modern-table td {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    color: #e2e8f0 !important;
+    vertical-align: middle !important;
+}
+
+.modern-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.badge-status {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+}
+
+.badge-emerald {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.badge-indigo {
+    background: rgba(99, 102, 241, 0.15) !important;
+    color: #a5b4fc !important;
+    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+}
+
+.badge-amber {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Launchpad Shortcut Grid */
+.launchpad-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 1rem !important;
+    margin-top: 1rem !important;
+}
+
+.launchpad-card {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+.launchpad-card:hover {
+    transform: translateY(-2px) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+.lp-icon {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.6rem !important;
+}
+
+.lp-title {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.lp-desc {
+    font-size: 0.74rem !important;
+    color: #64748b !important;
+    line-height: 1.35 !important;
+}
+
+.lp-arrow {
+    margin-top: 0.8rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    color: #818cf8 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.btn-table-action {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #cbd5e1 !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+}
+
+.btn-table-action:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+.btn-table-primary {
+    background: rgba(99, 102, 241, 0.2) !important;
+    border: 1px solid rgba(99, 102, 241, 0.4) !important;
+    color: #c7d2fe !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+.btn-table-primary:hover {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .launchpad-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: 1fr !important; }
+    .launchpad-grid { grid-template-columns: 1fr !important; }
+}

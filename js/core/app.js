@@ -66,6 +66,7 @@
                         if (typeof window !== 'undefined' && window.location) {
                             const params = new URLSearchParams(window.location.search);
                             const qv = params.get('tab') || params.get('view');
+                            if (qv === 'dashboard' || qv === 'summary' || qv === 'home') return 'dashboard';
                             if (qv === 'invoice' || qv === 'taxInvoice') return 'invoice';
                             if (qv === 'detail' || qv === 'activity') return 'detail';
                             if (qv === 'poleSchedule' || qv === 'pole' || qv === 'schedule') return 'poleSchedule';
@@ -1667,6 +1668,7 @@
         try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
             this._isLoading = true;
             await this.loadFromStorage();
+            try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}
             
             // Backup default stock & check for custom uploaded stock in IndexedDB
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
