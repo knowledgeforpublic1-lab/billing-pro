@@ -61,9 +61,31 @@
                     mapping: null,
                     invoice: null
                 },
-                currentView: (function() { try { const v = localStorage.getItem('billing_current_view'); return (v === 'mapping' ? 'poleSchedule' : (v || 'poleSchedule')); } catch(e) { return 'poleSchedule'; } })(),
+                currentView: (function() {
+                    try {
+                        if (typeof window !== 'undefined' && window.location) {
+                            const params = new URLSearchParams(window.location.search);
+                            const qv = params.get('tab') || params.get('view');
+                            if (qv === 'invoice' || qv === 'taxInvoice') return 'invoice';
+                            if (qv === 'detail' || qv === 'activity') return 'detail';
+                            if (qv === 'poleSchedule' || qv === 'pole' || qv === 'schedule') return 'poleSchedule';
+                            if (qv === 'reconciliation' || qv === 'reco') return 'reconciliation';
+                            if (qv === 'masterrecon' || qv === 'master') return 'masterrecon';
+                        }
+                        const v = localStorage.getItem('billing_current_view');
+                        return (v === 'mapping' ? 'poleSchedule' : (v || 'invoice'));
+                    } catch(e) { return 'invoice'; }
+                })(),
                 selectedPoleScheduleKey: (function() { try { return localStorage.getItem('billing_selected_pole_schedule_key') || '907'; } catch(e) { return '907'; } })(),
-                poleScheduleSubTab: 'schedule',
+                poleScheduleSubTab: (function() {
+                    try {
+                        if (typeof window !== 'undefined' && window.location) {
+                            const p = new URLSearchParams(window.location.search);
+                            if (p.get('sub') === 'abstract') return 'abstract';
+                        }
+                    } catch(e) {}
+                    return 'schedule';
+                })(),
                 poleScheduleLocations: {},
                 poleScheduleQuantities: {},
                 poleScheduleSearchQuery: '',
