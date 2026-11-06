@@ -3323,19 +3323,14 @@ body.dark-mode {
     text-align: left !important;
 }
 
-.tab-line-1 {
-    font-size: 0.74rem !important;
+.tab-line-1,
+.tab-line-2 {
+    font-size: 0.72rem !important;
     font-weight: 700 !important;
     white-space: nowrap !important;
     letter-spacing: -0.1px !important;
-}
-
-.tab-line-2 {
-    font-size: 0.65rem !important;
-    font-weight: 600 !important;
-    opacity: 0.78 !important;
-    white-space: nowrap !important;
-    letter-spacing: -0.1px !important;
+    opacity: 1 !important;
+    line-height: 1.15 !important;
 }
 
 .capsule-nav-tab.active .tab-line-1,
