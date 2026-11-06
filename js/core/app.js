@@ -182,6 +182,10 @@
                 activeSapManagerOrigIndex: -1,
                 sapManagerSearchQuery: '',
                 sapManagerSuggestions: [],
+                // 📐 Pole Schedule ➔ Activity Ratio Mapping
+                showPoleRatioModal: false,
+                selectedPoleRatioActKey: '907',
+                poleRatioSearchQuery: '',
                 mappingRoundMode: (function() { try { return localStorage.getItem('lk_billing_mapping_round_mode') || 'none'; } catch(e) { return 'none'; } })(),
                 // 🔒 Mapping locks — edit ke liye unlock karna hoga (sap mapping default unlocked hai taaki mapping asani se ho sake)
                 mappingLocks: (function() {

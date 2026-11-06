@@ -828,10 +828,35 @@ window.PoleScheduleModule = {
                     return false;
                 });
                 if (actMatIdx !== -1) {
+                    const actMat = act.materials[actMatIdx];
+                    let ratio = 1;
+                    if (actMat) {
+                        if (actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0) {
+                            ratio = Number(actMat.poleRatio);
+                        } else if (actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
+                            ratio = 1 / Number(actMat.poleRatioDivisor);
+                        } else if (actMat.unit && actMat.unit.toLowerCase().includes('set') && sm.unit && sm.unit.toLowerCase().includes('no') && sm.desc && sm.desc.toLowerCase().includes('cut point')) {
+                            ratio = 0.5;
+                            actMat.poleRatio = 0.5;
+                            actMat.poleRatioDivisor = 2;
+                            actMat.poleRatioMode = 'divisor';
+                        }
+                    }
                     locs.forEach((_, lIdx) => {
                         const val = (qMatrix[lIdx] && qMatrix[lIdx][smIdx] !== undefined) ? qMatrix[lIdx][smIdx] : '';
                         if (this.activityQuantities[k][lIdx]) {
-                            this.activityQuantities[k][lIdx][actMatIdx] = val;
+                            if (val === '' || val === null || val === undefined) {
+                                this.activityQuantities[k][lIdx][actMatIdx] = '';
+                            } else {
+                                const num = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
+                                if (!isNaN(num)) {
+                                    const converted = num * ratio;
+                                    const rounded = Math.round(converted * 1000) / 1000;
+                                    this.activityQuantities[k][lIdx][actMatIdx] = rounded;
+                                } else {
+                                    this.activityQuantities[k][lIdx][actMatIdx] = val;
+                                }
+                            }
                         }
                     });
                 }
@@ -895,6 +920,15 @@ window.PoleScheduleModule = {
                 return false;
             });
             if (actMatIdx !== -1) {
+                const actMat = act.materials[actMatIdx];
+                let ratio = 1;
+                if (actMat) {
+                    if (actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0) {
+                        ratio = Number(actMat.poleRatio);
+                    } else if (actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
+                        ratio = 1 / Number(actMat.poleRatioDivisor);
+                    }
+                }
                 locs.forEach((_, lIdx) => {
                     const val = (this.activityQuantities[k][lIdx] && this.activityQuantities[k][lIdx][actMatIdx] !== undefined)
                         ? this.activityQuantities[k][lIdx][actMatIdx]
@@ -902,7 +936,17 @@ window.PoleScheduleModule = {
                     if (!this.poleScheduleQuantities[k][lIdx]) {
                         this.poleScheduleQuantities[k][lIdx] = {};
                     }
-                    this.poleScheduleQuantities[k][lIdx][smIdx] = val;
+                    if (val === '' || val === null || val === undefined) {
+                        this.poleScheduleQuantities[k][lIdx][smIdx] = '';
+                    } else {
+                        const num = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
+                        if (!isNaN(num) && ratio > 0) {
+                            const poleVal = Math.round((num / ratio) * 1000) / 1000;
+                            this.poleScheduleQuantities[k][lIdx][smIdx] = poleVal;
+                        } else {
+                            this.poleScheduleQuantities[k][lIdx][smIdx] = val;
+                        }
+                    }
                 });
             }
         });
@@ -912,6 +956,163 @@ window.PoleScheduleModule = {
         this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
         this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
         this.recoRevision = (this.recoRevision || 0) + 1;
+    },
+
+    // =========================================================================
+    // 📐 POLE SCHEDULE ➔ ACTIVITY RATIO MAPPING SUITE (User requested)
+    // =========================================================================
+
+    getItemPoleRatio(item) {
+        if (!item) return 1;
+        if (item.poleRatio !== undefined && item.poleRatio !== null && !isNaN(Number(item.poleRatio)) && Number(item.poleRatio) > 0) {
+            return Number(item.poleRatio);
+        }
+        if (item.poleRatioDivisor && Number(item.poleRatioDivisor) > 0) {
+            return 1 / Number(item.poleRatioDivisor);
+        }
+        return 1;
+    },
+
+    getItemPoleRatioDivisor(item) {
+        if (!item) return 1;
+        if (item.poleRatioDivisor && Number(item.poleRatioDivisor) > 0) {
+            return Number(item.poleRatioDivisor);
+        }
+        if (item.poleRatio && Number(item.poleRatio) > 0 && Number(item.poleRatio) !== 1) {
+            return Math.round((1 / Number(item.poleRatio)) * 1000) / 1000;
+        }
+        return 1;
+    },
+
+    formatPoleRatioBadge(item) {
+        if (!item) return '';
+        const ratio = this.getItemPoleRatio(item);
+        if (ratio === 1) return '';
+        const div = this.getItemPoleRatioDivisor(item);
+        if (div > 1) {
+            return `1 ${item.unit || 'Set'} = ${div} Nos (÷${div})`;
+        }
+        return `Ratio ×${ratio}`;
+    },
+
+    getMatchedPoleMaterial(actKey, actMat) {
+        if (!actMat) return null;
+        const k = actKey || this.selectedActivityKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return null;
+        return sched.materials.find(sm => {
+            if (sm.isSection || sm.isSpan) return false;
+            if (sm.itemCode && actMat.itemCode && String(sm.itemCode).trim() === String(actMat.itemCode).trim()) return true;
+            if (sm.desc && actMat.desc && sm.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
+            return false;
+        }) || null;
+    },
+
+    openPoleRatioModal(actKey) {
+        this.selectedPoleRatioActKey = actKey || this.selectedActivityKey || '907';
+        this.poleRatioSearchQuery = '';
+        this.showPoleRatioModal = true;
+    },
+
+    openItemPoleRatioPrompt(item, origIndex) {
+        if (this.isFinalized) {
+            this.showToast('Bill locked — unlock to edit ratio', '🔒');
+            return;
+        }
+        const k = this.selectedActivityKey || '907';
+        const curDiv = this.getItemPoleRatioDivisor(item);
+        const promptMsg = `Set Pole Schedule Ratio for "${item.desc}"\n\nEnter how many Pole Schedule units equal 1 Activity ${item.unit || 'Unit'}:\n(e.g., enter 2 for '2 Nos = 1 Set' so Activity Qty = Pole Qty / 2, or 1 for 1:1 direct):`;
+        const input = prompt(promptMsg, String(curDiv || 1));
+        if (input === null) return;
+        const num = parseFloat(input);
+        if (!isNaN(num) && num > 0) {
+            item.poleRatioDivisor = num;
+            item.poleRatio = Math.round((1 / num) * 10000) / 10000;
+            item.poleRatioMode = 'divisor';
+            this.syncPoleScheduleToBillingAndReconciliation(k);
+            this.saveToStorage();
+            this.showToast(`Ratio updated: 1 ${item.unit || 'Unit'} = ${num} Pole Units`, '📐');
+        } else {
+            this.showToast('Invalid ratio number entered', '⚠️');
+        }
+    },
+
+    updateItemPoleRatioMode(item, mode) {
+        if (!item) return;
+        item.poleRatioMode = mode;
+        if (mode === 'multiplier') {
+            item.poleRatio = item.poleRatio || (item.poleRatioDivisor ? (Math.round((1 / item.poleRatioDivisor) * 10000) / 10000) : 1);
+        } else {
+            item.poleRatioDivisor = item.poleRatioDivisor || (item.poleRatio ? (Math.round((1 / item.poleRatio) * 10000) / 10000) : 1);
+        }
+    },
+
+    updateItemPoleRatioValue(item, rawVal) {
+        if (!item) return;
+        const val = parseFloat(rawVal);
+        if (isNaN(val) || val <= 0) return;
+        if (item.poleRatioMode === 'multiplier') {
+            item.poleRatio = val;
+            item.poleRatioDivisor = Math.round((1 / val) * 10000) / 10000;
+        } else {
+            item.poleRatioDivisor = val;
+            item.poleRatio = Math.round((1 / val) * 10000) / 10000;
+        }
+    },
+
+    setItemPoleRatioPreset(item, mode, val) {
+        if (!item) return;
+        item.poleRatioMode = mode;
+        if (mode === 'divisor') {
+            item.poleRatioDivisor = val;
+            item.poleRatio = Math.round((1 / val) * 10000) / 10000;
+        } else {
+            item.poleRatio = val;
+            item.poleRatioDivisor = Math.round((1 / val) * 10000) / 10000;
+        }
+        const k = this.selectedPoleRatioActKey || this.selectedActivityKey || '907';
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.saveToStorage();
+    },
+
+    getPoleRatioPreviewText(item) {
+        if (!item) return '1 ➔ 1';
+        const div = this.getItemPoleRatioDivisor(item);
+        if (div > 1) {
+            return `Pole: ${div} ➔ Act: 1`;
+        }
+        const mult = this.getItemPoleRatio(item);
+        if (mult !== 1) {
+            return `Pole: 1 ➔ Act: ${mult}`;
+        }
+        return 'Direct 1:1';
+    },
+
+    getFilteredPoleRatioMaterials() {
+        const k = this.selectedPoleRatioActKey || this.selectedActivityKey || '907';
+        const act = this.activities && this.activities[k];
+        if (!act || !Array.isArray(act.materials)) return [];
+        const q = (this.poleRatioSearchQuery || '').trim().toLowerCase();
+        return act.materials.filter((m, idx) => {
+            if (m.isSection || m.isSpan) return false;
+            m.origIndex = idx;
+            if (!q) return true;
+            return (m.desc && m.desc.toLowerCase().includes(q)) || (m.itemCode && String(m.itemCode).toLowerCase().includes(q));
+        });
+    },
+
+    applyItemPoleRatioChange(actKey) {
+        const k = actKey || this.selectedPoleRatioActKey || this.selectedActivityKey || '907';
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.saveToStorage();
+    },
+
+    saveAndApplyPoleRatios(actKey) {
+        const k = actKey || this.selectedPoleRatioActKey || this.selectedActivityKey || '907';
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        this.saveToStorage();
+        this.showPoleRatioModal = false;
+        this.showToast('Pole Schedule mapping ratios applied & quantities updated!', '📐');
     },
 
     // =========================================================================
