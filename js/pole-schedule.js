@@ -875,64 +875,9 @@ window.PoleScheduleModule = {
     },
 
     syncActivityBillingToPoleSchedule(key) {
-        const k = key || this.selectedActivityKey || '907';
-        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
-        const act = this.activities && this.activities[k];
-        if (!sched || !act || !this.activityQuantities || !this.activityQuantities[k]) return;
-
-        this.ensurePoleScheduleQuantities(k);
-        const locs = (this.activityLocations && this.activityLocations[k]) || (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : []);
-
-        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
-        this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(locs));
-
-        if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};
-        if (!this.poleScheduleQuantities[k]) this.poleScheduleQuantities[k] = {};
-
-        sched.materials.forEach((sm, smIdx) => {
-            if (sm.isSection || sm.isSpan) return;
-            const actMatIdx = act.materials.findIndex(am => {
-                if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
-                if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
-                return false;
-            });
-            if (actMatIdx !== -1) {
-                const actMat = act.materials[actMatIdx];
-                let ratio = 1;
-                if (actMat) {
-                    if (actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0) {
-                        ratio = Number(actMat.poleRatio);
-                    } else if (actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
-                        ratio = 1 / Number(actMat.poleRatioDivisor);
-                    }
-                }
-                locs.forEach((_, lIdx) => {
-                    const val = (this.activityQuantities[k][lIdx] && this.activityQuantities[k][lIdx][actMatIdx] !== undefined)
-                        ? this.activityQuantities[k][lIdx][actMatIdx]
-                        : '';
-                    if (!this.poleScheduleQuantities[k][lIdx]) {
-                        this.poleScheduleQuantities[k][lIdx] = {};
-                    }
-                    if (val === '' || val === null || val === undefined) {
-                        this.poleScheduleQuantities[k][lIdx][smIdx] = '';
-                    } else {
-                        const num = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
-                        if (!isNaN(num) && ratio > 0) {
-                            const poleVal = Math.round((num / ratio) * 1000) / 1000;
-                            this.poleScheduleQuantities[k][lIdx][smIdx] = poleVal;
-                        } else {
-                            this.poleScheduleQuantities[k][lIdx][smIdx] = val;
-                        }
-                    }
-                });
-            }
-        });
-
-        // Vue 3 reactivity trigger
-        this.poleScheduleLocations = { ...this.poleScheduleLocations };
-        this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
-        this.poleScheduleQuantities = { ...this.poleScheduleQuantities };
-        this.recoRevision = (this.recoRevision || 0) + 1;
+        // 🔒 STRICT ONE-WAY FLOW: Pole Schedule entries flow into Activity Billing & Reconciliation.
+        // Manual entries in Activity Billing sheet NEVER flow back into Pole Schedule.
+        return;
     },
 
     // =========================================================================

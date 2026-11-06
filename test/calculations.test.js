@@ -1653,6 +1653,49 @@ it('Auto-Concreting & Auger Size: Calculates Pole Pad + Stay Concreting automati
     assert.strictEqual(loc2New, 1.238, 'With 20 inch auger, Loc 2 concrete volume must be 1.238 m3');
 });
 
+it('Pole Schedule Strict One-Way Sync: Flows to Activity & Reco, manual activity edits never flow to Pole Schedule', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+    const utilsModule = require('../js/utils.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Location 1' }] },
+        activityLocations: { '907': [{ name: 'Location 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [new Array(18).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        evalFormula(val) { return val; },
+        ...psModule,
+        ...utilsModule
+    };
+
+    // 1. Entry in Pole Schedule must flow to Activity Billing & Reconciliation
+    mockApp.setPoleScheduleCellQty(0, 2, 12); // RSJ Pole = 12
+    const act = mockApp.activities['907'];
+    const actPoleIdx = act.materials.findIndex(m => m.itemCode === '17001243');
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actPoleIdx], 12, 'Activity Billing must receive 12 from Pole Schedule');
+    assert.ok(mockApp.recoRevision > 0, 'Reconciliation revision must be bumped');
+
+    // 2. Manual entry directly in Activity Billing sheet
+    const prevRevision = mockApp.recoRevision;
+    const fakeEvent = { target: { value: '25' } };
+    mockApp.commitGridFormula(fakeEvent, actPoleIdx, 0);
+    assert.strictEqual(Number(mockApp.activityQuantities['907'][0][actPoleIdx]), 25, 'Activity Billing has manual entry 25');
+    assert.ok(mockApp.recoRevision > prevRevision, 'Manual activity entry bumps recoRevision');
+
+    // 3. CRITICAL: Pole Schedule must NOT have been changed by manual activity entry!
+    assert.strictEqual(mockApp.poleScheduleQuantities['907'][0][2], 12, 'Pole Schedule must remain 12 and NEVER be overwritten by manual Activity entry');
+});
+
 it('Reconciliation Excel Export: Strictly exports only contractor-issued materials and exact summary totals', () => {
     // Mock app context with candidate rows containing both issued and unissued materials
     const mockRows = [

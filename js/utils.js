@@ -19,6 +19,10 @@ if (typeof window !== 'undefined') {
     window.computeFullHash = computeFullHash;
 }
 
+if (typeof window === 'undefined') {
+    global.window = global;
+}
+
 window.UtilsModule = {
     computeFullHash,
     formatDateToDDMMYYYY(val) {
@@ -128,9 +132,7 @@ window.UtilsModule = {
                         if (this.activityQuantities[this.selectedActivityKey] && this.activityQuantities[this.selectedActivityKey][locIdx]) {
                             this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = '';
                         }
-                        if (typeof this.syncActivityBillingToPoleSchedule === 'function') {
-                            this.syncActivityBillingToPoleSchedule(this.selectedActivityKey);
-                        }
+                        this.recoRevision = (this.recoRevision || 0) + 1;
                         this.saveToStorage();
                         return;
                     }
@@ -140,9 +142,7 @@ window.UtilsModule = {
                         this.activityQuantities[this.selectedActivityKey][locIdx][rowIdx] = finalVal;
                     }
                     event.target.value = finalVal;
-                    if (typeof this.syncActivityBillingToPoleSchedule === 'function') {
-                        this.syncActivityBillingToPoleSchedule(this.selectedActivityKey);
-                    }
+                    this.recoRevision = (this.recoRevision || 0) + 1;
                     this.saveToStorage();
                 },
                 onQtyCellBlur(event, rowIdx, locIdx) {
@@ -387,4 +387,9 @@ function numberToWordsIndian(num) {
         res += (rWords ? ' and ' : '') + pWords + ' Paise';
     }
     return res ? (res.trim() + ' Only/-') : 'Zero Rupees Only/-';
+}
+
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = window.UtilsModule;
 }
