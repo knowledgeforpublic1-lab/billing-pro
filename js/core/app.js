@@ -192,6 +192,7 @@
                     return { rate: true, sap: false, qty: true };
                 })(),
                 reconFilterZeroOnly: true,
+                reconFilterOnlyIssued: false,
                 // ☁️ Mongo sync status (kam space kharch ho isliye debounce + change-check ke sath)
                 syncStatus: 'local',
                 lastSyncAt: '',
@@ -1296,7 +1297,14 @@
 
                 let filtered = rows;
 
-                if (this.reconFilterZeroOnly) {
+                if (this.reconFilterOnlyIssued) {
+                    filtered = filtered.filter(r => {
+                        const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                        const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : 0);
+                        const issued = Number(r.sapIssuedQty || 0);
+                        return (net > 0 || gross > 0 || issued > 0);
+                    });
+                } else if (this.reconFilterZeroOnly) {
                     filtered = rows.filter(r => (
                         r.totalQty > 0 || 
                         (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
@@ -1323,6 +1331,19 @@
                 }
 
                 return filtered;
+            },
+            reconIssuedCount() {
+                try {
+                    const rows = (this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : [];
+                    return rows.filter(r => {
+                        const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                        const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : 0);
+                        const issued = Number(r.sapIssuedQty || 0);
+                        return (net > 0 || gross > 0 || issued > 0);
+                    }).length;
+                } catch (e) {
+                    return 0;
+                }
             },
             reconNonZeroCount() {
                 try {

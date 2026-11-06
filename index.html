@@ -2029,6 +2029,15 @@
                         
 
 
+                        <!-- 📦 Contractor Issued Only Button -->
+                        <button type="button" class="btn" 
+                            :class="reconFilterOnlyIssued ? 'btn-primary' : 'btn-secondary'" 
+                            @click="reconFilterOnlyIssued = !reconFilterOnlyIssued" 
+                            :title="reconFilterOnlyIssued ? 'Show all rows' : 'Filter: Sirf is Contractor ko issue hue materials dikhayein'" 
+                            style="height: 30px; padding: 0 10px; font-size: 0.76rem; font-weight: 700; border-radius: 7px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>{{ reconFilterOnlyIssued ? '📦 Issued Only (' + reconIssuedCount + ')' : '📦 Only Issued (' + reconIssuedCount + ')' }}</span>
+                        </button>
+
                         <!-- 👁️ Row Filter Button -->
                         <button type="button" class="btn btn-secondary" 
                             @click="reconFilterZeroOnly = !reconFilterZeroOnly" 

@@ -1653,6 +1653,40 @@ it('Auto-Concreting & Auger Size: Calculates Pole Pad + Stay Concreting automati
     assert.strictEqual(loc2New, 1.238, 'With 20 inch auger, Loc 2 concrete volume must be 1.238 m3');
 });
 
+it('Reconciliation Excel Export: Strictly exports only contractor-issued materials and exact summary totals', () => {
+    // Mock app context with candidate rows containing both issued and unissued materials
+    const mockRows = [
+        { code: '11000123', desc: 'M SAND', uom: 'KG', sapGrossIssue: 500, sapMrnReturn: 50, sapNetIssue: 450, totalQty: 100 },
+        { code: '17000624', desc: 'V CROSS ARM', uom: 'SET', sapGrossIssue: 164, sapMrnReturn: 0, sapNetIssue: 164, totalQty: 20 },
+        { code: '17000999', desc: 'UNISSUED MASTER ITEM', uom: 'NO', sapGrossIssue: 0, sapMrnReturn: 0, sapNetIssue: 0, totalQty: 0 },
+        { code: '17000888', desc: 'ANOTHER UNISSUED MATERIAL', uom: 'MTR', sapGrossIssue: 0, sapMrnReturn: 0, sapNetIssue: 0, totalQty: 50 }
+    ];
+
+    const allCandidateRows = mockRows;
+    let expRows = allCandidateRows.filter(r => {
+        const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+        const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : 0);
+        const issued = Number(r.sapIssuedQty || 0);
+        return (net > 0 || gross > 0 || issued > 0);
+    });
+
+    assert.strictEqual(expRows.length, 2, 'Only 2 items issued to this contractor must be selected for export');
+    assert.strictEqual(expRows[0].code, '11000123');
+    assert.strictEqual(expRows[1].code, '17000624');
+    assert.strictEqual(expRows.some(r => r.code === '17000999'), false, 'Unissued master item must be excluded');
+    assert.strictEqual(expRows.some(r => r.code === '17000888'), false, 'Material with 0 issue even if totalQty > 0 must be excluded');
+
+    let sumGross = 0, sumMrn = 0, sumNet = 0;
+    expRows.forEach(rowObj => {
+        sumGross += Number(rowObj.sapGrossIssue || rowObj.sapIssuedQty || 0);
+        sumMrn += Number(rowObj.sapMrnReturn || 0);
+        sumNet += Number(rowObj.sapNetIssue !== undefined ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || 0));
+    });
+    assert.strictEqual(sumGross, 664, 'Gross sum must equal 500 + 164 = 664');
+    assert.strictEqual(sumMrn, 50, 'MRN sum must equal 50');
+    assert.strictEqual(sumNet, 614, 'Net sum must equal 450 + 164 = 614');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

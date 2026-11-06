@@ -129,7 +129,19 @@ window.ExportModule = {
                     // ↩️ Dynamic Old Reco Columns & Reverse ON handling
                     const revOn = !!this.reverseEntry;
                     const rcols = revOn ? this.reverseReconColumns : [];
-                    const expRows = this.reconRows;
+                    // 🎯 User Rule: Sirf wahi materials export karein jo is contractor ko issue hain (Gross / Net Issue > 0)
+                    const allCandidateRows = (this.pivotReconciliationData && this.pivotReconciliationData.rows && this.pivotReconciliationData.rows.length)
+                        ? this.pivotReconciliationData.rows
+                        : ((this.reconRows && this.reconRows.length) ? this.reconRows : ((pData && pData.rows) || []));
+                    let expRows = allCandidateRows.filter(r => {
+                        const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
+                        const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : 0);
+                        const issued = Number(r.sapIssuedQty || 0);
+                        return (net > 0 || gross > 0 || issued > 0);
+                    });
+                    if (!expRows || expRows.length === 0) {
+                        expRows = (this.reconRows && this.reconRows.length) ? this.reconRows : allCandidateRows;
+                    }
 
                     const recoCols = (typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0)
                         ? this.visibleOldRecoColumns()
@@ -173,7 +185,7 @@ window.ExportModule = {
                         row.getCell(4).value = rowObj.uom;
                         row.getCell(5).value = rowObj.sapGrossIssue || rowObj.sapIssuedQty || '';
                         row.getCell(6).value = rowObj.sapMrnReturn || '';
-                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== 0) ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || rowObj.totalQty || '');
+                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || '');
 
                         const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
                         recoCols.forEach((orc, ocIdx) => {
@@ -232,36 +244,64 @@ window.ExportModule = {
                     totalRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
                     totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
 
-                    totalRow.getCell(5).value = (this.reconTotals && this.reconTotals.grossIssue) || '';
-                    totalRow.getCell(6).value = (this.reconTotals && this.reconTotals.mrnReturn) || '';
-                    totalRow.getCell(7).value = (this.reconTotals && this.reconTotals.netIssue) || '';
+                    let sumGross = 0, sumMrn = 0, sumNet = 0, sumThisBill = 0, sumCum = 0, sumBal = 0;
+                    expRows.forEach(rowObj => {
+                        sumGross += Number(rowObj.sapGrossIssue || rowObj.sapIssuedQty || 0);
+                        sumMrn += Number(rowObj.sapMrnReturn || 0);
+                        sumNet += Number((rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || 0));
+                        const thisB = Number(rowObj.totalQty) || 0;
+                        const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : Number(rowObj.prevReconQty || 0);
+                        const cumR = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(rowObj) : (prevR + thisB);
+                        const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(rowObj) : (Number((rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || 0)) - cumR);
+                        sumThisBill += thisB;
+                        sumCum += cumR;
+                        sumBal += bal;
+                    });
+                    totalRow.getCell(5).value = Math.round(sumGross * 100) / 100 || '';
+                    totalRow.getCell(6).value = Math.round(sumMrn * 100) / 100 || '';
+                    totalRow.getCell(7).value = Math.round(sumNet * 100) / 100 || '';
 
                     recoCols.forEach((orc, ocIdx) => {
                         const cIdx = 8 + ocIdx;
+                        let colSum = 0;
                         if (orc.name === 'PURANA RECO') {
-                            totalRow.getCell(cIdx).value = (this.reconTotals && this.reconTotals.prevRecon) || '';
-                        } else if (typeof this.getRecoColTotal === 'function') {
-                            totalRow.getCell(cIdx).value = this.getRecoColTotal(orc.name) || '';
+                            expRows.forEach(r => {
+                                const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : Number(r.prevReconQty || 0);
+                                colSum += Number(prevR || 0);
+                            });
                         } else {
-                            totalRow.getCell(cIdx).value = '';
+                            expRows.forEach(r => {
+                                const val = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, orc.name) : 0;
+                                colSum += Number(val || 0);
+                            });
                         }
+                        totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
                     });
 
                     const midColStart = 8 + recoCols.length;
                     if (revOn) {
                         rcols.forEach((rc, cIdx) => {
-                            totalRow.getCell(midColStart + cIdx).value = (this.reconTotals && this.reconTotals.reverseTotals && this.reconTotals.reverseTotals[rc.key]) || '';
+                            let colSum = 0;
+                            expRows.forEach(r => {
+                                const val = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(r.code, rc) : 0;
+                                colSum += Number(val || 0);
+                            });
+                            totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
                         });
                     } else {
                         pData.columns.forEach((col, cIdx) => {
-                            totalRow.getCell(midColStart + cIdx).value = (this.reconTotals && this.reconTotals.activities && this.reconTotals.activities[col]) || '';
+                            let colSum = 0;
+                            expRows.forEach(r => {
+                                colSum += Number((r.activities && r.activities[col]) || 0);
+                            });
+                            totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
                         });
                     }
 
                     const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
-                    totalRow.getCell(endColStart).value = (this.reconTotals && this.reconTotals.thisBill) || '';
-                    totalRow.getCell(endColStart + 1).value = (this.reconTotals && this.reconTotals.cumulativeRecon) || '';
-                    totalRow.getCell(endColStart + 2).value = (this.reconTotals && this.reconTotals.balance) || '';
+                    totalRow.getCell(endColStart).value = Math.round(sumThisBill * 100) / 100 || '';
+                    totalRow.getCell(endColStart + 1).value = Math.round(sumCum * 100) / 100 || '';
+                    totalRow.getCell(endColStart + 2).value = Math.round(sumBal * 100) / 100 || 0;
 
                     totalRow.eachCell((c, colNum) => {
                         c.border = headerBorder;
