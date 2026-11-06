@@ -456,9 +456,6 @@
                                         <button class="btn-filter-reset" @click="openConcretingCalculator" title="Concreting Calculator" style="border-color: #8b5cf6; color: #8b5cf6;">
                                             🧱 Concreting
                                         </button>
-                                        <button class="btn-filter-reset" @click="openPoleRatioModal(selectedActivityKey)" title="Pole Schedule se aane wali quantity ka Ratio / Factor set karein (e.g. 2 Nos SPCP Channel = 1 Set)" style="border-color: #3b82f6; color: #60a5fa; font-weight: 700;">
-                                            📐 Pole Ratio
-                                        </button>
                                         <button class="btn-filter-add" @click="showAddMaterialModal = true" :disabled="isFinalized" title="Add extra item to this activity">
                                             ➕ Extra Item
                                         </button>
@@ -579,21 +576,6 @@
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
-                                        <!-- Pole Schedule Sync Ratio Badge (Clickable) -->
-                                        <div v-if="formatPoleRatioBadge(item)" style="margin-top: 3px;">
-                                            <span class="badge" @click="openItemPoleRatioPrompt(item, item.origIndex)" 
-                                                style="cursor: pointer; background: rgba(59, 130, 246, 0.18); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.45); font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"
-                                                title="Click to edit Pole Schedule conversion ratio">
-                                                📐 {{ formatPoleRatioBadge(item) }} ✏️
-                                            </span>
-                                        </div>
-                                        <div v-else-if="getMatchedPoleMaterial(selectedActivityKey, item) && !isFinalized" style="margin-top: 2px;">
-                                            <span class="badge" @click="openItemPoleRatioPrompt(item, item.origIndex)" 
-                                                style="cursor: pointer; background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); font-size: 0.68rem; padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;"
-                                                title="Click to set Pole Schedule sync ratio (e.g. 2 Nos = 1 Set)">
-                                                🔗 Pole 1:1 ▾
-                                            </span>
-                                        </div>
                                     </td>
                                     <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
                                         <!-- Multiple SAP items -->
@@ -676,21 +658,6 @@
                                         <div v-else-if="item.sapDescription"
                                             style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
-                                        </div>
-                                        <!-- Pole Schedule Sync Ratio Badge (Clickable) -->
-                                        <div v-if="formatPoleRatioBadge(item)" style="margin-top: 3px;">
-                                            <span class="badge" @click="openItemPoleRatioPrompt(item, item.origIndex)" 
-                                                style="cursor: pointer; background: rgba(59, 130, 246, 0.18); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.45); font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"
-                                                title="Click to edit Pole Schedule conversion ratio">
-                                                📐 {{ formatPoleRatioBadge(item) }} ✏️
-                                            </span>
-                                        </div>
-                                        <div v-else-if="getMatchedPoleMaterial(selectedActivityKey, item) && !isFinalized" style="margin-top: 2px;">
-                                            <span class="badge" @click="openItemPoleRatioPrompt(item, item.origIndex)" 
-                                                style="cursor: pointer; background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); font-size: 0.68rem; padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;"
-                                                title="Click to set Pole Schedule sync ratio (e.g. 2 Nos = 1 Set)">
-                                                🔗 Pole 1:1 ▾
-                                            </span>
                                         </div>
                                     </td>
                                     <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
@@ -2578,37 +2545,6 @@
                             </div>
                         </div>
 
-                        <!-- 📐 Pole Schedule Sync Ratio Mapping inside SAP Item Manager -->
-                        <div style="margin-top: 1rem; padding: 10px 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <label style="font-size: 0.78rem; font-weight: 800; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px;">
-                                    <span>📐 Pole Schedule Sync Ratio</span>
-                                </label>
-                                <span style="font-size: 0.72rem; color: var(--text-muted);">Pole Qty ➔ Activity Unit conversion</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <select :value="activeSapManagerItem ? (activeSapManagerItem.poleRatioMode || 'divisor') : 'divisor'"
-                                    @change="updateItemPoleRatioMode(activeSapManagerItem, $event.target.value)"
-                                    style="height: 28px; padding: 0 6px; font-size: 0.74rem; font-weight: 700; border-radius: 5px; border: 1px solid rgba(59, 130, 246, 0.4); background: #0f172a; color: #93c5fd;">
-                                    <option value="divisor">1 {{ activeSapManagerItem ? (activeSapManagerItem.unit || 'Unit') : 'Unit' }} = X Pole Nos (÷)</option>
-                                    <option value="multiplier">Multiplier (× Factor)</option>
-                                </select>
-                                <input type="number" step="any" min="0.0001"
-                                    :value="activeSapManagerItem ? (activeSapManagerItem.poleRatioMode === 'multiplier' ? (activeSapManagerItem.poleRatio || 1) : (activeSapManagerItem.poleRatioDivisor || 1)) : 1"
-                                    @input="updateItemPoleRatioValue(activeSapManagerItem, $event.target.value)"
-                                    @change="applyItemPoleRatioChange(selectedActivityKey)"
-                                    style="width: 70px; height: 28px; padding: 0 6px; font-size: 0.8rem; font-weight: 800; font-family: monospace; text-align: center; border-radius: 5px; border: 1.5px solid #3b82f6; background: #1e293b; color: #ffffff;"
-                                    placeholder="1">
-                                <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.70rem; font-weight: 700; background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 4px;"
-                                    @click="setItemPoleRatioPreset(activeSapManagerItem, 'divisor', 2)">
-                                    1:2 (2 Nos = 1 Set)
-                                </button>
-                                <span style="font-size: 0.74rem; font-weight: 700; color: #10b981; margin-left: auto;">
-                                    {{ getPoleRatioPreviewText(activeSapManagerItem) }}
-                                </span>
-                            </div>
-                        </div>
-
                         <!-- Quick Action Chips -->
                         <div style="display: flex; gap: 6px; margin-top: 0.6rem; align-items: center; flex-wrap: wrap;">
                             <span style="font-size: 0.72rem; color: var(--text-muted);">Quick Options:</span>
@@ -2625,137 +2561,6 @@
                     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem;">
                         <button type="button" class="btn btn-primary" style="padding: 0.45rem 1.25rem; font-size: 0.82rem; font-weight: 700;" @click="closeSapItemManager">
                             ✓ Done / Save
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 📐 MODAL: POLE SCHEDULE ➔ ACTIVITY RATIO MAPPING -->
-        <div class="modal-overlay" v-if="showPoleRatioModal" @click.self="showPoleRatioModal = false">
-            <div class="modal-content" style="max-width: 860px; max-height: 90vh; display: flex; flex-direction: column;">
-                <div class="modal-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(30, 58, 138, 0.12)); border-bottom: 1px solid var(--border-strong);">
-                    <div>
-                        <div class="modal-title" style="font-size: 1.05rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-                            <span>📐 Pole Schedule ➔ Activity Ratio Mapping</span>
-                            <span class="badge font-mono" style="background: rgba(59, 130, 246, 0.25); color: #93c5fd; font-size: 0.78rem; padding: 2px 8px; border-radius: 999px;">Activity {{ selectedPoleRatioActKey || selectedActivityKey }}</span>
-                        </div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 3px;">
-                            Pole Schedule ki quantity ko Activity unit me convert karne ka ratio set karein (e.g. Pole me Cut Point 2 Nos = Activity me 1 Set)
-                        </div>
-                    </div>
-                    <button class="modal-close" @click="showPoleRatioModal = false">✕</button>
-                </div>
-
-                <div class="modal-body" style="padding: 1rem 1.25rem; overflow-y: auto; flex: 1;">
-                    <!-- Top Search & Quick Tips -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
-                        <input type="text" v-model="poleRatioSearchQuery" placeholder="🔍 Search item description or code..."
-                            style="flex: 1; min-width: 240px; height: 32px; padding: 0 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1.5px solid rgba(59, 130, 246, 0.4); background: rgba(15, 23, 42, 0.8); color: #ffffff;">
-                        <div style="font-size: 0.74rem; color: #a5b4fc; background: rgba(30, 58, 138, 0.25); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                            💡 <strong>Formula:</strong> Activity Qty = Pole Qty ÷ Divisor (or × Multiplier)
-                        </div>
-                    </div>
-
-                    <!-- Table of Items in this Activity -->
-                    <div style="border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden;">
-                        <table class="billing-table" style="margin: 0; font-size: 0.8rem;">
-                            <thead>
-                                <tr style="background: rgba(30, 41, 59, 0.9);">
-                                    <th style="width: 40px;" class="text-center">Sr.</th>
-                                    <th style="min-width: 180px;">Activity Item (Contract)</th>
-                                    <th style="width: 60px;" class="text-center">Act Unit</th>
-                                    <th style="min-width: 180px;">Matched Pole Schedule Item</th>
-                                    <th style="min-width: 240px;" class="text-center">Ratio / Conversion Factor</th>
-                                    <th style="width: 110px;" class="text-center">Live Preview</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(item, mIdx) in getFilteredPoleRatioMaterials()" :key="'pr_' + mIdx"
-                                    :style="item.poleRatioDivisor && item.poleRatioDivisor > 1 ? 'background: rgba(59, 130, 246, 0.08);' : ''">
-                                    <td class="text-center font-mono">{{ item.no }}</td>
-                                    <td>
-                                        <strong style="color: #ffffff;">{{ item.desc }}</strong>
-                                        <div v-if="item.itemCode" style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">
-                                            SAP: {{ item.itemCode }}
-                                        </div>
-                                    </td>
-                                    <td class="text-center font-mono font-bold" style="color: #60a5fa;">{{ item.unit || 'No' }}</td>
-                                    <td>
-                                        <template v-if="getMatchedPoleMaterial(selectedPoleRatioActKey || selectedActivityKey, item)">
-                                            <div style="font-weight: 600; color: #e2e8f0;">
-                                                {{ getMatchedPoleMaterial(selectedPoleRatioActKey || selectedActivityKey, item).desc }}
-                                            </div>
-                                            <div style="font-size: 0.72rem; color: #38bdf8; font-family: monospace;">
-                                                Pole Unit: {{ getMatchedPoleMaterial(selectedPoleRatioActKey || selectedActivityKey, item).unit || 'Nos' }}
-                                            </div>
-                                        </template>
-                                        <template v-else>
-                                            <span style="color: #64748b; font-size: 0.74rem;">(No direct Pole item match)</span>
-                                        </template>
-                                    </td>
-                                    <td style="padding: 6px;">
-                                        <!-- Ratio Controls -->
-                                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                                            <!-- Mode & Value Input -->
-                                            <div style="display: flex; align-items: center; gap: 6px;">
-                                                <select :value="item.poleRatioMode || 'divisor'"
-                                                    @change="updateItemPoleRatioMode(item, $event.target.value)"
-                                                    style="height: 28px; padding: 0 6px; font-size: 0.75rem; font-weight: 700; border-radius: 5px; border: 1px solid rgba(59, 130, 246, 0.4); background: #0f172a; color: #93c5fd;">
-                                                    <option value="divisor">1 {{ item.unit || 'Unit' }} = X Pole Nos (÷)</option>
-                                                    <option value="multiplier">Multiplier (× Factor)</option>
-                                                </select>
-                                                
-                                                <input type="number" step="any" min="0.0001"
-                                                    :value="item.poleRatioMode === 'multiplier' ? (item.poleRatio || 1) : (item.poleRatioDivisor || 1)"
-                                                    @input="updateItemPoleRatioValue(item, $event.target.value)"
-                                                    @change="applyItemPoleRatioChange(selectedPoleRatioActKey || selectedActivityKey)"
-                                                    style="width: 70px; height: 28px; padding: 0 6px; font-size: 0.8rem; font-weight: 800; font-family: monospace; text-align: center; border-radius: 5px; border: 1.5px solid #3b82f6; background: #1e293b; color: #ffffff;"
-                                                    placeholder="1">
-                                            </div>
-
-                                            <!-- Quick Presets -->
-                                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                                <button type="button" class="btn" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 700; background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 3px;"
-                                                    @click="setItemPoleRatioPreset(item, 'divisor', 1)">
-                                                    1:1 (Direct)
-                                                </button>
-                                                <button type="button" class="btn" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 700; background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 3px;"
-                                                    @click="setItemPoleRatioPreset(item, 'divisor', 2)">
-                                                    1:2 (2 Nos = 1 Set)
-                                                </button>
-                                                <button type="button" class="btn" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 700; background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 3px;"
-                                                    @click="setItemPoleRatioPreset(item, 'divisor', 3)">
-                                                    1:3
-                                                </button>
-                                                <button type="button" class="btn" style="padding: 1px 5px; font-size: 0.68rem; font-weight: 700; background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 3px;"
-                                                    @click="setItemPoleRatioPreset(item, 'divisor', 4)">
-                                                    1:4
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center font-mono">
-                                        <div style="font-size: 0.74rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                            {{ getPoleRatioPreviewText(item) }}
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="modal-footer" style="padding: 0.75rem 1.25rem; background: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--border-strong); display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 0.76rem; color: #94a3b8;">
-                        Ratio badalne par Activity Billing ki quantities turant recalculate ho jayengi.
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn btn-secondary" @click="showPoleRatioModal = false" style="padding: 6px 14px; font-size: 0.8rem;">
-                            Close
-                        </button>
-                        <button type="button" class="btn btn-primary" @click="saveAndApplyPoleRatios(selectedPoleRatioActKey || selectedActivityKey)" style="padding: 6px 16px; font-size: 0.8rem; font-weight: 800; background: #3b82f6; border-color: #3b82f6; color: white;">
-                            💾 Apply & Sync Now
                         </button>
                     </div>
                 </div>

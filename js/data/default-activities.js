@@ -83,9 +83,6 @@ const defaultActivities = {
         "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
-        "poleRatio": 0.5,
-        "poleRatioDivisor": 2,
-        "poleRatioMode": "divisor",
         "sapItems": [
           {
             "code": "17005042",
@@ -2936,9 +2933,6 @@ const defaultActivities = {
         "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
-        "poleRatio": 0.5,
-        "poleRatioDivisor": 2,
-        "poleRatioMode": "divisor",
         "sapItems": [
           {
             "code": "17005042",

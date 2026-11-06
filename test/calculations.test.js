@@ -1653,65 +1653,6 @@ it('Auto-Concreting & Auger Size: Calculates Pole Pad + Stay Concreting automati
     assert.strictEqual(loc2New, 1.238, 'With 20 inch auger, Loc 2 concrete volume must be 1.238 m3');
 });
 
-// 31. Pole Schedule to Activity Billing Ratio Mapping (User requested: Cut Point Channel 2 Nos = 1 Set)
-it('Pole Ratio Mapping: Converts Pole Schedule quantities to Activity Billing by custom ratio/factor', () => {
-    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
-    const defaultActivities = require('../js/data/default-activities.js');
-    const psModule = require('../js/pole-schedule.js');
-
-    const mockApp = {
-        selectedPoleScheduleKey: '907',
-        selectedActivityKey: '907',
-        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
-        activities: JSON.parse(JSON.stringify(defaultActivities)),
-        poleScheduleLocations: { '907': [{ name: 'Location 1' }] },
-        activityLocations: { '907': [{ name: 'Location 1' }] },
-        poleScheduleQuantities: { '907': { 0: {} } },
-        activityQuantities: { '907': [[]] },
-        isFinalized: false,
-        recoRevision: 0,
-        showToast() {},
-        saveToStorage() {},
-        debouncedSave() {},
-        ...psModule
-    };
-
-    // Find Cut Point Channel in Pole Schedule 907 (sm itemCode 17005042)
-    const sched = mockApp.poleSchedules['907'];
-    const act = mockApp.activities['907'];
-    const psCutIdx = sched.materials.findIndex(m => m.itemCode === '17005042');
-    const actCutIdx = act.materials.findIndex(m => m.itemCode === '17005042');
-
-    assert.ok(psCutIdx !== -1, 'Cut Point Channel must exist in Pole Schedule 907');
-    assert.ok(actCutIdx !== -1, 'Cut Point Set must exist in Activity 907');
-
-    const actItem = act.materials[actCutIdx];
-    // Verify default ratio: 1 Set = 2 Nos (divisor = 2, multiplier = 0.5)
-    assert.strictEqual(mockApp.getItemPoleRatioDivisor(actItem), 2, 'Default divisor for Cut Point Set must be 2');
-    assert.strictEqual(mockApp.getItemPoleRatio(actItem), 0.5, 'Default multiplier for Cut Point Set must be 0.5');
-
-    // Enter 2 Nos in Pole Schedule
-    mockApp.setPoleScheduleCellQty(0, psCutIdx, 2);
-
-    // Verify Activity Billing has 1 Set (2 Nos * 0.5 = 1 Set)
-    assert.strictEqual(mockApp.activityQuantities['907'][0][actCutIdx], 1, '2 Nos in Pole Schedule must convert to 1 Set in Activity Billing');
-
-    // Enter 6 Nos in Pole Schedule
-    mockApp.setPoleScheduleCellQty(0, psCutIdx, 6);
-    assert.strictEqual(mockApp.activityQuantities['907'][0][actCutIdx], 3, '6 Nos in Pole Schedule must convert to 3 Sets in Activity Billing');
-
-    // Test custom ratio change to 1:4 (4 Nos = 1 Set)
-    mockApp.setItemPoleRatioPreset(actItem, 'divisor', 4);
-    assert.strictEqual(mockApp.getItemPoleRatioDivisor(actItem), 4, 'Divisor should be 4');
-    mockApp.syncPoleScheduleToBillingAndReconciliation('907');
-    assert.strictEqual(mockApp.activityQuantities['907'][0][actCutIdx], 1.5, '6 Nos with divisor 4 must convert to 1.5 Sets');
-
-    // Test bidirectional sync: enter 2 Sets in Activity Billing -> Pole Schedule gets 2 * 4 = 8 Nos
-    mockApp.activityQuantities['907'][0][actCutIdx] = 2;
-    mockApp.syncActivityBillingToPoleSchedule('907');
-    assert.strictEqual(mockApp.poleScheduleQuantities['907'][0][psCutIdx], 8, '2 Sets in Activity Billing with divisor 4 must sync back to 8 Nos in Pole Schedule');
-});
-
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

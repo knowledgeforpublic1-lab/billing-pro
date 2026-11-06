@@ -182,10 +182,6 @@
                 activeSapManagerOrigIndex: -1,
                 sapManagerSearchQuery: '',
                 sapManagerSuggestions: [],
-                // 📐 Pole Schedule ➔ Activity Ratio Mapping
-                showPoleRatioModal: false,
-                selectedPoleRatioActKey: '907',
-                poleRatioSearchQuery: '',
                 mappingRoundMode: (function() { try { return localStorage.getItem('lk_billing_mapping_round_mode') || 'none'; } catch(e) { return 'none'; } })(),
                 // 🔒 Mapping locks — edit ke liye unlock karna hoga (sap mapping default unlocked hai taaki mapping asani se ho sake)
                 mappingLocks: (function() {
@@ -314,6 +310,14 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed && parsed.activities && typeof parsed.activities === 'object' && Object.keys(parsed.activities).length > 0) {
+                                if (typeof defaultActivities !== 'undefined') {
+                                    Object.keys(defaultActivities).forEach(k => {
+                                        const defLen = (defaultActivities[k] && defaultActivities[k].materials) ? defaultActivities[k].materials.length : 0;
+                                        if (parsed.activities[k] && parsed.activities[k].materials && parsed.activities[k].materials.length > defLen) {
+                                            parsed.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
+                                        }
+                                    });
+                                }
                                 if (parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length !== (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 18))) {
                                     parsed.activities['922'] = JSON.parse(JSON.stringify(defaultActivities['922']));
                                 }

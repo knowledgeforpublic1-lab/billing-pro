@@ -310,7 +310,7 @@ window.PoleScheduleModule = {
             document.execCommand('copy');
             document.body.removeChild(ta);
             this.showToast('📋 ' + count + ' Filtered items copied! Paste directly into Excel (Ctrl+V)', '✅');
-        } catch(e) {
+        } catch (e) {
             this.showToast('Could not copy to clipboard', '❌');
         }
     },
@@ -712,7 +712,7 @@ window.PoleScheduleModule = {
         this.selectedPoleScheduleKey = key;
         this.poleScheduleSubTab = 'schedule';
         this.ensurePoleScheduleQuantities(key);
-        try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch(e) {}
+        try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch (e) { }
     },
 
     getPoleScheduleItemTotalQtyByKey(key, mIdx) {
@@ -774,36 +774,13 @@ window.PoleScheduleModule = {
         const act = this.activities[k];
         if (!Array.isArray(act.materials)) act.materials = [];
 
-        // Synchronize all materials from Pole Schedule into act.materials so Activity Billing has all items
-        sched.materials.forEach((sm, smIdx) => {
-            if (sm.isSection || sm.isSpan) return;
-            let actMatIdx = act.materials.findIndex(am => {
-                if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
-                if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
-                return false;
-            });
-            if (actMatIdx === -1) {
-                act.materials.push({
-                    no: sm.no || (act.materials.length + 1).toString(),
-                    desc: sm.desc || '',
-                    unit: sm.unit || 'No',
-                    rate: Number(sm.rate) || 0,
-                    itemCode: sm.itemCode || '',
-                    sapDescription: sm.sapDescription || sm.desc || '',
-                    sapUom: sm.sapUom || sm.unit || 'No',
-                    docHeader: sm.docHeader || '0031006347',
-                    sapItems: (sm.sapItems && sm.sapItems.length > 0) ? JSON.parse(JSON.stringify(sm.sapItems)) : [
-                        { code: sm.itemCode || '', desc: sm.sapDescription || sm.desc || '', uom: sm.sapUom || sm.unit || 'No', qty: 1, docHeader: sm.docHeader || '0031006347' }
-                    ]
-                });
-            } else {
-                if (!act.materials[actMatIdx].itemCode && sm.itemCode) act.materials[actMatIdx].itemCode = sm.itemCode;
-                if ((!act.materials[actMatIdx].sapItems || act.materials[actMatIdx].sapItems.length === 0) && sm.sapItems && sm.sapItems.length > 0) {
-                    act.materials[actMatIdx].sapItems = JSON.parse(JSON.stringify(sm.sapItems));
-                }
-                if (!act.materials[actMatIdx].rate && sm.rate) act.materials[actMatIdx].rate = Number(sm.rate);
+        // 🛡️ Ensure act.materials ONLY contains official contract items (never inject Pole Schedule items)
+        if (typeof defaultActivities !== 'undefined' && defaultActivities[k] && defaultActivities[k].materials) {
+            const defLen = defaultActivities[k].materials.length;
+            if (act.materials.length > defLen) {
+                act.materials = JSON.parse(JSON.stringify(defaultActivities[k].materials));
             }
-        });
+        }
 
         // 2. Synchronize quantities into this.activityQuantities[k]
         if (!this.activityQuantities) this.activityQuantities = {};
@@ -884,14 +861,14 @@ window.PoleScheduleModule = {
                     }
                 }
             }
-        } catch(e) {}
+        } catch (e) { }
 
         // 4. Update Tax Invoice immediately
         try {
             if (typeof this.updateSyncTaxInvoiceFromActivities === 'function') {
                 this.updateSyncTaxInvoiceFromActivities();
             }
-        } catch(e) {}
+        } catch (e) { }
 
         // 5. Trigger Reconciliation Sheet re-calculation
         this.recoRevision = (this.recoRevision || 0) + 1;
@@ -1703,7 +1680,7 @@ window.PoleScheduleModule = {
         this.showToast(`Item "${name}" removed from Pole Schedule ${k}`, '🗑️');
     },
 
-        async persistPoleSchedulesToMasterFile(silent = false) {
+    async persistPoleSchedulesToMasterFile(silent = false) {
         try {
             if (!this.poleSchedules || typeof this.poleSchedules !== "object" || Object.keys(this.poleSchedules).length === 0) {
                 if (!silent && typeof this.showToast === "function") this.showToast("No pole schedules found to save", "⚠️");
@@ -1713,7 +1690,7 @@ window.PoleScheduleModule = {
             // 1. Keep localStorage updated
             try {
                 localStorage.setItem("lk_billing_pole_schedules_v1", JSON.stringify(this.poleSchedules));
-            } catch(e) {}
+            } catch (e) { }
 
             // 2. Keep in-memory window.defaultPoleSchedules updated
             if (typeof window !== "undefined") {
@@ -1727,7 +1704,7 @@ window.PoleScheduleModule = {
             try {
                 const k = localStorage.getItem("billing_api_key");
                 if (k) headers["x-api-key"] = k;
-            } catch(e) {}
+            } catch (e) { }
 
             const endpoints = [
                 "/api/save-default-pole-schedules",
@@ -1748,12 +1725,12 @@ window.PoleScheduleModule = {
                             break;
                         }
                     }
-                } catch(netErr) {}
+                } catch (netErr) { }
             }
 
             // 4. Also trigger background sync to MongoDB Cloud so all PCs get it immediately
             if (typeof this.syncToMongoNow === "function") {
-                try { this.syncToMongoNow({ manual: false }); } catch(e) {}
+                try { this.syncToMongoNow({ manual: false }); } catch (e) { }
             }
 
             if (savedToFile) {
@@ -1770,7 +1747,7 @@ window.PoleScheduleModule = {
                 }
                 return false;
             }
-        } catch(err) {
+        } catch (err) {
             console.error("persistPoleSchedulesToMasterFile error:", err);
             if (!silent && typeof this.showToast === "function") {
                 this.showToast("Save failed: " + (err.message || "Unknown error"), "❌");
@@ -1795,7 +1772,7 @@ window.PoleScheduleModule = {
             a.click();
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 5000);
-        } catch(err) {
+        } catch (err) {
             console.error("downloadDefaultPoleSchedulesFile error:", err);
             if (typeof this.showToast === "function") this.showToast("Download failed: " + (err.message || "Unknown"), "❌");
         }
