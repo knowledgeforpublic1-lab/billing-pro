@@ -1982,6 +1982,17 @@
                 }
             } catch(e) {}
 
+            // Cross-PC default pole schedules fetch from Cloud
+            try {
+                const psRes = await fetch('/api/default-pole-schedules');
+                if (psRes.ok) {
+                    const psJson = await psRes.json();
+                    if (psJson && psJson.success && psJson.poleSchedules && Object.keys(psJson.poleSchedules).length > 0) {
+                        window.defaultPoleSchedules = psJson.poleSchedules;
+                    }
+                }
+            } catch(psFetchErr) {}
+
             // Auto-heal poleSchedules from defaultPoleSchedules
             try {
                 if (typeof defaultPoleSchedules !== 'undefined') {

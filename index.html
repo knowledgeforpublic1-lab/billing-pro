@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v4">
+    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v5">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -46,97 +46,111 @@
             <div class="main-area">
                 <!-- 🧭 Ultra-Modern Linear/Vercel SaaS Navigation Header (Exact Mockup Match) -->
                 <header class="saas-header-wrapper">
-                    <!-- Top Command Bar -->
-                    <div class="saas-top-bar">
-                        <!-- Left: Workspace & Contractor -->
+                    <!-- Row 1: Top Brand, Navigation Tabs Capsule & User Profile -->
+                    <div class="saas-nav-row-top">
+                        <!-- Left: Brand / Project -->
                         <div class="brand-cluster">
                             <div class="brand-logo-icon">⚡</div>
-                            <div class="workspace-identity">
-                                <span class="workspace-subtitle">WORKSPACE</span>
-                                <div class="workspace-dropdown-trigger" @click="openSavedBillsManager('database')" title="Active Project & Bill Selector">
-                                    <span class="project-title">{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}</span>
-                                    <span class="dropdown-chevron">▾</span>
-                                </div>
-                            </div>
-                            <span class="status-dot-active">Active</span>
-                            <span class="breadcrumb-divider">/</span>
-                            <div class="contractor-badge-btn" @click="openSavedBillsManager('database')" title="Active Assigned Contractor. Click to change.">
-                                <span>👷</span>
-                                <span class="contractor-name">{{ getContractorDisplayName() }}</span>
-                                <span class="dropdown-chevron">▾</span>
-                            </div>
+                            <span class="project-title" @click="openSavedBillsManager('database')" title="Active Project & Bill Selector">
+                                {{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}
+                            </span>
+                            <span class="status-dot-active">ACTIVE</span>
                         </div>
 
-                        <!-- Right: Search, Sync, RA No, New Bill CTA & Profile -->
-                        <div class="actions-cluster">
-                            <!-- Search / Open Bill Pill -->
-                            <div class="saas-search-pill" @click="openSavedBillsManager('database')" title="Search or Open Saved Bills (⌘K / Click)">
-                                <span style="font-size: 0.8rem; opacity: 0.6;">🔍</span>
-                                <span class="search-placeholder">Search or ⌘K</span>
-                                <span v-if="effectiveBillNo" class="ra-badge">{{ effectiveBillNo }}</span>
-                            </div>
-
-                            <!-- ☁️ Live Cloud Sync Pill -->
-                            <div class="saas-pill sync-pill"
-                                @click="syncToMongoNow({ manual: true })"
-                                :title="'Cloud Sync: ' + (syncStatus === 'synced' ? ('Saved to Cloud (' + (lastSyncAt || 'now') + ')') : (syncStatus === 'syncing' ? 'Syncing...' : 'Click to save'))">
-                                <span class="live-dot" :class="{ 'spin-anim': syncStatus === 'syncing' }"></span>
-                                <span>{{ syncStatus === 'synced' ? 'Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save') }}</span>
-                            </div>
-
-                            <!-- RA No Pill -->
-                            <div class="saas-pill ra-pill" title="Current RA Bill Number. Click to edit.">
-                                <span class="ra-label">RA:</span>
-                                <input type="text"
-                                    :value="effectiveRaNo"
-                                    @input="updateRaNo($event.target.value)"
-                                    placeholder="RA"
-                                    title="RA Bill No"
-                                    class="ra-input font-mono">
-                            </div>
-
-                            <!-- Vibrant Emerald Primary CTA: + New Bill -->
-                            <button class="btn-new-bill-emerald" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
-                                <span>+</span>
-                                <span>New Bill</span>
-                            </button>
-
-                            <!-- Google Drive Backup Icon -->
-                            <div class="saas-pill drive-pill"
-                                @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
-                                :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook.' : 'Connect Google Drive'">
-                                <span>💾</span>
-                            </div>
-
-                            <!-- User Profile Avatar Pill -->
-                            <div class="user-profile-pill-mockup" title="Billing Engineer: Rakesh Kushawaha">
-                                <div class="avatar-circle">RK</div>
-                                <span class="avatar-name">Rakesh K.</span>
-                                <span class="dropdown-chevron">▾</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Centered Floating Tab Capsule (Hanging Below Top Bar, Exactly as in Mockup) -->
-                    <div class="saas-tab-capsule-container">
+                        <!-- Center: Primary Navigation Tabs Capsule -->
                         <nav class="saas-tab-capsule">
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
                                 <span class="tab-icon">📄</span>
                                 <span>Tax Invoice</span>
                             </button>
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
+                                <span class="tab-icon">⚡</span>
                                 <span>Activity Billing</span>
                             </button>
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
+                                <span class="tab-icon">📐</span>
                                 <span>Pole Schedule</span>
                             </button>
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
-                                <span>Reconciliation</span>
+                                <span class="tab-icon">📊</span>
+                                <span>Reconciliation Sheet</span>
                             </button>
                             <button class="capsule-nav-tab" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
-                                <span>Master Reco</span>
+                                <span class="tab-icon">🌐</span>
+                                <span>Master Reconciliation</span>
                             </button>
                         </nav>
+
+                        <!-- Right: Cloud Sync Status & Profile -->
+                        <div class="actions-cluster">
+                            <!-- ☁️ Cloud Sync Status Pill -->
+                            <div class="saas-pill sync-pill"
+                                :class="{ 'is-unsaved': syncStatus !== 'synced' && syncStatus !== 'syncing', 'is-syncing': syncStatus === 'syncing', 'is-synced': syncStatus === 'synced' }"
+                                @click="syncToMongoNow({ manual: true })"
+                                :title="'Cloud Sync: ' + (syncStatus === 'synced' ? ('Saved to Cloud (' + (lastSyncAt || 'now') + ')') : (syncStatus === 'syncing' ? 'Syncing...' : 'Click to save'))">
+                                <span v-if="syncStatus === 'synced'" class="live-dot"></span>
+                                <span v-else-if="syncStatus === 'syncing'" class="live-dot spin-anim"></span>
+                                <span v-else class="warn-icon">⚠️</span>
+                                <span>{{ syncStatus === 'synced' ? 'Cloud Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save Online') }}</span>
+                            </div>
+
+                            <!-- User Profile Avatar Pill -->
+                            <div class="user-profile-pill-mockup" title="Billing Engineer: Rakesh Kushawaha">
+                                <div class="avatar-circle">RK</div>
+                                <span class="avatar-name">Rakesh Kushawaha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Sub-bar Context & Bill Actions -->
+                    <div class="saas-nav-row-sub">
+                        <!-- Left: Client & Contractor Meta -->
+                        <div class="sub-context-cluster">
+                            <span class="context-lbl">CLIENT</span>
+                            <span class="context-val">{{ projectMeta.clientName || 'ASHOKA BUILDCON LTD.' }}</span>
+                            <span class="context-sep">•</span>
+                            <span class="context-lbl">CONTRACTOR</span>
+                            <span class="context-val contractor-amber" @click="openSavedBillsManager('database')" title="Assigned Contractor (Click to switch)">
+                                {{ getContractorDisplayName() || 'M/s Ranjeet Singh' }}
+                            </span>
+                        </div>
+
+                        <!-- Right: Bill Controls (Open Bill, RA No, + New Bill, Drive Backup) -->
+                        <div class="sub-actions-cluster">
+                            <!-- Open Bill Pill -->
+                            <div class="saas-pill open-bill-pill" @click="openSavedBillsManager('database')" title="Search or Open Saved Bills (Click / ⌘K)">
+                                <span>📁</span>
+                                <span>Open Bill</span>
+                                <span class="bill-id-chip">{{ effectiveBillNo || 'RSL/RA/02' }}</span>
+                                <span class="dropdown-chevron">▾</span>
+                            </div>
+
+                            <!-- RA No Pill -->
+                            <div class="saas-pill ra-pill" title="Current RA Bill Number. Click to edit.">
+                                <span>🏷️</span>
+                                <span class="ra-label">RA:</span>
+                                <input type="text"
+                                    :value="effectiveRaNo"
+                                    @input="updateRaNo($event.target.value)"
+                                    placeholder="02"
+                                    title="RA Bill No"
+                                    class="ra-input font-mono">
+                            </div>
+
+                            <!-- Vibrant Emerald Primary CTA: + New Bill -->
+                            <button class="btn-new-bill-emerald" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
+                                <span class="plus-sign">+</span>
+                                <span>New Bill</span>
+                            </button>
+
+                            <!-- Google Drive Backup Pill -->
+                            <div class="saas-pill drive-pill-btn"
+                                @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
+                                :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook.' : 'Connect Google Drive'">
+                                <span>📁</span>
+                                <span>Drive Backup</span>
+                            </div>
+                        </div>
                     </div>
                 </header>
 

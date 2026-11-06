@@ -79,7 +79,8 @@ const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
     'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
-    'dataId', 'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt'
+    'dataId', 'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt',
+    'poleSchedules', 'poleScheduleLocations', 'poleScheduleQuantities', 'selectedPoleScheduleKey', 'poleScheduleSubTab'
 ]);
 
 function pickAllowedKeys(obj) {

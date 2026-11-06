@@ -765,6 +765,7 @@ window.PoleScheduleModule = {
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
         if (typeof this.persistPoleSchedulesToMasterFile === "function") this.persistPoleSchedulesToMasterFile(true);
+        if (typeof this.syncToMongoNow === "function") this.syncToMongoNow({ manual: true }); // added duplicate trigger
         this.showToast(`Item "${newMat.desc}" duplicated below! 📋`, '✅');
     },
 
@@ -874,6 +875,12 @@ window.PoleScheduleModule = {
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.showPsAddMaterialModal = false;
         this.saveToStorage();
+        if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
+            this.persistPoleSchedulesToMasterFile(true);
+        }
+        if (typeof this.syncToMongoNow === 'function') {
+            this.syncToMongoNow({ manual: true });
+        }
         this.showToast(`Item "${newMat.desc}" added with SAP Code [${code || 'N/A'}]! 🎉`, '✅');
     },
 
