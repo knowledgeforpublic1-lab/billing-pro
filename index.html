@@ -2110,27 +2110,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, idx) in reconRows" :key="row.code"
-                                :style="row._isUnmapped ? 'background: rgba(239, 68, 68, 0.14) !important; border-left: 4px solid #ef4444;' : ''">
+                            <tr v-for="(row, idx) in reconRows" :key="row.code">
                                 <td class="text-center">{{ idx + 1 }}</td>
-                                <td class="text-center font-mono font-bold" :style="row._isUnmapped ? 'color: #f87171;' : 'color: var(--primary);'">
+                                <td class="text-center font-mono font-bold" style="color: var(--primary);">
                                     <div>{{ row.code }}</div>
-                                    <span v-if="row._isUnmapped" class="badge" style="background: #dc2626; color: #ffffff; font-size: 0.58rem; padding: 1px 4px; border-radius: 4px; font-weight: 900; display: inline-block; margin-top: 2px; letter-spacing: 0.3px;">
-                                        🚨 UNMAPPED
-                                    </span>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 700; font-size: 0.88rem;" :style="row._isUnmapped ? 'color: #fecaca;' : 'color: var(--text-main);'">
+                                    <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">
                                         {{ row.desc }}
-                                    </div>
-                                    <!-- Red Alert Notice for Unmapped SAP Issued Item -->
-                                    <div v-if="row._isUnmapped" style="margin-top: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.22); border: 1px solid rgba(239, 68, 68, 0.45); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                                        <div style="font-size: 0.72rem; color: #fca5a5; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                                            <span>⚠️ SAP Stock me Issue hai (Net: <strong style="color: #ffffff;">{{ row.sapNetIssue || row.sapGrossIssue }} {{ row.uom }}</strong>), lekin Mapping me ye Code kisi Activity se link nahi hai!</span>
-                                        </div>
-                                        <button type="button" @click.stop="goToMappingForCode(row.code, row.desc)" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.70rem; font-weight: 800; border-color: #ef4444; color: #ffffff; background: #dc2626; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-                                            <span>🛠️ Fix in Mapping ➔</span>
-                                        </button>
                                     </div>
                                 </td>
                                 <td class="text-center font-mono" style="font-size: 0.82rem;">{{ row.uom }}</td>
