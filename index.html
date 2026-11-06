@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v2">
+    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v3">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -61,61 +61,53 @@
                         </div>
                     </div>
 
-                    <!-- Center: Floating Segmented Navigation Tabs -->
+                    <!-- Center: Floating Segmented Navigation Tabs (Matches Mockup) -->
                     <nav class="nav-segmented">
                         <button class="saas-nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
-                            <span class="tab-icon">📄</span>
+                            <span>📄</span>
                             <span>Tax Invoice</span>
                         </button>
                         <button class="saas-nav-tab" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
-                            <span class="tab-icon">⚡</span>
+                            <span>⚡</span>
                             <span>Activity Billing</span>
                         </button>
                         <button class="saas-nav-tab" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
-                            <span class="tab-icon">📐</span>
+                            <span>📐</span>
                             <span>Pole Schedule</span>
                         </button>
                         <button class="saas-nav-tab" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
-                            <span class="tab-icon">📊</span>
-                            <span class="tab-label-full">Reconciliation Sheet</span>
-                            <span class="tab-label-short">Reconciliation</span>
+                            <span>📊</span>
+                            <span>Reconciliation</span>
                         </button>
                         <button class="saas-nav-tab" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
-                            <span class="tab-icon">🌐</span>
-                            <span class="tab-label-full">Master Reconciliation</span>
-                            <span class="tab-label-short">Master Reco</span>
+                            <span>🌐</span>
+                            <span>Master Reco</span>
                         </button>
                     </nav>
 
-                    <!-- Right: Actions Cluster (Sync, Bill Open, RA No, New Bill, Backup, Profile) -->
+                    <!-- Right: Actions Cluster (100% visible, compact, no overflow) -->
                     <div class="actions-cluster">
                         <!-- ☁️ Live Cloud Sync Chip -->
                         <div class="saas-chip sync-chip"
                             @click="syncToMongoNow({ manual: true })"
-                            :title="'Cloud Sync: ' + (syncStatus === 'synced' ? 'All changes saved to Cloud! Click to re-sync now.' : (syncStatus === 'syncing' ? 'Syncing with MongoDB cloud...' : 'Click to save now.'))"
-                            :style="syncStatus === 'synced' 
-                                ? 'background: rgba(16, 185, 129, 0.08); color: #34d399; border-color: rgba(16, 185, 129, 0.25);' 
-                                : (syncStatus === 'syncing' 
-                                    ? 'background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35);' 
-                                    : 'background: rgba(239, 68, 68, 0.10); color: #f87171; border-color: rgba(239, 68, 68, 0.35);')">
-                            <span class="live-dot" :class="{ 'spin-anim': syncStatus === 'syncing' }"
-                                  :style="syncStatus === 'syncing' ? 'background: #f59e0b; box-shadow: 0 0 8px #f59e0b;' : (syncStatus !== 'synced' ? 'background: #ef4444; box-shadow: 0 0 8px #ef4444;' : '')"></span>
-                            <span>{{ syncStatus === 'synced' ? ('Cloud Synced' + (lastSyncAt ? ' (' + lastSyncAt + ')' : '')) : (syncStatus === 'syncing' ? 'Saving Online...' : 'Save Online') }}</span>
+                            :title="'Cloud Sync: ' + (syncStatus === 'synced' ? ('Saved to Cloud (' + (lastSyncAt || 'now') + ')') : (syncStatus === 'syncing' ? 'Syncing...' : 'Click to save'))">
+                            <span class="live-dot" :class="{ 'spin-anim': syncStatus === 'syncing' }"></span>
+                            <span>{{ syncStatus === 'synced' ? 'Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save') }}</span>
                         </div>
 
                         <!-- Open Bill Selector -->
                         <div class="saas-chip bill-selector-chip"
                             @click="openSavedBillsManager('database')"
-                            :title="'Open Saved Bills (MongoDB). Active: ' + (effectiveBillNo || 'Main Bill')">
-                            <span style="font-size: 0.82rem;">📁</span>
-                            <span>Open Bill</span>
+                            :title="'Active Bill: ' + (effectiveBillNo || 'Main Bill') + '. Click to open saved bills.'">
+                            <span style="font-size: 0.80rem;">📂</span>
+                            <span>Bill</span>
                             <span v-if="effectiveBillNo" class="ra-badge">{{ effectiveBillNo }}</span>
                             <span class="pill-arrow">▾</span>
                         </div>
 
                         <!-- RA No Quick Edit Chip -->
                         <div class="saas-chip ra-chip" title="Current RA Bill Number. Click to edit.">
-                            <span style="font-size: 0.75rem;">🏷️</span>
+                            <span style="font-size: 0.72rem;">🏷️</span>
                             <span class="ra-text-label">RA:</span>
                             <input type="text"
                                 :value="effectiveRaNo"
@@ -135,8 +127,8 @@
                         <div class="saas-chip drive-chip"
                             @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()"
                             :title="hasDriveConnected ? 'Google Drive Connected! Click to save bill workbook to Google Drive.' : 'Google Drive not connected. Click to enter Google Apps Script Webhook URL.'">
-                            <span style="font-size: 0.8rem;">💾</span>
-                            <span>{{ hasDriveConnected ? 'Drive Backup' : 'Connect Drive' }}</span>
+                            <span style="font-size: 0.78rem;">💾</span>
+                            <span>{{ hasDriveConnected ? 'Drive' : 'Connect' }}</span>
                         </div>
 
                         <!-- User Profile Avatar Pill -->
