@@ -23,7 +23,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v6">
+    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v7">
     <script>
         // Dark mode is always enabled via html class="dark dark-mode"
     </script>
@@ -59,29 +59,47 @@
 
                         <!-- Center: Primary Navigation Tabs Capsule -->
                         <nav class="saas-tab-capsule">
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'dashboard' || currentView === 'summary' }" @click="switchView('dashboard')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'dashboard' || currentView === 'summary' }" @click="switchView('dashboard')" title="Dashboard & Executive Summary">
                                 <span class="tab-icon">🏠</span>
-                                <span>Dashboard & Summary</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Dashboard</span>
+                                    <span class="tab-line-2">& Summary</span>
+                                </span>
                             </button>
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'invoice' || currentView === 'taxInvoice' }" @click="switchView('invoice')" title="Official Tax Invoice">
                                 <span class="tab-icon">📄</span>
-                                <span>Tax Invoice</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Tax</span>
+                                    <span class="tab-line-2">Invoice</span>
+                                </span>
                             </button>
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'detail' }" @click="switchView('detail')" title="Activity Span Billing & Measurements">
                                 <span class="tab-icon">⚡</span>
-                                <span>Activity Billing</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Activity</span>
+                                    <span class="tab-line-2">Billing</span>
+                                </span>
                             </button>
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'poleSchedule' || currentView === 'abstract' }" @click="switchView('poleSchedule')" title="Pole Schedule Bill of Materials">
                                 <span class="tab-icon">📐</span>
-                                <span>Pole Schedule</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Pole</span>
+                                    <span class="tab-line-2">Schedule</span>
+                                </span>
                             </button>
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'reconciliation' }" @click="switchView('reconciliation')" title="Contractor Material Reconciliation Sheet">
                                 <span class="tab-icon">📊</span>
-                                <span>Reconciliation Sheet</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Reconciliation</span>
+                                    <span class="tab-line-2">Sheet</span>
+                                </span>
                             </button>
-                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')">
+                            <button class="capsule-nav-tab" :class="{ 'active': currentView === 'masterrecon' }" @click="switchView('masterrecon')" title="Master Multi-Contractor Reconciliation Hub">
                                 <span class="tab-icon">🌐</span>
-                                <span>Master Reconciliation</span>
+                                <span class="tab-text-wrap">
+                                    <span class="tab-line-1">Master</span>
+                                    <span class="tab-line-2">Reconciliation</span>
+                                </span>
                             </button>
                         </nav>
 

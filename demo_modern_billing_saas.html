@@ -122,7 +122,11 @@
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
         }
 
-        .capsule-nav-tab {
+        .tab-text-wrap { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.12; text-align: left; }
+        .tab-line-1 { font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+        .tab-line-2 { font-size: 0.65rem; font-weight: 600; opacity: 0.78; white-space: nowrap; }
+        .capsule-nav-tab.active .tab-line-1, .capsule-nav-tab.active .tab-line-2 { color: #ffffff; opacity: 1; }
+        .capsule-nav-tab { padding: 3px 9px !important;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -760,27 +764,27 @@
             <nav class="saas-tab-capsule">
                 <button class="capsule-nav-tab active" id="tab-dashboard" onclick="switchView('dashboard')">
                     <span class="tab-icon">🏠</span>
-                    <span>Dashboard & Summary</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Dashboard</span><span class="tab-line-2">& Summary</span></span>
                 </button>
                 <button class="capsule-nav-tab" id="tab-invoice" onclick="switchView('invoice')">
                     <span class="tab-icon">📄</span>
-                    <span>Tax Invoice</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Tax</span><span class="tab-line-2">Invoice</span></span>
                 </button>
                 <button class="capsule-nav-tab" id="tab-detail" onclick="switchView('detail')">
                     <span class="tab-icon">⚡</span>
-                    <span>Activity Billing</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Activity</span><span class="tab-line-2">Billing</span></span>
                 </button>
                 <button class="capsule-nav-tab" id="tab-poleSchedule" onclick="switchView('poleSchedule')">
                     <span class="tab-icon">📐</span>
-                    <span>Pole Schedule</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Pole</span><span class="tab-line-2">Schedule</span></span>
                 </button>
                 <button class="capsule-nav-tab" id="tab-reconciliation" onclick="switchView('reconciliation')">
                     <span class="tab-icon">📊</span>
-                    <span>Reconciliation Sheet</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Reconciliation</span><span class="tab-line-2">Sheet</span></span>
                 </button>
                 <button class="capsule-nav-tab" id="tab-masterrecon" onclick="switchView('masterrecon')">
                     <span class="tab-icon">🌐</span>
-                    <span>Master Reconciliation</span>
+                    <span class="tab-text-wrap"><span class="tab-line-1">Master</span><span class="tab-line-2">Reconciliation</span></span>
                 </button>
             </nav>
 
