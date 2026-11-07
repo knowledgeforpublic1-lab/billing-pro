@@ -844,176 +844,15 @@
                             </div>
                         </div>
 
-                        <!-- 📊 EXCEL-STYLE AUTOFILTER & EXTRACTION SUITE (User requested) -->
-                        <div class="excel-filter-toolbar no-print">
-                            <!-- Left: Quick Filter Preset Chips -->
-                            <div class="excel-filter-presets">
-                                <span style="font-size: 0.76rem; font-weight: 800; color: #818cf8; display: inline-flex; align-items: center; gap: 4px; margin-right: 4px;">
-                                    <span>⚡ Filter:</span>
-                                </span>
-
-                                <!-- 👁️ All Items -->
-                                <button type="button" class="ef-chip" :class="{ 'active': (!poleScheduleFilterQty || poleScheduleFilterQty === 'ALL') && (!poleScheduleFilterSap || poleScheduleFilterSap === 'ALL') && (!poleScheduleFilterUnit || poleScheduleFilterUnit === 'ALL') && !poleScheduleSearchQuery && (!poleScheduleColumnFilters || Object.keys(poleScheduleColumnFilters).length === 0) }"
-                                    @click="resetPoleScheduleFilters" title="Show all items in this schedule">
-                                    <span>👁️ All ({{ getPoleScheduleMaterials().filter(m => !m.isSection).length }})</span>
-                                </button>
-
-                                <!-- ⚡ With Qty Only (> 0) -->
-                                <button type="button" class="ef-chip ef-chip-qty" :class="{ 'active': poleScheduleFilterQty === 'WITH_QTY' }"
-                                    @click="poleScheduleFilterQty = (poleScheduleFilterQty === 'WITH_QTY' ? 'ALL' : 'WITH_QTY')" title="Only items with entered quantities (> 0)">
-                                    <span>⚡ With Qty (> 0)</span>
-                                </button>
-
-                                <!-- ⭕ Zero / Blank Qty -->
-                                <button type="button" class="ef-chip ef-chip-zero" :class="{ 'active': poleScheduleFilterQty === 'ZERO_QTY' }"
-                                    @click="poleScheduleFilterQty = (poleScheduleFilterQty === 'ZERO_QTY' ? 'ALL' : 'ZERO_QTY')" title="Items with 0 or blank quantity">
-                                    <span>⭕ Zero Qty</span>
-                                </button>
-
-                                <!-- 🏷️ Mapped SAP -->
-                                <button type="button" class="ef-chip" :class="{ 'active': poleScheduleFilterSap === 'MAPPED' }"
-                                    @click="poleScheduleFilterSap = (poleScheduleFilterSap === 'MAPPED' ? 'ALL' : 'MAPPED')" title="Items with mapped SAP code">
-                                    <span>🏷️ Mapped SAP</span>
-                                </button>
-
-                                <!-- ⚠️ Unmapped (+ Map) -->
-                                <button type="button" class="ef-chip" :class="{ 'active': poleScheduleFilterSap === 'UNMAPPED' }"
-                                    @click="poleScheduleFilterSap = (poleScheduleFilterSap === 'UNMAPPED' ? 'ALL' : 'UNMAPPED')" title="Items missing SAP code">
-                                    <span>⚠️ Unmapped</span>
-                                </button>
-
-                                <!-- 📦 Unit Dropdown -->
-                                <select v-model="poleScheduleFilterUnit" class="ef-select" title="Filter by Unit of Measurement">
-                                    <option value="ALL">📦 Unit: All</option>
-                                    <option v-for="u in getPoleScheduleUniqueUnits().filter(u => u !== 'ALL')" :key="u" :value="u">
-                                        {{ u }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <!-- Right: Live Search + Extract / Export Filtered Actions -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <div style="position: relative; display: inline-flex; align-items: center;">
-                                    <input type="text" v-model="poleScheduleSearchQuery" placeholder="🔍 Search code, description..." class="ef-search">
-                                    <button v-if="poleScheduleSearchQuery" type="button" @click="poleScheduleSearchQuery = ''" style="position: absolute; right: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.82rem;">✕</button>
-                                </div>
-
-                                <span v-if="isPoleScheduleFilterActive" style="font-size: 0.72rem; font-weight: 800; color: #fde68a; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
-                                    Filtered: {{ filteredPoleScheduleTotals.count }} / {{ getPoleScheduleMaterials().filter(m => !m.isSection).length }} Items
-                                </span>
-
-                                <!-- 📗 Extract / Export Filtered Button -->
-                                <button type="button" class="btn btn-excel" @click="exportPoleScheduleExcel(true)" title="Export only filtered items to Excel (.xlsx)" style="padding: 4px 11px; font-size: 0.78rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                                    <span>📗</span>
-                                    <span>Export Filtered (.xlsx)</span>
-                                </button>
-
-                                <!-- 📋 Copy Filtered Items to Clipboard -->
-                                <button type="button" class="btn btn-secondary" @click="copyFilteredPoleScheduleToClipboard" title="Copy filtered items as table to paste into Excel (Ctrl+V)" style="padding: 4px 10px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc;">
-                                    <span>📋</span>
-                                    <span>Copy Filtered</span>
-                                </button>
-
-                                <!-- Reset Button -->
-                                <button v-if="isPoleScheduleFilterActive" type="button" class="btn btn-secondary" @click="resetPoleScheduleFilters" title="Clear all filters and show full schedule" style="padding: 4px 8px; font-size: 0.74rem; font-weight: 700; color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);">
-                                    <span>🔄 Reset</span>
-                                </button>
-                            </div>
-                        </div>
-
                         <div class="table-responsive" style="max-height: 72vh; overflow-y: auto;">
                             <table class="billing-table">
                                 <thead style="position: sticky; top: 0; z-index: 10;">
                                     <tr>
                                         <th class="text-center no-print" style="width: 42px;" title="Insert Row Anywhere">➕</th>
-
-                                        <!-- Col 1: Item No with Filter Popover -->
-                                        <th class="text-center" style="width: 70px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
-                                                <span>Item No</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.itemNo || poleScheduleSortCol === 'no' }" @click.stop="togglePoleScheduleFilterCol('itemNo')" title="Excel Filter / Sort Item No">
-                                                    <span>{{ (poleScheduleColumnFilters.itemNo || poleScheduleSortCol === 'no') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'itemNo'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter Item No</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('no', 'asc')">🔼 Sort Smallest to Largest</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('no', 'desc')">🔽 Sort Largest to Smallest</button>
-                                                </div>
-                                                <input type="text" :value="poleScheduleColumnFilters.itemNo || ''" @input="setPoleScheduleColFilter('itemNo', $event.target.value)" placeholder="Search item no..." class="ef-search" style="width: 100%; min-width: 0; margin-bottom: 8px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('itemNo'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- Col 2: SAP Code with Filter Popover -->
-                                        <th class="text-center" style="width: 110px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
-                                                <span>SAP Code</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.itemCode || poleScheduleSortCol === 'itemCode' }" @click.stop="togglePoleScheduleFilterCol('itemCode')" title="Excel Filter / Sort SAP Code">
-                                                    <span>{{ (poleScheduleColumnFilters.itemCode || poleScheduleSortCol === 'itemCode') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'itemCode'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter SAP Code</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('itemCode', 'asc')">🔼 Sort A to Z</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('itemCode', 'desc')">🔽 Sort Z to A</button>
-                                                </div>
-                                                <input type="text" :value="poleScheduleColumnFilters.itemCode || ''" @input="setPoleScheduleColFilter('itemCode', $event.target.value)" placeholder="Search SAP code..." class="ef-search" style="width: 100%; min-width: 0; margin-bottom: 8px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('itemCode'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- Col 3: Description with Filter Popover -->
-                                        <th style="min-width: 250px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-                                                <span>Description of Material</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.desc || poleScheduleSortCol === 'desc' }" @click.stop="togglePoleScheduleFilterCol('desc')" title="Excel Filter / Sort Description">
-                                                    <span>{{ (poleScheduleColumnFilters.desc || poleScheduleSortCol === 'desc') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'desc'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter" style="min-width: 270px;">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter Description</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('desc', 'asc')">🔼 Sort A to Z</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('desc', 'desc')">🔽 Sort Z to A</button>
-                                                </div>
-                                                <input type="text" :value="poleScheduleColumnFilters.desc || ''" @input="setPoleScheduleColFilter('desc', $event.target.value)" placeholder="Search description..." class="ef-search" style="width: 100%; min-width: 0; margin-bottom: 8px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('desc'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- Col 4: Unit with Filter Popover -->
-                                        <th class="text-center" style="width: 65px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
-                                                <span>Unit</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.unit || poleScheduleSortCol === 'unit' }" @click.stop="togglePoleScheduleFilterCol('unit')" title="Excel Filter / Sort Unit">
-                                                    <span>{{ (poleScheduleColumnFilters.unit || poleScheduleSortCol === 'unit') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'unit'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter Unit</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('unit', 'asc')">🔼 Sort A to Z</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('unit', 'desc')">🔽 Sort Z to A</button>
-                                                </div>
-                                                <input type="text" :value="poleScheduleColumnFilters.unit || ''" @input="setPoleScheduleColFilter('unit', $event.target.value)" placeholder="e.g. KM, NOS..." class="ef-search" style="width: 100%; min-width: 0; margin-bottom: 8px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('unit'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
+                                        <th class="text-center" style="width: 55px;">Item No</th>
+                                        <th class="text-center" style="width: 95px;">SAP Code</th>
+                                        <th style="min-width: 240px;">Description of Material</th>
+                                        <th class="text-center" style="width: 50px;">Unit</th>
 
                                         <!-- Dynamic Location Columns -->
                                         <th v-for="(loc, lIdx) in getPoleScheduleLocations()" :key="lIdx" class="text-center" style="min-width: 90px; position: relative;">
@@ -1024,109 +863,13 @@
                                             </div>
                                         </th>
 
-                                        <!-- Total Qty with Filter Popover -->
-                                        <th class="text-right" style="width: 95px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
-                                                <span>Total Qty</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.totalQty || poleScheduleSortCol === 'totalQty' }" @click.stop="togglePoleScheduleFilterCol('totalQty')" title="Filter / Sort Total Qty">
-                                                    <span>{{ (poleScheduleColumnFilters.totalQty || poleScheduleSortCol === 'totalQty') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'totalQty'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter" style="right: 0; left: auto;">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter Total Qty</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('totalQty', 'asc')">🔼 Smallest to Largest</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('totalQty', 'desc')">🔽 Largest to Smallest</button>
-                                                </div>
-                                                <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="ef-chip" :class="{ 'active': poleScheduleColumnFilters.totalQty === '>0' }" @click="setPoleScheduleColFilter('totalQty', '>0')">> 0 Only</button>
-                                                    <button type="button" class="ef-chip" :class="{ 'active': poleScheduleColumnFilters.totalQty === '=0' }" @click="setPoleScheduleColFilter('totalQty', '=0')">= 0 / Blank</button>
-                                                </div>
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('totalQty'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- Unit Rate with Filter Popover -->
-                                        <th class="text-right" style="width: 95px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
-                                                <span>Unit Rate</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.rate || poleScheduleSortCol === 'rate' }" @click.stop="togglePoleScheduleFilterCol('rate')" title="Filter / Sort Rate">
-                                                    <span>{{ (poleScheduleColumnFilters.rate || poleScheduleSortCol === 'rate') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'rate'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter" style="right: 0; left: auto;">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter Rate</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('rate', 'asc')">🔼 Smallest to Largest</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('rate', 'desc')">🔽 Largest to Smallest</button>
-                                                </div>
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('rate'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- 100% Amt with Filter Popover -->
-                                        <th class="text-right" style="width: 105px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
-                                                <span>100% Amt</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleColumnFilters.amt100 || poleScheduleSortCol === 'amt100' }" @click.stop="togglePoleScheduleFilterCol('amt100')" title="Filter / Sort 100% Amt">
-                                                    <span>{{ (poleScheduleColumnFilters.amt100 || poleScheduleSortCol === 'amt100') ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'amt100'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter" style="right: 0; left: auto;">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Filter 100% Amt</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('amt100', 'asc')">🔼 Smallest to Largest</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('amt100', 'desc')">🔽 Largest to Smallest</button>
-                                                </div>
-                                                <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="ef-chip" :class="{ 'active': poleScheduleColumnFilters.amt100 === '>0' }" @click="setPoleScheduleColFilter('amt100', '>0')">> 0 Only</button>
-                                                    <button type="button" class="ef-chip" :class="{ 'active': poleScheduleColumnFilters.amt100 === '=0' }" @click="setPoleScheduleColFilter('amt100', '=0')">= 0 Only</button>
-                                                </div>
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleColFilter('amt100'); clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Filter</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
-
-                                        <!-- 85% Amt with Sort Popover -->
-                                        <th class="text-right" style="width: 105px; position: relative;">
-                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
-                                                <span>{{ pctStage1 }}% Amt</span>
-                                                <button type="button" class="btn-col-filter" :class="{ 'active': poleScheduleSortCol === 'amtStage1' }" @click.stop="togglePoleScheduleFilterCol('amtStage1')" title="Sort 85% Amt">
-                                                    <span>{{ poleScheduleSortCol === 'amtStage1' ? '🔽' : '🔻' }}</span>
-                                                </button>
-                                            </div>
-                                            <div v-if="poleScheduleActiveFilterCol === 'amtStage1'" class="excel-filter-popover" v-click-outside="closePoleScheduleColFilter" style="right: 0; left: auto;">
-                                                <div style="font-weight: 800; font-size: 0.78rem; color: #fbbf24; margin-bottom: 6px;">Sort {{ pctStage1 }}% Amt</div>
-                                                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('amtStage1', 'asc')">🔼 Smallest to Largest</button>
-                                                    <button type="button" class="qa-btn qa-btn-blue" style="font-size: 0.72rem; padding: 4px 8px;" @click="setPoleScheduleSort('amtStage1', 'desc')">🔽 Largest to Smallest</button>
-                                                </div>
-                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <button type="button" @click="clearPoleScheduleSort();" style="background: none; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer;">Clear Sort</button>
-                                                    <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.72rem;" @click="closePoleScheduleColFilter">Done</button>
-                                                </div>
-                                            </div>
-                                        </th>
+                                        <th class="text-right" style="width: 80px;">Total Qty</th>
+                                        <th class="text-right" style="width: 85px;">Unit Rate</th>
+                                        <th class="text-right" style="width: 95px;">100% Amt</th>
+                                        <th class="text-right" style="width: 95px;">{{ pctStage1 }}% Amt</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-if="currentPoleScheduleMaterials.length === 0">
-                                        <td :colspan="5 + getPoleScheduleLocations().length + 4" class="text-center" style="padding: 2.5rem; color: #94a3b8;">
-                                            <div style="font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px;">🔍 Filter se koi item match nahi hua</div>
-                                            <div style="font-size: 0.82rem; margin-bottom: 12px; color: #cbd5e1;">Aapke lagaye gaye filter ya search me koi record nahi mila.</div>
-                                            <button type="button" class="btn btn-secondary" @click="resetPoleScheduleFilters" style="padding: 4px 12px; font-size: 0.8rem; font-weight: 700;">
-                                                🔄 Clear All Filters (Show All Items)
-                                            </button>
-                                        </td>
-                                    </tr>
                                     <tr v-for="(item, rowIdx) in currentPoleScheduleMaterials" :key="item.origIndex"
                                         :style="item.isSection ? { background: 'rgba(99, 102, 241, 0.12)', fontWeight: '800' } : {}">
                                         <!-- Section Header Row -->
@@ -1220,8 +963,7 @@
                                     </tr>
                                 </tbody>
                                 <tfoot style="position: sticky; bottom: 0; background: var(--bg-card); z-index: 10; font-weight: 800; border-top: 2px solid var(--border-color);">
-                                    <!-- Full Schedule Total Row (when no filter active) -->
-                                    <tr v-if="!isPoleScheduleFilterActive">
+                                    <tr>
                                         <th colspan="5" class="text-right">TOTAL (ACTIVITY {{ selectedPoleScheduleKey }})</th>
                                         <th :colspan="getPoleScheduleLocations().length" class="text-center text-muted" style="font-size: 0.8rem;">
                                             Across {{ getPoleScheduleLocations().length }} Locations
@@ -1230,20 +972,6 @@
                                         <th class="text-right text-muted">—</th>
                                         <th class="text-right font-mono">{{ formatCurrency(poleScheduleTotals.totalAmt100) }}</th>
                                         <th class="text-right font-mono" style="color: var(--accent-amber);">{{ formatCurrency(poleScheduleTotals.totalAmtStage1) }}</th>
-                                    </tr>
-
-                                    <!-- Filtered Total Row (when filter is active) -->
-                                    <tr v-else style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">
-                                        <th colspan="5" class="text-right">
-                                            🎯 FILTERED TOTAL ({{ filteredPoleScheduleTotals.count }} of {{ getPoleScheduleMaterials().filter(m => !m.isSection).length }} Items)
-                                        </th>
-                                        <th :colspan="getPoleScheduleLocations().length" class="text-center" style="font-size: 0.78rem; color: #a7f3d0;">
-                                            Filtered View Active
-                                        </th>
-                                        <th class="text-right font-mono" style="color: #34d399; font-size: 0.95rem;">{{ format2Dec(filteredPoleScheduleTotals.totalQty) }}</th>
-                                        <th class="text-right text-muted">—</th>
-                                        <th class="text-right font-mono" style="color: #6ee7b7; font-size: 0.95rem;">{{ formatCurrency(filteredPoleScheduleTotals.totalAmt100) }}</th>
-                                        <th class="text-right font-mono" style="color: #fde68a; font-size: 0.95rem;">{{ formatCurrency(filteredPoleScheduleTotals.totalAmtStage1) }}</th>
                                     </tr>
                                 </tfoot>
                             </table>
