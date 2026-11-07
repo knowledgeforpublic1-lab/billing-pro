@@ -2088,6 +2088,16 @@
                                         cur.sapUom = defMat.sapUom;
                                         cur.docHeader = defMat.docHeader;
                                     }
+                                    // 🛡️ Auto-heal poles from master if mistakenly mapped to cut point/cross arm
+                                    if (cur.desc && defMat.desc && cur.desc.trim().toLowerCase() === defMat.desc.trim().toLowerCase()) {
+                                        if (/\b(rsj|pole|psc)\b/i.test(defMat.desc) && defMat.itemCode && cur.itemCode !== defMat.itemCode) {
+                                            cur.itemCode = defMat.itemCode;
+                                            cur.sapDescription = defMat.sapDescription;
+                                            cur.sapUom = defMat.sapUom;
+                                            cur.docHeader = defMat.docHeader;
+                                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems || []));
+                                        }
+                                    }
                                     if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
                                         cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
                                     }

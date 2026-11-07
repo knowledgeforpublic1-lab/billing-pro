@@ -834,14 +834,23 @@ window.PoleScheduleModule = {
 
                     let isMatch = false;
                     if (amCode && smCode && amCode !== '—' && amCode !== 'N/A' && smCode !== '—' && smCode !== 'N/A' && amCode === smCode) {
-                        // If multiple am in act.materials share this exact code, use description to disambiguate
-                        const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && String(oAm.itemCode || '').trim() === amCode);
-                        if (duplicateAmCode) {
-                            if (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc))) {
+                        // 🛡️ Category safety guard: A pole can only match a pole, cross arm only a cross arm
+                        const smIsPole = /\b(rsj|pole|psc)\b/i.test(smDesc);
+                        const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
+                        const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
+                        const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
+                        if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
+                            isMatch = false;
+                        } else {
+                            // If multiple am in act.materials share this exact code, use description to disambiguate
+                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && String(oAm.itemCode || '').trim() === amCode);
+                            if (duplicateAmCode) {
+                                if (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc))) {
+                                    isMatch = true;
+                                }
+                            } else {
                                 isMatch = true;
                             }
-                        } else {
-                            isMatch = true;
                         }
                     } else if (amDesc && smDesc && amDesc === smDesc) {
                         isMatch = true;
@@ -977,6 +986,11 @@ window.PoleScheduleModule = {
             const smCode = String(sm.itemCode || '').trim();
             const smDesc = String(sm.desc || '').trim().toLowerCase();
             if (amCode && smCode && amCode !== '—' && amCode !== 'N/A' && smCode !== '—' && smCode !== 'N/A' && amCode === smCode) {
+                const smIsPole = /\b(rsj|pole|psc)\b/i.test(smDesc);
+                const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
+                const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
+                const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
+                if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) return false;
                 return true;
             }
             if (amDesc && smDesc && amDesc === smDesc) {
