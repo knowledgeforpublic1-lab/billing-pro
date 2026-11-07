@@ -887,6 +887,19 @@ window.SyncModule = {
         }, 120);
     },
     buildSyncPayload(extra = {}) {
+        if (this.invoiceData && typeof this.invoiceData === 'object') {
+            if (this.projectMeta && this.projectMeta.workOrderNo && !this.invoiceData.workOrderNo) {
+                this.invoiceData.workOrderNo = this.projectMeta.workOrderNo;
+            }
+            if (this.projectMeta && this.projectMeta.raNo && !this.invoiceData.raNo) {
+                this.invoiceData.raNo = this.projectMeta.raNo;
+            }
+            if (typeof this.calculatedInvoiceBasic === 'number' && this.calculatedInvoiceBasic > 0) {
+                this.invoiceData.taxableAmount = this.calculatedInvoiceBasic;
+                this.invoiceData.gstAmount = typeof this.calculatedInvoiceGst === 'number' ? this.calculatedInvoiceGst : 0;
+                this.invoiceData.grandTotal = typeof this.calculatedInvoiceGrandTotal === 'number' ? this.calculatedInvoiceGrandTotal : 0;
+            }
+        }
         return Object.assign({
             dataId: this.activeBillId || 'main-billing-state',
             isFinalized: this.isFinalized,

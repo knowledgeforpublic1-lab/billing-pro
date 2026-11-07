@@ -125,6 +125,10 @@ const billingStateSchema = new mongoose.Schema({
     dataId: { type: String, default: 'main-billing-state', unique: true },
     billNo: { type: String, default: '' },
     raNo: { type: String, default: '' },
+    workOrderNo: { type: String, default: '' },
+    taxableAmount: { type: Number, default: 0 },
+    gstAmount: { type: Number, default: 0 },
+    grandTotal: { type: Number, default: 0 },
     billDate: { type: String, default: '' },
     contractorName: { type: String, default: '' },
     projectName: { type: String, default: '' },
@@ -176,19 +180,91 @@ app.get('/api/bills', requireApiKey, async (req, res) => {
     try {
         await connectToDatabase();
         const docs = await BillingState.find({})
-            .select('dataId billNo billDate contractorName projectName isFinalized rev updatedAt createdAt stateData.projectMeta stateData.invoiceData')
+            .select('dataId billNo raNo workOrderNo taxableAmount gstAmount grandTotal billDate contractorName projectName isFinalized rev updatedAt createdAt stateData.projectMeta stateData.invoiceData stateData.activities stateData.activityQuantities')
             .sort({ updatedAt: -1 })
             .lean();
         
         const bills = docs.map(doc => {
             const pm = (doc.stateData && doc.stateData.projectMeta) || {};
             const inv = (doc.stateData && doc.stateData.invoiceData) || {};
+
+            let ra = String(doc.raNo || pm.raNo || inv.raNo || '').trim();
+            let billNo = String(doc.billNo || pm.billNo || inv.invoiceNo || '').trim();
+            if (billNo === 'Main Bill') billNo = '';
+
+            let displayBillNo = '';
+            if (billNo) {
+                displayBillNo = billNo;
+            } else if (ra) {
+                displayBillNo = 'RA-' + ra.padStart(2, '0');
+            } else {
+                displayBillNo = doc.dataId === 'main-billing-state' ? 'Main Bill' : 'Draft Bill';
+            }
+
+            const workOrderNo = doc.workOrderNo || inv.workOrderNo || pm.workOrderNo || pm.poNo || inv.poNo || '—';
+            const contractor = doc.contractorName || inv.contractorName || inv.contractorFirm || pm.contractorName || pm.contractorFirm || 'Not Assigned';
+            const billDate = doc.billDate || inv.invoiceDate || pm.billDate || pm.date || '—';
+
+            let taxable = Number(doc.taxableAmount || 0);
+            let gst = Number(doc.gstAmount || 0);
+            let grand = Number(doc.grandTotal || 0);
+
+            if (taxable === 0 && Array.isArray(inv.items) && inv.items.length > 0) {
+                taxable = inv.items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+                taxable = Math.round(taxable * 100) / 100;
+            }
+
+            if (taxable === 0 && doc.stateData && doc.stateData.activities) {
+                const acts = doc.stateData.activities || {};
+                const qts = doc.stateData.activityQuantities || {};
+                let actSum = 0;
+                Object.keys(acts).forEach(k => {
+                    const act = acts[k];
+                    if (act && act.rate) {
+                        let q = 0;
+                        const qRow = qts[k];
+                        if (Array.isArray(qRow)) {
+                            qRow.forEach(locRow => {
+                                if (Array.isArray(locRow)) locRow.forEach(v => { q += Number(v) || 0; });
+                                else q += Number(locRow) || 0;
+                            });
+                        } else if (qRow && typeof qRow === 'object') {
+                            Object.values(qRow).forEach(v => { q += Number(v) || 0; });
+                        } else {
+                            q = Number(qRow) || 0;
+                        }
+                        actSum += q * (Number(act.rate) || 0);
+                    }
+                });
+                if (actSum > 0) {
+                    taxable = Math.round(actSum * 0.85 * 100) / 100;
+                }
+            }
+
+            if (gst === 0 && taxable > 0) {
+                if (inv.gstType === 'NONE') {
+                    gst = 0;
+                } else {
+                    gst = Math.round(taxable * 0.18 * 100) / 100;
+                }
+            }
+
+            if (grand === 0 && taxable > 0) {
+                grand = Math.round((taxable + gst) * 100) / 100;
+            }
+
             return {
                 dataId: doc.dataId || 'main-billing-state',
-                billNo: doc.billNo || pm.billNo || inv.invoiceNo || 'Main Bill',
-                billDate: doc.billDate || pm.billDate || inv.invoiceDate || '',
-                contractorName: doc.contractorName || pm.contractorName || inv.contractorName || '',
+                billNo: displayBillNo,
+                raNo: ra,
+                workOrderNo: workOrderNo,
+                billDate: billDate,
+                contractorName: contractor,
                 projectName: doc.projectName || pm.projectName || 'Billing Project',
+                taxableAmount: taxable,
+                gstAmount: gst,
+                totalAmount: grand,
+                grandTotal: grand,
                 isFinalized: doc.isFinalized !== undefined ? !!doc.isFinalized : !!(doc.stateData && doc.stateData.isFinalized),
                 rev: doc.rev || 0,
                 updatedAt: doc.updatedAt || new Date()
@@ -322,12 +398,58 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             });
         }
 
-        const metaBillNo = (dataToSave.projectMeta && dataToSave.projectMeta.billNo) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceNo) || 'Main Bill';
-        const metaRaNo = (dataToSave.projectMeta && dataToSave.projectMeta.raNo) || (dataToSave.invoiceData && dataToSave.invoiceData.raNo) || '';
-        const metaBillDate = (dataToSave.projectMeta && dataToSave.projectMeta.billDate) || (dataToSave.invoiceData && dataToSave.invoiceData.invoiceDate) || '';
-        const metaContractor = (dataToSave.projectMeta && dataToSave.projectMeta.contractorName) || (dataToSave.invoiceData && dataToSave.invoiceData.contractorName) || '';
-        const metaProject = (dataToSave.projectMeta && dataToSave.projectMeta.projectName) || 'Billing Project';
+        const pm = dataToSave.projectMeta || {};
+        const inv = dataToSave.invoiceData || {};
+
+        const metaBillNo = String(pm.billNo || inv.invoiceNo || 'Main Bill').trim();
+        const metaRaNo = String(pm.raNo || inv.raNo || '').trim();
+        const metaWoNo = String(inv.workOrderNo || pm.workOrderNo || pm.poNo || inv.poNo || '').trim();
+        const metaBillDate = String(pm.billDate || pm.date || inv.invoiceDate || inv.date || '').trim();
+        const metaContractor = String(inv.contractorName || inv.contractorFirm || pm.contractorName || pm.contractorFirm || '').trim();
+        const metaProject = String(pm.projectName || 'Billing Project').trim();
         const metaIsFinalized = !!dataToSave.isFinalized;
+
+        let metaTaxable = 0;
+        if (Array.isArray(inv.items) && inv.items.length > 0) {
+            metaTaxable = inv.items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+            metaTaxable = Math.round(metaTaxable * 100) / 100;
+        } else if (dataToSave.activities) {
+            const acts = dataToSave.activities || {};
+            const qts = dataToSave.activityQuantities || {};
+            let actSum = 0;
+            Object.keys(acts).forEach(k => {
+                const act = acts[k];
+                if (act && act.rate) {
+                    let q = 0;
+                    const qRow = qts[k];
+                    if (Array.isArray(qRow)) {
+                        qRow.forEach(locRow => {
+                            if (Array.isArray(locRow)) locRow.forEach(v => { q += Number(v) || 0; });
+                            else q += Number(locRow) || 0;
+                        });
+                    } else if (qRow && typeof qRow === 'object') {
+                        Object.values(qRow).forEach(v => { q += Number(v) || 0; });
+                    } else {
+                        q = Number(qRow) || 0;
+                    }
+                    actSum += q * (Number(act.rate) || 0);
+                }
+            });
+            if (actSum > 0) {
+                metaTaxable = Math.round(actSum * 0.85 * 100) / 100;
+            }
+        }
+
+        let metaGst = 0;
+        if (metaTaxable > 0) {
+            if (inv.gstType === 'NONE') {
+                metaGst = 0;
+            } else {
+                metaGst = Math.round(metaTaxable * 0.18 * 100) / 100;
+            }
+        }
+
+        let metaGrand = Math.round((metaTaxable + metaGst) * 100) / 100;
 
         const nextRev = curRev + 1;
         await BillingState.findOneAndUpdate(
@@ -335,6 +457,11 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             {
                 dataId,
                 billNo: metaBillNo,
+                raNo: metaRaNo,
+                workOrderNo: metaWoNo,
+                taxableAmount: metaTaxable,
+                gstAmount: metaGst,
+                grandTotal: metaGrand,
                 billDate: metaBillDate,
                 contractorName: metaContractor,
                 projectName: metaProject,

@@ -322,11 +322,11 @@
                                                 <tr v-for="b in (savedBillsList && savedBillsList.length ? savedBillsList.slice(0, 6) : [])" :key="b.dataId">
                                                     <td><strong style="color: #60a5fa; font-family: monospace;">{{ b.billNo || 'Main Bill' }}</strong></td>
                                                     <td>{{ b.contractorName || 'Not Assigned' }}</td>
-                                                    <td>31006871</td>
-                                                    <td>{{ b.billDate || '03-11-2026' }}</td>
-                                                    <td>{{ formatCurrency(b.taxableAmount || 530336.64) }}</td>
-                                                    <td>{{ formatCurrency(b.gstAmount || 95460.59) }}</td>
-                                                    <td><strong>{{ formatCurrency(b.totalAmount || 625797.23) }}</strong></td>
+                                                    <td><span style="font-family: monospace;">{{ b.workOrderNo || '—' }}</span></td>
+                                                    <td>{{ b.billDate || '—' }}</td>
+                                                    <td>{{ b.taxableAmount ? '₹' + formatCurrency(b.taxableAmount) : '₹0.00' }}</td>
+                                                    <td>{{ b.gstAmount ? '₹' + formatCurrency(b.gstAmount) : '₹0.00' }}</td>
+                                                    <td><strong>{{ (b.grandTotal || b.totalAmount) ? '₹' + formatCurrency(b.grandTotal || b.totalAmount) : '₹0.00' }}</strong></td>
                                                     <td>
                                                         <span v-if="b.dataId === activeBillId" class="badge-status badge-emerald">● Active Bill</span>
                                                         <span v-else-if="b.isFinalized" class="badge-status badge-indigo">🔒 Finalized</span>
@@ -337,18 +337,10 @@
                                                         <button class="btn-table-action" @click="openBill(b.dataId); switchView('detail')">Activities</button>
                                                     </td>
                                                 </tr>
-                                                <!-- Fallback realistic rows if bills not yet fetched -->
+                                                <!-- Loading / Empty fallback if bills not yet loaded -->
                                                 <tr v-if="!savedBillsList || savedBillsList.length === 0">
-                                                    <td><strong style="color: #60a5fa; font-family: monospace;">RSL/RA/02</strong></td>
-                                                    <td>M/s Ranjeet Singh Lodhi</td>
-                                                    <td>31006871</td>
-                                                    <td>03-11-2026</td>
-                                                    <td>₹5,30,336.64</td>
-                                                    <td>₹95,460.59</td>
-                                                    <td><strong>₹6,25,797.23</strong></td>
-                                                    <td><span class="badge-status badge-emerald">● Live Synced</span></td>
-                                                    <td>
-                                                        <button class="btn-table-primary" @click="switchView('invoice')">Open Invoice</button>
+                                                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                                                        <span class="spin-anim" style="display: inline-block; margin-right: 6px;">🔄</span> Loading saved bills from cloud...
                                                     </td>
                                                 </tr>
                                             </tbody>
