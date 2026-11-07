@@ -797,46 +797,88 @@ window.PoleScheduleModule = {
 
         const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
         if (qMatrix) {
-            sched.materials.forEach((sm, smIdx) => {
-                if (sm.isSection || sm.isSpan) return;
-                const actMatIdx = act.materials.findIndex(am => {
-                    if (am.itemCode && sm.itemCode && String(am.itemCode).trim() === String(sm.itemCode).trim()) return true;
-                    if (am.desc && sm.desc && am.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
-                    return false;
-                });
-                if (actMatIdx !== -1) {
-                    const actMat = act.materials[actMatIdx];
-                    let ratio = 1;
-                    if (actMat) {
-                        if (actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0) {
-                            ratio = Number(actMat.poleRatio);
-                        } else if (actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
-                            ratio = 1 / Number(actMat.poleRatioDivisor);
-                        } else if (actMat.unit && actMat.unit.toLowerCase().includes('set') && sm.unit && sm.unit.toLowerCase().includes('no') && sm.desc && sm.desc.toLowerCase().includes('cut point')) {
-                            ratio = 0.5;
-                            actMat.poleRatio = 0.5;
-                            actMat.poleRatioDivisor = 2;
-                            actMat.poleRatioMode = 'divisor';
+            // Helper to get conversion ratio for sm -> actMat
+            const getRatio = (smMat, actMat) => {
+                if (smMat && smMat.poleRatio !== undefined && smMat.poleRatio !== null && !isNaN(Number(smMat.poleRatio)) && Number(smMat.poleRatio) > 0) {
+                    return Number(smMat.poleRatio);
+                }
+                if (smMat && smMat.poleRatioDivisor && Number(smMat.poleRatioDivisor) > 0) {
+                    return 1 / Number(smMat.poleRatioDivisor);
+                }
+                if (actMat && actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0) {
+                    return Number(actMat.poleRatio);
+                }
+                if (actMat && actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
+                    return 1 / Number(actMat.poleRatioDivisor);
+                }
+                if (actMat && actMat.unit && actMat.unit.toLowerCase().includes('set') && smMat && smMat.unit && smMat.unit.toLowerCase().includes('no') && smMat.desc && smMat.desc.toLowerCase().includes('cut point')) {
+                    actMat.poleRatio = 0.5;
+                    actMat.poleRatioDivisor = 2;
+                    actMat.poleRatioMode = 'divisor';
+                    return 0.5;
+                }
+                return 1;
+            };
+
+            // Loop per activity material to accumulate and SUM ALL repeating/matching pole schedule items
+            act.materials.forEach((am, actMatIdx) => {
+                const amCode = String(am.itemCode || '').trim();
+                const amDesc = String(am.desc || '').trim().toLowerCase();
+
+                // Find all matching pole schedule materials for this am
+                const matchingSmList = [];
+                sched.materials.forEach((sm, smIdx) => {
+                    if (sm.isSection || sm.isSpan) return;
+                    const smCode = String(sm.itemCode || '').trim();
+                    const smDesc = String(sm.desc || '').trim().toLowerCase();
+
+                    let isMatch = false;
+                    if (amCode && smCode && amCode !== '—' && amCode !== 'N/A' && smCode !== '—' && smCode !== 'N/A' && amCode === smCode) {
+                        // If multiple am in act.materials share this exact code, use description to disambiguate
+                        const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && String(oAm.itemCode || '').trim() === amCode);
+                        if (duplicateAmCode) {
+                            if (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc))) {
+                                isMatch = true;
+                            }
+                        } else {
+                            isMatch = true;
                         }
+                    } else if (amDesc && smDesc && amDesc === smDesc) {
+                        isMatch = true;
                     }
-                    locs.forEach((_, lIdx) => {
+
+                    if (isMatch) {
+                        matchingSmList.push({ sm, smIdx });
+                    }
+                });
+
+                if (matchingSmList.length === 0) return;
+
+                // For each location, SUM all matching pole schedule rows
+                locs.forEach((_, lIdx) => {
+                    let totalSum = 0;
+                    let hasAnyNum = false;
+
+                    matchingSmList.forEach(({ sm, smIdx }) => {
                         const val = (qMatrix[lIdx] && qMatrix[lIdx][smIdx] !== undefined) ? qMatrix[lIdx][smIdx] : '';
-                        if (this.activityQuantities[k][lIdx]) {
-                            if (val === '' || val === null || val === undefined) {
-                                this.activityQuantities[k][lIdx][actMatIdx] = '';
-                            } else {
-                                const num = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : parseFloat(val);
-                                if (!isNaN(num)) {
-                                    const converted = num * ratio;
-                                    const rounded = Math.round(converted * 1000) / 1000;
-                                    this.activityQuantities[k][lIdx][actMatIdx] = rounded;
-                                } else {
-                                    this.activityQuantities[k][lIdx][actMatIdx] = val;
-                                }
+                        if (val !== '' && val !== null && val !== undefined) {
+                            const num = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(val))) : (typeof this.evalFormula === 'function' ? Number(this.evalFormula(String(val))) : parseFloat(val));
+                            if (!isNaN(num)) {
+                                const ratio = getRatio(sm, am);
+                                totalSum += num * ratio;
+                                hasAnyNum = true;
                             }
                         }
                     });
-                }
+
+                    if (this.activityQuantities[k] && this.activityQuantities[k][lIdx]) {
+                        if (hasAnyNum) {
+                            this.activityQuantities[k][lIdx][actMatIdx] = Math.round(totalSum * 1000) / 1000;
+                        } else {
+                            this.activityQuantities[k][lIdx][actMatIdx] = '';
+                        }
+                    }
+                });
             });
         }
 
@@ -919,15 +961,29 @@ window.PoleScheduleModule = {
 
     getMatchedPoleMaterial(actKey, actMat) {
         if (!actMat) return null;
+        const list = this.getMatchedPoleMaterials(actKey, actMat);
+        return list && list.length > 0 ? list[0] : null;
+    },
+
+    getMatchedPoleMaterials(actKey, actMat) {
+        if (!actMat) return [];
         const k = actKey || this.selectedActivityKey || '907';
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
-        if (!sched || !Array.isArray(sched.materials)) return null;
-        return sched.materials.find(sm => {
+        if (!sched || !Array.isArray(sched.materials)) return [];
+        const amCode = String(actMat.itemCode || '').trim();
+        const amDesc = String(actMat.desc || '').trim().toLowerCase();
+        return sched.materials.filter(sm => {
             if (sm.isSection || sm.isSpan) return false;
-            if (sm.itemCode && actMat.itemCode && String(sm.itemCode).trim() === String(actMat.itemCode).trim()) return true;
-            if (sm.desc && actMat.desc && sm.desc.trim().toLowerCase() === sm.desc.trim().toLowerCase()) return true;
+            const smCode = String(sm.itemCode || '').trim();
+            const smDesc = String(sm.desc || '').trim().toLowerCase();
+            if (amCode && smCode && amCode !== '—' && amCode !== 'N/A' && smCode !== '—' && smCode !== 'N/A' && amCode === smCode) {
+                return true;
+            }
+            if (amDesc && smDesc && amDesc === smDesc) {
+                return true;
+            }
             return false;
-        }) || null;
+        });
     },
 
     openPoleRatioModal(actKey) {

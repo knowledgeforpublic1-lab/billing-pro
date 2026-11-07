@@ -1730,6 +1730,52 @@ it('Reconciliation Excel Export: Strictly exports only contractor-issued materia
     assert.strictEqual(sumNet, 614, 'Net sum must equal 450 + 164 = 614');
 });
 
+it('Repeating Pole Schedule Items: Sums multiple occurrences (e.g. Top Cleat in Cut Point & V-Cross) into single Activity quantity', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Loc 1' }] },
+        activityLocations: { '907': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [new Array(25).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    // Activity 907 material for Top Cleat (itemCode: 17005041)
+    const actMatIdx = mockApp.activities['907'].materials.findIndex(m => m.itemCode === '17005041');
+    assert.ok(actMatIdx !== -1, 'Top cleat (17005041) must exist in Activity 907');
+
+    // Pole Schedule 907 has Top Cleat at index 10 (Cut point) and index 27 (V-Cross fitting)
+    mockApp.setPoleScheduleCellQty(0, 10, 15); // Top Cleat SPCP in Cut point = 15
+    mockApp.setPoleScheduleCellQty(0, 27, 25); // Top fitting with clamp in V-Cross = 25
+
+    // Activity Billing must receive the SUM: 15 + 25 = 40
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actMatIdx], 40, 'Activity Billing must receive exact sum of repeating Pole Schedule rows (15 + 25 = 40)');
+
+    // Changing one row updates the sum reactively
+    mockApp.setPoleScheduleCellQty(0, 10, 30);
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actMatIdx], 55, 'Activity Billing must update sum to 30 + 25 = 55');
+
+    // Clearing one row retains the other row
+    mockApp.setPoleScheduleCellQty(0, 27, '');
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actMatIdx], 30, 'Activity Billing must retain 30 when second row is cleared');
+
+    // Clearing both makes activity cell blank
+    mockApp.setPoleScheduleCellQty(0, 10, '');
+    assert.strictEqual(mockApp.activityQuantities['907'][0][actMatIdx], '', 'Activity Billing must be blank when all matching rows are cleared');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
