@@ -298,6 +298,20 @@ window.BillingModule = {
         const keyOf = (it) => this.keyOfInvoiceItem(it);
         const excluded = this.invoiceData.excludedActKeys || [];
         const billedKeys = Object.keys(this.activities).filter(k => !excluded.includes(k) && this.getActivityBilled85Amount(k) > 0);
+        // New Bill intentionally starts with no tax-invoice rows. The legacy
+        // fallback below adds zero-value rows for default activities whenever
+        // auto-sync saves an empty invoice; wait until this bill has billed
+        // activity, while keeping any rows the user explicitly added.
+        if (this.invoiceData.newBillBlank && billedKeys.length === 0) {
+            const currentItems = Array.isArray(this.invoiceData.items) ? this.invoiceData.items : [];
+            this.invoiceData.items = currentItems.filter(it => it && (
+                it.actKey || it.manual || !this.isBlankInvoiceItem(it)
+            ));
+            this.invoiceData.items.forEach((it, idx) => { it.srNo = (idx + 1).toString(); });
+            if (typeof this.syncInvoiceLocationNames === 'function') this.syncInvoiceLocationNames();
+            return;
+        }
+        if (billedKeys.length > 0) this.invoiceData.newBillBlank = false;
         const billedSet = new Set(billedKeys);
         const qtyFor = (k) => {
             if (k === '907') { const q = this.getActivity907InvoiceQty(); return q > 0 ? q : 1.00; }
@@ -444,6 +458,7 @@ window.BillingModule = {
     },
 
     syncInvoiceFromBilling() {
+        if (this.invoiceData) this.invoiceData.newBillBlank = false;
         if (this.invoiceData.excludedActKeys) {
             this.invoiceData.excludedActKeys = [];
         }

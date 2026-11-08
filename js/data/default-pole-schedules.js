@@ -27,18 +27,19 @@ const defaultPoleSchedules = {
       },
       {
         "no": "1",
-        "itemCode": "17001243",
+        "itemCode": "17004792",
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No.",
         "rate": 2500,
-        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
-        "sapUom": "NO",
+        "sapDescription": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
+        "sapUom": "SET",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001243",
-            "desc": "RSJ POLE 100X116 MM 11 MTR",
-            "uom": "NO",
+            "code": "17004792",
+            "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
+            "uom": "SET",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -57,6 +58,7 @@ const defaultPoleSchedules = {
             "code": "17001242",
             "desc": "RSJ POLE 100X116 MM 10 MTR",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -75,25 +77,27 @@ const defaultPoleSchedules = {
             "code": "17000004",
             "desc": "RSJ POLE 100X116 MM 9 MTR",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "4",
-        "itemCode": "17005037",
+        "itemCode": "17005041",
         "desc": "RSJ 116x100, 8 m long",
         "unit": "No.",
         "rate": 1500,
-        "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
+        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005037",
-            "desc": "RSJ POLE 100X116 MM 8 MTR",
+            "code": "17005041",
+            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
             "uom": "NO",
-            "docHeader": "0031006347"
+            "docHeader": "0031006347",
+            "qty": 1
           }
         ]
       },
@@ -133,18 +137,18 @@ const defaultPoleSchedules = {
       },
       {
         "no": "6",
-        "itemCode": "17005041",
+        "itemCode": "17000704",
         "desc": "Top Cleat (Extension)",
         "unit": "Nos",
         "rate": 50,
-        "sapDescription": "MS-11KV TOP CLEAT EXTENSION",
-        "sapUom": "NOS",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+        "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005041",
-            "desc": "MS-11KV TOP CLEAT EXTENSION",
-            "uom": "NOS",
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+            "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
           }
@@ -196,18 +200,19 @@ const defaultPoleSchedules = {
       },
       {
         "no": "9",
-        "itemCode": "17005043",
+        "itemCode": "N/A",
         "desc": "MS angle 50x50x6 mm (tie angle)",
         "unit": "No.",
         "rate": 150,
-        "sapDescription": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-        "sapUom": "NO",
+        "sapDescription": "NOT APPLICABLE",
+        "sapUom": "LS",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005043",
-            "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-            "uom": "NO",
+            "code": "N/A",
+            "desc": "NOT APPLICABLE",
+            "uom": "LS",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -338,36 +343,38 @@ const defaultPoleSchedules = {
       },
       {
         "no": "16",
-        "itemCode": "17005046",
+        "itemCode": "17001356",
         "desc": "Side Clamp for 11 KV V-Cross Arm (Extension)",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+        "sapDescription": "WEDGE CONNECTOR RABBIT TO RABBIT",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005046",
-            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
             "uom": "NO",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
       },
       {
         "no": "17",
-        "itemCode": "17005046",
+        "itemCode": "17001261",
         "desc": "Side Clamp for Guarding Channel",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-        "sapUom": "NO",
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapUom": "KM",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005046",
-            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-            "uom": "NO",
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "KM",
+            "qty": 1,
             "docHeader": "0031006347"
           }
         ]
@@ -820,7 +827,15 @@ const defaultPoleSchedules = {
         "rate": 25,
         "sapDescription": "GUARDING I BOLT",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "GUARDING I BOLT",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "43",
@@ -1262,7 +1277,15 @@ const defaultPoleSchedules = {
         "rate": 25,
         "sapDescription": "I BOLT",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "I BOLT",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "13",
@@ -5122,7 +5145,15 @@ const defaultPoleSchedules = {
         "rate": 60,
         "sapDescription": "CHANNEL SUPPORT FOR OPERATING HANDLE",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "CHANNEL SUPPORT FOR OPERATING HANDLE",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "6",
@@ -5212,7 +5243,15 @@ const defaultPoleSchedules = {
         "rate": 60,
         "sapDescription": "STRUT FOR OPERATING HANDLE SUPPORT CHANNEL",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "STRUT FOR OPERATING HANDLE SUPPORT CHANNEL",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "7",
@@ -5312,7 +5351,15 @@ const defaultPoleSchedules = {
         "rate": 150,
         "sapDescription": "LIGHTNING ARRESTOR 11KV GAPLESS",
         "sapUom": "SET",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "LIGHTNING ARRESTOR 11KV GAPLESS",
+            "uom": "SET",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "13",
@@ -5466,7 +5513,15 @@ const defaultPoleSchedules = {
         "rate": 25,
         "sapDescription": "GI PIPE 20 MM",
         "sapUom": "RMT",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "GI PIPE 20 MM",
+            "uom": "RMT",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "22",
@@ -5476,7 +5531,15 @@ const defaultPoleSchedules = {
         "rate": 15,
         "sapDescription": "PVC PIPE 20 MM",
         "sapUom": "RMT",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "PVC PIPE 20 MM",
+            "uom": "RMT",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "23",
@@ -5522,7 +5585,15 @@ const defaultPoleSchedules = {
         "rate": 20,
         "sapDescription": "PVC PIPE 1 INCH",
         "sapUom": "RMT",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "PVC PIPE 1 INCH",
+            "uom": "RMT",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "26",
@@ -5550,7 +5621,15 @@ const defaultPoleSchedules = {
         "rate": 15,
         "sapDescription": "BENTONITE POWDER",
         "sapUom": "KG",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "BENTONITE POWDER",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "28",
@@ -6758,7 +6837,15 @@ const defaultPoleSchedules = {
         "rate": 5,
         "sapDescription": "JOINTING SLEEVES FOR AAC",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "JOINTING SLEEVES FOR AAC",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "20",
@@ -6768,7 +6855,15 @@ const defaultPoleSchedules = {
         "rate": 8,
         "sapDescription": "PG CLAMP",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "PG CLAMP",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "21",
@@ -6850,7 +6945,15 @@ const defaultPoleSchedules = {
         "rate": 2.5,
         "sapDescription": "BINDING WIRE",
         "sapUom": "KG",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "BINDING WIRE",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "26",
@@ -6860,7 +6963,15 @@ const defaultPoleSchedules = {
         "rate": 2.5,
         "sapDescription": "BINDING TAPE",
         "sapUom": "KG",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "BINDING TAPE",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "27",

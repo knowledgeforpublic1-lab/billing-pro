@@ -492,104 +492,22 @@ window.SyncModule = {
         }
     },
     async openNewBillModal() {
-        return await this.startNewBlankBill();
+        const now = new Date();
+        const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+        if (!this.newBillForm) this.newBillForm = {};
+        Object.assign(this.newBillForm, {
+            billNo: '',
+            raNo: '',
+            billDate: today,
+            projectName: (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI',
+            selectedContractorId: this.selectedContractorId || this.newBillForm.selectedContractorId || 'ranjeet_singh_lodhi',
+            selectedCompanyId: this.selectedCompanyId || this.newBillForm.selectedCompanyId || 'ashoka_buildcon'
+        });
+        this.showNewBillModal = true;
     },
     async startNewBlankBill() {
-        if (this._isStartingNewBill) return;
-        this._isStartingNewBill = true;
-        try {
-            this.showToast('Saving current bill before starting new...', '⏳');
-            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
-
-            // 1. Reset all manual quantities, extra items, calculator inputs, and invoice entries
-            this.resetAllManualDataKeepMapping();
-
-            // 2. Completely blank out Bill No, RA No, Contractor, and Metadata
-            this.selectedContractorId = '';
-            this.contractorDropdownSearch = '';
-            this.reconContractorDropdownOpen = false;
-            this.contractorDropdownOpen = false;
-
-            const today = new Date().toISOString().slice(0, 10);
-            if (!this.projectMeta) this.projectMeta = {};
-            this.projectMeta.billNo = '';
-            this.projectMeta.raNo = '';
-            this.projectMeta.billDate = today;
-            this.projectMeta.contractorName = '';
-            this.projectMeta.workOrderNo = '';
-            if (!this.projectMeta.projectName) this.projectMeta.projectName = 'RDSS T-10 GADCHIROLI';
-
-            if (!this.invoiceData) this.invoiceData = {};
-            this.invoiceData.invoiceNo = '';
-            this.invoiceData.raNo = '';
-            this.invoiceData.invoiceDate = today;
-            this.invoiceData.contractorName = '';
-            this.invoiceData.workOrderNo = '';
-            this.invoiceData.workOrderDate = '';
-            this.invoiceData.contractorPan = '';
-            this.invoiceData.contractorGstin = '';
-            this.invoiceData.bankAccountName = '';
-            this.invoiceData.bankAccountNo = '';
-            this.invoiceData.bankIfsc = '';
-            this.invoiceData.bankName = '';
-            this.invoiceData.divisionName = '';
-            this.invoiceData.subDivName = '';
-            this.invoiceData.feederName = '';
-            this.invoiceData.items = [];
-        this.invoiceData.feederName = '';
-        this.invoiceData.locationName = '';
-            this.invoiceData.basicTotal = 0;
-            this.invoiceData.gstTotal = 0;
-            this.invoiceData.grandTotal = 0;
-            this.invoiceData.words = '';
-
-            if (this.newBillForm) {
-                this.newBillForm.billNo = '';
-                this.newBillForm.raNo = '';
-                this.newBillForm.selectedContractorId = '';
-            }
-
-            // Keep default client company (Ashoka Buildcon Ltd.)
-            const comp = (this.companiesList || []).find(c => c.id === (this.selectedCompanyId || 'ashoka_buildcon'));
-            if (comp) {
-                this.selectedCompanyId = comp.id;
-                this.invoiceData.clientName = comp.name;
-                this.invoiceData.clientAddress = comp.address;
-                this.invoiceData.clientGstin = comp.gstin;
-            }
-
-            // 3. Generate unique activeBillId for clean isolation
-            const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-            this.activeBillId = newBillId;
-            this.cloudRev = 0;
-            this.lastSentHash = '';
-            try { localStorage.setItem('lk_billing_active_bill_id', newBillId); } catch(e) {}
-
-            // 4. Save blank slate to local and cloud
-            this.saveToStorage();
-            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
-
-            // 5. Ensure modals are closed
-            this.showNewBillModal = false;
-            this.showSavedBillsModal = false;
-
-            // 6. Switch view if user was not already on invoice or reconciliation
-            if (this.currentView !== 'reconciliation' && this.currentView !== 'invoice') {
-                if (typeof this.switchView === 'function') {
-                    this.switchView('invoice');
-                } else {
-                    this.currentView = 'invoice';
-                }
-            }
-
-            if (typeof this.loadSavedBillsList === 'function') {
-                this.loadSavedBillsList();
-            }
-            if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
-            this.showToast('Pichla bill save ho gaya! Naya bill puri tarah BLANK ready hai — Contractor aur Bill No bharein.', '✅');
-        } finally {
-            this._isStartingNewBill = false;
-        }
+        // Compatibility alias: require explicit confirmation before clearing bill data.
+        return await this.openNewBillModal();
     },
     updateBillNo(val) {
         const clean = String(val || '').trim();
@@ -635,12 +553,25 @@ window.SyncModule = {
         if (ra) {
             const cur = this.newBillForm.billNo || '';
             if (!cur || /^(?:RSL\/RA\/|RA[\-_])\d+$/i.test(cur.trim())) {
-                const prefix = (cur && cur.startsWith('RSL/RA/')) ? 'RSL/RA/' : 'RA-';
+                const activeBillNo = (this.projectMeta && this.projectMeta.billNo) || (this.invoiceData && this.invoiceData.invoiceNo) || '';
+                const prefix = (/^RSL\/RA\//i.test(cur) || (!cur && /^RSL\/RA\//i.test(activeBillNo))) ? 'RSL/RA/' : 'RA-';
                 this.newBillForm.billNo = prefix + ra;
             }
         }
     },
-    resetAllManualDataKeepMapping() {
+    resetAllManualDataKeepMapping(options = {}) {
+        const resetLocations = options.resetLocations === true;
+
+        // A newly created bill starts with a clean location context. Keep the
+        // existing labels when the user only chooses "Blank All Quantities".
+        if (resetLocations) {
+            this.locations = [{ name: 'Location 1' }];
+            this.activityLocations = {};
+            this.poleScheduleLocations = {};
+        }
+        // Pole Schedule quantities are bill data just like Activity quantities.
+        this.poleScheduleQuantities = {};
+
         // 1. Reset all Activity Quantities across ALL activities to blank
         this.activityQuantities = {};
         if (this.activities && typeof this.activities === 'object') {
@@ -692,11 +623,8 @@ window.SyncModule = {
 
         // 3. Reset Concreting Calculator inputs
         this.selectedAugerSize = 22;
-        if (this.concretingData && typeof this.concretingData === 'object') {
-            Object.keys(this.concretingData).forEach(k => {
-                this.concretingData[k] = '';
-            });
-        }
+        if (Array.isArray(this.concretePoleData)) this.concretePoleData.forEach(item => { item.poles = ''; });
+        if (Array.isArray(this.concreteMuffingData)) this.concreteMuffingData.forEach(item => { item.qty = ''; });
 
         // 4. Reset Tax Invoice data
         if (!this.invoiceData) this.invoiceData = {};
@@ -705,12 +633,27 @@ window.SyncModule = {
         this.invoiceData.gstTotal = 0;
         this.invoiceData.grandTotal = 0;
         this.invoiceData.words = '';
+        this.invoiceData.excludedActKeys = [];
+        if (resetLocations) {
+            this.invoiceData.locationName = '';
+            this.invoiceData.feederName = '';
+        }
 
         // 5. Reset filters & UI states
         this.searchQuery = '';
         this.selectedLocationIdx = 'ALL';
         this.mappingSearchQuery = '';
         this.mappingActivityFilter = 'ALL';
+        this.poleScheduleSearchQuery = '';
+        this.poleScheduleFilterQty = 'ALL';
+        this.poleScheduleFilterSap = 'ALL';
+        this.poleScheduleFilterUnit = 'ALL';
+        this.poleScheduleColumnFilters = {};
+        this.poleScheduleActiveFilterCol = null;
+        this.recoSearchQuery = '';
+        this.activeRecoCell = null;
+        this.activeRecoCellFormula = '';
+        this.recoRevision = (this.recoRevision || 0) + 1;
         this.isFinalized = false;
 
         // 6. Reset history stack
@@ -730,6 +673,10 @@ window.SyncModule = {
     },
     async createNewBill() {
         const form = this.newBillForm;
+        if (!form.raNo || !form.raNo.trim()) {
+            this.showToast('Please enter an RA Number', '⚠️');
+            return;
+        }
         if (!form.billNo || !form.billNo.trim()) {
             this.showToast('Please enter a Bill Number', '⚠️');
             return;
@@ -742,9 +689,13 @@ window.SyncModule = {
         try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) {}
 
         // Reset all manual values (quantities, extra items, calculator, invoice) while keeping all SAP mappings intact
-        this.resetAllManualDataKeepMapping();
+        this.resetAllManualDataKeepMapping({ resetLocations: true });
 
         if (!this.projectMeta) this.projectMeta = {};
+        // Remove prior bill's contractor/work-order metadata before applying
+        // the selected profile; otherwise blank fields in a profile inherit it.
+        this.projectMeta.contractorName = '';
+        this.projectMeta.workOrderNo = '';
         this.projectMeta.billNo = cleanBillNo;
         this.projectMeta.raNo = cleanRaNo;
         this.projectMeta.billDate = form.billDate || new Date().toISOString().slice(0, 10);
@@ -753,16 +704,35 @@ window.SyncModule = {
         this.selectedCompanyId = form.selectedCompanyId;
 
         if (!this.invoiceData) this.invoiceData = {};
+        [
+            'contractorName', 'contractorPan', 'contractorGstin',
+            'bankAccountName', 'bankAccountNo', 'bankIfsc', 'bankName',
+            'workOrderNo', 'workOrderDate', 'divisionName', 'subDivName',
+            'locationName', 'feederName'
+        ].forEach(key => { this.invoiceData[key] = ''; });
         this.invoiceData.invoiceNo = cleanBillNo;
         this.invoiceData.raNo = cleanRaNo;
         this.invoiceData.invoiceDate = form.billDate || new Date().toISOString().slice(0, 10);
         this.invoiceData.items = [];
+        this.invoiceData.newBillBlank = true;
 
-        if (this.selectedContractorId) {
-            this.applyContractorProfile(this.selectedContractorId);
-        }
-        if (this.selectedCompanyId) {
-            this.onCompanySelect();
+        // Applying profiles normally saves immediately. Suppress those saves
+        // until activeBillId switches, so they cannot overwrite the old bill.
+        const wasLoading = this._isLoading;
+        this._isLoading = true;
+        try {
+            if (this.selectedContractorId) {
+                this.applyContractorProfile(this.selectedContractorId);
+            }
+            if (this.selectedCompanyId) {
+                this.onCompanySelect();
+            }
+            // Location and feeder are entered for this new bill, even if the
+            // contractor profile contains values from an older workbook.
+            this.invoiceData.locationName = '';
+            this.invoiceData.feederName = '';
+        } finally {
+            this._isLoading = wasLoading;
         }
 
         this.activeBillId = newBillId;

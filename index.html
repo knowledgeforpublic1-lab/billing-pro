@@ -24,7 +24,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261108_eye_comfort_10">
+    <link rel="stylesheet" href="css/style.css?v=20261108_typography_11">
 </head>
 
 <body>
@@ -41,7 +41,7 @@
         <div class="app-layout">
 
             <!-- MAIN AREA -->
-            <div class="main-area">
+            <div class="main-area" :class="{ 'pole-schedule-area': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract' }">
                 <!-- 🧭 Ultra-Modern Linear/Vercel SaaS Navigation Header (Exact Mockup Match) -->
                 <header class="saas-header-wrapper">
                     <!-- Row 1: Top Brand, Navigation Tabs Capsule & User Profile -->
@@ -127,7 +127,7 @@
                     </div>
 
                     <!-- Row 2: Sub-bar Context & Bill Actions (Cleanly scoped per active view) -->
-                    <div class="saas-nav-row-sub">
+                    <div v-if="currentView === 'invoice' || currentView === 'taxInvoice'" class="saas-nav-row-sub">
                         <!-- 🌐 Context 1: Master Multi-Contractor Reconciliation Hub -->
                         <template v-if="currentView === 'masterrecon'">
                             <div class="sub-context-cluster">
@@ -223,8 +223,8 @@
                 </header>
 
                 <!-- Content Grid (Center Content + Right Sidebar) -->
-                <div class="content-grid">
-                    <main class="center-content">
+                <div class="content-grid" :class="{ 'pole-schedule-grid': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract' }">
+                    <main class="center-content" :class="{ 'pole-schedule-content': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract' }">
                         <div class="main-container">
                             <!-- Lock Status Alert Ribbon when Bill is Finalized -->
                             <div v-if="isFinalized && currentView !== 'dashboard' && currentView !== 'summary' && currentView !== 'masterrecon'" class="no-print"
@@ -743,14 +743,14 @@
             </div>
 
             <!-- VIEW 2: POLE SCHEDULE & MASTER ABSTRACT -->
-            <div v-if="currentView === 'poleSchedule' || currentView === 'abstract'" class="animate-fade-in">
+            <div v-if="currentView === 'poleSchedule' || currentView === 'abstract'" class="animate-fade-in pole-schedule-page">
                 <!-- Navigation Dropdown Strip -->
-                <div class="no-print" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+                <div class="no-print ps-page-toolbar" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
                     <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
                         <label style="font-size: 0.92rem; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
                             <span>⚡ Select Pole Schedule:</span>
                         </label>
-                        <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input" style="font-weight: 700; font-size: 0.95rem; min-width: 420px; max-width: 580px; padding: 8px 14px; background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                        <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input ps-schedule-select" style="font-weight: 700; font-size: 0.95rem; min-width: 420px; max-width: 580px; padding: 8px 14px; background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
                             <option value="907">⚡ Activity 907 — RSJ Line with V-Cross Arm (53 Items)</option>
                             <option value="919">⚡ Activity 919 — River Crossing DP on RSJ 152x152 (37 Items)</option>
                             <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
@@ -762,46 +762,37 @@
                             <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
                         </select>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = (poleScheduleSubTab === 'abstract' ? 'schedule' : 'abstract')" style="font-weight: 700; font-size: 0.88rem; padding: 7px 16px;">
-                            <span>{{ poleScheduleSubTab === 'abstract' ? '📋 Back to Pole Schedule' : '📊 Master Abstract (11 Activities)' }}</span>
+                    <div class="ps-toolbar-actions">
+                        <button class="btn btn-primary" @click="openPoleScheduleAddMaterialModal(-1)" title="Add a material row to this pole schedule">➕ Add Row</button>
+                        <button class="btn btn-secondary" @click="addPoleScheduleLocation" title="Add another location column">＋ Location</button>
+                        <button class="btn btn-excel" @click="exportPoleScheduleExcel(false)" title="Export the full pole schedule to Excel">📗 Export</button>
+                        <details class="ps-more-actions no-print">
+                            <summary class="btn btn-secondary">More ▾</summary>
+                            <div class="ps-more-actions-menu">
+                                <button class="btn btn-secondary" @click="persistPoleSchedulesToMasterFile(false)" title="Save this schedule as the default through the configured API, or download the master file.">
+                                    💾 Save as Default
+                                </button>
+                                <button class="btn btn-secondary" @click="resetPoleScheduleToDefault()" title="Restore this activity from the official default schedule.">
+                                    ↺ Reset to Default
+                                </button>
+                            </div>
+                        </details>
+                        <button class="btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = (poleScheduleSubTab === 'abstract' ? 'schedule' : 'abstract')" title="Open the Master Activity-Wise Billing Abstract for all 11 activities" style="font-weight: 700; font-size: 0.88rem; padding: 7px 16px;">
+                            <span>{{ poleScheduleSubTab === 'abstract' ? '📋 Schedule' : '📊 Abstract' }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- SUB-VIEW A: POLE SCHEDULE MEASUREMENT GRID -->
-                <div v-if="poleScheduleSubTab !== 'abstract'">
+                <div v-if="poleScheduleSubTab !== 'abstract'" class="ps-schedule-workspace">
                     <!-- Pole Schedule Card -->
-                    <div class="abstract-card">
-                        <div class="table-header-strip" style="background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.2);">
-                            <div class="table-title">
-                                <span style="font-size: 1rem; font-weight: 800; color: #fbbf24;">⚡ {{ currentPoleSchedule.title || ('Pole Schedule ' + selectedPoleScheduleKey) }}</span>
-                            </div>
-                            <div class="table-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                <button class="btn btn-primary" @click="openPoleScheduleAddMaterialModal(-1)" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
-                                    ➕ Add Row
-                                </button>
-                                <button class="btn btn-secondary" @click="addPoleScheduleLocation" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 700;">
-                                    ➕ Add Location
-                                </button>
-                                <button class="btn btn-secondary" @click="persistPoleSchedulesToMasterFile(false)" title="Save current mappings permanently into js/data/default-pole-schedules.js master file on disk" style="padding: 5px 12px; font-size: 0.82rem; font-weight: 800; border-color: #10b981; color: #10b981; display: inline-flex; align-items: center; gap: 5px;">
-                                    <span>💾 Set as Default (Hard-code)</span>
-                                </button>
-                                <button class="btn btn-secondary" @click="resetPoleScheduleToDefault()" title="Reset current pole schedule to official master default" style="padding: 5px 10px; font-size: 0.82rem; font-weight: 700; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4);">
-                                    <span>🔄 Reset to Default</span>
-                                </button>
-                                <button class="btn btn-excel" @click="exportPoleScheduleExcel(false)" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 700;" title="Export Full Schedule to Excel">
-                                    📗 Export Full (.xlsx)
-                                </button>
-                            </div>
-                        </div>
-
+                    <div class="abstract-card ps-schedule-card">
                         <!-- 🧱 AUTO-CONCRETING & AUGER HUB (User requested) -->
                         <div class="ps-concreting-strip no-print">
                             <div class="ps-cs-left">
                                 <span class="ps-cs-badge">
                                     <span>🧱</span>
-                                    <span>Auger & Concreting</span>
+                                    <span>Concreting</span>
                                 </span>
                                 <div style="display: inline-flex; align-items: center; gap: 5px;">
                                     <label style="font-size: 0.74rem; font-weight: 800; color: #a5b4fc;">Auger Size:</label>
@@ -813,7 +804,7 @@
                                 </div>
                                 <label class="ps-cs-switch" title="When enabled, entering poles and stay sets automatically computes pole pad foundation + stay concreting volume and fills the Concreting line item">
                                     <input type="checkbox" v-model="poleScheduleAutoConcreting" @change="recalculatePoleScheduleConcreting(selectedPoleScheduleKey, true)">
-                                    <span>⚡ Auto-fill Concreting (Pole Pad + Stay)</span>
+                                    <span>⚡ Auto-fill</span>
                                 </label>
                             </div>
                             <div class="ps-cs-right">
@@ -833,7 +824,7 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive" style="max-height: 72vh; overflow-y: auto;">
+                        <div class="table-responsive ps-table-scroll" style="max-height: 72vh; overflow-y: auto;">
                             <table class="billing-table">
                                 <thead style="position: sticky; top: 0; z-index: 10;">
                                     <tr>
@@ -959,7 +950,7 @@
                                         </template>
                                     </tr>
                                 </tbody>
-                                <tfoot style="position: sticky; bottom: 0; background: var(--bg-card); z-index: 10; font-weight: 800; border-top: 2px solid var(--border-color);">
+                                <tfoot class="ps-schedule-totals" style="background: var(--bg-card); font-weight: 800; border-top: 2px solid var(--border-color);">
                                     <tr>
                                         <th colspan="5" class="text-right">TOTAL (ACTIVITY {{ selectedPoleScheduleKey }})</th>
                                         <th :colspan="getPoleScheduleLocations().length" class="text-center text-muted" style="font-size: 0.8rem;">
@@ -1946,7 +1937,7 @@
             </div>
 
         <!-- Footer Info Bar -->
-        <div class="footer-info-strip no-print" v-if="currentView !== 'masterrecon'">
+        <div class="footer-info-strip no-print" v-if="currentView !== 'masterrecon' && currentView !== 'poleSchedule' && currentView !== 'abstract'">
             <div class="fi-item">
                 <span>⚡</span>
                 <strong>Billing Pro v6.0</strong>
@@ -3143,7 +3134,7 @@
                         <span style="font-size: 1.3rem;">➕</span>
                         <div>
                             <div class="modal-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main);">Create New Bill</div>
-                            <div style="font-size: 0.73rem; color: var(--text-muted);">MongoDB database me naya bill start karein</div>
+                            <div style="font-size: 0.73rem; color: var(--text-muted);">Details bharein; purana bill Create par click karne tak unchanged rahega.</div>
                         </div>
                     </div>
                     <button class="modal-close" @click="showNewBillModal = false">✕</button>

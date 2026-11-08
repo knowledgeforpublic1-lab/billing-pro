@@ -395,6 +395,7 @@
                 showNewBillModal: false,
                 newBillForm: {
                     billNo: '',
+                    raNo: '',
                     billDate: '',
                     projectName: '',
                     selectedContractorId: 'ranjeet_singh_lodhi',
