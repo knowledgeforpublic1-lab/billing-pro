@@ -862,6 +862,9 @@ window.PoleScheduleModule = {
 
         const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
         if (qMatrix) {
+            const expandSapCodes = value => String(value || '').split(/[,|]/).map(code =>
+                code.trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase()
+            ).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
             // Helper to get conversion ratio for sm -> actMat
             const getRatio = (smMat, actMat) => {
                 if (smMat && smMat.poleRatio !== undefined && smMat.poleRatio !== null && !isNaN(Number(smMat.poleRatio)) && Number(smMat.poleRatio) > 0) {
@@ -887,18 +890,30 @@ window.PoleScheduleModule = {
 
             // Loop per activity material to accumulate and SUM ALL repeating/matching pole schedule items
             act.materials.forEach((am, actMatIdx) => {
-                const amCode = String(am.itemCode || '').trim();
+                const amCodes = new Set([
+                    ...expandSapCodes(am.itemCode),
+                    ...(Array.isArray(am.sapItems) ? am.sapItems.map(sap => sap && sap.code) : [])
+                ].flatMap(expandSapCodes));
                 const amDesc = String(am.desc || '').trim().toLowerCase();
 
                 // Find all matching pole schedule materials for this am
                 const matchingSmList = [];
                 sched.materials.forEach((sm, smIdx) => {
                     if (sm.isSection || sm.isSpan) return;
-                    const smCode = String(sm.itemCode || '').trim();
+                    const smCodes = new Set([
+                        ...expandSapCodes(sm.itemCode),
+                        ...(Array.isArray(sm.sapItems) ? sm.sapItems.map(sap => sap && sap.code) : [])
+                    ].flatMap(expandSapCodes));
                     const smDesc = String(sm.desc || '').trim().toLowerCase();
 
                     let isMatch = false;
-                    if (amCode && smCode && amCode !== '—' && amCode !== 'N/A' && smCode !== '—' && smCode !== 'N/A' && amCode === smCode) {
+                    const hasExplicitActivityLink = sm.activityMaterialNo !== undefined && sm.activityMaterialNo !== null && String(sm.activityMaterialNo).trim() !== '';
+                    if (hasExplicitActivityLink) {
+                        // The explicit mapping is authoritative. A multi-SAP Activity
+                        // material can therefore collect quantities from each linked
+                        // Pole Schedule component, even when its primary code differs.
+                        isMatch = String(sm.activityMaterialNo) === String(am.no);
+                    } else if ([...smCodes].some(code => amCodes.has(code))) {
                         // 🛡️ Category safety guard: A pole can only match a pole, cross arm only a cross arm
                         const smIsPole = /\b(rsj|pole|psc)\b/i.test(smDesc);
                         const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
@@ -908,7 +923,10 @@ window.PoleScheduleModule = {
                             isMatch = false;
                         } else {
                             // If multiple am in act.materials share this exact code, use description to disambiguate
-                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && String(oAm.itemCode || '').trim() === amCode);
+                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && [
+                                ...expandSapCodes(oAm.itemCode),
+                                ...(Array.isArray(oAm.sapItems) ? oAm.sapItems.map(sap => sap && sap.code) : [])
+                            ].flatMap(expandSapCodes).some(code => amCodes.has(code)));
                             if (duplicateAmCode) {
                                 if (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc))) {
                                     isMatch = true;
