@@ -8,6 +8,71 @@
  */
 
 window.PoleScheduleModule = {
+    getPoleScheduleRateLink(item, scheduleKey) {
+        const key = String(scheduleKey || this.selectedPoleScheduleKey || '907').replace(/^PS\s*/i, '').trim();
+        if (!item || item.isSection || item.isSpan) return { status: 'not-applicable', rate: null, activityKey: key, code: '' };
+        const cleanCode = code => String(code || '').trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
+        const codesFor = material => {
+            const codes = new Set();
+            (Array.isArray(material && material.sapItems) ? material.sapItems : []).forEach(s => {
+                const code = cleanCode(s && s.code);
+                if (code && !['N/A', 'NA', '—', '-'].includes(code)) codes.add(code);
+            });
+            String(material && material.itemCode || '').split(/[,|]/).forEach(raw => {
+                const code = cleanCode(raw);
+                if (code && !['N/A', 'NA', '—', '-'].includes(code)) codes.add(code);
+            });
+            return codes;
+        };
+        const scheduleCodes = codesFor(item);
+        if (!scheduleCodes.size) return { status: 'unmapped', rate: null, activityKey: key, code: '' };
+        const activity = this.activities && this.activities[key];
+        if (!activity || !Array.isArray(activity.materials)) return { status: 'activity-missing', rate: null, activityKey: key, code: [...scheduleCodes].join(', ') };
+
+        const candidates = activity.materials.filter(source => {
+            if (!source || source.isSection || source.isSpan) return false;
+            const sourceCodes = codesFor(source);
+            if (sourceCodes.size < scheduleCodes.size) return false;
+            return [...scheduleCodes].every(code => sourceCodes.has(code));
+        });
+        if (!candidates.length) return { status: 'no-match', rate: null, activityKey: key, code: [...scheduleCodes].join(', ') };
+        const exactCandidates = candidates.filter(source => codesFor(source).size === scheduleCodes.size);
+        const preferredCandidates = exactCandidates.length ? exactCandidates : candidates;
+        if (preferredCandidates.length !== 1) return { status: 'ambiguous', rate: null, activityKey: key, code: [...scheduleCodes].join(', '), count: preferredCandidates.length };
+        const source = preferredCandidates[0];
+        const value = Number(typeof this.evalFormula === 'function' ? this.evalFormula(source.rate) : source.rate);
+        if (!Number.isFinite(value) || value < 0) return { status: 'invalid-rate', rate: null, activityKey: key, code: [...scheduleCodes].join(', '), source };
+        const sourceCodes = codesFor(source);
+        const schedule = (this.poleSchedules && this.poleSchedules[key]) ||
+            (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]);
+        const scheduleRows = (schedule && Array.isArray(schedule.materials) ? schedule.materials : []).filter(row => {
+            if (!row || row.isSection || row.isSpan) return false;
+            const rowCodes = codesFor(row);
+            return rowCodes.size > 0 && [...rowCodes].every(code => sourceCodes.has(code));
+        });
+        const exactScheduleRows = scheduleRows.filter(row => codesFor(row).size === sourceCodes.size);
+        const splitRows = exactScheduleRows.length ? exactScheduleRows : scheduleRows;
+        const scheduleMatchCount = Math.max(1, splitRows.length);
+        const isSplit = scheduleMatchCount > 1;
+        const linkedRate = isSplit ? value / scheduleMatchCount : value;
+        return {
+            status: 'linked',
+            rate: linkedRate,
+            activityKey: key,
+            code: [...scheduleCodes].join(', '),
+            source,
+            sourceRate: value,
+            sourceCodeCount: sourceCodes.size,
+            scheduleMatchCount,
+            isSplit
+        };
+    },
+
+    getPoleScheduleRateValue(item, scheduleKey) {
+        const link = this.getPoleScheduleRateLink(item, scheduleKey);
+        return link.status === 'linked' ? link.rate : 0;
+    },
+
     getCurrentPoleSchedule() {
         const key = this.selectedPoleScheduleKey || '907';
         if (this.poleSchedules && this.poleSchedules[key]) {
@@ -94,7 +159,7 @@ window.PoleScheduleModule = {
             }
             if (colFilters.rate) {
                 const cr = String(colFilters.rate).trim();
-                const r = Number(m.rate) || 0;
+                const r = this.getPoleScheduleRateValue(m);
                 if (cr === '>0' && r <= 0) return false;
                 if (cr === '=0' && r > 0) return false;
                 if (!isNaN(parseFloat(cr)) && Math.abs(r - parseFloat(cr)) > 0.001) return false;
@@ -151,8 +216,8 @@ window.PoleScheduleModule = {
                     vA = this.getPoleScheduleItemTotalQty(a.origIndex);
                     vB = this.getPoleScheduleItemTotalQty(b.origIndex);
                 } else if (sortCol === 'rate') {
-                    vA = Number(a.rate) || 0;
-                    vB = Number(b.rate) || 0;
+                    vA = this.getPoleScheduleRateValue(a);
+                    vB = this.getPoleScheduleRateValue(b);
                 } else if (sortCol === 'amt100') {
                     vA = this.getPoleScheduleItemAmount100(a, a.origIndex);
                     vB = this.getPoleScheduleItemAmount100(b, b.origIndex);
@@ -281,7 +346,7 @@ window.PoleScheduleModule = {
             const amt100 = this.getPoleScheduleItemAmount100(m, m.origIndex);
             const amtStage1 = this.getPoleScheduleItemAmountStage1(m, m.origIndex);
             r.push(totQty > 0 ? totQty : '');
-            r.push(m.rate || 0);
+            r.push(this.getPoleScheduleRateValue(m));
             r.push(amt100 > 0 ? amt100 : '');
             r.push(amtStage1 > 0 ? amtStage1 : '');
             rows.push(r.join('\t'));
@@ -535,7 +600,7 @@ window.PoleScheduleModule = {
     getPoleScheduleItemAmount100(item, mIdx) {
         if (!item || item.isSection || item.isSpan) return 0;
         const qty = this.getPoleScheduleItemTotalQty(mIdx);
-        const rate = Number(item.rate) || 0;
+        const rate = this.getPoleScheduleRateValue(item);
         return qty * rate;
     },
 
@@ -564,7 +629,7 @@ window.PoleScheduleModule = {
                     if (!isNaN(n)) mQty += n;
                 }
             });
-            const rate = Number(m.rate) || 0;
+            const rate = this.getPoleScheduleRateValue(m, k);
             const itemAmt = mQty * rate;
             totalQty += mQty;
             totalAmt100 += itemAmt;
@@ -586,7 +651,7 @@ window.PoleScheduleModule = {
             if (!m.isSection && !m.isSpan) {
                 const q = this.getPoleScheduleItemTotalQty(idx);
                 totalQty += q;
-                const amt100 = q * (Number(m.rate) || 0);
+                const amt100 = q * this.getPoleScheduleRateValue(m);
                 totalAmt100 += amt100;
                 totalAmtStage1 += amt100 * ((Number(this.pctStage1) || 85) / 100);
             }
@@ -1869,7 +1934,7 @@ window.PoleScheduleModule = {
             const amt100 = this.getPoleScheduleItemAmount100(m, origIdx);
             const amtStage1 = this.getPoleScheduleItemAmountStage1(m, origIdx);
             row.push(totQty > 0 ? totQty : '');
-            row.push(m.rate || 0);
+            row.push(this.getPoleScheduleRateValue(m, k));
             row.push(amt100 > 0 ? amt100 : '');
             row.push(amtStage1 > 0 ? amtStage1 : '');
             rows.push(row);

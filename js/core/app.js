@@ -32,6 +32,25 @@
         window.PoleScheduleModule || {}
     );
 
+    allMethods.applyTheme = function() {
+        const dark = !!this.isDarkMode;
+        const html = document.documentElement;
+        const body = document.body;
+        html.dataset.theme = dark ? 'dark' : 'light';
+        html.classList.toggle('dark', dark);
+        html.classList.toggle('dark-mode', dark);
+        if (body) {
+            body.classList.toggle('dark', dark);
+            body.classList.toggle('dark-mode', dark);
+        }
+    };
+
+    allMethods.toggleTheme = function() {
+        this.isDarkMode = !this.isDarkMode;
+        try { localStorage.setItem('billing_theme', this.isDarkMode ? 'dark' : 'light'); } catch(e) {}
+        this.applyTheme();
+    };
+
         // 🛡️ Error Recovery Method
     allMethods.recoverSection = function(sectionName) {
         console.log('[Recover Section Triggered]:', sectionName);
@@ -52,6 +71,10 @@
     const app = Vue.createApp({
         data() {
             return {
+                isDarkMode: (function() {
+                    try { return (localStorage.getItem('billing_theme') || 'dark') !== 'light'; }
+                    catch(e) { return true; }
+                })(),
                 isFinalized: false,
                 // 🛡️ Section-level Error Isolation: agar kisi tab me error ho to sirf wahi isolate ho
                 sectionErrors: {
@@ -1715,6 +1738,7 @@
         },
 
         async mounted() {
+        this.applyTheme();
         try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
             this._isLoading = true;
             await this.loadFromStorage();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark dark-mode">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,7 @@
     /* Phone ko alag mobile page par bhejo — desktop view bilkul same rehta hai.
        Wapas aana ho to mobile page par "Desktop version" dabao (?view=desktop). */
     try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('mobile.html');}})();}catch(e){}
+    try{var savedTheme=localStorage.getItem('billing_theme')||'dark';document.documentElement.dataset.theme=savedTheme;document.documentElement.classList.toggle('dark',savedTheme==='dark');document.documentElement.classList.toggle('dark-mode',savedTheme==='dark');}catch(e){}
     </script>
     <title>Billing Pro | Activity Billing Studio & Tax Invoice Exporter</title>
     <!-- Vue 3 -->
@@ -23,13 +24,10 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261106_saas_v8">
-    <script>
-        // Dark mode is always enabled via html class="dark dark-mode"
-    </script>
+    <link rel="stylesheet" href="css/style.css?v=20261108_eye_comfort_10">
 </head>
 
-<body class="dark dark-mode">
+<body>
     <div id="app" v-cloak>
         <!-- Global SAP Materials Autocomplete Datalist (shared across all tabs) -->
         <datalist id="globalSapMaterialsList">
@@ -105,15 +103,19 @@
 
                         <!-- Right: Cloud Sync Status & Profile -->
                         <div class="actions-cluster">
+                            <button type="button" class="theme-toggle" @click="toggleTheme" :aria-label="isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'" :title="isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'">
+                                <span class="theme-toggle-icon">{{ isDarkMode ? '☀️' : '🌙' }}</span>
+                                <span class="theme-toggle-label">{{ isDarkMode ? 'Light' : 'Dark' }}</span>
+                            </button>
                             <!-- ☁️ Cloud Sync Status Pill -->
                             <div class="saas-pill sync-pill"
                                 :class="{ 'is-unsaved': syncStatus !== 'synced' && syncStatus !== 'syncing', 'is-syncing': syncStatus === 'syncing', 'is-synced': syncStatus === 'synced' }"
                                 @click="syncToMongoNow({ manual: true })"
-                                :title="'Cloud Sync: ' + (syncStatus === 'synced' ? ('Saved to Cloud (' + (lastSyncAt || 'now') + ')') : (syncStatus === 'syncing' ? 'Syncing...' : 'Click to save'))">
+                                :title="'Cloud Sync: ' + (syncStatus === 'synced' ? ('Saved to Cloud (' + (lastSyncAt || 'now') + ')') : (syncStatus === 'syncing' ? 'Syncing...' : (syncStatus === 'error' ? 'Cloud unavailable — click to retry' : 'Click to save')))">
                                 <span v-if="syncStatus === 'synced'" class="live-dot"></span>
                                 <span v-else-if="syncStatus === 'syncing'" class="live-dot spin-anim"></span>
                                 <span v-else class="warn-icon">⚠️</span>
-                                <span>{{ syncStatus === 'synced' ? 'Cloud Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save Online') }}</span>
+                                <span>{{ syncStatus === 'synced' ? 'Cloud Synced' : (syncStatus === 'syncing' ? 'Syncing...' : (syncStatus === 'error' ? 'Cloud Unavailable' : 'Save Online')) }}</span>
                             </div>
 
                             <!-- User Profile Avatar Pill -->
@@ -261,38 +263,38 @@
                                 <!-- Bento KPI Metrics Strip -->
                                 <div class="kpi-grid">
                                     <div class="kpi-card">
-                                        <span class="kpi-badge badge-emerald">↑ 12.4% MoM</span>
+                                        <span class="kpi-badge badge-emerald">Active workbook</span>
                                         <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">₹</div>
-                                        <div class="kpi-val">{{ formatCurrency(calculatedInvoiceBasic || 48562450) }}</div>
-                                        <div class="kpi-lbl">Total Net Billed (85% Erection)</div>
+                                        <div class="kpi-val">{{ formatCurrency(calculatedInvoiceBasic || 0) }}</div>
+                                        <div class="kpi-lbl">Current Bill · Taxable</div>
                                     </div>
 
                                     <div class="kpi-card">
-                                        <span class="kpi-badge badge-indigo">100% Synced</span>
+                                        <span class="kpi-badge badge-indigo">{{ syncStatus === 'synced' ? 'Cloud synced' : (syncStatus === 'syncing' ? 'Syncing' : 'Local copy') }}</span>
                                         <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">📁</div>
-                                        <div class="kpi-val">{{ savedBillsList && savedBillsList.length ? savedBillsList.length : 14 }} Bills</div>
-                                        <div class="kpi-lbl">Processed RA Workbooks</div>
+                                        <div class="kpi-val">{{ savedBillsList ? savedBillsList.length : 0 }} Bills</div>
+                                        <div class="kpi-lbl">Saved RA Workbooks</div>
                                     </div>
 
                                     <div class="kpi-card">
-                                        <span class="kpi-badge badge-amber">{{ contractorsList ? contractorsList.length : 8 }} Packages</span>
+                                        <span class="kpi-badge badge-amber">Directory</span>
                                         <div class="kpi-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">👷</div>
-                                        <div class="kpi-val">62 Sectors</div>
-                                        <div class="kpi-lbl">Active Sub-Contractor Sites</div>
+                                        <div class="kpi-val">{{ contractorsList ? contractorsList.length : 0 }}</div>
+                                        <div class="kpi-lbl">Available Contractors</div>
                                     </div>
 
                                     <div class="kpi-card">
-                                        <span class="kpi-badge badge-emerald">Audit Grade</span>
+                                        <span class="kpi-badge badge-emerald">{{ invoiceData.gstManual ? 'Manual' : 'Auto GST' }}</span>
                                         <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">⚖️</div>
-                                        <div class="kpi-val">96.8%</div>
-                                        <div class="kpi-lbl">Stock Consumption Efficiency</div>
+                                        <div class="kpi-val">{{ invoiceData.gstType === 'CGST_SGST' ? 'CGST + SGST' : (invoiceData.gstType === 'NONE' ? 'No GST' : 'IGST 18%') }}</div>
+                                        <div class="kpi-lbl">Current GST Treatment</div>
                                     </div>
                                 </div>
 
                                 <!-- Recent Bills Table & Overview -->
                                 <div class="table-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
                                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                                        <div style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                                        <div class="dashboard-card-heading" style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
                                             <span>📋</span>
                                             <span>Recent RA Billing Workbooks & Cloud Status</span>
                                         </div>
@@ -340,7 +342,8 @@
                                                 <!-- Loading / Empty fallback if bills not yet loaded -->
                                                 <tr v-if="!savedBillsList || savedBillsList.length === 0">
                                                     <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                                                        <span class="spin-anim" style="display: inline-block; margin-right: 6px;">🔄</span> Loading saved bills from cloud...
+                                                        <span v-if="isLoadingBills"><span class="spin-anim" style="display: inline-block; margin-right: 6px;">🔄</span> Loading saved bills…</span>
+                                                        <span v-else>No cloud bills are available yet. Your current workbook remains saved locally.</span>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -350,7 +353,7 @@
 
                                 <!-- Launchpad Quick Shortcuts -->
                                 <div class="table-card" style="padding: 1.25rem;">
-                                    <div style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                    <div class="dashboard-card-heading" style="font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
                                         <span>⚡</span>
                                         <span>Executive Launchpad — Jump to Module</span>
                                     </div>
@@ -447,9 +450,6 @@
                                         </button>
                                         <button class="btn-filter-add" @click="showAddMaterialModal = true" :disabled="isFinalized" title="Add extra item to this activity">
                                             ➕ Extra Item
-                                        </button>
-                                        <button class="btn-filter-reset" @click="showRightSidebar = !showRightSidebar" :title="showRightSidebar ? 'Sidebar hide karke table full width karein' : 'Sidebar show karein'" :style="!showRightSidebar ? 'border-color: #38bdf8; color: #38bdf8;' : ''">
-                                            <span>{{ showRightSidebar ? '↔️ Full Width' : '📊 Sidebar' }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -936,7 +936,15 @@
 
                                             <!-- Rate -->
                                             <td class="text-right font-mono text-muted">
-                                                {{ item.rate ? formatCurrency(item.rate) : '—' }}
+                                                <template v-if="getPoleScheduleRateLink(item).status === 'linked'">
+                                                    <span :title="'Activity ' + selectedPoleScheduleKey + ' rate ₹' + formatCurrency(getPoleScheduleRateLink(item).sourceRate) + (getPoleScheduleRateLink(item).isSplit ? ' ko ' + getPoleScheduleRateLink(item).scheduleMatchCount + ' Pole Schedule rows mein barabar baanta gaya' : '') + '. Source: ' + getPoleScheduleRateLink(item).source.desc + ' (' + getPoleScheduleRateLink(item).code + ')'">
+                                                        {{ formatCurrency(getPoleScheduleRateValue(item)) }}
+                                                    </span>
+                                                    <div style="font-size:0.72rem; color:var(--accent-green); white-space:nowrap;">↳ Activity {{ selectedPoleScheduleKey }}<span v-if="getPoleScheduleRateLink(item).isSplit"> · {{ formatCurrency(getPoleScheduleRateLink(item).sourceRate) }} ÷ {{ getPoleScheduleRateLink(item).scheduleMatchCount }} rows</span></div>
+                                                </template>
+                                                <span v-else :title="'Pole Schedule SAP code: ' + (getPoleScheduleRateLink(item).code || 'not mapped') + ' • Activity ' + selectedPoleScheduleKey + ' mein exact SAP mapping match nahi mila.'" style="font-size:0.68rem; color:var(--accent-amber); white-space:nowrap;">
+                                                    {{ getPoleScheduleRateLink(item).status === 'ambiguous' ? 'Multiple matches' : (getPoleScheduleRateLink(item).status === 'unmapped' ? 'Map SAP code' : (getPoleScheduleRateLink(item).status === 'activity-missing' ? 'Activity missing' : 'No rate match')) }}
+                                                </span>
                                             </td>
 
                                             <!-- 100% Amount -->
@@ -1530,8 +1538,17 @@
                                     </td>
                                     <td class="text-center font-mono">{{ (row && row.item) ? row.item.unit : '' }}</td>
                                     <td class="text-right font-mono">
-                                        <span v-if="mappingLocks.rate || isFinalized" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
-                                        <input v-else type="text" inputmode="decimal" v-model="row.item.rate" @change="onMappingRateChange(row.item, $event)" @blur="onMappingRateChange(row.item, $event)" @keydown.enter="$event.target.blur()" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
+                                        <span v-if="row && row.isPoleSchedule" :title="'Rate Activity ' + row.poleScheduleKey + ' ke same SAP mapping se liya ja raha hai.'">
+                                            <template v-if="getPoleScheduleRateLink(row.item, row.poleScheduleKey).status === 'linked'">
+                                                {{ formatCurrency(getPoleScheduleRateValue(row.item, row.poleScheduleKey)) }}
+                                                <div style="font-size:0.72rem; color:var(--accent-green);">↳ Activity {{ row.poleScheduleKey }}<span v-if="getPoleScheduleRateLink(row.item, row.poleScheduleKey).isSplit"> · {{ formatCurrency(getPoleScheduleRateLink(row.item, row.poleScheduleKey).sourceRate) }} ÷ {{ getPoleScheduleRateLink(row.item, row.poleScheduleKey).scheduleMatchCount }} rows</span></div>
+                                            </template>
+                                            <span v-else style="font-size:0.68rem; color:var(--accent-amber);">{{ getPoleScheduleRateLink(row.item, row.poleScheduleKey).status === 'ambiguous' ? 'Multiple matches' : 'No rate match' }}</span>
+                                        </span>
+                                        <template v-else>
+                                            <span v-if="mappingLocks.rate || isFinalized" :title="'Rate locked hai — upar 🔓 Rate dabakar edit karo'">{{ (row && row.item) ? formatCurrency(row.item.rate) : '' }} 🔒</span>
+                                            <input v-else type="text" inputmode="decimal" v-model="row.item.rate" @change="onMappingRateChange(row.item, $event)" @blur="onMappingRateChange(row.item, $event)" @keydown.enter="$event.target.blur()" class="editable-cell text-right font-mono" style="width: 85px; padding: 3px; border-color: var(--accent-amber);" placeholder="0">
+                                        </template>
                                     </td>
                                     <td style="padding: 0.6rem;" v-if="row && row.item">
                                         <!-- List of attached SAP items for this material -->
@@ -1788,7 +1805,7 @@
                                 </span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 0.73rem; color: #a5b4fc; font-weight: 600;">
+                                <span class="reco-math-tip" style="font-size: 0.73rem; color: #a5b4fc; font-weight: 600;">
                                     💡 Tip: Direct numbers likhein ya simple math jaise <code>=100+50</code>
                                 </span>
                                 <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.70rem; font-weight: 700; border-color: var(--accent-indigo); color: var(--accent-indigo);" @click="showToast('Click a Qty cell first, then Ctrl+V to paste from Excel', '📋')" title="How to paste from Excel">
@@ -1922,7 +1939,7 @@
             <!-- VIEW 6: MASTER RECONCILIATION (doosri site — iframe me poori khulti hai, logic untouched) -->
             <div v-if="currentView === 'masterrecon'" class="animate-fade-in">
                 <div class="table-card" style="padding: 0; overflow: hidden;">
-                    <iframe src="Reconciliation master/index.html" title="Master Reconciliation"
+                    <iframe :src="'Reconciliation master/index.html?theme=' + (isDarkMode ? 'dark' : 'light')" title="Master Reconciliation"
                         style="width: 100%; height: calc(100vh - 170px); min-height: 560px; border: 0; display: block; background: #fff;">
                     </iframe>
                 </div>
@@ -1953,128 +1970,6 @@
         </div>
     </main>
 
-    <!-- RIGHT SIDEBAR -->
-    <aside class="right-sidebar-panel no-print" v-if="currentView === 'detail' && showRightSidebar">
-        <!-- Quick Actions Card -->
-        <div class="rs-card">
-            <div class="rs-card-title">
-                <span>⚡</span> Quick Actions
-            </div>
-            <button v-if="!isFinalized" class="qa-btn qa-btn-blue" @click="finalizeBill" title="Finalize and lock bill">
-                🔒 Finalize & Lock Bill
-            </button>
-            <button v-else class="qa-btn qa-btn-red" @click="unlockBill" title="Unlock bill for editing">
-                🔓 Unlock Bill
-            </button>
-
-            <button class="qa-btn qa-btn-green" @click="showAddMaterialModal = true" :disabled="isFinalized" title="Add new item to current activity">
-                ➕ Add Material Item
-            </button>
-
-            <button class="qa-btn qa-btn-outline" @click="openContractorManager" title="Open Contractor & Firm Database">
-                📁 Contractor DB
-            </button>
-
-            <button class="qa-btn qa-btn-blue" @click="openSavedBillsManager" title="Saved bills open karein ya manage karein">
-                📂 Open Saved Bills
-            </button>
-
-            <button class="qa-btn qa-btn-green" @click="openNewBillModal" title="Naya Bill / RA Bill banayein">
-                ➕ Create New Bill
-            </button>
-
-            <button class="qa-btn qa-btn-outline" @click="resetCurrentBillQuantities" :disabled="isFinalized" title="Current bill ki saari quantities blank karein (Mapping safe rahegi)">
-                🧹 Blank All Quantities
-            </button>
-
-            <button class="qa-btn qa-btn-outline" @click="manualSaveBillToDrive" title="Save this entire bill workbook to Google Drive">
-                ☁️ Save Bill to Drive
-            </button>
-        </div>
-
-        <!-- Billing Summary Card -->
-        <div class="rs-card">
-            <div class="rs-card-title">
-                <span>📊</span> Billing Summary
-            </div>
-            <div class="bs-row">
-                <span class="bs-label">Total Activities</span>
-                <span class="bs-value">{{ Object.keys(activities || {}).length }}</span>
-            </div>
-            <div class="bs-row" v-if="currentView === 'detail'">
-                <span class="bs-label">Current Act (100%)</span>
-                <span class="bs-value">{{ formatCurrency(activeTotals.amt100) }}</span>
-            </div>
-            <div class="bs-row" v-if="currentView === 'detail'">
-                <span class="bs-label">Stage 1 ({{ pctStage1 }}%)</span>
-                <span class="bs-value">{{ formatCurrency(activeTotals.amtStage1) }}</span>
-            </div>
-            <div class="bs-row" v-if="currentView === 'detail'">
-                <span class="bs-label">Stage 2 ({{ pctStage2 }}%)</span>
-                <span class="bs-value">{{ formatCurrency(activeTotals.amtStage2) }}</span>
-            </div>
-            <div class="bs-row">
-                <span class="bs-label">Taxable Amount</span>
-                <span class="bs-value">{{ formatCurrency(calculatedInvoiceBasic) }}</span>
-            </div>
-            <div class="bs-row">
-                <span class="bs-label">GST Total</span>
-                <span class="bs-value">{{ formatCurrency(calculatedInvoiceGst) }}</span>
-            </div>
-            <div class="bs-row grand">
-                <span class="bs-label">Grand Total</span>
-                <span class="bs-value">{{ formatCurrency(calculatedInvoiceGrandTotal) }}</span>
-            </div>
-        </div>
-
-        <!-- Project Progress Card -->
-        <div class="rs-card">
-            <div class="rs-card-title">
-                <span>📈</span> Project Progress
-            </div>
-            <div class="progress-donut-wrap">
-                <div class="donut-svg-box">
-                    <svg viewBox="0 0 68 68">
-                        <circle class="donut-bg" cx="34" cy="34" r="28"></circle>
-                        <circle class="donut-fill" cx="34" cy="34" r="28"
-                            stroke-dasharray="175.93"
-                            :stroke-dashoffset="overallProgressOffset"></circle>
-                    </svg>
-                    <span class="donut-pct">{{ overallProgressPct }}%</span>
-                </div>
-                <div class="prog-info">
-                    <div class="prog-title">Billed vs Contract</div>
-                    <div class="prog-detail">Target: {{ formatCurrency(Number(projectMeta.contractValue) || 0) }}</div>
-                    <div class="prog-bar-full">
-                        <div class="fill" :style="{ width: overallProgressPct + '%' }"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="motivational-box">
-                <div class="m-icon">💡</div>
-                <div>
-                    <div class="m-title">Audit Ready</div>
-                    <p class="m-desc">All activity formulas strictly match client audit guidelines. Ready to export.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Project Settings Card -->
-        <div class="rs-card no-print">
-            <div class="rs-card-title">
-                <span>⚙️</span> Project Settings
-            </div>
-            <div class="bs-row">
-                <span class="bs-label">Contract Value ₹</span>
-                <input type="text" inputmode="decimal" v-model="projectMeta.contractValue" @change="onProjectMetaFormulaChange('contractValue', $event)" @blur="onProjectMetaFormulaChange('contractValue', $event)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="Progress % isi se nikalta hai">
-            </div>
-            <div class="bs-row">
-                <span class="bs-label" title="907 invoice qty = AAAC Rmt ÷ divisor">AAAC ÷ divisor</span>
-                <input type="text" inputmode="decimal" v-model="projectMeta.aaacDivisor" @change="onProjectMetaFormulaChange('aaacDivisor', $event)" @blur="onProjectMetaFormulaChange('aaacDivisor', $event)" @keydown.enter="$event.target.blur()" :disabled="isFinalized" class="editable-cell text-right font-mono" style="width: 120px;" title="907 invoice qty = AAAC Rmt ÷ divisor">
-            </div>
-        </div>
-    </aside>
 </div><!-- /content-grid -->
 </div><!-- /main-area -->
 </div><!-- /app-layout -->
