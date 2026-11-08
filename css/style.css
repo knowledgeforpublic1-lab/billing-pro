@@ -326,6 +326,11 @@ header {
     font-weight: 600;
 }
 
+/* Hide the raw Vue template until the first render is ready. */
+[v-cloak] {
+    display: none !important;
+}
+
 /* View Section & Animation */
 .view-section {
     width: 100%;
