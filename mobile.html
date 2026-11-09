@@ -1,208 +1,623 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="hi" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#070a12" id="metaThemeColor">
 <title>Billing Pro Mobile — Qty Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+  try {
+    var savedTheme = localStorage.getItem('billing_theme') || 'dark';
+    document.documentElement.dataset.theme = savedTheme;
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle('dark-mode', savedTheme === 'dark');
+  } catch(e) {}
+</script>
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
+  :root {
+    --bg-body: #f4f7fb;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-header: rgba(248, 250, 252, 0.96);
+    --bg-subtle: #f8fafc;
+    --bg-input: #ffffff;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --border-focus: #4f46e5;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-light: #e0e7ff;
+    --primary-glow: rgba(79, 70, 229, 0.22);
+    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+
+    --accent-green: #10b981;
+    --accent-green-bg: rgba(16, 185, 129, 0.1);
+    --accent-green-border: rgba(16, 185, 129, 0.25);
+
+    --accent-blue: #2563eb;
+    --accent-blue-bg: rgba(37, 99, 235, 0.08);
+    --accent-blue-border: rgba(37, 99, 235, 0.2);
+
+    --accent-amber: #f59e0b;
+    --accent-amber-bg: rgba(245, 158, 11, 0.1);
+    --accent-red: #ef4444;
+    --accent-red-bg: rgba(239, 68, 68, 0.1);
+
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --shadow-card: 0 3px 12px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+    --shadow-dock: 0 -4px 20px rgba(15, 23, 42, 0.07);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 9999px;
+
+    --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  [data-theme="dark"],
+  .dark,
+  html.dark-mode {
+    color-scheme: dark;
+    --bg-body: #070a12;
+    --bg-surface: #0e1526;
+    --bg-card: #111a2e;
+    --bg-header: rgba(11, 18, 32, 0.96);
+    --bg-subtle: #090e1a;
+    --bg-input: #080d1a;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --border-focus: #6366f1;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.16);
+    --primary-glow: rgba(99, 102, 241, 0.4);
+    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+
+    --accent-green: #10b981;
+    --accent-green-bg: rgba(16, 185, 129, 0.14);
+    --accent-green-border: rgba(16, 185, 129, 0.3);
+
+    --accent-blue: #60a5fa;
+    --accent-blue-bg: rgba(96, 165, 250, 0.12);
+    --accent-blue-border: rgba(96, 165, 250, 0.25);
+
+    --accent-amber: #f59e0b;
+    --accent-amber-bg: rgba(245, 158, 11, 0.14);
+    --accent-red: #f43f5e;
+    --accent-red-bg: rgba(244, 63, 94, 0.14);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+    --shadow-dock: 0 -4px 24px rgba(0, 0, 0, 0.7);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    margin: 0; padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0d1117; color: #e6edf3;
+    font-family: var(--font-main);
+    background-color: var(--bg-body);
+    color: var(--text-main);
     min-height: 100vh;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
+
+  /* Header — Clean, Project Brand Match */
   header {
     position: sticky; top: 0; z-index: 100;
-    background: #161b22; border-bottom: 1px solid #30363d;
-    padding: 0.7rem 1rem;
-    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--bg-header);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.65rem 0.9rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
   }
-  .logo {
-    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-    background: linear-gradient(135deg, #2563eb, #38bdf8);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 1.1rem; color: #fff;
+  .h-brand {
+    display: flex; align-items: center; gap: 0.45rem; min-width: 0; flex: 1;
   }
-  .h-title { font-size: 1rem; font-weight: 800; line-height: 1.2; }
-  .h-sub { font-size: 0.7rem; color: #8b949e; }
-  .sync-dot {
-    margin-left: auto; display: flex; align-items: center; gap: 0.35rem;
-    font-size: 0.72rem; font-weight: 700; color: #8b949e; white-space: nowrap;
+  .proj-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--radius-pill);
+    font-weight: 800; font-size: 0.8rem;
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    min-width: 0;
   }
-  .dot { width: 9px; height: 9px; border-radius: 50%; background: #6e7681; }
-  .dot.synced { background: #3fb950; box-shadow: 0 0 6px rgba(63,185,80,.6); }
-  .dot.syncing { background: #d29922; }
-  .dot.error { background: #f85149; }
-  .wrap { padding: 0.75rem 0.75rem 11rem 0.75rem; max-width: 640px; margin: 0 auto; }
+  .proj-badge .bolt { font-size: 0.9rem; line-height: 1; flex-shrink: 0; }
+  .proj-badge .h-title {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+  }
+  .status-badge {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green-border);
+    font-size: 0.65rem; font-weight: 800;
+    padding: 0.2rem 0.45rem;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .h-actions {
+    display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;
+  }
+  .theme-toggle-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: var(--radius-pill);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    font-size: 1rem; cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+  }
+  .theme-toggle-btn:active { transform: scale(0.92); }
+  .sync-pill {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem; font-weight: 700;
+    color: var(--text-muted);
+    box-shadow: var(--shadow-sm);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-dim); transition: all 0.2s;
+  }
+  .dot.synced {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+  }
+  .dot.syncing { background: var(--accent-amber); animation: pulse 1s infinite; }
+  .dot.error { background: var(--accent-red); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Main Wrapper */
+  .wrap {
+    padding: 0.75rem 0.75rem 12rem 0.75rem;
+    max-width: 640px; margin: 0 auto;
+  }
   .lock-bar {
-    background: rgba(248,81,73,.12); border: 1px solid #f85149; color: #ffa198;
-    padding: 0.7rem 0.9rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem;
-    margin-bottom: 0.75rem;
+    background: var(--accent-red-bg);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: 0.65rem 0.85rem; border-radius: var(--radius-md);
+    font-weight: 700; font-size: 0.82rem; margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.4rem;
   }
-  label.lbl { display: block; font-size: 0.72rem; font-weight: 700; color: #8b949e; margin: 0.6rem 0 0.3rem; text-transform: uppercase; }
+
+  /* Control Panel / Filter Card */
+  .control-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem;
+    box-shadow: var(--shadow-card);
+    display: flex; flex-direction: column; gap: 0.65rem;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field-label {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .select-wrapper { position: relative; width: 100%; }
   select, input[type="search"], input[type="password"] {
-    width: 100%; font-size: 16px; padding: 0.7rem 0.8rem;
-    border: 1.5px solid #484f58; border-radius: 10px;
-    background: #0d1117; color: #e6edf3; outline: none;
+    width: 100%; font-family: var(--font-main);
+    font-size: 0.9rem; font-weight: 600;
+    padding: 0.68rem 0.85rem;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none; -webkit-appearance: none;
   }
-  select:focus, input:focus { border-color: #58a6ff; }
-  .meta-line { font-size: 0.75rem; color: #8b949e; margin: 0.5rem 0 0; }
-  .card {
-    background: #161b22; border: 1px solid #30363d; border-radius: 14px;
-    padding: 0.8rem; margin-top: 0.7rem;
+  .select-wrapper::after {
+    content: "▼";
+    font-size: 0.65rem; color: var(--text-muted);
+    position: absolute; right: 0.9rem; top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
   }
-  .card.extra { border-color: #a371f7; }
-  .sec-head { font-weight: 800; font-size: 0.85rem; color: #a371f7; margin: 1rem 0 -0.2rem; }
-  .item-no {
-    display: inline-block; font-size: 0.7rem; font-weight: 800; color: #8b949e;
-    background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
-    padding: 1px 7px; margin-bottom: 0.3rem;
+  select:focus, input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--primary-glow);
   }
-  .item-desc { font-size: 0.92rem; font-weight: 700; line-height: 1.35; }
-  .item-sub { font-size: 0.75rem; color: #8b949e; margin-top: 0.25rem; }
-  .item-sub b { color: #79c0ff; }
-  .loc-row {
-    display: flex; align-items: center; gap: 0.5rem;
-    margin-top: 0.55rem; background: #0d1117;
-    border: 1px solid #30363d; border-radius: 10px; padding: 0.4rem 0.5rem;
+
+  /* Settings Accordion */
+  .settings {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden; margin-top: 0.2rem;
   }
-  .loc-name { flex: 1; font-size: 0.8rem; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .step-btn {
-    width: 48px; height: 48px; flex-shrink: 0;
-    border: 1px solid #484f58; border-radius: 10px;
-    background: #21262d; color: #e6edf3;
-    font-size: 1.4rem; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  .settings summary {
+    padding: 0.6rem 0.8rem; font-size: 0.8rem; font-weight: 700;
+    color: var(--text-muted); cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
   }
-  .step-btn:active { background: #30363d; }
-  .step-btn:disabled { opacity: 0.35; }
-  .qty-box {
-    width: 84px; flex-shrink: 0; height: 48px;
-    font-size: 16px; font-weight: 700; text-align: center;
-    border: 1.5px solid #3fb950; border-radius: 10px;
-    background: #0d1117; color: #e6edf3; outline: none; padding: 0 4px;
-  }
-  .qty-box:focus { border-color: #58a6ff; }
-  .qty-box:disabled { opacity: 0.5; border-color: #484f58; }
-  .line-total {
-    margin-top: 0.55rem; display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.8rem; color: #8b949e;
-  }
-  .line-total b { color: #3fb950; font-size: 0.95rem; }
-  .empty { text-align: center; color: #8b949e; padding: 2rem 1rem; font-size: 0.9rem; }
-  #totalBar {
-    position: fixed; left: 0; right: 0; bottom: 76px; z-index: 200;
-    background: #161b22; border-top: 1px solid #30363d;
-    padding: 0.55rem 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
-  }
-  #totalBar .t-lbl { font-size: 0.66rem; color: #8b949e; font-weight: 700; white-space: nowrap; }
-  #totalBar .t-val { font-size: 1.0rem; font-weight: 800; color: #3fb950; white-space: nowrap; }
-  #totalBar .t-val.inv { color: #79c0ff; }
-  #totalBar .t-qty { font-size: 0.78rem; color: #8b949e; font-weight: 700; white-space: nowrap; }
-  .settings { background: #161b22; border: 1px solid #30363d; border-radius: 12px; margin-top: 0.7rem; overflow: hidden; }
-  .settings summary { padding: 0.65rem 0.85rem; font-size: 0.82rem; font-weight: 800; cursor: pointer; list-style: none; }
   .settings summary::-webkit-details-marker { display: none; }
-  .settings .s-body { padding: 0 0.85rem 0.85rem; }
-  .settings .s-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .settings .s-body {
+    padding: 0.75rem 0.8rem; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .settings .s-row { display: flex; gap: 0.5rem; }
   .settings .s-row input { flex: 1; min-width: 0; }
-  .s-btn { border: 1px solid #484f58; border-radius: 10px; background: #21262d; color: #e6edf3; font-weight: 800; font-size: 0.8rem; padding: 0 0.9rem; min-height: 48px; cursor: pointer; white-space: nowrap; }
-  .s-btn:active { background: #30363d; }
-  .s-btn.primary { background: linear-gradient(135deg, #2563eb, #38bdf8); border: none; color: #fff; }
-  .s-status { font-size: 0.75rem; color: #8b949e; margin-top: 0.5rem; line-height: 1.5; }
-  .s-status b { color: #e6edf3; }
-  .retry-btn { display: inline-block; margin-top: 0.8rem; border: 1px solid #484f58; border-radius: 10px; background: #21262d; color: #e6edf3; font-weight: 800; font-size: 0.85rem; padding: 0.7rem 1.4rem; cursor: pointer; }
-  .retry-btn:active { background: #30363d; }
-  #actionBar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+  .s-btn {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font-weight: 700; font-size: 0.82rem;
+    padding: 0 1rem; min-height: 44px;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .s-btn:active { transform: scale(0.96); }
+  .s-btn.primary {
+    background: var(--primary-gradient);
+    border: none; color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+  }
+  .s-status { font-size: 0.75rem; color: var(--text-muted); line-height: 1.45; }
+  .s-status b { color: var(--text-main); }
+
+  /* Meta Subline */
+  .meta-subline {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+    margin: 0.85rem 0.2rem 0.4rem;
+  }
+
+  /* Material Card — Clean, Polished, Desktop Match */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 0.95rem;
+    margin-top: 0.75rem;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.12s ease, border-color 0.15s;
+  }
+  .card.extra { border-color: rgba(168, 85, 247, 0.4); }
+  .sec-head {
+    font-weight: 800; font-size: 0.85rem; color: #a855f7;
+    margin: 1.1rem 0.2rem 0.2rem;
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .card-top-pills {
+    display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    margin-bottom: 0.45rem;
+  }
+  .item-no-pill {
+    display: inline-block; font-size: 0.7rem; font-weight: 800;
+    color: var(--primary); background: var(--primary-light);
+    border-radius: var(--radius-sm); padding: 0.15rem 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .sap-pill {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--accent-blue);
+    background: var(--accent-blue-bg);
+    border: 1px solid var(--accent-blue-border);
+    border-radius: var(--radius-sm);
+    padding: 0.15rem 0.5rem;
+  }
+  .extra-badge {
+    display: inline-flex; align-items: center;
+    font-size: 0.68rem; font-weight: 800;
+    color: #a855f7; background: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 0.15rem 0.45rem;
+  }
+  .item-desc {
+    font-size: 0.95rem; font-weight: 700; line-height: 1.4;
+    color: var(--text-main); margin-bottom: 0.45rem;
+  }
+  .item-meta-bar {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    font-size: 0.78rem; color: var(--text-muted);
+  }
+  .meta-tag {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    padding: 0.15rem 0.45rem; border-radius: var(--radius-sm);
+  }
+  .meta-tag b {
+    color: var(--text-main); font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  /* Location Entry Rows */
+  .loc-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    margin-top: 0.65rem; background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md); padding: 0.45rem 0.55rem;
+  }
+  .loc-info {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.35rem;
+  }
+  .loc-pin { font-size: 0.75rem; flex-shrink: 0; }
+  .loc-name {
+    font-size: 0.82rem; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--text-main);
+  }
+  .stepper {
+    display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0;
+  }
+  .step-btn {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font-size: 1.3rem; font-weight: 800; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.12s ease;
+    user-select: none; -webkit-user-select: none;
+  }
+  .step-btn:active {
+    transform: scale(0.92);
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .qty-box {
+    width: 80px; height: 44px; flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 1.05rem; font-weight: 700; text-align: center;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    color: var(--text-main);
+    outline: none; padding: 0 4px;
+    transition: all 0.15s;
+  }
+  .qty-box:focus {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+  .qty-box:disabled { opacity: 0.5; }
+
+  /* Card Summary Footer */
+  .card-footer {
+    margin-top: 0.65rem; padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-subtle);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.78rem; color: var(--text-muted);
+  }
+  .card-footer .c-amt {
+    font-family: var(--font-mono);
+    font-weight: 800; font-size: 0.92rem;
+    color: var(--accent-green);
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center; color: var(--text-muted);
+    padding: 2.5rem 1rem; font-size: 0.9rem;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg); margin-top: 1rem;
+  }
+  .retry-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    margin-top: 0.85rem; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md); background: var(--bg-surface);
+    color: var(--text-main); font-weight: 700; font-size: 0.85rem;
+    padding: 0.65rem 1.25rem; cursor: pointer; box-shadow: var(--shadow-sm);
+  }
+
+  /* Bottom Dock: Totals + Actions */
+  .dock-container {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+    background: var(--bg-header);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-dock);
+  }
+  .total-row {
+    padding: 0.6rem 0.9rem;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .t-group { display: flex; flex-direction: column; }
+  .t-lbl {
+    font-size: 0.65rem; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .t-val {
+    font-family: var(--font-mono);
+    font-size: 1.05rem; font-weight: 800;
+    color: var(--text-main);
+  }
+  .t-val.stage { color: var(--accent-green); }
+  .t-qty-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem; font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    padding: 0.2rem 0.5rem; border-radius: var(--radius-pill);
+  }
+  .action-row {
     display: flex; gap: 0.5rem;
-    padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
-    background: #161b22; border-top: 1px solid #484f58;
+    padding: 0.6rem 0.85rem calc(0.6rem + env(safe-area-inset-bottom));
   }
   .abtn {
-    flex: 1; min-height: 52px; border: none; border-radius: 12px;
-    font-size: 0.9rem; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
-    touch-action: manipulation;
+    min-height: 48px; border: none; border-radius: var(--radius-md);
+    font-family: var(--font-main);
+    font-size: 0.92rem; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    touch-action: manipulation; transition: all 0.15s ease;
   }
-  .abtn:active { transform: scale(0.98); }
-  .abtn-save { background: linear-gradient(135deg, #2563eb, #38bdf8); color: #fff; }
-  .abtn-ghost { background: #21262d; color: #e6edf3; border: 1px solid #484f58; flex: 0.7; }
+  .abtn:active { transform: scale(0.97); }
+  .abtn-save {
+    flex: 1;
+    background: var(--primary-gradient);
+    color: #ffffff;
+    box-shadow: 0 4px 14px var(--primary-glow);
+  }
+  .abtn-ghost {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border: 1.5px solid var(--border-subtle);
+    width: 48px; flex: 0 0 48px;
+    font-size: 1.1rem;
+  }
+
+  /* Desktop View Link */
+  .desk-link-box {
+    text-align: center; margin-top: 1.25rem;
+  }
+  .desk-link {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.8rem; font-weight: 700;
+    color: var(--primary); text-decoration: none;
+    padding: 0.5rem 0.9rem; border-radius: var(--radius-pill);
+    background: var(--primary-light);
+  }
+
+  /* Toast */
   #toast {
     position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: 150px; z-index: 999;
-    background: #21262d; border: 1px solid #484f58; color: #e6edf3;
-    padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700;
-    display: none; max-width: 92%; text-align: center;
+    bottom: 145px; z-index: 999;
+    background: var(--text-main); color: var(--bg-surface);
+    padding: 0.65rem 1.1rem; border-radius: var(--radius-pill);
+    font-size: 0.82rem; font-weight: 700;
+    display: none; max-width: 90%; text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   }
-  .desk-link { display: block; text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #58a6ff; }
+
   @media (max-width: 380px) {
-    #totalBar { padding: 0.5rem 0.6rem; gap: 0.35rem; }
-    #totalBar .t-val { font-size: 0.88rem; }
-    #totalBar .t-lbl { font-size: 0.6rem; }
-    .step-btn { width: 44px; }
-    .qty-box { width: 70px; }
-    .wrap { padding-left: 0.55rem; padding-right: 0.55rem; }
+    .proj-badge { font-size: 0.72rem; padding: 0.3rem 0.5rem; }
+    .status-badge { font-size: 0.6rem; }
+    .step-btn { width: 40px; height: 40px; }
+    .qty-box { width: 70px; height: 40px; font-size: 0.95rem; }
+    .t-val { font-size: 0.95rem; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">B</div>
-  <div>
-    <div class="h-title" id="projName">Billing Pro</div>
-    <div class="h-sub">📱 Mobile Qty Entry</div>
+  <div class="h-brand">
+    <div class="proj-badge">
+      <span class="bolt">⚡</span>
+      <span class="h-title" id="projName">RDSS T-10 GADCHIROLI</span>
+    </div>
+    <span class="status-badge" id="statusBadge">ACTIVE</span>
   </div>
-  <div class="sync-dot"><span class="dot" id="syncDot"></span><span id="syncTxt">local</span></div>
+  <div class="h-actions">
+    <button class="theme-toggle-btn" id="themeToggle" type="button" title="Toggle Theme" aria-label="Toggle Theme">
+      <span id="themeIcon">🌙</span>
+    </button>
+    <div class="sync-pill" id="syncPill">
+      <span class="dot" id="syncDot"></span>
+      <span id="syncTxt">local</span>
+    </div>
+  </div>
 </header>
 
 <div class="wrap">
   <div class="lock-bar" id="lockBar" hidden>🔒 Bill finalized/locked hai — qty change nahi hogi. Unlock desktop se karo.</div>
 
-  <label class="lbl" for="actSel">Activity</label>
-  <select id="actSel"></select>
-
-  <label class="lbl" for="locSel">Location</label>
-  <select id="locSel"></select>
-
-  <label class="lbl" for="search">Khojo</label>
-  <input type="search" id="search" placeholder="🔍 Item naam, number ya SAP code..." autocomplete="off">
-
-  <details class="settings" id="settingsBox">
-    <summary>⚙️ Settings &amp; Sync <span style="font-weight:400;color:#8b949e;font-size:0.72rem;" id="setSumState"></span></summary>
-    <div class="s-body">
-      <label class="lbl" for="apiKey" style="margin-top:0.2rem;">API Key (desktop jaisi — ek baar dalo)</label>
-      <div class="s-row">
-        <input type="password" id="apiKey" placeholder="API key yahan paste karo" autocomplete="off">
-        <button class="s-btn primary" id="btnKeySave">Save</button>
-        <button class="s-btn" id="btnKeyTest">Test</button>
+  <div class="control-card">
+    <div class="field-group">
+      <label class="field-label" for="actSel">
+        <span>⚡ Activity (Pole Schedule)</span>
+      </label>
+      <div class="select-wrapper">
+        <select id="actSel"></select>
       </div>
-      <div class="s-status" id="keyStatus"></div>
-      <div class="s-status">🔄 Server se naya data har <b>20 second</b> me khud aa jayega (jab tak tum kuch likh nahi rahe). Desktop par Save/Sync karte hi yahan update dikhega.</div>
     </div>
-  </details>
 
-  <p class="meta-line" id="metaLine"></p>
+    <div class="field-group">
+      <label class="field-label" for="locSel">
+        <span>📍 Location Filter</span>
+      </label>
+      <div class="select-wrapper">
+        <select id="locSel"></select>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="search">
+        <span>🔍 Search Material</span>
+      </label>
+      <input type="search" id="search" placeholder="Item naam, number ya SAP code..." autocomplete="off">
+    </div>
+
+    <details class="settings" id="settingsBox">
+      <summary>⚙️ Settings &amp; Sync <span style="font-weight:400;font-size:0.72rem;" id="setSumState"></span></summary>
+      <div class="s-body">
+        <label class="field-label" for="apiKey" style="margin-top:0.2rem;">API Key (desktop jaisi — ek baar dalo)</label>
+        <div class="s-row">
+          <input type="password" id="apiKey" placeholder="API key yahan paste karo" autocomplete="off">
+          <button class="s-btn primary" id="btnKeySave">Save</button>
+          <button class="s-btn" id="btnKeyTest">Test</button>
+        </div>
+        <div class="s-status" id="keyStatus"></div>
+        <div class="s-status">🔄 Server se naya data har <b>20 second</b> me khud aa jayega (jab tak tum kuch likh nahi rahe). Desktop par Save/Sync karte hi yahan update dikhega.</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="meta-subline">
+    <span id="metaLine"></span>
+  </div>
+
   <div id="cards"></div>
 
-  <a class="desk-link" href="#" id="deskLink">🖥️ Poora Desktop version kholo (Export/Print ke liye)</a>
+  <div class="desk-link-box">
+    <a class="desk-link" href="#" id="deskLink">🖥️ Poora Desktop version kholo (Export/Print ke liye)</a>
+  </div>
 </div>
 
-<div id="totalBar">
-  <div><div class="t-lbl">TOTAL (100%)</div><div class="t-val" id="totAmt">0.00</div></div>
-  <div><div class="t-lbl" id="invLbl">INVOICE (85%)</div><div class="t-val inv" id="totInv">0.00</div></div>
-  <div class="t-qty" id="totQty">Qty: 0</div>
-</div>
-
-<div id="actionBar">
-  <button class="abtn abtn-save" id="btnSave">💾 Save / Sync</button>
-  <button class="abtn abtn-ghost" id="btnRefresh">🔄</button>
+<!-- Bottom Dock -->
+<div class="dock-container">
+  <div class="total-row">
+    <div class="t-group">
+      <span class="t-lbl">TOTAL (100%)</span>
+      <span class="t-val" id="totAmt">0.00</span>
+    </div>
+    <div class="t-group" style="text-align:right;">
+      <span class="t-lbl" id="invLbl">INVOICE (85%)</span>
+      <span class="t-val stage" id="totInv">0.00</span>
+    </div>
+    <div class="t-qty-badge" id="totQty">Qty: 0</div>
+  </div>
+  <div class="action-row">
+    <button class="abtn abtn-save" id="btnSave">💾 Save / Sync</button>
+    <button class="abtn abtn-ghost" id="btnRefresh" title="Refresh">🔄</button>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -237,8 +652,9 @@
   }
   function setSync(st, txt) {
     var d = $('syncDot');
-    d.className = 'dot' + (st ? ' ' + st : '');
-    $('syncTxt').textContent = txt || st || 'local';
+    if (d) d.className = 'dot' + (st ? ' ' + st : '');
+    var stxt = $('syncTxt');
+    if (stxt) stxt.textContent = txt || st || 'local';
   }
   function apiHeaders(json) {
     var h = {};
@@ -248,6 +664,32 @@
   }
 
   function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+  // Theme support: sync with billing_theme
+  function applyTheme(theme) {
+    var html = document.documentElement;
+    var isDark = theme === 'dark';
+    html.setAttribute('data-theme', theme);
+    html.classList.toggle('dark', isDark);
+    html.classList.toggle('dark-mode', isDark);
+    var icon = $('themeIcon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+    var meta = $('metaThemeColor');
+    if (meta) meta.setAttribute('content', isDark ? '#070a12' : '#f4f7fb');
+  }
+
+  function toggleTheme() {
+    var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('billing_theme', next); } catch (e) {}
+    applyTheme(next);
+  }
+
+  var initialTheme = 'dark';
+  try { initialTheme = localStorage.getItem('billing_theme') || 'dark'; } catch (e) {}
+  applyTheme(initialTheme);
+  var btnTheme = $('themeToggle');
+  if (btnTheme) btnTheme.addEventListener('click', toggleTheme);
 
   function stage1Pct() {
     var p = S ? Number(S.pctStage1) : 85;
@@ -464,7 +906,8 @@
   function render() {
     if (!S) return;
     var locked = renderLock(false);
-    $('projName').textContent = (S.projectMeta && S.projectMeta.projectName) || 'Billing Pro';
+    var pName = (S.projectMeta && S.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
+    $('projName').textContent = pName;
 
     var sel = $('actSel');
     var keys = Object.keys(S.activities).sort(function (a, b) { return parseInt(a) - parseInt(b); });
@@ -533,25 +976,42 @@
       var amt = q * num(m.rate);
       grand += amt; grandQty += q;
       if (m.isExtra && !extraOpen) { html += '<div class="sec-head">✏️ Extra Items</div>'; extraOpen = true; }
+      
+      var itemNoPill = '<span class="item-no-pill">' + esc(m.no) + '</span>';
+      var sapPill = m.itemCode ? '<span class="sap-pill">SAP: ' + esc(m.itemCode) + '</span>' : '';
+      var extraBadge = m.isExtra ? '<span class="extra-badge">✏️ Extra</span>' : '';
+      
       html += '<div class="card' + (m.isExtra ? ' extra' : '') + '">' +
-        '<span class="item-no">' + esc(m.no) + '</span>' +
+        '<div class="card-top-pills">' + itemNoPill + sapPill + extraBadge + '</div>' +
         '<div class="item-desc">' + esc(m.desc) + '</div>' +
-        '<div class="item-sub">Unit: <b>' + esc(m.unit || 'No') + '</b> • Rate: <b>₹' + fmt(m.rate) + '</b>' +
-        (m.itemCode ? ' • SAP: ' + esc(m.itemCode) : '') + '</div>';
+        '<div class="item-meta-bar">' +
+          '<span class="meta-tag">Unit: <b>' + esc(m.unit || 'No') + '</b></span>' +
+          '<span class="meta-tag">Rate: <b>₹' + fmt(m.rate) + '</b></span>' +
+        '</div>';
+
       for (var li = 0; li < locs.length; li++) {
         var l = locs[li];
         var locName = (S.locations[l] && S.locations[l].name) || ('Loc ' + (l + 1));
         var v = (S.activityQuantities[actKey][l] && S.activityQuantities[actKey][l][m.origIndex] !== undefined)
           ? S.activityQuantities[actKey][l][m.origIndex] : '';
         html += '<div class="loc-row">' +
-          '<span class="loc-name">' + esc(locName) + '</span>' +
-          '<button class="step-btn" data-a="dec" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + '>−</button>' +
-          '<input class="qty-box" type="number" inputmode="decimal" step="any" min="0" value="' + esc(v) + '"' +
-          ' data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + ' placeholder="0">' +
-          '<button class="step-btn" data-a="inc" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + '>+</button>' +
-          '</div>';
+          '<div class="loc-info">' +
+            '<span class="loc-pin">📍</span>' +
+            '<span class="loc-name">' + esc(locName) + '</span>' +
+          '</div>' +
+          '<div class="stepper">' +
+            '<button class="step-btn" data-a="dec" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + ' aria-label="Decrease">−</button>' +
+            '<input class="qty-box" type="number" inputmode="decimal" step="any" min="0" value="' + esc(v) + '"' +
+            ' data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + ' placeholder="0">' +
+            '<button class="step-btn" data-a="inc" data-loc="' + l + '" data-mat="' + m.origIndex + '"' + (locked ? ' disabled' : '') + ' aria-label="Increase">+</button>' +
+          '</div>' +
+        '</div>';
       }
-      html += '<div class="line-total"><span>Total Qty: ' + (Math.round(q * 100) / 100) + '</span><b>₹' + fmt(amt) + '</b></div></div>';
+      var unitText = esc(m.unit || 'Nos');
+      html += '<div class="card-footer">' +
+        '<span>Total Qty: <b>' + (Math.round(q * 100) / 100) + ' ' + unitText + '</b></span>' +
+        '<span class="c-amt">₹' + fmt(amt) + '</span>' +
+      '</div></div>';
     });
     if (!mats.length) html = '<div class="empty">🔍 Kuch nahi mila — kuch aur likh kar dekho.</div>';
     box.innerHTML = html;
@@ -581,9 +1041,13 @@
     var mat = parseInt(input.getAttribute('data-mat'), 10);
     var q = itemQty(actKey, mat);
     var act = S.activities[actKey];
-    var rate = act && act.materials[mat] ? num(act.materials[mat].rate) : 0;
-    var lt = card.querySelector('.line-total');
-    if (lt) lt.innerHTML = '<span>Total Qty: ' + (Math.round(q * 100) / 100) + '</span><b>₹' + fmt(q * rate) + '</b>';
+    var m = act && act.materials[mat];
+    var rate = m ? num(m.rate) : 0;
+    var unit = (m && m.unit) || 'Nos';
+    var lt = card.querySelector('.card-footer');
+    if (lt) {
+      lt.innerHTML = '<span>Total Qty: <b>' + (Math.round(q * 100) / 100) + ' ' + esc(unit) + '</b></span><span class="c-amt">₹' + fmt(q * rate) + '</span>';
+    }
   }
 
   function setQty(loc, mat, val, input) {
@@ -617,7 +1081,7 @@
     if (ss) ss.textContent = k ? '• key saved' : '';
   }
 
-  // Chup-chaap naya data lao — sirf tab jab user kuch likh nahi raha (dirty/peding sync nahi)
+  // Chup-chaap naya data lao — sirf tab jab user kuch likh nahi raha (dirty/pending sync nahi)
   function pullQuiet() {
     if (!S || dirty || syncTimer) return;
     fetch('/api/billing', { headers: apiHeaders(false) })
@@ -648,7 +1112,7 @@
     pollTimer = setInterval(pullQuiet, 20000);
   }
 
-  // Events (delegation — tez + simple)
+  // Events (delegation — fast + reliable)
   $('cards').addEventListener('click', function (e) {
     var b = e.target.closest('.step-btn');
     if (!b || b.disabled) return;
