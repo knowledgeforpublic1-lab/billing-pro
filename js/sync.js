@@ -1246,8 +1246,10 @@ window.SyncModule = {
           let serverRaw = null;
           let serverUpdatedAt = 0;
           const targetBillId = (opts && opts.dataId) || this.activeBillId || localStorage.getItem('lk_billing_active_bill_id') || 'latest';
-          this.activeBillId = targetBillId;
-          try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}
+          if (targetBillId !== 'latest') {
+              this.activeBillId = targetBillId;
+              try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}
+          }
           try {
               const res = await fetch('/api/billing?dataId=' + encodeURIComponent(targetBillId), {
                   headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
@@ -1264,6 +1266,10 @@ window.SyncModule = {
                       serverUpdatedAt = Number(json.data.savedAt) || 0;
                   }
                   if (typeof json.rev === 'number') this._loadedRev = json.rev;
+                  if (json.dataId && json.dataId !== 'latest') {
+                      this.activeBillId = json.dataId;
+                      try { localStorage.setItem('lk_billing_active_bill_id', json.dataId); } catch(e) {}
+                  }
               }
           } catch (err) {
               console.error('Failed to load from MongoDB API:', err);
@@ -1273,8 +1279,11 @@ window.SyncModule = {
           // kabhi nahi harega — chahe server timestamp naya dikhe (wahi revert bug tha).
           // Server tabhi jeetega jab us par dusre PC ka NAYA synced data ho.
           let localRaw = null;
-          const localKey = (targetBillId && targetBillId !== 'main-billing-state')
-              ? ('lk_billing_state_' + targetBillId)
+          const effectiveBillId = (this.activeBillId && this.activeBillId !== 'latest')
+              ? this.activeBillId
+              : (targetBillId !== 'latest' ? targetBillId : 'main-billing-state');
+          const localKey = (effectiveBillId && effectiveBillId !== 'main-billing-state')
+              ? ('lk_billing_state_' + effectiveBillId)
               : 'lk_billing_app_state_v10';
           if (window.BillingStorage && typeof window.BillingStorage.getItemAsync === 'function') {
               localRaw = await window.BillingStorage.getItemAsync(localKey);
@@ -1395,16 +1404,6 @@ window.SyncModule = {
                                         cur.sapDescription = defMat.sapDescription;
                                         cur.sapUom = defMat.sapUom;
                                         cur.docHeader = defMat.docHeader;
-                                    }
-                                    // 🛡️ Auto-heal poles from master if mistakenly mapped to cut point/cross arm
-                                    if (cur.desc && defMat.desc && cur.desc.trim().toLowerCase() === defMat.desc.trim().toLowerCase()) {
-                                        if (/\b(rsj|pole|psc)\b/i.test(defMat.desc) && defMat.itemCode && cur.itemCode !== defMat.itemCode) {
-                                            cur.itemCode = defMat.itemCode;
-                                            cur.sapDescription = defMat.sapDescription;
-                                            cur.sapUom = defMat.sapUom;
-                                            cur.docHeader = defMat.docHeader;
-                                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems || []));
-                                        }
                                     }
                                     if (!cur.sapItems && defMat.sapItems) {
                                         cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));

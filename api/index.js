@@ -160,16 +160,25 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/billing', requireApiKey, async (req, res) => {
     try {
         await connectToDatabase();
-        const dataId = (req.query && req.query.dataId && String(req.query.dataId).trim())
+        const rawDataId = (req.query && req.query.dataId && String(req.query.dataId).trim())
             ? String(req.query.dataId).trim()
-            : 'main-billing-state';
-        const state = await BillingState.findOne({ dataId });
-        if (!state) {
-            log.info('GET', `No billing state found for ${dataId} — returning null`);
-            return res.json({ success: true, data: null, dataId });
+            : '';
+        let state = null;
+        if (!rawDataId || rawDataId === 'latest') {
+            state = await BillingState.findOne({}).sort({ updatedAt: -1 });
+        } else {
+            state = await BillingState.findOne({ dataId: rawDataId });
+            // If requested dataId was not found, fallback to the latest active bill
+            if (!state) {
+                state = await BillingState.findOne({}).sort({ updatedAt: -1 });
+            }
         }
-        log.info('GET', `Billing state fetched for ${dataId} (rev: ${state.rev || 0})`);
-        res.json({ success: true, dataId: state.dataId || dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
+        if (!state) {
+            log.info('GET', `No billing state found for ${rawDataId || 'latest'} — returning null`);
+            return res.json({ success: true, data: null, dataId: rawDataId || 'main-billing-state' });
+        }
+        log.info('GET', `Billing state fetched for ${state.dataId} (rev: ${state.rev || 0})`);
+        res.json({ success: true, dataId: state.dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         log.error('GET', 'Error fetching billing data', err);
         res.status(500).json({ success: false, error: dbErrorHint(err) });
@@ -319,11 +328,15 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Empty payload' });
         }
 
-        const dataId = (req.body && req.body.dataId && String(req.body.dataId).trim())
+        let dataId = (req.body && req.body.dataId && String(req.body.dataId).trim())
             ? String(req.body.dataId).trim()
             : ((req.query && req.query.dataId && String(req.query.dataId).trim())
                 ? String(req.query.dataId).trim()
-                : 'main-billing-state');
+                : '');
+        if (!dataId || dataId === 'latest') {
+            const latestDoc = await BillingState.findOne({}).sort({ updatedAt: -1 });
+            dataId = (latestDoc && latestDoc.dataId) ? latestDoc.dataId : 'main-billing-state';
+        }
 
         const dataToSave = pickAllowedKeys(req.body || {});
 
