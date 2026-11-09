@@ -27,18 +27,18 @@ const defaultPoleSchedules = {
       },
       {
         "no": "1",
-        "itemCode": "17004792",
+        "itemCode": "17001243",
         "desc": "RSJ 116x100, 11 m long",
         "unit": "No.",
         "rate": 2500,
-        "sapDescription": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-        "sapUom": "SET",
+        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+        "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17004792",
-            "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-            "uom": "SET",
+            "code": "17001243",
+            "desc": "RSJ POLE 100X116 MM 11 MTR",
+            "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
           }
@@ -84,17 +84,17 @@ const defaultPoleSchedules = {
       },
       {
         "no": "4",
-        "itemCode": "17005041",
+        "itemCode": "17005037",
         "desc": "RSJ 116x100, 8 m long",
         "unit": "No.",
         "rate": 1500,
-        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
+        "sapDescription": "RSJ JOIST 116X100 8.0M 184.00KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005041",
-            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
+            "code": "17005037",
+            "desc": "RSJ JOIST 116X100 8.0M 184.00KG",
             "uom": "NO",
             "docHeader": "0031006347",
             "qty": 1
@@ -137,17 +137,17 @@ const defaultPoleSchedules = {
       },
       {
         "no": "6",
-        "itemCode": "17000704",
+        "itemCode": "17005041",
         "desc": "Top Cleat (Extension)",
         "unit": "Nos",
         "rate": 50,
-        "sapDescription": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+        "sapDescription": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17000704",
-            "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+            "code": "17005041",
+            "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -343,17 +343,17 @@ const defaultPoleSchedules = {
       },
       {
         "no": "16",
-        "itemCode": "17001356",
+        "itemCode": "17005046",
         "desc": "Side Clamp for 11 KV V-Cross Arm (Extension)",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "WEDGE CONNECTOR RABBIT TO RABBIT",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001356",
-            "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
             "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
@@ -362,18 +362,18 @@ const defaultPoleSchedules = {
       },
       {
         "no": "17",
-        "itemCode": "17001261",
+        "itemCode": "17005046",
         "desc": "Side Clamp for Guarding Channel",
         "unit": "Nos",
         "rate": 40,
-        "sapDescription": "AAAC RABBIT CONDUCTOR",
-        "sapUom": "KM",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+        "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001261",
-            "desc": "AAAC RABBIT CONDUCTOR",
-            "uom": "KM",
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
             "qty": 1,
             "docHeader": "0031006347"
           }

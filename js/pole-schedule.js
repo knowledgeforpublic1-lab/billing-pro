@@ -922,13 +922,11 @@ window.PoleScheduleModule = {
                         if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
                             isMatch = false;
                         } else {
-                            // If multiple am in act.materials share this exact code, use description to disambiguate
-                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && [
-                                ...expandSapCodes(oAm.itemCode),
-                                ...(Array.isArray(oAm.sapItems) ? oAm.sapItems.map(sap => sap && sap.code) : [])
-                            ].flatMap(expandSapCodes).some(code => amCodes.has(code)));
+                            // If multiple am in act.materials share this exact primary code, use description to disambiguate
+                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && expandSapCodes(oAm.itemCode).some(code => amCodes.has(code)));
                             if (duplicateAmCode) {
-                                if (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc))) {
+                                const isTopCleatSynonym = /\btop\s*(?:cleat|fitting)\b/i.test(amDesc) && /\btop\s*(?:cleat|fitting)\b/i.test(smDesc);
+                                if (isTopCleatSynonym || (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc)))) {
                                     isMatch = true;
                                 }
                             } else {

@@ -849,6 +849,12 @@ app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit
                 { key: 'poleSchedulesMaster', data: poleSchedules, updatedAt: new Date() },
                 { upsert: true, new: true }
             );
+
+            // Also update all BillingState documents so live bills immediately inherit updated schedules
+            await BillingState.updateMany(
+                {},
+                { $set: { 'stateData.poleSchedules': poleSchedules, updatedAt: new Date() }, $inc: { rev: 1 } }
+            );
             log.info(ctx, 'Successfully synced pole schedules to MongoDB Atlas for cross-PC default persistence');
         } catch (dbErr) {
             log.warn(ctx, `MongoDB backup skipped/failed: ${dbErr.message}`);

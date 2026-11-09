@@ -368,12 +368,12 @@ it('New Bill Workflow: Directly blanks bill, increments RA/Bill No, and leaves c
         switchView(v) { this.currentView = v; }
     };
 
-    // Execute startNewBlankBill via openNewBillModal
+    // Execute startNewBlankBill
     Object.assign(mockApp, window.SyncModule);
     mockApp.syncToMongoNow = async () => { syncCalled = true; return true; };
     mockApp.saveToStorage = () => { savedToStorageCalled = true; };
     mockApp.loadSavedBillsList = () => {};
-    await mockApp.openNewBillModal();
+    await mockApp.startNewBlankBill();
 
     // Assertions
     assert.strictEqual(syncCalled, true, 'syncToMongoNow must be called to save prior bill');

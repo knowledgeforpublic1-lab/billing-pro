@@ -506,8 +506,69 @@ window.SyncModule = {
         this.showNewBillModal = true;
     },
     async startNewBlankBill() {
-        // Compatibility alias: require explicit confirmation before clearing bill data.
-        return await this.openNewBillModal();
+        if (this._isStartingNewBill) return;
+        this._isStartingNewBill = true;
+        try {
+            this.showToast('Saving current bill before starting new...', '⏳');
+            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
+
+            if (typeof this.resetAllManualDataKeepMapping === 'function') {
+                this.resetAllManualDataKeepMapping();
+            } else {
+                this.activityQuantities = {};
+                if (this.invoiceData) this.invoiceData.items = [];
+            }
+            this.selectedContractorId = '';
+            this.contractorDropdownSearch = '';
+            this.reconContractorDropdownOpen = false;
+            this.contractorDropdownOpen = false;
+
+            const today = new Date().toISOString().slice(0, 10);
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.billNo = '';
+            this.projectMeta.raNo = '';
+            this.projectMeta.billDate = today;
+            this.projectMeta.contractorName = '';
+            this.projectMeta.workOrderNo = '';
+            if (!this.projectMeta.projectName) this.projectMeta.projectName = 'RDSS T-10 GADCHIROLI';
+
+            if (!this.invoiceData) this.invoiceData = {};
+            this.invoiceData.invoiceNo = '';
+            this.invoiceData.raNo = '';
+            this.invoiceData.invoiceDate = today;
+            this.invoiceData.contractorName = '';
+            this.invoiceData.workOrderNo = '';
+            this.invoiceData.workOrderDate = '';
+            this.invoiceData.contractorPan = '';
+            this.invoiceData.contractorGstin = '';
+            this.invoiceData.bankAccountName = '';
+            this.invoiceData.bankAccountNo = '';
+            this.invoiceData.bankIfsc = '';
+            this.invoiceData.bankName = '';
+            this.invoiceData.divisionName = '';
+            this.invoiceData.subDivName = '';
+            this.invoiceData.feederName = '';
+            this.invoiceData.locationName = '';
+            this.invoiceData.items = [];
+            this.invoiceData.basicTotal = 0;
+            this.invoiceData.gstTotal = 0;
+            this.invoiceData.grandTotal = 0;
+            this.invoiceData.words = '';
+
+            const newBillId = 'bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            this.activeBillId = newBillId;
+            this.cloudRev = 0;
+            this.lastSentHash = '';
+            try { localStorage.setItem('lk_billing_active_bill_id', newBillId); } catch(e) {}
+
+            this.saveToStorage();
+            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) { console.warn(e); }
+
+            this.showNewBillModal = false;
+            this.showSavedBillsModal = false;
+        } finally {
+            this._isStartingNewBill = false;
+        }
     },
     updateBillNo(val) {
         const clean = String(val || '').trim();
@@ -907,7 +968,7 @@ window.SyncModule = {
         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
         if (this._mappingSyncTimer) clearTimeout(this._mappingSyncTimer);
         this.syncStatus = 'syncing';
-        this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow(); }, 400);
+        this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow({ force: true }); }, 400);
     },
     stableStateHash(obj) {
         try {
@@ -988,15 +1049,13 @@ window.SyncModule = {
                 let rj = null;
                 try { rj = await res.json(); } catch(e) {}
                 if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
-                this.lastSentHash = hash;
                 this.syncStatus = 'error';
-                console.warn('Sync 409 conflict: overwrite blocked, checking auto-recovery...');
-                // Auto-recover if background sync or idle: pull newer cloud data directly!
-                if (!manual && rj && rj.data) {
-                    console.info('Auto-reloading newer cloud data after conflict...');
-                    await this.loadFromStorage({ forceServer: true });
-                    try { this.showToast('Cloud data synchronized from other PC ☁️', 'ℹ️'); } catch(e) {}
-                    return true;
+                console.warn('Sync 409 conflict: updating cloudRev and auto-retrying push...');
+                // Auto-recover without destroying local unsaved edits: update cloudRev and retry
+                if (!manual && rj && typeof rj.rev === 'number') {
+                    this.cloudConflict = false;
+                    this._scheduleSyncRetry();
+                    return false;
                 }
                 try {
                     const srvMsg = (rj && rj.error) ? String(rj.error).slice(0, 150) : '';

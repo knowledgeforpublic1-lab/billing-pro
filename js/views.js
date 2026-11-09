@@ -822,7 +822,7 @@ window.ViewsModule = {
         this.sapManagerSuggestions = [];
         this.saveToStorage();
         if (typeof this.syncToMongoNow === 'function') {
-            this.syncToMongoNow({ manual: false });
+            this.syncToMongoNow({ manual: true, force: true });
         }
     },
     onSapManagerItemQtyChange(sItem, val) {
