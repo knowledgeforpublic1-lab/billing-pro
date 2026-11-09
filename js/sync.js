@@ -1245,7 +1245,14 @@ window.SyncModule = {
           // Cloud copy lao (fail ho to null — phir local hi jeetega)
           let serverRaw = null;
           let serverUpdatedAt = 0;
-          const targetBillId = (opts && opts.dataId) || this.activeBillId || localStorage.getItem('lk_billing_active_bill_id') || 'latest';
+          const savedId = (function() {
+              try {
+                  const id = localStorage.getItem('lk_billing_active_bill_id');
+                  if (!id || id === 'main-billing-state' || id === 'latest') return '';
+                  return id;
+              } catch(e) { return ''; }
+          })();
+          const targetBillId = (opts && opts.dataId) || this.activeBillId || savedId || 'latest';
           if (targetBillId !== 'latest') {
               this.activeBillId = targetBillId;
               try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}

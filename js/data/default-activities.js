@@ -53,24 +53,24 @@ const defaultActivities = {
         "desc": "11 kv Guarding channel MS 75x40 with clamp",
         "unit": "Nos",
         "rate": 500,
-        "itemCode": "17001391",
-        "sapDescription": "MS CHANNEL 75X40X6 MM",
-        "sapUom": "NOS",
-        "docHeader": "0031006330",
+        "itemCode": "17005060, 17005059",
+        "sapDescription": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG | MS-11KV TOP CH-100X50X6X2700-25.81KG",
+        "sapUom": "NO",
+        "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001391",
-            "desc": "MS CHANNEL 75X40X6 MM",
-            "uom": "NOS",
-            "docHeader": "0031006330",
-            "qty": 1
+            "code": "17005060",
+            "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
           },
           {
-            "code": "17005046",
-            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "code": "17005059",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
             "uom": "NO",
-            "docHeader": "0031006347",
-            "qty": 1
+            "qty": 1,
+            "docHeader": "0031006347"
           }
         ]
       },
@@ -79,8 +79,8 @@ const defaultActivities = {
         "desc": "Cut Point Set with Channel, angle and clamps",
         "unit": "Set",
         "rate": 1250,
-        "itemCode": "17005042",
-        "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
+        "itemCode": "17005042, 17005043",
+        "sapDescription": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG | MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [

@@ -380,7 +380,13 @@
                     } catch(e) {}
                     return 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
                 })(),
-                activeBillId: (function() { try { return localStorage.getItem('lk_billing_active_bill_id') || 'main-billing-state'; } catch(e) { return 'main-billing-state'; } })(),
+                activeBillId: (function() {
+                    try {
+                        const id = localStorage.getItem('lk_billing_active_bill_id');
+                        if (!id || id === 'main-billing-state' || id === 'latest') return '';
+                        return id;
+                    } catch(e) { return ''; }
+                })(),
                 savedBillsList: [],
                 isLoadingBills: false,
                 showSavedBillsModal: false,
