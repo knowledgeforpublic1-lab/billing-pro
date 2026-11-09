@@ -1848,10 +1848,8 @@
                 });
             }
 
-            // PATCH: galat/orphan SAP mappings — ek baar, saved bill par bhi.
-            // 17 codes ka sahi remap; master list me na milne wala code blank (galat code dikhega hi nahi).
-            // Sirf tab chalega jab master poori load hui ho (200+ entries) — adhoori master par kuch nahi bigdega.
-            if (!localStorage.getItem('patch_orphan_remap_v4')) {
+            // Old migration patches permanently disabled to preserve user mappings
+            if (false && !localStorage.getItem('patch_orphan_remap_v4')) {
                 try {
                     const masterSet = {};
                     const masterDesc = {};
@@ -1950,8 +1948,8 @@
                 try { localStorage.setItem('patch_orphan_remap_v4', 'true'); } catch(e) {}
             }
 
-            // PATCH: remove 10 excluded SAP items (GI wire, Lug, Bituminous paint, Stay set clamps, MS angle 50x50x6, Shackle/Stay/Bobbin insulators, Copper flexible wire)
-            if (!localStorage.getItem('patch_remove_10_sap_items_v1')) {
+            // PATCH: remove 10 excluded SAP items permanently disabled
+            if (false && !localStorage.getItem('patch_remove_10_sap_items_v1')) {
                 try {
                     const excludedCodes = new Set([
                         '17000236', '17000243',
@@ -2118,16 +2116,6 @@
                                         cur.sapDescription = defMat.sapDescription;
                                         cur.sapUom = defMat.sapUom;
                                         cur.docHeader = defMat.docHeader;
-                                    }
-                                    // 🛡️ Auto-heal poles from master if mistakenly mapped to cut point/cross arm
-                                    if (cur.desc && defMat.desc && cur.desc.trim().toLowerCase() === defMat.desc.trim().toLowerCase()) {
-                                        if (/\b(rsj|pole|psc)\b/i.test(defMat.desc) && defMat.itemCode && cur.itemCode !== defMat.itemCode) {
-                                            cur.itemCode = defMat.itemCode;
-                                            cur.sapDescription = defMat.sapDescription;
-                                            cur.sapUom = defMat.sapUom;
-                                            cur.docHeader = defMat.docHeader;
-                                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems || []));
-                                        }
                                     }
                                     if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
                                         cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
