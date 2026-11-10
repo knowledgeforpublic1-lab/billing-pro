@@ -352,6 +352,18 @@ function getColLetter(colIdx) {
 }
 
 /**
+ * Excel formula-injection sanitizer: upload hue Excel se aaye strings me leading
+ * "=" ho to cell formula ban jata hai (ExcelJS). Leading space add karke text force karo.
+ * @param {*} v - cell value
+ * @returns {*} sanitized value
+ */
+window.sanitizeExcelText = function sanitizeExcelText(v) {
+    if (typeof v !== 'string') return v;
+    if (v.charAt(0) === '=') return ' ' + v;
+    return v;
+};
+
+/**
  * Indian Number to Currency Words Converter
  * @param {number} num
  * @returns {string}

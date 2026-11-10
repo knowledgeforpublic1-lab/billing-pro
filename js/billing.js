@@ -663,9 +663,21 @@ window.BillingModule = {
         if (this.isFinalized) return;
         this.contractorDropdownOpen = !this.contractorDropdownOpen;
         if (this.contractorDropdownOpen) {
+            this.reconContractorDropdownOpen = false;
             this.contractorDropdownSearch = '';
             this.$nextTick(() => {
                 if (this.$refs.contractorSearchInput) this.$refs.contractorSearchInput.focus();
+            });
+        }
+    },
+
+    toggleReconContractorDropdown() {
+        this.reconContractorDropdownOpen = !this.reconContractorDropdownOpen;
+        if (this.reconContractorDropdownOpen) {
+            this.contractorDropdownOpen = false;
+            this.contractorDropdownSearch = '';
+            this.$nextTick(() => {
+                if (this.$refs.reconContractorSearchInput) this.$refs.reconContractorSearchInput.focus();
             });
         }
     },
@@ -969,10 +981,7 @@ window.BillingModule = {
         }
     },
 
-    onActivityChange() {
-        this.initQuantitiesForActivity(this.selectedActivityKey);
-        this.saveToStorage();
-    },
+    // onActivityChange views.js me merged hai (location reset + initQuantities + saveToStorage)
 
     resetFilters() {
         this.searchQuery = '';

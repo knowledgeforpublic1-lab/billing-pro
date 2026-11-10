@@ -100,7 +100,23 @@ window.HistoryModule = {
                             savedAt: Date.now(),
                             baseRev: this.cloudRev
                         };
-                        localStorage.setItem('lk_billing_app_state_v10', JSON.stringify(dataToSave));
+                        // 🛡️ Storage race fix: pehle straight localStorage me likh rahe the —
+                        // (a) active bill koi aur ho to MAIN state overwrite ho jati thi,
+                        // (b) IndexedDB (BillingStorage) aur localStorage me purani/alag copy reh jati thi.
+                        // Ab saveToStorage jaisa hi key + engine use karo.
+                        const curBillId = this.activeBillId || 'main-billing-state';
+                        const histLocalKey = (curBillId && curBillId !== 'main-billing-state')
+                            ? ('lk_billing_state_' + curBillId)
+                            : 'lk_billing_app_state_v10';
+                        try {
+                            if (window.BillingStorage && typeof window.BillingStorage.setItem === 'function') {
+                                window.BillingStorage.setItem(histLocalKey, JSON.stringify(dataToSave));
+                            } else {
+                                localStorage.setItem(histLocalKey, JSON.stringify(dataToSave));
+                            }
+                        } catch (se) {
+                            try { localStorage.setItem(histLocalKey, JSON.stringify(dataToSave)); } catch (e2) {}
+                        }
                         // Cloud sync tested path se — direct fire-and-forget POST me rev/hash stale reh jata tha,
                         // agla auto-sync 409 khakar cloudConflict me phas jata tha. scheduleMappingSync rev/hash/conflict sahi handle karta hai.
                         try { this.scheduleMappingSync(); } catch(e) { console.error("Undo sync schedule failed", e); }

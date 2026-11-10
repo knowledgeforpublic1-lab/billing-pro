@@ -479,6 +479,8 @@ window.ViewsModule = {
         if (typeof this.initQuantitiesForActivity === 'function') {
             this.initQuantitiesForActivity(this.selectedActivityKey);
         }
+        // billing.js wale version me yahi save tha — merge shadowing me kho gaya tha, wapas add kiya
+        this.saveToStorage();
     },
     onExtraItemCodeSearch() {
         this.showExtraItemSuggest = true;

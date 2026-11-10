@@ -60,15 +60,15 @@ window.ExportModule = {
                         const sList = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [{ code: m.itemCode || '', desc: m.sapDescription || '', uom: m.sapUom || m.unit, docHeader: m.docHeader || '0031006347' }];
                         sList.forEach((s, sIdx) => {
                             const row = ws.getRow(rowIdx);
-                            row.getCell(1).value = (sIdx === 0) ? rowObj.actKey : '';
-                            row.getCell(2).value = (sIdx === 0) ? m.no : '';
-                            row.getCell(3).value = (sIdx === 0) ? m.desc : `↳ Component ${sIdx+1}`;
-                            row.getCell(4).value = (sIdx === 0) ? m.unit : '';
+                            row.getCell(1).value = window.sanitizeExcelText((sIdx === 0) ? rowObj.actKey : '');
+                            row.getCell(2).value = window.sanitizeExcelText((sIdx === 0) ? m.no : '');
+                            row.getCell(3).value = window.sanitizeExcelText((sIdx === 0) ? m.desc : `↳ Component ${sIdx+1}`);
+                            row.getCell(4).value = window.sanitizeExcelText((sIdx === 0) ? m.unit : '');
                             row.getCell(5).value = (sIdx === 0) ? m.rate : '';
-                            row.getCell(6).value = s.code;
-                            row.getCell(7).value = s.desc;
-                            row.getCell(8).value = s.uom;
-                            row.getCell(9).value = s.docHeader;
+                            row.getCell(6).value = window.sanitizeExcelText(s.code);
+                            row.getCell(7).value = window.sanitizeExcelText(s.desc);
+                            row.getCell(8).value = window.sanitizeExcelText(s.uom);
+                            row.getCell(9).value = window.sanitizeExcelText(s.docHeader);
                             row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
                             row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
                             row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
@@ -180,9 +180,9 @@ window.ExportModule = {
                     expRows.forEach((rowObj, idx) => {
                         const row = ws.getRow(rowIdx);
                         row.getCell(1).value = idx + 1;
-                        row.getCell(2).value = rowObj.code;
-                        row.getCell(3).value = rowObj.desc;
-                        row.getCell(4).value = rowObj.uom;
+                        row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
+                        row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
+                        row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
                         row.getCell(5).value = rowObj.sapGrossIssue || rowObj.sapIssuedQty || '';
                         row.getCell(6).value = rowObj.sapMrnReturn || '';
                         row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || '');
@@ -413,11 +413,11 @@ window.ExportModule = {
                         const row = ws.getRow(curRow);
                         row.height = 22;
 
-                        row.getCell(1).value = mr[0];
+                        row.getCell(1).value = window.sanitizeExcelText(mr[0]);
                         row.getCell(1).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                         row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
-                        row.getCell(2).value = mr[1];
+                        row.getCell(2).value = window.sanitizeExcelText(mr[1]);
                         row.getCell(2).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
                         row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
                         // Ensure Invoice Date (row 9) & WO Date (row 8) stay in DD-MM-YYYY text format without Excel auto-flipping
@@ -425,12 +425,12 @@ window.ExportModule = {
                             row.getCell(2).numFmt = '@';
                         }
 
-                        row.getCell(3).value = mr[2];
+                        row.getCell(3).value = window.sanitizeExcelText(mr[2]);
                         row.getCell(3).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
                         row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
 
                         ws.mergeCells(curRow, 4, curRow, 5);
-                        row.getCell(4).value = mr[3];
+                        row.getCell(4).value = window.sanitizeExcelText(mr[3]);
                         row.getCell(4).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
                         row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
 
@@ -453,9 +453,9 @@ window.ExportModule = {
                         const row = ws.getRow(curRow);
                         row.getCell(1).value = Number(it.srNo) || it.srNo;
                         row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(2).value = it.desc;
+                        row.getCell(2).value = window.sanitizeExcelText(it.desc);
                         row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(3).value = it.unit;
+                        row.getCell(3).value = window.sanitizeExcelText(it.unit);
                         row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
                         row.getCell(4).value = Number(it.qty) || 0;
                         row.getCell(4).numFmt = (Number(it.qty) % 1 !== 0) ? '#,##0.000' : '#,##0.00';
@@ -488,7 +488,7 @@ window.ExportModule = {
                     rBank1.getCell(1).value = 'Name of Account:';
                     rBank1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                     ws.mergeCells(curRow, 2, curRow, 3);
-                    rBank1.getCell(2).value = this.invoiceData.bankAccountName;
+                    rBank1.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankAccountName);
                     rBank1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                     rBank1.getCell(4).value = 'Basic Amount';
                     rBank1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
@@ -520,7 +520,7 @@ window.ExportModule = {
                         rBank3.getCell(1).value = 'Bank IFSC:';
                         rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank3.getCell(2).value = this.invoiceData.bankIfsc;
+                        rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
                         rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank3.getCell(4).value = 'SGST @ 9%';
                         rBank3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
@@ -536,7 +536,7 @@ window.ExportModule = {
                         rBank4.getCell(1).value = 'Bank Name :';
                         rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank4.getCell(2).value = this.invoiceData.bankName;
+                        rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
                         rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(4).value = 'Total Amount';
                         rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
@@ -567,7 +567,7 @@ window.ExportModule = {
                         rBank3.getCell(1).value = 'Bank IFSC:';
                         rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank3.getCell(2).value = this.invoiceData.bankIfsc;
+                        rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
                         rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         curRow++;
 
@@ -576,7 +576,7 @@ window.ExportModule = {
                         rBank4.getCell(1).value = 'Bank Name :';
                         rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank4.getCell(2).value = this.invoiceData.bankName;
+                        rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
                         rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rBank4.getCell(4).value = 'Total Amount';
                         rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
@@ -607,7 +607,7 @@ window.ExportModule = {
                         rNone2.getCell(1).value = 'Bank IFSC:';
                         rNone2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rNone2.getCell(2).value = this.invoiceData.bankIfsc;
+                        rNone2.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
                         rNone2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         curRow++;
 
@@ -616,7 +616,7 @@ window.ExportModule = {
                         rNone3.getCell(1).value = 'Bank Name :';
                         rNone3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
                         ws.mergeCells(curRow, 2, curRow, 3);
-                        rNone3.getCell(2).value = this.invoiceData.bankName;
+                        rNone3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
                         rNone3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
                         rNone3.getCell(4).value = 'Total Amount';
                         rNone3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
@@ -654,7 +654,7 @@ window.ExportModule = {
                     rDecl.alignment = { wrapText: true, vertical: 'top' };
 
                     ws.mergeCells(curRow, 4, curRow, 5);
-                    ws.getCell(`D${curRow}`).value = `For, ${this.getContractorDisplayName()}`;
+                    ws.getCell(`D${curRow}`).value = window.sanitizeExcelText(`For, ${this.getContractorDisplayName()}`);
                     ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
 
                     ws.mergeCells(curRow + 4, 4, curRow + 4, 5);
@@ -1242,9 +1242,9 @@ function jsonOut(obj) {
                     pData.rows.forEach((rowObj, idx) => {
                         const row = ws.getRow(rowIdx);
                         row.getCell(1).value = idx + 1;
-                        row.getCell(2).value = rowObj.code;
-                        row.getCell(3).value = rowObj.desc;
-                        row.getCell(4).value = rowObj.uom;
+                        row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
+                        row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
+                        row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
 
                         const actColStart = 6;
                         columns.forEach((col, cIdx) => {
@@ -1395,7 +1395,7 @@ function jsonOut(obj) {
                         const estTotal = qtyVal * rateVal;
 
                         row.getCell(1).value = act.code;
-                        row.getCell(2).value = act.desc;
+                        row.getCell(2).value = window.sanitizeExcelText(act.desc);
                         row.getCell(3).value = act.uom;
                         row.getCell(4).value = qtyVal;
                         row.getCell(5).value = rateVal;
@@ -1605,7 +1605,7 @@ function jsonOut(obj) {
                             const { mat, idx, rowNo } = itemObj;
                             const row = ws.getRow(rowIdx);
                             row.getCell(1).value = isExtra ? rowNo : (mat.no || rowNo);
-                            row.getCell(2).value = mat.desc || mat.sapDescription || mat.itemCode || '';
+                            row.getCell(2).value = window.sanitizeExcelText(mat.desc || mat.sapDescription || mat.itemCode || '');
                             row.getCell(3).value = mat.unit || '';
 
                             let itemTotalQty = 0;

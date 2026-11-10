@@ -666,15 +666,15 @@ window.MappingModule = {
             const sList = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [{ code: m.itemCode || '', desc: m.sapDescription || '', uom: m.sapUom || m.unit, docHeader: m.docHeader || '0031006347' }];
             sList.forEach((s, sIdx) => {
                 const row = ws.getRow(rowIdx);
-                row.getCell(1).value = (sIdx === 0) ? rowObj.actKey : '';
-                row.getCell(2).value = (sIdx === 0) ? m.no : '';
-                row.getCell(3).value = (sIdx === 0) ? m.desc : `↳ Component ${sIdx+1}`;
-                row.getCell(4).value = (sIdx === 0) ? m.unit : '';
+                row.getCell(1).value = window.sanitizeExcelText((sIdx === 0) ? rowObj.actKey : '');
+                row.getCell(2).value = window.sanitizeExcelText((sIdx === 0) ? m.no : '');
+                row.getCell(3).value = window.sanitizeExcelText((sIdx === 0) ? m.desc : `↳ Component ${sIdx+1}`);
+                row.getCell(4).value = window.sanitizeExcelText((sIdx === 0) ? m.unit : '');
                 row.getCell(5).value = (sIdx === 0) ? m.rate : '';
-                row.getCell(6).value = s.code;
-                row.getCell(7).value = s.desc;
-                row.getCell(8).value = s.uom;
-                row.getCell(9).value = s.docHeader;
+                row.getCell(6).value = window.sanitizeExcelText(s.code);
+                row.getCell(7).value = window.sanitizeExcelText(s.desc);
+                row.getCell(8).value = window.sanitizeExcelText(s.uom);
+                row.getCell(9).value = window.sanitizeExcelText(s.docHeader);
                 row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
                 row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
                 row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };

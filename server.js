@@ -53,8 +53,8 @@ app.use((req, res, next) => {
   let p = '';
   try { p = decodeURI(req.url); } catch(e) { p = req.url; }
   if (p.startsWith('/Reconciliation master')) {
-    if (p.includes('upload.php')) {
-      return res.status(403).send('Forbidden: PHP execution disabled.');
+    if (p.includes('upload.php') || /\/data\.(js|json)$/i.test(p)) {
+      return res.status(403).send('Forbidden: data scripts are blocked.');
     }
     return express.static(path.join(__dirname, 'Reconciliation master'))(
       Object.assign(req, { url: p.replace('/Reconciliation master', '') || '/' }),
@@ -64,7 +64,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
+// (dead /style.css route removed — style.css file hi nahi hai, css/ folder static serve hota hai)
 
 app.use('/demo', express.static(path.join(__dirname, 'sap-ui-demo')));
 app.get(['/old', '/old/index.html'], (req, res) => res.sendFile(path.join(__dirname, 'index.html')));

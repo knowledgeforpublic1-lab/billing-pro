@@ -1026,7 +1026,9 @@ window.OldRecoImporterModule = {
         return (val !== 0 && val !== undefined && val !== null) ? val : '';
     },
 
-    getRecoCellTitle(row, col) {
+    // getRecoCellTitle: pole-schedule.js wala version poore app me winner hai (index.html usi ko
+    // use karta hai). Ye wala dead tha — rename karke shadowing clear kiya.
+    getOldRecoCellTitle(row, col) {
         const form = this.getRecoFormula(row.code, col.name);
         if (form) {
             const val = this.getRecoColVal(row.code, col.name, row);
@@ -1349,6 +1351,7 @@ window.OldRecoImporterModule = {
             }
 
             window.ContractorOldReco = updatedDb;
+            window.__customOldReco = updatedDb; // lazy default load ke aane par yahi restore rahega
             await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
 
             this.hasCustomOldReco = true;

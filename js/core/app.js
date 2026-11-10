@@ -67,6 +67,51 @@
         }
     };
 
+    // ⚡ Heavy master data lazy-load: 8.1MB SAP stock + 2.2MB old-reco boot ke BAAD idle-time par.
+    // Sirf ek hi baar chalega (guard). Custom (user-uploaded) data window.__customSapStock /
+    // window.__customOldReco me capture hota hai aur defaults ke aane par wapas restore ho jata hai.
+    allMethods.lazyLoadHeavyData = function() {
+        if (window.__heavyDataLoaded || window.__heavyDataLoading) return;
+        window.__heavyDataLoading = true;
+        // fetch (http/https) fast hai; file:// direct open par fetch block hota hai — wahan
+        // <script> injection fallback chalega (script tag file:// me allowed hai).
+        const loadScript = (url) => fetch(url)
+            .then(r => { if (!r.ok) throw new Error(url + ' → HTTP ' + r.status); return r.text(); })
+            .then(code => { try { (new Function(code))(); } catch (e) { console.warn('[LazyLoad] eval error ' + url, e); } })
+            .catch(() => new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = url;
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('script load failed: ' + url));
+                document.head.appendChild(s);
+            }));
+        Promise.all([
+            loadScript('js/data/contractor-sap-issues.js?v=20261109_v2200')
+                .catch(e => { console.warn('[LazyLoad] SAP stock:', e.message); return null; }),
+            loadScript('js/data/contractor-old-reconciliation.js?v=20261109_v2200')
+                .catch(e => { console.warn('[LazyLoad] old reco:', e.message); return null; })
+        ]).then(() => {
+            window.__heavyDataLoaded = true;
+            window.__heavyDataLoading = false;
+            // Defaults aane ke baad bhi custom data hi rahe (agar boot par chuka tha)
+            if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
+                window.DefaultContractorSapStock = window.ContractorSapStock;
+            }
+            if (window.__customSapStock) {
+                window.ContractorSapStock = window.__customSapStock;
+                if (!window.DefaultContractorSapStock) window.DefaultContractorSapStock = { byContractorNorm: {} };
+            }
+            if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
+                window.DefaultContractorOldReco = window.ContractorOldReco;
+            }
+            if (window.__customOldReco) {
+                window.ContractorOldReco = window.__customOldReco;
+                if (!window.DefaultContractorOldReco) window.DefaultContractorOldReco = { byContractorNorm: {} };
+            }
+            try { this.recoRevision = (this.recoRevision || 0) + 1; } catch (e) {}
+        });
+    };
+
     allMethods.toggleTheme = function() {
         const order = ['light', 'dark', 'soft'];
         const cur = this.themeMode || 'light';
@@ -143,6 +188,8 @@
                             const p = new URLSearchParams(window.location.search);
                             if (p.get('sub') === 'abstract') return 'abstract';
                         }
+                        const sub = localStorage.getItem('billing_pole_schedule_subtab');
+                        if (sub === 'abstract' || sub === 'schedule') return sub;
                     } catch(e) {}
                     return 'schedule';
                 })(),
@@ -217,7 +264,14 @@
                     }
                     return base;
                 })(),
-                selectedActivityKey: '1220',
+                selectedActivityKey: (function() {
+                    // 🔄 Refresh par wahi activity wapas jis par user tha
+                    try {
+                        const saved = localStorage.getItem('billing_selected_activity_key');
+                        if (saved && ((typeof defaultActivities !== 'undefined' && defaultActivities[saved]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[saved]))) return saved;
+                    } catch(e) {}
+                    return '1220';
+                })(),
                 searchQuery: '',
                 selectedLocationIdx: 'ALL',
                 // ↩️ Reverse entry (reconciliation → activity) — default OFF = purana system jaisa hai wesa
@@ -1471,8 +1525,13 @@
                 return this.currentActivity.materials.map((m, idx) => ({ ...m, origIndex: idx }))
                     .filter(m => {
                         if (this.searchQuery) {
-                            const q = this.searchQuery.toLowerCase();
-                            return (m.desc && m.desc.toLowerCase().includes(q)) || String(m.no).toLowerCase().includes(q);
+                            const q = this.searchQuery.toLowerCase().trim();
+                            if (!q) return true;
+                            let hay = String(m.desc || '') + '|' + String(m.no || '') + '|' + String(m.itemCode || '');
+                            if (Array.isArray(m.sapItems)) {
+                                m.sapItems.forEach(s => { hay += '|' + String(s.code || '') + '|' + String(s.desc || ''); });
+                            }
+                            return hay.toLowerCase().includes(q);
                         }
                         return true;
                     });
@@ -1581,14 +1640,27 @@
                 }
             },
             filteredContractorsList() {
-                if (!this.contractorSearchQuery) return this.contractorsList;
-                const q = this.contractorSearchQuery.toLowerCase();
-                return this.contractorsList.filter(f =>
-                    (f.name && f.name.toLowerCase().includes(q)) ||
-                    (f.pan && f.pan.toLowerCase().includes(q)) ||
-                    (f.gstin && f.gstin.toLowerCase().includes(q)) ||
-                    (f.divisionName && f.divisionName.toLowerCase().includes(q))
-                );
+                const raw = String(this.contractorSearchQuery || '').trim().toLowerCase();
+                if (!raw) return this.contractorsList;
+                const q = raw.replace(/^m\/s\.?\s*/i, '').trim();
+                const tokens = q.split(/\s+/).filter(Boolean);
+                const isSubsequence = (needle, hay) => {
+                    let pos = 0;
+                    for (let i = 0; i < hay.length && pos < needle.length; i++) {
+                        if (hay[i] === needle[pos]) pos++;
+                    }
+                    return pos === needle.length;
+                };
+                return (this.contractorsList || []).filter(f => {
+                    const hay = [f.name, f.pan, f.gstin, f.workOrderNo, f.workOrderDate, f.divisionName, f.bankName, f.bankIfsc, f.bankAccountNo, f.projectName]
+                        .map(v => String(v || '').toLowerCase())
+                        .join(' ')
+                        .replace(/^m\/s\.?\s*/i, '');
+                    if (hay.includes(q)) return true;
+                    if (tokens.length > 1) return tokens.every(t => hay.includes(t));
+                    if (q.length >= 4) return isSubsequence(q, hay);
+                    return hay.includes(q);
+                });
             },
             sortedFilteredContractors() {
                 let list = this.contractorsList || [];
@@ -1774,12 +1846,15 @@
             pctStage3() { this.debouncedSave(); },
             isFinalized() { this.saveToStorage(); },
             currentView() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
-            poleScheduleSubTab() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
-            selectedPoleScheduleKey() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
-            poleScheduleQuantities: {
-                handler() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
-                deep: true
-            }
+            poleScheduleSubTab(v) {
+                try { localStorage.setItem('billing_pole_schedule_subtab', v || 'schedule'); } catch(e) {}
+                this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } });
+            },
+            // 🔄 Selected activity yaad rakho — refresh par same activity/page wapas
+            selectedActivityKey(v) {
+                try { localStorage.setItem('billing_selected_activity_key', v); } catch(e) {}
+            },
+            selectedPoleScheduleKey() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); }
         },
 
         methods: allMethods,
@@ -1794,33 +1869,32 @@
         },
 
         async mounted() {
-        this.applyTheme();
-        // Angular-style brand splash ko smooth fade-out karo jab app ready hai
-        try {
-            var splash = document.getElementById('boot-splash');
-            if (splash) {
-                splash.style.opacity = '0';
-                splash.style.pointerEvents = 'none';
-                setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
-            }
-        } catch(e) {}
-        try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
-        try {
-            this._alvSchedule = () => {
-                if (this._alvRaf) return;
-                this._alvRaf = requestAnimationFrame(() => {
-                    this._alvRaf = 0;
-                    try { this.updateAlvFiller(); } catch (e) { }
-                });
-            };
-            this._alvObserver = new MutationObserver(this._alvSchedule);
-            this._alvObserver.observe(document.body, { childList: true, subtree: true });
-            window.addEventListener('resize', this._alvSchedule);
-            window.addEventListener('load', this._alvSchedule);
-            this.$nextTick(this._alvSchedule);
-        } catch (e) { }
+            this.applyTheme();
+            try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
+            try {
+                this._alvSchedule = () => {
+                    if (this._alvRaf) return;
+                    this._alvRaf = requestAnimationFrame(() => {
+                        this._alvRaf = 0;
+                        try { this.updateAlvFiller(); } catch (e) { }
+                    });
+                };
+                window.addEventListener('resize', this._alvSchedule, { passive: true });
+                this.$nextTick(this._alvSchedule);
+            } catch (e) { }
             this._isLoading = true;
             await this.loadFromStorage();
+
+            // ⚡ Boot splash fade-out — app render ready, flash hataya gaya
+            try {
+                this.$nextTick(() => {
+                    const sp = document.getElementById('bootSplash');
+                    if (sp) {
+                        sp.classList.add('hide');
+                        setTimeout(() => { try { sp.remove(); } catch (e) {} }, 500);
+                    }
+                });
+            } catch (e) {}
             try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}
             
             // Backup default stock & check for custom uploaded stock in IndexedDB
@@ -1835,6 +1909,7 @@
                     const customOldReco = await window.OldRecoImporterModule.loadCustomOldRecoFromDb();
                     if (customOldReco && customOldReco.byContractorNorm && Object.keys(customOldReco.byContractorNorm).length > 0) {
                         window.ContractorOldReco = customOldReco;
+                        window.__customOldReco = customOldReco; // lazy default load ke baad yahi restore hoga
                         this.hasCustomOldReco = true;
                         console.log('[OldRecoImporter] Custom old reco loaded from IndexedDB:', customOldReco.meta);
                     }
@@ -1858,6 +1933,7 @@
                         const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
                         if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
                             window.ContractorSapStock = customStock;
+                            window.__customSapStock = customStock; // lazy default load ke baad yahi restore hoga
                             this.hasCustomStock = true;
                             this.customStockMeta = customStock.meta;
                             this.recoRevision = (this.recoRevision || 0) + 1;
@@ -1868,6 +1944,16 @@
             } catch (e) {
                 console.warn('[StockImporter] Error loading custom stock:', e);
             }
+            // ⚡ Heavy defaults (8.1MB SAP stock + 2.2MB old-reco) boot ke baad idle-time par load —
+            // pehle 10.6MB parse-time blocking JS thi. Custom data ho to usi ko restore rakhte hain.
+            try {
+                const idle = (typeof requestIdleCallback === 'function')
+                    ? (cb) => requestIdleCallback(cb, { timeout: 3000 })
+                    : (cb) => setTimeout(cb, 0);
+                idle(() => {
+                    try { this.lazyLoadHeavyData(); } catch (e) { console.warn('[LazyLoad] failed:', e); }
+                });
+            } catch (e) { console.warn('[LazyLoad] schedule failed:', e); }
             // Tab close/reload/switch par pending cloud sync flush — warna dusre PC par mapping nahi dikhega
             window.addEventListener('pagehide', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
             window.addEventListener('beforeunload', () => { try { this.saveToStorage(); } catch(e) {} try { this.flushPendingSync(); } catch(e) {} });
@@ -1921,153 +2007,7 @@
             }
 
             // Old migration patches permanently disabled to preserve user mappings
-            if (false && !localStorage.getItem('patch_orphan_remap_v4')) {
-                try {
-                    const masterSet = {};
-                    const masterDesc = {};
-                    (this.sapMaterialsMaster || []).forEach(s => { if (s && s.code) { masterSet[s.code] = true; masterDesc[s.code] = s.desc || ''; } });
-                    if (Object.keys(masterSet).length >= 200) {
-                        const REMAP = {
-                            '17000006': { code: '17001243', desc: 'RSJ POLE 100X116 MM 11 MTR' },
-                            '17000005': { code: '17001242', desc: 'RSJ POLE 100X116 MM 10 MTR' },
-                            '17000003': { code: '17005037', desc: 'RSJ POLE 100X116 MM 8 MTR' },
-                            '17001296': { code: '17005041', desc: 'MS-11KV TOP CLEAT-75X40X6X325-2.44KG' },
-                            '17000045': { code: '17000046', desc: 'DISC INSULATOR 11KV 70KN B & S POLYMER' },
-                            '17001251': { code: '17000026', desc: 'HORN GAP FUSE 11 KV' },
-                            '17000216': { code: '17000120', desc: 'ACSR WEASEL CONDUCTOR' },
-                            '17000650': { code: '17000700', desc: 'PG CLAMP FOR ACSR WEASEL CONDUCTOR' },
-                            '23001573': { code: '17004372', desc: 'JOINTING SLEEVE AAAC RABBIT CONDUCTOR' },
-                            '28000103': { code: '17005597', desc: 'COVERED CONDUCTOR 55 SQMM' }
-                        };
-                        // Desc-scoped rules — ye codes master me HAIN lekin galat row par lage the.
-                        // scope: entry/row desc me ye text ho tabhi lagoo (sahi jagah lage codes ko haath nahi).
-                        const SCOPED = [
-                            { code: '17001295', has: 'V CROSS ARM', to: '17005050', toDesc: 'MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG' },
-                            { code: '17000700', has: 'SHACKLE', to: '17000696', toDesc: 'LT SHACKLE HARDWARE' },
-                            { code: '17005051', has: 'STAY SET', to: '17005091', toDesc: 'MS-LT STAY SET 16 MM' },
-                            { code: '17000776', has: 'RED OXIDE', to: '17000778', toDesc: 'RED OXIDE' },
-                            { code: '17005101', has: 'CURRENT TRANSFORMER', blank: true }
-                        ];
-                        function scopedRule(code, desc) {
-                            for (let i = 0; i < SCOPED.length; i++) {
-                                const r = SCOPED[i];
-                                if (r.code === code && desc && desc.toUpperCase().indexOf(r.has) !== -1) return r;
-                            }
-                            return null;
-                        }
-                        let remapped = 0, blanked = 0;
-                        Object.keys(this.activities || {}).forEach(actKey => {
-                            const act = this.activities[actKey];
-                            (act.materials || []).forEach(m => {
-                                const mIsCutPoint = (m.desc || '').indexOf('Cut Point') !== -1;
-                                // row-level itemCode
-                                if (m.itemCode) {
-                                    if (mIsCutPoint && m.itemCode === '17001294') {
-                                        m.itemCode = '17005042';
-                                        m.sapDescription = 'MS-11KV CUT POINT CH-75X40X6X1310-9.35KG';
-                                        remapped++;
-                                    } else {
-                                        const sr = scopedRule(m.itemCode, m.sapDescription);
-                                        if (sr) {
-                                            if (sr.blank) { m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = ''; blanked++; }
-                                            else { m.itemCode = sr.to; m.sapDescription = sr.toDesc; remapped++; }
-                                        } else if (REMAP[m.itemCode]) {
-                                            m.itemCode = REMAP[m.itemCode].code;
-                                            m.sapDescription = REMAP[m.itemCode].desc;
-                                            remapped++;
-                                        } else if (!masterSet[m.itemCode]) {
-                                            m.itemCode = ''; m.sapDescription = ''; m.sapUom = ''; m.docHeader = '';
-                                            blanked++;
-                                        } else if (masterDesc[m.itemCode] && m.sapDescription !== masterDesc[m.itemCode]) {
-                                            m.sapDescription = masterDesc[m.itemCode];
-                                            remapped++;
-                                        }
-                                    }
-                                }
-                                if (Array.isArray(m.sapItems)) {
-                                    for (let i = m.sapItems.length - 1; i >= 0; i--) {
-                                        const s = m.sapItems[i];
-                                        if (!s || !s.code) continue;
-                                        const sr = scopedRule(s.code, s.desc);
-                                        if (sr) {
-                                            if (sr.blank) { m.sapItems.splice(i, 1); blanked++; }
-                                            else { s.code = sr.to; s.desc = sr.toDesc; remapped++; }
-                                        } else if (REMAP[s.code]) {
-                                            s.code = REMAP[s.code].code;
-                                            s.desc = REMAP[s.code].desc;
-                                            remapped++;
-                                        } else if (!masterSet[s.code]) {
-                                            if (s.code !== 'N/A' && !String(s.code).startsWith('EXTRA-')) {
-                                                m.sapItems.splice(i, 1);
-                                                blanked++;
-                                            }
-                                        } else if (masterDesc[s.code] && s.desc !== masterDesc[s.code]) {
-                                            s.desc = masterDesc[s.code];
-                                            remapped++;
-                                        }
-                                    }
-                                }
-                            });
-                        });
-                        if (remapped > 0 || blanked > 0) {
-                            this._isLoading = false;
-                            this.saveToStorage();
-                            const msg = 'Mapping safai: ' + remapped + ' sahi, ' + blanked + ' blank (khud check karo)';
-                            setTimeout(() => { try { this.showToast(msg, '🧹'); } catch(e) {} }, 1200);
-                        }
-                    }
-                } catch(e) { console.error('orphan remap patch failed', e); }
-                try { localStorage.setItem('patch_orphan_remap_v4', 'true'); } catch(e) {}
-            }
-
-            // PATCH: remove 10 excluded SAP items permanently disabled
-            if (false && !localStorage.getItem('patch_remove_10_sap_items_v1')) {
-                try {
-                    const excludedCodes = new Set([
-                        '17000236', '17000243',
-                        '17000656',
-                        '17000777', '17000776',
-                        '17001312',
-                        '17001313',
-                        '17001390',
-                        '17001398', '17000056',
-                        '17001399', '17000058',
-                        '17001400', '17001150',
-                        '17002274', '17004590', '17004591'
-                    ]);
-                    let cleaned = 0;
-                    Object.keys(this.activities || {}).forEach(actKey => {
-                        const act = this.activities[actKey];
-                        (act.materials || []).forEach(m => {
-                            let shouldBlank = false;
-                            if (excludedCodes.has(m.itemCode)) shouldBlank = true;
-                            if (Array.isArray(m.sapItems)) {
-                                for (let i = m.sapItems.length - 1; i >= 0; i--) {
-                                    if (excludedCodes.has(m.sapItems[i].code)) {
-                                        shouldBlank = true;
-                                        m.sapItems.splice(i, 1);
-                                    }
-                                }
-                            }
-                            if (shouldBlank) {
-                                m.itemCode = '';
-                                m.sapDescription = '';
-                                m.sapUom = '';
-                                m.docHeader = '';
-                                m.sapItems = [];
-                                cleaned++;
-                            }
-                        });
-                    });
-                    if (cleaned > 0) {
-                        this._isLoading = false;
-                        this.saveToStorage();
-                    }
-                                        localStorage.setItem('patch_remove_10_sap_items_v1', 'true');
-                } catch(e) {
-                    console.warn('patch_remove_10_sap_items_v1 error:', e);
-                }
-            }
+            // PATCH: Remove 10 excluded SAP items — dono legacy if(false) blocks hata diye gaye (dead code)
 
             // PATCH: Replace Activity 1220 Pole Schedule with user's exact specification from image
             if (!localStorage.getItem('patch_1220_exact_spec_v2')) {
@@ -2139,23 +2079,6 @@
                 this._isLoading = false;
                 this.saveToStorage();
             }
-
-            // Migration: Top & Bottom MS Channel item 3 in Activity 907 auto-setup if missing/extra
-            try {
-                if (this.activities && this.activities['907'] && Array.isArray(this.activities['907'].materials)) {
-                    const m3 = this.activities['907'].materials[2];
-                    if (m3 && (m3.itemCode === 'EXTRA-3' || m3.itemCode === '17002007' || !m3.sapItems || m3.sapItems.length < 2)) {
-                        m3.itemCode = '17005060, 17005059';
-                        m3.sapDescription = 'MS-11KV TR BASE CH-100X50X6X2700-25.81KG | MS-11KV TOP CH-100X50X6X2700-25.81KG';
-                        m3.sapUom = 'NO';
-                        m3.docHeader = '0031006347';
-                        m3.sapItems = [
-                            { code: '17005060', desc: 'MS-11KV TR BASE CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' },
-                            { code: '17005059', desc: 'MS-11KV TOP CH-100X50X6X2700-25.81KG', uom: 'NO', qty: 1, docHeader: '0031006347' }
-                        ];
-                    }
-                }
-            } catch(e) {}
 
             // Cross-PC default pole schedules fetch from Cloud
             try {
@@ -2386,10 +2309,21 @@
         mounted(el, binding) {
             el._clickOutsideHandler = (event) => {
                 if (!(el === event.target || el.contains(event.target))) {
-                    binding.value(event);
+                    if (typeof binding.value === 'function') {
+                        binding.value(event);
+                    }
                 }
             };
             document.addEventListener('click', el._clickOutsideHandler);
+        },
+        updated(el, binding) {
+            el._clickOutsideHandler = (event) => {
+                if (!(el === event.target || el.contains(event.target))) {
+                    if (typeof binding.value === 'function') {
+                        binding.value(event);
+                    }
+                }
+            };
         },
         unmounted(el) {
             document.removeEventListener('click', el._clickOutsideHandler);
@@ -2415,24 +2349,34 @@
         console.error('[Vue Fatal Mount Error]:', mountErr);
         const appEl = document.getElementById('app');
         if (appEl) {
-            appEl.innerHTML = `
-                <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; color: #f8fafc; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 24px;">
-                    <div style="max-width: 540px; background: #1e293b; border: 1.5px solid #ef4444; border-radius: 12px; padding: 28px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); text-align: center;">
-                        <div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>
-                        <h2 style="font-size: 1.4rem; margin-bottom: 8px; color: #f87171; font-weight: 800;">Billing Pro — Safety Recovery</h2>
-                        <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
-                            Ek error ki wajah se page load nahi ho saka. Screen black hone se bacha li gayi hai.
-                        </p>
-                        <div style="font-size: 0.78rem; color: #fca5a5; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); padding: 10px; border-radius: 6px; margin-bottom: 20px; word-break: break-all; font-family: monospace; text-align: left;">
-                            ${mountErr.message || mountErr}
-                        </div>
-                        <div style="display: flex; gap: 12px; justify-content: center;">
-                            <button onclick="location.reload();" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Normal Reload</button>
-                            <button onclick="localStorage.removeItem('billing_custom_old_reco_v1'); localStorage.removeItem('billing_custom_old_reco_edits_v1'); location.reload();" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Reset Reco Cache</button>
-                        </div>
+            // 🛡️ XSS guard: hero + status textContent se set — error message kabhi inject nahi hota
+            appEl.textContent = '';
+            const wrap = document.createElement('div');
+            wrap.setAttribute('style', "min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; color: #f8fafc; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 24px;");
+            wrap.innerHTML = `
+                <div style="max-width: 540px; background: #1e293b; border: 1.5px solid #ef4444; border-radius: 12px; padding: 28px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); text-align: center;">
+                    <div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>
+                    <h2 style="font-size: 1.4rem; margin-bottom: 8px; color: #f87171; font-weight: 800;">Billing Pro — Safety Recovery</h2>
+                    <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+                        Ek error ki wajah se page load nahi ho saka. Screen black hone se bacha li gayi hai.
+                    </p>
+                    <div data-err style="font-size: 0.78rem; color: #fca5a5; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); padding: 10px; border-radius: 6px; margin-bottom: 20px; word-break: break-all; font-family: monospace; text-align: left;"></div>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button data-reload style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Normal Reload</button>
+                        <button data-reset style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">↺ Reset Reco Cache</button>
                     </div>
                 </div>
             `;
+            try { wrap.querySelector('[data-err]').textContent = String(mountErr.message || mountErr); } catch(e) {}
+            try { wrap.querySelector('[data-reload]').addEventListener('click', () => location.reload()); } catch(e) {}
+            try {
+                wrap.querySelector('[data-reset]').addEventListener('click', () => {
+                    try { localStorage.removeItem('billing_custom_old_reco_v1'); } catch(e2) {}
+                    try { localStorage.removeItem('billing_custom_old_reco_edits_v1'); } catch(e2) {}
+                    location.reload();
+                });
+            } catch(e) {}
+            appEl.appendChild(wrap);
         }
     }
 })();

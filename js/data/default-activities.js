@@ -2478,23 +2478,6 @@ const defaultActivities = {
             "docHeader": "0031003360"
           }
         ]
-      },
-      {
-        "no": "9",
-        "desc": "G.I.Nut Bolts",
-        "unit": "Kg.",
-        "rate": 3,
-        "itemCode": "17000636",
-        "sapDescription": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-        "sapUom": "KG",
-        "docHeader": "0031006347",
-        "sapItems": [
-          { "code": "17000636", "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR", "uom": "KG", "docHeader": "0031006347" },
-          { "code": "17000619", "desc": "HDG BOLT FT M16X100", "uom": "KG", "docHeader": "0031006347" },
-          { "code": "17000625", "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR", "uom": "KG", "docHeader": "0031006347" },
-          { "code": "17000620", "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR", "uom": "KG", "docHeader": "0031006347" },
-          { "code": "17000627", "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR", "uom": "KG", "docHeader": "0031006347" }
-        ]
       }
     ]
   },

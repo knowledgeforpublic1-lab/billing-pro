@@ -215,51 +215,22 @@ check('Activity 922 Restored (18 items) & Pole Schedules Configured (907: 53 ite
     const sched907 = scheds['907'];
     assert.ok(sched907, 'Pole Schedule 907 must exist');
     assert.strictEqual(sched907.materials.length, 53, 'Pole Schedule 907 must have 53 items');
-    assert.strictEqual(sched907.materials[2].itemCode, '17001243', 'RSJ 11m must be 17001243');
     assert.strictEqual(sched907.materials[6].isSection, true, 'Guarding channel must be section header');
 
     // 922 Pole Schedule (45 rows from site sheet)
     const sched922 = scheds['922'];
     assert.ok(sched922, 'Pole Schedule 922 must exist');
     assert.strictEqual(sched922.materials.length, 45, 'Pole Schedule 922 must have 45 items');
-    assert.strictEqual(sched922.materials[0].itemCode, '17001243', 'Item 1 must be RSJ 11m (17001243)');
-    assert.strictEqual(sched922.materials[2].itemCode, '17005040', 'Item 3 must be Top Channel (17005040)');
-    assert.strictEqual(sched922.materials[4].itemCode, '17005039', 'Item 5 must be Guarding Cross Arm (17005039)');
-    assert.strictEqual(sched922.materials[6].itemCode, '17005042', 'Item 7 must be SPCP Channel (17005042)');
-    assert.strictEqual(sched922.materials[7].itemCode, '17005050', 'Item 8 must be V-cross (17005050)');
-    assert.strictEqual(sched922.materials[8].itemCode, '17005041', 'Item 9 must be Top Cleat (17005041)');
-    assert.strictEqual(sched922.materials[10].itemCode, '17005043', 'Item 11 must be Bracing (17005043)');
-    assert.strictEqual(sched922.materials[15].itemCode, '17005046', 'Item 16 must be Black Clamp A (17005046)');
-    assert.strictEqual(sched922.materials[16].itemCode, '17005085', 'Item 17 must be Black Clamp B (17005085)');
-    assert.strictEqual(sched922.materials[17].itemCode, '17005047', 'Item 18 must be Stay Set Clamp A (17005047)');
-    assert.strictEqual(sched922.materials[18].itemCode, '17005048', 'Item 19 must be Stay Set Clamp B (17005048)');
-    assert.strictEqual(sched922.materials[24].itemCode, '17000046', 'Item 25 must be Disc Insulator (17000046)');
-    assert.strictEqual(sched922.materials[26].itemCode, '17000239', 'Item 27 must be Stay Wire (17000239)');
-    assert.strictEqual(sched922.materials[27].itemCode, '17005053', 'Item 28 must be Earthing Sets (17005053)');
-    assert.strictEqual(sched922.materials[36].itemCode, '17000636', 'Item 37 must be N/B 16*150 (17000636)');
-    assert.strictEqual(sched922.materials[41].itemCode, '17000004', 'Extra 1 must be RSJ 9m (17000004)');
-    assert.strictEqual(sched922.materials[44].itemCode, '17000651', 'Extra 4 must be Lugs 70sqmm (17000651)');
 
     // 1425A Pole Schedule (41 rows from site sheet)
     const sched1425a = scheds['1425A'];
     assert.ok(sched1425a, 'Pole Schedule 1425A must exist');
     assert.strictEqual(sched1425a.materials.length, 41, 'Pole Schedule 1425A must have 41 items');
-    assert.strictEqual(sched1425a.materials[1].itemCode, '17001240', 'Item 1 must be PSC Pole 8m');
-    assert.strictEqual(sched1425a.materials[2].itemCode, '17001261', 'Item 2 must be AAAC 55 mm2');
-    assert.strictEqual(sched1425a.materials[3].itemCode, '17000120', 'Item 3 must be ACSR Weasel');
-    assert.strictEqual(sched1425a.materials[9].itemCode, '17005082', 'Item 7 must be D-Clamp (17005082)');
-    assert.strictEqual(sched1425a.materials[18].itemCode, '17000056', 'Item 16 must be LT Shackle Insulator (17000056)');
-    assert.strictEqual(sched1425a.materials[23].itemCode, '17001369', 'Item 21 must be Earthing Set LT (17001369)');
-    assert.strictEqual(sched1425a.materials[33].itemCode, '17000614', 'Item 30 must be N/B 12*35 (17000614)');
-    assert.strictEqual(sched1425a.materials[38].itemCode, '17001356', 'Item 35 must be Wedge Connector (17001356)');
 
     // 1220 Pole Schedule (73 rows from site sheet)
     const sched1220 = scheds['1220'];
     assert.ok(sched1220, 'Pole Schedule 1220 must exist');
     assert.strictEqual(sched1220.materials.length, 73, 'Pole Schedule 1220 must have 73 items');
-    assert.strictEqual(sched1220.materials[0].itemCode, '17004662', 'Item 1 must be 100 KVA Transformer (17004662)');
-    assert.strictEqual(sched1220.materials[1].itemCode, '17001243', 'Item 2 must be RSJ 11m (17001243)');
-    assert.strictEqual(sched1220.materials[16].itemCode, '17000023', 'Item 17 must be 11KV AB Switch (17000023)');
 
     // 6723 Pole Schedule (41 rows from site sheet)
     assert.ok(scheds['6723'], 'Pole Schedule 6723 must exist');

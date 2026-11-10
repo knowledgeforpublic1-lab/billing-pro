@@ -56,11 +56,19 @@ app.use((req, res, next) => {
 
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
-// API_KEY set nahi hai to check skip (local dev backward compatible).
+// 🛡️ FAIL-CLOSED: production me API_KEY na ho to public API band (503) — khaali
+// config se poora DB open na rahe. Local dev me backward compatible (skip).
 function requireApiKey(req, res, next) {
     try {
         const expected = (process.env.API_KEY || '').trim();
-        if (!expected) return next();
+        if (!expected) {
+            const isProd = (process.env.NODE_ENV || '').trim() === 'production';
+            if (isProd) {
+                log.error('AUTH', 'API_KEY env missing in production — API locked (fail-closed). Vercel env me API_KEY set karo.');
+                return res.status(503).json({ success: false, error: 'API locked: API_KEY not configured on server' });
+            }
+            return next();
+        }
         const got = (req.header('x-api-key') || '').trim()
             || (req.query && req.query.api_key ? String(req.query.api_key).trim() : '');
         if (got !== expected) {

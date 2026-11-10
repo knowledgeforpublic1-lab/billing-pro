@@ -112,14 +112,18 @@ window.PoleScheduleModule = {
         let filtered = mapped.filter(m => {
             if (m.isSection) return true; // section header handled below
 
-            // 1. Text Search query (Item No, SAP Code, Description, SAP Description, Unit)
+            // 1. Text Search query (Item No, SAP Code, Description, SAP Description, Unit, composite sapItems)
             if (q) {
                 const code = String(m.itemCode || '').toLowerCase();
                 const desc = String(m.desc || '').toLowerCase();
                 const sapDesc = String(m.sapDescription || '').toLowerCase();
                 const no = String(m.no || '').toLowerCase();
                 const unit = String(m.unit || '').toLowerCase();
-                if (!code.includes(q) && !desc.includes(q) && !sapDesc.includes(q) && !no.includes(q) && !unit.includes(q)) {
+                let sapExtra = '';
+                if (Array.isArray(m.sapItems)) {
+                    sapExtra = m.sapItems.map(s => String(s.code || '') + ' ' + String(s.desc || '')).join(' ').toLowerCase();
+                }
+                if (!code.includes(q) && !desc.includes(q) && !sapDesc.includes(q) && !no.includes(q) && !unit.includes(q) && !sapExtra.includes(q)) {
                     return false;
                 }
             }
@@ -319,7 +323,17 @@ window.PoleScheduleModule = {
         this.poleScheduleActiveFilterCol = null;
     },
 
+    // 🛡️ TSV formula-injection guard: Excel paste par "=..." jaisi string formula
+    // ban jati hai. Leading =/+/-/@ ko space prefix se neutralize + tabs/newlines strip.
+    tsvSafeCell(v) {
+        if (typeof v !== 'string') return v;
+        let s = v.replace(/[\t\r\n]+/g, ' ');
+        if (/^[=+\-@]/.test(s)) s = ' ' + s;
+        return s;
+    },
+
     copyFilteredPoleScheduleToClipboard() {
+        const ttsv = (v) => this.tsvSafeCell(v);
         const mats = (typeof this.getFilteredPoleScheduleMaterials === 'function' ? this.getFilteredPoleScheduleMaterials() : []).filter(m => !m.isSection);
         if (mats.length === 0) {
             this.showToast('No items to copy', '⚠️');
@@ -327,16 +341,16 @@ window.PoleScheduleModule = {
         }
         const locs = this.getPoleScheduleLocations();
         const header = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
-        locs.forEach(loc => header.push(loc.name || 'Location'));
+        locs.forEach(loc => header.push(ttsv(loc.name || 'Location')));
         header.push('Total Qty', 'Unit Rate', '100% Amount', (this.pctStage1 || 85) + '% Amount');
 
         const rows = [header.join('\t')];
         mats.forEach(m => {
             const r = [
-                m.no || '',
-                m.itemCode || '',
-                m.desc || '',
-                m.unit || ''
+                ttsv(m.no || ''),
+                ttsv(m.itemCode || ''),
+                ttsv(m.desc || ''),
+                ttsv(m.unit || '')
             ];
             locs.forEach((_, lIdx) => {
                 const q = this.getPoleScheduleCellQty(lIdx, m.origIndex);

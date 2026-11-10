@@ -504,6 +504,7 @@ window.StockImporterModule = {
             }
 
             window.ContractorSapStock = stockData;
+            window.__customSapStock = stockData; // lazy default load ke aane par yahi restore rahega
             this.hasCustomStock = true;
             this.customStockMeta = stockData.meta;
             this.recoRevision = (this.recoRevision || 0) + 1;

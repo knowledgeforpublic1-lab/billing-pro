@@ -910,6 +910,54 @@ window.SyncModule = {
             await this.loadSavedBillsList();
         }
     },
+    // 🗑️ Active (draft) bill ko DISCARD karo — database se delete + BLANK workspace
+    async discardActiveBill() {
+        const id = this.activeBillId || 'main-billing-state';
+        if (id === 'main-billing-state') {
+            this.showToast('Main workspace discard nahi hota — uske liye New RA Bill bana kar draft ke roop me use karo', 'ℹ️');
+            return;
+        }
+        const name = (this.projectMeta && this.projectMeta.billNo) || id;
+        const ok = confirm(`Kya aap Bill [${name}] ko DISCARD karna chahte hain?\n\n• Ye bill database se DELETE ho jayega\n• Workspace BLANK ho jayega (SAP mapping safe rahega)\n\nYeh action wapas nahi hoga!`);
+        if (!ok) return;
+
+        this.showToast(`Discarding bill [${name}]...`, '⏳');
+        // 1) Workspace BLANK karo — quantities/bill-no/invoice sab clear, SAP mapping intact
+        this._isLoading = true;
+        this.resetAllManualDataKeepMapping({ resetLocations: true });
+        if (!this.projectMeta) this.projectMeta = {};
+        const today = new Date().toISOString().slice(0, 10);
+        this.projectMeta.contractorName = '';
+        this.projectMeta.workOrderNo = '';
+        this.projectMeta.billNo = '';
+        this.projectMeta.raNo = '';
+        this.projectMeta.billDate = today;
+        if (this.invoiceData) {
+            ['contractorName', 'contractorPan', 'contractorGstin', 'bankAccountName', 'bankAccountNo', 'bankIfsc', 'bankName', 'workOrderNo', 'workOrderDate', 'divisionName', 'subDivName', 'locationName', 'feederName'].forEach(k => { this.invoiceData[k] = ''; });
+            this.invoiceData.invoiceNo = '';
+            this.invoiceData.raNo = '';
+            this.invoiceData.invoiceDate = today;
+            this.invoiceData.newBillBlank = true;
+        }
+        // 2) MAIN workspace par switch + blank state save (auto-sync ab blank ko hi save karega)
+        this.activeBillId = 'main-billing-state';
+        this.cloudRev = 0;
+        this.lastSentHash = '';
+        this.cloudConflict = false;
+        try { localStorage.setItem('lk_billing_active_bill_id', 'main-billing-state'); } catch(e) {}
+        try { this.saveToStorage(); } catch(e) {}
+        try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) {}
+        this._isLoading = false;
+        if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
+
+        // 3) Ab discarded bill ka doc database se delete karo
+        const deleted = await this.deleteBillFromCloud(id);
+        if (deleted) {
+            this.showToast(`Bill [${name}] discard ho gaya 🗑️ Blank workspace ready hai`, '🗑️');
+        }
+        await this.loadSavedBillsList();
+        this.showSavedBillsModal = false;
+    },
     debouncedSave() {
         if (this._isLoading) return;
         if (this._saveTimer) clearTimeout(this._saveTimer);
