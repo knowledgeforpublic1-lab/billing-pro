@@ -718,10 +718,13 @@ table.inv-summary-table td:nth-child(4) { text-align: right !important; font-fam
    vars :root se zyada specific hote hain, isliye yahan dono).
    Ye block dark selects/buttons/pills ko bhi SAP look dega.
    ============================================================ */
-.dark,
-html.dark,
-html.dark-mode,
-body.dark-mode {
+/* Guard: ye light tokens dark theme par apply na ho — warna body-level
+   vars (--bg-card white etc.) poore body ko poison karte hain aur
+   dark mode me toast/popup white dikhta hai. */
+html:not([data-theme="dark"]) .dark,
+html.dark:not([data-theme="dark"]),
+html.dark-mode:not([data-theme="dark"]),
+html:not([data-theme="dark"]) body.dark-mode {
   color-scheme: light !important;
 
   --bg-body: #f9f9f9 !important;
@@ -762,9 +765,9 @@ body.dark-mode {
 }
 
 /* Dark mode me bhi global surfaces white rahein */
-html.dark body,
-html.dark-mode body,
-body.dark-mode body {
+html.dark:not([data-theme="dark"]) body,
+html.dark-mode:not([data-theme="dark"]) body,
+html:not([data-theme="dark"]) body.dark-mode body {
   background: #f9f9f9 !important;
   color: #222222 !important;
 }
@@ -1884,5 +1887,165 @@ html[data-theme="dark"] button:not(.btn-primary):not(.btn-excel):not(.btn-print)
 }
 html[data-theme="dark"] button:not(.btn-primary):not(.btn-excel):not(.btn-print):hover {
   background: #273444 !important;
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   15. DARK MODE FIX — Notification toast popup + Tax Invoice
+   Sap-theme ke light (!important) invoice rules dark theme me
+   jeet rahe the; yahan same spec se dark version force hai.
+   ============================================================ */
+
+/* --- Notification toast popup (dark theme) --- */
+html[data-theme="dark"] .toast {
+  background: #18222d !important;
+  border: 1px solid #334155 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif !important;
+  font-size: 0.95rem !important;
+}
+html[data-theme="dark"] .toast span {
+  color: #f1f5f9 !important;
+}
+
+/* --- Invoice toolbar --- */
+html[data-theme="dark"] .invoice-toolbar {
+  background: #141b22 !important;
+  border-color: #26313c !important;
+}
+html[data-theme="dark"] .inv-tool-item label {
+  color: #94a3b8 !important;
+}
+html[data-theme="dark"] .inv-tool-item select,
+html[data-theme="dark"] .inv-tool-item input {
+  background: #0d1217 !important;
+  border-color: #2d3b49 !important;
+  color: #f1f5f9 !important;
+}
+
+/* --- Invoice card & headers --- */
+html[data-theme="dark"] .invoice-card,
+html[data-theme="dark"] .tax-invoice-card {
+  background: #141b22 !important;
+  border-color: #26313c !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-title-bar {
+  background: linear-gradient(180deg, #2b3a4d 0%, #1d2630 100%) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .inv-project-banner {
+  background: #1c2633 !important;
+  border-bottom-color: #26313c !important;
+  color: #7dd3fc !important;
+}
+html[data-theme="dark"] .inv-receiver-block {
+  background: #18222d !important;
+  border-bottom-color: #26313c !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-receiver-block strong,
+html[data-theme="dark"] .inv-sender-block strong {
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .inv-header-grid,
+html[data-theme="dark"] .inv-header-col:first-child {
+  border-color: #26313c !important;
+}
+html[data-theme="dark"] .inv-subheading,
+html[data-theme="dark"] .inv-label {
+  color: #94a3b8 !important;
+}
+
+/* --- Invoice inputs & badges --- */
+html[data-theme="dark"] .inv-input-clean {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-input-clean:hover,
+html[data-theme="dark"] .inv-input-clean:focus {
+  background: #131b24 !important;
+  border-color: #38bdf8 !important;
+}
+html[data-theme="dark"] .inv-gst-badge {
+  background: rgba(52, 211, 153, 0.15) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+html[data-theme="dark"] .inv-gst-select,
+html[data-theme="dark"] .inv-gst-mode {
+  background: #0d1217 !important;
+  border-color: #2d3b49 !important;
+  color: #f1f5f9 !important;
+}
+html[data-theme="dark"] .inv-contractor-banner {
+  background: #1c2633 !important;
+  border-bottom-color: #26313c !important;
+  color: #f1f5f9 !important;
+}
+html[data-theme="dark"] .inv-contractor-banner strong {
+  color: #ffffff !important;
+}
+
+/* --- Invoice tables --- */
+html[data-theme="dark"] .inv-meta-table {
+  border-bottom-color: #3b4d61 !important;
+}
+html[data-theme="dark"] .inv-meta-table td {
+  background: #141b22 !important;
+  border-color: #26313c !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-meta-table td:first-child,
+html[data-theme="dark"] .inv-meta-table td:nth-child(3) {
+  background: #1a2530 !important;
+  color: #93c5fd !important;
+}
+html[data-theme="dark"] table.inv-items-table {
+  border-bottom-color: #3b4d61 !important;
+}
+html[data-theme="dark"] table.inv-items-table th {
+  background: #18222d !important;
+  border-color: #26313c !important;
+  color: #93c5fd !important;
+}
+html[data-theme="dark"] table.inv-items-table td {
+  background: #141b22 !important;
+  border-color: #202a35 !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] table.inv-items-table tfoot td {
+  background: #1a2530 !important;
+  border-color: #3b4d61 !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] table.inv-summary-table td {
+  background: #141b22 !important;
+  border-color: #26313c !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] table.inv-summary-table td:nth-child(4) {
+  color: #7dd3fc !important;
+}
+
+/* --- Invoice footer --- */
+html[data-theme="dark"] .inv-words-bar {
+  background: #18222d !important;
+  border-bottom-color: #26313c !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-declaration-section {
+  border-top-color: #26313c !important;
+}
+html[data-theme="dark"] .inv-decl-box {
+  color: #94a3b8 !important;
+  border-right-color: #26313c !important;
+}
+html[data-theme="dark"] .inv-sig-box {
+  color: #e2e8f0 !important;
+}
+html[data-theme="dark"] .inv-sig-box .ln {
+  border-top-color: #64748b !important;
   color: #ffffff !important;
 }
