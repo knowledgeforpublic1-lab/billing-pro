@@ -1477,13 +1477,13 @@ window.SyncModule = {
                             defaultActivities[k].materials.forEach((defMat, mIdx) => {
                                 if (this.activities[k].materials && this.activities[k].materials[mIdx]) {
                                     const cur = this.activities[k].materials[mIdx];
-                                    if (!cur.itemCode && defMat.itemCode) {
+                                    if ((!cur.itemCode || String(cur.itemCode).trim() === '') && defMat.itemCode) {
                                         cur.itemCode = defMat.itemCode;
                                         cur.sapDescription = defMat.sapDescription;
                                         cur.sapUom = defMat.sapUom;
                                         cur.docHeader = defMat.docHeader;
                                     }
-                                    if (!cur.sapItems && defMat.sapItems) {
+                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems && defMat.sapItems.length > 0) {
                                         cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
                                     }
                                 }
@@ -1525,13 +1525,13 @@ window.SyncModule = {
                             defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
                                 if (this.poleSchedules[k].materials && this.poleSchedules[k].materials[mIdx]) {
                                     const cur = this.poleSchedules[k].materials[mIdx];
-                                    if (!cur.itemCode && defMat.itemCode) {
+                                    if ((!cur.itemCode || String(cur.itemCode).trim() === '') && defMat.itemCode) {
                                         cur.itemCode = defMat.itemCode;
                                         cur.sapDescription = defMat.sapDescription;
                                         cur.sapUom = defMat.sapUom;
                                         cur.docHeader = defMat.docHeader;
                                     }
-                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems && defMat.sapItems.length > 0) {
                                         cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
                                     }
                                 }
