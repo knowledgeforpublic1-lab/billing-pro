@@ -68,6 +68,69 @@ window.MappingModule = {
         this.saveToStorage();
         this.scheduleMappingSync();
     },
+    // ============ 💾 MAPPING MASTER — disk + MongoDB persistence ============
+    // Pole-schedule master persist jaisa hi: user ki SAP mapping ko
+    // default-activities.js + MongoDB DefaultConfig (activitiesMaster) me save karta hai
+    // taaki deploy/push ke baad bhi wahi mapping sab jagah mile.
+    async persistActivitiesToMasterFile(silent = false) {
+        try {
+            if (!this.activities || typeof this.activities !== 'object' || Object.keys(this.activities).length === 0) {
+                if (!silent && typeof this.showToast === 'function') this.showToast('No activities mapping found to save', '⚠️');
+                return false;
+            }
+
+            // 1. localStorage fresh rakho
+            this.saveToStorage();
+
+            // 2. In-memory default master update karo
+            if (typeof window !== 'undefined') {
+                window.defaultActivities = JSON.parse(JSON.stringify(this.activities));
+            }
+
+            // 3. API — disk (localhost) + MongoDB dono par
+            let saved = false;
+            const payload = JSON.stringify({
+                activities: this.activities,
+                sapMaterialsMaster: Array.isArray(this.sapMaterialsMaster) ? this.sapMaterialsMaster : []
+            });
+            const headers = { 'Content-Type': 'application/json' };
+            try {
+                const k = localStorage.getItem('billing_api_key');
+                if (k) headers['x-api-key'] = k;
+            } catch (e) {}
+
+            const endpoints = [
+                '/api/save-default-activities',
+                'http://localhost:3000/api/save-default-activities'
+            ];
+
+            for (const ep of endpoints) {
+                try {
+                    const res = await fetch(ep, { method: 'POST', headers, body: payload });
+                    if (res.ok) {
+                        const json = await res.json().catch(() => null);
+                        if (json && json.success) { saved = true; break; }
+                    }
+                } catch (netErr) { /* next endpoint */ }
+            }
+
+            if (saved) {
+                if (!silent && typeof this.showToast === 'function') {
+                    this.showToast('💾 Mapping master disk & MongoDB me save ho gayi!', '✅');
+                }
+                return true;
+            }
+            // Silent mode bhi console warn karo
+            console.warn('persistActivitiesToMasterFile: API unreachable (disk + Mongo skip)');
+            return false;
+        } catch (err) {
+            console.error('persistActivitiesToMasterFile error:', err);
+            if (!silent && typeof this.showToast === 'function') {
+                this.showToast('Mapping master save failed: ' + (err.message || 'Unknown'), '❌');
+            }
+            return false;
+        }
+    },
     restoreDefaultSapMaster() {
         if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
         const def = (typeof defaultSapMaterialsMaster !== 'undefined' && defaultSapMaterialsMaster) ? defaultSapMaterialsMaster : [];

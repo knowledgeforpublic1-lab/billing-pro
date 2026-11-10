@@ -969,6 +969,15 @@ window.SyncModule = {
         if (this._mappingSyncTimer) clearTimeout(this._mappingSyncTimer);
         this.syncStatus = 'syncing';
         this._mappingSyncTimer = setTimeout(() => { this._mappingSyncTimer = null; this.syncToMongoNow({ force: true }); }, 400);
+        // 💾 Mapping MASTER persistence — mapping edit par default master bhi
+        // disk (default-activities.js) + MongoDB (DefaultConfig: activitiesMaster) me save
+        if (typeof this.persistActivitiesToMasterFile === 'function') {
+            if (this._masterMapTimer) clearTimeout(this._masterMapTimer);
+            this._masterMapTimer = setTimeout(() => {
+                this._masterMapTimer = null;
+                this.persistActivitiesToMasterFile(true);
+            }, 1200);
+        }
     },
     stableStateHash(obj) {
         try {
@@ -1141,6 +1150,20 @@ window.SyncModule = {
             if (this.cloudConflict) return;
             if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
             if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
+            // 💾 Pending mapping-master persist bhi quit time par flush karo
+            if (this._masterMapTimer) {
+                clearTimeout(this._masterMapTimer);
+                this._masterMapTimer = null;
+                try {
+                    const masterPayload = JSON.stringify({
+                        activities: this.activities,
+                        sapMaterialsMaster: Array.isArray(this.sapMaterialsMaster) ? this.sapMaterialsMaster : []
+                    });
+                    const masterHeaders = { 'Content-Type': 'application/json' };
+                    try { const k = localStorage.getItem('billing_api_key'); if (k) masterHeaders['x-api-key'] = k; } catch(e) {}
+                    fetch('/api/save-default-activities', { method: 'POST', headers: masterHeaders, body: masterPayload, keepalive: true }).catch(() => {});
+                } catch (masterErr) {}
+            }
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
             if (json.length > 4 * 1024 * 1024) return;

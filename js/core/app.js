@@ -2168,6 +2168,47 @@
                 }
             } catch(psFetchErr) {}
 
+            // 💾 Cross-PC default activities mapping fetch from Cloud (MongoDB master)
+            // Sirf MISSING cheez bharo — user ki existing mapping kabhi overwrite mat karo
+            try {
+                const actRes = await fetch('/api/default-activities');
+                if (actRes.ok) {
+                    const actJson = await actRes.json();
+                    if (actJson && actJson.success && actJson.activities && Object.keys(actJson.activities).length > 0) {
+                        window.defaultActivities = actJson.activities;
+                        let healed = false;
+                        Object.keys(actJson.activities).forEach(k => {
+                            const def = actJson.activities[k];
+                            if (!def || !Array.isArray(def.materials)) return;
+                            if (!this.activities[k] || !Array.isArray(this.activities[k].materials) || this.activities[k].materials.length === 0) {
+                                this.activities[k] = JSON.parse(JSON.stringify(def));
+                                healed = true;
+                                return;
+                            }
+                            while (this.activities[k].materials.length < def.materials.length) {
+                                const idx = this.activities[k].materials.length;
+                                this.activities[k].materials.push(JSON.parse(JSON.stringify(def.materials[idx])));
+                                healed = true;
+                            }
+                            def.materials.forEach((defMat, mIdx) => {
+                                const cur = this.activities[k].materials[mIdx];
+                                if (cur && defMat) {
+                                    if (!cur.itemCode && defMat.itemCode) { cur.itemCode = defMat.itemCode; healed = true; }
+                                    if (!cur.sapDescription && defMat.sapDescription) { cur.sapDescription = defMat.sapDescription; healed = true; }
+                                    if (!cur.sapUom && defMat.sapUom) { cur.sapUom = defMat.sapUom; healed = true; }
+                                    if (!cur.docHeader && defMat.docHeader) { cur.docHeader = defMat.docHeader; healed = true; }
+                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
+                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                                        healed = true;
+                                    }
+                                }
+                            });
+                        });
+                        if (healed) { this._isLoading = false; this.saveToStorage(); }
+                    }
+                }
+            } catch(actFetchErr) {}
+
             // Auto-heal poleSchedules from defaultPoleSchedules
             try {
                 if (typeof defaultPoleSchedules !== 'undefined') {

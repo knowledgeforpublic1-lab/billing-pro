@@ -912,6 +912,128 @@ app.get('/api/default-pole-schedules', async (req, res) => {
     }
 });
 
+// POST: UI Mapping ↔ hardcode default-activities.js (+ SAP master) on disk & MongoDB
+// Pole-schedules flow jaisa hi — Mapping tab ke push/sync par user ki mapping
+// MongoDB DefaultConfig me master save hoti hai taaki har PC/phone par same mile.
+app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
+    const ctx = 'SAVE-DEFAULT-ACTIVITIES';
+    try {
+        const body = req.body || {};
+        const { activities, sapMaterialsMaster } = body;
+        const isActObj = activities && typeof activities === 'object' && Object.keys(activities).length > 0;
+        const isSapArr = sapMaterialsMaster && typeof sapMaterialsMaster === 'object' &&
+            (Array.isArray(sapMaterialsMaster) || Object.keys(sapMaterialsMaster).length > 0);
+        if (!isActObj && !isSapArr) {
+            return res.status(400).json({ success: false, error: 'activities object ya sapMaterialsMaster array required hai' });
+        }
+
+        const fsMod = require('fs');
+        const pathMod = require('path');
+        let wroteFiles = [];
+
+        if (isActObj) {
+            const targetPath = pathMod.join(__dirname, '..', 'js', 'data', 'default-activities.js');
+            const content = '/**\n * @file Activities Master Data\n * @description Master configuration for all 11 activities with material specifications,\n * units, rates, SAP codes, and default item mappings.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping via /api/save-default-activities).\n *\n * @global {Object} defaultActivities\n * @since v2.0\n */\n\nconst defaultActivities = ' + JSON.stringify(activities, null, 2) + ';\n\nif (typeof window !== \'undefined\') {\n    window.defaultActivities = defaultActivities;\n}\nif (typeof module !== \'undefined\' && module.exports) {\n    module.exports = defaultActivities;\n}\n';
+            try {
+                fsMod.writeFileSync(targetPath, content, 'utf8');
+                wroteFiles.push('default-activities.js');
+                log.info(ctx, `Successfully wrote ${Object.keys(activities).length} activities to default-activities.js on disk`);
+            } catch (fsErr) {
+                log.warn(ctx, `Disk file write failed (e.g. read-only serverless environment): ${fsErr.message}`);
+            }
+        }
+
+        if (isSapArr) {
+            try {
+                const sapPath = pathMod.join(__dirname, '..', 'js', 'data', 'default-sap-materials.js');
+                const list = Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []);
+                const content = '/**\n * @file SAP Materials Master Data\n * @description Approved list of SAP material codes with descriptions, UOMs, and categories.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping).\n *\n * @global {Array} defaultSapMaterialsMaster\n * @since v1.0\n */\n\nconst defaultSapMaterialsMaster = ' + JSON.stringify(list, null, 2) + ';\n\nif (typeof window !== \'undefined\') {\n    window.defaultSapMaterialsMaster = defaultSapMaterialsMaster;\n}\nif (typeof module !== \'undefined\' && module.exports) {\n    module.exports = defaultSapMaterialsMaster;\n}\n';
+                fsMod.writeFileSync(sapPath, content, 'utf8');
+                wroteFiles.push('default-sap-materials.js');
+                log.info(ctx, `Successfully wrote ${list.length} SAP master items to default-sap-materials.js on disk`);
+            } catch (fsErr) {
+                log.warn(ctx, `SAP master disk write failed: ${fsErr.message}`);
+            }
+        }
+
+        // MongoDB DefaultConfig — cross-PC master persistence
+        let mongoSaved = false;
+        try {
+            await connectToDatabase();
+            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
+                key: { type: String, unique: true },
+                data: { type: Object },
+                updatedAt: { type: Date, default: Date.now }
+            }));
+            if (isActObj) {
+                await DefaultConfig.findOneAndUpdate(
+                    { key: 'activitiesMaster' },
+                    { key: 'activitiesMaster', data: activities, updatedAt: new Date() },
+                    { upsert: true, new: true }
+                );
+            }
+            if (isSapArr) {
+                await DefaultConfig.findOneAndUpdate(
+                    { key: 'sapMaterialsMaster' },
+                    { key: 'sapMaterialsMaster', data: Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []) , updatedAt: new Date() },
+                    { upsert: true, new: true }
+                );
+            }
+
+            // Live bills ko turant updated mapping do (pole-schedules jaisa hi behavior)
+            if (isActObj) {
+                await BillingState.updateMany(
+                    {},
+                    { $set: { 'stateData.activities': activities, updatedAt: new Date() }, $inc: { rev: 1 } }
+                );
+            }
+            mongoSaved = true;
+            log.info(ctx, 'Successfully synced activities mapping to MongoDB Atlas (DefaultConfig + live bills)');
+        } catch (dbErr) {
+            log.warn(ctx, `MongoDB backup skipped/failed: ${dbErr.message}`);
+        }
+
+        return res.json({
+            success: true,
+            message: 'Mapping master disk & cloud me save ho gayi!',
+            files: wroteFiles,
+            mongoSaved,
+            count: isActObj ? Object.keys(activities).length : 0
+        });
+    } catch (err) {
+        log.error(ctx, 'Failed to save default-activities mapping', err);
+        return res.status(500).json({ success: false, error: err.message || 'Unknown error' });
+    }
+});
+
+// GET: Fetch default activities mapping from Cloud (MongoDB) ya disk file
+app.get('/api/default-activities', async (req, res) => {
+    try {
+        try {
+            await connectToDatabase();
+            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
+                key: { type: String, unique: true },
+                data: { type: Object },
+                updatedAt: { type: Date, default: Date.now }
+            }));
+            const record = await DefaultConfig.findOne({ key: 'activitiesMaster' });
+            if (record && record.data && Object.keys(record.data).length > 0) {
+                return res.json({ success: true, activities: record.data, source: 'mongodb' });
+            }
+        } catch (e) {}
+
+        const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-activities.js');
+        if (require('fs').existsSync(targetPath)) {
+            delete require.cache[require.resolve(targetPath)];
+            const fileData = require(targetPath);
+            return res.json({ success: true, activities: fileData, source: 'disk' });
+        }
+        res.status(404).json({ success: false, error: 'Default activities mapping not found' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Express JSON body errors (jaise 5MB limit) → Hinglish JSON message (HTML ki jagah)
 app.use((err, req, res, next) => {
     if (err && err.type === 'entity.too.large') {
