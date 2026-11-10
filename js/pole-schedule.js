@@ -428,7 +428,7 @@ window.PoleScheduleModule = {
         this.poleScheduleQuantities[k][lIdx][mIdx] = val;
 
         // Auto-recalculate concreting if pole or stay item was changed
-        if (!skipAutoConcrete && this.poleScheduleAutoConcreting) {
+        if (!skipAutoConcrete && (this.psAutoPole !== false || this.psAutoStay !== false || this.psAutoMuffing !== false)) {
             const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
             if (sched && sched.materials && sched.materials[mIdx]) {
                 const item = sched.materials[mIdx];
@@ -705,7 +705,7 @@ window.PoleScheduleModule = {
         this.activityQuantities = { ...this.activityQuantities };
 
         // Recalculate concreting if active
-        if (this.poleScheduleAutoConcreting && typeof this.recalculatePoleScheduleLocationConcreting === 'function') {
+        if ((this.psAutoPole !== false || this.psAutoStay !== false || this.psAutoMuffing !== false) && typeof this.recalculatePoleScheduleLocationConcreting === 'function') {
             this.recalculatePoleScheduleLocationConcreting(k, newLIdx);
         }
 
@@ -867,6 +867,15 @@ window.PoleScheduleModule = {
             ).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
             // Helper to get conversion ratio for sm -> actMat
             const getRatio = (smMat, actMat) => {
+                // 🔩 Nut-bolt special: Pole Schedule me entry Nos me hoti hai, activity sheet (unit kg)
+                // me direct weight (kg) chahiye — unit wazan per piece se auto convert
+                if (actMat && /kg/i.test(String(actMat.unit || '')) && smMat && this.isPoleScheduleNutBoltItem(smMat)) {
+                    const w = this.poleScheduleNutBoltUnitWeight(smMat);
+                    if (w > 0) {
+                        const u = String(actMat.unit || '').toLowerCase();
+                        return (u === 'mt' || u === 'mts' || u === 'mt.' || u === 'tonne' || u === 'tonnes') ? (w / 1000) : w;
+                    }
+                }
                 if (smMat && smMat.poleRatio !== undefined && smMat.poleRatio !== null && !isNaN(Number(smMat.poleRatio)) && Number(smMat.poleRatio) > 0) {
                     return Number(smMat.poleRatio);
                 }
@@ -919,7 +928,12 @@ window.PoleScheduleModule = {
                         const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
                         const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
                         const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
-                        if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
+                        // 🔩 Nut-bolt sirf nut-bolt se match hoga
+                        const smIsNutBolt = this.isPoleScheduleNutBoltItem(sm);
+                        const amIsNutBolt = /\bnut\s*&?\s*bolts?\b/i.test(amDesc);
+                        if (smIsNutBolt !== amIsNutBolt) {
+                            isMatch = false;
+                        } else if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
                             isMatch = false;
                         } else {
                             // If multiple am in act.materials share this exact primary code, use description to disambiguate
@@ -1236,10 +1250,70 @@ window.PoleScheduleModule = {
         return false;
     },
 
+    isPoleScheduleMuffingItem(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const d = String(item.desc || '').toLowerCase();
+        if (d.includes('muffing') && !d.includes('ration') && !d.includes('ratio')) return true;
+        return false;
+    },
+
+    isPoleScheduleNutBoltItem(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const d = String(item.desc || '').toLowerCase();
+        const sapDesc = (Array.isArray(item.sapItems) && item.sapItems.length) ? String(item.sapItems[0].desc || '').toLowerCase() : '';
+        return /\bnut\s*&?\s*bolts?\b/.test(d) || /\bnut\s*&?\s*bolts?\b/.test(sapDesc);
+    },
+
+    poleScheduleMuffUnitVol(sched) {
+        // User ne muffing size khud select kiya hai to wahi use hota hai
+        const manual = String(this.psMuffingSize || 'auto');
+        if (manual === '300') return 0.027; // 300x300
+        if (manual === '400') return 0.048; // 400x400
+        if (manual === '450') return 0.091; // 450x450 DP/DTC
+        if (manual !== 'auto' && manual !== '') return Number(manual) > 0 ? Number(manual) : 0.027;
+        // Auto: pole height aur schedule type ke hisab se
+        const schedTitle = String((sched && sched.title) || '').toLowerCase();
+        if (/\bdtc\b|\btransformer\b|\bdp\b/.test(schedTitle)) return 0.091; // 450x450
+        const poleItem = (sched && Array.isArray(sched.materials)) ? sched.materials.find(m => this.isPoleSchedulePoleItem(m)) : null;
+        const h = poleItem && typeof this.getPoleFoundationDepth === 'function' ? Number(this.getPoleFoundationDepth(poleItem.desc)) : 0;
+        return (h >= 1.5) ? 0.048 : 0.027; // 400x400 for >=9m pole, baaki 300x300
+    },
+
+    poleScheduleNutBoltUnitWeight(item) {
+        if (!item) return 0;
+        let text = String(item.desc || '') + ' ' + (Array.isArray(item.sapItems) ? item.sapItems.map(s => s.desc || '').join(' ') : '');
+        const mm = String(text).toUpperCase().match(/M(\d+)\s*[X×/]\s*(\d+)/);
+        if (!mm) return 0;
+        const key = parseInt(mm[1], 10) + 'x' + parseInt(mm[2], 10);
+        const hit = (this.nutBoltData || []).find(n => String(n.size || '').toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '') === key);
+        return hit ? Math.max(0, Number(hit.weight) || 0) : 0;
+    },
+
+    getPoleScheduleNutBoltSummary(key) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
+        let totalNos = 0;
+        let totalKg = 0;
+        if (sched && Array.isArray(sched.materials)) {
+            sched.materials.forEach((m, mIdx) => {
+                if (!this.isPoleScheduleNutBoltItem(m)) return;
+                const w = this.poleScheduleNutBoltUnitWeight(m);
+                Object.values(qMatrix).forEach(row => {
+                    const raw = (row && row[mIdx] !== undefined) ? row[mIdx] : '';
+                    if (raw === '' || raw === null || raw === undefined) return;
+                    const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+                    if (!isNaN(n)) { totalNos += n; totalKg += n * w; }
+                });
+            });
+        }
+        return { totalNos: Math.round(totalNos * 1000) / 1000, totalKg: Math.round(totalKg * 1000) / 1000, hasWeight: totalKg > 0 };
+    },
+
     calculateLocationConcreting(key, lIdx) {
         const k = key || this.selectedPoleScheduleKey || '907';
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
-        if (!sched || !Array.isArray(sched.materials)) return { totalPoles: 0, poleVol: 0, totalStays: 0, stayVol: 0, totalVol: 0 };
+        if (!sched || !Array.isArray(sched.materials)) return { totalPoles: 0, poleVol: 0, totalStays: 0, stayVol: 0, totalMuff: 0, muffUnitVol: 0, totalVol: 0 };
 
         const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
         const locRow = qMatrix[lIdx] || {};
@@ -1247,6 +1321,10 @@ window.PoleScheduleModule = {
         const augerSize = Number(this.selectedAugerSize) || 22;
         const r = parseFloat((augerSize * 0.0254 / 2).toFixed(4));
         const stayUnitVol = Number(this.stayConcretingUnitVol) || 0.125;
+        const wantPole = this.psAutoPole !== false;
+        const wantStay = this.psAutoStay !== false;
+        const wantMuff = this.psAutoMuffing !== false;
+        const muffUnitVol = wantMuff ? this.poleScheduleMuffUnitVol(sched) : 0;
 
         let totalPoles = 0;
         let poleVol = 0;
@@ -1265,20 +1343,27 @@ window.PoleScheduleModule = {
 
             if (this.isPoleSchedulePoleItem(m)) {
                 totalPoles += q;
-                const h = this.getPoleFoundationDepth(m.desc);
-                poleVol += q * Math.PI * r * r * h;
+                if (wantPole) {
+                    const h = this.getPoleFoundationDepth(m.desc);
+                    poleVol += q * Math.PI * r * r * h;
+                }
             } else if (this.isPoleScheduleStayItem(m)) {
                 totalStays += q;
-                stayVol += q * stayUnitVol;
+                if (wantStay) stayVol += q * stayUnitVol;
             }
         });
 
+        // 🧱 Muffing — checkbox selected hone pe hi count hota hai (har pole pe 1, user-selected size ya auto)
+        const totalMuff = wantMuff ? totalPoles * muffUnitVol : 0;
         const totalVol = Math.round((poleVol + stayVol) * 1000) / 1000;
         return {
             totalPoles,
             poleVol: Math.round(poleVol * 1000) / 1000,
             totalStays,
             stayVol: Math.round(stayVol * 1000) / 1000,
+            totalMuff: Math.round(totalMuff * 1000) / 1000,
+            muffUnitVol,
+            muffOn: wantMuff,
             totalVol,
             augerSize,
             r
@@ -1286,17 +1371,26 @@ window.PoleScheduleModule = {
     },
 
     recalculatePoleScheduleLocationConcreting(key, lIdx) {
-        if (!this.poleScheduleAutoConcreting) return;
+        if (this.psAutoPole === false && this.psAutoStay === false && this.psAutoMuffing === false) return;
         const k = key || this.selectedPoleScheduleKey || '907';
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
         if (!sched || !Array.isArray(sched.materials)) return;
 
         const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
-        if (concreteIdx === -1) return;
+        if (concreteIdx === -1 && (this.psAutoPole === false && this.psAutoStay === false)) return;
 
         this.ensurePoleScheduleQuantities(k);
         const res = this.calculateLocationConcreting(k, lIdx);
-        this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+        if (concreteIdx !== -1) {
+            this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+        }
+        // 🧱 Muffing row auto-fill (sirf Muffing checkbox checked tab)
+        if (this.psAutoMuffing !== false) {
+            const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
+            if (muffIdx !== -1 && res.totalMuff > 0) {
+                this.poleScheduleQuantities[k][lIdx][muffIdx] = Math.round(res.totalMuff * 1000) / 1000;
+            }
+        }
     },
 
     recalculatePoleScheduleConcreting(key, force = false) {
@@ -1305,7 +1399,7 @@ window.PoleScheduleModule = {
         if (!sched || !Array.isArray(sched.materials)) return;
 
         const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
-        if (concreteIdx === -1) {
+        if (concreteIdx === -1 && (this.psAutoPole !== false || this.psAutoStay !== false)) {
             if (force) this.showToast('Schedule ' + k + ' me koi Concreting line item nahi mila', 'ℹ️');
             return;
         }
@@ -1314,12 +1408,25 @@ window.PoleScheduleModule = {
         this.ensurePoleScheduleQuantities(k);
 
         let grandVol = 0;
+        let grandMuffVol = 0;
+        const wantPole = this.psAutoPole !== false;
+        const wantStay = this.psAutoStay !== false;
+        const wantMuff = this.psAutoMuffing !== false;
         locs.forEach((_, lIdx) => {
             const res = this.calculateLocationConcreting(k, lIdx);
-            if (res.totalVol > 0 || force) {
+            if (concreteIdx !== -1 && (res.totalVol > 0 || force) && (wantPole || wantStay)) {
                 this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
             }
             grandVol += res.totalVol;
+            grandMuffVol += res.totalMuff || 0;
+
+            // 🧱 Muffing row auto-fill — sirf tab jab Muffing checkbox checked ho
+            if (wantMuff) {
+                const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
+                if (muffIdx !== -1 && (res.totalMuff > 0 || (force && res.totalPoles > 0))) {
+                    this.poleScheduleQuantities[k][lIdx][muffIdx] = res.totalMuff > 0 ? Math.round(res.totalMuff * 1000) / 1000 : '';
+                }
+            }
         });
 
         this.poleScheduleQuantities[k] = { ...this.poleScheduleQuantities[k] };
@@ -1329,7 +1436,10 @@ window.PoleScheduleModule = {
         this.saveToStorage();
 
         if (force) {
-            this.showToast(`🧱 Auger ${this.selectedAugerSize}" Concreting: ${Math.round(grandVol * 1000) / 1000} m³ auto-calculated across ${locs.length} locations`, '✅');
+            const parts = [];
+            if (wantPole || wantStay) parts.push(`Concreting: ${Math.round(grandVol * 1000) / 1000} m³`);
+            if (wantMuff) parts.push(`Muffing: ${Math.round(grandMuffVol * 1000) / 1000} m³`);
+            this.showToast(`🧱 Auger ${this.selectedAugerSize}" ${parts.join(' + ')} auto-calculated across ${locs.length} locations`, '✅');
         }
     },
 
@@ -1341,6 +1451,7 @@ window.PoleScheduleModule = {
         let totalStays = 0;
         let stayVol = 0;
         let totalVol = 0;
+        let totalMuff = 0;
         locs.forEach((_, lIdx) => {
             const res = this.calculateLocationConcreting(k, lIdx);
             totalPoles += res.totalPoles;
@@ -1348,13 +1459,19 @@ window.PoleScheduleModule = {
             totalStays += res.totalStays;
             stayVol += res.stayVol;
             totalVol += res.totalVol;
+            totalMuff += res.totalMuff || 0;
         });
+        const nb = this.getPoleScheduleNutBoltSummary ? this.getPoleScheduleNutBoltSummary(k) : { totalNos: 0, totalKg: 0, hasWeight: false };
         return {
             totalPoles,
             poleVol: Math.round(poleVol * 1000) / 1000,
             totalStays,
             stayVol: Math.round(stayVol * 1000) / 1000,
+            totalMuff: Math.round(totalMuff * 1000) / 1000,
             totalVol: Math.round(totalVol * 1000) / 1000,
+            nbNos: nb.totalNos,
+            nbKg: nb.totalKg,
+            nbHasWeight: nb.hasWeight,
             augerSize: Number(this.selectedAugerSize) || 22,
             locCount: locs.length
         };

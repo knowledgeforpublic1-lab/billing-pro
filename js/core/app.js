@@ -32,23 +32,52 @@
         window.PoleScheduleModule || {}
     );
 
+    allMethods.updateAlvFiller = function() {
+        const wrap = document.querySelector('.ps-table-scroll');
+        const table = wrap && wrap.querySelector('table');
+        if (!wrap || !table || this.currentView !== 'poleSchedule' || this.poleScheduleSubTab === 'abstract') {
+            if (this.alvFillerHeight) this.alvFillerHeight = 0;
+            return;
+        }
+        const cur = this.alvFillerHeight || 0;
+        const natural = table.offsetHeight - cur;
+        const gap = Math.round(wrap.clientHeight - natural);
+        if (gap <= 0) {
+            if (cur !== 0) this.alvFillerHeight = 0;
+            return;
+        }
+        const next = Math.max(gap, 0);
+        if (next !== cur) this.alvFillerHeight = next;
+    };
+
     allMethods.applyTheme = function() {
-        const dark = !!this.isDarkMode;
+        const mode = this.themeMode || 'light';
+        const dark = mode === 'dark';
+        this.isDarkMode = dark;
         const html = document.documentElement;
         const body = document.body;
         html.dataset.theme = dark ? 'dark' : 'light';
+        html.classList.toggle('soft', mode === 'soft');
         html.classList.toggle('dark', dark);
         html.classList.toggle('dark-mode', dark);
         if (body) {
             body.classList.toggle('dark', dark);
             body.classList.toggle('dark-mode', dark);
+            body.classList.toggle('soft', mode === 'soft');
         }
     };
 
     allMethods.toggleTheme = function() {
-        this.isDarkMode = !this.isDarkMode;
-        try { localStorage.setItem('billing_theme', this.isDarkMode ? 'dark' : 'light'); } catch(e) {}
+        const order = ['light', 'dark', 'soft'];
+        const cur = this.themeMode || 'light';
+        this.themeMode = order[(order.indexOf(cur) + 1) % order.length];
+        try {
+            localStorage.setItem('billing_theme_mode', this.themeMode);
+            localStorage.setItem('billing_theme', this.themeMode === 'dark' ? 'dark' : 'light');
+        } catch(e) {}
         this.applyTheme();
+        const label = this.themeMode === 'dark' ? 'Dark Mode' : (this.themeMode === 'soft' ? 'Soft Comfort Mode' : 'SAP Light Mode');
+        if (typeof this.showToast === 'function') this.showToast(label, '🎨');
     };
 
         // 🛡️ Error Recovery Method
@@ -74,6 +103,13 @@
                 isDarkMode: (function() {
                     try { return (localStorage.getItem('billing_theme') || 'dark') !== 'light'; }
                     catch(e) { return true; }
+                })(),
+                themeMode: (function() {
+                    try {
+                        var m = localStorage.getItem('billing_theme_mode');
+                        if (m === 'dark' || m === 'soft') return m;
+                        return (localStorage.getItem('billing_theme') === 'light') ? 'light' : 'dark';
+                    } catch(e) { return 'dark'; }
                 })(),
                 isFinalized: false,
                 // 🛡️ Section-level Error Isolation: agar kisi tab me error ho to sirf wahi isolate ho
@@ -239,11 +275,17 @@
                 showConcretingModal: false,
                 selectedAugerSize: 22,
                 poleScheduleAutoConcreting: true,
+                psAutoPole: true,
+                psAutoStay: true,
+                psAutoMuffing: true,
+                psMuffingSize: 'auto',
+                alvFillerHeight: 0,
                 stayConcretingUnitVol: 0.125,
                 nutBoltData: [
                     { size: '16×65', unit: 'nos', weight: 0.164, qty: '' },
                     { size: '16×35', unit: 'nos', weight: 0.119, qty: '' },
                     { size: '16×75', unit: 'nos', weight: 0.180, qty: '' },
+                    { size: '16×100', unit: 'nos', weight: 0.220, qty: '' },
                     { size: '16×150', unit: 'nos', weight: 0.299, qty: '' },
                     { size: '6×75', unit: 'nos', weight: 0.022, qty: '' },
                     { size: '6×50', unit: 'nos', weight: 0.014, qty: '' },
@@ -1730,7 +1772,14 @@
             pctStage1() { this.debouncedSave(); },
             pctStage2() { this.debouncedSave(); },
             pctStage3() { this.debouncedSave(); },
-            isFinalized() { this.saveToStorage(); }
+            isFinalized() { this.saveToStorage(); },
+            currentView() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+            poleScheduleSubTab() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+            selectedPoleScheduleKey() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+            poleScheduleQuantities: {
+                handler() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+                deep: true
+            }
         },
 
         methods: allMethods,
@@ -1746,7 +1795,30 @@
 
         async mounted() {
         this.applyTheme();
+        // Angular-style brand splash ko smooth fade-out karo jab app ready hai
+        try {
+            var splash = document.getElementById('boot-splash');
+            if (splash) {
+                splash.style.opacity = '0';
+                splash.style.pointerEvents = 'none';
+                setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+            }
+        } catch(e) {}
         try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
+        try {
+            this._alvSchedule = () => {
+                if (this._alvRaf) return;
+                this._alvRaf = requestAnimationFrame(() => {
+                    this._alvRaf = 0;
+                    try { this.updateAlvFiller(); } catch (e) { }
+                });
+            };
+            this._alvObserver = new MutationObserver(this._alvSchedule);
+            this._alvObserver.observe(document.body, { childList: true, subtree: true });
+            window.addEventListener('resize', this._alvSchedule);
+            window.addEventListener('load', this._alvSchedule);
+            this.$nextTick(this._alvSchedule);
+        } catch (e) { }
             this._isLoading = true;
             await this.loadFromStorage();
             try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}

@@ -6016,10 +6016,19 @@ html[data-theme="light"] .saas-nav-row-sub { background: var(--bg-header) !impor
 }
 
 @media (min-width: 701px) {
-    .main-area.pole-schedule-area {
-        height: 100vh;
+    .main-area.pole-schedule-area,
+    .work.pole-schedule-area {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
         min-height: 0;
         overflow: hidden;
+    }
+
+    .work.pole-schedule-area > .apptoolbar,
+    .work.pole-schedule-area > .main-container > .pole-schedule-page .ps-page-toolbar,
+    .pole-schedule-area .ps-schedule-card .ps-concreting-strip {
+        flex: 0 0 auto !important;
     }
 
     .content-grid.pole-schedule-grid {
@@ -6034,9 +6043,13 @@ html[data-theme="light"] .saas-nav-row-sub { background: var(--bg-header) !impor
         padding-bottom: 4px !important;
     }
 
+    .work.pole-schedule-area > .main-container,
     .center-content.pole-schedule-content > .main-container,
+    .pole-schedule-area .pole-schedule-page,
     .pole-schedule-content .pole-schedule-page,
+    .pole-schedule-area .ps-schedule-workspace,
     .pole-schedule-content .ps-schedule-workspace,
+    .pole-schedule-area .ps-schedule-card,
     .pole-schedule-content .ps-schedule-card {
         display: flex;
         flex: 1 1 auto;
@@ -6048,7 +6061,8 @@ html[data-theme="light"] .saas-nav-row-sub { background: var(--bg-header) !impor
         margin-bottom: 4px !important;
     }
 
-    main.center-content.pole-schedule-content .ps-table-scroll {
+    main.center-content.pole-schedule-content .ps-table-scroll,
+    .pole-schedule-area .ps-table-scroll {
         flex: 1 1 auto;
         height: auto;
         max-height: none !important;
@@ -6791,4 +6805,110 @@ html[data-theme="light"] .excel-filter-popover {
     border-color: var(--border-strong) !important;
     color: #34363b !important;
     box-shadow: 0 10px 25px rgba(74, 66, 50, 0.16) !important;
+}
+
+/* ============================================================
+   ACTIVITY BILLING � SAP ALV FULL-HEIGHT LAYOUT (Pole Schedule
+   jaisa design: fixed toolbar + scrollable grid + sticky total)
+   ============================================================ */
+@media (min-width: 701px) {
+    .work.activity-area {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .work.activity-area > .apptoolbar {
+        flex: 0 0 auto !important;
+    }
+
+    .work.activity-area > .main-container {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .work.activity-area .main-container > * {
+        flex: 0 0 auto;
+    }
+
+    .work.activity-area .main-container > div.animate-fade-in {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .activity-area .filter-bar-card,
+    .activity-area .section-errors-strip {
+        flex: 0 0 auto !important;
+    }
+
+    .activity-area .table-card {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        margin-bottom: 4px !important;
+    }
+
+    .activity-area .table-card .table-header-strip {
+        flex: 0 0 auto !important;
+    }
+
+    .activity-area .table-card .table-responsive {
+        flex: 1 1 auto;
+        max-height: none !important;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    .activity-area .table-total-strip,
+    .activity-area .table-bottom-notice {
+        flex: 0 0 auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    .activity-area .table-card tfoot {
+        position: sticky;
+        bottom: 0;
+        z-index: 15;
+    }
+
+    .activity-area .table-card tfoot th {
+        position: relative;
+        background: var(--bg-card) !important;
+        box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.12);
+    }
+}
+
+/* Activity toolbar tools � SAP-uniform look (sab same family) */
+.activity-area .filter-actions .btn-filter-reset,
+.activity-area .filter-actions .btn-filter-add {
+    background: #fdfdfd !important;
+    color: #12325e !important;
+    border: 1px solid #b9c2cc !important;
+    font-weight: 600 !important;
+}
+
+.activity-area .filter-actions .btn-filter-reset:hover,
+.activity-area .filter-actions .btn-filter-add:hover {
+    background: #d3e3f7 !important;
+    border-color: #9dc3ea !important;
+    color: #0a5da8 !important;
+}
+
+/* ALV filler spacer - print me mat dikhana */
+@media print { .alv-filler-row { display: none !important; } }
+
+
+@media (min-width: 701px) {
+    .pole-schedule-page .ps-table-scroll {
+        max-height: none !important;
+        min-height: 0;
+    }
 }

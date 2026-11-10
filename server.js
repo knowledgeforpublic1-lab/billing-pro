@@ -5,15 +5,39 @@ const express = require('express');
 const path = require('path');
 const apiApp = require('./api/index.js');
 
+const https = require('https');
+
 const app = express();
 
 // API routes (/api/billing) — helmet/rate-limit/auth api/index.js ke andar.
-// IMPORTANT: apiApp ko sirf /api/* par chalao. Poore app par lagane se helmet ka
-// CSP (script-src 'self') index.html par bhi lag jata hai aur Vue CDN + inline
-// script block ho jata hai — page raw {{ }} dikhata hai. (Vercel par static
-// helmet ke bina serve hota hai, isliye wahan chalta tha.)
+// IMPORTANT: apiApp ko sirf /api/* par chalao. Agar local MONGODB_URI nahi hai,
+// to live Vercel backend se transparently proxy karo taaki local dev me sabhi
+// MongoDB bills, 62 contractors aur sync seamless chalein.
 app.use((req, res, next) => {
-  if (req.path === '/api' || req.path.startsWith('/api/')) return apiApp(req, res, next);
+  if (req.path === '/api' || req.path.startsWith('/api/')) {
+    if (process.env.MONGODB_URI) {
+      return apiApp(req, res, next);
+    }
+    const targetUrl = 'https://billing-pro-dusky.vercel.app' + req.originalUrl;
+    const clientReq = https.request(targetUrl, {
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: 'billing-pro-dusky.vercel.app'
+      }
+    }, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res);
+    });
+    clientReq.on('error', (err) => {
+      console.error('Local proxy error:', err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Backend proxy error', details: err.message });
+      }
+    });
+    req.pipe(clientReq);
+    return;
+  }
   next();
 });
 
@@ -41,6 +65,9 @@ app.use((req, res, next) => {
   next();
 });
 app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
+
+app.use('/demo', express.static(path.join(__dirname, 'sap-ui-demo')));
+app.get(['/old', '/old/index.html'], (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Billing Pro local: http://localhost:${PORT}`));
