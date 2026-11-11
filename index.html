@@ -709,7 +709,7 @@
                             <table class="billing-table pro-table-typo">
                                 <thead style="position: sticky; top: 0; z-index: 10;">
                                     <tr>
-                                        <th class="text-center no-print" style="width: 42px;" title="Insert Row Anywhere">➕</th>
+                                        <th class="text-center no-print" style="width: 65px;" title="Row Actions (+ Insert Row / 🗑️ Delete Row)">Actions</th>
                                         <th class="text-center" style="width: 55px;">Item No</th>
                                         <th class="text-center" style="width: 95px;">SAP Code</th>
                                         <th style="min-width: 240px;">Description of Material</th>
@@ -735,8 +735,9 @@
                                         :style="item.isSection ? { background: 'rgba(99, 102, 241, 0.12)', fontWeight: '800' } : {}">
                                         <!-- Section Header Row -->
                                         <template v-if="item.isSection">
-                                            <td class="text-center no-print" style="padding: 2px 4px;">
-                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Insert Row under this section" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; cursor: pointer; font-weight: 800;">➕</button>
+                                            <td class="text-center no-print" style="padding: 2px 4px; white-space: nowrap;">
+                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Insert Row under this section" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 5px; font-size: 0.72rem; cursor: pointer; font-weight: 800; margin-right: 2px;">➕</button>
+                                                <button type="button" @click.stop="removePoleScheduleMaterial(item.origIndex)" :title="'Section delete karein: ' + item.desc" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; border-radius: 4px; padding: 2px 5px; font-size: 0.72rem; cursor: pointer; font-weight: 800;">🗑️</button>
                                             </td>
                                             <td class="text-center font-bold" style="color: var(--accent-indigo);">—</td>
                                             <td class="text-center font-mono text-muted">—</td>
@@ -747,8 +748,9 @@
 
                                         <!-- Normal Material Row -->
                                         <template v-else>
-                                            <td class="text-center no-print" style="padding: 2px 4px;">
-                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Niche naya row insert karein (+ Row Below)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; cursor: pointer; font-weight: 800;">➕</button>
+                                            <td class="text-center no-print" style="padding: 2px 4px; white-space: nowrap;">
+                                                <button type="button" @click.stop="openPoleScheduleAddMaterialModal(item.origIndex)" title="Niche naya row insert karein (+ Row Below)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; border-radius: 4px; padding: 2px 5px; font-size: 0.72rem; cursor: pointer; font-weight: 800; margin-right: 2px;">➕</button>
+                                                <button type="button" @click.stop="removePoleScheduleMaterial(item.origIndex)" :title="'Row delete karein: ' + item.desc" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; border-radius: 4px; padding: 2px 5px; font-size: 0.72rem; cursor: pointer; font-weight: 800;">🗑️</button>
                                             </td>
                                             <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
                                             <td class="text-center font-mono">

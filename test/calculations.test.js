@@ -2024,6 +2024,56 @@ it('Pole Schedule Cut Point & SPCP Auto-Sync: Entries in Cut Point or SPCP sync 
     assert.strictEqual(mockApp934A.activityQuantities['934A'][0][act934ACutPointIdx], 4, 'Entry of 8 in PS 934A SPCP Channel Set must sync as half quantity (4) in Activity 934A');
 });
 
+it('Pole Schedule Row Deletion: Successfully deletes custom or unnecessary row and updates schedule & quantities', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Loc 1' }] },
+        activityLocations: { '907': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [new Array(25).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        persistPoleSchedulesToMasterFile() {},
+        ...psModule
+    };
+
+    const origConfirm = global.confirm;
+    global.confirm = () => true;
+
+    try {
+        const initLen = mockApp.poleSchedules['907'].materials.length;
+        mockApp.poleSchedules['907'].materials.push({
+            no: '99',
+            desc: 'Custom Extra Pole Clamp',
+            unit: 'Nos',
+            itemCode: '17009999'
+        });
+        const addedIdx = mockApp.poleSchedules['907'].materials.length - 1;
+        mockApp.poleScheduleQuantities['907'][0][addedIdx] = 12;
+
+        assert.strictEqual(mockApp.poleSchedules['907'].materials.length, initLen + 1);
+        assert.strictEqual(mockApp.poleScheduleQuantities['907'][0][addedIdx], 12);
+
+        // Delete the added row
+        mockApp.removePoleScheduleMaterial(addedIdx);
+
+        assert.strictEqual(mockApp.poleSchedules['907'].materials.length, initLen, 'Schedule length must return to original length after row deletion');
+        assert.strictEqual(mockApp.poleScheduleQuantities['907'][0][addedIdx], undefined, 'Deleted row quantity must be cleaned up');
+    } finally {
+        global.confirm = origConfirm;
+    }
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
