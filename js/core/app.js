@@ -2057,48 +2057,6 @@
                 this.saveToStorage();
             }
 
-            // Cross-PC default pole schedules fetch from Cloud
-            try {
-                const psRes = await fetch('/api/default-pole-schedules');
-                if (psRes.ok) {
-                    const psJson = await psRes.json();
-                    if (psJson && psJson.success && psJson.poleSchedules && Object.keys(psJson.poleSchedules).length > 0) {
-                        window.defaultPoleSchedules = psJson.poleSchedules;
-                    }
-                }
-            } catch(psFetchErr) {}
-
-            // 💾 Cross-PC default activities mapping fetch from Cloud (MongoDB master)
-            // Sirf MISSING cheez bharo — user ki existing mapping kabhi overwrite mat karo
-            try {
-                const actRes = await fetch('/api/default-activities');
-                if (actRes.ok) {
-                    const actJson = await actRes.json();
-                    if (actJson && actJson.success && actJson.activities && Object.keys(actJson.activities).length > 0) {
-                        window.defaultActivities = actJson.activities;
-                        // Never overwrite user mappings or user-added rows from master
-                        if (!this.activities || typeof this.activities !== 'object') this.activities = {};
-                        Object.keys(actJson.activities).forEach(k => {
-                            if (!this.activities[k] || !Array.isArray(this.activities[k].materials) || this.activities[k].materials.length === 0) {
-                                this.activities[k] = JSON.parse(JSON.stringify(actJson.activities[k]));
-                            }
-                        });
-                    }
-                }
-            } catch(actFetchErr) {}
-
-            // Ensure poleSchedules exists for all keys without overwriting user data
-            try {
-                if (typeof defaultPoleSchedules !== 'undefined') {
-                    if (!this.poleSchedules || typeof this.poleSchedules !== 'object') this.poleSchedules = {};
-                    Object.keys(defaultPoleSchedules).forEach(k => {
-                        if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
-                            this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
-                        }
-                    });
-                }
-            } catch(e) {}
-
             // ⚡ Auto-sync any existing Pole Schedule entries into Billing & Reconciliation
             try {
                 if (this.poleScheduleQuantities && typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
