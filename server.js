@@ -47,7 +47,14 @@ app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.s
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 // Alag mobile page — desktop index.html ko haath lagaye bina
 app.get(['/mobile', '/mobile.html'], (req, res) => res.sendFile(path.join(__dirname, 'mobile.html')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/js', (req, res, next) => {
+  if (req.url.includes('/data/')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+}, express.static(path.join(__dirname, 'js')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use((req, res, next) => {
   let p = '';

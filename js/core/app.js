@@ -86,19 +86,25 @@
                 document.head.appendChild(s);
             }));
         Promise.all([
-            loadScript('js/data/contractor-sap-issues.js?v=20261109_v2200')
+            loadScript('js/data/contractor-sap-issues.js?v=' + Date.now())
                 .catch(e => { console.warn('[LazyLoad] SAP stock:', e.message); return null; }),
             loadScript('js/data/contractor-old-reconciliation.js?v=20261109_v2200')
                 .catch(e => { console.warn('[LazyLoad] old reco:', e.message); return null; })
         ]).then(() => {
             window.__heavyDataLoaded = true;
             window.__heavyDataLoading = false;
-            // Defaults aane ke baad bhi custom data hi rahe (agar boot par chuka tha)
+            // Defaults aane ke baad bhi custom data hi rahe (agar boot par chuka tha aur naya ho)
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
                 window.DefaultContractorSapStock = window.ContractorSapStock;
             }
             if (window.__customSapStock) {
-                window.ContractorSapStock = window.__customSapStock;
+                const defTime = window.ContractorSapStock && window.ContractorSapStock.meta && window.ContractorSapStock.meta.generatedAt ? new Date(window.ContractorSapStock.meta.generatedAt).getTime() : 0;
+                const custTime = window.__customSapStock.meta && window.__customSapStock.meta.uploadedAt ? new Date(window.__customSapStock.meta.uploadedAt).getTime() : 0;
+                if (!defTime || !custTime || custTime >= defTime) {
+                    window.ContractorSapStock = window.__customSapStock;
+                } else {
+                    console.log('[LazyLoad] Generated stock is newer than custom stock; keeping updated built-in stock.');
+                }
                 if (!window.DefaultContractorSapStock) window.DefaultContractorSapStock = { byContractorNorm: {} };
             }
             if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
@@ -1932,12 +1938,21 @@
                     if (customStockJson) {
                         const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
                         if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
-                            window.ContractorSapStock = customStock;
-                            window.__customSapStock = customStock; // lazy default load ke baad yahi restore hoga
-                            this.hasCustomStock = true;
-                            this.customStockMeta = customStock.meta;
-                            this.recoRevision = (this.recoRevision || 0) + 1;
-                            console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
+                            const defTime = window.ContractorSapStock && window.ContractorSapStock.meta && window.ContractorSapStock.meta.generatedAt ? new Date(window.ContractorSapStock.meta.generatedAt).getTime() : 0;
+                            const custTime = customStock.meta && customStock.meta.uploadedAt ? new Date(customStock.meta.uploadedAt).getTime() : 0;
+                            if (defTime && custTime && defTime > custTime) {
+                                console.log('[StockImporter] Built-in stock is newer than stored custom stock. Using updated built-in stock.');
+                                await BillingStorage.removeItem('billing_custom_sap_stock');
+                                this.hasCustomStock = false;
+                                this.customStockMeta = null;
+                            } else {
+                                window.ContractorSapStock = customStock;
+                                window.__customSapStock = customStock;
+                                this.hasCustomStock = true;
+                                this.customStockMeta = customStock.meta;
+                                this.recoRevision = (this.recoRevision || 0) + 1;
+                                console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
+                            }
                         }
                     }
                 }

@@ -214,7 +214,7 @@ it('SAP Stock: Matches contractor and retrieves exact net issued quantities from
     const rsl = stock.byDocHeader['31006345'];
     assert.ok(rsl, 'Ranjeet Singh Lodhi docHeader 31006345 must exist');
     assert.strictEqual(rsl.contractorName, 'RANJEET SINGH LODHI');
-    assert.strictEqual(rsl.materials['17000625'].issuedQty, 15689);
+    assert.strictEqual(rsl.materials['17000625'].issuedQty, 15586);
 
     // Manohar Traders check by WO
     const mt = stock.byDocHeader['31007236'];
@@ -239,7 +239,7 @@ it('SAP Stock: Matches contractor and retrieves exact net issued quantities from
     };
     const rslMatch = window.BillingModule.getContractorSapIssues.call(mockAppRsl);
     assert.ok(rslMatch, 'M/s Ranjeet Singh Lodhi should match by name');
-    assert.strictEqual(rslMatch.materials['17000625'].issuedQty, 15689);
+    assert.strictEqual(rslMatch.materials['17000625'].issuedQty, 15586);
 });
 
 // 9. SAP Stock ISSUE, MRN, NET ISSUE format & Totals
@@ -256,12 +256,12 @@ it('SAP Stock: Verifies ISSUE, MRN, and NET ISSUE breakdown format', () => {
     assert.strictEqual(rslCement.mrnReturn, 250);
     assert.strictEqual(rslCement.netIssue, 650);
 
-    // RSL RSJ Pole 17000004: Gross = 1873, MRN = 286, Net = 1587
+    // RSL RSJ Pole 17000004: Gross = 1873, MRN = 287, Net = 1586
     const rslPole = stock.byDocHeader['31006345'].materials['17000004'];
     assert.ok(rslPole, 'RSL Pole must exist');
     assert.strictEqual(rslPole.grossIssue, 1873);
-    assert.strictEqual(rslPole.mrnReturn, 286);
-    assert.strictEqual(rslPole.netIssue, 1587);
+    assert.strictEqual(rslPole.mrnReturn, 287);
+    assert.strictEqual(rslPole.netIssue, 1586);
 
     // MT RSJ Pole 17000004: Gross = 370, MRN = 44, Net = 326
     const mtPole = stock.byDocHeader['31007236'].materials['17000004'];
@@ -283,9 +283,9 @@ it('SAP Stock: Consolidates and sums multiple work orders for same contractor', 
     const dusk = stock.byContractorNorm['dusklineinfrastructure'];
     assert.ok(dusk, 'Duskline consolidated record must exist');
     assert.deepStrictEqual(dusk.allWorkOrders.slice().sort(), ['31003359', '31003360', '31003362'].sort());
-    assert.strictEqual(dusk.totalGrossIssue, 1027046.87);
-    assert.strictEqual(dusk.totalMrnReturn, 438628.632);
-    assert.strictEqual(dusk.totalNetIssue, 588418.238);
+    assert.strictEqual(dusk.totalGrossIssue, 1028640.87);
+    assert.strictEqual(dusk.totalMrnReturn, 438660.632);
+    assert.strictEqual(dusk.totalNetIssue, 589980.238);
 
     // Verify all 3 WOs point to the same consolidated record
     assert.strictEqual(stock.byDocHeader['31003359'].totalNetIssue, dusk.totalNetIssue);
@@ -314,7 +314,7 @@ it('SAP Stock: Consolidates and sums multiple work orders for same contractor', 
     };
     const duskMatch = window.BillingModule.getContractorSapIssues.call(mockAppDusk);
     assert.strictEqual(duskMatch.contractorName, dusk.contractorName);
-    assert.strictEqual(duskMatch.totalNetIssue, 588418.238);
+    assert.strictEqual(duskMatch.totalNetIssue, 589980.238);
 });
 
 // 11. In-browser Stock Importer Module parsing & normalization

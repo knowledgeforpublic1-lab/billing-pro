@@ -1,5 +1,7 @@
 const ExcelJS = require('exceljs');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 function normGroupKey(n) {
   if (!n) return '';
@@ -20,10 +22,50 @@ function normRawKey(n) {
     .trim();
 }
 
+function findLatestStockFile() {
+  const candidates = [
+    path.join(__dirname, '..', 'stock.xlsx'),
+    path.join(os.homedir(), 'Downloads', 'stock.xlsx'),
+    path.join(os.homedir(), 'Downloads', 'Master Stock statemnt.xlsx'),
+    path.join(__dirname, '..', 'stock1.xlsx')
+  ];
+
+  let bestFile = null;
+  let bestMtime = 0;
+
+  for (const cand of candidates) {
+    if (fs.existsSync(cand)) {
+      try {
+        const stat = fs.statSync(cand);
+        // Only accept files larger than 1 MB (standard stock dump is 20-35MB)
+        if (stat.size > 1000000 && stat.mtimeMs > bestMtime) {
+          bestMtime = stat.mtimeMs;
+          bestFile = cand;
+        }
+      } catch (e) {}
+    }
+  }
+
+  // If the newest file is in Downloads, also copy it to ./stock.xlsx for workspace record
+  if (bestFile && bestFile.includes('Downloads')) {
+    const dest = path.join(__dirname, '..', 'stock.xlsx');
+    console.log(`Found newer stock in Downloads (${bestFile}), copying to ${dest}...`);
+    try {
+      fs.copyFileSync(bestFile, dest);
+      return dest;
+    } catch (e) {
+      console.warn('Could not copy from Downloads, reading directly:', e.message);
+      return bestFile;
+    }
+  }
+
+  return bestFile;
+}
+
 async function buildStockIndex() {
-  const stockFilePath = fs.existsSync('stock.xlsx') ? 'stock.xlsx' : (fs.existsSync('stock1.xlsx') ? 'stock1.xlsx' : null);
+  const stockFilePath = findLatestStockFile();
   if (!stockFilePath) {
-    throw new Error('Stock file not found! Please ensure stock.xlsx or stock1.xlsx exists in project root.');
+    throw new Error('Stock file not found! Please ensure stock.xlsx exists in project root or Downloads folder.');
   }
   console.log(`Using stock file: ${stockFilePath}`);
   console.log('1. Reading SAP Code sheet for contractor mappings...');

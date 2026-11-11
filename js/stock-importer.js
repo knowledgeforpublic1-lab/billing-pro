@@ -537,6 +537,8 @@ window.StockImporterModule = {
             if (typeof BillingStorage !== 'undefined') {
                 await BillingStorage.removeItem('billing_custom_sap_stock');
             }
+            delete window.__customSapStock;
+            window.__customSapStock = null;
             if (window.DefaultContractorSapStock) {
                 window.ContractorSapStock = window.DefaultContractorSapStock;
             }
