@@ -478,7 +478,7 @@ window.PoleScheduleModule = {
             evaluated = this.evalGridFormula(str);
         }
         const num = Number(evaluated);
-        const finalVal = (evaluated === '' || isNaN(num)) ? (isNaN(Number(str)) ? str : Number(str)) : (Math.round(num * 100) / 100);
+        const finalVal = (evaluated === '' || isNaN(num)) ? (isNaN(Number(str)) ? str : Number(str)) : (Math.round(num * 10000) / 10000);
         this.setPoleScheduleCellQty(lIdx, mIdx, finalVal);
         return finalVal;
     },

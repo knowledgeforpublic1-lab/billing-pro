@@ -18,1049 +18,1054 @@ window.ExportModule = {
         }
         return letter || 'A';
     },
-                async exportMaterialMappingExcel() {
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.creator = 'Billing Pro Studio';
-                    workbook.created = new Date();
-                    const ws = workbook.addWorksheet('SAP Material Mapping Master', {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
-                    });
-                    const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FF888888' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    const headerBorder = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    ws.mergeCells('A1:I1');
-                    const r1 = ws.getCell('A1');
-                    r1.value = 'LK ELECTRICALS - SAP ERP MATERIAL CODE & WORK ORDER ACTIVITY MAPPING MASTER';
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = headerBorder;
-                    ws.getRow(1).height = 30;
-                    const row2 = ws.getRow(2);
-                    row2.values = ['Act Code', 'Sr.No.', 'Work Order Description of Material', 'Act Unit', 'Rate (Rs)', 'SAP Item Code (Material)', 'SAP Material Description', 'SAP Unit', 'Document Header Text (Ref/WO)'];
-                    row2.height = 26;
-                    row2.eachCell(cell => {
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = headerBorder;
-                    });
-                    let rowIdx = 3;
-                    const items = this.filteredMappingMasterList;
-                    items.forEach((rowObj, idx) => {
-                        const m = rowObj.item;
-                        const sList = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [{ code: m.itemCode || '', desc: m.sapDescription || '', uom: m.sapUom || m.unit, docHeader: m.docHeader || '0031006347' }];
-                        sList.forEach((s, sIdx) => {
-                            const row = ws.getRow(rowIdx);
-                            row.getCell(1).value = window.sanitizeExcelText((sIdx === 0) ? rowObj.actKey : '');
-                            row.getCell(2).value = window.sanitizeExcelText((sIdx === 0) ? m.no : '');
-                            row.getCell(3).value = window.sanitizeExcelText((sIdx === 0) ? m.desc : `↳ Component ${sIdx+1}`);
-                            row.getCell(4).value = window.sanitizeExcelText((sIdx === 0) ? m.unit : '');
-                            row.getCell(5).value = (sIdx === 0) ? m.rate : '';
-                            row.getCell(6).value = window.sanitizeExcelText(s.code);
-                            row.getCell(7).value = window.sanitizeExcelText(s.desc);
-                            row.getCell(8).value = window.sanitizeExcelText(s.uom);
-                            row.getCell(9).value = window.sanitizeExcelText(s.docHeader);
-                            row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
-                            row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-                            if (sIdx === 0) row.getCell(5).numFmt = '#,##0.00';
-                            row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(7).alignment = { horizontal: 'left', vertical: 'middle' };
-                            row.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(9).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.eachCell(c => {
-                                c.border = thinBorder;
-                            });
-                            row.height = 20;
-                            rowIdx++;
-                        });
-                    });
-                    ws.columns = [
-                        { width: 12 }, { width: 8 }, { width: 50 }, { width: 10 },
-                        { width: 12 }, { width: 18 }, { width: 45 }, { width: 12 }, { width: 22 }
-                    ];
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : '';
-                    a.download = (cName && cName !== 'Contractor') ? `${cName}_SAP_Material_Mapping_Master.xlsx` : 'SAP_Material_Mapping_Master.xlsx';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    this.showToast('SAP Material Mapping Master Excel downloaded! 🎉', '📗');
-                },
-                async exportReconciliationExcel() {
-                    this.showToast('Exporting Pivot Reconciliation Sheet...', '⏳');
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.creator = 'Billing Pro Studio';
-                    workbook.created = new Date();
-                    const ws = workbook.addWorksheet('Reconciliation Sheet', {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
-                    });
-                    const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FF888888' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    const headerBorder = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    
-                    const pData = this.pivotReconciliationData;
-                    // ↩️ Dynamic Old Reco Columns & Reverse ON handling
-                    const revOn = !!this.reverseEntry;
-                    const rcols = revOn ? this.reverseReconColumns : [];
-                    
-                    // 🎯 Exactly what is displayed in reconRows on screen (same rows, same filters, same order):
-                    const expRows = (this.reconRows && this.reconRows.length > 0)
-                        ? this.reconRows
-                        : ((this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : []);
+    async exportMaterialMappingExcel() {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Billing Pro Studio';
+        workbook.created = new Date();
+        const ws = workbook.addWorksheet('SAP Material Mapping Master', {
+            views: [{ showGridLines: true }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+        });
+        const thinBorder = {
+            top: { style: 'thin', color: { argb: 'FF888888' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'thin', color: { argb: 'FF888888' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        ws.mergeCells('A1:I1');
+        const r1 = ws.getCell('A1');
+        r1.value = 'LK ELECTRICALS - SAP ERP MATERIAL CODE & WORK ORDER ACTIVITY MAPPING MASTER';
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
+        ws.getRow(1).height = 30;
+        const row2 = ws.getRow(2);
+        row2.values = ['Act Code', 'Sr.No.', 'Work Order Description of Material', 'Act Unit', 'Rate (Rs)', 'SAP Item Code (Material)', 'SAP Material Description', 'SAP Unit', 'Document Header Text (Ref/WO)'];
+        row2.height = 26;
+        row2.eachCell(cell => {
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = headerBorder;
+        });
+        let rowIdx = 3;
+        const items = this.filteredMappingMasterList;
+        items.forEach((rowObj, idx) => {
+            const m = rowObj.item;
+            const sList = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [{ code: m.itemCode || '', desc: m.sapDescription || '', uom: m.sapUom || m.unit, docHeader: m.docHeader || '0031006347' }];
+            sList.forEach((s, sIdx) => {
+                const row = ws.getRow(rowIdx);
+                row.getCell(1).value = window.sanitizeExcelText((sIdx === 0) ? rowObj.actKey : '');
+                row.getCell(2).value = window.sanitizeExcelText((sIdx === 0) ? m.no : '');
+                row.getCell(3).value = window.sanitizeExcelText((sIdx === 0) ? m.desc : `↳ Component ${sIdx + 1}`);
+                row.getCell(4).value = window.sanitizeExcelText((sIdx === 0) ? m.unit : '');
+                row.getCell(5).value = (sIdx === 0) ? m.rate : '';
+                row.getCell(6).value = window.sanitizeExcelText(s.code);
+                row.getCell(7).value = window.sanitizeExcelText(s.desc);
+                row.getCell(8).value = window.sanitizeExcelText(s.uom);
+                row.getCell(9).value = window.sanitizeExcelText(s.docHeader);
+                row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
+                row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+                if (sIdx === 0) row.getCell(5).numFmt = '#,##0.00';
+                row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(7).alignment = { horizontal: 'left', vertical: 'middle' };
+                row.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(9).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.eachCell(c => {
+                    c.border = thinBorder;
+                });
+                row.height = 20;
+                rowIdx++;
+            });
+        });
+        ws.columns = [
+            { width: 12 }, { width: 8 }, { width: 50 }, { width: 10 },
+            { width: 12 }, { width: 18 }, { width: 45 }, { width: 12 }, { width: 22 }
+        ];
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : '';
+        a.download = (cName && cName !== 'Contractor') ? `${cName}_SAP_Material_Mapping_Master.xlsx` : 'SAP_Material_Mapping_Master.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.showToast('SAP Material Mapping Master Excel downloaded! 🎉', '📗');
+    },
+    async exportReconciliationExcel() {
+        this.showToast('Exporting Pivot Reconciliation Sheet...', '⏳');
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Billing Pro Studio';
+        workbook.created = new Date();
+        this.addStyledReconciliationToWorkbook(workbook, 'Reconciliation Sheet');
 
-                    const hasCustomOldRecoCols = !!(this.hasCustomOldReco && typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0);
-                    const recoCols = hasCustomOldRecoCols ? this.visibleOldRecoColumns() : [];
-                    const recoColNames = recoCols.map(c => c.name);
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+        const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
+        a.download = ra ? `${cName}_${ra}_Material_Reconciliation_Sheet.xlsx` : `${cName}_Material_Reconciliation_Sheet.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        const revOn = !!this.reverseEntry;
+        this.showToast(revOn ? 'Reverse Reconciliation Excel downloaded! 🎉' : 'Pivot Reconciliation Excel downloaded! 🎉', '📊');
+    },
 
-                    // Headers match on-screen table: ISSUE, MRN, NET ISSUE, Activities, THIS BILL, BALANCE
-                    const actColHeaders = revOn
-                        ? rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))
-                        : (pData.columns || []);
+    addStyledReconciliationToWorkbook(workbook, sheetName = 'Reconciliation') {
+        const ws = workbook.addWorksheet(sheetName, {
+            views: [{ showGridLines: true }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+        });
+        const thinBorder = {
+            top: { style: 'thin', color: { argb: 'FF888888' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'thin', color: { argb: 'FF888888' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
 
-                    const expHeaders = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE']
-                        .concat(recoColNames)
-                        .concat(actColHeaders)
-                        .concat(['THIS BILL', 'BALANCE']);
-                    const totalCols = expHeaders.length;
-                    
-                    // Title Row
-                    ws.mergeCells(1, 1, 1, totalCols);
-                    const r1 = ws.getCell(1, 1);
-                    const stockDateSuffix = this.stockUpdatedDate ? ` (STOCK AS ON: ${this.stockUpdatedDate})` : '';
-                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET${stockDateSuffix}`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = headerBorder;
-                    ws.getRow(1).height = 30;
-                    
-                    // Header Row
-                    const row2 = ws.getRow(2);
-                    const headers = expHeaders;
-                    row2.values = headers;
-                    row2.height = 26;
-                    row2.eachCell((cell, colNum) => {
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = headerBorder;
-                    });
-                    
-                    // Data Rows (Matches on-screen reconRows cell-for-cell)
-                    let rowIdx = 3;
-                    expRows.forEach((rowObj, idx) => {
-                        const row = ws.getRow(rowIdx);
-                        row.getCell(1).value = idx + 1;
-                        row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
-                        row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
-                        row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
-                        row.getCell(5).value = (rowObj.sapGrossIssue !== undefined && rowObj.sapGrossIssue !== null && rowObj.sapGrossIssue !== 0) ? Number(rowObj.sapGrossIssue) : '';
-                        row.getCell(6).value = (rowObj.sapMrnReturn !== undefined && rowObj.sapMrnReturn !== null && rowObj.sapMrnReturn !== 0) ? Number(rowObj.sapMrnReturn) : '';
-                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? Number(rowObj.sapNetIssue) : (Number(rowObj.sapIssuedQty) || '');
+        const pData = this.pivotReconciliationData || { columns: [], rows: [] };
+        // ↩️ Dynamic Old Reco Columns & Reverse ON handling
+        const revOn = !!this.reverseEntry;
+        const rcols = revOn ? (this.reverseReconColumns || []) : [];
 
-                        if (hasCustomOldRecoCols) {
-                            const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
-                            recoCols.forEach((orc, ocIdx) => {
-                                const cIdx = 8 + ocIdx;
-                                if (orc.name === 'PURANA RECO') {
-                                    row.getCell(cIdx).value = prevR || '';
-                                } else if (typeof this.getRecoColVal === 'function') {
-                                    const val = this.getRecoColVal(rowObj.code, orc.name);
-                                    row.getCell(cIdx).value = val || '';
-                                } else {
-                                    row.getCell(cIdx).value = '';
-                                }
-                            });
-                        }
+        // 🎯 Exactly what is displayed in reconRows on screen (same rows, same filters, same order):
+        const expRows = (this.reconRows && this.reconRows.length > 0)
+            ? this.reconRows
+            : ((this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : []);
 
-                        const midColStart = 8 + recoCols.length;
-                        if (revOn) {
-                            rcols.forEach((rc, cIdx) => {
-                                const v = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(rowObj.code, rc) : 0;
-                                row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
-                            });
-                        } else {
-                            (pData.columns || []).forEach((col, cIdx) => {
-                                const v = rowObj.activities && rowObj.activities[col];
-                                row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
-                            });
-                        }
+        const hasCustomOldRecoCols = !!(this.hasCustomOldReco && typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0);
+        const recoCols = hasCustomOldRecoCols ? this.visibleOldRecoColumns() : [];
+        const recoColNames = recoCols.map(c => c.name);
 
-                        const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
-                        const thisB = Number(rowObj.totalQty) || 0;
-                        const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Math.round((Number(rowObj.sapNetIssue || 0) - thisB) * 100) / 100);
+        // Headers match on-screen table: ISSUE, MRN, NET ISSUE, Activities, THIS BILL, BALANCE
+        const actColHeaders = revOn
+            ? rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))
+            : (pData.columns || []);
 
-                        row.getCell(endColStart).value = thisB > 0 ? thisB : '';
-                        row.getCell(endColStart + 1).value = bal;
-                        
-                        row.eachCell((c, colNum) => {
-                            c.border = thinBorder;
-                            c.alignment = { vertical: 'middle' };
-                            if (colNum === 3) {
-                                c.alignment.horizontal = 'left';
-                                c.alignment.wrapText = true;
-                            } else if (colNum === 5 || colNum === 6 || colNum === 7 || colNum >= endColStart) {
-                                c.alignment.horizontal = 'right';
-                                c.font = { bold: colNum === 7 || colNum === endColStart || colNum === endColStart + 1 };
-                            } else {
-                                c.alignment.horizontal = 'center';
-                            }
-                        });
-                        row.height = 20;
-                        rowIdx++;
-                    });
+        const expHeaders = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE']
+            .concat(recoColNames)
+            .concat(actColHeaders)
+            .concat(['THIS BILL', 'BALANCE']);
+        const totalCols = expHeaders.length;
 
-                    // Summary Total row (Matches on-screen reconTotals)
-                    const totalRow = ws.getRow(rowIdx);
-                    totalRow.getCell(1).value = `TOTAL / SUMMARY (${expRows.length} Items)`;
-                    ws.mergeCells(rowIdx, 1, rowIdx, 4);
-                    totalRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
-                    totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        // Title Row
+        ws.mergeCells(1, 1, 1, totalCols);
+        const r1 = ws.getCell(1, 1);
+        const stockDateSuffix = this.stockUpdatedDate ? ` (STOCK AS ON: ${this.stockUpdatedDate})` : '';
+        r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET${stockDateSuffix}`;
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
+        ws.getRow(1).height = 30;
 
-                    let sumGross = 0, sumMrn = 0, sumNet = 0, sumThisBill = 0, sumBal = 0;
-                    expRows.forEach(rowObj => {
-                        sumGross += Number(rowObj.sapGrossIssue || 0);
-                        sumMrn += Number(rowObj.sapMrnReturn || 0);
-                        sumNet += Number(rowObj.sapNetIssue || 0);
-                        const thisB = Number(rowObj.totalQty) || 0;
-                        const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Number(rowObj.sapNetIssue || 0) - thisB);
-                        sumThisBill += thisB;
-                        sumBal += bal;
-                    });
+        // Header Row
+        const row2 = ws.getRow(2);
+        const headers = expHeaders;
+        row2.values = headers;
+        row2.height = 26;
+        row2.eachCell((cell, colNum) => {
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = headerBorder;
+        });
 
-                    totalRow.getCell(5).value = Math.round(sumGross * 100) / 100 || '';
-                    totalRow.getCell(6).value = Math.round(sumMrn * 100) / 100 || '';
-                    totalRow.getCell(7).value = Math.round(sumNet * 100) / 100 || '';
+        // Data Rows (Matches on-screen reconRows cell-for-cell)
+        let rowIdx = 3;
+        expRows.forEach((rowObj, idx) => {
+            const row = ws.getRow(rowIdx);
+            row.getCell(1).value = idx + 1;
+            row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
+            row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
+            row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
+            row.getCell(5).value = (rowObj.sapGrossIssue !== undefined && rowObj.sapGrossIssue !== null && rowObj.sapGrossIssue !== 0) ? Number(rowObj.sapGrossIssue) : '';
+            row.getCell(6).value = (rowObj.sapMrnReturn !== undefined && rowObj.sapMrnReturn !== null && rowObj.sapMrnReturn !== 0) ? Number(rowObj.sapMrnReturn) : '';
+            row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? Number(rowObj.sapNetIssue) : (Number(rowObj.sapIssuedQty) || '');
 
-                    if (hasCustomOldRecoCols) {
-                        recoCols.forEach((orc, ocIdx) => {
-                            const cIdx = 8 + ocIdx;
-                            let colSum = 0;
-                            if (orc.name === 'PURANA RECO') {
-                                expRows.forEach(r => {
-                                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : Number(r.prevReconQty || 0);
-                                    colSum += Number(prevR || 0);
-                                });
-                            } else {
-                                expRows.forEach(r => {
-                                    const val = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, orc.name) : 0;
-                                    colSum += Number(val || 0);
-                                });
-                            }
-                            totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
-                        });
-                    }
-
-                    const midColStart = 8 + recoCols.length;
-                    if (revOn) {
-                        rcols.forEach((rc, cIdx) => {
-                            let colSum = 0;
-                            expRows.forEach(r => {
-                                const val = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(r.code, rc) : 0;
-                                colSum += Number(val || 0);
-                            });
-                            totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
-                        });
+            if (hasCustomOldRecoCols) {
+                const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
+                recoCols.forEach((orc, ocIdx) => {
+                    const cIdx = 8 + ocIdx;
+                    if (orc.name === 'PURANA RECO') {
+                        row.getCell(cIdx).value = prevR || '';
+                    } else if (typeof this.getRecoColVal === 'function') {
+                        const val = this.getRecoColVal(rowObj.code, orc.name);
+                        row.getCell(cIdx).value = val || '';
                     } else {
-                        (pData.columns || []).forEach((col, cIdx) => {
-                            let colSum = 0;
-                            expRows.forEach(r => {
-                                colSum += Number((r.activities && r.activities[col]) || 0);
-                            });
-                            totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
-                        });
+                        row.getCell(cIdx).value = '';
                     }
+                });
+            }
 
-                    const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
-                    totalRow.getCell(endColStart).value = Math.round(sumThisBill * 100) / 100 || '';
-                    totalRow.getCell(endColStart + 1).value = Math.round(sumBal * 100) / 100 || 0;
+            const midColStart = 8 + recoCols.length;
+            if (revOn) {
+                rcols.forEach((rc, cIdx) => {
+                    const v = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(rowObj.code, rc) : 0;
+                    row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
+                });
+            } else {
+                (pData.columns || []).forEach((col, cIdx) => {
+                    const v = rowObj.activities && rowObj.activities[col];
+                    row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
+                });
+            }
 
-                    totalRow.eachCell((c, colNum) => {
-                        c.border = headerBorder;
-                        c.font = { name: 'Calibri', size: 10, bold: true };
-                        if (colNum >= 5) {
-                            c.alignment = { horizontal: 'right', vertical: 'middle' };
-                            c.numFmt = '#,##0.00';
-                        }
+            const endColStart = midColStart + (revOn ? rcols.length : (pData.columns || []).length);
+            const thisB = Number(rowObj.totalQty) || 0;
+            const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Math.round((Number(rowObj.sapNetIssue || 0) - thisB) * 100) / 100);
+
+            row.getCell(endColStart).value = thisB > 0 ? thisB : '';
+            row.getCell(endColStart + 1).value = bal;
+
+            row.eachCell((c, colNum) => {
+                c.border = thinBorder;
+                c.alignment = { vertical: 'middle' };
+                if (colNum === 3) {
+                    c.alignment.horizontal = 'left';
+                    c.alignment.wrapText = true;
+                } else if (colNum === 5 || colNum === 6 || colNum === 7 || colNum >= endColStart) {
+                    c.alignment.horizontal = 'right';
+                    c.font = { bold: colNum === 7 || colNum === endColStart || colNum === endColStart + 1 };
+                } else {
+                    c.alignment.horizontal = 'center';
+                }
+            });
+            row.height = 20;
+            rowIdx++;
+        });
+
+        // Summary Total row (Matches on-screen reconTotals)
+        const totalRow = ws.getRow(rowIdx);
+        totalRow.getCell(1).value = `TOTAL / SUMMARY (${expRows.length} Items)`;
+        ws.mergeCells(rowIdx, 1, rowIdx, 4);
+        totalRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
+        totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+        let sumGross = 0, sumMrn = 0, sumNet = 0, sumThisBill = 0, sumBal = 0;
+        expRows.forEach(rowObj => {
+            sumGross += Number(rowObj.sapGrossIssue || 0);
+            sumMrn += Number(rowObj.sapMrnReturn || 0);
+            sumNet += Number(rowObj.sapNetIssue || 0);
+            const thisB = Number(rowObj.totalQty) || 0;
+            const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Number(rowObj.sapNetIssue || 0) - thisB);
+            sumThisBill += thisB;
+            sumBal += bal;
+        });
+
+        totalRow.getCell(5).value = Math.round(sumGross * 100) / 100 || '';
+        totalRow.getCell(6).value = Math.round(sumMrn * 100) / 100 || '';
+        totalRow.getCell(7).value = Math.round(sumNet * 100) / 100 || '';
+
+        if (hasCustomOldRecoCols) {
+            recoCols.forEach((orc, ocIdx) => {
+                const cIdx = 8 + ocIdx;
+                let colSum = 0;
+                if (orc.name === 'PURANA RECO') {
+                    expRows.forEach(r => {
+                        const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : Number(r.prevReconQty || 0);
+                        colSum += Number(prevR || 0);
                     });
-                    totalRow.height = 22;
-                    rowIdx++;
-                    
-                    // Column Widths
-                    const cols = [
-                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }
-                    ];
-                    if (hasCustomOldRecoCols) recoCols.forEach(() => cols.push({ width: 14 }));
-                    (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 12 }));
-                    cols.push({ width: 14 }, { width: 14 });
-                    ws.columns = cols;
-                    
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
-                    const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
-                    a.download = ra ? `${cName}_${ra}_Material_Reconciliation_Sheet.xlsx` : `${cName}_Material_Reconciliation_Sheet.xlsx`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    this.showToast(revOn ? 'Reverse Reconciliation Excel downloaded! 🎉' : 'Pivot Reconciliation Excel downloaded! 🎉', '📊');
-                },
-                addStyledTaxInvoiceToWorkbook(workbook) {
-                    const ws = workbook.addWorksheet('Tax Invoice', {
-                        views: [{ showGridLines: true }]
+                } else {
+                    expRows.forEach(r => {
+                        const val = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, orc.name) : 0;
+                        colSum += Number(val || 0);
                     });
-
-                    const borderThin = {
-                        top: { style: 'thin', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
-                    };
-                    const borderHeader = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
-                    };
-
-                    // Row 1: Title & Contractor Name (Low-Ink: Clean White, Bold Black)
-                    ws.mergeCells('A1:E1');
-                    const r1 = ws.getCell('A1');
-                    r1.value = 'Tax Invoice';
-                    r1.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = borderHeader;
-                    ws.getRow(1).height = 28;
-
-                    // Row 2: Project Name & Contractor
-                    ws.mergeCells('A2:E2');
-                    const r2 = ws.getCell('A2');
-                    r2.value = `Project Name : ${this.projectMeta.projectName}`.toUpperCase();
-                    r2.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r2.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r2.border = borderThin;
-                    ws.getRow(2).height = 22;
-
-                    // Row 3,4,5: Client Details (Clean White, Bold Black)
-                    ws.mergeCells('A3:E3');
-                    ws.getCell('A3').value = `To :- ${this.invoiceData.clientName}`;
-                    ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                    ws.mergeCells('A4:E4');
-                    ws.getCell('A4').value = `${this.invoiceData.clientAddress}`;
-                    ws.getCell('A4').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                    ws.mergeCells('A5:E5');
-                    ws.getCell('A5').value = `GSTIN : ${this.invoiceData.clientGstin}`;
-                    ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                    // Row 6: Contractor Name Banner (with PAN / GSTIN) (Low-Ink: Clean White, Bold Black)
-                    ws.mergeCells('A6:E6');
-                    const r6 = ws.getCell('A6');
-                    r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}`;
-                    r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r6.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r6.border = borderThin;
-                    ws.getRow(6).height = 22;
-
-                    // Row 7 to 11: 2-Column Meta Table (Clean White, Bold Black Labels)
-                    const fmtDate = (d) => typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(d) : String(d || '');
-                    const formattedInvDate = fmtDate(this.invoiceData.invoiceDate);
-                    const formattedWoDate = this.invoiceData.workOrderDate ? fmtDate(this.invoiceData.workOrderDate) : '';
-                    const woCellText = formattedWoDate ? `${this.invoiceData.workOrderNo}    Dt:${formattedWoDate}` : (this.invoiceData.workOrderNo || '');
-
-                    const metaRows = [
-                        ['Invoice No :', this.invoiceData.invoiceNo, 'Name of Contractor :', this.getContractorDisplayName()],
-                        ['Work Order No :', woCellText, 'GSTIN :', this.invoiceData.contractorGstin],
-                        ['Invoice Date :', formattedInvDate, 'PAN No :', this.invoiceData.contractorPan],
-                        ['Name of Division :', this.invoiceData.divisionName, 'Location :', this.invoiceData.locationName],
-                        ['Name of Sub-Div :', this.invoiceData.subDivName, 'Name of Feeder :', (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName() : (this.invoiceData.feederName || ''))]
-                    ];
-
-                    let curRow = 7;
-                    metaRows.forEach(mr => {
-                        const row = ws.getRow(curRow);
-                        row.height = 22;
-
-                        row.getCell(1).value = window.sanitizeExcelText(mr[0]);
-                        row.getCell(1).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
-
-                        row.getCell(2).value = window.sanitizeExcelText(mr[1]);
-                        row.getCell(2).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
-                        row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
-                        // Ensure Invoice Date (row 9) & WO Date (row 8) stay in DD-MM-YYYY text format without Excel auto-flipping
-                        if (curRow === 8 || curRow === 9) {
-                            row.getCell(2).numFmt = '@';
-                        }
-
-                        row.getCell(3).value = window.sanitizeExcelText(mr[2]);
-                        row.getCell(3).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
-
-                        ws.mergeCells(curRow, 4, curRow, 5);
-                        row.getCell(4).value = window.sanitizeExcelText(mr[3]);
-                        row.getCell(4).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
-                        row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
-
-                        curRow++;
-                    });
-
-                    // Row 12: Item Headers (Low-Ink: Clean White, Medium Top/Bottom Borders)
-                    const itemHeaderRow = ws.getRow(curRow);
-                    itemHeaderRow.values = ['Sr. No.', 'Description of Goods', 'Unit', 'Qty', 'Amount'];
-                    itemHeaderRow.eachCell(c => {
-                        c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        c.border = borderHeader;
-                        c.alignment = { horizontal: 'center', vertical: 'middle' };
-                    });
-                    itemHeaderRow.height = 24;
-                    curRow++;
-
-                    const itemsStartRow = curRow;
-                    this.invoiceData.items.forEach((it, idx) => {
-                        const row = ws.getRow(curRow);
-                        row.getCell(1).value = Number(it.srNo) || it.srNo;
-                        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(2).value = window.sanitizeExcelText(it.desc);
-                        row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(3).value = window.sanitizeExcelText(it.unit);
-                        row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(4).value = Number(it.qty) || 0;
-                        row.getCell(4).numFmt = (Number(it.qty) % 1 !== 0) ? '#,##0.000' : '#,##0.00';
-                        row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(5).value = Number(it.amount) || 0;
-                        row.getCell(5).numFmt = '#,##0.00';
-                        row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(5).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        
-                        row.height = 30;
-                        curRow++;
-                    });
-                    const itemsEndRow = curRow - 1;
-
-                    // Summary Block
-                    // Total Erection Amount Row
-                    const rErect = ws.getRow(curRow);
-                    ws.mergeCells(curRow, 1, curRow, 3);
-                    rErect.getCell(4).value = 'Total Erection Amount';
-                    rErect.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                    rErect.getCell(5).value = { formula: `SUM(E${itemsStartRow}:E${itemsEndRow})`, result: this.calculatedInvoiceBasic };
-                    rErect.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                    rErect.getCell(5).numFmt = '#,##0.00';
-                    rErect.getCell(5).alignment = { horizontal: 'right' };
-                    const basicRowIdx = curRow;
-                    curRow++;
-
-                    // Bank Account / Basic Amount Row
-                    const rBank1 = ws.getRow(curRow);
-                    rBank1.getCell(1).value = 'Name of Account:';
-                    rBank1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                    ws.mergeCells(curRow, 2, curRow, 3);
-                    rBank1.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankAccountName);
-                    rBank1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                    rBank1.getCell(4).value = 'Basic Amount';
-                    rBank1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                    rBank1.getCell(5).value = { formula: `E${basicRowIdx}`, result: this.calculatedInvoiceBasic };
-                    rBank1.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                    rBank1.getCell(5).numFmt = '#,##0.00';
-                    rBank1.getCell(5).alignment = { horizontal: 'right' };
-                    curRow++;
-
-                    if (this.invoiceData.gstType === 'CGST_SGST') {
-                        // Bank A/C / CGST 9% Row
-                        const rBank2 = ws.getRow(curRow);
-                        rBank2.getCell(1).value = 'Bank A/C:';
-                        rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
-                        rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(4).value = 'CGST @ 9%';
-                        rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceCgst };
-                        rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).numFmt = '#,##0.00';
-                        rBank2.getCell(5).alignment = { horizontal: 'right' };
-                        const cgstRowIdx = curRow;
-                        curRow++;
-
-                        // Bank IFSC / SGST 9% Row
-                        const rBank3 = ws.getRow(curRow);
-                        rBank3.getCell(1).value = 'Bank IFSC:';
-                        rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
-                        rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rBank3.getCell(4).value = 'SGST @ 9%';
-                        rBank3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank3.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceSgst };
-                        rBank3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rBank3.getCell(5).numFmt = '#,##0.00';
-                        rBank3.getCell(5).alignment = { horizontal: 'right' };
-                        const sgstRowIdx = curRow;
-                        curRow++;
-
-                        // Bank Name / Grand Total Row
-                        const rBank4 = ws.getRow(curRow);
-                        rBank4.getCell(1).value = 'Bank Name :';
-                        rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
-                        rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(4).value = 'Total Amount';
-                        rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${cgstRowIdx}+E${sgstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
-                        rBank4.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(5).numFmt = '#,##0.00';
-                        rBank4.getCell(5).alignment = { horizontal: 'right' };
-                        curRow++;
-                    } else if (this.invoiceData.gstType === 'IGST') {
-                        // Bank A/C / IGST Row
-                        const rBank2 = ws.getRow(curRow);
-                        rBank2.getCell(1).value = 'Bank A/C:';
-                        rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
-                        rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(4).value = 'IGST @ 18%';
-                        rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.18, 2)`, result: this.calculatedInvoiceIgst };
-                        rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rBank2.getCell(5).numFmt = '#,##0.00';
-                        rBank2.getCell(5).alignment = { horizontal: 'right' };
-                        const gstRowIdx = curRow;
-                        curRow++;
-
-                        // Bank IFSC Row
-                        const rBank3 = ws.getRow(curRow);
-                        rBank3.getCell(1).value = 'Bank IFSC:';
-                        rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
-                        rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        curRow++;
-
-                        // Bank Name / Grand Total Row
-                        const rBank4 = ws.getRow(curRow);
-                        rBank4.getCell(1).value = 'Bank Name :';
-                        rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
-                        rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(4).value = 'Total Amount';
-                        rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${gstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
-                        rBank4.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rBank4.getCell(5).numFmt = '#,##0.00';
-                        rBank4.getCell(5).alignment = { horizontal: 'right' };
-                        curRow++;
-                    } else {
-                        // NONE (No GSTIN) — GST 0%, Total = Basic only
-                        const rNone1 = ws.getRow(curRow);
-                        rNone1.getCell(1).value = 'Bank A/C:';
-                        rNone1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rNone1.getCell(2).value = this.invoiceData.bankAccountNo;
-                        rNone1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rNone1.getCell(4).value = 'GST @ 0% (No GSTIN)';
-                        rNone1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rNone1.getCell(5).value = 0;
-                        rNone1.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rNone1.getCell(5).numFmt = '#,##0.00';
-                        rNone1.getCell(5).alignment = { horizontal: 'right' };
-                        const noneGstRowIdx = curRow;
-                        curRow++;
-
-                        // Bank IFSC Row
-                        const rNone2 = ws.getRow(curRow);
-                        rNone2.getCell(1).value = 'Bank IFSC:';
-                        rNone2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rNone2.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
-                        rNone2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        curRow++;
-
-                        // Bank Name / Grand Total Row (= Basic)
-                        const rNone3 = ws.getRow(curRow);
-                        rNone3.getCell(1).value = 'Bank Name :';
-                        rNone3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
-                        ws.mergeCells(curRow, 2, curRow, 3);
-                        rNone3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
-                        rNone3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
-                        rNone3.getCell(4).value = 'Total Amount';
-                        rNone3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
-                        rNone3.getCell(5).value = { formula: `E${basicRowIdx}+E${noneGstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
-                        rNone3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
-                        rNone3.getCell(5).numFmt = '#,##0.00';
-                        rNone3.getCell(5).alignment = { horizontal: 'right' };
-                        curRow++;
-                    }
-
-                    // Double-bottom border for Grand Total row (Low-Ink Accounting Standard)
-                    const grandTotalRowIdx = curRow - 1;
-                    const borderDoubleTotal = {
-                        top: { style: 'thin', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'double', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
-                    };
-                    for (let c = 1; c <= 5; c++) {
-                        ws.getRow(grandTotalRowIdx).getCell(c).border = borderDoubleTotal;
-                    }
-
-                    // Amount in words row
-                    ws.mergeCells(curRow, 1, curRow, 5);
-                    const rWords = ws.getCell(`A${curRow}`);
-                    rWords.value = `Amount in Words :  ${this.amountInWordsIndian(this.calculatedInvoiceGrandTotal)}`;
-                    rWords.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    curRow++;
-
-                    // Declaration & Signatures
-                    ws.mergeCells(curRow, 1, curRow + 4, 3);
-                    const rDecl = ws.getCell(`A${curRow}`);
-                    rDecl.value = `Declaration :\n. Any Complaint/Dispute regarding this sheet should be\n  communicated within 7 days from date of receipt of bill.`;
-                    rDecl.font = { name: 'Arial', size: 9.5, color: { argb: 'FF000000' } };
-                    rDecl.alignment = { wrapText: true, vertical: 'top' };
-
-                    ws.mergeCells(curRow, 4, curRow, 5);
-                    ws.getCell(`D${curRow}`).value = window.sanitizeExcelText(`For, ${this.getContractorDisplayName()}`);
-                    ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                    ws.mergeCells(curRow + 4, 4, curRow + 4, 5);
-                    ws.getCell(`D${curRow + 4}`).value = 'Proprietor';
-                    ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    ws.getCell(`D${curRow + 4}`).alignment = { horizontal: 'right' };
-
-                    const totalEndRow = curRow + 4;
-
-                    // Apply Borders Across all table cells, correctly handling merged cells
-                    for (let r = 1; r <= totalEndRow; r++) {
-                        const row = ws.getRow(r);
-                        for (let c = 1; c <= 5; c++) {
-                            const cell = row.getCell(c);
-                            if (cell.isMerged && cell.master !== cell) {
-                                continue;
-                            }
-                            if (!cell.border) {
-                                cell.border = borderThin;
-                            }
-                        }
-                    }
-
-                    // Column Widths (Optimized so no label or text gets clipped/truncated)
-                    ws.columns = [
-                        { width: 22 }, // Col A: Labels ("Name of Division :", "Work Order No :", "Sr. No.")
-                        { width: 46 }, // Col B: Description of Goods & Meta values
-                        { width: 22 }, // Col C: Labels ("Name of Contractor :", "Name of Feeder :", "Unit")
-                        { width: 24 }, // Col D: Qty & Summary Labels ("Total Erection Amount", etc.)
-                        { width: 24 }  // Col E: Amount with currency formatting
-                    ];
-                },
-
-                // EXCELJS RICH FORMATTED TAX INVOICE EXPORT (WITH ALL ADDED ACTIVITIES AS SEPARATE SHEETS)
-                // Khali meta field par Tax Invoice Excel rok — pehle haath se bharo
-                getMissingInvoiceMeta() {
-                    const missing = [];
-                    const v = this.invoiceData || {};
-                    if (!String(v.invoiceNo || '').trim()) missing.push('Invoice No');
-                    if (!String(v.workOrderNo || '').trim()) missing.push('Work Order No');
-                    if (!String(v.workOrderDate || '').trim()) missing.push('WO Dt');
-                    if (!String(v.invoiceDate || '').trim()) missing.push('Invoice Date');
-                    if (!String(v.divisionName || '').trim()) missing.push('Name of Division');
-                    if (!String(v.subDivName || '').trim()) missing.push('Name of Sub-Div');
-                    return missing;
-                },
-                async buildTaxInvoiceWorkbook() {
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.creator = 'Billing Pro Studio';
-                    workbook.created = new Date();
-
-                    // 1. Add Exact Formatted Tax Invoice Sheet
-                    this.addStyledTaxInvoiceToWorkbook(workbook);
-
-                    // 2. Identify all added / active activities in the invoice / project
-                    const addedActKeys = [];
-
-                    // Collect activities explicitly listed in invoice items
-                    this.invoiceData.items.forEach(it => {
-                        if (it.actKey && this.activities[it.actKey] && !addedActKeys.includes(it.actKey)) {
-                            addedActKeys.push(it.actKey);
-                        } else if (it.desc) {
-                            const matchedKey = Object.keys(this.activities).find(k =>
-                                it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' ') || it.desc.includes(k)
-                            );
-                            if (matchedKey && !addedActKeys.includes(matchedKey)) {
-                                addedActKeys.push(matchedKey);
-                            }
-                        }
-                    });
-
-                    // Also include any activities that have billed amount / entered quantities
-                    Object.keys(this.activities).forEach(actKey => {
-                        if (!addedActKeys.includes(actKey) && this.getActivityBilled85Amount(actKey) > 0) {
-                            addedActKeys.push(actKey);
-                        }
-                    });
-
-                    // If still empty, include all project activities
-                    if (addedActKeys.length === 0) {
-                        Object.keys(this.activities).forEach(actKey => {
-                            addedActKeys.push(actKey);
-                        });
-                    }
-
-                    // Add detailed separate sheets for each added activity with live formulas & values
-                    addedActKeys.forEach(actKey => {
-                        this.addStyledActivityDetailToWorkbook(workbook, actKey);
-                    });
-
-                    // 3. Add Reconciliation Sheet
-                    this.addReconciliationToWorkbook(workbook, addedActKeys);
-
-                    return { workbook, addedActKeys };
-                },
-                async exportTaxInvoiceExcel() {
-                    const missing = this.getMissingInvoiceMeta();
-                    if (missing.length) {
-                        this.showToast('⚠️ Note: Ye fields khali hain: ' + missing.join(', '), '⚠️');
-                    }
-                    this.showToast('Generating Tax Invoice & Added Activity Sheets...', '⏳');
-
-                    const { workbook, addedActKeys } = await this.buildTaxInvoiceWorkbook();
-
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const fileName = this.getBillExportFileName('.xlsx');
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    this.showToast(`Tax Invoice downloaded with ${addedActKeys.length} activity sheets + Reconciliation! 🎉`, '🧾');
-
-                    // If Google Drive is configured, also auto-save to Drive
-                    const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
-                    if (webhookUrl) {
-                        this.uploadBufferToGoogleDrive(buffer, fileName);
-                    }
-                },
-                getContractorCleanFileName() {
-                    let cName = '';
-                    // 1. Current selected contractor computed property (if selected in dropdown)
-                    if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
-                        cName = this.selectedContractorName;
-                    }
-                    // 2. Firm matching selectedContractorId
-                    if (!cName && this.selectedContractorId && this.selectedContractorId !== 'custom') {
-                        const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
-                        if (firm && firm.name) cName = firm.name;
-                    }
-                    // 3. Invoice data / Project metadata contractor name
-                    if (!cName) {
-                        const invC = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
-                        if (invC && !invC.toUpperCase().includes('CONTRACTOR') && !invC.includes('Select Contractor')) {
-                            cName = invC;
-                        }
-                    }
-                    // 4. Contractor display name helper
-                    if (!cName && typeof this.getContractorDisplayName === 'function') {
-                        const disp = this.getContractorDisplayName();
-                        if (disp && !disp.toUpperCase().includes('CONTRACTOR')) cName = disp;
-                    }
-                    // 5. Active SAP Stock synchronized contractor info (e.g. "Ravindra kapgade (WO: 31004925)")
-                    if (!cName && this.currentContractorSapInfo) {
-                        cName = String(this.currentContractorSapInfo).split('(')[0].trim();
-                    }
-                    // 6. Active Old Reconciliation contractor
-                    if (!cName && this.currentContractorOldReco && this.currentContractorOldReco.contractorName) {
-                        cName = this.currentContractorOldReco.contractorName;
-                    }
-
-                    cName = String(cName || '')
-                        .replace(/^M\/[sS]\.?\s*/i, '')
-                        .replace(/[\/\\:*?"<>|]/g, '_')
-                        .replace(/\s+/g, '_')
-                        .replace(/_+/g, '_')
-                        .replace(/^_+|_+$/g, '')
-                        .trim();
-
-                    // Absolute safeguard: Never let "LK" or "LK_Electricals" leak through if default
-                    if (cName.toLowerCase() === 'lk_electricals' && (!this.selectedContractorId || !this.selectedContractorId.includes('lk'))) {
-                        cName = '';
-                    }
-
-                    return cName || 'Contractor';
-                },
-                
-                getEffectiveFeederName(actKey) {
-                    // 1. Explicit user input from Invoice or Activity bar (ignoring old dummy default)
-                    let f = (this.invoiceData && this.invoiceData.feederName && this.invoiceData.feederName.trim()) || '';
-                    if (f && f.toLowerCase() !== '11 kv yenapur, gogaon') {
-                        return f;
-                    }
-
-                    // 2. Specific activity location names (if customized beyond Location 1, Location 2)
-                    if (actKey) {
-                        const actLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(actKey) : [];
-                        const customNames = actLocs
-                            .map(l => (l && l.name ? l.name.trim() : ''))
-                            .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
-                        if (customNames.length > 0) {
-                            return customNames.join(', ');
-                        }
-                    }
-
-                    // 3. All configured project locations
-                    const allLocs = (this.locations || [])
-                        .map(l => (l && l.name ? l.name.trim() : ''))
-                        .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
-                    if (allLocs.length > 0) {
-                        return allLocs.join(', ');
-                    }
-
-                    // 4. Fallback to locationName
-                    if (this.invoiceData && this.invoiceData.locationName && this.invoiceData.locationName.trim()) {
-                        return this.invoiceData.locationName.trim();
-                    }
-
-                    return '';
-                },
-                getRaCleanFileName() {
-                    let ra = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '').trim();
-                    if (!ra) {
-                        const b = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
-                        const m = b.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
-                        if (m && m[1]) ra = m[1];
-                        else if (b) ra = b.replace(/[\/\\:*?"<>|]/g, '_').trim();
-                    }
-                    if (ra) {
-                        if (!/^RA[\s\-_]*/i.test(ra)) ra = 'RA-' + ra;
-                        else ra = ra.replace(/^RA[\s\-_]*/i, 'RA-');
-                    }
-                    return ra;
-                },
-                getBillExportFileName(ext = '.xlsx') {
-                    const cName = this.getContractorCleanFileName();
-                    const ra = this.getRaCleanFileName() || 'RA-01';
-                    return `${cName}_${ra}${ext}`;
-                },
-                getEffectiveDriveWebhookUrl() {
-                    const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
-                    const OLD_ID = 'AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx';
-                    const isValid = (val) => {
-                        if (!val || typeof val !== 'string') return false;
-                        let s = val.trim().replace(/^["']|["']$/g, '');
-                        if (s.startsWith('http://script.google.com/')) s = 'https://' + s.slice('http://'.length);
-                        else if (s.startsWith('script.google.com/')) s = 'https://' + s;
-                        if (s.includes(OLD_ID)) return false; // Reject old retired version
-                        return s.startsWith('https://script.google.com/') && s.includes('/exec');
-                    };
-
-                    let u = '';
-                    if (isValid(this.gdriveWebhookUrl)) {
-                        u = this.gdriveWebhookUrl;
-                    } else if (isValid(localStorage.getItem('billing_gdrive_webhook_url'))) {
-                        u = localStorage.getItem('billing_gdrive_webhook_url');
-                    } else if (this.projectMeta && isValid(this.projectMeta.gdriveWebhookUrl)) {
-                        u = this.projectMeta.gdriveWebhookUrl;
-                    } else {
-                        u = DEFAULT_URL;
-                    }
-
-                    u = u.trim().replace(/^["']|["']$/g, '');
-                    if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
-                    else if (u.startsWith('script.google.com/')) u = 'https://' + u;
-
-                    if (!u || u.includes(OLD_ID) || !u.includes('/exec')) {
-                        u = DEFAULT_URL;
-                    }
-
-                    try { localStorage.setItem('billing_gdrive_webhook_url', u); } catch(e) {}
-                    this.gdriveWebhookUrl = u;
-                    if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = u;
-
-                    return u;
-                },
-                async manualSaveBillToDrive() {
-                    const webhookUrl = this.getEffectiveDriveWebhookUrl();
-                    if (!webhookUrl || !webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec')) {
-                        this.openGDriveModal();
-                        if (webhookUrl && (!webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec'))) {
-                            this.showToast('Google Drive Webhook URL invalid hai — modal me valid /exec URL lagayein', '⚠️');
-                        }
-                        return;
-                    }
-                    this.showToast('Generating Bill Workbook for Google Drive... ⏳', '☁️');
-                    try {
-                        const { workbook } = await this.buildTaxInvoiceWorkbook();
-                        const buffer = await workbook.xlsx.writeBuffer();
-                        const fileName = this.getBillExportFileName('.xlsx');
-                        await this.uploadBufferToGoogleDrive(buffer, fileName);
-                    } catch(e) {
-                        console.error('Manual drive save error:', e);
-                        this.showToast('Drive save error: ' + (e.message || e), '❌');
-                    }
-                },
-                async testGDriveConnection() {
-                    let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
-                    if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
-                    else if (url.startsWith('script.google.com/')) url = 'https://' + url;
-                    this.gdriveWebhookUrl = url;
-
-                    if (!url) {
-                        this.showToast('Pehle Apps Script Webhook URL paste karo', '⚠️');
-                        return;
-                    }
-                    if (url.includes('drive.google.com')) {
-                        this.showToast('Aapne Google Drive folder link dala hai — Apps Script Web App link chahiye', '⚠️');
-                        alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai (drive.google.com)!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" button dabakar 1 minute me script deploy karein aur /exec link paste karein.');
-                        return;
-                    }
-                    if (url.includes('/edit')) {
-                        this.showToast('Aapne Script Editor link dala hai — /exec link lagayein', '⚠️');
-                        alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
-                        return;
-                    }
-                    if (!url.startsWith('https://script.google.com/')) {
-                        this.showToast('URL https://script.google.com/macros/s/.../exec format me hona chahiye', '⚠️');
-                        return;
-                    }
-                    this.showToast('Drive webhook test ho raha hai... ⏳', '🔍');
-                    try {
-                        const headers = {};
-                        try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-                        const res = await fetch('/api/gdrive-ping?url=' + encodeURIComponent(url), { headers });
-                        const data = await res.json().catch(function(){ return {}; });
-                        if (res.ok && data.success) {
-                            const root = (data.gas && data.gas.rootFolder) || 'RDSS T-10 GADCHIROLI';
-                            this.showToast('Google Drive webhook CONNECTED ✅ (folder: ' + root + ')', '✅');
-                        } else {
-                            throw new Error(data.error || ('HTTP ' + res.status));
-                        }
-                    } catch (e) {
-                        this.showToast('Drive test FAIL: ' + (e.message || e), '❌');
-                    }
-                },
-                async uploadBufferToGoogleDrive(buffer, fileName) {
-                    const webhookUrl = this.getEffectiveDriveWebhookUrl();
-                    if (!webhookUrl) {
-                        this.openGDriveModal();
-                        return;
-                    }
-                    let contractorName = '';
-                    if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
-                        contractorName = this.selectedContractorName;
-                    } else {
-                        contractorName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
-                    }
-                    const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
-                    const folderName = (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
-
-                    this.showToast(`Google Drive uploading: [${contractorName}] / [${billNo}]... ⏳`, '☁️');
-
-                    try {
-                        // Convert buffer to base64 in chunks to avoid call stack overflow on large files
-                        let binary = '';
-                        const bytes = new Uint8Array(buffer);
-                        const len = bytes.byteLength;
-                        const chunkSize = 8192;
-                        for (let offset = 0; offset < len; offset += chunkSize) {
-                            const slice = bytes.subarray(offset, Math.min(offset + chunkSize, len));
-                            binary += String.fromCharCode.apply(null, slice);
-                        }
-                        const base64Data = window.btoa(binary);
-
-                        // Vercel proxy request limit 4.5MB — usse bada payload pehle hi roko
-                        if (base64Data.length > 4.2 * 1024 * 1024) {
-                            this.showToast('❌ File bahut bada hai (' + (base64Data.length / (1024 * 1024)).toFixed(1) + 'MB, limit 4.2MB) — bill workbook chhota karo ya file seedha download karke manually Drive me daalo', '❌');
-                            return;
-                        }
-
-                        const payload = {
-                            webhookUrl: webhookUrl,
-                            folderName: folderName,
-                            contractorName: contractorName,
-                            billNo: billNo,
-                            fileName: fileName,
-                            fileData: base64Data,
-                            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                        };
-
-                        const fileSizeMB = (base64Data.length / (1024 * 1024)).toFixed(2);
-                        console.log(`[GDrive Upload] File: ${fileName}, Base64 size: ${fileSizeMB} MB, Contractor: ${contractorName}, Bill: ${billNo}`);
-
-                        // Route through our own Vercel API proxy to avoid CORS issues.
-                        // Browser → /api/gdrive-upload (same-origin) → Google Apps Script (server-to-server)
-                        const headers = { 'Content-Type': 'application/json' };
-                        try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-
-                        const response = await fetch('/api/gdrive-upload', {
-                            method: 'POST',
-                            headers: headers,
-                            body: JSON.stringify(payload)
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            const savedName = (result.gasResponse && result.gasResponse.fileName) || fileName;
-                            const folderPath = (result.gasResponse && result.gasResponse.folder) || (folderName + ' / ' + contractorName);
-                            if (savedName !== fileName) {
-                                this.showToast(`Saved as [${savedName}]. ⚠️ Purana script chal raha hai — overwrite ke liye script.google.com me code update karein!`, '⚠️');
-                            } else {
-                                this.showToast(`Google Drive me save ho gaya (Overwritten)! 📁 [${folderPath}/${savedName}] 🎉`, '✅');
-                            }
-                            console.log('[GDrive Upload] Success:', result);
-                        } else {
-                            throw new Error(result.error || `Server responded with status ${response.status}`);
-                        }
-                    } catch (err) {
-                        console.error('Drive upload failed:', err);
-                        let errorMsg = err.message || 'Network error';
-                        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-                            errorMsg = 'Network error — internet check karo ya Vercel deploy verify karo';
-                        }
-                        this.showToast('❌ Google Drive save fail: ' + errorMsg, '❌');
-                    }
-                },
-                openGDriveModal() {
-                    this.gdriveWebhookUrl = this.getEffectiveDriveWebhookUrl();
-                    this.showGDriveModal = true;
-                },
-                copyAppsScriptCode() {
-                    const code = `/**
+                }
+                totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
+            });
+        }
+
+        const midColStart = 8 + recoCols.length;
+        if (revOn) {
+            rcols.forEach((rc, cIdx) => {
+                let colSum = 0;
+                expRows.forEach(r => {
+                    const val = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(r.code, rc) : 0;
+                    colSum += Number(val || 0);
+                });
+                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
+            });
+        } else {
+            (pData.columns || []).forEach((col, cIdx) => {
+                let colSum = 0;
+                expRows.forEach(r => {
+                    colSum += Number((r.activities && r.activities[col]) || 0);
+                });
+                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
+            });
+        }
+
+        const endColStart = midColStart + (revOn ? rcols.length : (pData.columns || []).length);
+        totalRow.getCell(endColStart).value = Math.round(sumThisBill * 100) / 100 || '';
+        totalRow.getCell(endColStart + 1).value = Math.round(sumBal * 100) / 100 || 0;
+
+        totalRow.eachCell((c, colNum) => {
+            c.border = headerBorder;
+            c.font = { name: 'Calibri', size: 10, bold: true };
+            if (colNum >= 5) {
+                c.alignment = { horizontal: 'right', vertical: 'middle' };
+                c.numFmt = '#,##0.00';
+            }
+        });
+        totalRow.height = 22;
+
+        // Column Widths
+        const cols = [
+            { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }
+        ];
+        if (hasCustomOldRecoCols) recoCols.forEach(() => cols.push({ width: 14 }));
+        (revOn ? rcols : (pData.columns || [])).forEach(() => cols.push({ width: 12 }));
+        cols.push({ width: 14 }, { width: 14 });
+        ws.columns = cols;
+        return ws;
+    },
+    addStyledTaxInvoiceToWorkbook(workbook) {
+        const ws = workbook.addWorksheet('Tax Invoice', {
+            views: [{ showGridLines: true }]
+        });
+
+        const borderThin = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+        const borderHeader = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        // Row 1: Title & Contractor Name (Low-Ink: Clean White, Bold Black)
+        ws.mergeCells('A1:E1');
+        const r1 = ws.getCell('A1');
+        r1.value = 'Tax Invoice';
+        r1.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF000000' } };
+        r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = borderHeader;
+        ws.getRow(1).height = 28;
+
+        // Row 2: Project Name & Contractor
+        ws.mergeCells('A2:E2');
+        const r2 = ws.getCell('A2');
+        r2.value = `Project Name : ${this.projectMeta.projectName}`.toUpperCase();
+        r2.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r2.alignment = { horizontal: 'center', vertical: 'middle' };
+        r2.border = borderThin;
+        ws.getRow(2).height = 22;
+
+        // Row 3,4,5: Client Details (Clean White, Bold Black)
+        ws.mergeCells('A3:E3');
+        ws.getCell('A3').value = `To :- ${this.invoiceData.clientName}`;
+        ws.getCell('A3').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+        ws.mergeCells('A4:E4');
+        ws.getCell('A4').value = `${this.invoiceData.clientAddress}`;
+        ws.getCell('A4').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+        ws.mergeCells('A5:E5');
+        ws.getCell('A5').value = `GSTIN : ${this.invoiceData.clientGstin}`;
+        ws.getCell('A5').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+        // Row 6: Contractor Name Banner (with PAN / GSTIN) (Low-Ink: Clean White, Bold Black)
+        ws.mergeCells('A6:E6');
+        const r6 = ws.getCell('A6');
+        r6.value = `Name of Contractor :- ${this.getContractorDisplayName()}`;
+        r6.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r6.alignment = { horizontal: 'center', vertical: 'middle' };
+        r6.border = borderThin;
+        ws.getRow(6).height = 22;
+
+        // Row 7 to 11: 2-Column Meta Table (Clean White, Bold Black Labels)
+        const fmtDate = (d) => typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(d) : String(d || '');
+        const formattedInvDate = fmtDate(this.invoiceData.invoiceDate);
+        const formattedWoDate = this.invoiceData.workOrderDate ? fmtDate(this.invoiceData.workOrderDate) : '';
+        const woCellText = formattedWoDate ? `${this.invoiceData.workOrderNo}    Dt:${formattedWoDate}` : (this.invoiceData.workOrderNo || '');
+
+        const metaRows = [
+            ['Invoice No :', this.invoiceData.invoiceNo, 'Name of Contractor :', this.getContractorDisplayName()],
+            ['Work Order No :', woCellText, 'GSTIN :', this.invoiceData.contractorGstin],
+            ['Invoice Date :', formattedInvDate, 'PAN No :', this.invoiceData.contractorPan],
+            ['Name of Division :', this.invoiceData.divisionName, 'Location :', this.invoiceData.locationName],
+            ['Name of Sub-Div :', this.invoiceData.subDivName, 'Name of Feeder :', (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName() : (this.invoiceData.feederName || ''))]
+        ];
+
+        let curRow = 7;
+        metaRows.forEach(mr => {
+            const row = ws.getRow(curRow);
+            row.height = 22;
+
+            row.getCell(1).value = window.sanitizeExcelText(mr[0]);
+            row.getCell(1).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+            row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+
+            row.getCell(2).value = window.sanitizeExcelText(mr[1]);
+            row.getCell(2).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
+            row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
+            // Ensure Invoice Date (row 9) & WO Date (row 8) stay in DD-MM-YYYY text format without Excel auto-flipping
+            if (curRow === 8 || curRow === 9) {
+                row.getCell(2).numFmt = '@';
+            }
+
+            row.getCell(3).value = window.sanitizeExcelText(mr[2]);
+            row.getCell(3).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+            row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
+
+            ws.mergeCells(curRow, 4, curRow, 5);
+            row.getCell(4).value = window.sanitizeExcelText(mr[3]);
+            row.getCell(4).font = { name: 'Arial', size: 11, color: { argb: 'FF000000' } };
+            row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
+
+            curRow++;
+        });
+
+        // Row 12: Item Headers (Low-Ink: Clean White, Medium Top/Bottom Borders)
+        const itemHeaderRow = ws.getRow(curRow);
+        itemHeaderRow.values = ['Sr. No.', 'Description of Goods', 'Unit', 'Qty', 'Amount'];
+        itemHeaderRow.eachCell(c => {
+            c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+            c.border = borderHeader;
+            c.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+        itemHeaderRow.height = 24;
+        curRow++;
+
+        const itemsStartRow = curRow;
+        this.invoiceData.items.forEach((it, idx) => {
+            const row = ws.getRow(curRow);
+            row.getCell(1).value = Number(it.srNo) || it.srNo;
+            row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell(2).value = window.sanitizeExcelText(it.desc);
+            row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+            row.getCell(3).value = window.sanitizeExcelText(it.unit);
+            row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell(4).value = Number(it.qty) || 0;
+            row.getCell(4).numFmt = (Number(it.qty) % 1 !== 0) ? '#,##0.000' : '#,##0.00';
+            row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell(5).value = Number(it.amount) || 0;
+            row.getCell(5).numFmt = '#,##0.00';
+            row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+            row.getCell(5).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+            row.height = 30;
+            curRow++;
+        });
+        const itemsEndRow = curRow - 1;
+
+        // Summary Block
+        // Total Erection Amount Row
+        const rErect = ws.getRow(curRow);
+        ws.mergeCells(curRow, 1, curRow, 3);
+        rErect.getCell(4).value = 'Total Erection Amount';
+        rErect.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+        rErect.getCell(5).value = { formula: `SUM(E${itemsStartRow}:E${itemsEndRow})`, result: this.calculatedInvoiceBasic };
+        rErect.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+        rErect.getCell(5).numFmt = '#,##0.00';
+        rErect.getCell(5).alignment = { horizontal: 'right' };
+        const basicRowIdx = curRow;
+        curRow++;
+
+        // Bank Account / Basic Amount Row
+        const rBank1 = ws.getRow(curRow);
+        rBank1.getCell(1).value = 'Name of Account:';
+        rBank1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+        ws.mergeCells(curRow, 2, curRow, 3);
+        rBank1.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankAccountName);
+        rBank1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+        rBank1.getCell(4).value = 'Basic Amount';
+        rBank1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+        rBank1.getCell(5).value = { formula: `E${basicRowIdx}`, result: this.calculatedInvoiceBasic };
+        rBank1.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+        rBank1.getCell(5).numFmt = '#,##0.00';
+        rBank1.getCell(5).alignment = { horizontal: 'right' };
+        curRow++;
+
+        if (this.invoiceData.gstType === 'CGST_SGST') {
+            // Bank A/C / CGST 9% Row
+            const rBank2 = ws.getRow(curRow);
+            rBank2.getCell(1).value = 'Bank A/C:';
+            rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
+            rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(4).value = 'CGST @ 9%';
+            rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceCgst };
+            rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(5).numFmt = '#,##0.00';
+            rBank2.getCell(5).alignment = { horizontal: 'right' };
+            const cgstRowIdx = curRow;
+            curRow++;
+
+            // Bank IFSC / SGST 9% Row
+            const rBank3 = ws.getRow(curRow);
+            rBank3.getCell(1).value = 'Bank IFSC:';
+            rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
+            rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rBank3.getCell(4).value = 'SGST @ 9%';
+            rBank3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rBank3.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.09, 2)`, result: this.calculatedInvoiceSgst };
+            rBank3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rBank3.getCell(5).numFmt = '#,##0.00';
+            rBank3.getCell(5).alignment = { horizontal: 'right' };
+            const sgstRowIdx = curRow;
+            curRow++;
+
+            // Bank Name / Grand Total Row
+            const rBank4 = ws.getRow(curRow);
+            rBank4.getCell(1).value = 'Bank Name :';
+            rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
+            rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(4).value = 'Total Amount';
+            rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${cgstRowIdx}+E${sgstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
+            rBank4.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(5).numFmt = '#,##0.00';
+            rBank4.getCell(5).alignment = { horizontal: 'right' };
+            curRow++;
+        } else if (this.invoiceData.gstType === 'IGST') {
+            // Bank A/C / IGST Row
+            const rBank2 = ws.getRow(curRow);
+            rBank2.getCell(1).value = 'Bank A/C:';
+            rBank2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank2.getCell(2).value = this.invoiceData.bankAccountNo;
+            rBank2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(4).value = 'IGST @ 18%';
+            rBank2.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(5).value = { formula: `ROUND(E${basicRowIdx}*0.18, 2)`, result: this.calculatedInvoiceIgst };
+            rBank2.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rBank2.getCell(5).numFmt = '#,##0.00';
+            rBank2.getCell(5).alignment = { horizontal: 'right' };
+            const gstRowIdx = curRow;
+            curRow++;
+
+            // Bank IFSC Row
+            const rBank3 = ws.getRow(curRow);
+            rBank3.getCell(1).value = 'Bank IFSC:';
+            rBank3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
+            rBank3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            curRow++;
+
+            // Bank Name / Grand Total Row
+            const rBank4 = ws.getRow(curRow);
+            rBank4.getCell(1).value = 'Bank Name :';
+            rBank4.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rBank4.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
+            rBank4.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(4).value = 'Total Amount';
+            rBank4.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(5).value = { formula: `E${basicRowIdx}+E${gstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
+            rBank4.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rBank4.getCell(5).numFmt = '#,##0.00';
+            rBank4.getCell(5).alignment = { horizontal: 'right' };
+            curRow++;
+        } else {
+            // NONE (No GSTIN) — GST 0%, Total = Basic only
+            const rNone1 = ws.getRow(curRow);
+            rNone1.getCell(1).value = 'Bank A/C:';
+            rNone1.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rNone1.getCell(2).value = this.invoiceData.bankAccountNo;
+            rNone1.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rNone1.getCell(4).value = 'GST @ 0% (No GSTIN)';
+            rNone1.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rNone1.getCell(5).value = 0;
+            rNone1.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rNone1.getCell(5).numFmt = '#,##0.00';
+            rNone1.getCell(5).alignment = { horizontal: 'right' };
+            const noneGstRowIdx = curRow;
+            curRow++;
+
+            // Bank IFSC Row
+            const rNone2 = ws.getRow(curRow);
+            rNone2.getCell(1).value = 'Bank IFSC:';
+            rNone2.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rNone2.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankIfsc);
+            rNone2.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            curRow++;
+
+            // Bank Name / Grand Total Row (= Basic)
+            const rNone3 = ws.getRow(curRow);
+            rNone3.getCell(1).value = 'Bank Name :';
+            rNone3.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+            ws.mergeCells(curRow, 2, curRow, 3);
+            rNone3.getCell(2).value = window.sanitizeExcelText(this.invoiceData.bankName);
+            rNone3.getCell(2).font = { name: 'Arial', size: 11, bold: true };
+            rNone3.getCell(4).value = 'Total Amount';
+            rNone3.getCell(4).font = { name: 'Arial', size: 11, bold: true };
+            rNone3.getCell(5).value = { formula: `E${basicRowIdx}+E${noneGstRowIdx}`, result: this.calculatedInvoiceGrandTotal };
+            rNone3.getCell(5).font = { name: 'Arial', size: 11, bold: true };
+            rNone3.getCell(5).numFmt = '#,##0.00';
+            rNone3.getCell(5).alignment = { horizontal: 'right' };
+            curRow++;
+        }
+
+        // Double-bottom border for Grand Total row (Low-Ink Accounting Standard)
+        const grandTotalRowIdx = curRow - 1;
+        const borderDoubleTotal = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'double', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+        for (let c = 1; c <= 5; c++) {
+            ws.getRow(grandTotalRowIdx).getCell(c).border = borderDoubleTotal;
+        }
+
+        // Amount in words row
+        ws.mergeCells(curRow, 1, curRow, 5);
+        const rWords = ws.getCell(`A${curRow}`);
+        rWords.value = `Amount in Words :  ${this.amountInWordsIndian(this.calculatedInvoiceGrandTotal)}`;
+        rWords.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+        curRow++;
+
+        // Declaration & Signatures
+        ws.mergeCells(curRow, 1, curRow + 4, 3);
+        const rDecl = ws.getCell(`A${curRow}`);
+        rDecl.value = `Declaration :\n. Any Complaint/Dispute regarding this sheet should be\n  communicated within 7 days from date of receipt of bill.`;
+        rDecl.font = { name: 'Arial', size: 9.5, color: { argb: 'FF000000' } };
+        rDecl.alignment = { wrapText: true, vertical: 'top' };
+
+        ws.mergeCells(curRow, 4, curRow, 5);
+        ws.getCell(`D${curRow}`).value = window.sanitizeExcelText(`For, ${this.getContractorDisplayName()}`);
+        ws.getCell(`D${curRow}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+        ws.mergeCells(curRow + 4, 4, curRow + 4, 5);
+        ws.getCell(`D${curRow + 4}`).value = 'Proprietor';
+        ws.getCell(`D${curRow + 4}`).font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+        ws.getCell(`D${curRow + 4}`).alignment = { horizontal: 'right' };
+
+        const totalEndRow = curRow + 4;
+
+        // Apply Borders Across all table cells, correctly handling merged cells
+        for (let r = 1; r <= totalEndRow; r++) {
+            const row = ws.getRow(r);
+            for (let c = 1; c <= 5; c++) {
+                const cell = row.getCell(c);
+                if (cell.isMerged && cell.master !== cell) {
+                    continue;
+                }
+                if (!cell.border) {
+                    cell.border = borderThin;
+                }
+            }
+        }
+
+        // Column Widths (Optimized so no label or text gets clipped/truncated)
+        ws.columns = [
+            { width: 22 }, // Col A: Labels ("Name of Division :", "Work Order No :", "Sr. No.")
+            { width: 46 }, // Col B: Description of Goods & Meta values
+            { width: 22 }, // Col C: Labels ("Name of Contractor :", "Name of Feeder :", "Unit")
+            { width: 24 }, // Col D: Qty & Summary Labels ("Total Erection Amount", etc.)
+            { width: 24 }  // Col E: Amount with currency formatting
+        ];
+    },
+
+    // EXCELJS RICH FORMATTED TAX INVOICE EXPORT (WITH ALL ADDED ACTIVITIES AS SEPARATE SHEETS)
+    // Khali meta field par Tax Invoice Excel rok — pehle haath se bharo
+    getMissingInvoiceMeta() {
+        const missing = [];
+        const v = this.invoiceData || {};
+        if (!String(v.invoiceNo || '').trim()) missing.push('Invoice No');
+        if (!String(v.workOrderNo || '').trim()) missing.push('Work Order No');
+        if (!String(v.workOrderDate || '').trim()) missing.push('WO Dt');
+        if (!String(v.invoiceDate || '').trim()) missing.push('Invoice Date');
+        if (!String(v.divisionName || '').trim()) missing.push('Name of Division');
+        if (!String(v.subDivName || '').trim()) missing.push('Name of Sub-Div');
+        return missing;
+    },
+    async buildTaxInvoiceWorkbook() {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Billing Pro Studio';
+        workbook.created = new Date();
+
+        // 1. Add Exact Formatted Tax Invoice Sheet
+        this.addStyledTaxInvoiceToWorkbook(workbook);
+
+        // 2. Identify all added / active activities in the invoice / project
+        const addedActKeys = [];
+
+        // Collect activities explicitly listed in invoice items
+        this.invoiceData.items.forEach(it => {
+            if (it.actKey && this.activities[it.actKey] && !addedActKeys.includes(it.actKey)) {
+                addedActKeys.push(it.actKey);
+            } else if (it.desc) {
+                const matchedKey = Object.keys(this.activities).find(k =>
+                    it.desc.startsWith(k + ':') || it.desc.startsWith(k + ' ') || it.desc.includes(k)
+                );
+                if (matchedKey && !addedActKeys.includes(matchedKey)) {
+                    addedActKeys.push(matchedKey);
+                }
+            }
+        });
+
+        // Also include any activities that have billed amount / entered quantities
+        Object.keys(this.activities).forEach(actKey => {
+            if (!addedActKeys.includes(actKey) && this.getActivityBilled85Amount(actKey) > 0) {
+                addedActKeys.push(actKey);
+            }
+        });
+
+        // If still empty, include all project activities
+        if (addedActKeys.length === 0) {
+            Object.keys(this.activities).forEach(actKey => {
+                addedActKeys.push(actKey);
+            });
+        }
+
+        // Add detailed separate sheets for each added activity with live formulas & values
+        addedActKeys.forEach(actKey => {
+            this.addStyledActivityDetailToWorkbook(workbook, actKey);
+        });
+
+        // 3. Add Reconciliation Sheet
+        this.addReconciliationToWorkbook(workbook, addedActKeys);
+
+        return { workbook, addedActKeys };
+    },
+    async exportTaxInvoiceExcel() {
+        const missing = this.getMissingInvoiceMeta();
+        if (missing.length) {
+            this.showToast('⚠️ Note: Ye fields khali hain: ' + missing.join(', '), '⚠️');
+        }
+        this.showToast('Generating Tax Invoice & Added Activity Sheets...', '⏳');
+
+        const { workbook, addedActKeys } = await this.buildTaxInvoiceWorkbook();
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const fileName = this.getBillExportFileName('.xlsx');
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.showToast(`Tax Invoice downloaded with ${addedActKeys.length} activity sheets + Reconciliation! 🎉`, '🧾');
+
+        // If Google Drive is configured, also auto-save to Drive
+        const webhookUrl = localStorage.getItem('billing_gdrive_webhook_url');
+        if (webhookUrl) {
+            this.uploadBufferToGoogleDrive(buffer, fileName);
+        }
+    },
+    getContractorCleanFileName() {
+        let cName = '';
+        // 1. Current selected contractor computed property (if selected in dropdown)
+        if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
+            cName = this.selectedContractorName;
+        }
+        // 2. Firm matching selectedContractorId
+        if (!cName && this.selectedContractorId && this.selectedContractorId !== 'custom') {
+            const firm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+            if (firm && firm.name) cName = firm.name;
+        }
+        // 3. Invoice data / Project metadata contractor name
+        if (!cName) {
+            const invC = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || '';
+            if (invC && !invC.toUpperCase().includes('CONTRACTOR') && !invC.includes('Select Contractor')) {
+                cName = invC;
+            }
+        }
+        // 4. Contractor display name helper
+        if (!cName && typeof this.getContractorDisplayName === 'function') {
+            const disp = this.getContractorDisplayName();
+            if (disp && !disp.toUpperCase().includes('CONTRACTOR')) cName = disp;
+        }
+        // 5. Active SAP Stock synchronized contractor info (e.g. "Ravindra kapgade (WO: 31004925)")
+        if (!cName && this.currentContractorSapInfo) {
+            cName = String(this.currentContractorSapInfo).split('(')[0].trim();
+        }
+        // 6. Active Old Reconciliation contractor
+        if (!cName && this.currentContractorOldReco && this.currentContractorOldReco.contractorName) {
+            cName = this.currentContractorOldReco.contractorName;
+        }
+
+        cName = String(cName || '')
+            .replace(/^M\/[sS]\.?\s*/i, '')
+            .replace(/[\/\\:*?"<>|]/g, '_')
+            .replace(/\s+/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .trim();
+
+        // Absolute safeguard: Never let "LK" or "LK_Electricals" leak through if default
+        if (cName.toLowerCase() === 'lk_electricals' && (!this.selectedContractorId || !this.selectedContractorId.includes('lk'))) {
+            cName = '';
+        }
+
+        return cName || 'Contractor';
+    },
+
+    getEffectiveFeederName(actKey) {
+        // 1. Explicit user input from Invoice or Activity bar (ignoring old dummy default)
+        let f = (this.invoiceData && this.invoiceData.feederName && this.invoiceData.feederName.trim()) || '';
+        if (f && f.toLowerCase() !== '11 kv yenapur, gogaon') {
+            return f;
+        }
+
+        // 2. Specific activity location names (if customized beyond Location 1, Location 2)
+        if (actKey) {
+            const actLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(actKey) : [];
+            const customNames = actLocs
+                .map(l => (l && l.name ? l.name.trim() : ''))
+                .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
+            if (customNames.length > 0) {
+                return customNames.join(', ');
+            }
+        }
+
+        // 3. All configured project locations
+        const allLocs = (this.locations || [])
+            .map(l => (l && l.name ? l.name.trim() : ''))
+            .filter(n => n && !/^Location\s*\d+$/i.test(n) && !/^Loc\s*\d+$/i.test(n));
+        if (allLocs.length > 0) {
+            return allLocs.join(', ');
+        }
+
+        // 4. Fallback to locationName
+        if (this.invoiceData && this.invoiceData.locationName && this.invoiceData.locationName.trim()) {
+            return this.invoiceData.locationName.trim();
+        }
+
+        return '';
+    },
+    getRaCleanFileName() {
+        let ra = (typeof this.effectiveRaNo === 'string' ? this.effectiveRaNo : (this.projectMeta && this.projectMeta.raNo) || '').trim();
+        if (!ra) {
+            const b = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || '';
+            const m = b.match(/(?:RA|BILL)[\s\/\-_]*(\d+[A-Za-z0-9\-_]*)/i);
+            if (m && m[1]) ra = m[1];
+            else if (b) ra = b.replace(/[\/\\:*?"<>|]/g, '_').trim();
+        }
+        if (ra) {
+            if (!/^RA[\s\-_]*/i.test(ra)) ra = 'RA-' + ra;
+            else ra = ra.replace(/^RA[\s\-_]*/i, 'RA-');
+        }
+        return ra;
+    },
+    getBillExportFileName(ext = '.xlsx') {
+        const cName = this.getContractorCleanFileName();
+        const ra = this.getRaCleanFileName() || 'RA-01';
+        return `${cName}_${ra}${ext}`;
+    },
+    getEffectiveDriveWebhookUrl() {
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbw495PuqtHzuCATbRHI3dgofeWKaMVyYrUhc0twCdf0EbaPwSlpA81i0ExHdny6MZQ/exec';
+        const OLD_ID = 'AKfycbx6hHT7Xnw4SItlkrKeE3BSBuBpQDy1-gFsxq5kRdlr_3PHEK7XYjIHBPjtGWj3H9Jx';
+        const isValid = (val) => {
+            if (!val || typeof val !== 'string') return false;
+            let s = val.trim().replace(/^["']|["']$/g, '');
+            if (s.startsWith('http://script.google.com/')) s = 'https://' + s.slice('http://'.length);
+            else if (s.startsWith('script.google.com/')) s = 'https://' + s;
+            if (s.includes(OLD_ID)) return false; // Reject old retired version
+            return s.startsWith('https://script.google.com/') && s.includes('/exec');
+        };
+
+        let u = '';
+        if (isValid(this.gdriveWebhookUrl)) {
+            u = this.gdriveWebhookUrl;
+        } else if (isValid(localStorage.getItem('billing_gdrive_webhook_url'))) {
+            u = localStorage.getItem('billing_gdrive_webhook_url');
+        } else if (this.projectMeta && isValid(this.projectMeta.gdriveWebhookUrl)) {
+            u = this.projectMeta.gdriveWebhookUrl;
+        } else {
+            u = DEFAULT_URL;
+        }
+
+        u = u.trim().replace(/^["']|["']$/g, '');
+        if (u.startsWith('http://script.google.com/')) u = 'https://' + u.slice('http://'.length);
+        else if (u.startsWith('script.google.com/')) u = 'https://' + u;
+
+        if (!u || u.includes(OLD_ID) || !u.includes('/exec')) {
+            u = DEFAULT_URL;
+        }
+
+        try { localStorage.setItem('billing_gdrive_webhook_url', u); } catch (e) { }
+        this.gdriveWebhookUrl = u;
+        if (this.projectMeta) this.projectMeta.gdriveWebhookUrl = u;
+
+        return u;
+    },
+    async manualSaveBillToDrive() {
+        const webhookUrl = this.getEffectiveDriveWebhookUrl();
+        if (!webhookUrl || !webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec')) {
+            this.openGDriveModal();
+            if (webhookUrl && (!webhookUrl.startsWith('https://script.google.com/') || !webhookUrl.includes('/exec'))) {
+                this.showToast('Google Drive Webhook URL invalid hai — modal me valid /exec URL lagayein', '⚠️');
+            }
+            return;
+        }
+        this.showToast('Generating Bill Workbook for Google Drive... ⏳', '☁️');
+        try {
+            const { workbook } = await this.buildTaxInvoiceWorkbook();
+            const buffer = await workbook.xlsx.writeBuffer();
+            const fileName = this.getBillExportFileName('.xlsx');
+            await this.uploadBufferToGoogleDrive(buffer, fileName);
+        } catch (e) {
+            console.error('Manual drive save error:', e);
+            this.showToast('Drive save error: ' + (e.message || e), '❌');
+        }
+    },
+    async testGDriveConnection() {
+        let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
+        if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
+        else if (url.startsWith('script.google.com/')) url = 'https://' + url;
+        this.gdriveWebhookUrl = url;
+
+        if (!url) {
+            this.showToast('Pehle Apps Script Webhook URL paste karo', '⚠️');
+            return;
+        }
+        if (url.includes('drive.google.com')) {
+            this.showToast('Aapne Google Drive folder link dala hai — Apps Script Web App link chahiye', '⚠️');
+            alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai (drive.google.com)!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" button dabakar 1 minute me script deploy karein aur /exec link paste karein.');
+            return;
+        }
+        if (url.includes('/edit')) {
+            this.showToast('Aapne Script Editor link dala hai — /exec link lagayein', '⚠️');
+            alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
+            return;
+        }
+        if (!url.startsWith('https://script.google.com/')) {
+            this.showToast('URL https://script.google.com/macros/s/.../exec format me hona chahiye', '⚠️');
+            return;
+        }
+        this.showToast('Drive webhook test ho raha hai... ⏳', '🔍');
+        try {
+            const headers = {};
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch (e) { }
+            const res = await fetch('/api/gdrive-ping?url=' + encodeURIComponent(url), { headers });
+            const data = await res.json().catch(function () { return {}; });
+            if (res.ok && data.success) {
+                const root = (data.gas && data.gas.rootFolder) || 'RDSS T-10 GADCHIROLI';
+                this.showToast('Google Drive webhook CONNECTED ✅ (folder: ' + root + ')', '✅');
+            } else {
+                throw new Error(data.error || ('HTTP ' + res.status));
+            }
+        } catch (e) {
+            this.showToast('Drive test FAIL: ' + (e.message || e), '❌');
+        }
+    },
+    async uploadBufferToGoogleDrive(buffer, fileName) {
+        const webhookUrl = this.getEffectiveDriveWebhookUrl();
+        if (!webhookUrl) {
+            this.openGDriveModal();
+            return;
+        }
+        let contractorName = '';
+        if (this.selectedContractorName && this.selectedContractorName !== 'Select Contractor...' && !this.selectedContractorName.includes('Custom')) {
+            contractorName = this.selectedContractorName;
+        } else {
+            contractorName = (this.invoiceData && this.invoiceData.contractorName) || (this.projectMeta && this.projectMeta.contractorName) || 'Unknown_Contractor';
+        }
+        const billNo = (this.invoiceData && this.invoiceData.invoiceNo) || (this.projectMeta && this.projectMeta.billNo) || 'Draft_Bill';
+        const folderName = (this.projectMeta && this.projectMeta.projectName) || 'RDSS T-10 GADCHIROLI';
+
+        this.showToast(`Google Drive uploading: [${contractorName}] / [${billNo}]... ⏳`, '☁️');
+
+        try {
+            // Convert buffer to base64 in chunks to avoid call stack overflow on large files
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            const chunkSize = 8192;
+            for (let offset = 0; offset < len; offset += chunkSize) {
+                const slice = bytes.subarray(offset, Math.min(offset + chunkSize, len));
+                binary += String.fromCharCode.apply(null, slice);
+            }
+            const base64Data = window.btoa(binary);
+
+            // Vercel proxy request limit 4.5MB — usse bada payload pehle hi roko
+            if (base64Data.length > 4.2 * 1024 * 1024) {
+                this.showToast('❌ File bahut bada hai (' + (base64Data.length / (1024 * 1024)).toFixed(1) + 'MB, limit 4.2MB) — bill workbook chhota karo ya file seedha download karke manually Drive me daalo', '❌');
+                return;
+            }
+
+            const payload = {
+                webhookUrl: webhookUrl,
+                folderName: folderName,
+                contractorName: contractorName,
+                billNo: billNo,
+                fileName: fileName,
+                fileData: base64Data,
+                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            };
+
+            const fileSizeMB = (base64Data.length / (1024 * 1024)).toFixed(2);
+            console.log(`[GDrive Upload] File: ${fileName}, Base64 size: ${fileSizeMB} MB, Contractor: ${contractorName}, Bill: ${billNo}`);
+
+            // Route through our own Vercel API proxy to avoid CORS issues.
+            // Browser → /api/gdrive-upload (same-origin) → Google Apps Script (server-to-server)
+            const headers = { 'Content-Type': 'application/json' };
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch (e) { }
+
+            const response = await fetch('/api/gdrive-upload', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const savedName = (result.gasResponse && result.gasResponse.fileName) || fileName;
+                const folderPath = (result.gasResponse && result.gasResponse.folder) || (folderName + ' / ' + contractorName);
+                if (savedName !== fileName) {
+                    this.showToast(`Saved as [${savedName}]. ⚠️ Purana script chal raha hai — overwrite ke liye script.google.com me code update karein!`, '⚠️');
+                } else {
+                    this.showToast(`Google Drive me save ho gaya (Overwritten)! 📁 [${folderPath}/${savedName}] 🎉`, '✅');
+                }
+                console.log('[GDrive Upload] Success:', result);
+            } else {
+                throw new Error(result.error || `Server responded with status ${response.status}`);
+            }
+        } catch (err) {
+            console.error('Drive upload failed:', err);
+            let errorMsg = err.message || 'Network error';
+            if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                errorMsg = 'Network error — internet check karo ya Vercel deploy verify karo';
+            }
+            this.showToast('❌ Google Drive save fail: ' + errorMsg, '❌');
+        }
+    },
+    openGDriveModal() {
+        this.gdriveWebhookUrl = this.getEffectiveDriveWebhookUrl();
+        this.showGDriveModal = true;
+    },
+    copyAppsScriptCode() {
+        const code = `/**
  * BILLING APP → Google Drive backup (Apps Script Web App)
  * Setup steps: google-drive/README.md
  *
@@ -1141,603 +1146,523 @@ function jsonOut(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 `;
-                    try {
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(code);
-                            this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
-                        } else {
-                            const ta = document.createElement('textarea');
-                            ta.value = code;
-                            document.body.appendChild(ta);
-                            ta.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(ta);
-                            this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
-                        }
-                    } catch(e) {
-                        console.error('Copy script error:', e);
-                        this.showToast('Code copy nahi ho paya, please README.md se copy karein', '⚠️');
-                    }
-                },
-                saveGDriveSettings() {
-                    let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
-                    if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
-                    else if (url.startsWith('script.google.com/')) url = 'https://' + url;
-                    this.gdriveWebhookUrl = url;
-
-                    if (url) {
-                        if (url.includes('drive.google.com')) {
-                            alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" dabakar script.new par deploy karein.');
-                            return;
-                        }
-                        if (url.includes('/edit')) {
-                            alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
-                            return;
-                        }
-                        if (!url.startsWith('https://script.google.com/') || !url.includes('/exec')) {
-                            alert('⚠️ Invalid Webhook URL:\n\nURL format aisa hona chahiye:\nhttps://script.google.com/macros/s/.../exec\n\nPlease sahi Web App link paste karein.');
-                            return;
-                        }
-                        localStorage.setItem('billing_gdrive_webhook_url', url);
-                        if (!this.projectMeta) this.projectMeta = {};
-                        this.projectMeta.gdriveWebhookUrl = url;
-                        this.showToast('Google Drive Webhook URL saved & synced! ✅', '☁️');
-                        this.saveToStorage();
-                        if (typeof this.syncToMongoNow === 'function') {
-                            this.syncToMongoNow({ manual: true });
-                        }
-                    } else {
-                        localStorage.removeItem('billing_gdrive_webhook_url');
-                        if (this.projectMeta) delete this.projectMeta.gdriveWebhookUrl;
-                        this.saveToStorage();
-                        this.showToast('Google Drive disconnected', 'ℹ️');
-                    }
-                    this.showGDriveModal = false;
-                },
-
-                addReconciliationToWorkbook(workbook, actKeys) {
-                    const ws = workbook.addWorksheet('Reconciliation', {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
-                    });
-                    const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FF888888' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    const headerBorder = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-
-                    const columns = actKeys.slice().sort((a, b) => parseInt(a) - parseInt(b));
-                    const totalCols = 5 + columns.length;
-
-                    ws.mergeCells(1, 1, 1, totalCols);
-                    const r1 = ws.getCell(1, 1);
-                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = headerBorder;
-                    ws.getRow(1).height = 30;
-
-                    const row2 = ws.getRow(2);
-                    const headers = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'TOTAL QTY', ...columns];
-                    row2.values = headers;
-                    row2.height = 26;
-                    row2.eachCell((cell) => {
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = headerBorder;
-                    });
-
-                    const pData = this.pivotReconciliationData;
-                    let rowIdx = 3;
-
-                    pData.rows.forEach((rowObj, idx) => {
-                        const row = ws.getRow(rowIdx);
-                        row.getCell(1).value = idx + 1;
-                        row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
-                        row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
-                        row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
-
-                        const actColStart = 6;
-                        columns.forEach((col, cIdx) => {
-                            const actColIdx = actColStart + cIdx;
-                            const val = rowObj.activities[col] || 0;
-                            row.getCell(actColIdx).value = val;
-                        });
-
-                        const actEndCol = this.colNumToLetter(5 + columns.length);
-                        row.getCell(5).value = { formula: `SUM(F${rowIdx}:${actEndCol}${rowIdx})` };
-
-                        row.eachCell((c, colNum) => {
-                            c.border = thinBorder;
-                            c.alignment = { vertical: 'middle' };
-                            if (colNum === 3) {
-                                c.alignment = { horizontal: 'left', wrapText: true };
-                            } else if (colNum === 5) {
-                                c.font = { bold: true };
-                                c.alignment = { horizontal: 'right' };
-                            } else {
-                                c.alignment = { horizontal: 'center' };
-                            }
-                            if (colNum >= 5) {
-                                c.numFmt = '#,##0.00';
-                            }
-                        });
-                        row.height = 20;
-                        rowIdx++;
-                    });
-
-                    const cols = [
-                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }
-                    ];
-                    columns.forEach(() => cols.push({ width: 10 }));
-                    ws.columns = cols;
-                },
-
-                // EXCEL EXPORT METHODS
-                async exportExcelWithExcelJS(exportMode = 'single_activity') {
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.creator = 'Billing Pro Studio';
-                    workbook.created = new Date();
-
-                    let fileName = '';
-
-                    const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
-                    const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
-                    const raSuffix = ra ? `_${ra}` : '';
-
-                    if (exportMode === 'single_activity') {
-                        this.showToast(`Exporting Activity ${this.selectedActivityKey} Excel...`, '⏳');
-                        this.addStyledActivityDetailToWorkbook(workbook, this.selectedActivityKey);
-                        fileName = `${cName}${raSuffix}_Activity_${this.selectedActivityKey}_Billing.xlsx`;
-                    } else if (exportMode === 'abstract_only') {
-                        this.showToast('Exporting Master Abstract Excel...', '⏳');
-                        this.addStyledMasterAbstractToWorkbook(workbook);
-                        fileName = `${cName}${raSuffix}_Master_Abstract.xlsx`;
-                    } else if (exportMode === 'all_activities') {
-                        this.showToast('Exporting Complete Workbook (All Activities)...', '⏳');
-                        this.addStyledMasterAbstractToWorkbook(workbook);
-                        Object.keys(this.activities).forEach(actKey => {
-                            this.addStyledActivityDetailToWorkbook(workbook, actKey);
-                        });
-                        fileName = `${cName}${raSuffix}_Billing_All_Activities.xlsx`;
-                    }
-
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    this.showToast(`Downloaded ${fileName} 🎉`, '📗');
-                },
-
-                addStyledMasterAbstractToWorkbook(workbook) {
-                    const ws = workbook.addWorksheet('Master Abstract', {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
-                    });
-
-                    const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FF888888' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    const headerBorder = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-
-                    ws.mergeCells('A1:I1');
-                    const r1 = ws.getCell('A1');
-                    r1.value = `PROJECT: ${this.projectMeta.projectName.toUpperCase()} - MASTER BILLING ABSTRACT`;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = headerBorder;
-                    ws.getRow(1).height = 32;
-
-                    ws.mergeCells('A2:I2');
-                    const r2 = ws.getCell('A2');
-                    r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(this.invoiceData.invoiceDate) : this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
-                    r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF000000' } };
-                    r2.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r2.border = thinBorder;
-                    ws.getRow(2).height = 22;
-
-                    ws.getRow(3).height = 10;
-
-                    const headers = [
-                        'Act No',
-                        'Activity Description',
-                        'UoM',
-                        'Total Qty',
-                        'Unit Rate',
-                        'Total Amt',
-                        `${this.pctStage1}% Amt`,
-                        `${this.pctStage2}% Amt`,
-                        `${this.pctStage3}% Amt`
-                    ];
-
-                    const row4 = ws.getRow(4);
-                    row4.values = headers;
-                    row4.height = 28;
-                    row4.eachCell((cell) => {
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                        cell.border = headerBorder;
-                    });
-
-                    let rowIdx = 5;
-                    const startRow = 5;
-                    const s1Factor = this.pctStage1 / 100;
-                    const s2Factor = this.pctStage2 / 100;
-                    const s3Factor = this.pctStage3 / 100;
-
-                    this.masterAbstractList.forEach((act, idx) => {
-                        const row = ws.getRow(rowIdx);
-                        const qtyVal = Number(act.qty) || 0;
-                        const rateVal = Number(act.rate) || 0;
-                        const estTotal = qtyVal * rateVal;
-
-                        row.getCell(1).value = act.code;
-                        row.getCell(2).value = window.sanitizeExcelText(act.desc);
-                        row.getCell(3).value = act.uom;
-                        row.getCell(4).value = qtyVal;
-                        row.getCell(5).value = rateVal;
-
-                        row.getCell(6).value = { formula: `D${rowIdx}*E${rowIdx}`, result: estTotal };
-                        row.getCell(7).value = { formula: `F${rowIdx}*${s1Factor}`, result: estTotal * s1Factor };
-                        row.getCell(8).value = { formula: `F${rowIdx}*${s2Factor}`, result: estTotal * s2Factor };
-                        row.getCell(9).value = { formula: `F${rowIdx}*${s3Factor}`, result: estTotal * s3Factor };
-
-                        row.height = 24;
-
-                        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(1).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                        row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                        row.getCell(2).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-
-                        row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-                        row.getCell(3).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-
-                        row.getCell(4).numFmt = '#,##0.00';
-                        row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
-
-                        row.getCell(5).numFmt = '#,##0.00';
-                        row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-
-                        row.getCell(6).numFmt = '#,##0.00';
-                        row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(6).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                        row.getCell(7).numFmt = '#,##0.00';
-                        row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(7).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                        row.getCell(8).numFmt = '#,##0.00';
-                        row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(8).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-
-                        row.getCell(9).numFmt = '#,##0.00';
-                        row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
-                        row.getCell(9).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-
-                        row.eachCell((cell) => {
-                            cell.border = thinBorder;
-                        });
-
-                        rowIdx++;
-                    });
-
-                    const endRow = rowIdx - 1;
-
-                    const totalRow = ws.getRow(rowIdx);
-                    ws.mergeCells(`A${rowIdx}:E${rowIdx}`);
-                    totalRow.getCell(1).value = 'GRAND TOTAL';
-                    totalRow.getCell(6).value = { formula: `SUM(F${startRow}:F${endRow})`, result: this.abstractTotals.amt100 };
-                    totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${endRow})`, result: this.abstractTotals.amtStage1 };
-                    totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${endRow})`, result: this.abstractTotals.amtStage2 };
-                    totalRow.getCell(9).value = { formula: `SUM(I${startRow}:I${endRow})`, result: this.abstractTotals.amtStage3 };
-
-                    totalRow.height = 26;
-
-                    totalRow.eachCell((cell, colNum) => {
-                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        cell.border = {
-                            top: { style: 'medium', color: { argb: 'FF000000' } },
-                            bottom: { style: 'double', color: { argb: 'FF000000' } },
-                            left: { style: 'thin', color: { argb: 'FF888888' } },
-                            right: { style: 'thin', color: { argb: 'FF888888' } }
-                        };
-                        if (colNum >= 6) {
-                            cell.numFmt = '#,##0.00';
-                            cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                        }
-                    });
-                    totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
-
-                    ws.columns = [
-                        { width: 12 },
-                        { width: 62 },
-                        { width: 10 },
-                        { width: 14 },
-                        { width: 16 },
-                        { width: 18 },
-                        { width: 18 },
-                        { width: 16 },
-                        { width: 16 }
-                    ];
-                },
-
-                addStyledActivityDetailToWorkbook(workbook, actKey) {
-                    const act = this.activities[actKey];
-                    if (!act) return;
-
-                    const safeSheetName = `Act ${actKey}`.substring(0, 31);
-                    const ws = workbook.addWorksheet(safeSheetName, {
-                        views: [{ showGridLines: true }],
-                        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
-                    });
-
-                    // Audit format: Sr | Desc | Unit | Loc1..N | Rate | 100% | st1% | st2% | st3%
-                    const numLocs = this.getActLocations(actKey).length;
-                    const totalCols = 8 + numLocs;
-                    const locStartCol = 4, locEndCol = 3 + numLocs;
-                    const rateCol = 4 + numLocs;
-                    const amt100Col = 5 + numLocs, amt85Col = 6 + numLocs, amt10Col = 7 + numLocs, amt5Col = 8 + numLocs;
-                    const L = (c) => {
-                        let temp, letter = '';
-                        while (c > 0) {
-                            temp = (c - 1) % 26;
-                            letter = String.fromCharCode(temp + 65) + letter;
-                            c = Math.floor((c - temp - 1) / 26);
-                        }
-                        return letter;
-                    };
-
-                    const thinBorder = {
-                        top: { style: 'thin', color: { argb: 'FF888888' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'thin', color: { argb: 'FF888888' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-                    const headerBorder = {
-                        top: { style: 'medium', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF888888' } },
-                        bottom: { style: 'medium', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF888888' } }
-                    };
-
-                    ws.mergeCells(1, 1, 1, totalCols);
-                    const r1 = ws.getCell(1, 1);
-                    const companyObj = this.companiesList.find(c => c.id === this.selectedCompanyId);
-                    const companyName = companyObj ? companyObj.name : '';
-                    r1.value = companyName;
-                    r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r1.alignment = { horizontal: 'center', vertical: 'middle' };
-                    r1.border = headerBorder;
-                    ws.getRow(1).height = 30;
-
-                    const metaLabelFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-
-                    const metaStartRow = 2;
-                    const metaRows = [
-                        { label: 'Name of Contractor :-', value: this.getContractorDisplayName() },
-                        { label: 'Name of Feeder:', value: (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName(actKey) : (this.invoiceData.feederName || '')) },
-                        { label: 'RA BILL NO.-', value: this.invoiceData.invoiceNo || '' }
-                    ];
-
-                    metaRows.forEach((m, i) => {
-                        const r = metaStartRow + i;
-                        ws.mergeCells(r, 1, r, totalCols);
-                        const labelCell = ws.getCell(r, 1);
-                        labelCell.value = `${m.label} ${m.value}`;
-                        labelCell.font = metaLabelFont;
-                        labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                        labelCell.border = thinBorder;
-                        ws.getRow(r).height = 22;
-                    });
-
-                    const r5 = ws.getCell(5, 1);
-                    ws.mergeCells(5, 1, 5, totalCols);
-                    r5.value = act.title;
-                    r5.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                    r5.alignment = { horizontal: 'left', vertical: 'middle' };
-                    r5.border = thinBorder;
-                    ws.getRow(5).height = 22;
-
-                    ws.getRow(6).height = 10;
-
-                    const qMatrix = this.activityQuantities[actKey] || [];
-                    const s1Factor = this.pctStage1 / 100;
-                    const s2Factor = this.pctStage2 / 100;
-                    const s3Factor = this.pctStage3 / 100;
-
-                    const regularMats = [];
-                    const extraMats = [];
-                    act.materials.forEach((mat, idx) => {
-                        if (mat.isExtra) extraMats.push({ mat, idx, rowNo: extraMats.length + 1 });
-                        else regularMats.push({ mat, idx, rowNo: regularMats.length + 1 });
-                    });
-
-                    let rowIdx = 7;
-
-                    const writeTableHeader = () => {
-                        let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
-                        this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
-                        headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
-                        const rowH = ws.getRow(rowIdx);
-                        rowH.values = headerValues;
-                        rowH.height = 28;
-                        rowH.eachCell((cell, colIdx) => {
-                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                            cell.border = headerBorder;
-                        });
-                        rowIdx++;
-                    };
-
-                    const writeItems = (itemsList, isExtra) => {
-                        const rC = rateCol;
-                        const c100 = amt100Col;
-                        const c85 = amt85Col;
-                        const c10 = amt10Col;
-                        const c5 = amt5Col;
-                        const startRow = rowIdx;
-                        let sum100 = 0;
-                        itemsList.forEach((itemObj, listIdx) => {
-                            const { mat, idx, rowNo } = itemObj;
-                            const row = ws.getRow(rowIdx);
-                            row.getCell(1).value = isExtra ? rowNo : (mat.no || rowNo);
-                            row.getCell(2).value = window.sanitizeExcelText(mat.desc || mat.sapDescription || mat.itemCode || '');
-                            row.getCell(3).value = mat.unit || '';
-
-                            let itemTotalQty = 0;
-                            for (let locIdx = 0; locIdx < numLocs; locIdx++) {
-                                const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
-                                    ? parseFloat(qMatrix[locIdx][idx])
-                                    : 0;
-                                row.getCell(locStartCol + locIdx).value = val;
-                                if (!isNaN(val)) itemTotalQty += val;
-                            }
-
-                            const rateVal = Number(mat.rate) || 0;
-                            row.getCell(rC).value = rateVal;
-
-                            const est100 = itemTotalQty * rateVal;
-                            sum100 += est100;
-
-                            const sumLocFormula = numLocs <= 0
-                                ? '0'
-                                : (numLocs === 1
-                                    ? `${L(locStartCol)}${rowIdx}`
-                                    : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`);
-
-                            row.getCell(c100).value = { formula: `(${sumLocFormula})*${L(rC)}${rowIdx}`, result: est100 };
-                            row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
-                            row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
-                            row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
-
-                            row.height = 22;
-
-                            row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-                            row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-                            row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-
-                            for (let c = 4; c <= totalCols; c++) {
-                                row.getCell(c).numFmt = '#,##0.00';
-                                row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
-                            }
-
-                            row.getCell(c100).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                            row.getCell(c85).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                            row.getCell(c10).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-                            row.getCell(c5).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
-
-                            for (let c = 1; c <= totalCols; c++) {
-                                const cell = row.getCell(c);
-                                cell.border = thinBorder;
-                            }
-
-                            rowIdx++;
-                        });
-                        return { startRow, endRow: rowIdx - 1, sum100, a100: L(c100), a85: L(c85), a10: L(c10), a5: L(c5) };
-                    };
-
-                    writeTableHeader();
-
-                    let regRange = null, extRange = null;
-
-                    if (regularMats.length > 0) {
-                        regRange = writeItems(regularMats, false);
-                    }
-
-                    if (extraMats.length > 0) {
-                        ws.mergeCells(rowIdx, 1, rowIdx, totalCols);
-                        const banCell = ws.getCell(rowIdx, 1);
-                        banCell.value = `Extra Items (${extraMats.length} items)`;
-                        banCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                        banCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                        for (let c = 1; c <= totalCols; c++) {
-                            const cell = ws.getRow(rowIdx).getCell(c);
-                            cell.border = headerBorder;
-                        }
-                        ws.getRow(rowIdx).height = 24;
-                        rowIdx++;
-                        extRange = writeItems(extraMats, true);
-                    }
-
-                    // Single grand total — regular + extra milake
-                    if (regRange || extRange) {
-                        const ranges100 = [];
-                        const ranges85 = [];
-                        const ranges10 = [];
-                        const ranges5 = [];
-                        [regRange, extRange].forEach(rg => {
-                            if (!rg || rg.startRow > rg.endRow) return;
-                            ranges100.push(`${rg.a100}${rg.startRow}:${rg.a100}${rg.endRow}`);
-                            ranges85.push(`${rg.a85}${rg.startRow}:${rg.a85}${rg.endRow}`);
-                            ranges10.push(`${rg.a10}${rg.startRow}:${rg.a10}${rg.endRow}`);
-                            ranges5.push(`${rg.a5}${rg.startRow}:${rg.a5}${rg.endRow}`);
-                        });
-                        const grand100 = (regRange ? regRange.sum100 : 0) + (extRange ? extRange.sum100 : 0);
-                        const totalRow = ws.getRow(rowIdx);
-                        ws.mergeCells(rowIdx, 1, rowIdx, rateCol);
-                        totalRow.getCell(1).value = 'ACTIVITY TOTAL';
-                        totalRow.getCell(amt100Col).value = { formula: `SUM(${ranges100.join(',')})`, result: grand100 };
-                        totalRow.getCell(amt85Col).value = { formula: `SUM(${ranges85.join(',')})`, result: grand100 * s1Factor };
-                        totalRow.getCell(amt10Col).value = { formula: `SUM(${ranges10.join(',')})`, result: grand100 * s2Factor };
-                        totalRow.getCell(amt5Col).value = { formula: `SUM(${ranges5.join(',')})`, result: grand100 * s3Factor };
-
-                        totalRow.height = 26;
-
-                        for (let c = 1; c <= totalCols; c++) {
-                            const cell = totalRow.getCell(c);
-                            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
-                            cell.border = {
-                                top: { style: 'medium', color: { argb: 'FF000000' } },
-                                bottom: { style: 'double', color: { argb: 'FF000000' } },
-                                left: { style: 'thin', color: { argb: 'FF888888' } },
-                                right: { style: 'thin', color: { argb: 'FF888888' } }
-                            };
-                            if (c >= amt100Col) {
-                                cell.numFmt = '#,##0.00';
-                                cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                            }
-                        }
-                        totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
-                        rowIdx++;
-                    }
-
-                    let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
-                    this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
-                    widths.push({ width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
-                    ws.columns = widths;
-                },
-
-                exportCurrentActivityStyledExcel() {
-                    this.exportExcelWithExcelJS('single_activity');
-                },
-
-                exportMasterAbstractStyledExcel() {
-                    this.exportExcelWithExcelJS('abstract_only');
-                },
-
-                exportMasterWorkbookStyledExcel() {
-                    this.exportExcelWithExcelJS('all_activities');
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code);
+                this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = code;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                this.showToast('Apps Script code copied! Ab script.new par paste karein 📋', '✅');
+            }
+        } catch (e) {
+            console.error('Copy script error:', e);
+            this.showToast('Code copy nahi ho paya, please README.md se copy karein', '⚠️');
+        }
+    },
+    saveGDriveSettings() {
+        let url = (this.gdriveWebhookUrl || '').trim().replace(/^["']|["']$/g, '');
+        if (url.startsWith('http://script.google.com/')) url = 'https://' + url.slice('http://'.length);
+        else if (url.startsWith('script.google.com/')) url = 'https://' + url;
+        this.gdriveWebhookUrl = url;
+
+        if (url) {
+            if (url.includes('drive.google.com')) {
+                alert('⚠️ Dhyan dein: Aapne Google Drive folder ka link dala hai!\n\nDrive me auto-save hone ke liye Google Apps Script ka Web App link chahiye hota hai (https://script.google.com/macros/s/.../exec).\n\nModal me "📋 Copy Apps Script Code" dabakar script.new par deploy karein.');
+                return;
+            }
+            if (url.includes('/edit')) {
+                alert('⚠️ Dhyan dein: Aapne Script Editor ka link dala hai (.../edit)!\n\nScript me "Deploy > New deployment > Web app" karke "/exec" wala link copy karein.');
+                return;
+            }
+            if (!url.startsWith('https://script.google.com/') || !url.includes('/exec')) {
+                alert('⚠️ Invalid Webhook URL:\n\nURL format aisa hona chahiye:\nhttps://script.google.com/macros/s/.../exec\n\nPlease sahi Web App link paste karein.');
+                return;
+            }
+            localStorage.setItem('billing_gdrive_webhook_url', url);
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.gdriveWebhookUrl = url;
+            this.showToast('Google Drive Webhook URL saved & synced! ✅', '☁️');
+            this.saveToStorage();
+            if (typeof this.syncToMongoNow === 'function') {
+                this.syncToMongoNow({ manual: true });
+            }
+        } else {
+            localStorage.removeItem('billing_gdrive_webhook_url');
+            if (this.projectMeta) delete this.projectMeta.gdriveWebhookUrl;
+            this.saveToStorage();
+            this.showToast('Google Drive disconnected', 'ℹ️');
+        }
+        this.showGDriveModal = false;
+    },
+
+    addReconciliationToWorkbook(workbook, actKeys) {
+        return this.addStyledReconciliationToWorkbook(workbook, 'Reconciliation');
+    },
+
+    // EXCEL EXPORT METHODS
+    async exportExcelWithExcelJS(exportMode = 'single_activity') {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Billing Pro Studio';
+        workbook.created = new Date();
+
+        let fileName = '';
+
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+        const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : '';
+        const raSuffix = ra ? `_${ra}` : '';
+
+        if (exportMode === 'single_activity') {
+            this.showToast(`Exporting Activity ${this.selectedActivityKey} Excel...`, '⏳');
+            this.addStyledActivityDetailToWorkbook(workbook, this.selectedActivityKey);
+            fileName = `${cName}${raSuffix}_Activity_${this.selectedActivityKey}_Billing.xlsx`;
+        } else if (exportMode === 'abstract_only') {
+            this.showToast('Exporting Master Abstract Excel...', '⏳');
+            this.addStyledMasterAbstractToWorkbook(workbook);
+            fileName = `${cName}${raSuffix}_Master_Abstract.xlsx`;
+        } else if (exportMode === 'all_activities') {
+            this.showToast('Exporting Complete Workbook (All Activities)...', '⏳');
+            this.addStyledMasterAbstractToWorkbook(workbook);
+            Object.keys(this.activities).forEach(actKey => {
+                this.addStyledActivityDetailToWorkbook(workbook, actKey);
+            });
+            this.addStyledReconciliationToWorkbook(workbook, 'Reconciliation');
+            fileName = `${cName}${raSuffix}_Billing_All_Activities.xlsx`;
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.showToast(`Downloaded ${fileName} 🎉`, '📗');
+    },
+
+    addStyledMasterAbstractToWorkbook(workbook) {
+        const ws = workbook.addWorksheet('Master Abstract', {
+            views: [{ showGridLines: true }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+        });
+
+        const thinBorder = {
+            top: { style: 'thin', color: { argb: 'FF888888' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'thin', color: { argb: 'FF888888' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+
+        ws.mergeCells('A1:I1');
+        const r1 = ws.getCell('A1');
+        r1.value = `PROJECT: ${this.projectMeta.projectName.toUpperCase()} - MASTER BILLING ABSTRACT`;
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
+        ws.getRow(1).height = 32;
+
+        ws.mergeCells('A2:I2');
+        const r2 = ws.getCell('A2');
+        r2.value = `Contractor: ${this.getContractorDisplayName()}  |  Bill No: ${this.invoiceData.invoiceNo}  |  Bill Date: ${typeof this.formatDateToDDMMYYYY === 'function' ? this.formatDateToDDMMYYYY(this.invoiceData.invoiceDate) : this.invoiceData.invoiceDate}  |  Stage Split: ${this.pctStage1}% / ${this.pctStage2}% / ${this.pctStage3}%`;
+        r2.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF000000' } };
+        r2.alignment = { horizontal: 'center', vertical: 'middle' };
+        r2.border = thinBorder;
+        ws.getRow(2).height = 22;
+
+        ws.getRow(3).height = 10;
+
+        const headers = [
+            'Act No',
+            'Activity Description',
+            'UoM',
+            'Total Qty',
+            'Unit Rate',
+            'Total Amt',
+            `${this.pctStage1}% Amt`,
+            `${this.pctStage2}% Amt`,
+            `${this.pctStage3}% Amt`
+        ];
+
+        const row4 = ws.getRow(4);
+        row4.values = headers;
+        row4.height = 28;
+        row4.eachCell((cell) => {
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.border = headerBorder;
+        });
+
+        let rowIdx = 5;
+        const startRow = 5;
+        const s1Factor = this.pctStage1 / 100;
+        const s2Factor = this.pctStage2 / 100;
+        const s3Factor = this.pctStage3 / 100;
+
+        this.masterAbstractList.forEach((act, idx) => {
+            const row = ws.getRow(rowIdx);
+            const qtyVal = Number(act.qty) || 0;
+            const rateVal = Number(act.rate) || 0;
+            const estTotal = qtyVal * rateVal;
+
+            row.getCell(1).value = act.code;
+            row.getCell(2).value = window.sanitizeExcelText(act.desc);
+            row.getCell(3).value = act.uom;
+            row.getCell(4).value = qtyVal;
+            row.getCell(5).value = rateVal;
+
+            row.getCell(6).value = { formula: `D${rowIdx}*E${rowIdx}`, result: estTotal };
+            row.getCell(7).value = { formula: `F${rowIdx}*${s1Factor}`, result: estTotal * s1Factor };
+            row.getCell(8).value = { formula: `F${rowIdx}*${s2Factor}`, result: estTotal * s2Factor };
+            row.getCell(9).value = { formula: `F${rowIdx}*${s3Factor}`, result: estTotal * s3Factor };
+
+            row.height = 24;
+
+            row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell(1).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+            row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+            row.getCell(2).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+
+            row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell(3).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+
+            row.getCell(4).numFmt = '#,##0.00';
+            row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+
+            row.getCell(5).numFmt = '#,##0.00';
+            row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+
+            row.getCell(6).numFmt = '#,##0.00';
+            row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+            row.getCell(6).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+            row.getCell(7).numFmt = '#,##0.00';
+            row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+            row.getCell(7).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+            row.getCell(8).numFmt = '#,##0.00';
+            row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
+            row.getCell(8).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+
+            row.getCell(9).numFmt = '#,##0.00';
+            row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
+            row.getCell(9).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+
+            row.eachCell((cell) => {
+                cell.border = thinBorder;
+            });
+
+            rowIdx++;
+        });
+
+        const endRow = rowIdx - 1;
+
+        const totalRow = ws.getRow(rowIdx);
+        ws.mergeCells(`A${rowIdx}:E${rowIdx}`);
+        totalRow.getCell(1).value = 'GRAND TOTAL';
+        totalRow.getCell(6).value = { formula: `SUM(F${startRow}:F${endRow})`, result: this.abstractTotals.amt100 };
+        totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${endRow})`, result: this.abstractTotals.amtStage1 };
+        totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${endRow})`, result: this.abstractTotals.amtStage2 };
+        totalRow.getCell(9).value = { formula: `SUM(I${startRow}:I${endRow})`, result: this.abstractTotals.amtStage3 };
+
+        totalRow.height = 26;
+
+        totalRow.eachCell((cell, colNum) => {
+            cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+            cell.border = {
+                top: { style: 'medium', color: { argb: 'FF000000' } },
+                bottom: { style: 'double', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF888888' } },
+                right: { style: 'thin', color: { argb: 'FF888888' } }
+            };
+            if (colNum >= 6) {
+                cell.numFmt = '#,##0.00';
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            }
+        });
+        totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
+
+        ws.columns = [
+            { width: 12 },
+            { width: 62 },
+            { width: 10 },
+            { width: 14 },
+            { width: 16 },
+            { width: 18 },
+            { width: 18 },
+            { width: 16 },
+            { width: 16 }
+        ];
+    },
+
+    addStyledActivityDetailToWorkbook(workbook, actKey) {
+        const act = this.activities[actKey];
+        if (!act) return;
+
+        const safeSheetName = `Act ${actKey}`.substring(0, 31);
+        const ws = workbook.addWorksheet(safeSheetName, {
+            views: [{ showGridLines: true }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+        });
+
+        // Audit format: Sr | Desc | Unit | Loc1..N | Rate | 100% | st1% | st2% | st3%
+        const numLocs = this.getActLocations(actKey).length;
+        const totalCols = 8 + numLocs;
+        const locStartCol = 4, locEndCol = 3 + numLocs;
+        const rateCol = 4 + numLocs;
+        const amt100Col = 5 + numLocs, amt85Col = 6 + numLocs, amt10Col = 7 + numLocs, amt5Col = 8 + numLocs;
+        const L = (c) => {
+            let temp, letter = '';
+            while (c > 0) {
+                temp = (c - 1) % 26;
+                letter = String.fromCharCode(temp + 65) + letter;
+                c = Math.floor((c - temp - 1) / 26);
+            }
+            return letter;
+        };
+
+        const thinBorder = {
+            top: { style: 'thin', color: { argb: 'FF888888' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'thin', color: { argb: 'FF888888' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+        const headerBorder = {
+            top: { style: 'medium', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF888888' } },
+            bottom: { style: 'medium', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF888888' } }
+        };
+
+        ws.mergeCells(1, 1, 1, totalCols);
+        const r1 = ws.getCell(1, 1);
+        const companyObj = this.companiesList.find(c => c.id === this.selectedCompanyId);
+        const companyName = companyObj ? companyObj.name : '';
+        r1.value = companyName;
+        r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r1.alignment = { horizontal: 'center', vertical: 'middle' };
+        r1.border = headerBorder;
+        ws.getRow(1).height = 30;
+
+        const metaLabelFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+
+        const metaStartRow = 2;
+        const metaRows = [
+            { label: 'Name of Contractor :-', value: this.getContractorDisplayName() },
+            { label: 'Name of Feeder:', value: (typeof this.getEffectiveFeederName === 'function' ? this.getEffectiveFeederName(actKey) : (this.invoiceData.feederName || '')) },
+            { label: 'RA BILL NO.-', value: this.invoiceData.invoiceNo || '' }
+        ];
+
+        metaRows.forEach((m, i) => {
+            const r = metaStartRow + i;
+            ws.mergeCells(r, 1, r, totalCols);
+            const labelCell = ws.getCell(r, 1);
+            labelCell.value = `${m.label} ${m.value}`;
+            labelCell.font = metaLabelFont;
+            labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            labelCell.border = thinBorder;
+            ws.getRow(r).height = 22;
+        });
+
+        const r5 = ws.getCell(5, 1);
+        ws.mergeCells(5, 1, 5, totalCols);
+        r5.value = act.title;
+        r5.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+        r5.alignment = { horizontal: 'left', vertical: 'middle' };
+        r5.border = thinBorder;
+        ws.getRow(5).height = 22;
+
+        ws.getRow(6).height = 10;
+
+        const qMatrix = this.activityQuantities[actKey] || [];
+        const s1Factor = this.pctStage1 / 100;
+        const s2Factor = this.pctStage2 / 100;
+        const s3Factor = this.pctStage3 / 100;
+
+        const regularMats = [];
+        const extraMats = [];
+        act.materials.forEach((mat, idx) => {
+            if (mat.isExtra) extraMats.push({ mat, idx, rowNo: extraMats.length + 1 });
+            else regularMats.push({ mat, idx, rowNo: regularMats.length + 1 });
+        });
+
+        let rowIdx = 7;
+
+        const writeTableHeader = () => {
+            let headerValues = ['Sr.No.', 'Description of Material', 'Unit'];
+            this.getActLocations(actKey).forEach(l => headerValues.push(l.name));
+            headerValues.push('Rate', '100% Amt', `${this.pctStage1}% Amt`, `${this.pctStage2}% Amt`, `${this.pctStage3}% Amt`);
+            const rowH = ws.getRow(rowIdx);
+            rowH.values = headerValues;
+            rowH.height = 28;
+            rowH.eachCell((cell, colIdx) => {
+                cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = headerBorder;
+            });
+            rowIdx++;
+        };
+
+        const writeItems = (itemsList, isExtra) => {
+            const rC = rateCol;
+            const c100 = amt100Col;
+            const c85 = amt85Col;
+            const c10 = amt10Col;
+            const c5 = amt5Col;
+            const startRow = rowIdx;
+            let sum100 = 0;
+            itemsList.forEach((itemObj, listIdx) => {
+                const { mat, idx, rowNo } = itemObj;
+                const row = ws.getRow(rowIdx);
+                row.getCell(1).value = isExtra ? rowNo : (mat.no || rowNo);
+                row.getCell(2).value = window.sanitizeExcelText(mat.desc || mat.sapDescription || mat.itemCode || '');
+                row.getCell(3).value = mat.unit || '';
+
+                let itemTotalQty = 0;
+                for (let locIdx = 0; locIdx < numLocs; locIdx++) {
+                    const val = (qMatrix[locIdx] && qMatrix[locIdx][idx] !== undefined && qMatrix[locIdx][idx] !== '')
+                        ? parseFloat(qMatrix[locIdx][idx])
+                        : 0;
+                    row.getCell(locStartCol + locIdx).value = val;
+                    if (!isNaN(val)) itemTotalQty += val;
                 }
+
+                const rateVal = Number(mat.rate) || 0;
+                row.getCell(rC).value = rateVal;
+
+                const est100 = itemTotalQty * rateVal;
+                sum100 += est100;
+
+                const sumLocFormula = numLocs <= 0
+                    ? '0'
+                    : (numLocs === 1
+                        ? `${L(locStartCol)}${rowIdx}`
+                        : `SUM(${L(locStartCol)}${rowIdx}:${L(locEndCol)}${rowIdx})`);
+
+                row.getCell(c100).value = { formula: `(${sumLocFormula})*${L(rC)}${rowIdx}`, result: est100 };
+                row.getCell(c85).value = { formula: `${L(c100)}${rowIdx}*${s1Factor}`, result: est100 * s1Factor };
+                row.getCell(c10).value = { formula: `${L(c100)}${rowIdx}*${s2Factor}`, result: est100 * s2Factor };
+                row.getCell(c5).value = { formula: `${L(c100)}${rowIdx}*${s3Factor}`, result: est100 * s3Factor };
+
+                row.height = 22;
+
+                row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+                row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+
+                for (let c = 4; c <= totalCols; c++) {
+                    row.getCell(c).numFmt = '#,##0.00';
+                    row.getCell(c).alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+
+                row.getCell(c100).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                row.getCell(c85).font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                row.getCell(c10).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+                row.getCell(c5).font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
+
+                for (let c = 1; c <= totalCols; c++) {
+                    const cell = row.getCell(c);
+                    cell.border = thinBorder;
+                }
+
+                rowIdx++;
+            });
+            return { startRow, endRow: rowIdx - 1, sum100, a100: L(c100), a85: L(c85), a10: L(c10), a5: L(c5) };
+        };
+
+        writeTableHeader();
+
+        let regRange = null, extRange = null;
+
+        if (regularMats.length > 0) {
+            regRange = writeItems(regularMats, false);
+        }
+
+        if (extraMats.length > 0) {
+            ws.mergeCells(rowIdx, 1, rowIdx, totalCols);
+            const banCell = ws.getCell(rowIdx, 1);
+            banCell.value = `Extra Items (${extraMats.length} items)`;
+            banCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+            banCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = ws.getRow(rowIdx).getCell(c);
+                cell.border = headerBorder;
+            }
+            ws.getRow(rowIdx).height = 24;
+            rowIdx++;
+            extRange = writeItems(extraMats, true);
+        }
+
+        // Single grand total — regular + extra milake
+        if (regRange || extRange) {
+            const ranges100 = [];
+            const ranges85 = [];
+            const ranges10 = [];
+            const ranges5 = [];
+            [regRange, extRange].forEach(rg => {
+                if (!rg || rg.startRow > rg.endRow) return;
+                ranges100.push(`${rg.a100}${rg.startRow}:${rg.a100}${rg.endRow}`);
+                ranges85.push(`${rg.a85}${rg.startRow}:${rg.a85}${rg.endRow}`);
+                ranges10.push(`${rg.a10}${rg.startRow}:${rg.a10}${rg.endRow}`);
+                ranges5.push(`${rg.a5}${rg.startRow}:${rg.a5}${rg.endRow}`);
+            });
+            const grand100 = (regRange ? regRange.sum100 : 0) + (extRange ? extRange.sum100 : 0);
+            const totalRow = ws.getRow(rowIdx);
+            ws.mergeCells(rowIdx, 1, rowIdx, rateCol);
+            totalRow.getCell(1).value = 'ACTIVITY TOTAL';
+            totalRow.getCell(amt100Col).value = { formula: `SUM(${ranges100.join(',')})`, result: grand100 };
+            totalRow.getCell(amt85Col).value = { formula: `SUM(${ranges85.join(',')})`, result: grand100 * s1Factor };
+            totalRow.getCell(amt10Col).value = { formula: `SUM(${ranges10.join(',')})`, result: grand100 * s2Factor };
+            totalRow.getCell(amt5Col).value = { formula: `SUM(${ranges5.join(',')})`, result: grand100 * s3Factor };
+
+            totalRow.height = 26;
+
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = totalRow.getCell(c);
+                cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+                cell.border = {
+                    top: { style: 'medium', color: { argb: 'FF000000' } },
+                    bottom: { style: 'double', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF888888' } },
+                    right: { style: 'thin', color: { argb: 'FF888888' } }
+                };
+                if (c >= amt100Col) {
+                    cell.numFmt = '#,##0.00';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            }
+            totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
+            rowIdx++;
+        }
+
+        let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
+        this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
+        widths.push({ width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
+        ws.columns = widths;
+    },
+
+    exportCurrentActivityStyledExcel() {
+        this.exportExcelWithExcelJS('single_activity');
+    },
+
+    exportMasterAbstractStyledExcel() {
+        this.exportExcelWithExcelJS('abstract_only');
+    },
+
+    exportMasterWorkbookStyledExcel() {
+        this.exportExcelWithExcelJS('all_activities');
+    }
 };
