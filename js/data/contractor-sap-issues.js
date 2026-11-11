@@ -1,15 +1,15 @@
 /**
  * Auto-generated SAP Stock Material Issues Database from stock.xlsx
  * Features consolidated contractor aggregation (all work orders & aliases for same contractor summed together)
- * Generated: 2026-11-11T06:26:30.743Z
+ * Generated: 2026-11-11T07:37:44.509Z
  */
 window.ContractorSapStock = {
   "meta": {
-    "generatedAt": "2026-11-11T06:26:30.730Z",
+    "generatedAt": "2026-11-11T07:37:44.470Z",
     "source": "stock.xlsx",
-    "matchedTxns": 49305,
+    "matchedTxns": 48048,
     "contractorsWithIssues": 109,
-    "consolidatedWorkOrders": 212
+    "consolidatedWorkOrders": 211
   },
   "byDocHeader": {
     "31003359": {
@@ -22,9 +22,9 @@ window.ContractorSapStock = {
       "vendorCode": "500306505",
       "contractorName": "DUSKLINE INFRASTRUCTURE",
       "materialCount": 191,
-      "totalGrossIssue": 1028640.87,
+      "totalGrossIssue": 1028616.87,
       "totalMrnReturn": 438660.632,
-      "totalNetIssue": 589980.238,
+      "totalNetIssue": 589956.238,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -1200,19 +1200,19 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 194,
+          "grossIssue": 190,
           "mrnReturn": 24,
-          "netIssue": 170,
-          "issuedQty": 170
+          "netIssue": 166,
+          "issuedQty": 166
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 471,
+          "grossIssue": 459,
           "mrnReturn": 71,
-          "netIssue": 400,
-          "issuedQty": 400
+          "netIssue": 388,
+          "issuedQty": 388
         },
         "17005072": {
           "code": "17005072",
@@ -1425,10 +1425,10 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 686,
+          "grossIssue": 678,
           "mrnReturn": 303,
-          "netIssue": 383,
-          "issuedQty": 383
+          "netIssue": 375,
+          "issuedQty": 375
         },
         "17005513": {
           "code": "17005513",
@@ -1757,9 +1757,9 @@ window.ContractorSapStock = {
       "vendorCode": "500306505",
       "contractorName": "DUSKLINE INFRASTRUCTURE",
       "materialCount": 191,
-      "totalGrossIssue": 1028640.87,
+      "totalGrossIssue": 1028616.87,
       "totalMrnReturn": 438660.632,
-      "totalNetIssue": 589980.238,
+      "totalNetIssue": 589956.238,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -2935,19 +2935,19 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 194,
+          "grossIssue": 190,
           "mrnReturn": 24,
-          "netIssue": 170,
-          "issuedQty": 170
+          "netIssue": 166,
+          "issuedQty": 166
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 471,
+          "grossIssue": 459,
           "mrnReturn": 71,
-          "netIssue": 400,
-          "issuedQty": 400
+          "netIssue": 388,
+          "issuedQty": 388
         },
         "17005072": {
           "code": "17005072",
@@ -3160,10 +3160,10 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 686,
+          "grossIssue": 678,
           "mrnReturn": 303,
-          "netIssue": 383,
-          "issuedQty": 383
+          "netIssue": 375,
+          "issuedQty": 375
         },
         "17005513": {
           "code": "17005513",
@@ -3492,9 +3492,9 @@ window.ContractorSapStock = {
       "vendorCode": "500306505",
       "contractorName": "DUSKLINE INFRASTRUCTURE",
       "materialCount": 191,
-      "totalGrossIssue": 1028640.87,
+      "totalGrossIssue": 1028616.87,
       "totalMrnReturn": 438660.632,
-      "totalNetIssue": 589980.238,
+      "totalNetIssue": 589956.238,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -4670,19 +4670,19 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 194,
+          "grossIssue": 190,
           "mrnReturn": 24,
-          "netIssue": 170,
-          "issuedQty": 170
+          "netIssue": 166,
+          "issuedQty": 166
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 471,
+          "grossIssue": 459,
           "mrnReturn": 71,
-          "netIssue": 400,
-          "issuedQty": 400
+          "netIssue": 388,
+          "issuedQty": 388
         },
         "17005072": {
           "code": "17005072",
@@ -4895,10 +4895,10 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 686,
+          "grossIssue": 678,
           "mrnReturn": 303,
-          "netIssue": 383,
-          "issuedQty": 383
+          "netIssue": 375,
+          "issuedQty": 375
         },
         "17005513": {
           "code": "17005513",
@@ -5217,1361 +5217,6 @@ window.ContractorSapStock = {
         }
       }
     },
-    "31004866": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
-      "vendorCode": "",
-      "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
-      "materials": {
-        "11000123": {
-          "code": "11000123",
-          "desc": "M SAND 0-6 MM",
-          "uom": "KG",
-          "grossIssue": 7700,
-          "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
-        },
-        "11000336": {
-          "code": "11000336",
-          "desc": "CEMENT GRADE OPC 53",
-          "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
-        },
-        "12000009": {
-          "code": "12000009",
-          "desc": "AGGREGATE 40 MM",
-          "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
-          "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
-        },
-        "17000243": {
-          "code": "17000243",
-          "desc": "GI WIRE 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
-          "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
-        },
-        "19020569": {
-          "code": "19020569",
-          "desc": "ROPE PULLEY 1 WAY",
-          "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
-        },
-        "22001359": {
-          "code": "22001359",
-          "desc": "MEASURING TAPE FIBRE 30 MTR",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002553": {
-          "code": "22002553",
-          "desc": "HAND GLOVES (PLASTIC)",
-          "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 0,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "23000187": {
-          "code": "23000187",
-          "desc": "FIX SPANNER 12 X 13",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
-        },
-        "23000195": {
-          "code": "23000195",
-          "desc": "FIX SPANNER 16 X 17",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000209": {
-          "code": "23000209",
-          "desc": "FIX SPANNER 24 X 26",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000379": {
-          "code": "23000379",
-          "desc": "PLIER 6INCH",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000432": {
-          "code": "23000432",
-          "desc": "RING SPANNER 12 X 13",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
-        },
-        "23000437": {
-          "code": "23000437",
-          "desc": "RING SPANNER 16 X 17",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000439": {
-          "code": "23000439",
-          "desc": "RING SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000447": {
-          "code": "23000447",
-          "desc": "RING SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23001289": {
-          "code": "23001289",
-          "desc": "GHAMELA PVC",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23001306": {
-          "code": "23001306",
-          "desc": "ALUMINIUM PATELE (VESSEL)",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23001328": {
-          "code": "23001328",
-          "desc": "BUCKET PVC 20 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
-        },
-        "23001530": {
-          "code": "23001530",
-          "desc": "THALI SS FULL SIZE",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
-        },
-        "23001697": {
-          "code": "23001697",
-          "desc": "SPIRIT LEVEL 12 INCHES",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23001920": {
-          "code": "23001920",
-          "desc": "SPADE MS",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
-        },
-        "23001952": {
-          "code": "23001952",
-          "desc": "HACKSAW FRAME",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23002064": {
-          "code": "23002064",
-          "desc": "GLASS SS",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        }
-      }
-    },
     "31004922": {
       "docHeader": "31004922",
       "allWorkOrders": [
@@ -6579,10 +5224,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Raial Infra ABL Dept.Teem",
-      "materialCount": 128,
-      "totalGrossIssue": 56110.174,
-      "totalMrnReturn": 10855.682,
-      "totalNetIssue": 45254.492,
+      "materialCount": 120,
+      "totalGrossIssue": 54783.424,
+      "totalMrnReturn": 1748.7,
+      "totalNetIssue": 53034.724,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -6598,9 +5243,9 @@ window.ContractorSapStock = {
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
           "grossIssue": 13000,
-          "mrnReturn": 2650,
-          "netIssue": 10350,
-          "issuedQty": 10350
+          "mrnReturn": 0,
+          "netIssue": 13000,
+          "issuedQty": 13000
         },
         "12000009": {
           "code": "12000009",
@@ -6616,18 +5261,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
           "grossIssue": 353,
-          "mrnReturn": 140,
-          "netIssue": 213,
-          "issuedQty": 213
+          "mrnReturn": 104,
+          "netIssue": 249,
+          "issuedQty": 249
         },
         "17000023": {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 19,
-          "mrnReturn": 7,
-          "netIssue": 12,
-          "issuedQty": 12
+          "mrnReturn": 0,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "17000026": {
           "code": "17000026",
@@ -6643,18 +5288,18 @@ window.ContractorSapStock = {
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 1004,
-          "mrnReturn": 11,
-          "netIssue": 993,
-          "issuedQty": 993
+          "mrnReturn": 0,
+          "netIssue": 1004,
+          "issuedQty": 1004
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 160,
-          "mrnReturn": 80,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17000058": {
           "code": "17000058",
@@ -6688,9 +5333,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17000128": {
           "code": "17000128",
@@ -6714,73 +5359,64 @@ window.ContractorSapStock = {
           "code": "17000231",
           "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
           "uom": "M",
-          "grossIssue": 62,
-          "mrnReturn": 122,
+          "grossIssue": 0,
+          "mrnReturn": 60,
           "netIssue": -60,
           "issuedQty": -60
-        },
-        "17000232": {
-          "code": "17000232",
-          "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 52,
-          "mrnReturn": 52,
-          "netIssue": 0,
-          "issuedQty": 0
         },
         "17000237": {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 1882,
-          "mrnReturn": 1882,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1130,
+          "mrnReturn": 890,
+          "netIssue": 240,
+          "issuedQty": 240
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 157,
-          "mrnReturn": 141,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 157,
+          "issuedQty": 157
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 2056,
-          "mrnReturn": 752,
-          "netIssue": 1304,
-          "issuedQty": 1304
+          "mrnReturn": 0,
+          "netIssue": 2056,
+          "issuedQty": 2056
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 815.5,
-          "mrnReturn": 387,
-          "netIssue": 428.5,
-          "issuedQty": 428.5
+          "mrnReturn": 0,
+          "netIssue": 815.5,
+          "issuedQty": 815.5
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 504,
-          "mrnReturn": 222,
-          "netIssue": 282,
-          "issuedQty": 282
+          "mrnReturn": 0,
+          "netIssue": 504,
+          "issuedQty": 504
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 130,
-          "mrnReturn": 67,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000617": {
           "code": "17000617",
@@ -6791,23 +5427,14 @@ window.ContractorSapStock = {
           "netIssue": 217,
           "issuedQty": 217
         },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 6,
-          "mrnReturn": 6,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 79,
-          "mrnReturn": 52,
-          "netIssue": 27,
-          "issuedQty": 27
+          "mrnReturn": 0,
+          "netIssue": 79,
+          "issuedQty": 79
         },
         "17000624": {
           "code": "17000624",
@@ -6823,36 +5450,36 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 3133,
-          "mrnReturn": 205,
-          "netIssue": 2928,
-          "issuedQty": 2928
+          "mrnReturn": 120,
+          "netIssue": 3013,
+          "issuedQty": 3013
         },
         "17000627": {
           "code": "17000627",
           "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 364,
-          "mrnReturn": 364,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 364,
+          "issuedQty": 364
         },
         "17000631": {
           "code": "17000631",
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 100,
-          "mrnReturn": 37,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000632": {
           "code": "17000632",
           "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 80,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17000633": {
           "code": "17000633",
@@ -6868,18 +5495,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 1295,
-          "mrnReturn": 284,
-          "netIssue": 1011,
-          "issuedQty": 1011
+          "mrnReturn": 0,
+          "netIssue": 1295,
+          "issuedQty": 1295
         },
         "17000638": {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 106,
-          "mrnReturn": 19,
-          "netIssue": 87,
-          "issuedQty": 87
+          "mrnReturn": 0,
+          "netIssue": 106,
+          "issuedQty": 106
         },
         "17000700": {
           "code": "17000700",
@@ -6903,62 +5530,62 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 361,
-          "mrnReturn": 361,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 150,
+          "mrnReturn": 0,
+          "netIssue": 150,
+          "issuedQty": 150
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 100,
-          "mrnReturn": 65,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000775": {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
           "grossIssue": 220,
-          "mrnReturn": 140,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 20,
+          "netIssue": 200,
+          "issuedQty": 200
         },
         "17000776": {
           "code": "17000776",
           "desc": "PAINT BLACK BITUMINUS",
           "uom": "L",
           "grossIssue": 90,
-          "mrnReturn": 80,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 20,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17000778": {
           "code": "17000778",
           "desc": "RED OXIDE",
           "uom": "L",
           "grossIssue": 80,
-          "mrnReturn": 100,
-          "netIssue": -20,
-          "issuedQty": -20
+          "mrnReturn": 20,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 58,
-          "mrnReturn": 20,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 58,
+          "issuedQty": 58
         },
         "17001240": {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 82,
+          "grossIssue": 25,
+          "mrnReturn": 19,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -6967,18 +5594,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
           "grossIssue": 225,
-          "mrnReturn": 82,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 21,
+          "netIssue": 204,
+          "issuedQty": 204
         },
         "17001261": {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 80.463,
-          "mrnReturn": 9.232,
-          "netIssue": 71.231,
-          "issuedQty": 71.231
+          "mrnReturn": 0,
+          "netIssue": 80.463,
+          "issuedQty": 80.463
         },
         "17001264": {
           "code": "17001264",
@@ -7002,19 +5629,19 @@ window.ContractorSapStock = {
           "code": "17001294",
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
-          "grossIssue": 742,
-          "mrnReturn": 443,
-          "netIssue": 299,
-          "issuedQty": 299
+          "grossIssue": 642,
+          "mrnReturn": 40,
+          "netIssue": 602,
+          "issuedQty": 602
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 184,
-          "netIssue": 146,
-          "issuedQty": 146
+          "mrnReturn": 30,
+          "netIssue": 300,
+          "issuedQty": 300
         },
         "17001390": {
           "code": "17001390",
@@ -7057,9 +5684,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 1456,
-          "mrnReturn": 82,
-          "netIssue": 1374,
-          "issuedQty": 1374
+          "mrnReturn": 0,
+          "netIssue": 1456,
+          "issuedQty": 1456
         },
         "17002007": {
           "code": "17002007",
@@ -7075,9 +5702,9 @@ window.ContractorSapStock = {
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 688,
-          "mrnReturn": 16,
-          "netIssue": 672,
-          "issuedQty": 672
+          "mrnReturn": 0,
+          "netIssue": 688,
+          "issuedQty": 688
         },
         "17004662": {
           "code": "17004662",
@@ -7093,54 +5720,54 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 84,
-          "mrnReturn": 28,
-          "netIssue": 56,
-          "issuedQty": 56
+          "mrnReturn": 4,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005037": {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
           "grossIssue": 49,
-          "mrnReturn": 34,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 24,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
           "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
+          "mrnReturn": 0,
+          "netIssue": 8,
+          "issuedQty": 8
         },
         "17005041": {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 669,
-          "mrnReturn": 114,
-          "netIssue": 555,
-          "issuedQty": 555
+          "mrnReturn": 0,
+          "netIssue": 669,
+          "issuedQty": 669
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 264,
-          "mrnReturn": 21,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 264,
+          "issuedQty": 264
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 260,
-          "mrnReturn": 17,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 260,
+          "issuedQty": 260
         },
         "17005045": {
           "code": "17005045",
@@ -7156,63 +5783,63 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 1137,
-          "mrnReturn": 49,
-          "netIssue": 1088,
-          "issuedQty": 1088
+          "mrnReturn": 0,
+          "netIssue": 1137,
+          "issuedQty": 1137
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 954,
-          "mrnReturn": 147,
-          "netIssue": 807,
-          "issuedQty": 807
+          "mrnReturn": 108,
+          "netIssue": 846,
+          "issuedQty": 846
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 729,
-          "mrnReturn": 291,
-          "netIssue": 438,
-          "issuedQty": 438
+          "mrnReturn": 50,
+          "netIssue": 679,
+          "issuedQty": 679
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 652,
-          "mrnReturn": 73,
-          "netIssue": 579,
-          "issuedQty": 579
+          "mrnReturn": 0,
+          "netIssue": 652,
+          "issuedQty": 652
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 480,
-          "mrnReturn": 55,
-          "netIssue": 425,
-          "issuedQty": 425
+          "mrnReturn": 0,
+          "netIssue": 480,
+          "issuedQty": 480
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 315,
-          "mrnReturn": 15,
-          "netIssue": 300,
-          "issuedQty": 300
+          "mrnReturn": 0,
+          "netIssue": 315,
+          "issuedQty": 315
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 349,
-          "mrnReturn": 141,
-          "netIssue": 208,
-          "issuedQty": 208
+          "mrnReturn": 0,
+          "netIssue": 349,
+          "issuedQty": 349
         },
         "17005059": {
           "code": "17005059",
@@ -7255,18 +5882,18 @@ window.ContractorSapStock = {
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 10,
-          "netIssue": 2,
-          "issuedQty": 2
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
           "grossIssue": 27,
-          "mrnReturn": 11,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 6,
+          "netIssue": 21,
+          "issuedQty": 21
         },
         "17005065": {
           "code": "17005065",
@@ -7282,9 +5909,9 @@ window.ContractorSapStock = {
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
           "grossIssue": 16,
-          "mrnReturn": 1,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005068": {
           "code": "17005068",
@@ -7327,45 +5954,36 @@ window.ContractorSapStock = {
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 40,
-          "mrnReturn": 8,
-          "netIssue": 32,
-          "issuedQty": 32
+          "mrnReturn": 0,
+          "netIssue": 40,
+          "issuedQty": 40
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 155,
-          "mrnReturn": 153,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 20,
           "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
+          "netIssue": 155,
+          "issuedQty": 155
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 54,
-          "mrnReturn": 40,
-          "netIssue": 14,
-          "issuedQty": 14
+          "mrnReturn": 20,
+          "netIssue": 34,
+          "issuedQty": 34
         },
         "17005091": {
           "code": "17005091",
@@ -7408,27 +6026,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 42,
-          "mrnReturn": 39,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 42,
+          "issuedQty": 42
         },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 800,
-          "mrnReturn": 52,
-          "netIssue": 748,
-          "issuedQty": 748
-        },
-        "17005858": {
-          "code": "17005858",
-          "desc": "GI NUT BOLTS",
-          "uom": "KG",
-          "grossIssue": 3.75,
-          "mrnReturn": 3.75,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 800,
+          "issuedQty": 800
         },
         "17006129": {
           "code": "17006129",
@@ -7453,18 +6062,9 @@ window.ContractorSapStock = {
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "22001359": {
           "code": "22001359",
@@ -7480,9 +6080,9 @@ window.ContractorSapStock = {
           "desc": "SAFETY JACKET - ORANGE",
           "uom": "NO",
           "grossIssue": 28,
-          "mrnReturn": 12,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 28,
+          "issuedQty": 28
         },
         "22002544": {
           "code": "22002544",
@@ -7493,66 +6093,57 @@ window.ContractorSapStock = {
           "netIssue": 15,
           "issuedQty": 15
         },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "22002551": {
           "code": "22002551",
           "desc": "HELMET PVC - YELLOW",
           "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 42,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 28,
+          "mrnReturn": 9,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "22003558": {
           "code": "22003558",
           "desc": "MEASURING TAPE STEEL 5 MTR",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000004": {
           "code": "23000004",
           "desc": "ADJUSTABLE SPANNER 12 INCH",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000122": {
           "code": "23000122",
           "desc": "CROW BAR (SABBAL)",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7560,8 +6151,8 @@ window.ContractorSapStock = {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7569,8 +6160,8 @@ window.ContractorSapStock = {
           "code": "23000199",
           "desc": "FIX SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7578,8 +6169,8 @@ window.ContractorSapStock = {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7588,27 +6179,9 @@ window.ContractorSapStock = {
           "desc": "FIX SPANNER 30 X 32",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000379": {
           "code": "23000379",
@@ -7623,8 +6196,8 @@ window.ContractorSapStock = {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7632,8 +6205,8 @@ window.ContractorSapStock = {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7641,8 +6214,8 @@ window.ContractorSapStock = {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -7668,10 +6241,10 @@ window.ContractorSapStock = {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 15,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 10,
+          "mrnReturn": 5,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001325": {
           "code": "23001325",
@@ -7696,9 +6269,9 @@ window.ContractorSapStock = {
           "desc": "SPADE MS",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001952": {
           "code": "23001952",
@@ -7714,27 +6287,27 @@ window.ContractorSapStock = {
           "desc": "DISCHARGE ROD FOR 11 KV",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "23002373": {
           "code": "23002373",
           "desc": "COME ALONG CLAMP TOOL",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23003901": {
           "code": "23003901",
           "desc": "BOLT CUTTER 18 INCH",
           "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1,
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         }
       }
     },
@@ -7745,10 +6318,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -7782,9 +6355,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -7880,10 +6453,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -8101,15 +6674,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -8168,10 +6732,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -8190,15 +6754,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -8317,15 +6872,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -8353,32 +6899,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -10707,10 +9235,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "500303597",
       "contractorName": "pratima Enterprises",
-      "materialCount": 151,
-      "totalGrossIssue": 34948.764,
+      "materialCount": 150,
+      "totalGrossIssue": 34889.764,
       "totalMrnReturn": 7679.341,
-      "totalNetIssue": 27269.423,
+      "totalNetIssue": 27210.423,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -10986,10 +9514,10 @@ window.ContractorSapStock = {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 281,
+          "grossIssue": 271,
           "mrnReturn": 93,
-          "netIssue": 188,
-          "issuedQty": 188
+          "netIssue": 178,
+          "issuedQty": 178
         },
         "17000624": {
           "code": "17000624",
@@ -11697,10 +10225,10 @@ window.ContractorSapStock = {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
-          "grossIssue": 14,
+          "grossIssue": 4,
           "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
+          "netIssue": 4,
+          "issuedQty": 4
         },
         "17005065": {
           "code": "17005065",
@@ -11751,10 +10279,10 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 55,
+          "grossIssue": 46,
           "mrnReturn": 17,
-          "netIssue": 38,
-          "issuedQty": 38
+          "netIssue": 29,
+          "issuedQty": 29
         },
         "17005072": {
           "code": "17005072",
@@ -12007,15 +10535,6 @@ window.ContractorSapStock = {
           "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "17006129": {
-          "code": "17006129",
-          "desc": "MS-FISH PLATE 75X10X254-1.5KG",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
         },
         "22002542": {
           "code": "22002542",
@@ -13647,10 +12166,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Anjali Electricals Dayashankar",
-      "materialCount": 92,
-      "totalGrossIssue": 22582.9,
+      "materialCount": 91,
+      "totalGrossIssue": 22382.9,
       "totalMrnReturn": 10853.195,
-      "totalNetIssue": 11729.705,
+      "totalNetIssue": 11529.705,
       "materials": {
         "17000004": {
           "code": "17000004",
@@ -14011,15 +12530,6 @@ window.ContractorSapStock = {
           "mrnReturn": 311,
           "netIssue": 69,
           "issuedQty": 69
-        },
-        "17001312": {
-          "code": "17001312",
-          "desc": "STAY SET CLAMP-A LG 100X116 50X10X310 MM",
-          "uom": "NO",
-          "grossIssue": 200,
-          "mrnReturn": 0,
-          "netIssue": 200,
-          "issuedQty": 200
         },
         "17001356": {
           "code": "17001356",
@@ -14490,9 +13000,9 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "LK Electricals",
       "materialCount": 126,
-      "totalGrossIssue": 66816.728,
-      "totalMrnReturn": 5620.71,
-      "totalNetIssue": 61196.018,
+      "totalGrossIssue": 66768.728,
+      "totalMrnReturn": 5608.71,
+      "totalNetIssue": 61160.018,
       "materials": {
         "17000004": {
           "code": "17000004",
@@ -15389,8 +13899,8 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
+          "grossIssue": 32,
+          "mrnReturn": 0,
           "netIssue": 32,
           "issuedQty": 32
         },
@@ -15398,8 +13908,8 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 116,
-          "mrnReturn": 6,
+          "grossIssue": 110,
+          "mrnReturn": 0,
           "netIssue": 110,
           "issuedQty": 110
         },
@@ -15416,8 +13926,8 @@ window.ContractorSapStock = {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 81,
-          "mrnReturn": 4,
+          "grossIssue": 77,
+          "mrnReturn": 0,
           "netIssue": 77,
           "issuedQty": 77
         },
@@ -15587,10 +14097,10 @@ window.ContractorSapStock = {
           "code": "17006129",
           "desc": "MS-FISH PLATE 75X10X254-1.5KG",
           "uom": "NO",
-          "grossIssue": 66,
+          "grossIssue": 30,
           "mrnReturn": 14,
-          "netIssue": 52,
-          "issuedQty": 52
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "22002542": {
           "code": "22002542",
@@ -17345,8 +15855,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -17848,8 +16358,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -29187,10 +27697,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "500303597",
       "contractorName": "MANOJ KAUMAR MOHTO",
-      "materialCount": 127,
-      "totalGrossIssue": 30680.159,
-      "totalMrnReturn": 3040.99,
-      "totalNetIssue": 27639.169,
+      "materialCount": 125,
+      "totalGrossIssue": 30403.159,
+      "totalMrnReturn": 349.03,
+      "totalNetIssue": 30054.129,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -29224,45 +27734,45 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "17000046": {
           "code": "17000046",
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 250,
-          "mrnReturn": 46,
-          "netIssue": 204,
-          "issuedQty": 204
+          "mrnReturn": 0,
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 16,
-          "netIssue": 214,
-          "issuedQty": 214
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17000057": {
           "code": "17000057",
           "desc": "LT SPACER",
           "uom": "NO",
           "grossIssue": 130,
-          "mrnReturn": 95,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000058": {
           "code": "17000058",
           "desc": "LT STAY INSULATOR",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 2,
-          "netIssue": 23,
-          "issuedQty": 23
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17000081": {
           "code": "17000081",
@@ -29287,9 +27797,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1.478,
-          "mrnReturn": 0.16,
-          "netIssue": 1.318,
-          "issuedQty": 1.318
+          "mrnReturn": 0,
+          "netIssue": 1.478,
+          "issuedQty": 1.478
         },
         "17000195": {
           "code": "17000195",
@@ -29305,81 +27815,81 @@ window.ContractorSapStock = {
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
           "grossIssue": 445,
-          "mrnReturn": 16,
-          "netIssue": 429,
-          "issuedQty": 429
+          "mrnReturn": 0,
+          "netIssue": 445,
+          "issuedQty": 445
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 184,
-          "mrnReturn": 90,
-          "netIssue": 94,
-          "issuedQty": 94
+          "mrnReturn": 0,
+          "netIssue": 184,
+          "issuedQty": 184
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 479,
-          "mrnReturn": 35,
-          "netIssue": 444,
-          "issuedQty": 444
+          "mrnReturn": 0,
+          "netIssue": 479,
+          "issuedQty": 479
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 566,
-          "mrnReturn": 58,
-          "netIssue": 508,
-          "issuedQty": 508
+          "mrnReturn": 0,
+          "netIssue": 566,
+          "issuedQty": 566
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 85,
-          "mrnReturn": 40,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 85,
+          "issuedQty": 85
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 60,
-          "mrnReturn": 52,
-          "netIssue": 8,
-          "issuedQty": 8
+          "mrnReturn": 0,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17000617": {
           "code": "17000617",
           "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 50,
-          "mrnReturn": 16,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000618": {
           "code": "17000618",
           "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 17,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 165,
-          "mrnReturn": 56,
-          "netIssue": 109,
-          "issuedQty": 109
+          "mrnReturn": 0,
+          "netIssue": 165,
+          "issuedQty": 165
         },
         "17000624": {
           "code": "17000624",
@@ -29395,9 +27905,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 562,
-          "mrnReturn": 44,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 562,
+          "issuedQty": 562
         },
         "17000627": {
           "code": "17000627",
@@ -29413,9 +27923,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 112,
-          "mrnReturn": 7,
-          "netIssue": 105,
-          "issuedQty": 105
+          "mrnReturn": 0,
+          "netIssue": 112,
+          "issuedQty": 112
         },
         "17000632": {
           "code": "17000632",
@@ -29430,8 +27940,8 @@ window.ContractorSapStock = {
           "code": "17000633",
           "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 454,
-          "mrnReturn": 454,
+          "grossIssue": 214,
+          "mrnReturn": 214,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -29440,9 +27950,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 212,
-          "mrnReturn": 130,
-          "netIssue": 82,
-          "issuedQty": 82
+          "mrnReturn": 0,
+          "netIssue": 212,
+          "issuedQty": 212
         },
         "17000637": {
           "code": "17000637",
@@ -29458,18 +27968,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 9,
-          "netIssue": 11,
-          "issuedQty": 11
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000651": {
           "code": "17000651",
           "desc": "LUG AL RING 70 SQMM",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 12,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000656": {
           "code": "17000656",
@@ -29485,27 +27995,27 @@ window.ContractorSapStock = {
           "desc": "LT SHACKLE HARDWARE",
           "uom": "PAA",
           "grossIssue": 168,
-          "mrnReturn": 113,
-          "netIssue": 55,
-          "issuedQty": 55
+          "mrnReturn": 0,
+          "netIssue": 168,
+          "issuedQty": 168
         },
         "17000702": {
           "code": "17000702",
           "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
           "uom": "NO",
           "grossIssue": 15,
-          "mrnReturn": 2,
-          "netIssue": 13,
-          "issuedQty": 13
+          "mrnReturn": 0,
+          "netIssue": 15,
+          "issuedQty": 15
         },
         "17000704": {
           "code": "17000704",
           "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
           "uom": "NO",
           "grossIssue": 269,
-          "mrnReturn": 44,
-          "netIssue": 225,
-          "issuedQty": 225
+          "mrnReturn": 0,
+          "netIssue": 269,
+          "issuedQty": 269
         },
         "17000725": {
           "code": "17000725",
@@ -29521,18 +28031,18 @@ window.ContractorSapStock = {
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
           "grossIssue": 274,
-          "mrnReturn": 91,
-          "netIssue": 183,
-          "issuedQty": 183
+          "mrnReturn": 0,
+          "netIssue": 274,
+          "issuedQty": 274
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 120,
-          "mrnReturn": 71,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 120,
+          "issuedQty": 120
         },
         "17000775": {
           "code": "17000775",
@@ -29575,18 +28085,18 @@ window.ContractorSapStock = {
           "desc": "LUG AL RING 120 SQMM",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 20,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 6,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17001240": {
           "code": "17001240",
@@ -29611,9 +28121,9 @@ window.ContractorSapStock = {
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 20.081,
-          "mrnReturn": 5.8,
-          "netIssue": 14.281,
-          "issuedQty": 14.281
+          "mrnReturn": 0,
+          "netIssue": 20.081,
+          "issuedQty": 20.081
         },
         "17001264": {
           "code": "17001264",
@@ -29629,18 +28139,18 @@ window.ContractorSapStock = {
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
           "grossIssue": 810,
-          "mrnReturn": 292,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 810,
+          "issuedQty": 810
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 181,
-          "mrnReturn": 44,
-          "netIssue": 137,
-          "issuedQty": 137
+          "mrnReturn": 0,
+          "netIssue": 181,
+          "issuedQty": 181
         },
         "17001312": {
           "code": "17001312",
@@ -29656,9 +28166,9 @@ window.ContractorSapStock = {
           "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
           "uom": "NO",
           "grossIssue": 216,
-          "mrnReturn": 13,
-          "netIssue": 203,
-          "issuedQty": 203
+          "mrnReturn": 0,
+          "netIssue": 216,
+          "issuedQty": 216
         },
         "17001369": {
           "code": "17001369",
@@ -29674,9 +28184,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 265,
-          "mrnReturn": 21,
-          "netIssue": 244,
-          "issuedQty": 244
+          "mrnReturn": 0,
+          "netIssue": 265,
+          "issuedQty": 265
         },
         "17001992": {
           "code": "17001992",
@@ -29701,18 +28211,18 @@ window.ContractorSapStock = {
           "desc": "JOINTING SLEEVE AAAC RABBIT CONDUCTOR",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 49,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17004596": {
           "code": "17004596",
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 160,
-          "mrnReturn": 35,
-          "netIssue": 125,
-          "issuedQty": 125
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17004662": {
           "code": "17004662",
@@ -29728,9 +28238,9 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 46,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 33,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005020": {
           "code": "17005020",
@@ -29755,27 +28265,27 @@ window.ContractorSapStock = {
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 67,
-          "mrnReturn": 30,
-          "netIssue": 37,
-          "issuedQty": 37
+          "mrnReturn": 0,
+          "netIssue": 67,
+          "issuedQty": 67
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 78,
-          "mrnReturn": 10,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 78,
+          "issuedQty": 78
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 76,
-          "mrnReturn": 8,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 76,
+          "issuedQty": 76
         },
         "17005044": {
           "code": "17005044",
@@ -29800,108 +28310,108 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 142,
-          "mrnReturn": 20,
-          "netIssue": 122,
-          "issuedQty": 122
+          "mrnReturn": 0,
+          "netIssue": 142,
+          "issuedQty": 142
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 97,
-          "netIssue": 233,
-          "issuedQty": 233
+          "mrnReturn": 0,
+          "netIssue": 330,
+          "issuedQty": 330
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 196,
-          "mrnReturn": 139,
-          "netIssue": 57,
-          "issuedQty": 57
+          "mrnReturn": 0,
+          "netIssue": 196,
+          "issuedQty": 196
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 270,
-          "mrnReturn": 65,
-          "netIssue": 205,
-          "issuedQty": 205
+          "mrnReturn": 0,
+          "netIssue": 270,
+          "issuedQty": 270
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 11,
-          "netIssue": 19,
-          "issuedQty": 19
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 22,
-          "netIssue": 58,
-          "issuedQty": 58
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 70,
-          "mrnReturn": 1,
-          "netIssue": 69,
-          "issuedQty": 69
+          "mrnReturn": 0,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17005059": {
           "code": "17005059",
           "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 1,
+          "netIssue": 3,
+          "issuedQty": 3
         },
         "17005060": {
           "code": "17005060",
           "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 3,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17005061": {
           "code": "17005061",
           "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 9,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 4,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005063": {
           "code": "17005063",
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 3,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
-          "grossIssue": 28,
-          "mrnReturn": 15,
-          "netIssue": 13,
-          "issuedQty": 13
+          "grossIssue": 18,
+          "mrnReturn": 0,
+          "netIssue": 18,
+          "issuedQty": 18
         },
         "17005065": {
           "code": "17005065",
@@ -29935,108 +28445,99 @@ window.ContractorSapStock = {
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 3,
-          "netIssue": 7,
-          "issuedQty": 7
+          "mrnReturn": 0,
+          "netIssue": 10,
+          "issuedQty": 10
         },
         "17005077": {
           "code": "17005077",
           "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
           "uom": "NO",
           "grossIssue": 26,
-          "mrnReturn": 16,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 26,
+          "issuedQty": 26
         },
         "17005078": {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 1,
-          "netIssue": 19,
-          "issuedQty": 19
+          "grossIssue": 16,
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 178,
-          "mrnReturn": 70,
-          "netIssue": 108,
-          "issuedQty": 108
+          "mrnReturn": 0,
+          "netIssue": 178,
+          "issuedQty": 178
         },
         "17005081": {
           "code": "17005081",
           "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 12,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 40,
-          "netIssue": 190,
-          "issuedQty": 190
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17005083": {
           "code": "17005083",
           "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 10,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 47,
-          "mrnReturn": 14,
-          "netIssue": 33,
-          "issuedQty": 33
+          "mrnReturn": 0,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005091": {
           "code": "17005091",
           "desc": "MS-LT STAY SET 16 MM",
           "uom": "SET",
           "grossIssue": 25,
-          "mrnReturn": 3,
-          "netIssue": 22,
-          "issuedQty": 22
+          "mrnReturn": 2,
+          "netIssue": 23,
+          "issuedQty": 23
         },
         "17005188": {
           "code": "17005188",
           "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
           "uom": "M",
           "grossIssue": 462,
-          "mrnReturn": 80,
-          "netIssue": 382,
-          "issuedQty": 382
-        },
-        "17005212": {
-          "code": "17005212",
-          "desc": "HDPE PIPE 150 MM DIA",
-          "uom": "M",
-          "grossIssue": 19,
-          "mrnReturn": 19,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 462,
+          "issuedQty": 462
         },
         "17005508": {
           "code": "17005508",
@@ -30052,9 +28553,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 170,
-          "mrnReturn": 27,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 0,
+          "netIssue": 170,
+          "issuedQty": 170
         },
         "17005597": {
           "code": "17005597",
@@ -30065,23 +28566,14 @@ window.ContractorSapStock = {
           "netIssue": 0.27,
           "issuedQty": 0.27
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 600,
-          "mrnReturn": 166,
-          "netIssue": 434,
-          "issuedQty": 434
+          "mrnReturn": 0,
+          "netIssue": 600,
+          "issuedQty": 600
         },
         "17005858": {
           "code": "17005858",
@@ -30345,8 +28837,8 @@ window.ContractorSapStock = {
       "vendorCode": "500308115",
       "contractorName": "RAATH BILDICON",
       "materialCount": 57,
-      "totalGrossIssue": 8460.9,
-      "totalMrnReturn": 50,
+      "totalGrossIssue": 8410.9,
+      "totalMrnReturn": 0,
       "totalNetIssue": 8410.9,
       "materials": {
         "17000004": {
@@ -30524,8 +29016,8 @@ window.ContractorSapStock = {
           "code": "17001243",
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
-          "grossIssue": 108,
-          "mrnReturn": 50,
+          "grossIssue": 58,
+          "mrnReturn": 0,
           "netIssue": 58,
           "issuedQty": 58
         },
@@ -56032,16 +54524,16 @@ window.ContractorSapStock = {
       "vendorCode": "500308483",
       "contractorName": "D S INFRASTUACTURE",
       "materialCount": 101,
-      "totalGrossIssue": 48287.513,
-      "totalMrnReturn": 16465.927,
-      "totalNetIssue": 31821.586,
+      "totalGrossIssue": 39814.513,
+      "totalMrnReturn": 7968.927,
+      "totalNetIssue": 31845.586,
       "materials": {
         "17000004": {
           "code": "17000004",
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
-          "grossIssue": 430,
-          "mrnReturn": 121,
+          "grossIssue": 322,
+          "mrnReturn": 13,
           "netIssue": 309,
           "issuedQty": 309
         },
@@ -56058,8 +54550,8 @@ window.ContractorSapStock = {
           "code": "17000008",
           "desc": "RSJ POLE 152X152 MM 13 MTR",
           "uom": "NO",
-          "grossIssue": 9,
-          "mrnReturn": 3,
+          "grossIssue": 6,
+          "mrnReturn": 0,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -56067,8 +54559,8 @@ window.ContractorSapStock = {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
-          "grossIssue": 16,
-          "mrnReturn": 3,
+          "grossIssue": 13,
+          "mrnReturn": 0,
           "netIssue": 13,
           "issuedQty": 13
         },
@@ -56076,8 +54568,8 @@ window.ContractorSapStock = {
           "code": "17000026",
           "desc": "HORN GAP FUSE 11 KV",
           "uom": "SET",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -56085,8 +54577,8 @@ window.ContractorSapStock = {
           "code": "17000046",
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
-          "grossIssue": 1149,
-          "mrnReturn": 388,
+          "grossIssue": 899,
+          "mrnReturn": 138,
           "netIssue": 761,
           "issuedQty": 761
         },
@@ -56094,8 +54586,8 @@ window.ContractorSapStock = {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
-          "grossIssue": 641,
-          "mrnReturn": 131,
+          "grossIssue": 510,
+          "mrnReturn": 0,
           "netIssue": 510,
           "issuedQty": 510
         },
@@ -56103,8 +54595,8 @@ window.ContractorSapStock = {
           "code": "17000057",
           "desc": "LT SPACER",
           "uom": "NO",
-          "grossIssue": 153,
-          "mrnReturn": 40,
+          "grossIssue": 150,
+          "mrnReturn": 37,
           "netIssue": 113,
           "issuedQty": 113
         },
@@ -56112,8 +54604,8 @@ window.ContractorSapStock = {
           "code": "17000058",
           "desc": "LT STAY INSULATOR",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 14,
+          "grossIssue": 20,
+          "mrnReturn": 0,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -56121,8 +54613,8 @@ window.ContractorSapStock = {
           "code": "17000081",
           "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -56130,8 +54622,8 @@ window.ContractorSapStock = {
           "code": "17000108",
           "desc": "LT CT METER BOX FOR 100 KVA DTC",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -56139,8 +54631,8 @@ window.ContractorSapStock = {
           "code": "17000120",
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
-          "grossIssue": 10.46,
-          "mrnReturn": 5.835,
+          "grossIssue": 8.46,
+          "mrnReturn": 3.835,
           "netIssue": 4.625,
           "issuedQty": 4.625
         },
@@ -56148,8 +54640,8 @@ window.ContractorSapStock = {
           "code": "17000128",
           "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
           "uom": "NO",
-          "grossIssue": 39,
-          "mrnReturn": 12,
+          "grossIssue": 30,
+          "mrnReturn": 3,
           "netIssue": 27,
           "issuedQty": 27
         },
@@ -56157,8 +54649,8 @@ window.ContractorSapStock = {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 2110.4,
-          "mrnReturn": 431,
+          "grossIssue": 2057.4,
+          "mrnReturn": 378,
           "netIssue": 1679.4,
           "issuedQty": 1679.4
         },
@@ -56166,8 +54658,8 @@ window.ContractorSapStock = {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
-          "grossIssue": 520,
-          "mrnReturn": 159,
+          "grossIssue": 407,
+          "mrnReturn": 46,
           "netIssue": 361,
           "issuedQty": 361
         },
@@ -56175,8 +54667,8 @@ window.ContractorSapStock = {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
-          "grossIssue": 3675,
-          "mrnReturn": 1535.4,
+          "grossIssue": 2975,
+          "mrnReturn": 835.4,
           "netIssue": 2139.6,
           "issuedQty": 2139.6
         },
@@ -56184,8 +54676,8 @@ window.ContractorSapStock = {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 2631,
-          "mrnReturn": 452,
+          "grossIssue": 2371,
+          "mrnReturn": 192,
           "netIssue": 2179,
           "issuedQty": 2179
         },
@@ -56193,8 +54685,8 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 886,
-          "mrnReturn": 373,
+          "grossIssue": 698,
+          "mrnReturn": 185,
           "netIssue": 513,
           "issuedQty": 513
         },
@@ -56202,8 +54694,8 @@ window.ContractorSapStock = {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 615,
-          "mrnReturn": 289,
+          "grossIssue": 500,
+          "mrnReturn": 174,
           "netIssue": 326,
           "issuedQty": 326
         },
@@ -56220,8 +54712,8 @@ window.ContractorSapStock = {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 182,
-          "mrnReturn": 66,
+          "grossIssue": 140,
+          "mrnReturn": 24,
           "netIssue": 116,
           "issuedQty": 116
         },
@@ -56229,8 +54721,8 @@ window.ContractorSapStock = {
           "code": "17000624",
           "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 3968,
-          "mrnReturn": 1964,
+          "grossIssue": 2608,
+          "mrnReturn": 604,
           "netIssue": 2004,
           "issuedQty": 2004
         },
@@ -56238,8 +54730,8 @@ window.ContractorSapStock = {
           "code": "17000625",
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 3424,
-          "mrnReturn": 1731,
+          "grossIssue": 2264,
+          "mrnReturn": 571,
           "netIssue": 1693,
           "issuedQty": 1693
         },
@@ -56265,8 +54757,8 @@ window.ContractorSapStock = {
           "code": "17000636",
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 593,
-          "mrnReturn": 178,
+          "grossIssue": 430,
+          "mrnReturn": 15,
           "netIssue": 415,
           "issuedQty": 415
         },
@@ -56274,8 +54766,8 @@ window.ContractorSapStock = {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 119,
-          "mrnReturn": 68,
+          "grossIssue": 100,
+          "mrnReturn": 49,
           "netIssue": 51,
           "issuedQty": 51
         },
@@ -56283,8 +54775,8 @@ window.ContractorSapStock = {
           "code": "17000651",
           "desc": "LUG AL RING 70 SQMM",
           "uom": "NO",
-          "grossIssue": 206,
-          "mrnReturn": 54,
+          "grossIssue": 152,
+          "mrnReturn": 0,
           "netIssue": 152,
           "issuedQty": 152
         },
@@ -56310,8 +54802,8 @@ window.ContractorSapStock = {
           "code": "17000702",
           "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
           "uom": "NO",
-          "grossIssue": 166,
-          "mrnReturn": 55,
+          "grossIssue": 115,
+          "mrnReturn": 4,
           "netIssue": 111,
           "issuedQty": 111
         },
@@ -56319,8 +54811,8 @@ window.ContractorSapStock = {
           "code": "17000704",
           "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
           "uom": "NO",
-          "grossIssue": 1020,
-          "mrnReturn": 380,
+          "grossIssue": 820,
+          "mrnReturn": 180,
           "netIssue": 640,
           "issuedQty": 640
         },
@@ -56328,8 +54820,8 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 894,
-          "mrnReturn": 305,
+          "grossIssue": 728,
+          "mrnReturn": 139,
           "netIssue": 589,
           "issuedQty": 589
         },
@@ -56337,8 +54829,8 @@ window.ContractorSapStock = {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
-          "grossIssue": 34,
-          "mrnReturn": 14,
+          "grossIssue": 20,
+          "mrnReturn": 0,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -56355,8 +54847,8 @@ window.ContractorSapStock = {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
-          "grossIssue": 200,
-          "mrnReturn": 53,
+          "grossIssue": 160,
+          "mrnReturn": 13,
           "netIssue": 147,
           "issuedQty": 147
         },
@@ -56364,8 +54856,8 @@ window.ContractorSapStock = {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 208,
-          "mrnReturn": 93,
+          "grossIssue": 175,
+          "mrnReturn": 60,
           "netIssue": 115,
           "issuedQty": 115
         },
@@ -56373,8 +54865,8 @@ window.ContractorSapStock = {
           "code": "17001242",
           "desc": "RSJ POLE 100X116 MM 10 MTR",
           "uom": "NO",
-          "grossIssue": 104,
-          "mrnReturn": 40,
+          "grossIssue": 64,
+          "mrnReturn": 0,
           "netIssue": 64,
           "issuedQty": 64
         },
@@ -56382,8 +54874,8 @@ window.ContractorSapStock = {
           "code": "17001243",
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
-          "grossIssue": 186,
-          "mrnReturn": 59,
+          "grossIssue": 127,
+          "mrnReturn": 0,
           "netIssue": 127,
           "issuedQty": 127
         },
@@ -56391,8 +54883,8 @@ window.ContractorSapStock = {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
-          "grossIssue": 142,
-          "mrnReturn": 51.344,
+          "grossIssue": 112,
+          "mrnReturn": 21.344,
           "netIssue": 90.656,
           "issuedQty": 90.656
         },
@@ -56400,8 +54892,8 @@ window.ContractorSapStock = {
           "code": "17001264",
           "desc": "CT LT RING TYPE 200/5A",
           "uom": "NO",
-          "grossIssue": 36,
-          "mrnReturn": 9,
+          "grossIssue": 27,
+          "mrnReturn": 0,
           "netIssue": 27,
           "issuedQty": 27
         },
@@ -56418,8 +54910,8 @@ window.ContractorSapStock = {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
-          "grossIssue": 901,
-          "mrnReturn": 339,
+          "grossIssue": 728,
+          "mrnReturn": 166,
           "netIssue": 562,
           "issuedQty": 562
         },
@@ -56427,8 +54919,8 @@ window.ContractorSapStock = {
           "code": "17001356",
           "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
           "uom": "NO",
-          "grossIssue": 1049,
-          "mrnReturn": 604,
+          "grossIssue": 910,
+          "mrnReturn": 465,
           "netIssue": 445,
           "issuedQty": 445
         },
@@ -56445,8 +54937,8 @@ window.ContractorSapStock = {
           "code": "17001369",
           "desc": "EARTHING SET LT",
           "uom": "NO",
-          "grossIssue": 80,
-          "mrnReturn": 41,
+          "grossIssue": 75,
+          "mrnReturn": 36,
           "netIssue": 39,
           "issuedQty": 39
         },
@@ -56454,8 +54946,8 @@ window.ContractorSapStock = {
           "code": "17001397",
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
-          "grossIssue": 2735,
-          "mrnReturn": 1057,
+          "grossIssue": 2200,
+          "mrnReturn": 522,
           "netIssue": 1678,
           "issuedQty": 1678
         },
@@ -56481,8 +54973,8 @@ window.ContractorSapStock = {
           "code": "17004596",
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
-          "grossIssue": 386,
-          "mrnReturn": 90,
+          "grossIssue": 296,
+          "mrnReturn": 0,
           "netIssue": 296,
           "issuedQty": 296
         },
@@ -56490,8 +54982,8 @@ window.ContractorSapStock = {
           "code": "17004662",
           "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 4,
+          "grossIssue": 9,
+          "mrnReturn": 1,
           "netIssue": 8,
           "issuedQty": 8
         },
@@ -56499,8 +54991,8 @@ window.ContractorSapStock = {
           "code": "17004792",
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 82,
+          "grossIssue": 140,
+          "mrnReturn": 51,
           "netIssue": 89,
           "issuedQty": 89
         },
@@ -56508,8 +55000,8 @@ window.ContractorSapStock = {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 15,
+          "grossIssue": 31,
+          "mrnReturn": 9,
           "netIssue": 22,
           "issuedQty": 22
         },
@@ -56517,8 +55009,8 @@ window.ContractorSapStock = {
           "code": "17005039",
           "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
           "uom": "NO",
-          "grossIssue": 41,
-          "mrnReturn": 25,
+          "grossIssue": 25,
+          "mrnReturn": 9,
           "netIssue": 16,
           "issuedQty": 16
         },
@@ -56526,8 +55018,8 @@ window.ContractorSapStock = {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 18,
+          "grossIssue": 52,
+          "mrnReturn": 6,
           "netIssue": 46,
           "issuedQty": 46
         },
@@ -56535,8 +55027,8 @@ window.ContractorSapStock = {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
-          "grossIssue": 729,
-          "mrnReturn": 312,
+          "grossIssue": 561,
+          "mrnReturn": 144,
           "netIssue": 417,
           "issuedQty": 417
         },
@@ -56544,8 +55036,8 @@ window.ContractorSapStock = {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
-          "grossIssue": 360,
-          "mrnReturn": 126,
+          "grossIssue": 270,
+          "mrnReturn": 36,
           "netIssue": 234,
           "issuedQty": 234
         },
@@ -56553,8 +55045,8 @@ window.ContractorSapStock = {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
-          "grossIssue": 354,
-          "mrnReturn": 120,
+          "grossIssue": 264,
+          "mrnReturn": 30,
           "netIssue": 234,
           "issuedQty": 234
         },
@@ -56562,8 +55054,8 @@ window.ContractorSapStock = {
           "code": "17005044",
           "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
           "uom": "NO",
-          "grossIssue": 70,
-          "mrnReturn": 17,
+          "grossIssue": 60,
+          "mrnReturn": 7,
           "netIssue": 53,
           "issuedQty": 53
         },
@@ -56571,8 +55063,8 @@ window.ContractorSapStock = {
           "code": "17005045",
           "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
           "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 10,
+          "grossIssue": 52,
+          "mrnReturn": 0,
           "netIssue": 52,
           "issuedQty": 52
         },
@@ -56580,8 +55072,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 1040,
-          "mrnReturn": 111,
+          "grossIssue": 932,
+          "mrnReturn": 3,
           "netIssue": 929,
           "issuedQty": 929
         },
@@ -56589,8 +55081,8 @@ window.ContractorSapStock = {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
-          "grossIssue": 1375,
-          "mrnReturn": 307,
+          "grossIssue": 1230,
+          "mrnReturn": 162,
           "netIssue": 1068,
           "issuedQty": 1068
         },
@@ -56598,8 +55090,8 @@ window.ContractorSapStock = {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
-          "grossIssue": 605,
-          "mrnReturn": 309,
+          "grossIssue": 591,
+          "mrnReturn": 295,
           "netIssue": 296,
           "issuedQty": 296
         },
@@ -56607,8 +55099,8 @@ window.ContractorSapStock = {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
-          "grossIssue": 1140,
-          "mrnReturn": 485,
+          "grossIssue": 859,
+          "mrnReturn": 204,
           "netIssue": 655,
           "issuedQty": 655
         },
@@ -56616,8 +55108,8 @@ window.ContractorSapStock = {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
-          "grossIssue": 624,
-          "mrnReturn": 286,
+          "grossIssue": 490,
+          "mrnReturn": 152,
           "netIssue": 338,
           "issuedQty": 338
         },
@@ -56634,8 +55126,8 @@ window.ContractorSapStock = {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
-          "grossIssue": 445,
-          "mrnReturn": 187,
+          "grossIssue": 357,
+          "mrnReturn": 99,
           "netIssue": 258,
           "issuedQty": 258
         },
@@ -56643,8 +55135,8 @@ window.ContractorSapStock = {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
-          "grossIssue": 1006,
-          "mrnReturn": 449,
+          "grossIssue": 814,
+          "mrnReturn": 257,
           "netIssue": 557,
           "issuedQty": 557
         },
@@ -56652,8 +55144,8 @@ window.ContractorSapStock = {
           "code": "17005059",
           "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
           "uom": "NO",
-          "grossIssue": 40,
-          "mrnReturn": 20,
+          "grossIssue": 34,
+          "mrnReturn": 14,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -56661,8 +55153,8 @@ window.ContractorSapStock = {
           "code": "17005060",
           "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
           "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 8,
+          "grossIssue": 20,
+          "mrnReturn": 2,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -56670,8 +55162,8 @@ window.ContractorSapStock = {
           "code": "17005061",
           "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
-          "grossIssue": 24,
-          "mrnReturn": 6,
+          "grossIssue": 18,
+          "mrnReturn": 0,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -56679,8 +55171,8 @@ window.ContractorSapStock = {
           "code": "17005062",
           "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 8,
+          "grossIssue": 28,
+          "mrnReturn": 2,
           "netIssue": 26,
           "issuedQty": 26
         },
@@ -56688,8 +55180,8 @@ window.ContractorSapStock = {
           "code": "17005063",
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
-          "grossIssue": 22,
-          "mrnReturn": 9,
+          "grossIssue": 13,
+          "mrnReturn": 0,
           "netIssue": 13,
           "issuedQty": 13
         },
@@ -56697,8 +55189,8 @@ window.ContractorSapStock = {
           "code": "17005065",
           "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
           "uom": "NO",
-          "grossIssue": 24,
-          "mrnReturn": 6,
+          "grossIssue": 18,
+          "mrnReturn": 0,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -56706,8 +55198,8 @@ window.ContractorSapStock = {
           "code": "17005066",
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
+          "grossIssue": 28,
+          "mrnReturn": 10,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -56715,8 +55207,8 @@ window.ContractorSapStock = {
           "code": "17005067",
           "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 6,
+          "grossIssue": 28,
+          "mrnReturn": 0,
           "netIssue": 28,
           "issuedQty": 28
         },
@@ -56724,8 +55216,8 @@ window.ContractorSapStock = {
           "code": "17005068",
           "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
+          "grossIssue": 8,
+          "mrnReturn": 1,
           "netIssue": 7,
           "issuedQty": 7
         },
@@ -56733,8 +55225,8 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 3,
+          "grossIssue": 12,
+          "mrnReturn": 0,
           "netIssue": 12,
           "issuedQty": 12
         },
@@ -56742,8 +55234,8 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 9,
+          "grossIssue": 57,
+          "mrnReturn": 0,
           "netIssue": 57,
           "issuedQty": 57
         },
@@ -56760,17 +55252,17 @@ window.ContractorSapStock = {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 124,
-          "mrnReturn": 59,
-          "netIssue": 65,
-          "issuedQty": 65
+          "grossIssue": 100,
+          "mrnReturn": 11,
+          "netIssue": 89,
+          "issuedQty": 89
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
-          "grossIssue": 349,
-          "mrnReturn": 126,
+          "grossIssue": 300,
+          "mrnReturn": 77,
           "netIssue": 223,
           "issuedQty": 223
         },
@@ -56778,8 +55270,8 @@ window.ContractorSapStock = {
           "code": "17005081",
           "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
           "uom": "NO",
-          "grossIssue": 100,
-          "mrnReturn": 15,
+          "grossIssue": 85,
+          "mrnReturn": 0,
           "netIssue": 85,
           "issuedQty": 85
         },
@@ -56787,8 +55279,8 @@ window.ContractorSapStock = {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
-          "grossIssue": 518,
-          "mrnReturn": 243,
+          "grossIssue": 350,
+          "mrnReturn": 75,
           "netIssue": 275,
           "issuedQty": 275
         },
@@ -56796,8 +55288,8 @@ window.ContractorSapStock = {
           "code": "17005083",
           "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
           "uom": "NO",
-          "grossIssue": 220,
-          "mrnReturn": 135,
+          "grossIssue": 180,
+          "mrnReturn": 95,
           "netIssue": 85,
           "issuedQty": 85
         },
@@ -56805,8 +55297,8 @@ window.ContractorSapStock = {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
-          "grossIssue": 208,
-          "mrnReturn": 183,
+          "grossIssue": 200,
+          "mrnReturn": 175,
           "netIssue": 25,
           "issuedQty": 25
         },
@@ -56832,8 +55324,8 @@ window.ContractorSapStock = {
           "code": "17005091",
           "desc": "MS-LT STAY SET 16 MM",
           "uom": "SET",
-          "grossIssue": 87,
-          "mrnReturn": 22,
+          "grossIssue": 70,
+          "mrnReturn": 5,
           "netIssue": 65,
           "issuedQty": 65
         },
@@ -56841,8 +55333,8 @@ window.ContractorSapStock = {
           "code": "17005188",
           "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
           "uom": "M",
-          "grossIssue": 924,
-          "mrnReturn": 351,
+          "grossIssue": 708,
+          "mrnReturn": 135,
           "netIssue": 573,
           "issuedQty": 573
         },
@@ -56850,8 +55342,8 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 3,
+          "grossIssue": 10,
+          "mrnReturn": 0,
           "netIssue": 10,
           "issuedQty": 10
         },
@@ -56859,8 +55351,8 @@ window.ContractorSapStock = {
           "code": "17005513",
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 511,
-          "mrnReturn": 360,
+          "grossIssue": 450,
+          "mrnReturn": 299,
           "netIssue": 151,
           "issuedQty": 151
         },
@@ -56868,8 +55360,8 @@ window.ContractorSapStock = {
           "code": "17005597",
           "desc": "COVERED CONDUCTOR 55 SQMM",
           "uom": "KM",
-          "grossIssue": 12.403,
-          "mrnReturn": 2.348,
+          "grossIssue": 10.403,
+          "mrnReturn": 0.348,
           "netIssue": 10.055,
           "issuedQty": 10.055
         },
@@ -56877,8 +55369,8 @@ window.ContractorSapStock = {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 1763,
-          "mrnReturn": 80,
+          "grossIssue": 1700,
+          "mrnReturn": 17,
           "netIssue": 1683,
           "issuedQty": 1683
         },
@@ -186940,10 +185432,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -186977,9 +185469,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -187075,10 +185567,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -187296,15 +185788,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -187363,10 +185846,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -187385,15 +185868,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -187512,15 +185986,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -187548,32 +186013,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -187863,10 +186310,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -187900,9 +186347,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -187998,10 +186445,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -188219,15 +186666,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -188286,10 +186724,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -188308,15 +186746,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -188435,15 +186864,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -188471,32 +186891,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -188786,10 +187188,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -188823,9 +187225,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -188921,10 +187323,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -189142,15 +187544,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -189209,10 +187602,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -189231,15 +187624,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -189358,15 +187742,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -189394,32 +187769,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -189709,10 +188066,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -189746,9 +188103,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -189844,10 +188201,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -190065,15 +188422,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -190132,10 +188480,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -190154,15 +188502,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -190281,15 +188620,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -190317,32 +188647,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -190632,10 +188944,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -190669,9 +188981,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -190767,10 +189079,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -190988,15 +189300,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -191055,10 +189358,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -191077,15 +189380,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -191204,15 +189498,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -191240,32 +189525,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -191555,10 +189822,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -191592,9 +189859,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -191690,10 +189957,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -191911,15 +190178,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -191978,10 +190236,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -192000,15 +190258,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -192127,15 +190376,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -192163,32 +190403,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -192478,10 +190700,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -192515,9 +190737,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -192613,10 +190835,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -192834,15 +191056,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -192901,10 +191114,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -192923,15 +191136,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -193050,15 +191254,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -193086,32 +191281,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -193401,10 +191578,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -193438,9 +191615,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -193536,10 +191713,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -193757,15 +191934,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -193824,10 +191992,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -193846,15 +192014,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -193973,15 +192132,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -194009,32 +192159,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -196707,10 +194839,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "500303597",
       "contractorName": "MANOJ KAUMAR MOHTO",
-      "materialCount": 127,
-      "totalGrossIssue": 30680.159,
-      "totalMrnReturn": 3040.99,
-      "totalNetIssue": 27639.169,
+      "materialCount": 125,
+      "totalGrossIssue": 30403.159,
+      "totalMrnReturn": 349.03,
+      "totalNetIssue": 30054.129,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -196744,45 +194876,45 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "17000046": {
           "code": "17000046",
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 250,
-          "mrnReturn": 46,
-          "netIssue": 204,
-          "issuedQty": 204
+          "mrnReturn": 0,
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 16,
-          "netIssue": 214,
-          "issuedQty": 214
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17000057": {
           "code": "17000057",
           "desc": "LT SPACER",
           "uom": "NO",
           "grossIssue": 130,
-          "mrnReturn": 95,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000058": {
           "code": "17000058",
           "desc": "LT STAY INSULATOR",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 2,
-          "netIssue": 23,
-          "issuedQty": 23
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17000081": {
           "code": "17000081",
@@ -196807,9 +194939,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1.478,
-          "mrnReturn": 0.16,
-          "netIssue": 1.318,
-          "issuedQty": 1.318
+          "mrnReturn": 0,
+          "netIssue": 1.478,
+          "issuedQty": 1.478
         },
         "17000195": {
           "code": "17000195",
@@ -196825,81 +194957,81 @@ window.ContractorSapStock = {
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
           "grossIssue": 445,
-          "mrnReturn": 16,
-          "netIssue": 429,
-          "issuedQty": 429
+          "mrnReturn": 0,
+          "netIssue": 445,
+          "issuedQty": 445
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 184,
-          "mrnReturn": 90,
-          "netIssue": 94,
-          "issuedQty": 94
+          "mrnReturn": 0,
+          "netIssue": 184,
+          "issuedQty": 184
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 479,
-          "mrnReturn": 35,
-          "netIssue": 444,
-          "issuedQty": 444
+          "mrnReturn": 0,
+          "netIssue": 479,
+          "issuedQty": 479
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 566,
-          "mrnReturn": 58,
-          "netIssue": 508,
-          "issuedQty": 508
+          "mrnReturn": 0,
+          "netIssue": 566,
+          "issuedQty": 566
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 85,
-          "mrnReturn": 40,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 85,
+          "issuedQty": 85
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 60,
-          "mrnReturn": 52,
-          "netIssue": 8,
-          "issuedQty": 8
+          "mrnReturn": 0,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17000617": {
           "code": "17000617",
           "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 50,
-          "mrnReturn": 16,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000618": {
           "code": "17000618",
           "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 17,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 165,
-          "mrnReturn": 56,
-          "netIssue": 109,
-          "issuedQty": 109
+          "mrnReturn": 0,
+          "netIssue": 165,
+          "issuedQty": 165
         },
         "17000624": {
           "code": "17000624",
@@ -196915,9 +195047,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 562,
-          "mrnReturn": 44,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 562,
+          "issuedQty": 562
         },
         "17000627": {
           "code": "17000627",
@@ -196933,9 +195065,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 112,
-          "mrnReturn": 7,
-          "netIssue": 105,
-          "issuedQty": 105
+          "mrnReturn": 0,
+          "netIssue": 112,
+          "issuedQty": 112
         },
         "17000632": {
           "code": "17000632",
@@ -196950,8 +195082,8 @@ window.ContractorSapStock = {
           "code": "17000633",
           "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 454,
-          "mrnReturn": 454,
+          "grossIssue": 214,
+          "mrnReturn": 214,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -196960,9 +195092,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 212,
-          "mrnReturn": 130,
-          "netIssue": 82,
-          "issuedQty": 82
+          "mrnReturn": 0,
+          "netIssue": 212,
+          "issuedQty": 212
         },
         "17000637": {
           "code": "17000637",
@@ -196978,18 +195110,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 9,
-          "netIssue": 11,
-          "issuedQty": 11
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000651": {
           "code": "17000651",
           "desc": "LUG AL RING 70 SQMM",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 12,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000656": {
           "code": "17000656",
@@ -197005,27 +195137,27 @@ window.ContractorSapStock = {
           "desc": "LT SHACKLE HARDWARE",
           "uom": "PAA",
           "grossIssue": 168,
-          "mrnReturn": 113,
-          "netIssue": 55,
-          "issuedQty": 55
+          "mrnReturn": 0,
+          "netIssue": 168,
+          "issuedQty": 168
         },
         "17000702": {
           "code": "17000702",
           "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
           "uom": "NO",
           "grossIssue": 15,
-          "mrnReturn": 2,
-          "netIssue": 13,
-          "issuedQty": 13
+          "mrnReturn": 0,
+          "netIssue": 15,
+          "issuedQty": 15
         },
         "17000704": {
           "code": "17000704",
           "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
           "uom": "NO",
           "grossIssue": 269,
-          "mrnReturn": 44,
-          "netIssue": 225,
-          "issuedQty": 225
+          "mrnReturn": 0,
+          "netIssue": 269,
+          "issuedQty": 269
         },
         "17000725": {
           "code": "17000725",
@@ -197041,18 +195173,18 @@ window.ContractorSapStock = {
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
           "grossIssue": 274,
-          "mrnReturn": 91,
-          "netIssue": 183,
-          "issuedQty": 183
+          "mrnReturn": 0,
+          "netIssue": 274,
+          "issuedQty": 274
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 120,
-          "mrnReturn": 71,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 120,
+          "issuedQty": 120
         },
         "17000775": {
           "code": "17000775",
@@ -197095,18 +195227,18 @@ window.ContractorSapStock = {
           "desc": "LUG AL RING 120 SQMM",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 20,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 6,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17001240": {
           "code": "17001240",
@@ -197131,9 +195263,9 @@ window.ContractorSapStock = {
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 20.081,
-          "mrnReturn": 5.8,
-          "netIssue": 14.281,
-          "issuedQty": 14.281
+          "mrnReturn": 0,
+          "netIssue": 20.081,
+          "issuedQty": 20.081
         },
         "17001264": {
           "code": "17001264",
@@ -197149,18 +195281,18 @@ window.ContractorSapStock = {
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
           "grossIssue": 810,
-          "mrnReturn": 292,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 810,
+          "issuedQty": 810
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 181,
-          "mrnReturn": 44,
-          "netIssue": 137,
-          "issuedQty": 137
+          "mrnReturn": 0,
+          "netIssue": 181,
+          "issuedQty": 181
         },
         "17001312": {
           "code": "17001312",
@@ -197176,9 +195308,9 @@ window.ContractorSapStock = {
           "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
           "uom": "NO",
           "grossIssue": 216,
-          "mrnReturn": 13,
-          "netIssue": 203,
-          "issuedQty": 203
+          "mrnReturn": 0,
+          "netIssue": 216,
+          "issuedQty": 216
         },
         "17001369": {
           "code": "17001369",
@@ -197194,9 +195326,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 265,
-          "mrnReturn": 21,
-          "netIssue": 244,
-          "issuedQty": 244
+          "mrnReturn": 0,
+          "netIssue": 265,
+          "issuedQty": 265
         },
         "17001992": {
           "code": "17001992",
@@ -197221,18 +195353,18 @@ window.ContractorSapStock = {
           "desc": "JOINTING SLEEVE AAAC RABBIT CONDUCTOR",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 49,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17004596": {
           "code": "17004596",
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 160,
-          "mrnReturn": 35,
-          "netIssue": 125,
-          "issuedQty": 125
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17004662": {
           "code": "17004662",
@@ -197248,9 +195380,9 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 46,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 33,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005020": {
           "code": "17005020",
@@ -197275,27 +195407,27 @@ window.ContractorSapStock = {
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 67,
-          "mrnReturn": 30,
-          "netIssue": 37,
-          "issuedQty": 37
+          "mrnReturn": 0,
+          "netIssue": 67,
+          "issuedQty": 67
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 78,
-          "mrnReturn": 10,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 78,
+          "issuedQty": 78
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 76,
-          "mrnReturn": 8,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 76,
+          "issuedQty": 76
         },
         "17005044": {
           "code": "17005044",
@@ -197320,108 +195452,108 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 142,
-          "mrnReturn": 20,
-          "netIssue": 122,
-          "issuedQty": 122
+          "mrnReturn": 0,
+          "netIssue": 142,
+          "issuedQty": 142
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 97,
-          "netIssue": 233,
-          "issuedQty": 233
+          "mrnReturn": 0,
+          "netIssue": 330,
+          "issuedQty": 330
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 196,
-          "mrnReturn": 139,
-          "netIssue": 57,
-          "issuedQty": 57
+          "mrnReturn": 0,
+          "netIssue": 196,
+          "issuedQty": 196
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 270,
-          "mrnReturn": 65,
-          "netIssue": 205,
-          "issuedQty": 205
+          "mrnReturn": 0,
+          "netIssue": 270,
+          "issuedQty": 270
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 11,
-          "netIssue": 19,
-          "issuedQty": 19
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 22,
-          "netIssue": 58,
-          "issuedQty": 58
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 70,
-          "mrnReturn": 1,
-          "netIssue": 69,
-          "issuedQty": 69
+          "mrnReturn": 0,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17005059": {
           "code": "17005059",
           "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 1,
+          "netIssue": 3,
+          "issuedQty": 3
         },
         "17005060": {
           "code": "17005060",
           "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 3,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17005061": {
           "code": "17005061",
           "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 9,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 4,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005063": {
           "code": "17005063",
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 3,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
-          "grossIssue": 28,
-          "mrnReturn": 15,
-          "netIssue": 13,
-          "issuedQty": 13
+          "grossIssue": 18,
+          "mrnReturn": 0,
+          "netIssue": 18,
+          "issuedQty": 18
         },
         "17005065": {
           "code": "17005065",
@@ -197455,108 +195587,99 @@ window.ContractorSapStock = {
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 3,
-          "netIssue": 7,
-          "issuedQty": 7
+          "mrnReturn": 0,
+          "netIssue": 10,
+          "issuedQty": 10
         },
         "17005077": {
           "code": "17005077",
           "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
           "uom": "NO",
           "grossIssue": 26,
-          "mrnReturn": 16,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 26,
+          "issuedQty": 26
         },
         "17005078": {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 1,
-          "netIssue": 19,
-          "issuedQty": 19
+          "grossIssue": 16,
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 178,
-          "mrnReturn": 70,
-          "netIssue": 108,
-          "issuedQty": 108
+          "mrnReturn": 0,
+          "netIssue": 178,
+          "issuedQty": 178
         },
         "17005081": {
           "code": "17005081",
           "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 12,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 40,
-          "netIssue": 190,
-          "issuedQty": 190
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17005083": {
           "code": "17005083",
           "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 10,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 47,
-          "mrnReturn": 14,
-          "netIssue": 33,
-          "issuedQty": 33
+          "mrnReturn": 0,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005091": {
           "code": "17005091",
           "desc": "MS-LT STAY SET 16 MM",
           "uom": "SET",
           "grossIssue": 25,
-          "mrnReturn": 3,
-          "netIssue": 22,
-          "issuedQty": 22
+          "mrnReturn": 2,
+          "netIssue": 23,
+          "issuedQty": 23
         },
         "17005188": {
           "code": "17005188",
           "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
           "uom": "M",
           "grossIssue": 462,
-          "mrnReturn": 80,
-          "netIssue": 382,
-          "issuedQty": 382
-        },
-        "17005212": {
-          "code": "17005212",
-          "desc": "HDPE PIPE 150 MM DIA",
-          "uom": "M",
-          "grossIssue": 19,
-          "mrnReturn": 19,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 462,
+          "issuedQty": 462
         },
         "17005508": {
           "code": "17005508",
@@ -197572,9 +195695,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 170,
-          "mrnReturn": 27,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 0,
+          "netIssue": 170,
+          "issuedQty": 170
         },
         "17005597": {
           "code": "17005597",
@@ -197585,23 +195708,14 @@ window.ContractorSapStock = {
           "netIssue": 0.27,
           "issuedQty": 0.27
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 600,
-          "mrnReturn": 166,
-          "netIssue": 434,
-          "issuedQty": 434
+          "mrnReturn": 0,
+          "netIssue": 600,
+          "issuedQty": 600
         },
         "17005858": {
           "code": "17005858",
@@ -197864,10 +195978,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Raial Infra ABL Dept.Teem",
-      "materialCount": 128,
-      "totalGrossIssue": 56110.174,
-      "totalMrnReturn": 10855.682,
-      "totalNetIssue": 45254.492,
+      "materialCount": 120,
+      "totalGrossIssue": 54783.424,
+      "totalMrnReturn": 1748.7,
+      "totalNetIssue": 53034.724,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -197883,9 +195997,9 @@ window.ContractorSapStock = {
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
           "grossIssue": 13000,
-          "mrnReturn": 2650,
-          "netIssue": 10350,
-          "issuedQty": 10350
+          "mrnReturn": 0,
+          "netIssue": 13000,
+          "issuedQty": 13000
         },
         "12000009": {
           "code": "12000009",
@@ -197901,18 +196015,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
           "grossIssue": 353,
-          "mrnReturn": 140,
-          "netIssue": 213,
-          "issuedQty": 213
+          "mrnReturn": 104,
+          "netIssue": 249,
+          "issuedQty": 249
         },
         "17000023": {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 19,
-          "mrnReturn": 7,
-          "netIssue": 12,
-          "issuedQty": 12
+          "mrnReturn": 0,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "17000026": {
           "code": "17000026",
@@ -197928,18 +196042,18 @@ window.ContractorSapStock = {
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 1004,
-          "mrnReturn": 11,
-          "netIssue": 993,
-          "issuedQty": 993
+          "mrnReturn": 0,
+          "netIssue": 1004,
+          "issuedQty": 1004
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 160,
-          "mrnReturn": 80,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17000058": {
           "code": "17000058",
@@ -197973,9 +196087,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17000128": {
           "code": "17000128",
@@ -197999,73 +196113,64 @@ window.ContractorSapStock = {
           "code": "17000231",
           "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
           "uom": "M",
-          "grossIssue": 62,
-          "mrnReturn": 122,
+          "grossIssue": 0,
+          "mrnReturn": 60,
           "netIssue": -60,
           "issuedQty": -60
-        },
-        "17000232": {
-          "code": "17000232",
-          "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 52,
-          "mrnReturn": 52,
-          "netIssue": 0,
-          "issuedQty": 0
         },
         "17000237": {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 1882,
-          "mrnReturn": 1882,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1130,
+          "mrnReturn": 890,
+          "netIssue": 240,
+          "issuedQty": 240
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 157,
-          "mrnReturn": 141,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 157,
+          "issuedQty": 157
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 2056,
-          "mrnReturn": 752,
-          "netIssue": 1304,
-          "issuedQty": 1304
+          "mrnReturn": 0,
+          "netIssue": 2056,
+          "issuedQty": 2056
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 815.5,
-          "mrnReturn": 387,
-          "netIssue": 428.5,
-          "issuedQty": 428.5
+          "mrnReturn": 0,
+          "netIssue": 815.5,
+          "issuedQty": 815.5
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 504,
-          "mrnReturn": 222,
-          "netIssue": 282,
-          "issuedQty": 282
+          "mrnReturn": 0,
+          "netIssue": 504,
+          "issuedQty": 504
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 130,
-          "mrnReturn": 67,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000617": {
           "code": "17000617",
@@ -198076,23 +196181,14 @@ window.ContractorSapStock = {
           "netIssue": 217,
           "issuedQty": 217
         },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 6,
-          "mrnReturn": 6,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 79,
-          "mrnReturn": 52,
-          "netIssue": 27,
-          "issuedQty": 27
+          "mrnReturn": 0,
+          "netIssue": 79,
+          "issuedQty": 79
         },
         "17000624": {
           "code": "17000624",
@@ -198108,36 +196204,36 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 3133,
-          "mrnReturn": 205,
-          "netIssue": 2928,
-          "issuedQty": 2928
+          "mrnReturn": 120,
+          "netIssue": 3013,
+          "issuedQty": 3013
         },
         "17000627": {
           "code": "17000627",
           "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 364,
-          "mrnReturn": 364,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 364,
+          "issuedQty": 364
         },
         "17000631": {
           "code": "17000631",
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 100,
-          "mrnReturn": 37,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000632": {
           "code": "17000632",
           "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 80,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17000633": {
           "code": "17000633",
@@ -198153,18 +196249,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 1295,
-          "mrnReturn": 284,
-          "netIssue": 1011,
-          "issuedQty": 1011
+          "mrnReturn": 0,
+          "netIssue": 1295,
+          "issuedQty": 1295
         },
         "17000638": {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 106,
-          "mrnReturn": 19,
-          "netIssue": 87,
-          "issuedQty": 87
+          "mrnReturn": 0,
+          "netIssue": 106,
+          "issuedQty": 106
         },
         "17000700": {
           "code": "17000700",
@@ -198188,62 +196284,62 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 361,
-          "mrnReturn": 361,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 150,
+          "mrnReturn": 0,
+          "netIssue": 150,
+          "issuedQty": 150
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 100,
-          "mrnReturn": 65,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000775": {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
           "grossIssue": 220,
-          "mrnReturn": 140,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 20,
+          "netIssue": 200,
+          "issuedQty": 200
         },
         "17000776": {
           "code": "17000776",
           "desc": "PAINT BLACK BITUMINUS",
           "uom": "L",
           "grossIssue": 90,
-          "mrnReturn": 80,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 20,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17000778": {
           "code": "17000778",
           "desc": "RED OXIDE",
           "uom": "L",
           "grossIssue": 80,
-          "mrnReturn": 100,
-          "netIssue": -20,
-          "issuedQty": -20
+          "mrnReturn": 20,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 58,
-          "mrnReturn": 20,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 58,
+          "issuedQty": 58
         },
         "17001240": {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 82,
+          "grossIssue": 25,
+          "mrnReturn": 19,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -198252,18 +196348,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
           "grossIssue": 225,
-          "mrnReturn": 82,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 21,
+          "netIssue": 204,
+          "issuedQty": 204
         },
         "17001261": {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 80.463,
-          "mrnReturn": 9.232,
-          "netIssue": 71.231,
-          "issuedQty": 71.231
+          "mrnReturn": 0,
+          "netIssue": 80.463,
+          "issuedQty": 80.463
         },
         "17001264": {
           "code": "17001264",
@@ -198287,19 +196383,19 @@ window.ContractorSapStock = {
           "code": "17001294",
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
-          "grossIssue": 742,
-          "mrnReturn": 443,
-          "netIssue": 299,
-          "issuedQty": 299
+          "grossIssue": 642,
+          "mrnReturn": 40,
+          "netIssue": 602,
+          "issuedQty": 602
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 184,
-          "netIssue": 146,
-          "issuedQty": 146
+          "mrnReturn": 30,
+          "netIssue": 300,
+          "issuedQty": 300
         },
         "17001390": {
           "code": "17001390",
@@ -198342,9 +196438,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 1456,
-          "mrnReturn": 82,
-          "netIssue": 1374,
-          "issuedQty": 1374
+          "mrnReturn": 0,
+          "netIssue": 1456,
+          "issuedQty": 1456
         },
         "17002007": {
           "code": "17002007",
@@ -198360,9 +196456,9 @@ window.ContractorSapStock = {
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 688,
-          "mrnReturn": 16,
-          "netIssue": 672,
-          "issuedQty": 672
+          "mrnReturn": 0,
+          "netIssue": 688,
+          "issuedQty": 688
         },
         "17004662": {
           "code": "17004662",
@@ -198378,54 +196474,54 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 84,
-          "mrnReturn": 28,
-          "netIssue": 56,
-          "issuedQty": 56
+          "mrnReturn": 4,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005037": {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
           "grossIssue": 49,
-          "mrnReturn": 34,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 24,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
           "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
+          "mrnReturn": 0,
+          "netIssue": 8,
+          "issuedQty": 8
         },
         "17005041": {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 669,
-          "mrnReturn": 114,
-          "netIssue": 555,
-          "issuedQty": 555
+          "mrnReturn": 0,
+          "netIssue": 669,
+          "issuedQty": 669
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 264,
-          "mrnReturn": 21,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 264,
+          "issuedQty": 264
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 260,
-          "mrnReturn": 17,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 260,
+          "issuedQty": 260
         },
         "17005045": {
           "code": "17005045",
@@ -198441,63 +196537,63 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 1137,
-          "mrnReturn": 49,
-          "netIssue": 1088,
-          "issuedQty": 1088
+          "mrnReturn": 0,
+          "netIssue": 1137,
+          "issuedQty": 1137
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 954,
-          "mrnReturn": 147,
-          "netIssue": 807,
-          "issuedQty": 807
+          "mrnReturn": 108,
+          "netIssue": 846,
+          "issuedQty": 846
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 729,
-          "mrnReturn": 291,
-          "netIssue": 438,
-          "issuedQty": 438
+          "mrnReturn": 50,
+          "netIssue": 679,
+          "issuedQty": 679
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 652,
-          "mrnReturn": 73,
-          "netIssue": 579,
-          "issuedQty": 579
+          "mrnReturn": 0,
+          "netIssue": 652,
+          "issuedQty": 652
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 480,
-          "mrnReturn": 55,
-          "netIssue": 425,
-          "issuedQty": 425
+          "mrnReturn": 0,
+          "netIssue": 480,
+          "issuedQty": 480
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 315,
-          "mrnReturn": 15,
-          "netIssue": 300,
-          "issuedQty": 300
+          "mrnReturn": 0,
+          "netIssue": 315,
+          "issuedQty": 315
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 349,
-          "mrnReturn": 141,
-          "netIssue": 208,
-          "issuedQty": 208
+          "mrnReturn": 0,
+          "netIssue": 349,
+          "issuedQty": 349
         },
         "17005059": {
           "code": "17005059",
@@ -198540,18 +196636,18 @@ window.ContractorSapStock = {
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 10,
-          "netIssue": 2,
-          "issuedQty": 2
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
           "grossIssue": 27,
-          "mrnReturn": 11,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 6,
+          "netIssue": 21,
+          "issuedQty": 21
         },
         "17005065": {
           "code": "17005065",
@@ -198567,9 +196663,9 @@ window.ContractorSapStock = {
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
           "grossIssue": 16,
-          "mrnReturn": 1,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005068": {
           "code": "17005068",
@@ -198612,45 +196708,36 @@ window.ContractorSapStock = {
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 40,
-          "mrnReturn": 8,
-          "netIssue": 32,
-          "issuedQty": 32
+          "mrnReturn": 0,
+          "netIssue": 40,
+          "issuedQty": 40
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 155,
-          "mrnReturn": 153,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 20,
           "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
+          "netIssue": 155,
+          "issuedQty": 155
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 54,
-          "mrnReturn": 40,
-          "netIssue": 14,
-          "issuedQty": 14
+          "mrnReturn": 20,
+          "netIssue": 34,
+          "issuedQty": 34
         },
         "17005091": {
           "code": "17005091",
@@ -198693,27 +196780,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 42,
-          "mrnReturn": 39,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 42,
+          "issuedQty": 42
         },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 800,
-          "mrnReturn": 52,
-          "netIssue": 748,
-          "issuedQty": 748
-        },
-        "17005858": {
-          "code": "17005858",
-          "desc": "GI NUT BOLTS",
-          "uom": "KG",
-          "grossIssue": 3.75,
-          "mrnReturn": 3.75,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 800,
+          "issuedQty": 800
         },
         "17006129": {
           "code": "17006129",
@@ -198738,18 +196816,9 @@ window.ContractorSapStock = {
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "22001359": {
           "code": "22001359",
@@ -198765,9 +196834,9 @@ window.ContractorSapStock = {
           "desc": "SAFETY JACKET - ORANGE",
           "uom": "NO",
           "grossIssue": 28,
-          "mrnReturn": 12,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 28,
+          "issuedQty": 28
         },
         "22002544": {
           "code": "22002544",
@@ -198778,66 +196847,57 @@ window.ContractorSapStock = {
           "netIssue": 15,
           "issuedQty": 15
         },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "22002551": {
           "code": "22002551",
           "desc": "HELMET PVC - YELLOW",
           "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 42,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 28,
+          "mrnReturn": 9,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "22003558": {
           "code": "22003558",
           "desc": "MEASURING TAPE STEEL 5 MTR",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000004": {
           "code": "23000004",
           "desc": "ADJUSTABLE SPANNER 12 INCH",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000122": {
           "code": "23000122",
           "desc": "CROW BAR (SABBAL)",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198845,8 +196905,8 @@ window.ContractorSapStock = {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198854,8 +196914,8 @@ window.ContractorSapStock = {
           "code": "23000199",
           "desc": "FIX SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198863,8 +196923,8 @@ window.ContractorSapStock = {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198873,27 +196933,9 @@ window.ContractorSapStock = {
           "desc": "FIX SPANNER 30 X 32",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000379": {
           "code": "23000379",
@@ -198908,8 +196950,8 @@ window.ContractorSapStock = {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198917,8 +196959,8 @@ window.ContractorSapStock = {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198926,8 +196968,8 @@ window.ContractorSapStock = {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -198953,10 +196995,10 @@ window.ContractorSapStock = {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 15,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 10,
+          "mrnReturn": 5,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001325": {
           "code": "23001325",
@@ -198981,9 +197023,9 @@ window.ContractorSapStock = {
           "desc": "SPADE MS",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001952": {
           "code": "23001952",
@@ -198999,27 +197041,27 @@ window.ContractorSapStock = {
           "desc": "DISCHARGE ROD FOR 11 KV",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "23002373": {
           "code": "23002373",
           "desc": "COME ALONG CLAMP TOOL",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23003901": {
           "code": "23003901",
           "desc": "BOLT CUTTER 18 INCH",
           "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1,
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         }
       }
     },
@@ -199030,10 +197072,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Raial Infra ABL Dept.Teem",
-      "materialCount": 128,
-      "totalGrossIssue": 56110.174,
-      "totalMrnReturn": 10855.682,
-      "totalNetIssue": 45254.492,
+      "materialCount": 120,
+      "totalGrossIssue": 54783.424,
+      "totalMrnReturn": 1748.7,
+      "totalNetIssue": 53034.724,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -199049,9 +197091,9 @@ window.ContractorSapStock = {
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
           "grossIssue": 13000,
-          "mrnReturn": 2650,
-          "netIssue": 10350,
-          "issuedQty": 10350
+          "mrnReturn": 0,
+          "netIssue": 13000,
+          "issuedQty": 13000
         },
         "12000009": {
           "code": "12000009",
@@ -199067,18 +197109,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
           "grossIssue": 353,
-          "mrnReturn": 140,
-          "netIssue": 213,
-          "issuedQty": 213
+          "mrnReturn": 104,
+          "netIssue": 249,
+          "issuedQty": 249
         },
         "17000023": {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 19,
-          "mrnReturn": 7,
-          "netIssue": 12,
-          "issuedQty": 12
+          "mrnReturn": 0,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "17000026": {
           "code": "17000026",
@@ -199094,18 +197136,18 @@ window.ContractorSapStock = {
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 1004,
-          "mrnReturn": 11,
-          "netIssue": 993,
-          "issuedQty": 993
+          "mrnReturn": 0,
+          "netIssue": 1004,
+          "issuedQty": 1004
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 160,
-          "mrnReturn": 80,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17000058": {
           "code": "17000058",
@@ -199139,9 +197181,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17000128": {
           "code": "17000128",
@@ -199165,73 +197207,64 @@ window.ContractorSapStock = {
           "code": "17000231",
           "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
           "uom": "M",
-          "grossIssue": 62,
-          "mrnReturn": 122,
+          "grossIssue": 0,
+          "mrnReturn": 60,
           "netIssue": -60,
           "issuedQty": -60
-        },
-        "17000232": {
-          "code": "17000232",
-          "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 52,
-          "mrnReturn": 52,
-          "netIssue": 0,
-          "issuedQty": 0
         },
         "17000237": {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 1882,
-          "mrnReturn": 1882,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1130,
+          "mrnReturn": 890,
+          "netIssue": 240,
+          "issuedQty": 240
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 157,
-          "mrnReturn": 141,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 157,
+          "issuedQty": 157
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 2056,
-          "mrnReturn": 752,
-          "netIssue": 1304,
-          "issuedQty": 1304
+          "mrnReturn": 0,
+          "netIssue": 2056,
+          "issuedQty": 2056
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 815.5,
-          "mrnReturn": 387,
-          "netIssue": 428.5,
-          "issuedQty": 428.5
+          "mrnReturn": 0,
+          "netIssue": 815.5,
+          "issuedQty": 815.5
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 504,
-          "mrnReturn": 222,
-          "netIssue": 282,
-          "issuedQty": 282
+          "mrnReturn": 0,
+          "netIssue": 504,
+          "issuedQty": 504
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 130,
-          "mrnReturn": 67,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000617": {
           "code": "17000617",
@@ -199242,23 +197275,14 @@ window.ContractorSapStock = {
           "netIssue": 217,
           "issuedQty": 217
         },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 6,
-          "mrnReturn": 6,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 79,
-          "mrnReturn": 52,
-          "netIssue": 27,
-          "issuedQty": 27
+          "mrnReturn": 0,
+          "netIssue": 79,
+          "issuedQty": 79
         },
         "17000624": {
           "code": "17000624",
@@ -199274,36 +197298,36 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 3133,
-          "mrnReturn": 205,
-          "netIssue": 2928,
-          "issuedQty": 2928
+          "mrnReturn": 120,
+          "netIssue": 3013,
+          "issuedQty": 3013
         },
         "17000627": {
           "code": "17000627",
           "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 364,
-          "mrnReturn": 364,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 364,
+          "issuedQty": 364
         },
         "17000631": {
           "code": "17000631",
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 100,
-          "mrnReturn": 37,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000632": {
           "code": "17000632",
           "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 80,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17000633": {
           "code": "17000633",
@@ -199319,18 +197343,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 1295,
-          "mrnReturn": 284,
-          "netIssue": 1011,
-          "issuedQty": 1011
+          "mrnReturn": 0,
+          "netIssue": 1295,
+          "issuedQty": 1295
         },
         "17000638": {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 106,
-          "mrnReturn": 19,
-          "netIssue": 87,
-          "issuedQty": 87
+          "mrnReturn": 0,
+          "netIssue": 106,
+          "issuedQty": 106
         },
         "17000700": {
           "code": "17000700",
@@ -199354,62 +197378,62 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 361,
-          "mrnReturn": 361,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 150,
+          "mrnReturn": 0,
+          "netIssue": 150,
+          "issuedQty": 150
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 100,
-          "mrnReturn": 65,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000775": {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
           "grossIssue": 220,
-          "mrnReturn": 140,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 20,
+          "netIssue": 200,
+          "issuedQty": 200
         },
         "17000776": {
           "code": "17000776",
           "desc": "PAINT BLACK BITUMINUS",
           "uom": "L",
           "grossIssue": 90,
-          "mrnReturn": 80,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 20,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17000778": {
           "code": "17000778",
           "desc": "RED OXIDE",
           "uom": "L",
           "grossIssue": 80,
-          "mrnReturn": 100,
-          "netIssue": -20,
-          "issuedQty": -20
+          "mrnReturn": 20,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 58,
-          "mrnReturn": 20,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 58,
+          "issuedQty": 58
         },
         "17001240": {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 82,
+          "grossIssue": 25,
+          "mrnReturn": 19,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -199418,18 +197442,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
           "grossIssue": 225,
-          "mrnReturn": 82,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 21,
+          "netIssue": 204,
+          "issuedQty": 204
         },
         "17001261": {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 80.463,
-          "mrnReturn": 9.232,
-          "netIssue": 71.231,
-          "issuedQty": 71.231
+          "mrnReturn": 0,
+          "netIssue": 80.463,
+          "issuedQty": 80.463
         },
         "17001264": {
           "code": "17001264",
@@ -199453,19 +197477,19 @@ window.ContractorSapStock = {
           "code": "17001294",
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
-          "grossIssue": 742,
-          "mrnReturn": 443,
-          "netIssue": 299,
-          "issuedQty": 299
+          "grossIssue": 642,
+          "mrnReturn": 40,
+          "netIssue": 602,
+          "issuedQty": 602
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 184,
-          "netIssue": 146,
-          "issuedQty": 146
+          "mrnReturn": 30,
+          "netIssue": 300,
+          "issuedQty": 300
         },
         "17001390": {
           "code": "17001390",
@@ -199508,9 +197532,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 1456,
-          "mrnReturn": 82,
-          "netIssue": 1374,
-          "issuedQty": 1374
+          "mrnReturn": 0,
+          "netIssue": 1456,
+          "issuedQty": 1456
         },
         "17002007": {
           "code": "17002007",
@@ -199526,9 +197550,9 @@ window.ContractorSapStock = {
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 688,
-          "mrnReturn": 16,
-          "netIssue": 672,
-          "issuedQty": 672
+          "mrnReturn": 0,
+          "netIssue": 688,
+          "issuedQty": 688
         },
         "17004662": {
           "code": "17004662",
@@ -199544,54 +197568,54 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 84,
-          "mrnReturn": 28,
-          "netIssue": 56,
-          "issuedQty": 56
+          "mrnReturn": 4,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005037": {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
           "grossIssue": 49,
-          "mrnReturn": 34,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 24,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
           "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
+          "mrnReturn": 0,
+          "netIssue": 8,
+          "issuedQty": 8
         },
         "17005041": {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 669,
-          "mrnReturn": 114,
-          "netIssue": 555,
-          "issuedQty": 555
+          "mrnReturn": 0,
+          "netIssue": 669,
+          "issuedQty": 669
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 264,
-          "mrnReturn": 21,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 264,
+          "issuedQty": 264
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 260,
-          "mrnReturn": 17,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 260,
+          "issuedQty": 260
         },
         "17005045": {
           "code": "17005045",
@@ -199607,63 +197631,63 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 1137,
-          "mrnReturn": 49,
-          "netIssue": 1088,
-          "issuedQty": 1088
+          "mrnReturn": 0,
+          "netIssue": 1137,
+          "issuedQty": 1137
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 954,
-          "mrnReturn": 147,
-          "netIssue": 807,
-          "issuedQty": 807
+          "mrnReturn": 108,
+          "netIssue": 846,
+          "issuedQty": 846
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 729,
-          "mrnReturn": 291,
-          "netIssue": 438,
-          "issuedQty": 438
+          "mrnReturn": 50,
+          "netIssue": 679,
+          "issuedQty": 679
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 652,
-          "mrnReturn": 73,
-          "netIssue": 579,
-          "issuedQty": 579
+          "mrnReturn": 0,
+          "netIssue": 652,
+          "issuedQty": 652
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 480,
-          "mrnReturn": 55,
-          "netIssue": 425,
-          "issuedQty": 425
+          "mrnReturn": 0,
+          "netIssue": 480,
+          "issuedQty": 480
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 315,
-          "mrnReturn": 15,
-          "netIssue": 300,
-          "issuedQty": 300
+          "mrnReturn": 0,
+          "netIssue": 315,
+          "issuedQty": 315
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 349,
-          "mrnReturn": 141,
-          "netIssue": 208,
-          "issuedQty": 208
+          "mrnReturn": 0,
+          "netIssue": 349,
+          "issuedQty": 349
         },
         "17005059": {
           "code": "17005059",
@@ -199706,18 +197730,18 @@ window.ContractorSapStock = {
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 10,
-          "netIssue": 2,
-          "issuedQty": 2
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
           "grossIssue": 27,
-          "mrnReturn": 11,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 6,
+          "netIssue": 21,
+          "issuedQty": 21
         },
         "17005065": {
           "code": "17005065",
@@ -199733,9 +197757,9 @@ window.ContractorSapStock = {
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
           "grossIssue": 16,
-          "mrnReturn": 1,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005068": {
           "code": "17005068",
@@ -199778,45 +197802,36 @@ window.ContractorSapStock = {
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 40,
-          "mrnReturn": 8,
-          "netIssue": 32,
-          "issuedQty": 32
+          "mrnReturn": 0,
+          "netIssue": 40,
+          "issuedQty": 40
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 155,
-          "mrnReturn": 153,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 20,
           "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
+          "netIssue": 155,
+          "issuedQty": 155
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 54,
-          "mrnReturn": 40,
-          "netIssue": 14,
-          "issuedQty": 14
+          "mrnReturn": 20,
+          "netIssue": 34,
+          "issuedQty": 34
         },
         "17005091": {
           "code": "17005091",
@@ -199859,27 +197874,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 42,
-          "mrnReturn": 39,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 42,
+          "issuedQty": 42
         },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 800,
-          "mrnReturn": 52,
-          "netIssue": 748,
-          "issuedQty": 748
-        },
-        "17005858": {
-          "code": "17005858",
-          "desc": "GI NUT BOLTS",
-          "uom": "KG",
-          "grossIssue": 3.75,
-          "mrnReturn": 3.75,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 800,
+          "issuedQty": 800
         },
         "17006129": {
           "code": "17006129",
@@ -199904,18 +197910,9 @@ window.ContractorSapStock = {
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "22001359": {
           "code": "22001359",
@@ -199931,9 +197928,9 @@ window.ContractorSapStock = {
           "desc": "SAFETY JACKET - ORANGE",
           "uom": "NO",
           "grossIssue": 28,
-          "mrnReturn": 12,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 28,
+          "issuedQty": 28
         },
         "22002544": {
           "code": "22002544",
@@ -199944,66 +197941,57 @@ window.ContractorSapStock = {
           "netIssue": 15,
           "issuedQty": 15
         },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "22002551": {
           "code": "22002551",
           "desc": "HELMET PVC - YELLOW",
           "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 42,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 28,
+          "mrnReturn": 9,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "22003558": {
           "code": "22003558",
           "desc": "MEASURING TAPE STEEL 5 MTR",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000004": {
           "code": "23000004",
           "desc": "ADJUSTABLE SPANNER 12 INCH",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000122": {
           "code": "23000122",
           "desc": "CROW BAR (SABBAL)",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200011,8 +197999,8 @@ window.ContractorSapStock = {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200020,8 +198008,8 @@ window.ContractorSapStock = {
           "code": "23000199",
           "desc": "FIX SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200029,8 +198017,8 @@ window.ContractorSapStock = {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200039,27 +198027,9 @@ window.ContractorSapStock = {
           "desc": "FIX SPANNER 30 X 32",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000379": {
           "code": "23000379",
@@ -200074,8 +198044,8 @@ window.ContractorSapStock = {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200083,8 +198053,8 @@ window.ContractorSapStock = {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200092,8 +198062,8 @@ window.ContractorSapStock = {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -200119,10 +198089,10 @@ window.ContractorSapStock = {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 15,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 10,
+          "mrnReturn": 5,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001325": {
           "code": "23001325",
@@ -200147,9 +198117,9 @@ window.ContractorSapStock = {
           "desc": "SPADE MS",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001952": {
           "code": "23001952",
@@ -200165,27 +198135,27 @@ window.ContractorSapStock = {
           "desc": "DISCHARGE ROD FOR 11 KV",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "23002373": {
           "code": "23002373",
           "desc": "COME ALONG CLAMP TOOL",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23003901": {
           "code": "23003901",
           "desc": "BOLT CUTTER 18 INCH",
           "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1,
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         }
       }
     },
@@ -200196,10 +198166,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Raial Infra ABL Dept.Teem",
-      "materialCount": 128,
-      "totalGrossIssue": 56110.174,
-      "totalMrnReturn": 10855.682,
-      "totalNetIssue": 45254.492,
+      "materialCount": 120,
+      "totalGrossIssue": 54783.424,
+      "totalMrnReturn": 1748.7,
+      "totalNetIssue": 53034.724,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -200215,9 +198185,9 @@ window.ContractorSapStock = {
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
           "grossIssue": 13000,
-          "mrnReturn": 2650,
-          "netIssue": 10350,
-          "issuedQty": 10350
+          "mrnReturn": 0,
+          "netIssue": 13000,
+          "issuedQty": 13000
         },
         "12000009": {
           "code": "12000009",
@@ -200233,18 +198203,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
           "grossIssue": 353,
-          "mrnReturn": 140,
-          "netIssue": 213,
-          "issuedQty": 213
+          "mrnReturn": 104,
+          "netIssue": 249,
+          "issuedQty": 249
         },
         "17000023": {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 19,
-          "mrnReturn": 7,
-          "netIssue": 12,
-          "issuedQty": 12
+          "mrnReturn": 0,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "17000026": {
           "code": "17000026",
@@ -200260,18 +198230,18 @@ window.ContractorSapStock = {
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 1004,
-          "mrnReturn": 11,
-          "netIssue": 993,
-          "issuedQty": 993
+          "mrnReturn": 0,
+          "netIssue": 1004,
+          "issuedQty": 1004
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 160,
-          "mrnReturn": 80,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17000058": {
           "code": "17000058",
@@ -200305,9 +198275,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17000128": {
           "code": "17000128",
@@ -200331,73 +198301,64 @@ window.ContractorSapStock = {
           "code": "17000231",
           "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
           "uom": "M",
-          "grossIssue": 62,
-          "mrnReturn": 122,
+          "grossIssue": 0,
+          "mrnReturn": 60,
           "netIssue": -60,
           "issuedQty": -60
-        },
-        "17000232": {
-          "code": "17000232",
-          "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 52,
-          "mrnReturn": 52,
-          "netIssue": 0,
-          "issuedQty": 0
         },
         "17000237": {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 1882,
-          "mrnReturn": 1882,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1130,
+          "mrnReturn": 890,
+          "netIssue": 240,
+          "issuedQty": 240
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 157,
-          "mrnReturn": 141,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 157,
+          "issuedQty": 157
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 2056,
-          "mrnReturn": 752,
-          "netIssue": 1304,
-          "issuedQty": 1304
+          "mrnReturn": 0,
+          "netIssue": 2056,
+          "issuedQty": 2056
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 815.5,
-          "mrnReturn": 387,
-          "netIssue": 428.5,
-          "issuedQty": 428.5
+          "mrnReturn": 0,
+          "netIssue": 815.5,
+          "issuedQty": 815.5
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 504,
-          "mrnReturn": 222,
-          "netIssue": 282,
-          "issuedQty": 282
+          "mrnReturn": 0,
+          "netIssue": 504,
+          "issuedQty": 504
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 130,
-          "mrnReturn": 67,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000617": {
           "code": "17000617",
@@ -200408,23 +198369,14 @@ window.ContractorSapStock = {
           "netIssue": 217,
           "issuedQty": 217
         },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 6,
-          "mrnReturn": 6,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 79,
-          "mrnReturn": 52,
-          "netIssue": 27,
-          "issuedQty": 27
+          "mrnReturn": 0,
+          "netIssue": 79,
+          "issuedQty": 79
         },
         "17000624": {
           "code": "17000624",
@@ -200440,36 +198392,36 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 3133,
-          "mrnReturn": 205,
-          "netIssue": 2928,
-          "issuedQty": 2928
+          "mrnReturn": 120,
+          "netIssue": 3013,
+          "issuedQty": 3013
         },
         "17000627": {
           "code": "17000627",
           "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 364,
-          "mrnReturn": 364,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 364,
+          "issuedQty": 364
         },
         "17000631": {
           "code": "17000631",
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 100,
-          "mrnReturn": 37,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000632": {
           "code": "17000632",
           "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 80,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17000633": {
           "code": "17000633",
@@ -200485,18 +198437,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 1295,
-          "mrnReturn": 284,
-          "netIssue": 1011,
-          "issuedQty": 1011
+          "mrnReturn": 0,
+          "netIssue": 1295,
+          "issuedQty": 1295
         },
         "17000638": {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 106,
-          "mrnReturn": 19,
-          "netIssue": 87,
-          "issuedQty": 87
+          "mrnReturn": 0,
+          "netIssue": 106,
+          "issuedQty": 106
         },
         "17000700": {
           "code": "17000700",
@@ -200520,62 +198472,62 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 361,
-          "mrnReturn": 361,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 150,
+          "mrnReturn": 0,
+          "netIssue": 150,
+          "issuedQty": 150
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 100,
-          "mrnReturn": 65,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000775": {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
           "grossIssue": 220,
-          "mrnReturn": 140,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 20,
+          "netIssue": 200,
+          "issuedQty": 200
         },
         "17000776": {
           "code": "17000776",
           "desc": "PAINT BLACK BITUMINUS",
           "uom": "L",
           "grossIssue": 90,
-          "mrnReturn": 80,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 20,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17000778": {
           "code": "17000778",
           "desc": "RED OXIDE",
           "uom": "L",
           "grossIssue": 80,
-          "mrnReturn": 100,
-          "netIssue": -20,
-          "issuedQty": -20
+          "mrnReturn": 20,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 58,
-          "mrnReturn": 20,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 58,
+          "issuedQty": 58
         },
         "17001240": {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 82,
+          "grossIssue": 25,
+          "mrnReturn": 19,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -200584,18 +198536,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
           "grossIssue": 225,
-          "mrnReturn": 82,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 21,
+          "netIssue": 204,
+          "issuedQty": 204
         },
         "17001261": {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 80.463,
-          "mrnReturn": 9.232,
-          "netIssue": 71.231,
-          "issuedQty": 71.231
+          "mrnReturn": 0,
+          "netIssue": 80.463,
+          "issuedQty": 80.463
         },
         "17001264": {
           "code": "17001264",
@@ -200619,19 +198571,19 @@ window.ContractorSapStock = {
           "code": "17001294",
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
-          "grossIssue": 742,
-          "mrnReturn": 443,
-          "netIssue": 299,
-          "issuedQty": 299
+          "grossIssue": 642,
+          "mrnReturn": 40,
+          "netIssue": 602,
+          "issuedQty": 602
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 184,
-          "netIssue": 146,
-          "issuedQty": 146
+          "mrnReturn": 30,
+          "netIssue": 300,
+          "issuedQty": 300
         },
         "17001390": {
           "code": "17001390",
@@ -200674,9 +198626,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 1456,
-          "mrnReturn": 82,
-          "netIssue": 1374,
-          "issuedQty": 1374
+          "mrnReturn": 0,
+          "netIssue": 1456,
+          "issuedQty": 1456
         },
         "17002007": {
           "code": "17002007",
@@ -200692,9 +198644,9 @@ window.ContractorSapStock = {
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 688,
-          "mrnReturn": 16,
-          "netIssue": 672,
-          "issuedQty": 672
+          "mrnReturn": 0,
+          "netIssue": 688,
+          "issuedQty": 688
         },
         "17004662": {
           "code": "17004662",
@@ -200710,54 +198662,54 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 84,
-          "mrnReturn": 28,
-          "netIssue": 56,
-          "issuedQty": 56
+          "mrnReturn": 4,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005037": {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
           "grossIssue": 49,
-          "mrnReturn": 34,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 24,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
           "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
+          "mrnReturn": 0,
+          "netIssue": 8,
+          "issuedQty": 8
         },
         "17005041": {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 669,
-          "mrnReturn": 114,
-          "netIssue": 555,
-          "issuedQty": 555
+          "mrnReturn": 0,
+          "netIssue": 669,
+          "issuedQty": 669
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 264,
-          "mrnReturn": 21,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 264,
+          "issuedQty": 264
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 260,
-          "mrnReturn": 17,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 260,
+          "issuedQty": 260
         },
         "17005045": {
           "code": "17005045",
@@ -200773,63 +198725,63 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 1137,
-          "mrnReturn": 49,
-          "netIssue": 1088,
-          "issuedQty": 1088
+          "mrnReturn": 0,
+          "netIssue": 1137,
+          "issuedQty": 1137
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 954,
-          "mrnReturn": 147,
-          "netIssue": 807,
-          "issuedQty": 807
+          "mrnReturn": 108,
+          "netIssue": 846,
+          "issuedQty": 846
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 729,
-          "mrnReturn": 291,
-          "netIssue": 438,
-          "issuedQty": 438
+          "mrnReturn": 50,
+          "netIssue": 679,
+          "issuedQty": 679
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 652,
-          "mrnReturn": 73,
-          "netIssue": 579,
-          "issuedQty": 579
+          "mrnReturn": 0,
+          "netIssue": 652,
+          "issuedQty": 652
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 480,
-          "mrnReturn": 55,
-          "netIssue": 425,
-          "issuedQty": 425
+          "mrnReturn": 0,
+          "netIssue": 480,
+          "issuedQty": 480
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 315,
-          "mrnReturn": 15,
-          "netIssue": 300,
-          "issuedQty": 300
+          "mrnReturn": 0,
+          "netIssue": 315,
+          "issuedQty": 315
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 349,
-          "mrnReturn": 141,
-          "netIssue": 208,
-          "issuedQty": 208
+          "mrnReturn": 0,
+          "netIssue": 349,
+          "issuedQty": 349
         },
         "17005059": {
           "code": "17005059",
@@ -200872,18 +198824,18 @@ window.ContractorSapStock = {
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 10,
-          "netIssue": 2,
-          "issuedQty": 2
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
           "grossIssue": 27,
-          "mrnReturn": 11,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 6,
+          "netIssue": 21,
+          "issuedQty": 21
         },
         "17005065": {
           "code": "17005065",
@@ -200899,9 +198851,9 @@ window.ContractorSapStock = {
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
           "grossIssue": 16,
-          "mrnReturn": 1,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005068": {
           "code": "17005068",
@@ -200944,45 +198896,36 @@ window.ContractorSapStock = {
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 40,
-          "mrnReturn": 8,
-          "netIssue": 32,
-          "issuedQty": 32
+          "mrnReturn": 0,
+          "netIssue": 40,
+          "issuedQty": 40
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 155,
-          "mrnReturn": 153,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 20,
           "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
+          "netIssue": 155,
+          "issuedQty": 155
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 54,
-          "mrnReturn": 40,
-          "netIssue": 14,
-          "issuedQty": 14
+          "mrnReturn": 20,
+          "netIssue": 34,
+          "issuedQty": 34
         },
         "17005091": {
           "code": "17005091",
@@ -201025,27 +198968,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 42,
-          "mrnReturn": 39,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 42,
+          "issuedQty": 42
         },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 800,
-          "mrnReturn": 52,
-          "netIssue": 748,
-          "issuedQty": 748
-        },
-        "17005858": {
-          "code": "17005858",
-          "desc": "GI NUT BOLTS",
-          "uom": "KG",
-          "grossIssue": 3.75,
-          "mrnReturn": 3.75,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 800,
+          "issuedQty": 800
         },
         "17006129": {
           "code": "17006129",
@@ -201070,18 +199004,9 @@ window.ContractorSapStock = {
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "22001359": {
           "code": "22001359",
@@ -201097,9 +199022,9 @@ window.ContractorSapStock = {
           "desc": "SAFETY JACKET - ORANGE",
           "uom": "NO",
           "grossIssue": 28,
-          "mrnReturn": 12,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 28,
+          "issuedQty": 28
         },
         "22002544": {
           "code": "22002544",
@@ -201110,66 +199035,57 @@ window.ContractorSapStock = {
           "netIssue": 15,
           "issuedQty": 15
         },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "22002551": {
           "code": "22002551",
           "desc": "HELMET PVC - YELLOW",
           "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 42,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 28,
+          "mrnReturn": 9,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "22003558": {
           "code": "22003558",
           "desc": "MEASURING TAPE STEEL 5 MTR",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000004": {
           "code": "23000004",
           "desc": "ADJUSTABLE SPANNER 12 INCH",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000122": {
           "code": "23000122",
           "desc": "CROW BAR (SABBAL)",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201177,8 +199093,8 @@ window.ContractorSapStock = {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201186,8 +199102,8 @@ window.ContractorSapStock = {
           "code": "23000199",
           "desc": "FIX SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201195,8 +199111,8 @@ window.ContractorSapStock = {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201205,27 +199121,9 @@ window.ContractorSapStock = {
           "desc": "FIX SPANNER 30 X 32",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000379": {
           "code": "23000379",
@@ -201240,8 +199138,8 @@ window.ContractorSapStock = {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201249,8 +199147,8 @@ window.ContractorSapStock = {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201258,8 +199156,8 @@ window.ContractorSapStock = {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -201285,10 +199183,10 @@ window.ContractorSapStock = {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 15,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 10,
+          "mrnReturn": 5,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001325": {
           "code": "23001325",
@@ -201313,9 +199211,9 @@ window.ContractorSapStock = {
           "desc": "SPADE MS",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001952": {
           "code": "23001952",
@@ -201331,27 +199229,27 @@ window.ContractorSapStock = {
           "desc": "DISCHARGE ROD FOR 11 KV",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "23002373": {
           "code": "23002373",
           "desc": "COME ALONG CLAMP TOOL",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23003901": {
           "code": "23003901",
           "desc": "BOLT CUTTER 18 INCH",
           "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1,
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         }
       }
     },
@@ -207542,5422 +205440,1022 @@ window.ContractorSapStock = {
       }
     },
     "TALLY DYNAMIX MDC-1832": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
+      "docHeader": "TALLY DYNAMIX MDC-1832",
+      "allWorkOrders": [],
       "vendorCode": "",
       "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
+      "materialCount": 27,
+      "totalGrossIssue": 6870,
+      "totalMrnReturn": 55,
+      "totalNetIssue": 6815,
       "materials": {
         "11000123": {
           "code": "11000123",
           "desc": "M SAND 0-6 MM",
           "uom": "KG",
-          "grossIssue": 7700,
+          "grossIssue": 5200,
           "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
+          "netIssue": 5200,
+          "issuedQty": 5200
         },
         "11000336": {
           "code": "11000336",
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
+          "grossIssue": 1500,
+          "mrnReturn": 0,
+          "netIssue": 1500,
+          "issuedQty": 1500
         },
         "12000009": {
           "code": "12000009",
           "desc": "AGGREGATE 40 MM",
           "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
+          "grossIssue": 6,
           "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
+          "grossIssue": 108,
           "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
+          "netIssue": 108,
+          "issuedQty": 108
         },
         "19020569": {
           "code": "19020569",
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
         },
         "22001359": {
           "code": "22001359",
           "desc": "MEASURING TAPE FIBRE 30 MTR",
           "uom": "NO",
-          "grossIssue": 3,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
+        "22003558": {
+          "code": "22003558",
+          "desc": "MEASURING TAPE STEEL 5 MTR",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "22004150": {
+          "code": "22004150",
+          "desc": "NYLON ROPE 36MM",
+          "uom": "KG",
+          "grossIssue": 12,
+          "mrnReturn": 12,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000004": {
+          "code": "23000004",
+          "desc": "ADJUSTABLE SPANNER 12 INCH",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000106": {
+          "code": "23000106",
+          "desc": "CHAIN PULLEY 3 MT",
           "uom": "NO",
           "grossIssue": 1,
           "mrnReturn": 0,
           "netIssue": 1,
           "issuedQty": 1
         },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000195": {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 7,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000209": {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000379": {
           "code": "23000379",
           "desc": "PLIER 6INCH",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000432": {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000437": {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000439": {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000447": {
           "code": "23000447",
           "desc": "RING SPANNER 30 X 32",
           "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001289": {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001306": {
           "code": "23001306",
           "desc": "ALUMINIUM PATELE (VESSEL)",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
         },
         "23001328": {
           "code": "23001328",
           "desc": "BUCKET PVC 20 LTR",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001530": {
           "code": "23001530",
           "desc": "THALI SS FULL SIZE",
           "uom": "NO",
-          "grossIssue": 12,
+          "grossIssue": 6,
           "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001697": {
           "code": "23001697",
           "desc": "SPIRIT LEVEL 12 INCHES",
           "uom": "NO",
-          "grossIssue": 2,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001920": {
           "code": "23001920",
           "desc": "SPADE MS",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001952": {
           "code": "23001952",
           "desc": "HACKSAW FRAME",
           "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23002064": {
           "code": "23002064",
           "desc": "GLASS SS",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
+          "grossIssue": 3,
+          "mrnReturn": 3,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
         }
       }
     },
     "31004866 MDC-315": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
+      "docHeader": "TALLY DYNAMIX MDC-1832",
+      "allWorkOrders": [],
       "vendorCode": "",
       "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
+      "materialCount": 27,
+      "totalGrossIssue": 6870,
+      "totalMrnReturn": 55,
+      "totalNetIssue": 6815,
       "materials": {
         "11000123": {
           "code": "11000123",
           "desc": "M SAND 0-6 MM",
           "uom": "KG",
-          "grossIssue": 7700,
+          "grossIssue": 5200,
           "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
+          "netIssue": 5200,
+          "issuedQty": 5200
         },
         "11000336": {
           "code": "11000336",
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
+          "grossIssue": 1500,
+          "mrnReturn": 0,
+          "netIssue": 1500,
+          "issuedQty": 1500
         },
         "12000009": {
           "code": "12000009",
           "desc": "AGGREGATE 40 MM",
           "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
+          "grossIssue": 6,
           "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
+          "grossIssue": 108,
           "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
+          "netIssue": 108,
+          "issuedQty": 108
         },
         "19020569": {
           "code": "19020569",
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
         },
         "22001359": {
           "code": "22001359",
           "desc": "MEASURING TAPE FIBRE 30 MTR",
           "uom": "NO",
-          "grossIssue": 3,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
+        "22003558": {
+          "code": "22003558",
+          "desc": "MEASURING TAPE STEEL 5 MTR",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "22004150": {
+          "code": "22004150",
+          "desc": "NYLON ROPE 36MM",
+          "uom": "KG",
+          "grossIssue": 12,
+          "mrnReturn": 12,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000004": {
+          "code": "23000004",
+          "desc": "ADJUSTABLE SPANNER 12 INCH",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000106": {
+          "code": "23000106",
+          "desc": "CHAIN PULLEY 3 MT",
           "uom": "NO",
           "grossIssue": 1,
           "mrnReturn": 0,
           "netIssue": 1,
           "issuedQty": 1
         },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000195": {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 7,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000209": {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000379": {
           "code": "23000379",
           "desc": "PLIER 6INCH",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000432": {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000437": {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000439": {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000447": {
           "code": "23000447",
           "desc": "RING SPANNER 30 X 32",
           "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001289": {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001306": {
           "code": "23001306",
           "desc": "ALUMINIUM PATELE (VESSEL)",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
         },
         "23001328": {
           "code": "23001328",
           "desc": "BUCKET PVC 20 LTR",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001530": {
           "code": "23001530",
           "desc": "THALI SS FULL SIZE",
           "uom": "NO",
-          "grossIssue": 12,
+          "grossIssue": 6,
           "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001697": {
           "code": "23001697",
           "desc": "SPIRIT LEVEL 12 INCHES",
           "uom": "NO",
-          "grossIssue": 2,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001920": {
           "code": "23001920",
           "desc": "SPADE MS",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001952": {
           "code": "23001952",
           "desc": "HACKSAW FRAME",
           "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23002064": {
           "code": "23002064",
           "desc": "GLASS SS",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
+          "grossIssue": 3,
+          "mrnReturn": 3,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
         }
       }
     },
     "TALLY DYNAMIX MDC-345": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
+      "docHeader": "TALLY DYNAMIX MDC-1832",
+      "allWorkOrders": [],
       "vendorCode": "",
       "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
+      "materialCount": 27,
+      "totalGrossIssue": 6870,
+      "totalMrnReturn": 55,
+      "totalNetIssue": 6815,
       "materials": {
         "11000123": {
           "code": "11000123",
           "desc": "M SAND 0-6 MM",
           "uom": "KG",
-          "grossIssue": 7700,
+          "grossIssue": 5200,
           "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
+          "netIssue": 5200,
+          "issuedQty": 5200
         },
         "11000336": {
           "code": "11000336",
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
+          "grossIssue": 1500,
+          "mrnReturn": 0,
+          "netIssue": 1500,
+          "issuedQty": 1500
         },
         "12000009": {
           "code": "12000009",
           "desc": "AGGREGATE 40 MM",
           "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
+          "grossIssue": 6,
           "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
+          "grossIssue": 108,
           "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
+          "netIssue": 108,
+          "issuedQty": 108
         },
         "19020569": {
           "code": "19020569",
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
         },
         "22001359": {
           "code": "22001359",
           "desc": "MEASURING TAPE FIBRE 30 MTR",
           "uom": "NO",
-          "grossIssue": 3,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
+        "22003558": {
+          "code": "22003558",
+          "desc": "MEASURING TAPE STEEL 5 MTR",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "22004150": {
+          "code": "22004150",
+          "desc": "NYLON ROPE 36MM",
+          "uom": "KG",
+          "grossIssue": 12,
+          "mrnReturn": 12,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000004": {
+          "code": "23000004",
+          "desc": "ADJUSTABLE SPANNER 12 INCH",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000106": {
+          "code": "23000106",
+          "desc": "CHAIN PULLEY 3 MT",
           "uom": "NO",
           "grossIssue": 1,
           "mrnReturn": 0,
           "netIssue": 1,
           "issuedQty": 1
         },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000195": {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 7,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000209": {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000379": {
           "code": "23000379",
           "desc": "PLIER 6INCH",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000432": {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000437": {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000439": {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000447": {
           "code": "23000447",
           "desc": "RING SPANNER 30 X 32",
           "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001289": {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001306": {
           "code": "23001306",
           "desc": "ALUMINIUM PATELE (VESSEL)",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
         },
         "23001328": {
           "code": "23001328",
           "desc": "BUCKET PVC 20 LTR",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001530": {
           "code": "23001530",
           "desc": "THALI SS FULL SIZE",
           "uom": "NO",
-          "grossIssue": 12,
+          "grossIssue": 6,
           "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001697": {
           "code": "23001697",
           "desc": "SPIRIT LEVEL 12 INCHES",
           "uom": "NO",
-          "grossIssue": 2,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001920": {
           "code": "23001920",
           "desc": "SPADE MS",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001952": {
           "code": "23001952",
           "desc": "HACKSAW FRAME",
           "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23002064": {
           "code": "23002064",
           "desc": "GLASS SS",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
+          "grossIssue": 3,
+          "mrnReturn": 3,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
         }
       }
     },
     "TALLY DYNAMIX MDC-332": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
+      "docHeader": "TALLY DYNAMIX MDC-1832",
+      "allWorkOrders": [],
       "vendorCode": "",
       "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
+      "materialCount": 27,
+      "totalGrossIssue": 6870,
+      "totalMrnReturn": 55,
+      "totalNetIssue": 6815,
       "materials": {
         "11000123": {
           "code": "11000123",
           "desc": "M SAND 0-6 MM",
           "uom": "KG",
-          "grossIssue": 7700,
+          "grossIssue": 5200,
           "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
+          "netIssue": 5200,
+          "issuedQty": 5200
         },
         "11000336": {
           "code": "11000336",
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
+          "grossIssue": 1500,
+          "mrnReturn": 0,
+          "netIssue": 1500,
+          "issuedQty": 1500
         },
         "12000009": {
           "code": "12000009",
           "desc": "AGGREGATE 40 MM",
           "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
+          "grossIssue": 6,
           "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
+          "grossIssue": 108,
           "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
+          "netIssue": 108,
+          "issuedQty": 108
         },
         "19020569": {
           "code": "19020569",
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
         },
         "22001359": {
           "code": "22001359",
           "desc": "MEASURING TAPE FIBRE 30 MTR",
           "uom": "NO",
-          "grossIssue": 3,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
+        "22003558": {
+          "code": "22003558",
+          "desc": "MEASURING TAPE STEEL 5 MTR",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "22004150": {
+          "code": "22004150",
+          "desc": "NYLON ROPE 36MM",
+          "uom": "KG",
+          "grossIssue": 12,
+          "mrnReturn": 12,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000004": {
+          "code": "23000004",
+          "desc": "ADJUSTABLE SPANNER 12 INCH",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000106": {
+          "code": "23000106",
+          "desc": "CHAIN PULLEY 3 MT",
           "uom": "NO",
           "grossIssue": 1,
           "mrnReturn": 0,
           "netIssue": 1,
           "issuedQty": 1
         },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000195": {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 7,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000209": {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000379": {
           "code": "23000379",
           "desc": "PLIER 6INCH",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000432": {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000437": {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000439": {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000447": {
           "code": "23000447",
           "desc": "RING SPANNER 30 X 32",
           "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001289": {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001306": {
           "code": "23001306",
           "desc": "ALUMINIUM PATELE (VESSEL)",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
         },
         "23001328": {
           "code": "23001328",
           "desc": "BUCKET PVC 20 LTR",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001530": {
           "code": "23001530",
           "desc": "THALI SS FULL SIZE",
           "uom": "NO",
-          "grossIssue": 12,
+          "grossIssue": 6,
           "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001697": {
           "code": "23001697",
           "desc": "SPIRIT LEVEL 12 INCHES",
           "uom": "NO",
-          "grossIssue": 2,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001920": {
           "code": "23001920",
           "desc": "SPADE MS",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001952": {
           "code": "23001952",
           "desc": "HACKSAW FRAME",
           "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23002064": {
           "code": "23002064",
           "desc": "GLASS SS",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
+          "grossIssue": 3,
+          "mrnReturn": 3,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
         }
       }
     },
@@ -217986,8 +211484,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -218489,8 +211987,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -218774,8 +212272,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -219277,8 +212775,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -219562,8 +213060,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -220065,8 +213563,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -220350,8 +213848,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -220853,8 +214351,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -221138,8 +214636,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -221641,8 +215139,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -221926,8 +215424,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -222429,8 +215927,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -222714,8 +216212,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -223217,8 +216715,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },
@@ -242632,10 +236130,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Moktar Momin",
-      "materialCount": 101,
-      "totalGrossIssue": 15218.84,
-      "totalMrnReturn": 6678.24,
-      "totalNetIssue": 8540.6,
+      "materialCount": 96,
+      "totalGrossIssue": 14517.84,
+      "totalMrnReturn": 6659.24,
+      "totalNetIssue": 7858.6,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -242669,9 +236167,9 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000026": {
           "code": "17000026",
@@ -242767,10 +236265,10 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 187,
+          "grossIssue": 107,
           "mrnReturn": 150,
-          "netIssue": 37,
-          "issuedQty": 37
+          "netIssue": -43,
+          "issuedQty": -43
         },
         "17000617": {
           "code": "17000617",
@@ -242988,15 +236486,6 @@ window.ContractorSapStock = {
           "netIssue": 31,
           "issuedQty": 31
         },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
@@ -243055,10 +236544,10 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 150,
+          "grossIssue": 102,
           "mrnReturn": 138,
-          "netIssue": 12,
-          "issuedQty": 12
+          "netIssue": -36,
+          "issuedQty": -36
         },
         "17005047": {
           "code": "17005047",
@@ -243077,15 +236566,6 @@ window.ContractorSapStock = {
           "mrnReturn": 92,
           "netIssue": 104,
           "issuedQty": 104
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
         },
         "17005050": {
           "code": "17005050",
@@ -243204,15 +236684,6 @@ window.ContractorSapStock = {
           "netIssue": 5,
           "issuedQty": 5
         },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
@@ -243240,32 +236711,14 @@ window.ContractorSapStock = {
           "netIssue": 0,
           "issuedQty": 0
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 965,
+          "grossIssue": 461,
           "mrnReturn": 211,
-          "netIssue": 754,
-          "issuedQty": 754
-        },
-        "17006214": {
-          "code": "17006214",
-          "desc": "MS-LT GUARDING ANG 50X50X6X1440-6.425KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 8,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "19020569": {
           "code": "19020569",
@@ -243558,9 +237011,9 @@ window.ContractorSapStock = {
       "vendorCode": "500306505",
       "contractorName": "DUSKLINE INFRASTRUCTURE",
       "materialCount": 191,
-      "totalGrossIssue": 1028640.87,
+      "totalGrossIssue": 1028616.87,
       "totalMrnReturn": 438660.632,
-      "totalNetIssue": 589980.238,
+      "totalNetIssue": 589956.238,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -244736,19 +238189,19 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 194,
+          "grossIssue": 190,
           "mrnReturn": 24,
-          "netIssue": 170,
-          "issuedQty": 170
+          "netIssue": 166,
+          "issuedQty": 166
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 471,
+          "grossIssue": 459,
           "mrnReturn": 71,
-          "netIssue": 400,
-          "issuedQty": 400
+          "netIssue": 388,
+          "issuedQty": 388
         },
         "17005072": {
           "code": "17005072",
@@ -244961,10 +238414,10 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 686,
+          "grossIssue": 678,
           "mrnReturn": 303,
-          "netIssue": 383,
-          "issuedQty": 383
+          "netIssue": 375,
+          "issuedQty": 375
         },
         "17005513": {
           "code": "17005513",
@@ -254968,16 +248421,16 @@ window.ContractorSapStock = {
       "vendorCode": "500308483",
       "contractorName": "D S INFRASTUACTURE",
       "materialCount": 101,
-      "totalGrossIssue": 48287.513,
-      "totalMrnReturn": 16465.927,
-      "totalNetIssue": 31821.586,
+      "totalGrossIssue": 39814.513,
+      "totalMrnReturn": 7968.927,
+      "totalNetIssue": 31845.586,
       "materials": {
         "17000004": {
           "code": "17000004",
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
-          "grossIssue": 430,
-          "mrnReturn": 121,
+          "grossIssue": 322,
+          "mrnReturn": 13,
           "netIssue": 309,
           "issuedQty": 309
         },
@@ -254994,8 +248447,8 @@ window.ContractorSapStock = {
           "code": "17000008",
           "desc": "RSJ POLE 152X152 MM 13 MTR",
           "uom": "NO",
-          "grossIssue": 9,
-          "mrnReturn": 3,
+          "grossIssue": 6,
+          "mrnReturn": 0,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -255003,8 +248456,8 @@ window.ContractorSapStock = {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
-          "grossIssue": 16,
-          "mrnReturn": 3,
+          "grossIssue": 13,
+          "mrnReturn": 0,
           "netIssue": 13,
           "issuedQty": 13
         },
@@ -255012,8 +248465,8 @@ window.ContractorSapStock = {
           "code": "17000026",
           "desc": "HORN GAP FUSE 11 KV",
           "uom": "SET",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -255021,8 +248474,8 @@ window.ContractorSapStock = {
           "code": "17000046",
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
-          "grossIssue": 1149,
-          "mrnReturn": 388,
+          "grossIssue": 899,
+          "mrnReturn": 138,
           "netIssue": 761,
           "issuedQty": 761
         },
@@ -255030,8 +248483,8 @@ window.ContractorSapStock = {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
-          "grossIssue": 641,
-          "mrnReturn": 131,
+          "grossIssue": 510,
+          "mrnReturn": 0,
           "netIssue": 510,
           "issuedQty": 510
         },
@@ -255039,8 +248492,8 @@ window.ContractorSapStock = {
           "code": "17000057",
           "desc": "LT SPACER",
           "uom": "NO",
-          "grossIssue": 153,
-          "mrnReturn": 40,
+          "grossIssue": 150,
+          "mrnReturn": 37,
           "netIssue": 113,
           "issuedQty": 113
         },
@@ -255048,8 +248501,8 @@ window.ContractorSapStock = {
           "code": "17000058",
           "desc": "LT STAY INSULATOR",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 14,
+          "grossIssue": 20,
+          "mrnReturn": 0,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -255057,8 +248510,8 @@ window.ContractorSapStock = {
           "code": "17000081",
           "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -255066,8 +248519,8 @@ window.ContractorSapStock = {
           "code": "17000108",
           "desc": "LT CT METER BOX FOR 100 KVA DTC",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 3,
+          "grossIssue": 9,
+          "mrnReturn": 0,
           "netIssue": 9,
           "issuedQty": 9
         },
@@ -255075,8 +248528,8 @@ window.ContractorSapStock = {
           "code": "17000120",
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
-          "grossIssue": 10.46,
-          "mrnReturn": 5.835,
+          "grossIssue": 8.46,
+          "mrnReturn": 3.835,
           "netIssue": 4.625,
           "issuedQty": 4.625
         },
@@ -255084,8 +248537,8 @@ window.ContractorSapStock = {
           "code": "17000128",
           "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
           "uom": "NO",
-          "grossIssue": 39,
-          "mrnReturn": 12,
+          "grossIssue": 30,
+          "mrnReturn": 3,
           "netIssue": 27,
           "issuedQty": 27
         },
@@ -255093,8 +248546,8 @@ window.ContractorSapStock = {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 2110.4,
-          "mrnReturn": 431,
+          "grossIssue": 2057.4,
+          "mrnReturn": 378,
           "netIssue": 1679.4,
           "issuedQty": 1679.4
         },
@@ -255102,8 +248555,8 @@ window.ContractorSapStock = {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
-          "grossIssue": 520,
-          "mrnReturn": 159,
+          "grossIssue": 407,
+          "mrnReturn": 46,
           "netIssue": 361,
           "issuedQty": 361
         },
@@ -255111,8 +248564,8 @@ window.ContractorSapStock = {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
-          "grossIssue": 3675,
-          "mrnReturn": 1535.4,
+          "grossIssue": 2975,
+          "mrnReturn": 835.4,
           "netIssue": 2139.6,
           "issuedQty": 2139.6
         },
@@ -255120,8 +248573,8 @@ window.ContractorSapStock = {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 2631,
-          "mrnReturn": 452,
+          "grossIssue": 2371,
+          "mrnReturn": 192,
           "netIssue": 2179,
           "issuedQty": 2179
         },
@@ -255129,8 +248582,8 @@ window.ContractorSapStock = {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 886,
-          "mrnReturn": 373,
+          "grossIssue": 698,
+          "mrnReturn": 185,
           "netIssue": 513,
           "issuedQty": 513
         },
@@ -255138,8 +248591,8 @@ window.ContractorSapStock = {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 615,
-          "mrnReturn": 289,
+          "grossIssue": 500,
+          "mrnReturn": 174,
           "netIssue": 326,
           "issuedQty": 326
         },
@@ -255156,8 +248609,8 @@ window.ContractorSapStock = {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 182,
-          "mrnReturn": 66,
+          "grossIssue": 140,
+          "mrnReturn": 24,
           "netIssue": 116,
           "issuedQty": 116
         },
@@ -255165,8 +248618,8 @@ window.ContractorSapStock = {
           "code": "17000624",
           "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 3968,
-          "mrnReturn": 1964,
+          "grossIssue": 2608,
+          "mrnReturn": 604,
           "netIssue": 2004,
           "issuedQty": 2004
         },
@@ -255174,8 +248627,8 @@ window.ContractorSapStock = {
           "code": "17000625",
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 3424,
-          "mrnReturn": 1731,
+          "grossIssue": 2264,
+          "mrnReturn": 571,
           "netIssue": 1693,
           "issuedQty": 1693
         },
@@ -255201,8 +248654,8 @@ window.ContractorSapStock = {
           "code": "17000636",
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 593,
-          "mrnReturn": 178,
+          "grossIssue": 430,
+          "mrnReturn": 15,
           "netIssue": 415,
           "issuedQty": 415
         },
@@ -255210,8 +248663,8 @@ window.ContractorSapStock = {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 119,
-          "mrnReturn": 68,
+          "grossIssue": 100,
+          "mrnReturn": 49,
           "netIssue": 51,
           "issuedQty": 51
         },
@@ -255219,8 +248672,8 @@ window.ContractorSapStock = {
           "code": "17000651",
           "desc": "LUG AL RING 70 SQMM",
           "uom": "NO",
-          "grossIssue": 206,
-          "mrnReturn": 54,
+          "grossIssue": 152,
+          "mrnReturn": 0,
           "netIssue": 152,
           "issuedQty": 152
         },
@@ -255246,8 +248699,8 @@ window.ContractorSapStock = {
           "code": "17000702",
           "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
           "uom": "NO",
-          "grossIssue": 166,
-          "mrnReturn": 55,
+          "grossIssue": 115,
+          "mrnReturn": 4,
           "netIssue": 111,
           "issuedQty": 111
         },
@@ -255255,8 +248708,8 @@ window.ContractorSapStock = {
           "code": "17000704",
           "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
           "uom": "NO",
-          "grossIssue": 1020,
-          "mrnReturn": 380,
+          "grossIssue": 820,
+          "mrnReturn": 180,
           "netIssue": 640,
           "issuedQty": 640
         },
@@ -255264,8 +248717,8 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 894,
-          "mrnReturn": 305,
+          "grossIssue": 728,
+          "mrnReturn": 139,
           "netIssue": 589,
           "issuedQty": 589
         },
@@ -255273,8 +248726,8 @@ window.ContractorSapStock = {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
-          "grossIssue": 34,
-          "mrnReturn": 14,
+          "grossIssue": 20,
+          "mrnReturn": 0,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -255291,8 +248744,8 @@ window.ContractorSapStock = {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
-          "grossIssue": 200,
-          "mrnReturn": 53,
+          "grossIssue": 160,
+          "mrnReturn": 13,
           "netIssue": 147,
           "issuedQty": 147
         },
@@ -255300,8 +248753,8 @@ window.ContractorSapStock = {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 208,
-          "mrnReturn": 93,
+          "grossIssue": 175,
+          "mrnReturn": 60,
           "netIssue": 115,
           "issuedQty": 115
         },
@@ -255309,8 +248762,8 @@ window.ContractorSapStock = {
           "code": "17001242",
           "desc": "RSJ POLE 100X116 MM 10 MTR",
           "uom": "NO",
-          "grossIssue": 104,
-          "mrnReturn": 40,
+          "grossIssue": 64,
+          "mrnReturn": 0,
           "netIssue": 64,
           "issuedQty": 64
         },
@@ -255318,8 +248771,8 @@ window.ContractorSapStock = {
           "code": "17001243",
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
-          "grossIssue": 186,
-          "mrnReturn": 59,
+          "grossIssue": 127,
+          "mrnReturn": 0,
           "netIssue": 127,
           "issuedQty": 127
         },
@@ -255327,8 +248780,8 @@ window.ContractorSapStock = {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
-          "grossIssue": 142,
-          "mrnReturn": 51.344,
+          "grossIssue": 112,
+          "mrnReturn": 21.344,
           "netIssue": 90.656,
           "issuedQty": 90.656
         },
@@ -255336,8 +248789,8 @@ window.ContractorSapStock = {
           "code": "17001264",
           "desc": "CT LT RING TYPE 200/5A",
           "uom": "NO",
-          "grossIssue": 36,
-          "mrnReturn": 9,
+          "grossIssue": 27,
+          "mrnReturn": 0,
           "netIssue": 27,
           "issuedQty": 27
         },
@@ -255354,8 +248807,8 @@ window.ContractorSapStock = {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
-          "grossIssue": 901,
-          "mrnReturn": 339,
+          "grossIssue": 728,
+          "mrnReturn": 166,
           "netIssue": 562,
           "issuedQty": 562
         },
@@ -255363,8 +248816,8 @@ window.ContractorSapStock = {
           "code": "17001356",
           "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
           "uom": "NO",
-          "grossIssue": 1049,
-          "mrnReturn": 604,
+          "grossIssue": 910,
+          "mrnReturn": 465,
           "netIssue": 445,
           "issuedQty": 445
         },
@@ -255381,8 +248834,8 @@ window.ContractorSapStock = {
           "code": "17001369",
           "desc": "EARTHING SET LT",
           "uom": "NO",
-          "grossIssue": 80,
-          "mrnReturn": 41,
+          "grossIssue": 75,
+          "mrnReturn": 36,
           "netIssue": 39,
           "issuedQty": 39
         },
@@ -255390,8 +248843,8 @@ window.ContractorSapStock = {
           "code": "17001397",
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
-          "grossIssue": 2735,
-          "mrnReturn": 1057,
+          "grossIssue": 2200,
+          "mrnReturn": 522,
           "netIssue": 1678,
           "issuedQty": 1678
         },
@@ -255417,8 +248870,8 @@ window.ContractorSapStock = {
           "code": "17004596",
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
-          "grossIssue": 386,
-          "mrnReturn": 90,
+          "grossIssue": 296,
+          "mrnReturn": 0,
           "netIssue": 296,
           "issuedQty": 296
         },
@@ -255426,8 +248879,8 @@ window.ContractorSapStock = {
           "code": "17004662",
           "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 4,
+          "grossIssue": 9,
+          "mrnReturn": 1,
           "netIssue": 8,
           "issuedQty": 8
         },
@@ -255435,8 +248888,8 @@ window.ContractorSapStock = {
           "code": "17004792",
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 82,
+          "grossIssue": 140,
+          "mrnReturn": 51,
           "netIssue": 89,
           "issuedQty": 89
         },
@@ -255444,8 +248897,8 @@ window.ContractorSapStock = {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 15,
+          "grossIssue": 31,
+          "mrnReturn": 9,
           "netIssue": 22,
           "issuedQty": 22
         },
@@ -255453,8 +248906,8 @@ window.ContractorSapStock = {
           "code": "17005039",
           "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
           "uom": "NO",
-          "grossIssue": 41,
-          "mrnReturn": 25,
+          "grossIssue": 25,
+          "mrnReturn": 9,
           "netIssue": 16,
           "issuedQty": 16
         },
@@ -255462,8 +248915,8 @@ window.ContractorSapStock = {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 18,
+          "grossIssue": 52,
+          "mrnReturn": 6,
           "netIssue": 46,
           "issuedQty": 46
         },
@@ -255471,8 +248924,8 @@ window.ContractorSapStock = {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
-          "grossIssue": 729,
-          "mrnReturn": 312,
+          "grossIssue": 561,
+          "mrnReturn": 144,
           "netIssue": 417,
           "issuedQty": 417
         },
@@ -255480,8 +248933,8 @@ window.ContractorSapStock = {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
-          "grossIssue": 360,
-          "mrnReturn": 126,
+          "grossIssue": 270,
+          "mrnReturn": 36,
           "netIssue": 234,
           "issuedQty": 234
         },
@@ -255489,8 +248942,8 @@ window.ContractorSapStock = {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
-          "grossIssue": 354,
-          "mrnReturn": 120,
+          "grossIssue": 264,
+          "mrnReturn": 30,
           "netIssue": 234,
           "issuedQty": 234
         },
@@ -255498,8 +248951,8 @@ window.ContractorSapStock = {
           "code": "17005044",
           "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
           "uom": "NO",
-          "grossIssue": 70,
-          "mrnReturn": 17,
+          "grossIssue": 60,
+          "mrnReturn": 7,
           "netIssue": 53,
           "issuedQty": 53
         },
@@ -255507,8 +248960,8 @@ window.ContractorSapStock = {
           "code": "17005045",
           "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
           "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 10,
+          "grossIssue": 52,
+          "mrnReturn": 0,
           "netIssue": 52,
           "issuedQty": 52
         },
@@ -255516,8 +248969,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 1040,
-          "mrnReturn": 111,
+          "grossIssue": 932,
+          "mrnReturn": 3,
           "netIssue": 929,
           "issuedQty": 929
         },
@@ -255525,8 +248978,8 @@ window.ContractorSapStock = {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
-          "grossIssue": 1375,
-          "mrnReturn": 307,
+          "grossIssue": 1230,
+          "mrnReturn": 162,
           "netIssue": 1068,
           "issuedQty": 1068
         },
@@ -255534,8 +248987,8 @@ window.ContractorSapStock = {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
-          "grossIssue": 605,
-          "mrnReturn": 309,
+          "grossIssue": 591,
+          "mrnReturn": 295,
           "netIssue": 296,
           "issuedQty": 296
         },
@@ -255543,8 +248996,8 @@ window.ContractorSapStock = {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
-          "grossIssue": 1140,
-          "mrnReturn": 485,
+          "grossIssue": 859,
+          "mrnReturn": 204,
           "netIssue": 655,
           "issuedQty": 655
         },
@@ -255552,8 +249005,8 @@ window.ContractorSapStock = {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
-          "grossIssue": 624,
-          "mrnReturn": 286,
+          "grossIssue": 490,
+          "mrnReturn": 152,
           "netIssue": 338,
           "issuedQty": 338
         },
@@ -255570,8 +249023,8 @@ window.ContractorSapStock = {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
-          "grossIssue": 445,
-          "mrnReturn": 187,
+          "grossIssue": 357,
+          "mrnReturn": 99,
           "netIssue": 258,
           "issuedQty": 258
         },
@@ -255579,8 +249032,8 @@ window.ContractorSapStock = {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
-          "grossIssue": 1006,
-          "mrnReturn": 449,
+          "grossIssue": 814,
+          "mrnReturn": 257,
           "netIssue": 557,
           "issuedQty": 557
         },
@@ -255588,8 +249041,8 @@ window.ContractorSapStock = {
           "code": "17005059",
           "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
           "uom": "NO",
-          "grossIssue": 40,
-          "mrnReturn": 20,
+          "grossIssue": 34,
+          "mrnReturn": 14,
           "netIssue": 20,
           "issuedQty": 20
         },
@@ -255597,8 +249050,8 @@ window.ContractorSapStock = {
           "code": "17005060",
           "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
           "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 8,
+          "grossIssue": 20,
+          "mrnReturn": 2,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -255606,8 +249059,8 @@ window.ContractorSapStock = {
           "code": "17005061",
           "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
-          "grossIssue": 24,
-          "mrnReturn": 6,
+          "grossIssue": 18,
+          "mrnReturn": 0,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -255615,8 +249068,8 @@ window.ContractorSapStock = {
           "code": "17005062",
           "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 8,
+          "grossIssue": 28,
+          "mrnReturn": 2,
           "netIssue": 26,
           "issuedQty": 26
         },
@@ -255624,8 +249077,8 @@ window.ContractorSapStock = {
           "code": "17005063",
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
-          "grossIssue": 22,
-          "mrnReturn": 9,
+          "grossIssue": 13,
+          "mrnReturn": 0,
           "netIssue": 13,
           "issuedQty": 13
         },
@@ -255633,8 +249086,8 @@ window.ContractorSapStock = {
           "code": "17005065",
           "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
           "uom": "NO",
-          "grossIssue": 24,
-          "mrnReturn": 6,
+          "grossIssue": 18,
+          "mrnReturn": 0,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -255642,8 +249095,8 @@ window.ContractorSapStock = {
           "code": "17005066",
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
+          "grossIssue": 28,
+          "mrnReturn": 10,
           "netIssue": 18,
           "issuedQty": 18
         },
@@ -255651,8 +249104,8 @@ window.ContractorSapStock = {
           "code": "17005067",
           "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 6,
+          "grossIssue": 28,
+          "mrnReturn": 0,
           "netIssue": 28,
           "issuedQty": 28
         },
@@ -255660,8 +249113,8 @@ window.ContractorSapStock = {
           "code": "17005068",
           "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
+          "grossIssue": 8,
+          "mrnReturn": 1,
           "netIssue": 7,
           "issuedQty": 7
         },
@@ -255669,8 +249122,8 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 3,
+          "grossIssue": 12,
+          "mrnReturn": 0,
           "netIssue": 12,
           "issuedQty": 12
         },
@@ -255678,8 +249131,8 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 9,
+          "grossIssue": 57,
+          "mrnReturn": 0,
           "netIssue": 57,
           "issuedQty": 57
         },
@@ -255696,17 +249149,17 @@ window.ContractorSapStock = {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 124,
-          "mrnReturn": 59,
-          "netIssue": 65,
-          "issuedQty": 65
+          "grossIssue": 100,
+          "mrnReturn": 11,
+          "netIssue": 89,
+          "issuedQty": 89
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
-          "grossIssue": 349,
-          "mrnReturn": 126,
+          "grossIssue": 300,
+          "mrnReturn": 77,
           "netIssue": 223,
           "issuedQty": 223
         },
@@ -255714,8 +249167,8 @@ window.ContractorSapStock = {
           "code": "17005081",
           "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
           "uom": "NO",
-          "grossIssue": 100,
-          "mrnReturn": 15,
+          "grossIssue": 85,
+          "mrnReturn": 0,
           "netIssue": 85,
           "issuedQty": 85
         },
@@ -255723,8 +249176,8 @@ window.ContractorSapStock = {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
-          "grossIssue": 518,
-          "mrnReturn": 243,
+          "grossIssue": 350,
+          "mrnReturn": 75,
           "netIssue": 275,
           "issuedQty": 275
         },
@@ -255732,8 +249185,8 @@ window.ContractorSapStock = {
           "code": "17005083",
           "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
           "uom": "NO",
-          "grossIssue": 220,
-          "mrnReturn": 135,
+          "grossIssue": 180,
+          "mrnReturn": 95,
           "netIssue": 85,
           "issuedQty": 85
         },
@@ -255741,8 +249194,8 @@ window.ContractorSapStock = {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
-          "grossIssue": 208,
-          "mrnReturn": 183,
+          "grossIssue": 200,
+          "mrnReturn": 175,
           "netIssue": 25,
           "issuedQty": 25
         },
@@ -255768,8 +249221,8 @@ window.ContractorSapStock = {
           "code": "17005091",
           "desc": "MS-LT STAY SET 16 MM",
           "uom": "SET",
-          "grossIssue": 87,
-          "mrnReturn": 22,
+          "grossIssue": 70,
+          "mrnReturn": 5,
           "netIssue": 65,
           "issuedQty": 65
         },
@@ -255777,8 +249230,8 @@ window.ContractorSapStock = {
           "code": "17005188",
           "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
           "uom": "M",
-          "grossIssue": 924,
-          "mrnReturn": 351,
+          "grossIssue": 708,
+          "mrnReturn": 135,
           "netIssue": 573,
           "issuedQty": 573
         },
@@ -255786,8 +249239,8 @@ window.ContractorSapStock = {
           "code": "17005508",
           "desc": "ENERGY METER LT CT 100/5 AMP",
           "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 3,
+          "grossIssue": 10,
+          "mrnReturn": 0,
           "netIssue": 10,
           "issuedQty": 10
         },
@@ -255795,8 +249248,8 @@ window.ContractorSapStock = {
           "code": "17005513",
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 511,
-          "mrnReturn": 360,
+          "grossIssue": 450,
+          "mrnReturn": 299,
           "netIssue": 151,
           "issuedQty": 151
         },
@@ -255804,8 +249257,8 @@ window.ContractorSapStock = {
           "code": "17005597",
           "desc": "COVERED CONDUCTOR 55 SQMM",
           "uom": "KM",
-          "grossIssue": 12.403,
-          "mrnReturn": 2.348,
+          "grossIssue": 10.403,
+          "mrnReturn": 0.348,
           "netIssue": 10.055,
           "issuedQty": 10.055
         },
@@ -255813,8 +249266,8 @@ window.ContractorSapStock = {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 1763,
-          "mrnReturn": 80,
+          "grossIssue": 1700,
+          "mrnReturn": 17,
           "netIssue": 1683,
           "issuedQty": 1683
         },
@@ -255890,10 +249343,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "500303597",
       "contractorName": "pratima Enterprises",
-      "materialCount": 151,
-      "totalGrossIssue": 34948.764,
+      "materialCount": 150,
+      "totalGrossIssue": 34889.764,
       "totalMrnReturn": 7679.341,
-      "totalNetIssue": 27269.423,
+      "totalNetIssue": 27210.423,
       "materials": {
         "11000336": {
           "code": "11000336",
@@ -256169,10 +249622,10 @@ window.ContractorSapStock = {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 281,
+          "grossIssue": 271,
           "mrnReturn": 93,
-          "netIssue": 188,
-          "issuedQty": 188
+          "netIssue": 178,
+          "issuedQty": 178
         },
         "17000624": {
           "code": "17000624",
@@ -256880,10 +250333,10 @@ window.ContractorSapStock = {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
-          "grossIssue": 14,
+          "grossIssue": 4,
           "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
+          "netIssue": 4,
+          "issuedQty": 4
         },
         "17005065": {
           "code": "17005065",
@@ -256934,10 +250387,10 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 55,
+          "grossIssue": 46,
           "mrnReturn": 17,
-          "netIssue": 38,
-          "issuedQty": 38
+          "netIssue": 29,
+          "issuedQty": 29
         },
         "17005072": {
           "code": "17005072",
@@ -257190,15 +250643,6 @@ window.ContractorSapStock = {
           "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "17006129": {
-          "code": "17006129",
-          "desc": "MS-FISH PLATE 75X10X254-1.5KG",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
         },
         "22002542": {
           "code": "22002542",
@@ -264662,9 +258106,9 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "LK Electricals",
       "materialCount": 126,
-      "totalGrossIssue": 66816.728,
-      "totalMrnReturn": 5620.71,
-      "totalNetIssue": 61196.018,
+      "totalGrossIssue": 66768.728,
+      "totalMrnReturn": 5608.71,
+      "totalNetIssue": 61160.018,
       "materials": {
         "17000004": {
           "code": "17000004",
@@ -265561,8 +259005,8 @@ window.ContractorSapStock = {
           "code": "17005069",
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
+          "grossIssue": 32,
+          "mrnReturn": 0,
           "netIssue": 32,
           "issuedQty": 32
         },
@@ -265570,8 +259014,8 @@ window.ContractorSapStock = {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
-          "grossIssue": 116,
-          "mrnReturn": 6,
+          "grossIssue": 110,
+          "mrnReturn": 0,
           "netIssue": 110,
           "issuedQty": 110
         },
@@ -265588,8 +259032,8 @@ window.ContractorSapStock = {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 81,
-          "mrnReturn": 4,
+          "grossIssue": 77,
+          "mrnReturn": 0,
           "netIssue": 77,
           "issuedQty": 77
         },
@@ -265759,10 +259203,10 @@ window.ContractorSapStock = {
           "code": "17006129",
           "desc": "MS-FISH PLATE 75X10X254-1.5KG",
           "uom": "NO",
-          "grossIssue": 66,
+          "grossIssue": 30,
           "mrnReturn": 14,
-          "netIssue": 52,
-          "issuedQty": 52
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "22002542": {
           "code": "22002542",
@@ -270985,10 +264429,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Anjali Electricals Dayashankar",
-      "materialCount": 92,
-      "totalGrossIssue": 22582.9,
+      "materialCount": 91,
+      "totalGrossIssue": 22382.9,
       "totalMrnReturn": 10853.195,
-      "totalNetIssue": 11729.705,
+      "totalNetIssue": 11529.705,
       "materials": {
         "17000004": {
           "code": "17000004",
@@ -271349,15 +264793,6 @@ window.ContractorSapStock = {
           "mrnReturn": 311,
           "netIssue": 69,
           "issuedQty": 69
-        },
-        "17001312": {
-          "code": "17001312",
-          "desc": "STAY SET CLAMP-A LG 100X116 50X10X310 MM",
-          "uom": "NO",
-          "grossIssue": 200,
-          "mrnReturn": 0,
-          "netIssue": 200,
-          "issuedQty": 200
         },
         "17001356": {
           "code": "17001356",
@@ -272462,10 +265897,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "500303597",
       "contractorName": "MANOJ KAUMAR MOHTO",
-      "materialCount": 127,
-      "totalGrossIssue": 30680.159,
-      "totalMrnReturn": 3040.99,
-      "totalNetIssue": 27639.169,
+      "materialCount": 125,
+      "totalGrossIssue": 30403.159,
+      "totalMrnReturn": 349.03,
+      "totalNetIssue": 30054.129,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -272499,45 +265934,45 @@ window.ContractorSapStock = {
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "17000046": {
           "code": "17000046",
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 250,
-          "mrnReturn": 46,
-          "netIssue": 204,
-          "issuedQty": 204
+          "mrnReturn": 0,
+          "netIssue": 250,
+          "issuedQty": 250
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 16,
-          "netIssue": 214,
-          "issuedQty": 214
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17000057": {
           "code": "17000057",
           "desc": "LT SPACER",
           "uom": "NO",
           "grossIssue": 130,
-          "mrnReturn": 95,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000058": {
           "code": "17000058",
           "desc": "LT STAY INSULATOR",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 2,
-          "netIssue": 23,
-          "issuedQty": 23
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17000081": {
           "code": "17000081",
@@ -272562,9 +265997,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1.478,
-          "mrnReturn": 0.16,
-          "netIssue": 1.318,
-          "issuedQty": 1.318
+          "mrnReturn": 0,
+          "netIssue": 1.478,
+          "issuedQty": 1.478
         },
         "17000195": {
           "code": "17000195",
@@ -272580,81 +266015,81 @@ window.ContractorSapStock = {
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
           "grossIssue": 445,
-          "mrnReturn": 16,
-          "netIssue": 429,
-          "issuedQty": 429
+          "mrnReturn": 0,
+          "netIssue": 445,
+          "issuedQty": 445
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 184,
-          "mrnReturn": 90,
-          "netIssue": 94,
-          "issuedQty": 94
+          "mrnReturn": 0,
+          "netIssue": 184,
+          "issuedQty": 184
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 479,
-          "mrnReturn": 35,
-          "netIssue": 444,
-          "issuedQty": 444
+          "mrnReturn": 0,
+          "netIssue": 479,
+          "issuedQty": 479
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 566,
-          "mrnReturn": 58,
-          "netIssue": 508,
-          "issuedQty": 508
+          "mrnReturn": 0,
+          "netIssue": 566,
+          "issuedQty": 566
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 85,
-          "mrnReturn": 40,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 85,
+          "issuedQty": 85
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 60,
-          "mrnReturn": 52,
-          "netIssue": 8,
-          "issuedQty": 8
+          "mrnReturn": 0,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17000617": {
           "code": "17000617",
           "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 50,
-          "mrnReturn": 16,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000618": {
           "code": "17000618",
           "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 17,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 165,
-          "mrnReturn": 56,
-          "netIssue": 109,
-          "issuedQty": 109
+          "mrnReturn": 0,
+          "netIssue": 165,
+          "issuedQty": 165
         },
         "17000624": {
           "code": "17000624",
@@ -272670,9 +266105,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 562,
-          "mrnReturn": 44,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 562,
+          "issuedQty": 562
         },
         "17000627": {
           "code": "17000627",
@@ -272688,9 +266123,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 112,
-          "mrnReturn": 7,
-          "netIssue": 105,
-          "issuedQty": 105
+          "mrnReturn": 0,
+          "netIssue": 112,
+          "issuedQty": 112
         },
         "17000632": {
           "code": "17000632",
@@ -272705,8 +266140,8 @@ window.ContractorSapStock = {
           "code": "17000633",
           "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
-          "grossIssue": 454,
-          "mrnReturn": 454,
+          "grossIssue": 214,
+          "mrnReturn": 214,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -272715,9 +266150,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 212,
-          "mrnReturn": 130,
-          "netIssue": 82,
-          "issuedQty": 82
+          "mrnReturn": 0,
+          "netIssue": 212,
+          "issuedQty": 212
         },
         "17000637": {
           "code": "17000637",
@@ -272733,18 +266168,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 20,
-          "mrnReturn": 9,
-          "netIssue": 11,
-          "issuedQty": 11
+          "mrnReturn": 0,
+          "netIssue": 20,
+          "issuedQty": 20
         },
         "17000651": {
           "code": "17000651",
           "desc": "LUG AL RING 70 SQMM",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 12,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17000656": {
           "code": "17000656",
@@ -272760,27 +266195,27 @@ window.ContractorSapStock = {
           "desc": "LT SHACKLE HARDWARE",
           "uom": "PAA",
           "grossIssue": 168,
-          "mrnReturn": 113,
-          "netIssue": 55,
-          "issuedQty": 55
+          "mrnReturn": 0,
+          "netIssue": 168,
+          "issuedQty": 168
         },
         "17000702": {
           "code": "17000702",
           "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
           "uom": "NO",
           "grossIssue": 15,
-          "mrnReturn": 2,
-          "netIssue": 13,
-          "issuedQty": 13
+          "mrnReturn": 0,
+          "netIssue": 15,
+          "issuedQty": 15
         },
         "17000704": {
           "code": "17000704",
           "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
           "uom": "NO",
           "grossIssue": 269,
-          "mrnReturn": 44,
-          "netIssue": 225,
-          "issuedQty": 225
+          "mrnReturn": 0,
+          "netIssue": 269,
+          "issuedQty": 269
         },
         "17000725": {
           "code": "17000725",
@@ -272796,18 +266231,18 @@ window.ContractorSapStock = {
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
           "grossIssue": 274,
-          "mrnReturn": 91,
-          "netIssue": 183,
-          "issuedQty": 183
+          "mrnReturn": 0,
+          "netIssue": 274,
+          "issuedQty": 274
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 120,
-          "mrnReturn": 71,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 120,
+          "issuedQty": 120
         },
         "17000775": {
           "code": "17000775",
@@ -272850,18 +266285,18 @@ window.ContractorSapStock = {
           "desc": "LUG AL RING 120 SQMM",
           "uom": "NO",
           "grossIssue": 25,
-          "mrnReturn": 20,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 6,
-          "netIssue": 49,
-          "issuedQty": 49
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17001240": {
           "code": "17001240",
@@ -272886,9 +266321,9 @@ window.ContractorSapStock = {
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 20.081,
-          "mrnReturn": 5.8,
-          "netIssue": 14.281,
-          "issuedQty": 14.281
+          "mrnReturn": 0,
+          "netIssue": 20.081,
+          "issuedQty": 20.081
         },
         "17001264": {
           "code": "17001264",
@@ -272904,18 +266339,18 @@ window.ContractorSapStock = {
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
           "grossIssue": 810,
-          "mrnReturn": 292,
-          "netIssue": 518,
-          "issuedQty": 518
+          "mrnReturn": 0,
+          "netIssue": 810,
+          "issuedQty": 810
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 181,
-          "mrnReturn": 44,
-          "netIssue": 137,
-          "issuedQty": 137
+          "mrnReturn": 0,
+          "netIssue": 181,
+          "issuedQty": 181
         },
         "17001312": {
           "code": "17001312",
@@ -272931,9 +266366,9 @@ window.ContractorSapStock = {
           "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
           "uom": "NO",
           "grossIssue": 216,
-          "mrnReturn": 13,
-          "netIssue": 203,
-          "issuedQty": 203
+          "mrnReturn": 0,
+          "netIssue": 216,
+          "issuedQty": 216
         },
         "17001369": {
           "code": "17001369",
@@ -272949,9 +266384,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 265,
-          "mrnReturn": 21,
-          "netIssue": 244,
-          "issuedQty": 244
+          "mrnReturn": 0,
+          "netIssue": 265,
+          "issuedQty": 265
         },
         "17001992": {
           "code": "17001992",
@@ -272976,18 +266411,18 @@ window.ContractorSapStock = {
           "desc": "JOINTING SLEEVE AAAC RABBIT CONDUCTOR",
           "uom": "NO",
           "grossIssue": 50,
-          "mrnReturn": 49,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 50,
+          "issuedQty": 50
         },
         "17004596": {
           "code": "17004596",
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 160,
-          "mrnReturn": 35,
-          "netIssue": 125,
-          "issuedQty": 125
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17004662": {
           "code": "17004662",
@@ -273003,9 +266438,9 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 46,
-          "netIssue": 34,
-          "issuedQty": 34
+          "mrnReturn": 33,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005020": {
           "code": "17005020",
@@ -273030,27 +266465,27 @@ window.ContractorSapStock = {
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 67,
-          "mrnReturn": 30,
-          "netIssue": 37,
-          "issuedQty": 37
+          "mrnReturn": 0,
+          "netIssue": 67,
+          "issuedQty": 67
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 78,
-          "mrnReturn": 10,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 78,
+          "issuedQty": 78
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 76,
-          "mrnReturn": 8,
-          "netIssue": 68,
-          "issuedQty": 68
+          "mrnReturn": 0,
+          "netIssue": 76,
+          "issuedQty": 76
         },
         "17005044": {
           "code": "17005044",
@@ -273075,108 +266510,108 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 142,
-          "mrnReturn": 20,
-          "netIssue": 122,
-          "issuedQty": 122
+          "mrnReturn": 0,
+          "netIssue": 142,
+          "issuedQty": 142
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 97,
-          "netIssue": 233,
-          "issuedQty": 233
+          "mrnReturn": 0,
+          "netIssue": 330,
+          "issuedQty": 330
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 196,
-          "mrnReturn": 139,
-          "netIssue": 57,
-          "issuedQty": 57
+          "mrnReturn": 0,
+          "netIssue": 196,
+          "issuedQty": 196
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 270,
-          "mrnReturn": 65,
-          "netIssue": 205,
-          "issuedQty": 205
+          "mrnReturn": 0,
+          "netIssue": 270,
+          "issuedQty": 270
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 11,
-          "netIssue": 19,
-          "issuedQty": 19
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 22,
-          "netIssue": 58,
-          "issuedQty": 58
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 70,
-          "mrnReturn": 1,
-          "netIssue": 69,
-          "issuedQty": 69
+          "mrnReturn": 0,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17005059": {
           "code": "17005059",
           "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 1,
+          "netIssue": 3,
+          "issuedQty": 3
         },
         "17005060": {
           "code": "17005060",
           "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
           "uom": "NO",
           "grossIssue": 4,
-          "mrnReturn": 4,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 3,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17005061": {
           "code": "17005061",
           "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 9,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 4,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005063": {
           "code": "17005063",
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 3,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
-          "grossIssue": 28,
-          "mrnReturn": 15,
-          "netIssue": 13,
-          "issuedQty": 13
+          "grossIssue": 18,
+          "mrnReturn": 0,
+          "netIssue": 18,
+          "issuedQty": 18
         },
         "17005065": {
           "code": "17005065",
@@ -273210,108 +266645,99 @@ window.ContractorSapStock = {
           "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
           "uom": "NO",
           "grossIssue": 6,
-          "mrnReturn": 1,
-          "netIssue": 5,
-          "issuedQty": 5
+          "mrnReturn": 0,
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17005070": {
           "code": "17005070",
           "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
           "uom": "NO",
           "grossIssue": 10,
-          "mrnReturn": 3,
-          "netIssue": 7,
-          "issuedQty": 7
+          "mrnReturn": 0,
+          "netIssue": 10,
+          "issuedQty": 10
         },
         "17005077": {
           "code": "17005077",
           "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
           "uom": "NO",
           "grossIssue": 26,
-          "mrnReturn": 16,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 26,
+          "issuedQty": 26
         },
         "17005078": {
           "code": "17005078",
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 1,
-          "netIssue": 19,
-          "issuedQty": 19
+          "grossIssue": 16,
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 178,
-          "mrnReturn": 70,
-          "netIssue": 108,
-          "issuedQty": 108
+          "mrnReturn": 0,
+          "netIssue": 178,
+          "issuedQty": 178
         },
         "17005081": {
           "code": "17005081",
           "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 12,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 230,
-          "mrnReturn": 40,
-          "netIssue": 190,
-          "issuedQty": 190
+          "mrnReturn": 0,
+          "netIssue": 230,
+          "issuedQty": 230
         },
         "17005083": {
           "code": "17005083",
           "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
           "uom": "NO",
           "grossIssue": 55,
-          "mrnReturn": 10,
-          "netIssue": 45,
-          "issuedQty": 45
+          "mrnReturn": 0,
+          "netIssue": 55,
+          "issuedQty": 55
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 47,
-          "mrnReturn": 14,
-          "netIssue": 33,
-          "issuedQty": 33
+          "mrnReturn": 0,
+          "netIssue": 47,
+          "issuedQty": 47
         },
         "17005091": {
           "code": "17005091",
           "desc": "MS-LT STAY SET 16 MM",
           "uom": "SET",
           "grossIssue": 25,
-          "mrnReturn": 3,
-          "netIssue": 22,
-          "issuedQty": 22
+          "mrnReturn": 2,
+          "netIssue": 23,
+          "issuedQty": 23
         },
         "17005188": {
           "code": "17005188",
           "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
           "uom": "M",
           "grossIssue": 462,
-          "mrnReturn": 80,
-          "netIssue": 382,
-          "issuedQty": 382
-        },
-        "17005212": {
-          "code": "17005212",
-          "desc": "HDPE PIPE 150 MM DIA",
-          "uom": "M",
-          "grossIssue": 19,
-          "mrnReturn": 19,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 462,
+          "issuedQty": 462
         },
         "17005508": {
           "code": "17005508",
@@ -273327,9 +266753,9 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 170,
-          "mrnReturn": 27,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 0,
+          "netIssue": 170,
+          "issuedQty": 170
         },
         "17005597": {
           "code": "17005597",
@@ -273340,23 +266766,14 @@ window.ContractorSapStock = {
           "netIssue": 0.27,
           "issuedQty": 0.27
         },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 600,
-          "mrnReturn": 166,
-          "netIssue": 434,
-          "issuedQty": 434
+          "mrnReturn": 0,
+          "netIssue": 600,
+          "issuedQty": 600
         },
         "17005858": {
           "code": "17005858",
@@ -274430,10 +267847,10 @@ window.ContractorSapStock = {
       ],
       "vendorCode": "",
       "contractorName": "Raial Infra ABL Dept.Teem",
-      "materialCount": 128,
-      "totalGrossIssue": 56110.174,
-      "totalMrnReturn": 10855.682,
-      "totalNetIssue": 45254.492,
+      "materialCount": 120,
+      "totalGrossIssue": 54783.424,
+      "totalMrnReturn": 1748.7,
+      "totalNetIssue": 53034.724,
       "materials": {
         "11000123": {
           "code": "11000123",
@@ -274449,9 +267866,9 @@ window.ContractorSapStock = {
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
           "grossIssue": 13000,
-          "mrnReturn": 2650,
-          "netIssue": 10350,
-          "issuedQty": 10350
+          "mrnReturn": 0,
+          "netIssue": 13000,
+          "issuedQty": 13000
         },
         "12000009": {
           "code": "12000009",
@@ -274467,18 +267884,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 9 MTR",
           "uom": "NO",
           "grossIssue": 353,
-          "mrnReturn": 140,
-          "netIssue": 213,
-          "issuedQty": 213
+          "mrnReturn": 104,
+          "netIssue": 249,
+          "issuedQty": 249
         },
         "17000023": {
           "code": "17000023",
           "desc": "AB SWITCH 11 KV 400 AMP",
           "uom": "SET",
           "grossIssue": 19,
-          "mrnReturn": 7,
-          "netIssue": 12,
-          "issuedQty": 12
+          "mrnReturn": 0,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "17000026": {
           "code": "17000026",
@@ -274494,18 +267911,18 @@ window.ContractorSapStock = {
           "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
           "uom": "NO",
           "grossIssue": 1004,
-          "mrnReturn": 11,
-          "netIssue": 993,
-          "issuedQty": 993
+          "mrnReturn": 0,
+          "netIssue": 1004,
+          "issuedQty": 1004
         },
         "17000056": {
           "code": "17000056",
           "desc": "LT SHACKLE INSULATOR",
           "uom": "NO",
           "grossIssue": 160,
-          "mrnReturn": 80,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 0,
+          "netIssue": 160,
+          "issuedQty": 160
         },
         "17000058": {
           "code": "17000058",
@@ -274539,9 +267956,9 @@ window.ContractorSapStock = {
           "desc": "ACSR WEASEL CONDUCTOR",
           "uom": "KM",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "17000128": {
           "code": "17000128",
@@ -274565,73 +267982,64 @@ window.ContractorSapStock = {
           "code": "17000231",
           "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
           "uom": "M",
-          "grossIssue": 62,
-          "mrnReturn": 122,
+          "grossIssue": 0,
+          "mrnReturn": 60,
           "netIssue": -60,
           "issuedQty": -60
-        },
-        "17000232": {
-          "code": "17000232",
-          "desc": "CABLE CU LT PVC 4X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 52,
-          "mrnReturn": 52,
-          "netIssue": 0,
-          "issuedQty": 0
         },
         "17000237": {
           "code": "17000237",
           "desc": "GI BARBED WIRE A TYPE",
           "uom": "KG",
-          "grossIssue": 1882,
-          "mrnReturn": 1882,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1130,
+          "mrnReturn": 890,
+          "netIssue": 240,
+          "issuedQty": 240
         },
         "17000238": {
           "code": "17000238",
           "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
           "uom": "KG",
           "grossIssue": 157,
-          "mrnReturn": 141,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 157,
+          "issuedQty": 157
         },
         "17000239": {
           "code": "17000239",
           "desc": "GI STAY WIRE 7/4 MM 8 SWG",
           "uom": "KG",
           "grossIssue": 2056,
-          "mrnReturn": 752,
-          "netIssue": 1304,
-          "issuedQty": 1304
+          "mrnReturn": 0,
+          "netIssue": 2056,
+          "issuedQty": 2056
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
           "grossIssue": 815.5,
-          "mrnReturn": 387,
-          "netIssue": 428.5,
-          "issuedQty": 428.5
+          "mrnReturn": 0,
+          "netIssue": 815.5,
+          "issuedQty": 815.5
         },
         "17000613": {
           "code": "17000613",
           "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 504,
-          "mrnReturn": 222,
-          "netIssue": 282,
-          "issuedQty": 282
+          "mrnReturn": 0,
+          "netIssue": 504,
+          "issuedQty": 504
         },
         "17000614": {
           "code": "17000614",
           "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 130,
-          "mrnReturn": 67,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 130,
+          "issuedQty": 130
         },
         "17000617": {
           "code": "17000617",
@@ -274642,23 +268050,14 @@ window.ContractorSapStock = {
           "netIssue": 217,
           "issuedQty": 217
         },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 6,
-          "mrnReturn": 6,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "17000620": {
           "code": "17000620",
           "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 79,
-          "mrnReturn": 52,
-          "netIssue": 27,
-          "issuedQty": 27
+          "mrnReturn": 0,
+          "netIssue": 79,
+          "issuedQty": 79
         },
         "17000624": {
           "code": "17000624",
@@ -274674,36 +268073,36 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 3133,
-          "mrnReturn": 205,
-          "netIssue": 2928,
-          "issuedQty": 2928
+          "mrnReturn": 120,
+          "netIssue": 3013,
+          "issuedQty": 3013
         },
         "17000627": {
           "code": "17000627",
           "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 364,
-          "mrnReturn": 364,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 364,
+          "issuedQty": 364
         },
         "17000631": {
           "code": "17000631",
           "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 100,
-          "mrnReturn": 37,
-          "netIssue": 63,
-          "issuedQty": 63
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000632": {
           "code": "17000632",
           "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 80,
-          "mrnReturn": 80,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17000633": {
           "code": "17000633",
@@ -274719,18 +268118,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 1295,
-          "mrnReturn": 284,
-          "netIssue": 1011,
-          "issuedQty": 1011
+          "mrnReturn": 0,
+          "netIssue": 1295,
+          "issuedQty": 1295
         },
         "17000638": {
           "code": "17000638",
           "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 106,
-          "mrnReturn": 19,
-          "netIssue": 87,
-          "issuedQty": 87
+          "mrnReturn": 0,
+          "netIssue": 106,
+          "issuedQty": 106
         },
         "17000700": {
           "code": "17000700",
@@ -274754,62 +268153,62 @@ window.ContractorSapStock = {
           "code": "17000751",
           "desc": "DANGER BOARD 11 KV 250X200 MM",
           "uom": "NO",
-          "grossIssue": 361,
-          "mrnReturn": 361,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 150,
+          "mrnReturn": 0,
+          "netIssue": 150,
+          "issuedQty": 150
         },
         "17000755": {
           "code": "17000755",
           "desc": "EYE BOLT",
           "uom": "NO",
           "grossIssue": 100,
-          "mrnReturn": 65,
-          "netIssue": 35,
-          "issuedQty": 35
+          "mrnReturn": 0,
+          "netIssue": 100,
+          "issuedQty": 100
         },
         "17000775": {
           "code": "17000775",
           "desc": "PAINT ALUMINIUM",
           "uom": "L",
           "grossIssue": 220,
-          "mrnReturn": 140,
-          "netIssue": 80,
-          "issuedQty": 80
+          "mrnReturn": 20,
+          "netIssue": 200,
+          "issuedQty": 200
         },
         "17000776": {
           "code": "17000776",
           "desc": "PAINT BLACK BITUMINUS",
           "uom": "L",
           "grossIssue": 90,
-          "mrnReturn": 80,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 20,
+          "netIssue": 70,
+          "issuedQty": 70
         },
         "17000778": {
           "code": "17000778",
           "desc": "RED OXIDE",
           "uom": "L",
           "grossIssue": 80,
-          "mrnReturn": 100,
-          "netIssue": -20,
-          "issuedQty": -20
+          "mrnReturn": 20,
+          "netIssue": 60,
+          "issuedQty": 60
         },
         "17001150": {
           "code": "17001150",
           "desc": "ALUMINIUM BOBBINS",
           "uom": "NO",
           "grossIssue": 58,
-          "mrnReturn": 20,
-          "netIssue": 38,
-          "issuedQty": 38
+          "mrnReturn": 0,
+          "netIssue": 58,
+          "issuedQty": 58
         },
         "17001240": {
           "code": "17001240",
           "desc": "PSC POLE 8 MTR 140 KGS",
           "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 82,
+          "grossIssue": 25,
+          "mrnReturn": 19,
           "netIssue": 6,
           "issuedQty": 6
         },
@@ -274818,18 +268217,18 @@ window.ContractorSapStock = {
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
           "grossIssue": 225,
-          "mrnReturn": 82,
-          "netIssue": 143,
-          "issuedQty": 143
+          "mrnReturn": 21,
+          "netIssue": 204,
+          "issuedQty": 204
         },
         "17001261": {
           "code": "17001261",
           "desc": "AAAC RABBIT CONDUCTOR",
           "uom": "KM",
           "grossIssue": 80.463,
-          "mrnReturn": 9.232,
-          "netIssue": 71.231,
-          "issuedQty": 71.231
+          "mrnReturn": 0,
+          "netIssue": 80.463,
+          "issuedQty": 80.463
         },
         "17001264": {
           "code": "17001264",
@@ -274853,19 +268252,19 @@ window.ContractorSapStock = {
           "code": "17001294",
           "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
           "uom": "NO",
-          "grossIssue": 742,
-          "mrnReturn": 443,
-          "netIssue": 299,
-          "issuedQty": 299
+          "grossIssue": 642,
+          "mrnReturn": 40,
+          "netIssue": 602,
+          "issuedQty": 602
         },
         "17001300": {
           "code": "17001300",
           "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
           "uom": "NO",
           "grossIssue": 330,
-          "mrnReturn": 184,
-          "netIssue": 146,
-          "issuedQty": 146
+          "mrnReturn": 30,
+          "netIssue": 300,
+          "issuedQty": 300
         },
         "17001390": {
           "code": "17001390",
@@ -274908,9 +268307,9 @@ window.ContractorSapStock = {
           "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
           "uom": "SET",
           "grossIssue": 1456,
-          "mrnReturn": 82,
-          "netIssue": 1374,
-          "issuedQty": 1374
+          "mrnReturn": 0,
+          "netIssue": 1456,
+          "issuedQty": 1456
         },
         "17002007": {
           "code": "17002007",
@@ -274926,9 +268325,9 @@ window.ContractorSapStock = {
           "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
           "uom": "M",
           "grossIssue": 688,
-          "mrnReturn": 16,
-          "netIssue": 672,
-          "issuedQty": 672
+          "mrnReturn": 0,
+          "netIssue": 688,
+          "issuedQty": 688
         },
         "17004662": {
           "code": "17004662",
@@ -274944,54 +268343,54 @@ window.ContractorSapStock = {
           "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
           "uom": "SET",
           "grossIssue": 84,
-          "mrnReturn": 28,
-          "netIssue": 56,
-          "issuedQty": 56
+          "mrnReturn": 4,
+          "netIssue": 80,
+          "issuedQty": 80
         },
         "17005037": {
           "code": "17005037",
           "desc": "RSJ POLE 100X116 MM 8 MTR",
           "uom": "NO",
           "grossIssue": 49,
-          "mrnReturn": 34,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 24,
+          "netIssue": 25,
+          "issuedQty": 25
         },
         "17005040": {
           "code": "17005040",
           "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
           "uom": "NO",
           "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
+          "mrnReturn": 0,
+          "netIssue": 8,
+          "issuedQty": 8
         },
         "17005041": {
           "code": "17005041",
           "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
           "uom": "NO",
           "grossIssue": 669,
-          "mrnReturn": 114,
-          "netIssue": 555,
-          "issuedQty": 555
+          "mrnReturn": 0,
+          "netIssue": 669,
+          "issuedQty": 669
         },
         "17005042": {
           "code": "17005042",
           "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
           "uom": "NO",
           "grossIssue": 264,
-          "mrnReturn": 21,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 264,
+          "issuedQty": 264
         },
         "17005043": {
           "code": "17005043",
           "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
           "uom": "NO",
           "grossIssue": 260,
-          "mrnReturn": 17,
-          "netIssue": 243,
-          "issuedQty": 243
+          "mrnReturn": 0,
+          "netIssue": 260,
+          "issuedQty": 260
         },
         "17005045": {
           "code": "17005045",
@@ -275007,63 +268406,63 @@ window.ContractorSapStock = {
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
           "grossIssue": 1137,
-          "mrnReturn": 49,
-          "netIssue": 1088,
-          "issuedQty": 1088
+          "mrnReturn": 0,
+          "netIssue": 1137,
+          "issuedQty": 1137
         },
         "17005047": {
           "code": "17005047",
           "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 954,
-          "mrnReturn": 147,
-          "netIssue": 807,
-          "issuedQty": 807
+          "mrnReturn": 108,
+          "netIssue": 846,
+          "issuedQty": 846
         },
         "17005048": {
           "code": "17005048",
           "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
           "uom": "NO",
           "grossIssue": 729,
-          "mrnReturn": 291,
-          "netIssue": 438,
-          "issuedQty": 438
+          "mrnReturn": 50,
+          "netIssue": 679,
+          "issuedQty": 679
         },
         "17005049": {
           "code": "17005049",
           "desc": "MS-FISH PLATE-50X10X254-0.99KG",
           "uom": "NO",
           "grossIssue": 652,
-          "mrnReturn": 73,
-          "netIssue": 579,
-          "issuedQty": 579
+          "mrnReturn": 0,
+          "netIssue": 652,
+          "issuedQty": 652
         },
         "17005050": {
           "code": "17005050",
           "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
           "uom": "NO",
           "grossIssue": 480,
-          "mrnReturn": 55,
-          "netIssue": 425,
-          "issuedQty": 425
+          "mrnReturn": 0,
+          "netIssue": 480,
+          "issuedQty": 480
         },
         "17005052": {
           "code": "17005052",
           "desc": "MS-HT STAY SET 20 MM",
           "uom": "SET",
           "grossIssue": 315,
-          "mrnReturn": 15,
-          "netIssue": 300,
-          "issuedQty": 300
+          "mrnReturn": 0,
+          "netIssue": 315,
+          "issuedQty": 315
         },
         "17005053": {
           "code": "17005053",
           "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
           "uom": "SET",
           "grossIssue": 349,
-          "mrnReturn": 141,
-          "netIssue": 208,
-          "issuedQty": 208
+          "mrnReturn": 0,
+          "netIssue": 349,
+          "issuedQty": 349
         },
         "17005059": {
           "code": "17005059",
@@ -275106,18 +268505,18 @@ window.ContractorSapStock = {
           "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
           "uom": "NO",
           "grossIssue": 12,
-          "mrnReturn": 10,
-          "netIssue": 2,
-          "issuedQty": 2
+          "mrnReturn": 0,
+          "netIssue": 12,
+          "issuedQty": 12
         },
         "17005064": {
           "code": "17005064",
           "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
           "uom": "NO",
           "grossIssue": 27,
-          "mrnReturn": 11,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 6,
+          "netIssue": 21,
+          "issuedQty": 21
         },
         "17005065": {
           "code": "17005065",
@@ -275133,9 +268532,9 @@ window.ContractorSapStock = {
           "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
           "uom": "NO",
           "grossIssue": 16,
-          "mrnReturn": 1,
-          "netIssue": 15,
-          "issuedQty": 15
+          "mrnReturn": 0,
+          "netIssue": 16,
+          "issuedQty": 16
         },
         "17005068": {
           "code": "17005068",
@@ -275178,45 +268577,36 @@ window.ContractorSapStock = {
           "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
           "uom": "NO",
           "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
+          "mrnReturn": 0,
+          "netIssue": 30,
+          "issuedQty": 30
         },
         "17005079": {
           "code": "17005079",
           "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
           "uom": "NO",
           "grossIssue": 40,
-          "mrnReturn": 8,
-          "netIssue": 32,
-          "issuedQty": 32
+          "mrnReturn": 0,
+          "netIssue": 40,
+          "issuedQty": 40
         },
         "17005082": {
           "code": "17005082",
           "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
           "uom": "NO",
           "grossIssue": 155,
-          "mrnReturn": 153,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 20,
           "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
+          "netIssue": 155,
+          "issuedQty": 155
         },
         "17005085": {
           "code": "17005085",
           "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
           "uom": "NO",
           "grossIssue": 54,
-          "mrnReturn": 40,
-          "netIssue": 14,
-          "issuedQty": 14
+          "mrnReturn": 20,
+          "netIssue": 34,
+          "issuedQty": 34
         },
         "17005091": {
           "code": "17005091",
@@ -275259,27 +268649,18 @@ window.ContractorSapStock = {
           "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 42,
-          "mrnReturn": 39,
-          "netIssue": 3,
-          "issuedQty": 3
+          "mrnReturn": 0,
+          "netIssue": 42,
+          "issuedQty": 42
         },
         "17005802": {
           "code": "17005802",
           "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
           "uom": "SET",
           "grossIssue": 800,
-          "mrnReturn": 52,
-          "netIssue": 748,
-          "issuedQty": 748
-        },
-        "17005858": {
-          "code": "17005858",
-          "desc": "GI NUT BOLTS",
-          "uom": "KG",
-          "grossIssue": 3.75,
-          "mrnReturn": 3.75,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 800,
+          "issuedQty": 800
         },
         "17006129": {
           "code": "17006129",
@@ -275304,18 +268685,9 @@ window.ContractorSapStock = {
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "22001359": {
           "code": "22001359",
@@ -275331,9 +268703,9 @@ window.ContractorSapStock = {
           "desc": "SAFETY JACKET - ORANGE",
           "uom": "NO",
           "grossIssue": 28,
-          "mrnReturn": 12,
-          "netIssue": 16,
-          "issuedQty": 16
+          "mrnReturn": 0,
+          "netIssue": 28,
+          "issuedQty": 28
         },
         "22002544": {
           "code": "22002544",
@@ -275344,66 +268716,57 @@ window.ContractorSapStock = {
           "netIssue": 15,
           "issuedQty": 15
         },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
         "22002551": {
           "code": "22002551",
           "desc": "HELMET PVC - YELLOW",
           "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 42,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 28,
+          "mrnReturn": 9,
+          "netIssue": 19,
+          "issuedQty": 19
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "22003558": {
           "code": "22003558",
           "desc": "MEASURING TAPE STEEL 5 MTR",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000004": {
           "code": "23000004",
           "desc": "ADJUSTABLE SPANNER 12 INCH",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000122": {
           "code": "23000122",
           "desc": "CROW BAR (SABBAL)",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275411,8 +268774,8 @@ window.ContractorSapStock = {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275420,8 +268783,8 @@ window.ContractorSapStock = {
           "code": "23000199",
           "desc": "FIX SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275429,8 +268792,8 @@ window.ContractorSapStock = {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275439,27 +268802,9 @@ window.ContractorSapStock = {
           "desc": "FIX SPANNER 30 X 32",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23000379": {
           "code": "23000379",
@@ -275474,8 +268819,8 @@ window.ContractorSapStock = {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 6,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275483,8 +268828,8 @@ window.ContractorSapStock = {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275492,8 +268837,8 @@ window.ContractorSapStock = {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
         },
@@ -275519,10 +268864,10 @@ window.ContractorSapStock = {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 15,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 10,
+          "mrnReturn": 5,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001325": {
           "code": "23001325",
@@ -275547,9 +268892,9 @@ window.ContractorSapStock = {
           "desc": "SPADE MS",
           "uom": "NO",
           "grossIssue": 5,
-          "mrnReturn": 4,
-          "netIssue": 1,
-          "issuedQty": 1
+          "mrnReturn": 0,
+          "netIssue": 5,
+          "issuedQty": 5
         },
         "23001952": {
           "code": "23001952",
@@ -275565,27 +268910,27 @@ window.ContractorSapStock = {
           "desc": "DISCHARGE ROD FOR 11 KV",
           "uom": "SET",
           "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 2,
+          "issuedQty": 2
         },
         "23002373": {
           "code": "23002373",
           "desc": "COME ALONG CLAMP TOOL",
           "uom": "NO",
           "grossIssue": 1,
-          "mrnReturn": 1,
-          "netIssue": 0,
-          "issuedQty": 0
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         },
         "23003901": {
           "code": "23003901",
           "desc": "BOLT CUTTER 18 INCH",
           "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
-          "netIssue": 0,
-          "issuedQty": 0
+          "grossIssue": 1,
+          "mrnReturn": 0,
+          "netIssue": 1,
+          "issuedQty": 1
         }
       }
     },
@@ -279868,1357 +273213,257 @@ window.ContractorSapStock = {
       }
     },
     "tallydynamix": {
-      "docHeader": "31004866",
-      "allWorkOrders": [
-        "31004866"
-      ],
+      "docHeader": "TALLY DYNAMIX MDC-1832",
+      "allWorkOrders": [],
       "vendorCode": "",
       "contractorName": "TALLY DYNAMIX",
-      "materialCount": 149,
-      "totalGrossIssue": 50072.951,
-      "totalMrnReturn": 5499.072,
-      "totalNetIssue": 44573.879,
+      "materialCount": 27,
+      "totalGrossIssue": 6870,
+      "totalMrnReturn": 55,
+      "totalNetIssue": 6815,
       "materials": {
         "11000123": {
           "code": "11000123",
           "desc": "M SAND 0-6 MM",
           "uom": "KG",
-          "grossIssue": 7700,
+          "grossIssue": 5200,
           "mrnReturn": 0,
-          "netIssue": 7700,
-          "issuedQty": 7700
+          "netIssue": 5200,
+          "issuedQty": 5200
         },
         "11000336": {
           "code": "11000336",
           "desc": "CEMENT GRADE OPC 53",
           "uom": "KG",
-          "grossIssue": 12300,
-          "mrnReturn": 800,
-          "netIssue": 11500,
-          "issuedQty": 11500
+          "grossIssue": 1500,
+          "mrnReturn": 0,
+          "netIssue": 1500,
+          "issuedQty": 1500
         },
         "12000009": {
           "code": "12000009",
           "desc": "AGGREGATE 40 MM",
           "uom": "MT",
-          "grossIssue": 11.2,
-          "mrnReturn": 2.6,
-          "netIssue": 8.6,
-          "issuedQty": 8.6
-        },
-        "17000004": {
-          "code": "17000004",
-          "desc": "RSJ POLE 100X116 MM 9 MTR",
-          "uom": "NO",
-          "grossIssue": 340,
-          "mrnReturn": 160,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000023": {
-          "code": "17000023",
-          "desc": "AB SWITCH 11 KV 400 AMP",
-          "uom": "SET",
-          "grossIssue": 30,
-          "mrnReturn": 1,
-          "netIssue": 29,
-          "issuedQty": 29
-        },
-        "17000026": {
-          "code": "17000026",
-          "desc": "HORN GAP FUSE 11 KV",
-          "uom": "SET",
-          "grossIssue": 21,
+          "grossIssue": 6,
           "mrnReturn": 0,
-          "netIssue": 21,
-          "issuedQty": 21
-        },
-        "17000046": {
-          "code": "17000046",
-          "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
-          "uom": "NO",
-          "grossIssue": 881,
-          "mrnReturn": 151,
-          "netIssue": 730,
-          "issuedQty": 730
-        },
-        "17000056": {
-          "code": "17000056",
-          "desc": "LT SHACKLE INSULATOR",
-          "uom": "NO",
-          "grossIssue": 502,
-          "mrnReturn": 4,
-          "netIssue": 498,
-          "issuedQty": 498
-        },
-        "17000057": {
-          "code": "17000057",
-          "desc": "LT SPACER",
-          "uom": "NO",
-          "grossIssue": 250,
-          "mrnReturn": 135,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000058": {
-          "code": "17000058",
-          "desc": "LT STAY INSULATOR",
-          "uom": "NO",
-          "grossIssue": 88,
-          "mrnReturn": 43,
-          "netIssue": 45,
-          "issuedQty": 45
-        },
-        "17000081": {
-          "code": "17000081",
-          "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 16,
-          "mrnReturn": 0,
-          "netIssue": 16,
-          "issuedQty": 16
-        },
-        "17000108": {
-          "code": "17000108",
-          "desc": "LT CT METER BOX FOR 100 KVA DTC",
-          "uom": "NO",
-          "grossIssue": 18,
-          "mrnReturn": 1,
-          "netIssue": 17,
-          "issuedQty": 17
-        },
-        "17000120": {
-          "code": "17000120",
-          "desc": "ACSR WEASEL CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 5.752,
-          "mrnReturn": 0.534,
-          "netIssue": 5.218,
-          "issuedQty": 5.218
-        },
-        "17000128": {
-          "code": "17000128",
-          "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
-          "uom": "NO",
-          "grossIssue": 90,
-          "mrnReturn": 1,
-          "netIssue": 89,
-          "issuedQty": 89
-        },
-        "17000231": {
-          "code": "17000231",
-          "desc": "CABLE CU LT PVC 2X2.5 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 50,
-          "mrnReturn": 0,
-          "netIssue": 50,
-          "issuedQty": 50
-        },
-        "17000237": {
-          "code": "17000237",
-          "desc": "GI BARBED WIRE A TYPE",
-          "uom": "KG",
-          "grossIssue": 869,
-          "mrnReturn": 0,
-          "netIssue": 869,
-          "issuedQty": 869
-        },
-        "17000238": {
-          "code": "17000238",
-          "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
-          "uom": "KG",
-          "grossIssue": 434,
-          "mrnReturn": 142,
-          "netIssue": 292,
-          "issuedQty": 292
-        },
-        "17000239": {
-          "code": "17000239",
-          "desc": "GI STAY WIRE 7/4 MM 8 SWG",
-          "uom": "KG",
-          "grossIssue": 1610,
-          "mrnReturn": 310,
-          "netIssue": 1300,
-          "issuedQty": 1300
+          "netIssue": 6,
+          "issuedQty": 6
         },
         "17000243": {
           "code": "17000243",
           "desc": "GI WIRE 8 SWG",
           "uom": "KG",
-          "grossIssue": 1524.5,
-          "mrnReturn": 49,
-          "netIssue": 1475.5,
-          "issuedQty": 1475.5
-        },
-        "17000613": {
-          "code": "17000613",
-          "desc": "HDG BOLT FT M12X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 680,
-          "mrnReturn": 211,
-          "netIssue": 469,
-          "issuedQty": 469
-        },
-        "17000614": {
-          "code": "17000614",
-          "desc": "HDG BOLT FT M12X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 320,
+          "grossIssue": 108,
           "mrnReturn": 0,
-          "netIssue": 320,
-          "issuedQty": 320
-        },
-        "17000617": {
-          "code": "17000617",
-          "desc": "HDG BOLT FT M12X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 70,
-          "mrnReturn": 8,
-          "netIssue": 62,
-          "issuedQty": 62
-        },
-        "17000618": {
-          "code": "17000618",
-          "desc": "HDG BOLT FT M12X80 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 32,
-          "netIssue": 158,
-          "issuedQty": 158
-        },
-        "17000620": {
-          "code": "17000620",
-          "desc": "HDG BOLT FT M16X35 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 307,
-          "mrnReturn": 110,
-          "netIssue": 197,
-          "issuedQty": 197
-        },
-        "17000624": {
-          "code": "17000624",
-          "desc": "HDG BOLT FT M16X65 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 985,
-          "mrnReturn": 58,
-          "netIssue": 927,
-          "issuedQty": 927
-        },
-        "17000625": {
-          "code": "17000625",
-          "desc": "HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 2438,
-          "mrnReturn": 369,
-          "netIssue": 2069,
-          "issuedQty": 2069
-        },
-        "17000627": {
-          "code": "17000627",
-          "desc": "HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 1126,
-          "mrnReturn": 271,
-          "netIssue": 855,
-          "issuedQty": 855
-        },
-        "17000631": {
-          "code": "17000631",
-          "desc": "HDG BOLT HT M12X125 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 240,
-          "mrnReturn": 125,
-          "netIssue": 115,
-          "issuedQty": 115
-        },
-        "17000632": {
-          "code": "17000632",
-          "desc": "HDG BOLT HT M12X175 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 60,
-          "mrnReturn": 0,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17000633": {
-          "code": "17000633",
-          "desc": "HDG BOLT HT M12X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000636": {
-          "code": "17000636",
-          "desc": "HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 889,
-          "mrnReturn": 50,
-          "netIssue": 839,
-          "issuedQty": 839
-        },
-        "17000638": {
-          "code": "17000638",
-          "desc": "HDG BOLT HT M16X200 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 124,
-          "mrnReturn": 14,
-          "netIssue": 110,
-          "issuedQty": 110
-        },
-        "17000696": {
-          "code": "17000696",
-          "desc": "LT SHACKLE HARDWARE",
-          "uom": "PAA",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17000704": {
-          "code": "17000704",
-          "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
-          "uom": "NO",
-          "grossIssue": 882,
-          "mrnReturn": 120,
-          "netIssue": 762,
-          "issuedQty": 762
-        },
-        "17000725": {
-          "code": "17000725",
-          "desc": "JOINT KIT 11KV OD END TER 3X95 SQMM",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17000751": {
-          "code": "17000751",
-          "desc": "DANGER BOARD 11 KV 250X200 MM",
-          "uom": "NO",
-          "grossIssue": 570,
-          "mrnReturn": 108,
-          "netIssue": 462,
-          "issuedQty": 462
-        },
-        "17000755": {
-          "code": "17000755",
-          "desc": "EYE BOLT",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 69,
-          "netIssue": 111,
-          "issuedQty": 111
-        },
-        "17000775": {
-          "code": "17000775",
-          "desc": "PAINT ALUMINIUM",
-          "uom": "L",
-          "grossIssue": 277,
-          "mrnReturn": 0,
-          "netIssue": 277,
-          "issuedQty": 277
-        },
-        "17000776": {
-          "code": "17000776",
-          "desc": "PAINT BLACK BITUMINUS",
-          "uom": "L",
-          "grossIssue": 30,
-          "mrnReturn": 0,
-          "netIssue": 30,
-          "issuedQty": 30
-        },
-        "17000778": {
-          "code": "17000778",
-          "desc": "RED OXIDE",
-          "uom": "L",
-          "grossIssue": 100,
-          "mrnReturn": 0,
-          "netIssue": 100,
-          "issuedQty": 100
-        },
-        "17000802": {
-          "code": "17000802",
-          "desc": "BENTONITE POWDER",
-          "uom": "KG",
-          "grossIssue": 350,
-          "mrnReturn": 50,
-          "netIssue": 300,
-          "issuedQty": 300
-        },
-        "17001150": {
-          "code": "17001150",
-          "desc": "ALUMINIUM BOBBINS",
-          "uom": "NO",
-          "grossIssue": 133,
-          "mrnReturn": 5,
-          "netIssue": 128,
-          "issuedQty": 128
-        },
-        "17001240": {
-          "code": "17001240",
-          "desc": "PSC POLE 8 MTR 140 KGS",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001243": {
-          "code": "17001243",
-          "desc": "RSJ POLE 100X116 MM 11 MTR",
-          "uom": "NO",
-          "grossIssue": 139,
-          "mrnReturn": 62,
-          "netIssue": 77,
-          "issuedQty": 77
-        },
-        "17001261": {
-          "code": "17001261",
-          "desc": "AAAC RABBIT CONDUCTOR",
-          "uom": "KM",
-          "grossIssue": 76.22,
-          "mrnReturn": 13.659,
-          "netIssue": 62.561,
-          "issuedQty": 62.561
-        },
-        "17001264": {
-          "code": "17001264",
-          "desc": "CT LT RING TYPE 200/5A",
-          "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 0,
-          "netIssue": 15,
-          "issuedQty": 15
-        },
-        "17001294": {
-          "code": "17001294",
-          "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-          "uom": "NO",
-          "grossIssue": 600,
-          "mrnReturn": 143,
-          "netIssue": 457,
-          "issuedQty": 457
-        },
-        "17001300": {
-          "code": "17001300",
-          "desc": "DANGER BOARD CLAMP 100X116 25X3X465 MM",
-          "uom": "NO",
-          "grossIssue": 587,
-          "mrnReturn": 214,
-          "netIssue": 373,
-          "issuedQty": 373
-        },
-        "17001356": {
-          "code": "17001356",
-          "desc": "WEDGE CONNECTOR RABBIT TO RABBIT",
-          "uom": "NO",
-          "grossIssue": 410,
-          "mrnReturn": 18,
-          "netIssue": 392,
-          "issuedQty": 392
-        },
-        "17001369": {
-          "code": "17001369",
-          "desc": "EARTHING SET LT",
-          "uom": "NO",
-          "grossIssue": 61,
-          "mrnReturn": 29,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17001390": {
-          "code": "17001390",
-          "desc": "MS ANGLE 50X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 1.97,
-          "mrnReturn": 1.97,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001391": {
-          "code": "17001391",
-          "desc": "MS CHANNEL 75X40X6 MM",
-          "uom": "MT",
-          "grossIssue": 2.469,
-          "mrnReturn": 2.469,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001392": {
-          "code": "17001392",
-          "desc": "MS FLAT 50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.37,
-          "mrnReturn": 0.37,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001393": {
-          "code": "17001393",
-          "desc": "MS FLAT 50X10 MM",
-          "uom": "MT",
-          "grossIssue": 0.63,
-          "mrnReturn": 0.63,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17001397": {
-          "code": "17001397",
-          "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
-          "uom": "SET",
-          "grossIssue": 1088,
-          "mrnReturn": 286,
-          "netIssue": 802,
-          "issuedQty": 802
-        },
-        "17001992": {
-          "code": "17001992",
-          "desc": "GI PIPE 100 MM DIA 6 MTR LONG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17002007": {
-          "code": "17002007",
-          "desc": "MS CHANNEL 100X50X6 MM",
-          "uom": "MT",
-          "grossIssue": 0.825,
-          "mrnReturn": 0.825,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17002274": {
-          "code": "17002274",
-          "desc": "COPPER FLEXIBLE WIRE 2.5 SQMM",
-          "uom": "M",
-          "grossIssue": 12,
-          "mrnReturn": 0,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "17004596": {
-          "code": "17004596",
-          "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 811,
-          "mrnReturn": 218,
-          "netIssue": 593,
-          "issuedQty": 593
-        },
-        "17004662": {
-          "code": "17004662",
-          "desc": "DIST TRAN 11/0.433 KV 100KVA L-1 PROT AL",
-          "uom": "NO",
-          "grossIssue": 17,
-          "mrnReturn": 3,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17004792": {
-          "code": "17004792",
-          "desc": "11KV GUARDING CHANNEL 75X40X2210-15.78KG",
-          "uom": "SET",
-          "grossIssue": 171,
-          "mrnReturn": 40,
-          "netIssue": 131,
-          "issuedQty": 131
-        },
-        "17005020": {
-          "code": "17005020",
-          "desc": "HDG BOLT FT M16X160 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 190,
-          "mrnReturn": 0,
-          "netIssue": 190,
-          "issuedQty": 190
-        },
-        "17005037": {
-          "code": "17005037",
-          "desc": "RSJ POLE 100X116 MM 8 MTR",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 20,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005039": {
-          "code": "17005039",
-          "desc": "MS-GUARD X ARM CH-DP-100X50X3500-33.46KG",
-          "uom": "NO",
-          "grossIssue": 14,
-          "mrnReturn": 0,
-          "netIssue": 14,
-          "issuedQty": 14
-        },
-        "17005040": {
-          "code": "17005040",
-          "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 1,
-          "netIssue": 9,
-          "issuedQty": 9
-        },
-        "17005041": {
-          "code": "17005041",
-          "desc": "MS-11KV TOP CLEAT-75X40X6X325-2.44KG",
-          "uom": "NO",
-          "grossIssue": 584,
-          "mrnReturn": 100,
-          "netIssue": 484,
-          "issuedQty": 484
-        },
-        "17005042": {
-          "code": "17005042",
-          "desc": "MS-11KV CUT POINT CH-75X40X6X1310-9.35KG",
-          "uom": "NO",
-          "grossIssue": 339,
-          "mrnReturn": 23,
-          "netIssue": 316,
-          "issuedQty": 316
-        },
-        "17005043": {
-          "code": "17005043",
-          "desc": "MS-11KV CP BRCING ANG-50X50X6X1000-4.5KG",
-          "uom": "NO",
-          "grossIssue": 316,
-          "mrnReturn": 25,
-          "netIssue": 291,
-          "issuedQty": 291
-        },
-        "17005044": {
-          "code": "17005044",
-          "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 15,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
-        "17005045": {
-          "code": "17005045",
-          "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 16,
-          "netIssue": 18,
-          "issuedQty": 18
-        },
-        "17005046": {
-          "code": "17005046",
-          "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
-          "uom": "NO",
-          "grossIssue": 890,
-          "mrnReturn": 103,
-          "netIssue": 787,
-          "issuedQty": 787
-        },
-        "17005047": {
-          "code": "17005047",
-          "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 796,
-          "mrnReturn": 17,
-          "netIssue": 779,
-          "issuedQty": 779
-        },
-        "17005048": {
-          "code": "17005048",
-          "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
-          "uom": "NO",
-          "grossIssue": 547,
-          "mrnReturn": 61,
-          "netIssue": 486,
-          "issuedQty": 486
-        },
-        "17005049": {
-          "code": "17005049",
-          "desc": "MS-FISH PLATE-50X10X254-0.99KG",
-          "uom": "NO",
-          "grossIssue": 572,
-          "mrnReturn": 18,
-          "netIssue": 554,
-          "issuedQty": 554
-        },
-        "17005050": {
-          "code": "17005050",
-          "desc": "MS-11KV V-CROSS ARM-75X40X6X1614-11.99KG",
-          "uom": "NO",
-          "grossIssue": 408,
-          "mrnReturn": 146,
-          "netIssue": 262,
-          "issuedQty": 262
-        },
-        "17005052": {
-          "code": "17005052",
-          "desc": "MS-HT STAY SET 20 MM",
-          "uom": "SET",
-          "grossIssue": 129,
-          "mrnReturn": 5,
-          "netIssue": 124,
-          "issuedQty": 124
-        },
-        "17005053": {
-          "code": "17005053",
-          "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
-          "uom": "SET",
-          "grossIssue": 600,
-          "mrnReturn": 2,
-          "netIssue": 598,
-          "issuedQty": 598
-        },
-        "17005059": {
-          "code": "17005059",
-          "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 37,
-          "mrnReturn": 4,
-          "netIssue": 33,
-          "issuedQty": 33
-        },
-        "17005060": {
-          "code": "17005060",
-          "desc": "MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
-          "uom": "NO",
-          "grossIssue": 52,
-          "mrnReturn": 8,
-          "netIssue": 44,
-          "issuedQty": 44
-        },
-        "17005061": {
-          "code": "17005061",
-          "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 64,
-          "mrnReturn": 10,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005062": {
-          "code": "17005062",
-          "desc": "MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
-          "uom": "NO",
-          "grossIssue": 47,
-          "mrnReturn": 9,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005063": {
-          "code": "17005063",
-          "desc": "MS-CH SUPP OP HANDLE-75X40X6X650-4.64KG",
-          "uom": "NO",
-          "grossIssue": 38,
-          "mrnReturn": 1,
-          "netIssue": 37,
-          "issuedQty": 37
-        },
-        "17005064": {
-          "code": "17005064",
-          "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005065": {
-          "code": "17005065",
-          "desc": "MS-TR BELTING ANG-50X50X6X2340-10.53KG",
-          "uom": "NO",
-          "grossIssue": 72,
-          "mrnReturn": 18,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005066": {
-          "code": "17005066",
-          "desc": "MS-11KV DB SUPP ANG-50X50X6X2700-12.15KG",
-          "uom": "NO",
-          "grossIssue": 62,
-          "mrnReturn": 2,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005067": {
-          "code": "17005067",
-          "desc": "MS-TR SIDE BELTNG ANG-50X50X6X800-3.6KG",
-          "uom": "NO",
-          "grossIssue": 66,
-          "mrnReturn": 8,
-          "netIssue": 58,
-          "issuedQty": 58
-        },
-        "17005068": {
-          "code": "17005068",
-          "desc": "MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
-          "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 2,
-          "netIssue": 32,
-          "issuedQty": 32
-        },
-        "17005069": {
-          "code": "17005069",
-          "desc": "MS-STUD AB SW HDL CH-50X50X6X650-2.925KG",
-          "uom": "NO",
-          "grossIssue": 35,
-          "mrnReturn": 0,
-          "netIssue": 35,
-          "issuedQty": 35
-        },
-        "17005070": {
-          "code": "17005070",
-          "desc": "MS-SUPP ANG FOR AB SW-50X50X6X500-2.25KG",
-          "uom": "NO",
-          "grossIssue": 69,
-          "mrnReturn": 9,
-          "netIssue": 60,
-          "issuedQty": 60
-        },
-        "17005071": {
-          "code": "17005071",
-          "desc": "MS-HT LT SUPPORT ANG-50X50X6X1500-6.75KG",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005072": {
-          "code": "17005072",
-          "desc": "MS-FISH PLATE-50X10X254-0.6KG",
-          "uom": "NO",
-          "grossIssue": 180,
-          "mrnReturn": 0,
-          "netIssue": 180,
-          "issuedQty": 180
-        },
-        "17005078": {
-          "code": "17005078",
-          "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
-          "uom": "NO",
-          "grossIssue": 42,
-          "mrnReturn": 0,
-          "netIssue": 42,
-          "issuedQty": 42
-        },
-        "17005079": {
-          "code": "17005079",
-          "desc": "MS-STAY SET CLAMP 8-PSC-50X6X325-0.767KG",
-          "uom": "NO",
-          "grossIssue": 182,
-          "mrnReturn": 6,
-          "netIssue": 176,
-          "issuedQty": 176
-        },
-        "17005080": {
-          "code": "17005080",
-          "desc": "MS-BK CL PSC-4 PIN ANG-50X6X380-0.896KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 0,
-          "netIssue": 8,
-          "issuedQty": 8
-        },
-        "17005081": {
-          "code": "17005081",
-          "desc": "MS-BK CL PSC-2 PIN ANG-50X6X390-0.92KG",
-          "uom": "NO",
-          "grossIssue": 10,
-          "mrnReturn": 10,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005082": {
-          "code": "17005082",
-          "desc": "MS-U CL FOR SHACKLE INS-50X6X342-0.807KG",
-          "uom": "NO",
-          "grossIssue": 425,
-          "mrnReturn": 49,
-          "netIssue": 376,
-          "issuedQty": 376
-        },
-        "17005083": {
-          "code": "17005083",
-          "desc": "MS-U CL FOR AL BOBBIN INS-50X6X310-0.73K",
-          "uom": "NO",
-          "grossIssue": 75,
-          "mrnReturn": 21,
-          "netIssue": 54,
-          "issuedQty": 54
-        },
-        "17005085": {
-          "code": "17005085",
-          "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
-          "uom": "NO",
-          "grossIssue": 20,
-          "mrnReturn": 0,
-          "netIssue": 20,
-          "issuedQty": 20
-        },
-        "17005086": {
-          "code": "17005086",
-          "desc": "MS-BACK CLAMP-152X152-50X10X535-2.1KG",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 0,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "17005087": {
-          "code": "17005087",
-          "desc": "MS-STAY SET CL-152X152-50X10X395-1.55KG",
-          "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 5,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "17005091": {
-          "code": "17005091",
-          "desc": "MS-LT STAY SET 16 MM",
-          "uom": "SET",
-          "grossIssue": 42,
-          "mrnReturn": 4,
-          "netIssue": 38,
-          "issuedQty": 38
-        },
-        "17005121": {
-          "code": "17005121",
-          "desc": "MS FLAT 25X3 MM",
-          "uom": "MT",
-          "grossIssue": 0.015,
-          "mrnReturn": 0.015,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "17005188": {
-          "code": "17005188",
-          "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
-          "uom": "M",
-          "grossIssue": 740,
-          "mrnReturn": 0,
-          "netIssue": 740,
-          "issuedQty": 740
-        },
-        "17005508": {
-          "code": "17005508",
-          "desc": "ENERGY METER LT CT 100/5 AMP",
-          "uom": "NO",
-          "grossIssue": 26,
-          "mrnReturn": 21,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "17005513": {
-          "code": "17005513",
-          "desc": "HDG BOLT HT M12X225 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 342,
-          "mrnReturn": 76,
-          "netIssue": 266,
-          "issuedQty": 266
-        },
-        "17005519": {
-          "code": "17005519",
-          "desc": "MS-TOP CHANNEL 100X50X3160-30.210KG",
-          "uom": "NO",
-          "grossIssue": 13,
-          "mrnReturn": 0,
-          "netIssue": 13,
-          "issuedQty": 13
-        },
-        "17005775": {
-          "code": "17005775",
-          "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 0,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "17005802": {
-          "code": "17005802",
-          "desc": "HDG BOLT FT M6X50 NUT 1 SPRG 1 PL WSHR",
-          "uom": "SET",
-          "grossIssue": 514,
-          "mrnReturn": 47,
-          "netIssue": 467,
-          "issuedQty": 467
+          "netIssue": 108,
+          "issuedQty": 108
         },
         "19020569": {
           "code": "19020569",
           "desc": "ROPE PULLEY 1 WAY",
           "uom": "NO",
-          "grossIssue": 11,
-          "mrnReturn": 4,
-          "netIssue": 7,
-          "issuedQty": 7
-        },
-        "22001222": {
-          "code": "22001222",
-          "desc": "NYLON ROPE 16MM",
-          "uom": "KG",
-          "grossIssue": 23,
-          "mrnReturn": 23,
+          "grossIssue": 1,
+          "mrnReturn": 1,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22001224": {
-          "code": "22001224",
-          "desc": "NYLON ROPE 20MM",
-          "uom": "KG",
-          "grossIssue": 14,
-          "mrnReturn": 16,
-          "netIssue": -2,
-          "issuedQty": -2
         },
         "22001359": {
           "code": "22001359",
           "desc": "MEASURING TAPE FIBRE 30 MTR",
           "uom": "NO",
-          "grossIssue": 3,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "22002542": {
-          "code": "22002542",
-          "desc": "SAFETY JACKET - ORANGE",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
-        },
-        "22002544": {
-          "code": "22002544",
-          "desc": "HAND GLOVES COTTON",
-          "uom": "PAA",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "22002550": {
-          "code": "22002550",
-          "desc": "HELMET PVC - WHITE",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "22002551": {
-          "code": "22002551",
-          "desc": "HELMET PVC - YELLOW",
-          "uom": "NO",
-          "grossIssue": 30,
-          "mrnReturn": 20,
-          "netIssue": 10,
-          "issuedQty": 10
         },
         "22002553": {
           "code": "22002553",
           "desc": "HAND GLOVES (PLASTIC)",
           "uom": "PAA",
-          "grossIssue": 13,
-          "mrnReturn": 4,
-          "netIssue": 9,
-          "issuedQty": 9
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
-        "22002873": {
-          "code": "22002873",
-          "desc": "FIRST AID BOX",
+        "22003558": {
+          "code": "22003558",
+          "desc": "MEASURING TAPE STEEL 5 MTR",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "22004150": {
+          "code": "22004150",
+          "desc": "NYLON ROPE 36MM",
+          "uom": "KG",
+          "grossIssue": 12,
+          "mrnReturn": 12,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000004": {
+          "code": "23000004",
+          "desc": "ADJUSTABLE SPANNER 12 INCH",
+          "uom": "NO",
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
+        },
+        "23000106": {
+          "code": "23000106",
+          "desc": "CHAIN PULLEY 3 MT",
           "uom": "NO",
           "grossIssue": 1,
           "mrnReturn": 0,
           "netIssue": 1,
           "issuedQty": 1
         },
-        "22003558": {
-          "code": "22003558",
-          "desc": "MEASURING TAPE STEEL 5 MTR",
-          "uom": "NO",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "22004150": {
-          "code": "22004150",
-          "desc": "NYLON ROPE 36MM",
-          "uom": "KG",
-          "grossIssue": 24,
-          "mrnReturn": 12,
-          "netIssue": 12,
-          "issuedQty": 12
-        },
-        "23000004": {
-          "code": "23000004",
-          "desc": "ADJUSTABLE SPANNER 12 INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 3,
-          "netIssue": 0,
-          "issuedQty": 0
-        },
-        "23000033": {
-          "code": "23000033",
-          "desc": "AXE",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 4,
-          "netIssue": 3,
-          "issuedQty": 3
-        },
-        "23000041": {
-          "code": "23000041",
-          "desc": "BOLT CUTTER 24INCH",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000106": {
-          "code": "23000106",
-          "desc": "CHAIN PULLEY 3 MT",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23000122": {
-          "code": "23000122",
-          "desc": "CROW BAR (SABBAL)",
-          "uom": "NO",
-          "grossIssue": 27,
-          "mrnReturn": 8,
-          "netIssue": 19,
-          "issuedQty": 19
-        },
         "23000187": {
           "code": "23000187",
           "desc": "FIX SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000195": {
           "code": "23000195",
           "desc": "FIX SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 7,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
-        },
-        "23000199": {
-          "code": "23000199",
-          "desc": "FIX SPANNER 18 X 19",
-          "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000209": {
           "code": "23000209",
           "desc": "FIX SPANNER 24 X 26",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000214": {
-          "code": "23000214",
-          "desc": "FIX SPANNER 30 X 32",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 2,
-          "netIssue": 2,
-          "issuedQty": 2
-        },
-        "23000274": {
-          "code": "23000274",
-          "desc": "HAMMER 1 KG",
-          "uom": "NO",
-          "grossIssue": 6,
-          "mrnReturn": 2,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000281": {
-          "code": "23000281",
-          "desc": "HAMMER 5 KG",
-          "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 2,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000379": {
           "code": "23000379",
           "desc": "PLIER 6INCH",
           "uom": "NO",
-          "grossIssue": 5,
-          "mrnReturn": 3,
-          "netIssue": 2,
-          "issuedQty": 2
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000432": {
           "code": "23000432",
           "desc": "RING SPANNER 12 X 13",
           "uom": "NO",
-          "grossIssue": 8,
+          "grossIssue": 2,
           "mrnReturn": 2,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000437": {
           "code": "23000437",
           "desc": "RING SPANNER 16 X 17",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000439": {
           "code": "23000439",
           "desc": "RING SPANNER 18 X 19",
           "uom": "NO",
-          "grossIssue": 4,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23000447": {
           "code": "23000447",
           "desc": "RING SPANNER 30 X 32",
           "uom": "NO",
-          "grossIssue": 8,
-          "mrnReturn": 4,
-          "netIssue": 4,
-          "issuedQty": 4
-        },
-        "23000552": {
-          "code": "23000552",
-          "desc": "SPANNER SET",
-          "uom": "SET",
-          "grossIssue": 5,
-          "mrnReturn": 0,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001289": {
           "code": "23001289",
           "desc": "GHAMELA PVC",
           "uom": "NO",
-          "grossIssue": 15,
-          "mrnReturn": 10,
-          "netIssue": 5,
-          "issuedQty": 5
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001306": {
           "code": "23001306",
           "desc": "ALUMINIUM PATELE (VESSEL)",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 4,
+          "grossIssue": 2,
+          "mrnReturn": 2,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23001325": {
-          "code": "23001325",
-          "desc": "BUCKET PVC 16 LTR",
-          "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 1,
-          "netIssue": 3,
-          "issuedQty": 3
         },
         "23001328": {
           "code": "23001328",
           "desc": "BUCKET PVC 20 LTR",
           "uom": "NO",
-          "grossIssue": 4,
-          "mrnReturn": 5,
-          "netIssue": -1,
-          "issuedQty": -1
+          "grossIssue": 2,
+          "mrnReturn": 2,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001530": {
           "code": "23001530",
           "desc": "THALI SS FULL SIZE",
           "uom": "NO",
-          "grossIssue": 12,
+          "grossIssue": 6,
           "mrnReturn": 6,
-          "netIssue": 6,
-          "issuedQty": 6
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001697": {
           "code": "23001697",
           "desc": "SPIRIT LEVEL 12 INCHES",
           "uom": "NO",
-          "grossIssue": 2,
+          "grossIssue": 1,
           "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001920": {
           "code": "23001920",
           "desc": "SPADE MS",
           "uom": "NO",
-          "grossIssue": 34,
-          "mrnReturn": 10,
-          "netIssue": 24,
-          "issuedQty": 24
+          "grossIssue": 5,
+          "mrnReturn": 5,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23001952": {
           "code": "23001952",
           "desc": "HACKSAW FRAME",
           "uom": "NO",
-          "grossIssue": 7,
-          "mrnReturn": 3,
-          "netIssue": 4,
-          "issuedQty": 4
+          "grossIssue": 1,
+          "mrnReturn": 1,
+          "netIssue": 0,
+          "issuedQty": 0
         },
         "23002064": {
           "code": "23002064",
           "desc": "GLASS SS",
           "uom": "NO",
-          "grossIssue": 12,
-          "mrnReturn": 12,
+          "grossIssue": 3,
+          "mrnReturn": 3,
           "netIssue": 0,
           "issuedQty": 0
-        },
-        "23002177": {
-          "code": "23002177",
-          "desc": "DISCHARGE ROD FOR 11 KV",
-          "uom": "SET",
-          "grossIssue": 2,
-          "mrnReturn": 1,
-          "netIssue": 1,
-          "issuedQty": 1
-        },
-        "23002373": {
-          "code": "23002373",
-          "desc": "COME ALONG CLAMP TOOL",
-          "uom": "NO",
-          "grossIssue": 3,
-          "mrnReturn": 2,
-          "netIssue": 1,
-          "issuedQty": 1
         }
       }
     },
@@ -282284,8 +274529,8 @@ window.ContractorSapStock = {
       "vendorCode": "500308115",
       "contractorName": "RAATH BILDICON",
       "materialCount": 57,
-      "totalGrossIssue": 8460.9,
-      "totalMrnReturn": 50,
+      "totalGrossIssue": 8410.9,
+      "totalMrnReturn": 0,
       "totalNetIssue": 8410.9,
       "materials": {
         "17000004": {
@@ -282463,8 +274708,8 @@ window.ContractorSapStock = {
           "code": "17001243",
           "desc": "RSJ POLE 100X116 MM 11 MTR",
           "uom": "NO",
-          "grossIssue": 108,
-          "mrnReturn": 50,
+          "grossIssue": 58,
+          "mrnReturn": 0,
           "netIssue": 58,
           "issuedQty": 58
         },
@@ -289554,8 +281799,8 @@ window.ContractorSapStock = {
       "vendorCode": "500303597",
       "contractorName": "Sunita Electrical",
       "materialCount": 86,
-      "totalGrossIssue": 31852.4,
-      "totalMrnReturn": 6733.211,
+      "totalGrossIssue": 31832.4,
+      "totalMrnReturn": 6713.211,
       "totalNetIssue": 25119.189,
       "materials": {
         "17000004": {
@@ -290057,8 +282302,8 @@ window.ContractorSapStock = {
           "code": "17005046",
           "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
           "uom": "NO",
-          "grossIssue": 958,
-          "mrnReturn": 24,
+          "grossIssue": 938,
+          "mrnReturn": 4,
           "netIssue": 934,
           "issuedQty": 934
         },

@@ -240,6 +240,13 @@ it('SAP Stock: Matches contractor and retrieves exact net issued quantities from
     const rslMatch = window.BillingModule.getContractorSapIssues.call(mockAppRsl);
     assert.ok(rslMatch, 'M/s Ranjeet Singh Lodhi should match by name');
     assert.strictEqual(rslMatch.materials['17000625'].issuedQty, 15586);
+
+    // Pratima Enterprises exact pivot match check (matching user Excel Pivot Sheet4 Row 159)
+    const pratima = stock.byContractorNorm['pratimaenterprises'];
+    assert.ok(pratima, 'pratimaenterprises must exist in stock');
+    assert.strictEqual(pratima.totalGrossIssue, 34889.764, 'Pratima gross issue must match exact pivot 34889.764');
+    assert.strictEqual(pratima.totalMrnReturn, 7679.341, 'Pratima MRN must match exact pivot 7679.341');
+    assert.strictEqual(pratima.totalNetIssue, 27210.423, 'Pratima net issue must match exact pivot 27210.423');
 });
 
 // 9. SAP Stock ISSUE, MRN, NET ISSUE format & Totals
@@ -283,9 +290,9 @@ it('SAP Stock: Consolidates and sums multiple work orders for same contractor', 
     const dusk = stock.byContractorNorm['dusklineinfrastructure'];
     assert.ok(dusk, 'Duskline consolidated record must exist');
     assert.deepStrictEqual(dusk.allWorkOrders.slice().sort(), ['31003359', '31003360', '31003362'].sort());
-    assert.strictEqual(dusk.totalGrossIssue, 1028640.87);
+    assert.strictEqual(dusk.totalGrossIssue, 1028616.87);
     assert.strictEqual(dusk.totalMrnReturn, 438660.632);
-    assert.strictEqual(dusk.totalNetIssue, 589980.238);
+    assert.strictEqual(dusk.totalNetIssue, 589956.238);
 
     // Verify all 3 WOs point to the same consolidated record
     assert.strictEqual(stock.byDocHeader['31003359'].totalNetIssue, dusk.totalNetIssue);
@@ -314,7 +321,7 @@ it('SAP Stock: Consolidates and sums multiple work orders for same contractor', 
     };
     const duskMatch = window.BillingModule.getContractorSapIssues.call(mockAppDusk);
     assert.strictEqual(duskMatch.contractorName, dusk.contractorName);
-    assert.strictEqual(duskMatch.totalNetIssue, 589980.238);
+    assert.strictEqual(duskMatch.totalNetIssue, 589956.238);
 });
 
 // 11. In-browser Stock Importer Module parsing & normalization

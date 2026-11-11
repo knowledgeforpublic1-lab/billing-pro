@@ -142,11 +142,11 @@ window.StockImporterModule = {
             if (dh) {
                 groups[key].dhs.add(dh);
                 dhToGroupKey[dh] = key;
-                const m = dh.match(/\b\d{8}\b/);
+                const m = dh.match(/^\s*(\d{8})\s*$/);
                 if (m) {
-                    groups[key].wos.add(m[0]);
-                    woToGroupKey[m[0]] = key;
-                    dhToGroupKey[m[0]] = key;
+                    groups[key].wos.add(m[1]);
+                    woToGroupKey[m[1]] = key;
+                    dhToGroupKey[m[1]] = key;
                 }
             }
         }
@@ -174,8 +174,8 @@ window.StockImporterModule = {
 
             let key = dhToGroupKey[dh];
             if (!key) {
-                const m = dh.match(/\b\d{8}\b/);
-                if (m && woToGroupKey[m[0]]) key = woToGroupKey[m[0]];
+                const m = dh.match(/^\s*(\d{8})\s*$/);
+                if (m && woToGroupKey[m[1]]) key = woToGroupKey[m[1]];
             }
             if (!key) continue;
 
