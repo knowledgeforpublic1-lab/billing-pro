@@ -212,13 +212,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="display: inline-flex; align-items: center; background: rgba(37, 99, 235, 0.10); border: 1px solid rgba(37, 99, 235, 0.35); border-radius: 6px; padding: 2px;">
+                        <div style="display: inline-flex; align-items: center; background: rgba(37, 99, 235, 0.10); border: 1px solid rgba(37, 99, 235, 0.35); border-radius: 6px; padding: 2px; gap: 4px;">
                             <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
                             <button type="button" @click="$refs.reconStockFileInput.click()" :disabled="stockUploading" :title="currentContractorSapInfo ? ('SAP Stock: ' + currentContractorSapInfo + ' (' + currentContractorSapCount + ' items)') : 'Naya Stock Excel (.xlsx) upload karein'" style="height: 26px; padding: 0 10px; font-size: 0.74rem; font-weight: 800; border: none; border-radius: 5px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
                                 <span>{{ stockUploading ? '⏳' : '📥' }}</span>
                                 <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock' }}</span>
                                 <span v-if="hasCustomStock" style="font-size: 0.62rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; margin-left: 2px;">CUSTOM</span>
                             </button>
+                            <span v-if="stockUpdatedDate" style="font-size: 0.68rem; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;" :title="'Stock database last updated: ' + stockUpdatedDate">
+                                📅 {{ stockUpdatedDate }}
+                            </span>
                             <button v-if="hasCustomStock" type="button" @click="resetToDefaultStock" title="Reset to default built-in stock database" style="height: 26px; padding: 0 8px; font-size: 0.72rem; font-weight: 700; border: none; background: transparent; color: #dc2626; cursor: pointer;">
                                 <span>↺</span>
                             </button>
@@ -1519,6 +1522,7 @@
                             <tr>
                                 <th :colspan="9 + (reconColCount || 0)" style="background: linear-gradient(90deg, #1e1b4b 0%, #1e293b 50%, #1e1b4b 100%); color: #ffffff; text-align: center; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.7px; padding: 9px 14px; border: none; text-transform: uppercase; border-bottom: 2px solid rgba(99, 102, 241, 0.4);">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
+                                    <span v-if="stockUpdatedDate" style="font-size: 0.74rem; font-weight: 600; color: #93c5fd; opacity: 0.9; margin-left: 10px; text-transform: none; letter-spacing: 0.3px;">(Stock As On: {{ stockUpdatedDate }})</span>
                                 </th>
                             </tr>
                             <tr>
@@ -3165,21 +3169,21 @@
     <script defer src="js/core/storage.js?v=20261111_stock_exact"></script>
 
     <!-- Utility Modules -->
-    <script defer src="js/utils.js?v=20261111_stock_exact"></script>
-    <script defer src="js/history.js?v=20261111_stock_exact"></script>
+    <script defer src="js/utils.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/history.js?v=20261111_stock_sync_v2"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261111_stock_exact"></script>
-    <script defer src="js/billing.js?v=20261111_stock_exact"></script>
-    <script defer src="js/mapping.js?v=20261111_stock_exact"></script>
-    <script defer src="js/views.js?v=20261111_stock_exact"></script>
-    <script defer src="js/export.js?v=20261111_stock_exact"></script>
-    <script defer src="js/pole-schedule.js?v=20261111_stock_exact"></script>
-    <script defer src="js/stock-importer.js?v=20261111_stock_exact"></script>
-    <script defer src="js/old-reco-importer.js?v=20261111_stock_exact"></script>
+    <script defer src="js/sync.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/billing.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/mapping.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/views.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/export.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/pole-schedule.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/stock-importer.js?v=20261111_stock_sync_v2"></script>
+    <script defer src="js/old-reco-importer.js?v=20261111_stock_sync_v2"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261111_stock_mrn_exact"></script>
+    <script defer src="js/core/app.js?v=20261111_stock_sync_v2"></script>
 </body>
 
 </html>

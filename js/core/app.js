@@ -1072,6 +1072,24 @@
                 const s = this.currentContractorSap;
                 return s && s.materials ? Object.keys(s.materials).length : 0;
             },
+            stockUpdatedDate() {
+                const _rev = this.recoRevision;
+                const _cust = this.hasCustomStock;
+                const s = window.ContractorSapStock;
+                if (!s || !s.meta) return '';
+                const raw = s.meta.uploadedAt || s.meta.generatedAt || s.meta.stockDate;
+                if (!raw) return '';
+                try {
+                    const d = new Date(raw);
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const mon = String(d.getMonth() + 1).padStart(2, '0');
+                        const yr = d.getFullYear();
+                        return `${day}-${mon}-${yr}`;
+                    }
+                } catch(e) {}
+                return String(raw).slice(0, 10);
+            },
 
             visibleOldRecoColumns() {
                 try {

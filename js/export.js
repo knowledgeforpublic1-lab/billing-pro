@@ -129,36 +129,32 @@ window.ExportModule = {
                     // ↩️ Dynamic Old Reco Columns & Reverse ON handling
                     const revOn = !!this.reverseEntry;
                     const rcols = revOn ? this.reverseReconColumns : [];
-                    // 🎯 User Rule: Sirf wahi materials export karein jo is contractor ko issue hain (Gross / Net Issue > 0)
-                    const allCandidateRows = (this.pivotReconciliationData && this.pivotReconciliationData.rows && this.pivotReconciliationData.rows.length)
-                        ? this.pivotReconciliationData.rows
-                        : ((this.reconRows && this.reconRows.length) ? this.reconRows : ((pData && pData.rows) || []));
-                    let expRows = allCandidateRows.filter(r => {
-                        const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
-                        const gross = Number(r.sapGrossIssue !== undefined ? r.sapGrossIssue : 0);
-                        const issued = Number(r.sapIssuedQty || 0);
-                        return (net > 0 || gross > 0 || issued > 0);
-                    });
-                    if (!expRows || expRows.length === 0) {
-                        expRows = (this.reconRows && this.reconRows.length) ? this.reconRows : allCandidateRows;
-                    }
+                    
+                    // 🎯 Exactly what is displayed in reconRows on screen (same rows, same filters, same order):
+                    const expRows = (this.reconRows && this.reconRows.length > 0)
+                        ? this.reconRows
+                        : ((this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : []);
 
-                    const recoCols = (typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0)
-                        ? this.visibleOldRecoColumns()
-                        : (Array.isArray(this.visibleOldRecoColumns) && this.visibleOldRecoColumns.length > 0)
-                            ? this.visibleOldRecoColumns
-                            : [{ name: 'PURANA RECO', isCalc: true }];
+                    const hasCustomOldRecoCols = !!(this.hasCustomOldReco && typeof this.visibleOldRecoColumns === 'function' && this.visibleOldRecoColumns().length > 0);
+                    const recoCols = hasCustomOldRecoCols ? this.visibleOldRecoColumns() : [];
                     const recoColNames = recoCols.map(c => c.name);
 
-                    const expHeaders = revOn
-                        ? ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(recoColNames).concat(rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE'])
-                        : ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE'].concat(recoColNames).concat(pData.columns).concat(['THIS BILL', 'TOTAL RECON', 'BALANCE']);
-                    const totalCols = 7 + recoColNames.length + (revOn ? rcols.length : pData.columns.length) + 3;
+                    // Headers match on-screen table: ISSUE, MRN, NET ISSUE, Activities, THIS BILL, BALANCE
+                    const actColHeaders = revOn
+                        ? rcols.map(c => c.actKey + ' / ' + ((this.getActLocations(c.actKey)[c.locIdx] || {}).name || ('Loc ' + (c.locIdx + 1))))
+                        : (pData.columns || []);
+
+                    const expHeaders = ['SR NO.', 'Row Labels', 'ITEMS DESCRIPTION', 'UNIT', 'ISSUE', 'MRN', 'NET ISSUE']
+                        .concat(recoColNames)
+                        .concat(actColHeaders)
+                        .concat(['THIS BILL', 'BALANCE']);
+                    const totalCols = expHeaders.length;
                     
                     // Title Row
                     ws.mergeCells(1, 1, 1, totalCols);
                     const r1 = ws.getCell(1, 1);
-                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET`;
+                    const stockDateSuffix = this.stockUpdatedDate ? ` (STOCK AS ON: ${this.stockUpdatedDate})` : '';
+                    r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET${stockDateSuffix}`;
                     r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
                     r1.alignment = { horizontal: 'center', vertical: 'middle' };
                     r1.border = headerBorder;
@@ -175,7 +171,7 @@ window.ExportModule = {
                         cell.border = headerBorder;
                     });
                     
-                    // Data Rows
+                    // Data Rows (Matches on-screen reconRows cell-for-cell)
                     let rowIdx = 3;
                     expRows.forEach((rowObj, idx) => {
                         const row = ws.getRow(rowIdx);
@@ -183,42 +179,44 @@ window.ExportModule = {
                         row.getCell(2).value = window.sanitizeExcelText(rowObj.code);
                         row.getCell(3).value = window.sanitizeExcelText(rowObj.desc);
                         row.getCell(4).value = window.sanitizeExcelText(rowObj.uom);
-                        row.getCell(5).value = rowObj.sapGrossIssue || rowObj.sapIssuedQty || '';
-                        row.getCell(6).value = rowObj.sapMrnReturn || '';
-                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || '');
+                        row.getCell(5).value = (rowObj.sapGrossIssue !== undefined && rowObj.sapGrossIssue !== null && rowObj.sapGrossIssue !== 0) ? Number(rowObj.sapGrossIssue) : '';
+                        row.getCell(6).value = (rowObj.sapMrnReturn !== undefined && rowObj.sapMrnReturn !== null && rowObj.sapMrnReturn !== 0) ? Number(rowObj.sapMrnReturn) : '';
+                        row.getCell(7).value = (rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? Number(rowObj.sapNetIssue) : (Number(rowObj.sapIssuedQty) || '');
 
-                        const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
-                        recoCols.forEach((orc, ocIdx) => {
-                            const cIdx = 8 + ocIdx;
-                            if (orc.name === 'PURANA RECO') {
-                                row.getCell(cIdx).value = prevR || '';
-                            } else if (typeof this.getRecoColVal === 'function') {
-                                const val = this.getRecoColVal(rowObj.code, orc.name);
-                                row.getCell(cIdx).value = val || '';
-                            } else {
-                                row.getCell(cIdx).value = '';
-                            }
-                        });
+                        if (hasCustomOldRecoCols) {
+                            const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : 0;
+                            recoCols.forEach((orc, ocIdx) => {
+                                const cIdx = 8 + ocIdx;
+                                if (orc.name === 'PURANA RECO') {
+                                    row.getCell(cIdx).value = prevR || '';
+                                } else if (typeof this.getRecoColVal === 'function') {
+                                    const val = this.getRecoColVal(rowObj.code, orc.name);
+                                    row.getCell(cIdx).value = val || '';
+                                } else {
+                                    row.getCell(cIdx).value = '';
+                                }
+                            });
+                        }
 
                         const midColStart = 8 + recoCols.length;
                         if (revOn) {
                             rcols.forEach((rc, cIdx) => {
-                                row.getCell(midColStart + cIdx).value = this.reconCellLoc(rowObj.code, rc) || '';
+                                const v = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(rowObj.code, rc) : 0;
+                                row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
                             });
                         } else {
-                            pData.columns.forEach((col, cIdx) => {
-                                row.getCell(midColStart + cIdx).value = rowObj.activities[col] || '';
+                            (pData.columns || []).forEach((col, cIdx) => {
+                                const v = rowObj.activities && rowObj.activities[col];
+                                row.getCell(midColStart + cIdx).value = v > 0 ? Number(v) : '';
                             });
                         }
 
                         const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
                         const thisB = Number(rowObj.totalQty) || 0;
-                        const cumR = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(rowObj) : (prevR + thisB);
-                        const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(rowObj) : (Number(rowObj.sapNetIssue || 0) - cumR);
+                        const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Math.round((Number(rowObj.sapNetIssue || 0) - thisB) * 100) / 100);
 
-                        row.getCell(endColStart).value = thisB || '';
-                        row.getCell(endColStart + 1).value = cumR || '';
-                        row.getCell(endColStart + 2).value = bal;
+                        row.getCell(endColStart).value = thisB > 0 ? thisB : '';
+                        row.getCell(endColStart + 1).value = bal;
                         
                         row.eachCell((c, colNum) => {
                             c.border = thinBorder;
@@ -226,9 +224,9 @@ window.ExportModule = {
                             if (colNum === 3) {
                                 c.alignment.horizontal = 'left';
                                 c.alignment.wrapText = true;
-                            } else if (colNum === 5 || colNum === 6 || colNum === 7 || colNum === 8 || colNum >= endColStart) {
+                            } else if (colNum === 5 || colNum === 6 || colNum === 7 || colNum >= endColStart) {
                                 c.alignment.horizontal = 'right';
-                                c.font = { bold: colNum === 7 || colNum === endColStart + 1 || colNum === endColStart + 2 };
+                                c.font = { bold: colNum === 7 || colNum === endColStart || colNum === endColStart + 1 };
                             } else {
                                 c.alignment.horizontal = 'center';
                             }
@@ -237,46 +235,46 @@ window.ExportModule = {
                         rowIdx++;
                     });
 
-                    // Summary Total row
+                    // Summary Total row (Matches on-screen reconTotals)
                     const totalRow = ws.getRow(rowIdx);
                     totalRow.getCell(1).value = `TOTAL / SUMMARY (${expRows.length} Items)`;
                     ws.mergeCells(rowIdx, 1, rowIdx, 4);
                     totalRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
                     totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
 
-                    let sumGross = 0, sumMrn = 0, sumNet = 0, sumThisBill = 0, sumCum = 0, sumBal = 0;
+                    let sumGross = 0, sumMrn = 0, sumNet = 0, sumThisBill = 0, sumBal = 0;
                     expRows.forEach(rowObj => {
-                        sumGross += Number(rowObj.sapGrossIssue || rowObj.sapIssuedQty || 0);
+                        sumGross += Number(rowObj.sapGrossIssue || 0);
                         sumMrn += Number(rowObj.sapMrnReturn || 0);
-                        sumNet += Number((rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || 0));
+                        sumNet += Number(rowObj.sapNetIssue || 0);
                         const thisB = Number(rowObj.totalQty) || 0;
-                        const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(rowObj.code) : Number(rowObj.prevReconQty || 0);
-                        const cumR = (typeof this.getCumulativeReconQty === 'function') ? this.getCumulativeReconQty(rowObj) : (prevR + thisB);
-                        const bal = (typeof this.getReconBalanceQty === 'function') ? this.getReconBalanceQty(rowObj) : (Number((rowObj.sapNetIssue !== undefined && rowObj.sapNetIssue !== null && rowObj.sapNetIssue !== '') ? rowObj.sapNetIssue : (rowObj.sapIssuedQty || 0)) - cumR);
+                        const bal = (rowObj._bal !== undefined) ? Number(rowObj._bal) : (Number(rowObj.sapNetIssue || 0) - thisB);
                         sumThisBill += thisB;
-                        sumCum += cumR;
                         sumBal += bal;
                     });
+
                     totalRow.getCell(5).value = Math.round(sumGross * 100) / 100 || '';
                     totalRow.getCell(6).value = Math.round(sumMrn * 100) / 100 || '';
                     totalRow.getCell(7).value = Math.round(sumNet * 100) / 100 || '';
 
-                    recoCols.forEach((orc, ocIdx) => {
-                        const cIdx = 8 + ocIdx;
-                        let colSum = 0;
-                        if (orc.name === 'PURANA RECO') {
-                            expRows.forEach(r => {
-                                const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : Number(r.prevReconQty || 0);
-                                colSum += Number(prevR || 0);
-                            });
-                        } else {
-                            expRows.forEach(r => {
-                                const val = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, orc.name) : 0;
-                                colSum += Number(val || 0);
-                            });
-                        }
-                        totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
-                    });
+                    if (hasCustomOldRecoCols) {
+                        recoCols.forEach((orc, ocIdx) => {
+                            const cIdx = 8 + ocIdx;
+                            let colSum = 0;
+                            if (orc.name === 'PURANA RECO') {
+                                expRows.forEach(r => {
+                                    const prevR = (typeof this.getPrevReconQty === 'function') ? this.getPrevReconQty(r.code) : Number(r.prevReconQty || 0);
+                                    colSum += Number(prevR || 0);
+                                });
+                            } else {
+                                expRows.forEach(r => {
+                                    const val = (typeof this.getRecoColVal === 'function') ? this.getRecoColVal(r.code, orc.name) : 0;
+                                    colSum += Number(val || 0);
+                                });
+                            }
+                            totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
+                        });
+                    }
 
                     const midColStart = 8 + recoCols.length;
                     if (revOn) {
@@ -289,7 +287,7 @@ window.ExportModule = {
                             totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
                         });
                     } else {
-                        pData.columns.forEach((col, cIdx) => {
+                        (pData.columns || []).forEach((col, cIdx) => {
                             let colSum = 0;
                             expRows.forEach(r => {
                                 colSum += Number((r.activities && r.activities[col]) || 0);
@@ -300,8 +298,7 @@ window.ExportModule = {
 
                     const endColStart = midColStart + (revOn ? rcols.length : pData.columns.length);
                     totalRow.getCell(endColStart).value = Math.round(sumThisBill * 100) / 100 || '';
-                    totalRow.getCell(endColStart + 1).value = Math.round(sumCum * 100) / 100 || '';
-                    totalRow.getCell(endColStart + 2).value = Math.round(sumBal * 100) / 100 || 0;
+                    totalRow.getCell(endColStart + 1).value = Math.round(sumBal * 100) / 100 || 0;
 
                     totalRow.eachCell((c, colNum) => {
                         c.border = headerBorder;
@@ -316,10 +313,11 @@ window.ExportModule = {
                     
                     // Column Widths
                     const cols = [
-                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }, { width: 14 }
+                        { width: 8 }, { width: 12 }, { width: 45 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 12 }
                     ];
-                    (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 14 }));
-                    cols.push({ width: 14 }, { width: 14 }, { width: 14 });
+                    if (hasCustomOldRecoCols) recoCols.forEach(() => cols.push({ width: 14 }));
+                    (revOn ? rcols : pData.columns).forEach(() => cols.push({ width: 12 }));
+                    cols.push({ width: 14 }, { width: 14 });
                     ws.columns = cols;
                     
                     const buffer = await workbook.xlsx.writeBuffer();
