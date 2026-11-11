@@ -758,8 +758,8 @@
                             sapNetIssue: oNet,
                             activities: {}
                         };
-                    } else {
-                        // 🔥 Naye uploaded reco ka issue purane issue se update kar do
+                    } else if (!sapIssuesMap[matCode]) {
+                        // Sirf tabhi issue update karo jab SAP stock dump me ye code na ho
                         if (this.hasCustomOldReco || oNet > 0 || oGross > 0 || oMrn > 0) {
                             sapMap[matCode].sapGrossIssue = oGross;
                             sapMap[matCode].sapMrnReturn = oMrn;
