@@ -1,7 +1,8 @@
 /**
  * @file Default Contractors Database
  * @description Complete list of contractor firms with PAN, GSTIN, bank details, work orders.
- * Used for contractor selection and invoice generation.
+ * Auto-extracted and merged from SAP stock dump (stock.xlsx).
+ * Total Contractors: 152
  * 
  * @global {Array} defaultContractorsList
  * @readonly
@@ -41,7 +42,7 @@ const defaultContractorsList = [
   },
   {
     "id": "ab_enterprises",
-    "name": "AB ENTERPRISES",
+    "name": "M/s AB ENTERPRISES",
     "pan": "EKCPK5701G",
     "gstin": "",
     "bankAccountName": "AB ENTERPRISES",
@@ -228,7 +229,7 @@ const defaultContractorsList = [
     "bankAccountNo": "22200200000329",
     "bankIfsc": "BARB0PARSHA",
     "bankName": "Bank of Baroda",
-    "workOrderNo": "",
+    "workOrderNo": "31007557",
     "workOrderDate": "15.07.2025",
     "divisionName": "",
     "subDivName": "",
@@ -325,23 +326,8 @@ const defaultContractorsList = [
     "feederName": ""
   },
   {
-    "id": "baba_construction_31005619",
-    "name": "Baba Construction",
-    "pan": "ALRPV2897E",
-    "gstin": "10ALRPV2897E3ZM",
-    "bankAccountName": "Baba Construction",
-    "bankAccountNo": "75270100000426",
-    "bankIfsc": "PUNB0MBGB06",
-    "bankName": "Madhya Bihar Gramin BANK",
-    "workOrderNo": "31005619",
-    "workOrderDate": "06.01.2025",
-    "divisionName": "",
-    "subDivName": "",
-    "feederName": ""
-  },
-  {
     "id": "baba_construction_31005621",
-    "name": "Baba Construction",
+    "name": "BABA CONSTRUCTION (VIKASH KUMAR DUBEY)",
     "pan": "BKNPD9190E",
     "gstin": "10BKNPD9190E1ZB",
     "bankAccountName": "Baba Construction",
@@ -356,7 +342,7 @@ const defaultContractorsList = [
   },
   {
     "id": "balaji_construction",
-    "name": "Balaji Construction",
+    "name": "M/s. Balaji Construction",
     "pan": "BVSPS9258L",
     "gstin": "09BVSPS9258L1Z8",
     "bankAccountName": "Balaji Construction",
@@ -423,7 +409,7 @@ const defaultContractorsList = [
     "bankAccountNo": "",
     "bankIfsc": "",
     "bankName": "CENTRUL BANK OF INDIA",
-    "workOrderNo": "",
+    "workOrderNo": "31007561",
     "workOrderDate": "21.07.2026",
     "divisionName": "",
     "subDivName": "",
@@ -446,7 +432,7 @@ const defaultContractorsList = [
   },
   {
     "id": "chandanraj_ravindra_kapgate",
-    "name": "Chandanraj Ravindra Kapgate",
+    "name": "M/s Chandanraj Ravindra Kapgate",
     "pan": "MFZPK3872E",
     "gstin": "",
     "bankAccountName": "Chandanraj Ravindra Kapgate",
@@ -701,7 +687,7 @@ const defaultContractorsList = [
   },
   {
     "id": "j_p_supreme_infratech",
-    "name": "J P Supreme Infratech",
+    "name": "J.P. SUPREME INFRATECH",
     "pan": "ARYPP7680A",
     "gstin": "27ARYPP7680A1Z5",
     "bankAccountName": "J P Supreme Infratech",
@@ -948,7 +934,7 @@ const defaultContractorsList = [
     "bankAccountNo": "",
     "bankIfsc": "",
     "bankName": "Maharastra gamin bank",
-    "workOrderNo": "",
+    "workOrderNo": "31007560",
     "workOrderDate": "01.08.26",
     "divisionName": "",
     "subDivName": "",
@@ -1608,7 +1594,7 @@ const defaultContractorsList = [
     "bankAccountNo": "",
     "bankIfsc": "",
     "bankName": "SBI BANK",
-    "workOrderNo": "",
+    "workOrderNo": "31007559",
     "workOrderDate": "01.08.26",
     "divisionName": "",
     "subDivName": "",
@@ -1676,7 +1662,7 @@ const defaultContractorsList = [
   },
   {
     "id": "s_m_group",
-    "name": "S M Group",
+    "name": "S.M. GROUP",
     "pan": "FYOPM9108Q",
     "gstin": "27FYOPM9108Q1ZB",
     "bankAccountName": "S M Group",
@@ -1983,7 +1969,7 @@ const defaultContractorsList = [
     "bankAccountNo": "50200059420413",
     "bankIfsc": "HDFC0003042",
     "bankName": "HDFC BANK",
-    "workOrderNo": "",
+    "workOrderNo": "31007122",
     "workOrderDate": "01.04.2026",
     "divisionName": "",
     "subDivName": "",
@@ -2021,7 +2007,7 @@ const defaultContractorsList = [
   },
   {
     "id": "shriram_enterprises",
-    "name": "Shriram Enterprises",
+    "name": "SHRI RAM ENTERPRISES",
     "pan": "FAKPR6028C",
     "gstin": "",
     "bankAccountName": "Shriram Enterprises",
@@ -2036,7 +2022,7 @@ const defaultContractorsList = [
   },
   {
     "id": "sk_manglu",
-    "name": "SK Manglu",
+    "name": "S. K. manglu",
     "pan": "CRNPM7801H",
     "gstin": "",
     "bankAccountName": "SK Manglu",
@@ -2141,7 +2127,7 @@ const defaultContractorsList = [
   },
   {
     "id": "vc_enterprises",
-    "name": "VC Enterprises",
+    "name": "V C Enterprises",
     "pan": "BHJPC6748L",
     "gstin": "09BHJPC6748L1ZT",
     "bankAccountName": "VC Enterprises",
@@ -2228,5 +2214,87 @@ const defaultContractorsList = [
     "divisionName": "",
     "subDivName": "",
     "feederName": ""
+  },
+  {
+    "id": "moktarmomin",
+    "name": "Moktar Momin",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Moktar Momin",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "MUKTAR MOMIN MDC-1846",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
+    "id": "ravindrakapgade",
+    "name": "Ravindra kapgade",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Ravindra kapgade",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "RAVINDRA KAPGADE MDC-436",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
+    "id": "tallydynamix",
+    "name": "TALLY DYNAMIX",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "TALLY DYNAMIX",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "TALLY DYNAMIX MDC-1832",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
+    "id": "raialinfraabldeptteem",
+    "name": "Raial Infra ABL Dept.Teem",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Raial Infra ABL Dept.Teem",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "RAIAL INFRA MDC-1837",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
+  },
+  {
+    "id": "mangeshashoksonwanenew",
+    "name": "Mangesh Ashok Sonwane New",
+    "pan": "",
+    "gstin": "",
+    "bankAccountName": "Mangesh Ashok Sonwane New",
+    "bankAccountNo": "",
+    "bankIfsc": "",
+    "bankName": "",
+    "workOrderNo": "31007641",
+    "workOrderDate": "",
+    "divisionName": "",
+    "subDivName": "",
+    "feederName": ""
   }
 ];
+
+if (typeof window !== "undefined") {
+    window.defaultContractorsList = defaultContractorsList;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = defaultContractorsList;
+}

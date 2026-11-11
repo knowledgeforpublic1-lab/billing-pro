@@ -286,6 +286,15 @@ async function buildStockIndex() {
   console.log('Contractors with issues:', Object.keys(groupMaterials).length);
   console.log('Total docHeaders indexed:', Object.keys(outputData.byDocHeader).length);
   console.log('Total contractor norm keys indexed:', Object.keys(outputData.byContractorNorm).length);
+
+  // 3. Also extract and sync Master SAP Materials & Contractors from stock file
+  try {
+    const { extractAndMergeMasterData } = require('./extract_stock_master.js');
+    console.log('3. Extracting and merging Master SAP materials and Contractors...');
+    await extractAndMergeMasterData(stockFilePath);
+  } catch (e) {
+    console.warn('Could not extract master SAP materials/contractors:', e.message);
+  }
 }
 
 buildStockIndex().catch(console.error);

@@ -503,6 +503,65 @@ window.StockImporterModule = {
                 await BillingStorage.setItem('billing_custom_sap_stock', stockData);
             }
 
+            // 1. Auto-extract and merge ALL SAP materials from the uploaded file into sapMaterialsMaster
+            let newMatsAdded = 0;
+            if (stockData && stockData.byContractorNorm && Array.isArray(this.sapMaterialsMaster)) {
+                const existingCodes = new Set(this.sapMaterialsMaster.map(s => String(s && s.code).trim()));
+                Object.values(stockData.byContractorNorm).forEach(cRecord => {
+                    if (cRecord && cRecord.materials) {
+                        Object.values(cRecord.materials).forEach(m => {
+                            const codeStr = String(m && m.code || '').trim();
+                            if (codeStr && !existingCodes.has(codeStr)) {
+                                existingCodes.add(codeStr);
+                                this.sapMaterialsMaster.push({
+                                    code: codeStr,
+                                    desc: m.desc || codeStr,
+                                    uom: m.uom || 'No'
+                                });
+                                newMatsAdded++;
+                            }
+                        });
+                    }
+                });
+                if (newMatsAdded > 0) {
+                    this.sapMaterialsMaster = [...this.sapMaterialsMaster];
+                }
+            }
+
+            // 2. Auto-extract and merge ALL Contractors from uploaded file into contractorsList
+            let newContsAdded = 0;
+            if (stockData && stockData.byContractorNorm && Array.isArray(this.contractorsList)) {
+                const existingContKeys = new Set((this.contractorsList || []).map(c => window.StockImporterModule.normContractorName(c.name || c.id)));
+                Object.values(stockData.byContractorNorm).forEach(cRecord => {
+                    if (cRecord && cRecord.contractorName) {
+                        const key = window.StockImporterModule.normContractorName(cRecord.contractorName);
+                        if (key && !existingContKeys.has(key)) {
+                            existingContKeys.add(key);
+                            const newCont = {
+                                id: key,
+                                name: cRecord.contractorName,
+                                pan: '',
+                                gstin: '',
+                                bankAccountName: cRecord.contractorName,
+                                bankAccountNo: '',
+                                bankIfsc: '',
+                                bankName: '',
+                                workOrderNo: cRecord.docHeader || '',
+                                workOrderDate: '',
+                                divisionName: '',
+                                subDivName: '',
+                                feederName: ''
+                            };
+                            this.contractorsList.push(newCont);
+                            newContsAdded++;
+                        }
+                    }
+                });
+                if (newContsAdded > 0) {
+                    this.contractorsList = [...this.contractorsList];
+                }
+            }
+
             window.ContractorSapStock = stockData;
             window.__customSapStock = stockData; // lazy default load ke aane par yahi restore rahega
             this.hasCustomStock = true;
@@ -521,7 +580,11 @@ window.StockImporterModule = {
 
             this.$forceUpdate();
             const count = stockData.meta.contractorsWithIssues || Object.keys(stockData.byContractorNorm || {}).length;
-            this.showToast(`Stock Updated! ${count} contractors synced (${stockData.meta.matchedTxns || 0} items).`, 'Check');
+            const extraMsg = [];
+            if (newMatsAdded > 0) extraMsg.push(`${newMatsAdded} SAP codes added`);
+            if (newContsAdded > 0) extraMsg.push(`${newContsAdded} contractors added`);
+            const extraText = extraMsg.length ? ` (${extraMsg.join(', ')})` : '';
+            this.showToast(`Stock Updated! ${count} contractors synced${extraText}.`, 'Check');
         } catch (err) {
             console.error('[StockUpload Error]:', err);
             alert('Stock Upload Error:\n' + (err.message || err));
