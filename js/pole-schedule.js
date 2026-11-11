@@ -2142,6 +2142,82 @@ window.PoleScheduleModule = {
         const filename = `Pole_Schedule_${k}_${contractorName.replace(/[^a-zA-Z0-9]/g, '_')}_${billNo}${filterSuffix}.xlsx`;
         XLSX.writeFile(wb, filename);
         this.showToast(`Excel exported: ${filename}`, '📗');
+    },
+
+    // ─── CONTRACTOR SAP STOCK VERIFICATION & RED ALERT (User Requested) ───
+    getActiveContractorSapStock() {
+        if (typeof this.getContractorSapIssues === 'function') {
+            return this.getContractorSapIssues();
+        }
+        return this.currentContractorSap || null;
+    },
+
+    isSapCodeIssuedToActiveContractor(code) {
+        if (!code || code === 'N/A' || code === 'NA' || String(code).startsWith('EXTRA-')) return null;
+        const s = this.getActiveContractorSapStock();
+        if (!s || !s.materials) return null;
+        const item = s.materials[String(code).trim()];
+        if (!item) return false;
+        const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+        const gross = Number(item.grossIssue !== undefined ? item.grossIssue : 0);
+        return (net > 0 || gross > 0);
+    },
+
+    isPoleScheduleItemUnissued(item) {
+        if (!item || item.isSection || item.isSpan) return false;
+        const s = this.getActiveContractorSapStock();
+        if (!s || !s.materials) return false; // Agar koi contractor select nahi hai to alert na dikhayein
+
+        const codes = [];
+        if (item.itemCode && item.itemCode !== 'N/A' && item.itemCode !== 'NA' && !String(item.itemCode).startsWith('EXTRA-')) {
+            String(item.itemCode).split(',').forEach(c => {
+                const clean = c.trim();
+                if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
+            });
+        }
+        if (Array.isArray(item.sapItems)) {
+            item.sapItems.forEach(si => {
+                const clean = String(si && si.code || '').trim();
+                if (clean && clean !== 'N/A' && clean !== 'NA' && !String(clean).startsWith('EXTRA-') && !codes.includes(clean)) {
+                    codes.push(clean);
+                }
+            });
+        }
+        if (codes.length === 0) return false; // Abhi code map nahi hua
+
+        // Agar kisi bhi mapped SAP code par contractor ko issue hai to unissued nahi hai
+        const anyIssued = codes.some(c => this.isSapCodeIssuedToActiveContractor(c) === true);
+        return !anyIssued;
+    },
+
+    getPoleScheduleItemStockTooltip(item) {
+        if (!item || item.isSection || item.isSpan) return '';
+        const s = this.getActiveContractorSapStock();
+        const cName = (s && s.contractorName) || this.selectedContractorName || 'Contractor';
+        if (!item.itemCode || item.itemCode === 'N/A') return 'Click to map SAP code';
+        if (this.isPoleScheduleItemUnissued(item)) {
+            return `⚠️ Stock Issue nahi hai! Contractor '${cName}' ko code [${item.itemCode}] pe koi material issue nahi hua hai (Reco Net Issue: 0). Click to edit SAP Code.`;
+        }
+        if (s && s.materials && s.materials[item.itemCode]) {
+            const m = s.materials[item.itemCode];
+            const net = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+            return `📦 Stock OK: ${cName} ko ${net} ${m.uom || item.unit || ''} issue hai (Reco Net Issue). Click to edit.`;
+        }
+        return item.sapDescription ? (item.sapDescription + ' (Click to edit SAP Code)') : 'Click to edit SAP Code';
+    },
+
+    getPoleScheduleCellTooltip(item, lIdx) {
+        if (!item) return '';
+        const qty = this.getPoleScheduleCellQty(lIdx, item.origIndex);
+        if (this.isPoleScheduleItemUnissued(item) && Number(qty) > 0) {
+            const s = this.getActiveContractorSapStock();
+            const cName = (s && s.contractorName) || this.selectedContractorName || 'Contractor';
+            return `⚠️ Alert: Is item (${item.itemCode || ''}) ka stock contractor '${cName}' ko issue nahi hai! (Reco Net Issue: 0)`;
+        }
+        if (this.isPoleScheduleConcreteItem(item)) {
+            return '🧱 Auto-calculated Concreting from Auger ' + this.selectedAugerSize + ' inch + Stays: ' + (qty || '0') + ' ' + (item.unit || '');
+        }
+        return '';
     }
 };
 

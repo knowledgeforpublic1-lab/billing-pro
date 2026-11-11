@@ -754,7 +754,11 @@ window.ViewsModule = {
         this.syncActiveSapManagerItem();
         this.sapManagerSearchQuery = '';
         this.sapManagerSuggestions = [];
-        this.showToast(`Linked SAP Code: [${s.code}]`, 'Check');
+        if (typeof this.isSapCodeIssuedToActiveContractor === 'function' && this.isSapCodeIssuedToActiveContractor(s.code) === false) {
+            this.showToast(`⚠️ Alert: Code [${s.code}] contractor ko issue nahi hai (Net Issue: 0)`, 'Alert');
+        } else {
+            this.showToast(`Linked SAP Code: [${s.code}]`, 'Check');
+        }
     },
     setSapItemNa() {
         if (!this.activeSapManagerItem) return;

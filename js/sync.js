@@ -894,6 +894,69 @@ window.SyncModule = {
             try { await this.loadSavedBillsList(); } catch(e) {}
         }
     },
+    async renameBill(b) {
+        if (!b) return;
+        const currentName = b.billNo || (b.dataId === this.activeBillId && this.projectMeta && this.projectMeta.billNo) || 'Main Bill';
+        const newName = prompt('Enter new Bill / RA No:', currentName);
+        if (!newName || !newName.trim() || newName.trim() === currentName) return;
+
+        const trimmed = newName.trim();
+        this.showToast(`Renaming bill to [${trimmed}]...`, '⏳');
+
+        // 1) If active bill, update local projectMeta and invoiceData immediately
+        if (b.dataId === this.activeBillId) {
+            if (!this.projectMeta) this.projectMeta = {};
+            this.projectMeta.billNo = trimmed;
+            if (this.invoiceData) {
+                this.invoiceData.invoiceNo = trimmed;
+            }
+            b.billNo = trimmed;
+            this.saveToStorage();
+            await this.syncToMongoNow({ manual: true, force: true });
+            this.showToast(`Bill renamed to [${trimmed}]! ✏️`, '✅');
+            if (typeof this.loadSavedBillsList === 'function') {
+                await this.loadSavedBillsList();
+            }
+            return;
+        }
+
+        // 2) If not active bill, fetch from cloud, update billNo/invoiceNo, and save back
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
+            
+            const getRes = await fetch('/api/billing?dataId=' + encodeURIComponent(b.dataId), { headers });
+            const getJson = await getRes.json();
+            if (!getJson || !getJson.success || !getJson.data) {
+                this.showToast('Could not load bill from cloud to rename', '⚠️');
+                return;
+            }
+
+            const billState = getJson.data;
+            if (!billState.projectMeta) billState.projectMeta = {};
+            billState.projectMeta.billNo = trimmed;
+            if (!billState.invoiceData) billState.invoiceData = {};
+            billState.invoiceData.invoiceNo = trimmed;
+
+            const saveRes = await fetch('/api/billing', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(Object.assign(billState, { dataId: b.dataId, force: true }))
+            });
+            const saveJson = await saveRes.json().catch(() => null);
+            if (saveRes.ok && (!saveJson || saveJson.success !== false)) {
+                b.billNo = trimmed;
+                this.showToast(`Bill renamed to [${trimmed}]! ✏️`, '✅');
+                if (typeof this.loadSavedBillsList === 'function') {
+                    await this.loadSavedBillsList();
+                }
+            } else {
+                this.showToast('Failed to save renamed bill', '⚠️');
+            }
+        } catch (err) {
+            this.showToast(`Error renaming bill: ${err.message}`, '⚠️');
+        }
+    },
     async deleteBill(b) {
         if (!b) return;
         if (b.dataId === this.activeBillId) {

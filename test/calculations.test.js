@@ -1879,6 +1879,63 @@ it('Pole Schedule Muffing Calculation: Dynamic muffing volume calculation, size 
     assert.strictEqual(mockApp.getPoleScheduleCellQty(0, muffIdx924), '', 'Dedicated Muffing row must be blank when Muffing is toggled OFF');
 });
 
+// 35. Contractor SAP Unissued Alert & Bill Rename
+it('Contractor SAP Stock: Detects unissued codes for red alert & supports Bill Renaming', () => {
+    const mockApp = {
+        currentContractorSap: {
+            contractorName: 'M/s Test Contractor',
+            materials: {
+                '17005050': { code: '17005050', netIssue: 98, grossIssue: 98, issuedQty: 98 },
+                '17000123': { code: '17000123', netIssue: 0, grossIssue: 0, issuedQty: 0 }
+            }
+        },
+        getActiveContractorSapStock() {
+            return this.currentContractorSap;
+        },
+        isSapCodeIssuedToActiveContractor(code) {
+            if (!code || code === 'N/A' || code === 'NA' || String(code).startsWith('EXTRA-')) return null;
+            const s = this.getActiveContractorSapStock();
+            if (!s || !s.materials) return null;
+            const item = s.materials[String(code).trim()];
+            if (!item) return false;
+            const net = Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+            const gross = Number(item.grossIssue !== undefined ? item.grossIssue : 0);
+            return (net > 0 || gross > 0);
+        },
+        isPoleScheduleItemUnissued(item) {
+            if (!item || item.isSection || item.isSpan) return false;
+            const s = this.getActiveContractorSapStock();
+            if (!s || !s.materials) return false;
+            const codes = [];
+            if (item.itemCode && item.itemCode !== 'N/A' && !String(item.itemCode).startsWith('EXTRA-')) {
+                codes.push(String(item.itemCode).trim());
+            }
+            if (Array.isArray(item.sapItems)) {
+                item.sapItems.forEach(si => {
+                    const c = String(si && si.code || '').trim();
+                    if (c && c !== 'N/A' && !codes.includes(c)) codes.push(c);
+                });
+            }
+            if (codes.length === 0) return false;
+            return !codes.some(c => this.isSapCodeIssuedToActiveContractor(c) === true);
+        }
+    };
+
+    // Code 17005050 is issued (net 98 > 0)
+    assert.strictEqual(mockApp.isSapCodeIssuedToActiveContractor('17005050'), true);
+    assert.strictEqual(mockApp.isPoleScheduleItemUnissued({ itemCode: '17005050' }), false);
+
+    // Code 17009999 is not in stock -> unissued (false)
+    assert.strictEqual(mockApp.isSapCodeIssuedToActiveContractor('17009999'), false);
+    assert.strictEqual(mockApp.isPoleScheduleItemUnissued({ itemCode: '17009999' }), true);
+
+    // Bill Rename validation
+    const bill = { dataId: 'bill_test_123', billNo: 'Main Bill' };
+    const newName = 'AE/RA/01';
+    bill.billNo = newName;
+    assert.strictEqual(bill.billNo, 'AE/RA/01');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

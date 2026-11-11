@@ -330,7 +330,10 @@
                                         </thead>
                                         <tbody>
                                             <tr v-for="b in (savedBillsList && savedBillsList.length ? savedBillsList.slice(0, 8) : [])" :key="b.dataId">
-                                                <td class="mono lk" @click="openBill(b.dataId); switchView('invoice')" style="cursor: pointer;" title="Open this bill">{{ b.billNo || 'Main Bill' }}</td>
+                                                <td class="mono lk" style="cursor: pointer;" title="Open this bill">
+                                                    <span @click="openBill(b.dataId); switchView('invoice')">{{ b.billNo || 'Main Bill' }}</span>
+                                                    <button class="no-print" @click.stop="renameBill(b)" title="Rename Bill / RA No" style="background: none; border: none; cursor: pointer; color: var(--accent-indigo, #6366f1); font-size: 0.72rem; padding: 0 3px; margin-left: 4px;">✏️</button>
+                                                </td>
                                                 <td>{{ b.contractorName || 'Not Assigned' }}</td>
                                                 <td class="mono">{{ b.workOrderNo || '—' }}</td>
                                                 <td>{{ b.billDate || '—' }}</td>
@@ -340,6 +343,7 @@
                                                 <td class="ctr">
                                                     <button class="tbtn primary" style="padding: 0.15rem 0.5rem; min-height: 1.4rem; font-size: 0.7rem;" @click="openBill(b.dataId); switchView('invoice')">Invoice</button>
                                                     <button class="tbtn" style="padding: 0.15rem 0.5rem; min-height: 1.4rem; font-size: 0.7rem; margin-left: 3px;" @click="openBill(b.dataId); switchView('detail')">Activities</button>
+                                                    <button class="tbtn" style="padding: 0.15rem 0.45rem; min-height: 1.4rem; font-size: 0.7rem; margin-left: 3px; color: #818cf8;" @click="renameBill(b)" title="Rename Bill / RA No">✏️ Rename</button>
                                                 </td>
                                             </tr>
                                             <tr v-if="!savedBillsList || savedBillsList.length === 0">
@@ -489,10 +493,12 @@
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
-                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
+                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" :title="getPoleScheduleItemStockTooltip(item) || 'Click to manage single or multiple SAP items'">
                                         <!-- Multiple SAP items -->
                                         <div v-if="item.sapItems && item.sapItems.length > 1" class="sap-badge-group">
-                                            <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge">
+                                            <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge"
+                                                :class="{ 'badge-sap-not-issued': isSapCodeIssuedToActiveContractor(s.code) === false }"
+                                                :title="isSapCodeIssuedToActiveContractor(s.code) === false ? '⚠️ Not issued to contractor in Reco' : 'Stock Issued'">
                                                 {{ s.code }}
                                             </span>
                                             <span v-if="item.sapItems.length > 2" class="sap-more-badge">
@@ -501,8 +507,13 @@
                                         </div>
                                         <!-- Single SAP item -->
                                         <div v-else class="sap-badge-single">
-                                            <span class="sap-code-badge" :class="{ 'sap-badge-na': (item.itemCode === 'N/A' || (item.sapItems && item.sapItems[0] && item.sapItems[0].code === 'N/A')), 'sap-badge-extra': String(item.itemCode || '').startsWith('EXTRA-') }">
+                                            <span class="sap-code-badge" :class="{
+                                                'sap-badge-na': (item.itemCode === 'N/A' || (item.sapItems && item.sapItems[0] && item.sapItems[0].code === 'N/A')),
+                                                'sap-badge-extra': String(item.itemCode || '').startsWith('EXTRA-'),
+                                                'badge-sap-not-issued': isPoleScheduleItemUnissued(item)
+                                            }" :title="getPoleScheduleItemStockTooltip(item)">
                                                 {{ (item.sapItems && item.sapItems[0] && item.sapItems[0].code) || item.itemCode || '+ SAP' }}
+                                                <span v-if="isPoleScheduleItemUnissued(item)" style="margin-left: 2px;">⚠️</span>
                                             </span>
                                             <span class="sap-arrow-icon">▾</span>
                                         </div>
@@ -738,8 +749,13 @@
                                             </td>
                                             <td class="text-center font-semibold font-mono">{{ item.no || '—' }}</td>
                                             <td class="text-center font-mono">
-                                                <span v-if="item.itemCode" class="badge badge-sap" :title="item.sapDescription ? (item.sapDescription + ' (Click to edit SAP Code)') : 'Click to edit SAP Code'" style="cursor: pointer;" @click="openSapItemManager(item, item.origIndex)">
+                                                <span v-if="item.itemCode" class="badge badge-sap"
+                                                    :class="{ 'badge-sap-not-issued': isPoleScheduleItemUnissued(item) }"
+                                                    :title="getPoleScheduleItemStockTooltip(item)"
+                                                    style="cursor: pointer;"
+                                                    @click="openSapItemManager(item, item.origIndex)">
                                                     {{ item.itemCode }}
+                                                    <span v-if="isPoleScheduleItemUnissued(item)" style="margin-left: 3px; font-size: 0.72rem;">⚠️</span>
                                                 </span>
                                                 <span v-else class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); font-size: 0.72rem; cursor: pointer; padding: 2px 6px;" title="Click to map SAP code" @click="openSapItemManager(item, item.origIndex)">
                                                     + Map
@@ -747,7 +763,10 @@
                                             </td>
                                             <td>
                                                 <div style="font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                                    <span>{{ item.desc }}</span>
+                                                    <span :style="isPoleScheduleItemUnissued(item) ? { color: '#ef4444' } : {}">{{ item.desc }}</span>
+                                                    <span v-if="isPoleScheduleItemUnissued(item)" style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid #ef4444; padding: 1px 5px; border-radius: 4px; font-weight: 800;" :title="getPoleScheduleItemStockTooltip(item)">
+                                                        ⚠️ Unissued (0)
+                                                    </span>
                                                     <span v-if="isPoleScheduleConcreteItem(item)" class="badge-concrete-auto" title="Auger size aur stays se automatically calculate hota hai">
                                                         <span>🧱</span>
                                                         <span>Auto-Concreting</span>
@@ -770,7 +789,7 @@
                                                 <input type="text" inputmode="decimal"
                                                     :value="getPoleScheduleCellQty(lIdx, item.origIndex)"
                                                     :data-ps-row="item.origIndex" :data-ps-loc="lIdx"
-                                                    :title="isPoleScheduleConcreteItem(item) ? ('🧱 Auto-calculated Concreting from Auger ' + selectedAugerSize + ' inch + Stays: ' + (getPoleScheduleCellQty(lIdx, item.origIndex) || '0') + ' ' + item.unit) : ''"
+                                                    :title="getPoleScheduleCellTooltip(item, lIdx)"
                                                     @input="onPoleScheduleQtyInput(lIdx, item.origIndex, $event)"
                                                     @change="onPoleScheduleQtyChange(lIdx, item.origIndex, $event)"
                                                     @blur="onPoleScheduleQtyBlur(lIdx, item.origIndex, $event)"
@@ -783,6 +802,7 @@
                                                     @keydown.left.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'left')"
                                                     @paste="handlePoleSchedulePaste($event, item.origIndex, lIdx)"
                                                     class="qty-input editable-cell text-right font-mono"
+                                                    :class="{ 'cell-unissued-warn': isPoleScheduleItemUnissued(item) && Number(getPoleScheduleCellQty(lIdx, item.origIndex)) > 0 }"
                                                     :placeholder="item.isSpan ? 'Span' : '0'"
                                                     style="width: 100%; min-width: 65px;">
                                             </td>
@@ -1692,14 +1712,22 @@
 
                             <!-- List of Attached Items with Qty Factor & Reco Live Preview -->
                             <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 260px; overflow-y: auto;">
-                            <div v-for="(sItem, sIdx) in activeSapManagerItem.sapItems" :key="sIdx" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.65rem 0.85rem; border-radius: 8px;">
+                            <div v-for="(sItem, sIdx) in activeSapManagerItem.sapItems" :key="sIdx"
+                                style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.65rem 0.85rem; border-radius: 8px;"
+                                :style="isSapCodeIssuedToActiveContractor(sItem.code) === false ? { border: '1.5px solid #ef4444', background: 'rgba(239, 68, 68, 0.08)' } : {}">
                                 <!-- Top Bar: Code, Desc & Remove -->
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;">
                                     <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
                                         <span class="badge font-mono" style="background: rgba(99, 102, 241, 0.18); color: var(--accent-indigo); font-weight: 800; font-size: 0.74rem; padding: 2px 6px;">#{{ sIdx + 1 }}</span>
-                                        <div style="display: flex; align-items: center; gap: 6px;">
-                                            <strong class="font-mono" style="color: var(--primary); font-size: 0.9rem;">{{ sItem.code }}</strong>
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <strong class="font-mono" :style="isSapCodeIssuedToActiveContractor(sItem.code) === false ? { color: '#ef4444' } : { color: 'var(--primary)' }" style="font-size: 0.9rem;">{{ sItem.code }}</strong>
                                             <span v-if="sItem.uom" class="badge" style="background: var(--bg-card); font-size: 0.68rem; padding: 1px 5px; color: var(--text-muted);">{{ sItem.uom }}</span>
+                                            <span v-if="isSapCodeIssuedToActiveContractor(sItem.code) === false" class="badge" style="background: rgba(239, 68, 68, 0.20); color: #ef4444; font-size: 0.68rem; font-weight: 800; border: 1px solid #ef4444;" title="Contractor ko Reco me is material ka koi issue nahi hai">
+                                                ⚠️ NOT ISSUED TO CONTRACTOR (0)
+                                            </span>
+                                            <span v-else-if="isSapCodeIssuedToActiveContractor(sItem.code) === true" class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); font-size: 0.68rem; font-weight: 700;">
+                                                ✓ Reco Stock: {{ getContractorIssueForCode(sItem.code) }}
+                                            </span>
                                         </div>
                                     </div>
                                     <button type="button" class="btn-danger" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; flex-shrink: 0;" @click="removeSapItemFromManager(sIdx)" title="Remove this SAP code">
@@ -1800,16 +1828,22 @@
                             <div v-if="sapManagerSuggestions.length > 0" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-surface); border: 1.5px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-lg); max-height: 240px; overflow-y: auto; z-index: 1000;">
                                 <div v-for="s in sapManagerSuggestions" :key="s.code" @click="selectSapItemForManager(s)" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
                                     <div style="min-width: 0; flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 6px;">
-                                            <strong class="font-mono" style="color: var(--accent-indigo); font-size: 0.84rem;">[{{ s.code }}]</strong>
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <strong class="font-mono" :style="isSapCodeIssuedToActiveContractor(s.code) === false ? { color: '#ef4444' } : { color: 'var(--accent-indigo)' }" style="font-size: 0.84rem;">[{{ s.code }}]</strong>
                                             <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-main);">{{ s.desc }}</span>
+                                            <span v-if="isSapCodeIssuedToActiveContractor(s.code) === false" style="font-size: 0.66rem; font-weight: 800; color: #ef4444; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1px 5px; border-radius: 4px;">
+                                                ⚠️ No Issue (0)
+                                            </span>
+                                            <span v-else-if="isSapCodeIssuedToActiveContractor(s.code) === true" style="font-size: 0.66rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1px 5px; border-radius: 4px;">
+                                                ✓ Reco: {{ getContractorIssueForCode(s.code) }}
+                                            </span>
                                         </div>
                                         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
                                             UoM: {{ s.uom || 'NO' }} <span v-if="s.docHeader">· Doc: {{ s.docHeader }}</span>
                                         </div>
                                     </div>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); font-size: 0.7rem; padding: 2px 6px; white-space: nowrap;">
-                                        + Select
+                                    <span class="badge" :style="isSapCodeIssuedToActiveContractor(s.code) === false ? { background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid #ef4444' } : { background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-green)' }" style="font-size: 0.7rem; padding: 2px 6px; white-space: nowrap;">
+                                        {{ isSapCodeIssuedToActiveContractor(s.code) === false ? '⚠️ + Select (0 Stock)' : '+ Select' }}
                                     </span>
                                 </div>
                             </div>
@@ -2763,6 +2797,13 @@
                                             <span>🗑️</span>
                                         </button>
                                     </template>
+
+                                    <!-- Rename Button -->
+                                    <button type="button" class="btn btn-secondary" @click="renameBill(b)"
+                                        style="padding: 5px 9px; font-size: 0.78rem; display: flex; align-items: center; gap: 4px;" title="Is bill ka naam badlein (Rename Bill / RA No)">
+                                        <span>✏️</span>
+                                        <span style="font-size: 0.72rem; font-weight: 700;">Rename</span>
+                                    </button>
 
                                     <!-- Duplicate / Clone Button -->
                                     <button type="button" class="btn btn-secondary" @click="duplicateBill(b)"

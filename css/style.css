@@ -4033,6 +4033,34 @@ table.inv-items-table tbody tr:focus-within td:first-child {
     transform: translateY(-1px) !important;
 }
 
+/* ⚠️ SAP Code Not Issued to Contractor in Reconciliation (Red Alert) */
+.badge-sap.badge-sap-not-issued,
+.sap-code-badge.badge-sap-not-issued,
+.badge-sap-not-issued {
+    background: rgba(239, 68, 68, 0.20) !important;
+    color: #ef4444 !important;
+    border: 1.5px solid #ef4444 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.35) !important;
+}
+
+.badge-sap.badge-sap-not-issued:hover,
+.sap-code-badge.badge-sap-not-issued:hover {
+    background: rgba(239, 68, 68, 0.35) !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6) !important;
+}
+
+/* ⚠️ Input cell when quantity is entered against unissued SAP item */
+.qty-input.cell-unissued-warn,
+input.qty-input.cell-unissued-warn {
+    border: 1.5px solid #ef4444 !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #ef4444 !important;
+    font-weight: 800 !important;
+}
+
 /* 📑 Pole Schedule Section Divider Banner */
 .pole-schedule-section-header,
 tr[style*="rgba(99, 102, 241"] {
