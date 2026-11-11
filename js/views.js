@@ -818,7 +818,13 @@ window.ViewsModule = {
         
         // Update current pole schedule if in pole schedule view
         if (this.currentView === 'poleSchedule' || this.selectedPoleScheduleKey) {
-            const curSched = typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : (this.poleSchedules && this.poleSchedules[this.selectedPoleScheduleKey]);
+            const k = this.selectedPoleScheduleKey || '907';
+            if (!this.poleSchedules) this.poleSchedules = {};
+            if (!this.poleSchedules[k]) {
+                const s = typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : (typeof defaultPoleSchedules !== 'undefined' ? defaultPoleSchedules[k] : {});
+                this.poleSchedules[k] = JSON.parse(JSON.stringify(s || { title: `Pole Schedule ${k}`, materials: [] }));
+            }
+            const curSched = this.poleSchedules[k];
             if (curSched && curSched.materials && this.activeSapManagerOrigIndex >= 0) {
                 const targetMat = curSched.materials[this.activeSapManagerOrigIndex];
                 if (targetMat) {
@@ -829,6 +835,7 @@ window.ViewsModule = {
                     if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
                 }
             }
+            this.poleSchedules = { ...this.poleSchedules };
             if (typeof this.persistPoleSchedulesToMasterFile === "function") {
                 this.persistPoleSchedulesToMasterFile(true);
             }

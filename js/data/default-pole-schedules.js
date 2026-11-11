@@ -889,7 +889,7 @@ const defaultPoleSchedules = {
     "materials": [
       {
         "no": "1",
-        "itemCode": "17001246",
+        "itemCode": "17000008",
         "desc": "RSJ 152x152, 13 m long",
         "unit": "No.",
         "rate": 4500,
@@ -898,7 +898,7 @@ const defaultPoleSchedules = {
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001246",
+            "code": "17000008",
             "desc": "RSJ POLE 152X152 MM 13 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
@@ -907,7 +907,7 @@ const defaultPoleSchedules = {
       },
       {
         "no": "2",
-        "itemCode": "17001244",
+        "itemCode": "17000007",
         "desc": "RSJ 152x152, 11 m long",
         "unit": "No.",
         "rate": 3800,
@@ -916,7 +916,7 @@ const defaultPoleSchedules = {
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001244",
+            "code": "17000007",
             "desc": "RSJ POLE 152X152 MM 11 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
