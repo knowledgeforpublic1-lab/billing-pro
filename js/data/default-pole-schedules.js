@@ -3745,7 +3745,15 @@ const defaultPoleSchedules = {
         "rate": 80,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "MS Channel 100x50x6 mm",
+            "uom": "Kg.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "4",
@@ -3755,7 +3763,15 @@ const defaultPoleSchedules = {
         "rate": 80,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "M.S.Channel 75x40x6 mm",
+            "uom": "kg.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "5",
@@ -3765,7 +3781,15 @@ const defaultPoleSchedules = {
         "rate": 80,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "MS angle 50x50x6 mm",
+            "uom": "kg.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "6",
@@ -3775,7 +3799,15 @@ const defaultPoleSchedules = {
         "rate": 80,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "M.S.Flat 50 x 10mm",
+            "uom": "kg.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "7",
@@ -3785,7 +3817,15 @@ const defaultPoleSchedules = {
         "rate": 80,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "MS Flat 25x3 mm",
+            "uom": "Kg.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "8",
@@ -4042,7 +4082,15 @@ const defaultPoleSchedules = {
         "rate": 0,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "Concreting ration",
+            "uom": "CMT.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "22",
@@ -4052,7 +4100,15 @@ const defaultPoleSchedules = {
         "rate": 500,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "Painting/Hardware & support with numbering of pole",
+            "uom": "L.S.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "23",
@@ -4176,7 +4232,15 @@ const defaultPoleSchedules = {
         "rate": 20,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "Nut Boult",
+            "uom": "No.",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "30",
@@ -4373,7 +4437,15 @@ const defaultPoleSchedules = {
         "rate": 450,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "Bottom Channel SPCP",
+            "uom": "Nos",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "7",
@@ -4448,7 +4520,15 @@ const defaultPoleSchedules = {
         "rate": 120,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "HT LT Support Angle",
+            "uom": "Nos",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "4",
@@ -4786,7 +4866,15 @@ const defaultPoleSchedules = {
         "rate": 2500,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "11M RSJ Pole",
+            "uom": "Cmt",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "2",
@@ -4796,7 +4884,15 @@ const defaultPoleSchedules = {
         "rate": 2500,
         "sapDescription": "",
         "sapUom": "",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "HT Stay Set",
+            "uom": "Cmt",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "",
@@ -8981,7 +9077,15 @@ const defaultPoleSchedules = {
         "rate": 5,
         "sapDescription": "JOINTING SLEEVES FOR AAC",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "JOINTING SLEEVES FOR AAC",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "20",
@@ -8991,7 +9095,15 @@ const defaultPoleSchedules = {
         "rate": 8,
         "sapDescription": "PG CLAMP",
         "sapUom": "NO",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "PG CLAMP",
+            "uom": "NO",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "21",
@@ -9073,7 +9185,15 @@ const defaultPoleSchedules = {
         "rate": 2.5,
         "sapDescription": "BINDING WIRE",
         "sapUom": "KG",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "BINDING WIRE",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "26",
@@ -9083,7 +9203,15 @@ const defaultPoleSchedules = {
         "rate": 2.5,
         "sapDescription": "BINDING TAPE",
         "sapUom": "KG",
-        "sapItems": []
+        "sapItems": [
+          {
+            "code": "",
+            "desc": "BINDING TAPE",
+            "uom": "KG",
+            "qty": 1,
+            "docHeader": "0031006347"
+          }
+        ]
       },
       {
         "no": "27",
