@@ -884,6 +884,29 @@ window.PoleScheduleModule = {
                         return (u === 'mt' || u === 'mts' || u === 'mt.' || u === 'tonne' || u === 'tonnes') ? (w / 1000) : w;
                     }
                 }
+                // ✂️ Cut Point / SPCP special: Pole Schedule me jab bhi cut point ya SPCP me entry hogi,
+                // activity me cut point me uska half quantity (0.5 ratio / divisor 2) hi add hoga
+                const isSmCutPoint = smMat && (/\b(cut\s*point|spcp)\b/i.test(String(smMat.desc || '')) || /\b(cut\s*point|spcp)\b/i.test(String(smMat.sapDescription || '')));
+                const isAmCutPoint = actMat && (/\b(cut\s*point|spcp)\b/i.test(String(actMat.desc || '')) || /\b(cut\s*point|spcp)\b/i.test(String(actMat.sapDescription || '')));
+
+                if (isAmCutPoint) {
+                    // Check if explicit custom ratio (other than 1) was manually configured by user
+                    const smRatio = smMat && smMat.poleRatio !== undefined && smMat.poleRatio !== null && !isNaN(Number(smMat.poleRatio)) && Number(smMat.poleRatio) > 0 ? Number(smMat.poleRatio) : null;
+                    const smDiv = smMat && smMat.poleRatioDivisor && Number(smMat.poleRatioDivisor) > 0 ? Number(smMat.poleRatioDivisor) : null;
+                    const amRatio = actMat && actMat.poleRatio !== undefined && actMat.poleRatio !== null && !isNaN(Number(actMat.poleRatio)) && Number(actMat.poleRatio) > 0 ? Number(actMat.poleRatio) : null;
+                    const amDiv = actMat && actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0 ? Number(actMat.poleRatioDivisor) : null;
+
+                    if (smRatio && smRatio !== 1) return smRatio;
+                    if (smDiv && smDiv !== 1) return 1 / smDiv;
+                    if (amRatio && amRatio !== 1) return amRatio;
+                    if (amDiv && amDiv !== 1) return 1 / amDiv;
+
+                    actMat.poleRatio = 0.5;
+                    actMat.poleRatioDivisor = 2;
+                    actMat.poleRatioMode = 'divisor';
+                    return 0.5;
+                }
+
                 if (smMat && smMat.poleRatio !== undefined && smMat.poleRatio !== null && !isNaN(Number(smMat.poleRatio)) && Number(smMat.poleRatio) > 0) {
                     return Number(smMat.poleRatio);
                 }
@@ -895,12 +918,6 @@ window.PoleScheduleModule = {
                 }
                 if (actMat && actMat.poleRatioDivisor && Number(actMat.poleRatioDivisor) > 0) {
                     return 1 / Number(actMat.poleRatioDivisor);
-                }
-                if (actMat && actMat.unit && actMat.unit.toLowerCase().includes('set') && smMat && smMat.unit && smMat.unit.toLowerCase().includes('no') && smMat.desc && smMat.desc.toLowerCase().includes('cut point')) {
-                    actMat.poleRatio = 0.5;
-                    actMat.poleRatioDivisor = 2;
-                    actMat.poleRatioMode = 'divisor';
-                    return 0.5;
                 }
                 return 1;
             };
@@ -948,7 +965,10 @@ window.PoleScheduleModule = {
                             const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && expandSapCodes(oAm.itemCode).some(code => amCodes.has(code)));
                             if (duplicateAmCode) {
                                 const isTopCleatSynonym = /\btop\s*(?:cleat|fitting)\b/i.test(amDesc) && /\btop\s*(?:cleat|fitting)\b/i.test(smDesc);
-                                if (isTopCleatSynonym || (amDesc && smDesc && (amDesc === smDesc || amDesc.includes(smDesc) || smDesc.includes(amDesc)))) {
+                                const isCutPointSynonym = /\b(cut\s*point|spcp)\b/i.test(amDesc) && /\b(cut\s*point|spcp)\b/i.test(smDesc);
+                                const cleanAm = amDesc.replace(/[^a-z0-9]/g, '');
+                                const cleanSm = smDesc.replace(/[^a-z0-9]/g, '');
+                                if (isTopCleatSynonym || isCutPointSynonym || (cleanAm && cleanSm && (cleanAm === cleanSm || cleanAm.includes(cleanSm) || cleanSm.includes(cleanAm)))) {
                                     isMatch = true;
                                 }
                             } else {
@@ -1046,6 +1066,11 @@ window.PoleScheduleModule = {
         if (item.poleRatioDivisor && Number(item.poleRatioDivisor) > 0) {
             return 1 / Number(item.poleRatioDivisor);
         }
+        const d = (String(item.desc || '') + ' ' + String(item.sapDescription || '')).toLowerCase();
+        const u = String(item.unit || '').toLowerCase();
+        if (/\bcut\s*point\b/i.test(d) || (u.includes('set') && /\bspcp\b/i.test(d))) {
+            return 0.5;
+        }
         return 1;
     },
 
@@ -1056,6 +1081,11 @@ window.PoleScheduleModule = {
         }
         if (item.poleRatio && Number(item.poleRatio) > 0 && Number(item.poleRatio) !== 1) {
             return Math.round((1 / Number(item.poleRatio)) * 1000) / 1000;
+        }
+        const d = (String(item.desc || '') + ' ' + String(item.sapDescription || '')).toLowerCase();
+        const u = String(item.unit || '').toLowerCase();
+        if (/\bcut\s*point\b/i.test(d) || (u.includes('set') && /\bspcp\b/i.test(d))) {
+            return 2;
         }
         return 1;
     },

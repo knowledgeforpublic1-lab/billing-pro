@@ -1943,6 +1943,87 @@ it('Contractor SAP Stock: Detects unissued codes for red alert & supports Bill R
     assert.strictEqual(bill.billNo, 'AE/RA/01');
 });
 
+it('Pole Schedule Cut Point & SPCP Auto-Sync: Entries in Cut Point or SPCP sync to Activity at exact half quantity (0.5 ratio)', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    // 1. Test Schedule 907 -> Activity 907 Cut Point Set
+    const mockApp907 = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Loc 1' }] },
+        activityLocations: { '907': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [new Array(25).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    const act907CutPointIdx = mockApp907.activities['907'].materials.findIndex(m => /\bcut\s*point\b/i.test(m.desc));
+    assert.ok(act907CutPointIdx !== -1, 'Activity 907 must have Cut Point material');
+    
+    // PS 907 idx 11 is Cut Point Set (code 17005042)
+    mockApp907.setPoleScheduleCellQty(0, 11, 4);
+    assert.strictEqual(mockApp907.activityQuantities['907'][0][act907CutPointIdx], 2, 'Entry of 4 in PS 907 Cut Point must sync as half quantity (2) in Activity 907');
+
+    // 2. Test Schedule 924 -> Activity 924 M.S. Cut Point Channel
+    const mockApp924 = {
+        selectedPoleScheduleKey: '924',
+        selectedActivityKey: '924',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '924': [{ name: 'Loc 1' }] },
+        activityLocations: { '924': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '924': { 0: {} } },
+        activityQuantities: { '924': [new Array(15).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    const act924CutPointIdx = mockApp924.activities['924'].materials.findIndex(m => /\bcut\s*point\b/i.test(m.desc));
+    assert.ok(act924CutPointIdx !== -1, 'Activity 924 must have Cut Point material');
+
+    // PS 924 idx 18 is SPCP Channel Set (code 17005042)
+    mockApp924.setPoleScheduleCellQty(0, 18, 6);
+    assert.strictEqual(mockApp924.activityQuantities['924'][0][act924CutPointIdx], 3, 'Entry of 6 in PS 924 SPCP Channel Set must sync as half quantity (3) in Activity 924');
+
+    // 3. Test Schedule 934A -> Activity 934A Cut Point Set
+    const mockApp934A = {
+        selectedPoleScheduleKey: '934A',
+        selectedActivityKey: '934A',
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '934A': [{ name: 'Loc 1' }] },
+        activityLocations: { '934A': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '934A': { 0: {} } },
+        activityQuantities: { '934A': [new Array(15).fill('')] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    const act934ACutPointIdx = mockApp934A.activities['934A'].materials.findIndex(m => /\bcut\s*point\b/i.test(m.desc));
+    assert.ok(act934ACutPointIdx !== -1, 'Activity 934A must have Cut Point material');
+
+    // PS 934A idx 18 is SPCP Channel Set (code 17005042)
+    mockApp934A.setPoleScheduleCellQty(0, 18, 8);
+    assert.strictEqual(mockApp934A.activityQuantities['934A'][0][act934ACutPointIdx], 4, 'Entry of 8 in PS 934A SPCP Channel Set must sync as half quantity (4) in Activity 934A');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
