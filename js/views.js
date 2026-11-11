@@ -672,12 +672,23 @@ window.ViewsModule = {
         this.concretePoleData.forEach(item => item.poles = '');
         this.concreteMuffingData.forEach(item => item.qty = '');
     },
-    openSapItemManager(item, origIndex) {
+    openSapItemManager(item, origIndex, contextType, contextKey) {
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first to change SAP codes.', 'Lock');
             return;
         }
         this.activeSapManagerOrigIndex = origIndex !== undefined ? origIndex : (item.origIndex !== undefined ? item.origIndex : -1);
+        if (contextType) {
+            this.activeSapManagerContextType = contextType;
+        } else if (this.currentView === 'poleSchedule') {
+            this.activeSapManagerContextType = 'poleSchedule';
+        } else if (this.currentView === 'detail') {
+            this.activeSapManagerContextType = 'activity';
+        } else {
+            const isPole = this.currentPoleScheduleMaterials && this.currentPoleScheduleMaterials.some(m => m === item || (m.origIndex === origIndex && m.desc === item.desc));
+            this.activeSapManagerContextType = isPole ? 'poleSchedule' : 'activity';
+        }
+        this.activeSapManagerContextKey = contextKey || (this.activeSapManagerContextType === 'poleSchedule' ? (this.selectedPoleScheduleKey || '907') : (this.selectedActivityKey || '907'));
         
         // Ensure valid sapItems array
         if (!item.sapItems || !Array.isArray(item.sapItems)) {
@@ -816,16 +827,16 @@ window.ViewsModule = {
             this.activeSapManagerItem.sapUom = items[0].uom || this.activeSapManagerItem.unit;
         }
         
-        // Update current pole schedule if in pole schedule view
-        if (this.currentView === 'poleSchedule' || this.selectedPoleScheduleKey) {
-            const k = this.selectedPoleScheduleKey || '907';
+        const isPole = this.activeSapManagerContextType === 'poleSchedule';
+        if (isPole) {
+            const k = this.activeSapManagerContextKey || this.selectedPoleScheduleKey || '907';
             if (!this.poleSchedules) this.poleSchedules = {};
             if (!this.poleSchedules[k]) {
                 const s = typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : (typeof defaultPoleSchedules !== 'undefined' ? defaultPoleSchedules[k] : {});
                 this.poleSchedules[k] = JSON.parse(JSON.stringify(s || { title: `Pole Schedule ${k}`, materials: [] }));
             }
             const curSched = this.poleSchedules[k];
-            if (curSched && curSched.materials && this.activeSapManagerOrigIndex >= 0) {
+            if (curSched && Array.isArray(curSched.materials) && this.activeSapManagerOrigIndex >= 0) {
                 const targetMat = curSched.materials[this.activeSapManagerOrigIndex];
                 if (targetMat) {
                     targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
@@ -839,17 +850,23 @@ window.ViewsModule = {
             if (typeof this.persistPoleSchedulesToMasterFile === "function") {
                 this.persistPoleSchedulesToMasterFile(true);
             }
-        }
-
-        // Update current activity if in activity billing view
-        if (this.currentActivity && this.currentActivity.materials && this.activeSapManagerOrigIndex >= 0 && this.currentView !== 'poleSchedule') {
-            const targetMat = this.currentActivity.materials[this.activeSapManagerOrigIndex];
-            if (targetMat) {
-                targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
-                targetMat.itemCode = this.activeSapManagerItem.itemCode;
-                targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
-                targetMat.sapUom = this.activeSapManagerItem.sapUom;
-                if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
+        } else {
+            // Activity context
+            const k = this.activeSapManagerContextKey || this.selectedActivityKey || '907';
+            const curAct = (this.activities && this.activities[k]) || this.currentActivity;
+            if (curAct && Array.isArray(curAct.materials) && this.activeSapManagerOrigIndex >= 0) {
+                const targetMat = curAct.materials[this.activeSapManagerOrigIndex];
+                if (targetMat) {
+                    targetMat.sapItems = JSON.parse(JSON.stringify(this.activeSapManagerItem.sapItems));
+                    targetMat.itemCode = this.activeSapManagerItem.itemCode;
+                    targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
+                    targetMat.sapUom = this.activeSapManagerItem.sapUom;
+                    if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
+                }
+            }
+            this.activities = { ...this.activities };
+            if (typeof this.scheduleMappingSync === 'function') {
+                this.scheduleMappingSync();
             }
         }
         

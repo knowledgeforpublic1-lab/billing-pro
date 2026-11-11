@@ -496,7 +496,7 @@
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
-                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" :title="getPoleScheduleItemStockTooltip(item) || 'Click to manage single or multiple SAP items'">
+                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex, 'activity', selectedActivityKey)" :title="getPoleScheduleItemStockTooltip(item) || 'Click to manage single or multiple SAP items'">
                                         <!-- Multiple SAP items -->
                                         <div v-if="item.sapItems && item.sapItems.length > 1" class="sap-badge-group">
                                             <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge"
@@ -586,7 +586,7 @@
                                             SAP: {{ item.sapDescription }} (Doc: {{ item.docHeader || 'N/A' }})
                                         </div>
                                     </td>
-                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex)" title="Click to manage single or multiple SAP items">
+                                    <td class="text-center font-mono sap-cell" @click="openSapItemManager(item, item.origIndex, 'activity', selectedActivityKey)" title="Click to manage single or multiple SAP items">
                                         <div v-if="item.sapItems && item.sapItems.length > 1" class="sap-badge-group">
                                             <span v-for="(s, sIdx) in item.sapItems.slice(0, 2)" :key="sIdx" class="sap-code-badge">
                                                 {{ s.code }}
@@ -758,11 +758,11 @@
                                                     :class="{ 'badge-sap-not-issued': isPoleScheduleItemUnissued(item) }"
                                                     :title="getPoleScheduleItemStockTooltip(item)"
                                                     style="cursor: pointer;"
-                                                    @click="openSapItemManager(item, item.origIndex)">
+                                                    @click="openSapItemManager(item, item.origIndex, 'poleSchedule', selectedPoleScheduleKey)">
                                                     {{ item.itemCode }}
                                                     <span v-if="isPoleScheduleItemUnissued(item)" style="margin-left: 3px; font-size: 0.72rem;">⚠️</span>
                                                 </span>
-                                                <span v-else class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); font-size: 0.72rem; cursor: pointer; padding: 2px 6px;" title="Click to map SAP code" @click="openSapItemManager(item, item.origIndex)">
+                                                <span v-else class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); font-size: 0.72rem; cursor: pointer; padding: 2px 6px;" title="Click to map SAP code" @click="openSapItemManager(item, item.origIndex, 'poleSchedule', selectedPoleScheduleKey)">
                                                     + Map
                                                 </span>
                                             </td>
