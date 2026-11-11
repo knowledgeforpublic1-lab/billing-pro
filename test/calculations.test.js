@@ -1595,6 +1595,9 @@ it('Auto-Concreting & Auger Size: Calculates Pole Pad + Stay Concreting automati
         selectedActivityKey: '907',
         selectedAugerSize: 22,
         poleScheduleAutoConcreting: true,
+        psAutoPole: true,
+        psAutoStay: true,
+        psAutoMuffing: false,
         stayConcretingUnitVol: 0.125,
         poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
         activities: JSON.parse(JSON.stringify(defaultActivities)),
@@ -1774,6 +1777,106 @@ it('Repeating Pole Schedule Items: Sums multiple occurrences (e.g. Top Cleat in 
     // Clearing both makes activity cell blank
     mockApp.setPoleScheduleCellQty(0, 10, '');
     assert.strictEqual(mockApp.activityQuantities['907'][0][actMatIdx], '', 'Activity Billing must be blank when all matching rows are cleared');
+});
+
+// 34. Pole Schedule Muffing Concrete Calculation
+it('Pole Schedule Muffing Calculation: Dynamic muffing volume calculation, size selection, toggle, and Schedule 907/924 separation', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const psModule = require('../js/pole-schedule.js');
+
+    const mockApp = {
+        selectedPoleScheduleKey: '907',
+        selectedActivityKey: '907',
+        selectedAugerSize: 22,
+        poleScheduleAutoConcreting: true,
+        psAutoPole: true,
+        psAutoStay: true,
+        psAutoMuffing: true,
+        psMuffingSize: 'auto',
+        stayConcretingUnitVol: 0.125,
+        poleSchedules: JSON.parse(JSON.stringify(defaultPoleSchedules)),
+        activities: JSON.parse(JSON.stringify(defaultActivities)),
+        poleScheduleLocations: { '907': [{ name: 'Loc 1' }] },
+        activityLocations: { '907': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '907': { 0: {} } },
+        activityQuantities: { '907': [[]] },
+        isFinalized: false,
+        recoRevision: 0,
+        showToast() {},
+        saveToStorage() {},
+        debouncedSave() {},
+        ...psModule
+    };
+
+    // --- Part 1: Schedule 907 (single Concreting row, muffing included directly) ---
+    // 5 poles (idx 2, 11m RSJ, h=1.83m) and 2 stays (idx 39)
+    // Foundation depth = 1.83m >= 1.5m -> Auto muffing unitVol = 0.048 m3 (400x400)
+    mockApp.setPoleScheduleCellQty(0, 2, 5);
+    mockApp.setPoleScheduleCellQty(0, 39, 2);
+
+    // Pole pad: 5 * PI * 0.2794^2 * 1.83 = 2.244 m3
+    // Stay: 2 * 0.125 = 0.250 m3
+    // Muffing: 5 * 0.048 = 0.240 m3
+    // Total Concreting = 2.244 + 0.250 + 0.240 = 2.734 m3
+    const loc1ConcreteAuto = mockApp.getPoleScheduleCellQty(0, 44);
+    assert.strictEqual(loc1ConcreteAuto, 2.734, 'Concreting with Auto Muffing (400x400) must be 2.734 m3');
+
+    // Change muffing size to 300x300 (0.027 m3)
+    // Muffing: 5 * 0.027 = 0.135 m3 -> Total = 2.244 + 0.250 + 0.135 = 2.629 m3
+    mockApp.psMuffingSize = '300';
+    mockApp.recalculatePoleScheduleConcreting('907', true);
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, 44), 2.629, 'Concreting with 300x300 Muffing must be 2.629 m3');
+
+    // Change muffing size to 450x450 (0.091 m3)
+    // Muffing: 5 * 0.091 = 0.455 m3 -> Total = 2.244 + 0.250 + 0.455 = 2.949 m3
+    mockApp.psMuffingSize = '450';
+    mockApp.recalculatePoleScheduleConcreting('907', true);
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, 44), 2.949, 'Concreting with 450x450 Muffing must be 2.949 m3');
+
+    // Toggle Muffing OFF
+    // Total Concreting drops to pole + stay = 2.244 + 0.250 = 2.494 m3
+    mockApp.psAutoMuffing = false;
+    mockApp.recalculatePoleScheduleConcreting('907', true);
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, 44), 2.494, 'Concreting with Muffing OFF must drop to 2.494 m3');
+
+    // Toggle ONLY Muffing ON (Pole=false, Stay=false)
+    mockApp.psAutoPole = false;
+    mockApp.psAutoStay = false;
+    mockApp.psAutoMuffing = true;
+    mockApp.psMuffingSize = '400';
+    mockApp.recalculatePoleScheduleConcreting('907', true);
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, 44), 0.24, 'Only Muffing ON must compute pure muffing volume (0.240 m3)');
+
+    // --- Part 2: Schedule 924 (Dedicated Muffing row) ---
+    mockApp.selectedPoleScheduleKey = '924';
+    mockApp.poleScheduleLocations['924'] = [{ name: 'Loc 1' }];
+    mockApp.poleScheduleQuantities['924'] = { 0: {} };
+    mockApp.psAutoPole = true;
+    mockApp.psAutoStay = true;
+    mockApp.psAutoMuffing = true;
+    mockApp.psMuffingSize = 'auto';
+
+    // 924: Item 2 = RSJ 9m (h=1.5m), Item 26 = Stay set, Item 33 = Concreting, Item 34 = Muffing
+    // Set 10 poles (item 2), 4 stays (item 26)
+    mockApp.setPoleScheduleCellQty(0, 2, 10);
+    mockApp.setPoleScheduleCellQty(0, 26, 4);
+
+    // Pole pad: 10 * PI * 0.2794^2 * 1.5 = 3.679 m3
+    // Stay: 4 * 0.125 = 0.500 m3 -> Concreting row = 4.179 m3
+    // Muffing: 10 * 0.048 = 0.480 m3 -> Muffing row = 0.480 m3
+    const concIdx924 = mockApp.poleSchedules['924'].materials.findIndex(m => mockApp.isPoleScheduleConcreteItem(m));
+    const muffIdx924 = mockApp.poleSchedules['924'].materials.findIndex(m => mockApp.isPoleScheduleMuffingItem(m));
+    const conc924 = mockApp.getPoleScheduleCellQty(0, concIdx924);
+    const muff924 = mockApp.getPoleScheduleCellQty(0, muffIdx924);
+    assert.strictEqual(conc924, 4.179, 'Schedule 924 general Concreting row must be 4.179 m3 (pole + stay)');
+    assert.strictEqual(muff924, 0.48, 'Schedule 924 dedicated Muffing row must be 0.480 m3');
+
+    // Toggle Muffing OFF in Schedule 924
+    mockApp.psAutoMuffing = false;
+    mockApp.recalculatePoleScheduleConcreting('924', true);
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, concIdx924), 4.179, 'General Concreting row stays intact');
+    assert.strictEqual(mockApp.getPoleScheduleCellQty(0, muffIdx924), '', 'Dedicated Muffing row must be blank when Muffing is toggled OFF');
 });
 
 (async () => {

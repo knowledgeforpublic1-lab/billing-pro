@@ -1257,6 +1257,10 @@ window.PoleScheduleModule = {
     isPoleScheduleConcreteItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
         const d = String(item.desc || '').toLowerCase();
+        // Separate Muffing item is NOT the general concrete item
+        if (d.includes('muffing') && !d.includes('ration') && !d.includes('ratio')) return false;
+        // Separate Stay item is NOT the general concrete item
+        if (d === 'stay' && item.itemCode === '11000336') return false;
         if (item.itemCode === '11000336') return true;
         if (d.includes('concreting') || d.includes('cement concrete') || d.includes('concrete ratio') || d.includes('concreting ration')) {
             return true;
@@ -1288,9 +1292,16 @@ window.PoleScheduleModule = {
         // Auto: pole height aur schedule type ke hisab se
         const schedTitle = String((sched && sched.title) || '').toLowerCase();
         if (/\bdtc\b|\btransformer\b|\bdp\b/.test(schedTitle)) return 0.091; // 450x450
-        const poleItem = (sched && Array.isArray(sched.materials)) ? sched.materials.find(m => this.isPoleSchedulePoleItem(m)) : null;
-        const h = poleItem && typeof this.getPoleFoundationDepth === 'function' ? Number(this.getPoleFoundationDepth(poleItem.desc)) : 0;
-        return (h >= 1.5) ? 0.048 : 0.027; // 400x400 for >=9m pole, baaki 300x300
+        let maxH = 0;
+        if (sched && Array.isArray(sched.materials)) {
+            sched.materials.forEach(m => {
+                if (this.isPoleSchedulePoleItem(m) && typeof this.getPoleFoundationDepth === 'function') {
+                    const depth = Number(this.getPoleFoundationDepth(m.desc)) || 0;
+                    if (depth > maxH) maxH = depth;
+                }
+            });
+        }
+        return (maxH >= 1.5) ? 0.048 : 0.027; // 400x400 for >=9m pole, baaki 300x300
     },
 
     poleScheduleNutBoltUnitWeight(item) {
@@ -1369,7 +1380,10 @@ window.PoleScheduleModule = {
 
         // 🧱 Muffing — checkbox selected hone pe hi count hota hai (har pole pe 1, user-selected size ya auto)
         const totalMuff = wantMuff ? totalPoles * muffUnitVol : 0;
-        const totalVol = Math.round((poleVol + stayVol) * 1000) / 1000;
+        const hasSeparateMuff = sched.materials.some(m => this.isPoleScheduleMuffingItem(m));
+        // Agar schedule me alag Muffing row nahi hai (e.g. 907), to Concreting row me hi totalMuff judegi
+        const combinedVol = (wantPole ? poleVol : 0) + (wantStay ? stayVol : 0) + (!hasSeparateMuff ? totalMuff : 0);
+        const totalVol = Math.round(combinedVol * 1000) / 1000;
         return {
             totalPoles,
             poleVol: Math.round(poleVol * 1000) / 1000,
@@ -1378,6 +1392,7 @@ window.PoleScheduleModule = {
             totalMuff: Math.round(totalMuff * 1000) / 1000,
             muffUnitVol,
             muffOn: wantMuff,
+            hasSeparateMuff,
             totalVol,
             augerSize,
             r
@@ -1385,24 +1400,33 @@ window.PoleScheduleModule = {
     },
 
     recalculatePoleScheduleLocationConcreting(key, lIdx) {
-        if (this.psAutoPole === false && this.psAutoStay === false && this.psAutoMuffing === false) return;
+        const wantPole = this.psAutoPole !== false;
+        const wantStay = this.psAutoStay !== false;
+        const wantMuff = this.psAutoMuffing !== false;
+        if (!wantPole && !wantStay && !wantMuff) return;
+
         const k = key || this.selectedPoleScheduleKey || '907';
         const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
         if (!sched || !Array.isArray(sched.materials)) return;
 
         const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
-        if (concreteIdx === -1 && (this.psAutoPole === false && this.psAutoStay === false)) return;
+        const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
+        if (concreteIdx === -1 && muffIdx === -1) return;
 
         this.ensurePoleScheduleQuantities(k);
         const res = this.calculateLocationConcreting(k, lIdx);
+
         if (concreteIdx !== -1) {
-            this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+            const shouldFillConcrete = (wantPole || wantStay || (wantMuff && muffIdx === -1));
+            this.poleScheduleQuantities[k][lIdx][concreteIdx] = (shouldFillConcrete && res.totalVol > 0) ? res.totalVol : '';
         }
+
         // 🧱 Muffing row auto-fill (sirf Muffing checkbox checked tab)
-        if (this.psAutoMuffing !== false) {
-            const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
-            if (muffIdx !== -1 && res.totalMuff > 0) {
+        if (muffIdx !== -1) {
+            if (wantMuff && res.totalMuff > 0) {
                 this.poleScheduleQuantities[k][lIdx][muffIdx] = Math.round(res.totalMuff * 1000) / 1000;
+            } else if (!wantMuff) {
+                this.poleScheduleQuantities[k][lIdx][muffIdx] = '';
             }
         }
     },
@@ -1413,8 +1437,14 @@ window.PoleScheduleModule = {
         if (!sched || !Array.isArray(sched.materials)) return;
 
         const concreteIdx = sched.materials.findIndex(m => this.isPoleScheduleConcreteItem(m));
-        if (concreteIdx === -1 && (this.psAutoPole !== false || this.psAutoStay !== false)) {
-            if (force) this.showToast('Schedule ' + k + ' me koi Concreting line item nahi mila', 'ℹ️');
+        const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
+
+        const wantPole = this.psAutoPole !== false;
+        const wantStay = this.psAutoStay !== false;
+        const wantMuff = this.psAutoMuffing !== false;
+
+        if (concreteIdx === -1 && muffIdx === -1) {
+            if (force) this.showToast('Schedule ' + k + ' me koi Concreting ya Muffing line item nahi mila', 'ℹ️');
             return;
         }
 
@@ -1423,22 +1453,26 @@ window.PoleScheduleModule = {
 
         let grandVol = 0;
         let grandMuffVol = 0;
-        const wantPole = this.psAutoPole !== false;
-        const wantStay = this.psAutoStay !== false;
-        const wantMuff = this.psAutoMuffing !== false;
+        const shouldFillConcrete = (wantPole || wantStay || (wantMuff && muffIdx === -1));
+
         locs.forEach((_, lIdx) => {
             const res = this.calculateLocationConcreting(k, lIdx);
-            if (concreteIdx !== -1 && (res.totalVol > 0 || force) && (wantPole || wantStay)) {
-                this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+            if (concreteIdx !== -1) {
+                if (shouldFillConcrete && (res.totalVol > 0 || force)) {
+                    this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
+                } else if (!shouldFillConcrete) {
+                    this.poleScheduleQuantities[k][lIdx][concreteIdx] = '';
+                }
             }
             grandVol += res.totalVol;
             grandMuffVol += res.totalMuff || 0;
 
-            // 🧱 Muffing row auto-fill — sirf tab jab Muffing checkbox checked ho
-            if (wantMuff) {
-                const muffIdx = sched.materials.findIndex(m => this.isPoleScheduleMuffingItem(m));
-                if (muffIdx !== -1 && (res.totalMuff > 0 || (force && res.totalPoles > 0))) {
+            // 🧱 Separate Muffing row auto-fill
+            if (muffIdx !== -1) {
+                if (wantMuff && (res.totalMuff > 0 || (force && res.totalPoles > 0))) {
                     this.poleScheduleQuantities[k][lIdx][muffIdx] = res.totalMuff > 0 ? Math.round(res.totalMuff * 1000) / 1000 : '';
+                } else if (!wantMuff) {
+                    this.poleScheduleQuantities[k][lIdx][muffIdx] = '';
                 }
             }
         });
