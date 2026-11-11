@@ -98,13 +98,7 @@
                 window.DefaultContractorSapStock = window.ContractorSapStock;
             }
             if (window.__customSapStock) {
-                const defTime = window.ContractorSapStock && window.ContractorSapStock.meta && window.ContractorSapStock.meta.generatedAt ? new Date(window.ContractorSapStock.meta.generatedAt).getTime() : 0;
-                const custTime = window.__customSapStock.meta && window.__customSapStock.meta.uploadedAt ? new Date(window.__customSapStock.meta.uploadedAt).getTime() : 0;
-                if (!defTime || !custTime || custTime >= defTime) {
-                    window.ContractorSapStock = window.__customSapStock;
-                } else {
-                    console.log('[LazyLoad] Generated stock is newer than custom stock; keeping updated built-in stock.');
-                }
+                window.ContractorSapStock = window.__customSapStock;
                 if (!window.DefaultContractorSapStock) window.DefaultContractorSapStock = { byContractorNorm: {} };
             }
             if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
@@ -1938,21 +1932,12 @@
                     if (customStockJson) {
                         const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
                         if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
-                            const defTime = window.ContractorSapStock && window.ContractorSapStock.meta && window.ContractorSapStock.meta.generatedAt ? new Date(window.ContractorSapStock.meta.generatedAt).getTime() : 0;
-                            const custTime = customStock.meta && customStock.meta.uploadedAt ? new Date(customStock.meta.uploadedAt).getTime() : 0;
-                            if (defTime && custTime && defTime > custTime) {
-                                console.log('[StockImporter] Built-in stock is newer than stored custom stock. Using updated built-in stock.');
-                                await BillingStorage.removeItem('billing_custom_sap_stock');
-                                this.hasCustomStock = false;
-                                this.customStockMeta = null;
-                            } else {
-                                window.ContractorSapStock = customStock;
-                                window.__customSapStock = customStock;
-                                this.hasCustomStock = true;
-                                this.customStockMeta = customStock.meta;
-                                this.recoRevision = (this.recoRevision || 0) + 1;
-                                console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
-                            }
+                            window.ContractorSapStock = customStock;
+                            window.__customSapStock = customStock;
+                            this.hasCustomStock = true;
+                            this.customStockMeta = customStock.meta;
+                            this.recoRevision = (this.recoRevision || 0) + 1;
+                            console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
                         }
                     }
                 }
