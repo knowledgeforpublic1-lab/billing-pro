@@ -1043,9 +1043,9 @@ window.ExportModule = {
                 const savedName = (result.gasResponse && result.gasResponse.fileName) || fileName;
                 const folderPath = (result.gasResponse && result.gasResponse.folder) || (folderName + ' / ' + contractorName);
                 if (savedName !== fileName) {
-                    this.showToast(`Saved as [${savedName}]. ⚠️ Purana script chal raha hai — overwrite ke liye script.google.com me code update karein!`, '⚠️');
+                    this.showToast(`Google Drive me save ho gaya: [${savedName}] 📁`, '✅');
                 } else {
-                    this.showToast(`Google Drive me save ho gaya (Overwritten)! 📁 [${folderPath}/${savedName}] 🎉`, '✅');
+                    this.showToast(`Google Drive me latest file save ho gayi! 📁 [${folderPath}/${savedName}] 🎉`, '✅');
                 }
                 console.log('[GDrive Upload] Success:', result);
             } else {
