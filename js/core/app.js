@@ -240,25 +240,6 @@
                         Object.keys(defaultPoleSchedules).forEach(k => {
                             if (!base[k] || !Array.isArray(base[k].materials) || base[k].materials.length === 0) {
                                 base[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
-                            } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
-                                while (base[k].materials.length < defaultPoleSchedules[k].materials.length) {
-                                    const nextIdx = base[k].materials.length;
-                                    base[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
-                                }
-                                defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
-                                    const cur = base[k].materials[mIdx];
-                                    if (cur) {
-                                        if (!cur.itemCode && defMat.itemCode) {
-                                            cur.itemCode = defMat.itemCode;
-                                            cur.sapDescription = defMat.sapDescription;
-                                            cur.sapUom = defMat.sapUom;
-                                            cur.docHeader = defMat.docHeader;
-                                        }
-                                        if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
-                                            cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                        }
-                                    }
-                                });
                             }
                         });
                     }
@@ -2025,28 +2006,6 @@
             }
 
             // Old migration patches permanently disabled to preserve user mappings
-            // PATCH: Remove 10 excluded SAP items — dono legacy if(false) blocks hata diye gaye (dead code)
-
-            // PATCH: Replace Activity 1220 Pole Schedule with user's exact specification from image
-            if (!localStorage.getItem('patch_1220_exact_spec_v2')) {
-                try {
-                    if (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules['1220']) {
-                        if (!this.poleSchedules) this.poleSchedules = {};
-                        this.poleSchedules['1220'] = JSON.parse(JSON.stringify(defaultPoleSchedules['1220']));
-                        try {
-                            localStorage.setItem('lk_billing_pole_schedules_v1', JSON.stringify(this.poleSchedules));
-                        } catch(e) {}
-                        if (typeof this.persistPoleSchedulesToMasterFile === 'function') {
-                            this.persistPoleSchedulesToMasterFile(true);
-                        }
-                        this._isLoading = false;
-                        this.saveToStorage();
-                    }
-                    localStorage.setItem('patch_1220_exact_spec_v2', 'true');
-                } catch(e) {
-                    console.warn('patch_1220_exact_spec_v2 error:', e);
-                }
-            }
 
             // Standardize all activity titles and existing invoice items to "Activity [code] : ..."
             let actTitlesFixed = false;
@@ -2117,65 +2076,24 @@
                     const actJson = await actRes.json();
                     if (actJson && actJson.success && actJson.activities && Object.keys(actJson.activities).length > 0) {
                         window.defaultActivities = actJson.activities;
-                        let healed = false;
+                        // Never overwrite user mappings or user-added rows from master
+                        if (!this.activities || typeof this.activities !== 'object') this.activities = {};
                         Object.keys(actJson.activities).forEach(k => {
-                            const def = actJson.activities[k];
-                            if (!def || !Array.isArray(def.materials)) return;
                             if (!this.activities[k] || !Array.isArray(this.activities[k].materials) || this.activities[k].materials.length === 0) {
-                                this.activities[k] = JSON.parse(JSON.stringify(def));
-                                healed = true;
-                                return;
+                                this.activities[k] = JSON.parse(JSON.stringify(actJson.activities[k]));
                             }
-                            while (this.activities[k].materials.length < def.materials.length) {
-                                const idx = this.activities[k].materials.length;
-                                this.activities[k].materials.push(JSON.parse(JSON.stringify(def.materials[idx])));
-                                healed = true;
-                            }
-                            def.materials.forEach((defMat, mIdx) => {
-                                const cur = this.activities[k].materials[mIdx];
-                                if (cur && defMat) {
-                                    if (!cur.itemCode && defMat.itemCode) { cur.itemCode = defMat.itemCode; healed = true; }
-                                    if (!cur.sapDescription && defMat.sapDescription) { cur.sapDescription = defMat.sapDescription; healed = true; }
-                                    if (!cur.sapUom && defMat.sapUom) { cur.sapUom = defMat.sapUom; healed = true; }
-                                    if (!cur.docHeader && defMat.docHeader) { cur.docHeader = defMat.docHeader; healed = true; }
-                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
-                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                        healed = true;
-                                    }
-                                }
-                            });
                         });
-                        if (healed) { this._isLoading = false; this.saveToStorage(); }
                     }
                 }
             } catch(actFetchErr) {}
 
-            // Auto-heal poleSchedules from defaultPoleSchedules
+            // Ensure poleSchedules exists for all keys without overwriting user data
             try {
                 if (typeof defaultPoleSchedules !== 'undefined') {
                     if (!this.poleSchedules || typeof this.poleSchedules !== 'object') this.poleSchedules = {};
                     Object.keys(defaultPoleSchedules).forEach(k => {
                         if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
                             this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
-                        } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
-                            while (this.poleSchedules[k].materials.length < defaultPoleSchedules[k].materials.length) {
-                                const nextIdx = this.poleSchedules[k].materials.length;
-                                this.poleSchedules[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
-                            }
-                            defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
-                                const cur = this.poleSchedules[k].materials[mIdx];
-                                if (cur) {
-                                    if (!cur.itemCode && defMat.itemCode) {
-                                        cur.itemCode = defMat.itemCode;
-                                        cur.sapDescription = defMat.sapDescription;
-                                        cur.sapUom = defMat.sapUom;
-                                        cur.docHeader = defMat.docHeader;
-                                    }
-                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems) {
-                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                    }
-                                }
-                            });
                         }
                     });
                 }
@@ -2257,39 +2175,22 @@
             // Net wapas aaye to pending sync turant push ho jaye
             this.armOnlineRecovery();
 
-            // Periodic heartbeat sync — check cloud updates first, then push local changes
+            // Periodic heartbeat sync — push any unsaved local changes to MongoDB in real time
             this._heartbeatTimer = setInterval(async () => {
-                if (this._isLoading || this.cloudConflict) return;
+                if (this._isLoading) return;
                 if (this.syncStatus === 'syncing') return;
                 try {
-                    // 1. Check if another PC saved changes to cloud, auto-pull them!
-                    if (typeof this.cloudRev === 'number') {
-                        const curBillId = this.activeBillId || 'main-billing-state';
-                        const headRes = await fetch('/api/billing?dataId=' + encodeURIComponent(curBillId), {
-                            headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
-                        });
-                        if (headRes.ok) {
-                            const headData = await headRes.json();
-                            if (headData && typeof headData.rev === 'number' && headData.rev > this.cloudRev) {
-                                console.info(`Heartbeat: newer cloud rev detected (${headData.rev} > ${this.cloudRev}), loading updates...`);
-                                await this.loadFromStorage({ forceServer: true, dataId: curBillId });
-                                try { this.showToast('Cloud updates received from another PC ☁️', 'ℹ️'); } catch(e) {}
-                                return;
-                            }
-                        }
-                    }
-                    // 2. If already up to date, check if we have local changes to push
                     const payload = this.buildSyncPayload();
                     const json = JSON.stringify(payload);
                     if (json.length <= 4 * 1024 * 1024) {
                         const hash = typeof this.stableStateHash === 'function' ? this.stableStateHash(payload) : (typeof window !== 'undefined' && window.computeFullHash ? window.computeFullHash(json) : json.length + ':' + json.slice(0, 100));
                         if (hash !== this.lastSentHash) {
-                            console.info('Heartbeat: unsynced change detected, pushing to cloud');
+                            console.info('Heartbeat: unsynced change detected, pushing to cloud in real time');
                             await this.syncToMongoNow();
                         }
                     }
                 } catch(e) {}
-            }, 15000);
+            }, 10000);
 
             // Prevent mouse scroll wheel from changing numbers in active input while keeping scrolling buttery smooth
             window.addEventListener('wheel', function (e) {

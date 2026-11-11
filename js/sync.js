@@ -1073,7 +1073,7 @@ window.SyncModule = {
     scheduleRemoteSync() {
         this._syncRetryCount = 0; // naya edit = retry budget dobara se
         if (this._syncTimer) clearTimeout(this._syncTimer);
-        this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 2500);
+        this._syncTimer = setTimeout(() => { this.syncToMongoNow(); }, 400);
     },
     scheduleMappingSync() {
         if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
@@ -1528,32 +1528,15 @@ window.SyncModule = {
                 if (parsed.activityLocations && typeof parsed.activityLocations === 'object') this.activityLocations = parsed.activityLocations;
                 if (parsed.activities && typeof parsed.activities === 'object') {
                     this.activities = parsed.activities;
-                    Object.keys(defaultActivities).forEach(k => {
-                        const defLen = (defaultActivities[k] && defaultActivities[k].materials) ? defaultActivities[k].materials.length : 0;
-                        if (!this.activities[k] || !this.activities[k].materials || this.activities[k].materials.length > defLen || (k === '922' && this.activities[k].materials.length !== 18)) {
-                            this.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
-                        } else if (defaultActivities[k] && defaultActivities[k].materials) {
-                            while (this.activities[k].materials.length < defaultActivities[k].materials.length) {
-                                const nextIdx = this.activities[k].materials.length;
-                                this.activities[k].materials.push(JSON.parse(JSON.stringify(defaultActivities[k].materials[nextIdx])));
+                    // Only initialize an activity if it is completely missing in saved state
+                    if (typeof defaultActivities !== 'undefined') {
+                        Object.keys(defaultActivities).forEach(k => {
+                            if (!this.activities[k] || !Array.isArray(this.activities[k].materials) || this.activities[k].materials.length === 0) {
+                                this.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
                             }
-                            defaultActivities[k].materials.forEach((defMat, mIdx) => {
-                                if (this.activities[k].materials && this.activities[k].materials[mIdx]) {
-                                    const cur = this.activities[k].materials[mIdx];
-                                    if ((!cur.itemCode || String(cur.itemCode).trim() === '') && defMat.itemCode) {
-                                        cur.itemCode = defMat.itemCode;
-                                        cur.sapDescription = defMat.sapDescription;
-                                        cur.sapUom = defMat.sapUom;
-                                        cur.docHeader = defMat.docHeader;
-                                    }
-                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems && defMat.sapItems.length > 0) {
-                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    // Ensure all materials (including extra items) have valid sapItems
+                        });
+                    }
+                    // Ensure all materials have valid sapItems without modifying existing mappings
                     Object.keys(this.activities).forEach(k => {
                         const act = this.activities[k];
                         if (act && act.materials) {
@@ -1574,31 +1557,12 @@ window.SyncModule = {
                 if (parsed.poleSchedules && typeof parsed.poleSchedules === 'object') {
                     this.poleSchedules = parsed.poleSchedules;
                 }
-                // Auto-heal poleSchedules from defaultPoleSchedules to ensure all 9 schedules & SAP mappings exist
+                // Only initialize a schedule if it is completely missing in saved state — never overwrite user modifications
                 if (typeof defaultPoleSchedules !== 'undefined') {
                     if (!this.poleSchedules || typeof this.poleSchedules !== 'object') this.poleSchedules = {};
                     Object.keys(defaultPoleSchedules).forEach(k => {
                         if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
                             this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
-                        } else if (defaultPoleSchedules[k] && Array.isArray(defaultPoleSchedules[k].materials)) {
-                            while (this.poleSchedules[k].materials.length < defaultPoleSchedules[k].materials.length) {
-                                const nextIdx = this.poleSchedules[k].materials.length;
-                                this.poleSchedules[k].materials.push(JSON.parse(JSON.stringify(defaultPoleSchedules[k].materials[nextIdx])));
-                            }
-                            defaultPoleSchedules[k].materials.forEach((defMat, mIdx) => {
-                                if (this.poleSchedules[k].materials && this.poleSchedules[k].materials[mIdx]) {
-                                    const cur = this.poleSchedules[k].materials[mIdx];
-                                    if ((!cur.itemCode || String(cur.itemCode).trim() === '') && defMat.itemCode) {
-                                        cur.itemCode = defMat.itemCode;
-                                        cur.sapDescription = defMat.sapDescription;
-                                        cur.sapUom = defMat.sapUom;
-                                        cur.docHeader = defMat.docHeader;
-                                    }
-                                    if ((!cur.sapItems || !cur.sapItems.length) && defMat.sapItems && defMat.sapItems.length > 0) {
-                                        cur.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                    }
-                                }
-                            });
                         }
                     });
                 }

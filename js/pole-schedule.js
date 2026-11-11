@@ -853,13 +853,7 @@ window.PoleScheduleModule = {
         const act = this.activities[k];
         if (!Array.isArray(act.materials)) act.materials = [];
 
-        // 🛡️ Ensure act.materials ONLY contains official contract items (never inject Pole Schedule items)
-        if (typeof defaultActivities !== 'undefined' && defaultActivities[k] && defaultActivities[k].materials) {
-            const defLen = defaultActivities[k].materials.length;
-            if (act.materials.length > defLen) {
-                act.materials = JSON.parse(JSON.stringify(defaultActivities[k].materials));
-            }
-        }
+        // 🛡️ Preserve all user materials and user-added rows in act.materials
 
         // 2. Synchronize quantities into this.activityQuantities[k]
         if (!this.activityQuantities) this.activityQuantities = {};
@@ -1938,6 +1932,7 @@ window.PoleScheduleModule = {
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
         if (typeof this.persistPoleSchedulesToMasterFile === "function") this.persistPoleSchedulesToMasterFile(true);
+        if (typeof this.syncToMongoNow === 'function') this.syncToMongoNow({ manual: true });
         this.showToast(`Item "${name}" removed from Pole Schedule ${k}`, '🗑️');
     },
 

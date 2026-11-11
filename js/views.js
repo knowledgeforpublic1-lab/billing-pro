@@ -640,6 +640,7 @@ window.ViewsModule = {
         this.showExtraItemSuggest = false;
         this.newMaterial = { no: '', desc: '', unit: 'No', rate: 0, codeSearch: '', sapCode: '', sapItems: [] };
         this.saveToStorage();
+        if (typeof this.syncToMongoNow === 'function') this.syncToMongoNow({ force: true });
         this.showToast('Extra item added at bottom ✨', '✅');
     },
     removeItem(itemIndex) {
@@ -654,6 +655,7 @@ window.ViewsModule = {
                 qMatrix.forEach(locArr => locArr.splice(itemIndex, 1));
             }
             this.saveToStorage();
+            if (typeof this.syncToMongoNow === 'function') this.syncToMongoNow({ force: true });
             this.showToast('Item deleted', '🗑️');
         }
     },
