@@ -2288,6 +2288,90 @@ it('Extra Items in Activity: Automatically pick up and sum quantities from Pole 
     assert.strictEqual(mockApp.activityQuantities['922'][0][extraIdx2], 10, 'Extra Top Cleat must sum up both rows (4 + 6 = 10)');
 });
 
+it('Pair Unit Conversion: Pair in Activity / Pole Schedule -> 1:1 in Activity Billing, x2 in Reconciliation Sheet', () => {
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+    const defaultActivities = require('../js/data/default-activities.js');
+    const defaultSapMaterials = require('../js/data/default-sap-materials.js');
+
+    const ps919 = JSON.parse(JSON.stringify(defaultPoleSchedules['919']));
+    const act919 = JSON.parse(JSON.stringify(defaultActivities['919']));
+
+    // PS 919:
+    // Item 12 (0-based 12): Stay Set clamp A type (Unit: Pair, SAP 17005047) -> set 5
+    // Item 13 (0-based 13): Stay Set clamp B type (Unit: Pair, SAP 17005048) -> set 3
+    const qMatrix = [new Array(50).fill('')];
+    qMatrix[0][12] = '5'; // 5 Pairs
+    qMatrix[0][13] = '3'; // 3 Pairs
+
+    const mockApp = {
+        selectedPoleScheduleKey: '919',
+        selectedActivityKey: '919',
+        poleSchedules: { '919': ps919 },
+        activities: { '919': act919 },
+        poleScheduleLocations: { '919': [{ name: 'Loc 1' }] },
+        activityLocations: { '919': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: { '919': qMatrix },
+        activityQuantities: { '919': [new Array(20).fill('')] },
+        sapMaterialsMaster: defaultSapMaterials,
+        mappingRoundMode: 'none',
+        recoRevision: 0,
+        isPoleScheduleNutBoltItem: () => false,
+        getPoleScheduleLocations: () => [{ name: 'Loc 1' }],
+        getActLocations: () => [{ name: 'Loc 1' }],
+        evalGridFormula: val => val,
+        evalFormula: val => val
+    };
+
+    // 1. Sync Pole Schedule into Activity Billing
+    global.PoleScheduleModule.syncPoleScheduleToBillingAndReconciliation.call(mockApp, '919');
+
+    // In Activity 919, Material 5 (index 4) should receive 5 + 3 = 8 (as Pairs, 1:1)
+    const act5Qty = mockApp.activityQuantities['919'][0][4];
+    assert.strictEqual(act5Qty, 8, 'Activity 919 Material 5 must receive 8 (5 + 3 = 8 Pairs, 1:1)');
+
+    // 2. Check Reconciliation Sheet calculations via pivotReconciliationData logic
+    // Using the same pivot calculation logic from app.js
+    const sapMap = {};
+    mockApp.sapMaterialsMaster.forEach(sap => {
+        sapMap[sap.code] = { code: sap.code, desc: sap.desc, uom: sap.uom, totalQty: 0, activities: {} };
+    });
+
+    const sched = mockApp.poleSchedules['919'];
+    sched.materials.forEach((m, mIdx) => {
+        if (m.isSection || m.isSpan) return;
+        let itemTotalQty = 0;
+        const raw = qMatrix[0][mIdx];
+        if (raw !== '' && raw !== null && raw !== undefined) itemTotalQty += Number(raw);
+        if (itemTotalQty <= 0) return;
+
+        let sItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : (m.itemCode ? [{ code: m.itemCode, uom: m.unit, qty: 1 }] : []);
+        sItems.forEach(s => {
+            if (!s.code) return;
+            if (!sapMap[s.code]) sapMap[s.code] = { code: s.code, desc: s.desc, uom: s.uom || 'No', totalQty: 0, activities: {} };
+            let finalQty = itemTotalQty * (s.qty || 1);
+
+            const sapUomUpper = String((sapMap[s.code] && sapMap[s.code].uom) || s.uom || m.sapUom || '').toUpperCase();
+            const isPairSource = /\b(pair|pairs|pr|prs)\b/i.test(String(m.unit || '')) || /\b(pair|pairs|pr|prs)\b/i.test(String(m.desc || ''));
+            const isPairTarget = /\b(pair|pairs|pr|prs)\b/i.test(sapUomUpper);
+            if (isPairSource && !isPairTarget) {
+                finalQty = finalQty * 2;
+            }
+
+            sapMap[s.code].totalQty += finalQty;
+            sapMap[s.code].activities['919'] = (sapMap[s.code].activities['919'] || 0) + finalQty;
+        });
+    });
+
+    // In Reconciliation:
+    // 17005047 (Stay Set clamp A type) had 5 Pairs -> must be 5 * 2 = 10 Nos
+    assert.strictEqual(sapMap['17005047'].activities['919'], 10, 'Reconciliation for Stay Set Clamp A Type must be 10 Nos (5 pairs * 2)');
+    assert.strictEqual(sapMap['17005047'].totalQty, 10, 'Total consumed for 17005047 must be 10 Nos');
+
+    // 17005048 (Stay Set clamp B type) had 3 Pairs -> must be 3 * 2 = 6 Nos
+    assert.strictEqual(sapMap['17005048'].activities['919'], 6, 'Reconciliation for Stay Set Clamp B Type must be 6 Nos (3 pairs * 2)');
+    assert.strictEqual(sapMap['17005048'].totalQty, 6, 'Total consumed for 17005048 must be 6 Nos');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

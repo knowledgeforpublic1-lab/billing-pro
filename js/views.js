@@ -255,7 +255,17 @@ window.ViewsModule = {
                 if (factor === 0) return;
                 const raw = locArr[mIdx];
                 const v = (raw === '' || raw === null || raw === undefined) ? 0 : parseFloat(raw);
-                if (!isNaN(v)) total += _conv ? (v * factor / _conv) : (v * factor);
+                if (!isNaN(v)) {
+                    let cellQty = _conv ? (v * factor / _conv) : (v * factor);
+                    const sapUomUpper = String(s.uom || m.sapUom || '').toUpperCase();
+                    const isPairSource = /\b(pair|pairs|pr|prs)\b/i.test(String(m.unit || '')) ||
+                                         /\b(pair|pairs|pr|prs)\b/i.test(String(m.desc || ''));
+                    const isPairTarget = /\b(pair|pairs|pr|prs)\b/i.test(sapUomUpper);
+                    if (isPairSource && !isPairTarget) {
+                        cellQty = cellQty * 2;
+                    }
+                    total += cellQty;
+                }
             });
         });
         return Math.round(total * 100) / 100;
@@ -280,7 +290,12 @@ window.ViewsModule = {
                 if (factor !== 0) {
                     // 🔩 kg-material + wazan mila to nos → kg convert hoga
                     const _bw = this.nutBoltWeightForCode(sapCode);
-                    mapped.push({ mIdx, factor, mat: m, w: (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0 });
+                    const sapUomUpper = String(s.uom || m.sapUom || '').toUpperCase();
+                    const isPairSource = /\b(pair|pairs|pr|prs)\b/i.test(String(m.unit || '')) ||
+                                         /\b(pair|pairs|pr|prs)\b/i.test(String(m.desc || ''));
+                    const isPairTarget = /\b(pair|pairs|pr|prs)\b/i.test(sapUomUpper);
+                    const pairMult = (isPairSource && !isPairTarget) ? 2 : 1;
+                    mapped.push({ mIdx, factor, mat: m, w: (_bw > 0 && this.nutBoltTargetUnitKg(m)) ? _bw : 0, pairMult });
                 }
             });
         });
@@ -296,7 +311,7 @@ window.ViewsModule = {
             const v = (raw === '' || raw === null) ? 0 : parseFloat(raw);
             const vv = isNaN(v) ? 0 : v;
             // 🔩 hissa SAP unit (nos) me naapo taaki baant sahi ho
-            return { mp, formula: false, v: vv, contrib: vv * mp.factor / (mp.w || 1) };
+            return { mp, formula: false, v: vv, contrib: (vv * mp.factor * (mp.pairMult || 1)) / (mp.w || 1) };
         });
         if (cur.some(c => c.formula)) { return; }
         const totalContrib = cur.reduce((a, c) => a + c.contrib, 0);
@@ -314,8 +329,8 @@ window.ViewsModule = {
         const m2 = this.activityQuantities[actKey];
         const converted = cur.some(c => c.mp.w);
         cur.forEach((c, i) => {
-            // 🔩 nos → kg (wazan se); warna seedha factor se
-            const want = shares[i] / c.mp.factor * (c.mp.w || 1);
+            // 🔩 nos → kg (wazan se); warna seedha factor se (Pair item me / pairMult)
+            const want = ((shares[i] / (c.mp.pairMult || 1)) / c.mp.factor) * (c.mp.w || 1);
             m2[locIdx][c.mp.mIdx] = (want === 0) ? '' : (Math.round(want * 100) / 100);
         });
         this.saveToStorage(); // invoice auto-sync isi se judta hai

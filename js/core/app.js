@@ -854,6 +854,15 @@
                                         const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
                                         const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                         finalQty = _conv ? (itemTotalQty * mappingSheetQty / _conv) : (itemTotalQty * mappingSheetQty);
+
+                                        // ⚡ PAIR UNIT CONVERSION: If item is in Pair and SAP UOM is NO / NOS, 1 Pair = 2 Nos
+                                        const sapUomUpper = String((sapMap[s.code] && sapMap[s.code].uom) || s.uom || m.sapUom || '').toUpperCase();
+                                        const isPairSource = /\b(pair|pairs|pr|prs)\b/i.test(String(m.unit || '')) ||
+                                                             /\b(pair|pairs|pr|prs)\b/i.test(String(m.desc || ''));
+                                        const isPairTarget = /\b(pair|pairs|pr|prs)\b/i.test(sapUomUpper);
+                                        if (isPairSource && !isPairTarget) {
+                                            finalQty = finalQty * 2;
+                                        }
                                     }
                                     const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
                                     if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
@@ -927,6 +936,15 @@
                                             const _bw = (typeof this.nutBoltWeightForCode === 'function') ? this.nutBoltWeightForCode(s.code) : 0;
                                             const _conv = (_bw > 0 && typeof this.nutBoltTargetUnitKg === 'function' && this.nutBoltTargetUnitKg(m)) ? _bw : 0;
                                             finalQty = _conv ? (activitySheetQty * mappingSheetQty / _conv) : (activitySheetQty * mappingSheetQty);
+
+                                            // ⚡ PAIR UNIT CONVERSION: If item is in Pair and SAP UOM is NO / NOS, 1 Pair = 2 Nos
+                                            const sapUomUpper = String((sapMap[s.code] && sapMap[s.code].uom) || s.uom || m.sapUom || '').toUpperCase();
+                                            const isPairSource = /\b(pair|pairs|pr|prs)\b/i.test(String(m.unit || '')) ||
+                                                                 /\b(pair|pairs|pr|prs)\b/i.test(String(m.desc || ''));
+                                            const isPairTarget = /\b(pair|pairs|pr|prs)\b/i.test(sapUomUpper);
+                                            if (isPairSource && !isPairTarget) {
+                                                finalQty = finalQty * 2;
+                                            }
                                         }
                                         const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
                                         if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
