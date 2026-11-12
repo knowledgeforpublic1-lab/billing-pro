@@ -75,13 +75,28 @@ window.PoleScheduleModule = {
 
     getCurrentPoleSchedule() {
         const key = this.selectedPoleScheduleKey || '907';
-        if (this.poleSchedules && this.poleSchedules[key]) {
-            return this.poleSchedules[key];
+        let s = (this.poleSchedules && this.poleSchedules[key])
+            ? this.poleSchedules[key]
+            : ((typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) ? defaultPoleSchedules[key] : null);
+
+        // ⚡ Real-Time Old Code Replacement & Master Alignment
+        if (s && Array.isArray(s.materials) && typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) {
+            const defSched = defaultPoleSchedules[key];
+            const norm = str => String(str || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            s.materials.forEach((m, idx) => {
+                if (!m || m.isSection || m.isSpan || m.isExtra || m.isCustom) return;
+                let defMat = defSched.materials[idx];
+                const mNorm = norm(m.desc);
+                if (!defMat || norm(defMat.desc) !== mNorm) {
+                    defMat = defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && norm(dm.desc) === mNorm)
+                          || defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && dm.no === m.no);
+                }
+                if (typeof window.autoUpgradeMaterialCodesRealtime === 'function') {
+                    window.autoUpgradeMaterialCodesRealtime(m, defMat, true);
+                }
+            });
         }
-        if (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) {
-            return defaultPoleSchedules[key];
-        }
-        return { title: 'Pole Schedule', materials: [] };
+        return s || { title: 'Pole Schedule', materials: [] };
     },
 
     getPoleScheduleMaterials() {
@@ -873,9 +888,13 @@ window.PoleScheduleModule = {
 
         const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
         if (qMatrix) {
-            const expandSapCodes = value => String(value || '').split(/[,|]/).map(code =>
-                code.trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase()
-            ).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
+            const expandSapCodes = value => String(value || '').split(/[,|]/).map(code => {
+                let clean = code.trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
+                if (typeof window.replaceOldSapCodeWithNew === 'function') {
+                    clean = window.replaceOldSapCodeWithNew(clean);
+                }
+                return clean;
+            }).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
             // Helper to get conversion ratio for sm -> actMat
             const getRatio = (smMat, actMat) => {
                 // 🔩 Nut-bolt special: Pole Schedule me entry Nos me hoti hai, activity sheet (unit kg)
@@ -2213,19 +2232,25 @@ window.PoleScheduleModule = {
 
     isPoleScheduleItemUnissued(item) {
         if (!item || item.isSection || item.isSpan) return false;
+        if (typeof window.replaceOldSapCodeWithNew === 'function' && item.itemCode) {
+            const upgraded = window.replaceOldSapCodeWithNew(item.itemCode);
+            if (upgraded !== item.itemCode) item.itemCode = upgraded;
+        }
         const s = this.getActiveContractorSapStock();
         if (!s || !s.materials) return false; // Agar koi contractor select nahi hai to alert na dikhayein
 
         const codes = [];
         if (item.itemCode && item.itemCode !== 'N/A' && item.itemCode !== 'NA' && !String(item.itemCode).startsWith('EXTRA-')) {
             String(item.itemCode).split(',').forEach(c => {
-                const clean = c.trim();
+                let clean = c.trim();
+                if (typeof window.replaceOldSapCodeWithNew === 'function') clean = window.replaceOldSapCodeWithNew(clean);
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
             });
         }
         if (Array.isArray(item.sapItems)) {
             item.sapItems.forEach(si => {
-                const clean = String(si && si.code || '').trim();
+                let clean = String(si && si.code || '').trim();
+                if (typeof window.replaceOldSapCodeWithNew === 'function') clean = window.replaceOldSapCodeWithNew(clean);
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !String(clean).startsWith('EXTRA-') && !codes.includes(clean)) {
                     codes.push(clean);
                 }

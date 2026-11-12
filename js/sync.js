@@ -1029,6 +1029,10 @@ window.SyncModule = {
         }, 120);
     },
     buildSyncPayload(extra = {}) {
+        // ⚡ Real-Time Auto-Upgrade all codes before sending to cloud / MongoDB
+        if (typeof window.autoUpgradeAllStateRealtime === 'function') {
+            window.autoUpgradeAllStateRealtime(this);
+        }
         if (this.invoiceData && typeof this.invoiceData === 'object') {
             if (this.projectMeta && this.projectMeta.workOrderNo && !this.invoiceData.workOrderNo) {
                 this.invoiceData.workOrderNo = this.projectMeta.workOrderNo;
@@ -1292,6 +1296,10 @@ window.SyncModule = {
     saveToStorage() {
         if (this._isLoading) return;
         try {
+            // ⚡ Real-Time Auto-Upgrade all codes before saving to storage
+            if (typeof window.autoUpgradeAllStateRealtime === 'function') {
+                window.autoUpgradeAllStateRealtime(this);
+            }
             try {
                 if (this.invoiceData && this.invoiceData.autoSync) {
                     this.updateSyncTaxInvoiceFromActivities();

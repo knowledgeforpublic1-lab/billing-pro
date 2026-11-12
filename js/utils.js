@@ -23,8 +23,133 @@ if (typeof window === 'undefined') {
     global.window = global;
 }
 
+// ⚡ Real-Time Universal Old SAP Code to New Master SAP Code Migrator
+const KNOWN_SAP_CODE_MIGRATIONS = {
+    '17001246': '17000008', // RSJ 152x152, 13 m long (River Crossing Pole)
+    '17001244': '17000007', // RSJ 152x152, 11 m long (River Crossing Pole)
+    '17005037': '17001242', // RSJ 116x100, 10 m long (Activity 922 Pole)
+};
+
+function replaceOldSapCodeWithNew(rawCode) {
+    if (!rawCode) return rawCode;
+    const str = String(rawCode).trim();
+    if (KNOWN_SAP_CODE_MIGRATIONS[str]) {
+        return KNOWN_SAP_CODE_MIGRATIONS[str];
+    }
+    if (str.includes(',')) {
+        return str.split(',').map(c => KNOWN_SAP_CODE_MIGRATIONS[c.trim()] || c.trim()).join(', ');
+    }
+    return str;
+}
+
+function autoUpgradeMaterialCodesRealtime(mat, defMat, isPole) {
+    if (!mat || mat.isSection || mat.isSpan || mat.isExtra || mat.isCustom) return;
+
+    // 1. Direct code migration check
+    if (mat.itemCode) {
+        const upgraded = replaceOldSapCodeWithNew(mat.itemCode);
+        if (upgraded !== mat.itemCode) mat.itemCode = upgraded;
+    }
+    if (Array.isArray(mat.sapItems)) {
+        mat.sapItems.forEach(s => {
+            if (s && s.code) {
+                const uCode = replaceOldSapCodeWithNew(s.code);
+                if (uCode !== s.code) s.code = uCode;
+            }
+        });
+    }
+
+    // 2. Align with Master if defMat exists
+    if (defMat) {
+        if (defMat.itemCode && mat.itemCode !== defMat.itemCode) {
+            mat.itemCode = defMat.itemCode;
+        }
+        if (defMat.sapDescription && mat.sapDescription !== defMat.sapDescription) {
+            mat.sapDescription = defMat.sapDescription;
+        }
+        if (defMat.sapUom && mat.sapUom !== defMat.sapUom) {
+            mat.sapUom = defMat.sapUom;
+        }
+        if (defMat.docHeader && mat.docHeader !== defMat.docHeader) {
+            mat.docHeader = defMat.docHeader;
+        }
+        if (isPole) {
+            if (defMat.desc && mat.desc !== defMat.desc) {
+                mat.desc = defMat.desc;
+            }
+            if (defMat.activityMaterialNo !== undefined && mat.activityMaterialNo !== defMat.activityMaterialNo) {
+                mat.activityMaterialNo = defMat.activityMaterialNo;
+            }
+        }
+        if (Array.isArray(defMat.sapItems) && defMat.sapItems.length > 0) {
+            const curCodes = (mat.sapItems || []).map(s => s && s.code).join(',');
+            const defCodes = defMat.sapItems.map(s => s && s.code).join(',');
+            if (curCodes !== defCodes) {
+                mat.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+            }
+        }
+        if (defMat.unit && !mat.unit) {
+            mat.unit = defMat.unit;
+        }
+    }
+}
+
+function autoUpgradeAllStateRealtime(app) {
+    if (!app) return;
+    const norm = s => String(s || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Upgrade Activities
+    if (app.activities && typeof defaultActivities !== 'undefined') {
+        Object.keys(defaultActivities).forEach(k => {
+            const defAct = defaultActivities[k];
+            const curAct = app.activities[k];
+            if (defAct && Array.isArray(defAct.materials) && curAct && Array.isArray(curAct.materials)) {
+                curAct.materials.forEach((m, idx) => {
+                    if (!m || m.isExtra || m.isCustom) return;
+                    let defMat = defAct.materials[idx];
+                    const mNorm = norm(m.desc);
+                    if (!defMat || norm(defMat.desc) !== mNorm) {
+                        defMat = defAct.materials.find(dm => dm && !dm.isSection && norm(dm.desc) === mNorm)
+                              || defAct.materials.find(dm => dm && !dm.isSection && dm.no === m.no);
+                    }
+                    autoUpgradeMaterialCodesRealtime(m, defMat, false);
+                });
+            }
+        });
+    }
+
+    // Upgrade Pole Schedules
+    if (app.poleSchedules && typeof defaultPoleSchedules !== 'undefined') {
+        Object.keys(defaultPoleSchedules).forEach(k => {
+            const defSched = defaultPoleSchedules[k];
+            const curSched = app.poleSchedules[k];
+            if (defSched && Array.isArray(defSched.materials) && curSched && Array.isArray(curSched.materials)) {
+                curSched.materials.forEach((m, idx) => {
+                    if (!m || m.isSection || m.isSpan || m.isExtra || m.isCustom) return;
+                    let defMat = defSched.materials[idx];
+                    const mNorm = norm(m.desc);
+                    if (!defMat || norm(defMat.desc) !== mNorm) {
+                        defMat = defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && norm(dm.desc) === mNorm)
+                              || defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && dm.no === m.no);
+                    }
+                    autoUpgradeMaterialCodesRealtime(m, defMat, true);
+                });
+            }
+        });
+    }
+}
+
+const _g = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : this);
+_g.KNOWN_SAP_CODE_MIGRATIONS = KNOWN_SAP_CODE_MIGRATIONS;
+_g.replaceOldSapCodeWithNew = replaceOldSapCodeWithNew;
+_g.autoUpgradeMaterialCodesRealtime = autoUpgradeMaterialCodesRealtime;
+_g.autoUpgradeAllStateRealtime = autoUpgradeAllStateRealtime;
+
 window.UtilsModule = {
     computeFullHash,
+    replaceOldSapCodeWithNew,
+    autoUpgradeMaterialCodesRealtime,
+    autoUpgradeAllStateRealtime,
     formatDateToDDMMYYYY(val) {
         if (!val) return '';
         if (val instanceof Date && !isNaN(val)) {

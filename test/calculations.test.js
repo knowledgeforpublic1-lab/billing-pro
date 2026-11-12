@@ -2496,6 +2496,47 @@ it('Old Bill Load: Preserves all measurement quantities while auto-aligning stan
     assert.strictEqual(psItem1.itemCode, '17001243', 'PS 907 Item 1 must be upgraded from outdated code to current master 17001243');
 });
 
+it('Real-Time SAP Code Replacement: Instantly detects old codes and replaces with current master in real time', () => {
+    // 1. Direct code replacement
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17001246'), '17000008', '17001246 must become 17000008');
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17001244'), '17000007', '17001244 must become 17000007');
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17005037'), '17001242', '17005037 must become 17001242');
+
+    // 2. Material object real-time upgrade
+    const testMat = {
+        no: '1',
+        desc: 'RSJ 152x152, 13 m long',
+        itemCode: '17001246',
+        sapItems: [{ code: '17001246', desc: 'RSJ POLE 152X152 MM 13 MTR' }]
+    };
+    window.autoUpgradeMaterialCodesRealtime(testMat, null, true);
+    assert.strictEqual(testMat.itemCode, '17000008', 'Material itemCode must upgrade in real time');
+    assert.strictEqual(testMat.sapItems[0].code, '17000008', 'sapItem code must upgrade in real time');
+
+    // 3. Full App State real-time upgrade
+    const testApp = {
+        poleSchedules: {
+            '919': {
+                materials: [
+                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: '17001246' },
+                    { no: '2', desc: 'RSJ 152x152, 11 m long', itemCode: '17001244' }
+                ]
+            }
+        },
+        activities: {
+            '919': {
+                materials: [
+                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: '17001246' }
+                ]
+            }
+        }
+    };
+    window.autoUpgradeAllStateRealtime(testApp);
+    assert.strictEqual(testApp.poleSchedules['919'].materials[0].itemCode, '17000008', 'Pole schedule 919 item 1 must be 17000008');
+    assert.strictEqual(testApp.poleSchedules['919'].materials[1].itemCode, '17000007', 'Pole schedule 919 item 2 must be 17000007');
+    assert.strictEqual(testApp.activities['919'].materials[0].itemCode, '17000008', 'Activity 919 item 1 must be 17000008');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
