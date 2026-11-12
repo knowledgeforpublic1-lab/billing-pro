@@ -1566,6 +1566,23 @@ window.SyncModule = {
                             }
                         }
                     }
+                    // Activity 922 clamp mapping upgrade: if Material 2 has old default code 17001294, upgrade to 5 clamp SAP items
+                    if (this.activities['922'] && Array.isArray(this.activities['922'].materials)) {
+                        const m2 = this.activities['922'].materials[1];
+                        if (m2 && /flats for stay & c clamps/i.test(m2.desc || '')) {
+                            const codes = (m2.sapItems || []).map(s => s && s.code);
+                            if (codes.length <= 1 && (codes.includes('17001294') || !codes.length)) {
+                                if (typeof defaultActivities !== 'undefined' && defaultActivities['922'] && defaultActivities['922'].materials[1]) {
+                                    const defM2 = defaultActivities['922'].materials[1];
+                                    m2.itemCode = defM2.itemCode;
+                                    m2.sapDescription = defM2.sapDescription;
+                                    m2.sapUom = defM2.sapUom;
+                                    m2.docHeader = defM2.docHeader;
+                                    m2.sapItems = JSON.parse(JSON.stringify(defM2.sapItems));
+                                }
+                            }
+                        }
+                    }
                 }
                 if (parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = parsed.selectedPoleScheduleKey;
                 if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
@@ -1590,6 +1607,16 @@ window.SyncModule = {
                     psMats.forEach(m => {
                         if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
                             m.activityMaterialNo = "5";
+                        }
+                    });
+                }
+                // Pole Schedule 922 clamps & items: ensure clamp codes link to Activity material "2"
+                if (this.poleSchedules && this.poleSchedules['922'] && Array.isArray(this.poleSchedules['922'].materials)) {
+                    const psMats = this.poleSchedules['922'].materials;
+                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
+                    psMats.forEach(m => {
+                        if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
+                            m.activityMaterialNo = "2";
                         }
                     });
                 }

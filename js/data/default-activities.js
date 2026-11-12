@@ -1067,15 +1067,39 @@ const defaultActivities = {
         "desc": "M.S. Flats for stay & C clamps(50 X 10mm)",
         "unit": "Nos",
         "rate": 10,
-        "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-        "sapUom": "NOS",
+        "itemCode": "17005046, 17005047, 17005048, 17005049, 17005085",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG | MS-STAY CL A TP-100X116-50X10X310-1.21KG | MS-STAY CL B TP-100X116-50X10X310-1.21KG | MS-FISH PLATE-50X10X254-0.99KG | MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
+        "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-            "uom": "NOS",
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005049",
+            "desc": "MS-FISH PLATE-50X10X254-0.99KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
+            "uom": "NO",
             "docHeader": "0031006347"
           }
         ]
@@ -1085,8 +1109,8 @@ const defaultActivities = {
         "desc": "MS Top Channel 100x50x6 mm",
         "unit": "No",
         "rate": 250,
-        "itemCode": "17002007",
-        "sapDescription": "MS CHANNEL 100X50X6 MM",
+        "itemCode": "17002007, 17005040",
+        "sapDescription": "MS CHANNEL 100X50X6 MM | MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
         "sapUom": "NO",
         "docHeader": "CUST PURCHASED TO CLINET",
         "sapItems": [
@@ -1095,6 +1119,12 @@ const defaultActivities = {
             "desc": "MS CHANNEL 100X50X6 MM",
             "uom": "NO",
             "docHeader": "CUST PURCHASED TO CLINET"
+          },
+          {
+            "code": "17005040",
+            "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
           }
         ]
       },
@@ -1132,8 +1162,8 @@ const defaultActivities = {
         "desc": "Strain Hardware for Dog0.1 or Equ.AAAC.",
         "unit": "No.",
         "rate": 20,
-        "itemCode": "17000702",
-        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
+        "itemCode": "17000702, 17000704",
+        "sapDescription": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE | STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
@@ -1141,6 +1171,12 @@ const defaultActivities = {
             "code": "17000702",
             "desc": "STRAIN HARDWARE FOR ACSR DOG B&S TYPE",
             "uom": "SET",
+            "docHeader": "0031007012"
+          },
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE FOR ACSR RABBIT B&S TYPE",
+            "uom": "NO",
             "docHeader": "0031007012"
           }
         ]
@@ -1204,8 +1240,8 @@ const defaultActivities = {
         "desc": "Earthing Sets H.T",
         "unit": "No",
         "rate": 285,
-        "itemCode": "17001369",
-        "sapDescription": "EARTHING SET LT",
+        "itemCode": "17001369, 17005053",
+        "sapDescription": "EARTHING SET LT | EARTHING SET HT 20 MM X 1.91 MTR",
         "sapUom": "SET",
         "docHeader": "0031007012",
         "sapItems": [
@@ -1214,6 +1250,12 @@ const defaultActivities = {
             "desc": "EARTHING SET LT",
             "uom": "SET",
             "docHeader": "0031007012"
+          },
+          {
+            "code": "17005053",
+            "desc": "EARTHING SET HT 20 MM X 1.91 MTR",
+            "uom": "SET",
+            "docHeader": "0031006347"
           }
         ]
       },

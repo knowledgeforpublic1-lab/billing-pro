@@ -2163,6 +2163,131 @@ it('Activity 919 Pole Schedule Clamps Sync: 5 SAP Clamps & Fish Plate sum up int
     assert.strictEqual(mockApp.activityQuantities['919'][1][4], 6, 'Loc 2 Material 5 must be sum of clamp items (6)');
 });
 
+it('Activity 922 Pole Schedule Clamps Sync: 5 SAP Clamps & Fish Plate sum up into Activity 922 Material 2', () => {
+    const actMaster = require('../js/data/default-activities.js');
+    const psMaster = require('../js/data/default-pole-schedules.js');
+
+    const act922 = JSON.parse(JSON.stringify(actMaster['922']));
+    const ps922 = JSON.parse(JSON.stringify(psMaster['922']));
+
+    assert.ok(act922, 'Activity 922 must exist in master');
+    assert.ok(ps922, 'Pole Schedule 922 must exist in master');
+
+    const m2 = act922.materials[1];
+    assert.ok(m2, 'Activity 922 must have material 2');
+    assert.strictEqual(m2.no, '2');
+    assert.ok(/flats for stay & c clamps/i.test(m2.desc));
+
+    const expectedCodes = ['17005046', '17005047', '17005048', '17005049', '17005085'];
+    const actualCodes = (m2.sapItems || []).map(s => s && s.code);
+    expectedCodes.forEach(code => {
+        assert.ok(actualCodes.includes(code), `Material 2 must have SAP code ${code}`);
+    });
+
+    const mockApp = {
+        selectedPoleScheduleKey: '922',
+        poleSchedules: { '922': ps922 },
+        activities: { '922': act922 },
+        poleScheduleLocations: { '922': [{ name: 'Loc 1' }] },
+        activityLocations: { '922': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: {
+            '922': [ new Array(50).fill('') ]
+        },
+        activityQuantities: {
+            '922': [ new Array(25).fill('') ]
+        },
+        isPoleScheduleNutBoltItem: () => false,
+        getPoleScheduleLocations: () => [{ name: 'Loc 1' }],
+        evalGridFormula: val => val,
+        evalFormula: val => val
+    };
+
+    const idxBkClA = ps922.materials.findIndex(m => m.itemCode === '17005046');
+    const idxBkClB = ps922.materials.findIndex(m => m.itemCode === '17005085');
+    const idxStayClA = ps922.materials.findIndex(m => m.itemCode === '17005047');
+    const idxStayClB = ps922.materials.findIndex(m => m.itemCode === '17005048');
+    const idxFishPlate = ps922.materials.findIndex(m => m.itemCode === '17005049');
+
+    // Loc 1: 2 + 3 + 1 + 1 + 5 = 12
+    mockApp.poleScheduleQuantities['922'][0][idxBkClA] = '2';
+    mockApp.poleScheduleQuantities['922'][0][idxBkClB] = '3';
+    mockApp.poleScheduleQuantities['922'][0][idxStayClA] = '1';
+    mockApp.poleScheduleQuantities['922'][0][idxStayClB] = '1';
+    mockApp.poleScheduleQuantities['922'][0][idxFishPlate] = '5';
+
+    global.PoleScheduleModule.syncPoleScheduleToBillingAndReconciliation.call(mockApp, '922');
+
+    assert.strictEqual(mockApp.activityQuantities['922'][0][1], 12, 'Loc 1 Material 2 must be sum of 5 clamp items (12)');
+});
+
+it('Extra Items in Activity: Automatically pick up and sum quantities from Pole Schedule', () => {
+    const actMaster = require('../js/data/default-activities.js');
+    const psMaster = require('../js/data/default-pole-schedules.js');
+
+    const act922 = JSON.parse(JSON.stringify(actMaster['922']));
+    const ps922 = JSON.parse(JSON.stringify(psMaster['922']));
+
+    // Add 2 extra items to Activity 922:
+    // 1. Extra item by code: Pin Insulators (code: 17001397)
+    act922.materials.push({
+        no: '19',
+        desc: '11 kV Pin Insulators',
+        unit: 'No.',
+        rate: 45,
+        itemCode: '17001397',
+        sapItems: [{ code: '17001397', desc: 'PIN INSULATOR WITH GI PIN' }],
+        isExtra: true
+    });
+
+    // 2. Extra item by description: Top Cleat (repeats 2 times in PS 922)
+    act922.materials.push({
+        no: '20',
+        desc: 'Top Cleat',
+        unit: 'No',
+        rate: 50,
+        itemCode: '17005041',
+        sapItems: [{ code: '17005041', desc: 'TOP CLEAT' }],
+        isExtra: true
+    });
+
+    const mockApp = {
+        selectedPoleScheduleKey: '922',
+        selectedActivityKey: '922',
+        poleSchedules: { '922': ps922 },
+        activities: { '922': act922 },
+        poleScheduleLocations: { '922': [{ name: 'Loc 1' }] },
+        activityLocations: { '922': [{ name: 'Loc 1' }] },
+        poleScheduleQuantities: {
+            '922': [ new Array(50).fill('') ]
+        },
+        activityQuantities: {
+            '922': [ new Array(25).fill('') ]
+        },
+        isPoleScheduleNutBoltItem: () => false,
+        getPoleScheduleLocations: () => [{ name: 'Loc 1' }],
+        evalGridFormula: val => val,
+        evalFormula: val => val
+    };
+
+    // In PS 922:
+    // Item 22: Pin Insulator polymer -> set 14
+    mockApp.poleScheduleQuantities['922'][0][22] = '14';
+
+    // Item 5: Top Cleat (Extension) -> set 4
+    // Item 8: Top Cleat With Clamp -> set 6
+    // Extra item Top Cleat should sum: 4 + 6 = 10
+    mockApp.poleScheduleQuantities['922'][0][5] = '4';
+    mockApp.poleScheduleQuantities['922'][0][8] = '6';
+
+    global.PoleScheduleModule.syncPoleScheduleToBillingAndReconciliation.call(mockApp, '922');
+
+    const extraIdx1 = 18; // 19th item (0-based 18)
+    const extraIdx2 = 19; // 20th item (0-based 19)
+
+    assert.strictEqual(mockApp.activityQuantities['922'][0][extraIdx1], 14, 'Extra Pin Insulator must pick up 14 from Pole Schedule');
+    assert.strictEqual(mockApp.activityQuantities['922'][0][extraIdx2], 10, 'Extra Top Cleat must sum up both rows (4 + 6 = 10)');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

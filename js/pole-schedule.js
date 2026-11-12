@@ -986,8 +986,20 @@ window.PoleScheduleModule = {
                                 isMatch = true;
                             }
                         }
-                    } else if (amDesc && smDesc && amDesc === smDesc) {
-                        isMatch = true;
+                    } else if (amDesc && smDesc) {
+                        const cleanAm = amDesc.replace(/[^a-z0-9]/g, '');
+                        const cleanSm = smDesc.replace(/[^a-z0-9]/g, '');
+                        if (cleanAm && cleanSm && (cleanAm === cleanSm || cleanAm.includes(cleanSm) || cleanSm.includes(cleanAm))) {
+                            const smIsPole = /\b(rsj|pole|psc)\b/i.test(smDesc);
+                            const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
+                            const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
+                            const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
+                            const smIsNutBolt = this.isPoleScheduleNutBoltItem(sm);
+                            const amIsNutBolt = /\bnut\s*&?\s*bolts?\b/i.test(amDesc);
+                            if (smIsNutBolt === amIsNutBolt && smIsPole === amIsPole && smIsCrossArm === amIsCrossArm) {
+                                isMatch = true;
+                            }
+                        }
                     }
 
                     if (isMatch) {

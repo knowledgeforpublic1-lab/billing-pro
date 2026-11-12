@@ -605,40 +605,22 @@ window.ViewsModule = {
             isExtra: true
         };
         this.currentActivity.materials.push(newMat);
-        const qMatrix = this.activityQuantities[this.selectedActivityKey];
-        if (qMatrix) {
-            qMatrix.forEach(locArr => locArr.push(''));
-        }
-        // 📐 Agar ye item Pole Schedule me already filled hai, to qty wahin se uth jayegi (per-location)
-        try {
-            if (qMatrix && code && code !== 'N/A') {
-                const norm = v => String(v || '').replace(/^\[([^\]]*)\].*$/, '$1').trim().toUpperCase();
-                const sched = (this.poleSchedules && this.poleSchedules[this.selectedActivityKey]) || (typeof defaultPoleSchedules !== 'undefined' ? defaultPoleSchedules[this.selectedActivityKey] : null);
-                if (sched && Array.isArray(sched.materials)) {
-                    const matchIdx = sched.materials.findIndex(sm => {
-                        if (sm.isSection || sm.isSpan) return false;
-                        const codes = [norm(sm.itemCode), ...(Array.isArray(sm.sapItems) ? sm.sapItems.map(s => norm(s.code)) : [])].filter(Boolean);
-                        return codes.includes(norm(code));
-                    });
-                    if (matchIdx !== -1) {
-                        const psQ = (this.poleScheduleQuantities && this.poleScheduleQuantities[this.selectedActivityKey]) || null;
-                        let filledAny = false;
-                        qMatrix.forEach((locArr, lIdx) => {
-                            const raw = (psQ && psQ[lIdx] && psQ[lIdx][matchIdx] !== undefined) ? psQ[lIdx][matchIdx] : '';
-                            let n = NaN;
-                            if (raw !== '' && raw !== null && raw !== undefined) {
-                                n = (typeof this.evalGridFormula === 'function') ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
-                            }
-                            if (!isNaN(n) && n > 0) {
-                                locArr[locArr.length - 1] = Math.round(n * 1000) / 1000;
-                                filledAny = true;
-                            }
-                        });
-                        if (filledAny) this.showToast('📐 Extra item qty Pole Schedule se auto-filled ✨', '✅');
-                    }
+        const actKey = this.selectedActivityKey || '907';
+        if (!this.activityQuantities) this.activityQuantities = {};
+        if (!this.activityQuantities[actKey] || !Array.isArray(this.activityQuantities[actKey])) {
+            const numLocs = (typeof this.getActLocations === 'function' ? this.getActLocations(actKey).length : 1);
+            this.activityQuantities[actKey] = Array.from({ length: numLocs }, () => new Array(this.currentActivity.materials.length).fill(''));
+        } else {
+            this.activityQuantities[actKey].forEach(locArr => {
+                while (locArr.length < this.currentActivity.materials.length) {
+                    locArr.push('');
                 }
-            }
-        } catch (e) { }
+            });
+        }
+        // 📐 Immediately sync Pole Schedule quantities for all items (including this newly added extra item)
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(actKey);
+        }
         this.showAddMaterialModal = false;
         this.showExtraItemSuggest = false;
         this.newMaterial = { no: '', desc: '', unit: 'No', rate: 0, codeSearch: '', sapCode: '', sapItems: [] };
@@ -656,6 +638,9 @@ window.ViewsModule = {
             const qMatrix = this.activityQuantities[this.selectedActivityKey];
             if (qMatrix) {
                 qMatrix.forEach(locArr => locArr.splice(itemIndex, 1));
+            }
+            if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function' && this.selectedActivityKey) {
+                this.syncPoleScheduleToBillingAndReconciliation(this.selectedActivityKey);
             }
             this.saveToStorage();
             if (typeof this.syncToMongoNow === 'function') this.syncToMongoNow({ force: true });
