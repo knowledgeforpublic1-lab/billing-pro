@@ -1029,10 +1029,6 @@ window.SyncModule = {
         }, 120);
     },
     buildSyncPayload(extra = {}) {
-        // ⚡ Real-Time Auto-Upgrade all codes before sending to cloud / MongoDB
-        if (typeof window.autoUpgradeAllStateRealtime === 'function') {
-            window.autoUpgradeAllStateRealtime(this);
-        }
         if (this.invoiceData && typeof this.invoiceData === 'object') {
             if (this.projectMeta && this.projectMeta.workOrderNo && !this.invoiceData.workOrderNo) {
                 this.invoiceData.workOrderNo = this.projectMeta.workOrderNo;
@@ -1296,10 +1292,6 @@ window.SyncModule = {
     saveToStorage() {
         if (this._isLoading) return;
         try {
-            // ⚡ Real-Time Auto-Upgrade all codes before saving to storage
-            if (typeof window.autoUpgradeAllStateRealtime === 'function') {
-                window.autoUpgradeAllStateRealtime(this);
-            }
             try {
                 if (this.invoiceData && this.invoiceData.autoSync) {
                     this.updateSyncTaxInvoiceFromActivities();
@@ -1609,68 +1601,53 @@ window.SyncModule = {
                     });
                 }
 
-                // ⚡ UNIVERSAL MASTER SAP ALIGNMENT:
-                // When loading any saved/old bill, preserve all quantities and custom extra items,
-                // but automatically upgrade standard contract item codes to the latest verified master SAP codes.
-                const _normDesc = s => String(s || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (typeof defaultActivities !== 'undefined' && this.activities) {
-                    Object.keys(defaultActivities).forEach(k => {
-                        const defAct = defaultActivities[k];
-                        const curAct = this.activities[k];
-                        if (defAct && Array.isArray(defAct.materials) && curAct && Array.isArray(curAct.materials)) {
-                            curAct.materials.forEach((m, idx) => {
-                                if (!m || m.isExtra || m.isCustom) return;
-                                let defMat = defAct.materials[idx];
-                                const mNorm = _normDesc(m.desc);
-                                if (!defMat || _normDesc(defMat.desc) !== mNorm) {
-                                    defMat = defAct.materials.find(dm => dm && !dm.isSection && _normDesc(dm.desc) === mNorm);
-                                    if (!defMat) {
-                                        defMat = defAct.materials.find(dm => dm && !dm.isSection && dm.no === m.no);
-                                    }
-                                }
-                                if (defMat) {
-                                    if (defMat.itemCode) m.itemCode = defMat.itemCode;
-                                    if (defMat.sapDescription) m.sapDescription = defMat.sapDescription;
-                                    if (defMat.sapUom) m.sapUom = defMat.sapUom;
-                                    if (defMat.docHeader) m.docHeader = defMat.docHeader;
-                                    if (Array.isArray(defMat.sapItems) && defMat.sapItems.length > 0) {
-                                        m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                    }
-                                    if (defMat.unit && !m.unit) m.unit = defMat.unit;
-                                }
-                            });
+                // Pole Schedule 919: ensure 13m/11m poles use valid master codes and link to Activity Material 1, and clamps link to 5
+                if (this.poleSchedules && this.poleSchedules['919'] && Array.isArray(this.poleSchedules['919'].materials)) {
+                    const psMats = this.poleSchedules['919'].materials;
+                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
+                    psMats.forEach(m => {
+                        if (!m) return;
+                        if (clampCodes.includes(String(m.itemCode || '').trim())) {
+                            m.activityMaterialNo = "5";
+                        }
+                        if (m.itemCode === '17001246' || /152x152.*13\s*m/i.test(m.desc || '')) {
+                            m.itemCode = '17000008';
+                            m.sapDescription = 'RSJ POLE 152X152 MM 13 MTR';
+                            m.activityMaterialNo = "1";
+                            if (m.sapItems && m.sapItems[0]) {
+                                m.sapItems[0].code = '17000008';
+                                m.sapItems[0].desc = 'RSJ POLE 152X152 MM 13 MTR';
+                            }
+                        } else if (m.itemCode === '17001244' || /152x152.*11\s*m/i.test(m.desc || '')) {
+                            m.itemCode = '17000007';
+                            m.sapDescription = 'RSJ POLE 152X152 MM 11 MTR';
+                            m.activityMaterialNo = "1";
+                            if (m.sapItems && m.sapItems[0]) {
+                                m.sapItems[0].code = '17000007';
+                                m.sapItems[0].desc = 'RSJ POLE 152X152 MM 11 MTR';
+                            }
                         }
                     });
                 }
 
-                if (typeof defaultPoleSchedules !== 'undefined' && this.poleSchedules) {
-                    Object.keys(defaultPoleSchedules).forEach(k => {
-                        const defSched = defaultPoleSchedules[k];
-                        const curSched = this.poleSchedules[k];
-                        if (defSched && Array.isArray(defSched.materials) && curSched && Array.isArray(curSched.materials)) {
-                            curSched.materials.forEach((m, idx) => {
-                                if (!m || m.isSection || m.isSpan || m.isExtra || m.isCustom) return;
-                                let defMat = defSched.materials[idx];
-                                const mNorm = _normDesc(m.desc);
-                                if (!defMat || _normDesc(defMat.desc) !== mNorm) {
-                                    defMat = defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && _normDesc(dm.desc) === mNorm);
-                                    if (!defMat) {
-                                        defMat = defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && dm.no === m.no);
-                                    }
-                                }
-                                if (defMat) {
-                                    if (defMat.itemCode) m.itemCode = defMat.itemCode;
-                                    if (defMat.desc) m.desc = defMat.desc;
-                                    if (defMat.sapDescription) m.sapDescription = defMat.sapDescription;
-                                    if (defMat.sapUom) m.sapUom = defMat.sapUom;
-                                    if (defMat.docHeader) m.docHeader = defMat.docHeader;
-                                    if (defMat.activityMaterialNo !== undefined) m.activityMaterialNo = defMat.activityMaterialNo;
-                                    if (Array.isArray(defMat.sapItems) && defMat.sapItems.length > 0) {
-                                        m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
-                                    }
-                                    if (defMat.unit && !m.unit) m.unit = defMat.unit;
-                                }
-                            });
+                // Pole Schedule 922 clamps & items: ensure clamp codes link to Activity material "2"
+                if (this.poleSchedules && this.poleSchedules['922'] && Array.isArray(this.poleSchedules['922'].materials)) {
+                    const psMats = this.poleSchedules['922'].materials;
+                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
+                    psMats.forEach(m => {
+                        if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
+                            m.activityMaterialNo = "2";
+                        }
+                        // Auto-upgrade 8m pole (17005037) to 10m pole (17001242) so it never reverts
+                        if (m && (m.itemCode === '17005037' || /08m Pole|8 m long/i.test(m.desc || ''))) {
+                            m.itemCode = '17001242';
+                            m.desc = 'RSJ 116x100, 10 m long';
+                            m.sapDescription = 'RSJ POLE 100X116 MM 10 MTR';
+                            m.rate = 2300;
+                            if (m.sapItems && m.sapItems[0]) {
+                                m.sapItems[0].code = '17001242';
+                                m.sapItems[0].desc = 'RSJ POLE 100X116 MM 10 MTR';
+                            }
                         }
                     });
                 }

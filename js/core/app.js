@@ -667,10 +667,6 @@
             },
             pivotReconciliationData() {
                 const _rev = this.recoRevision;
-                // ⚡ Real-Time Auto-Upgrade all codes before calculating reconciliation
-                if (typeof window.autoUpgradeAllStateRealtime === 'function') {
-                    window.autoUpgradeAllStateRealtime(this);
-                }
                 const sapMap = {}; // mapping by sap code
                 const allActivityKeys = new Set();
                 
@@ -1539,26 +1535,7 @@
                 return this.historyIndex < this.historyStack.length - 1;
             },
             currentActivity() {
-                const key = this.selectedActivityKey;
-                const act = (this.activities && this.activities[key]) || null;
-                // ⚡ Real-Time Old Code Replacement & Master Alignment for Activities
-                if (act && Array.isArray(act.materials) && typeof defaultActivities !== 'undefined' && defaultActivities[key]) {
-                    const defAct = defaultActivities[key];
-                    const norm = str => String(str || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                    act.materials.forEach((m, idx) => {
-                        if (!m || m.isExtra || m.isCustom) return;
-                        let defMat = defAct.materials[idx];
-                        const mNorm = norm(m.desc);
-                        if (!defMat || norm(defMat.desc) !== mNorm) {
-                            defMat = defAct.materials.find(dm => dm && !dm.isSection && norm(dm.desc) === mNorm)
-                                  || defAct.materials.find(dm => dm && !dm.isSection && dm.no === m.no);
-                        }
-                        if (typeof window.autoUpgradeMaterialCodesRealtime === 'function') {
-                            window.autoUpgradeMaterialCodesRealtime(m, defMat, false);
-                        }
-                    });
-                }
-                return act || { title: 'Activity', materials: [] };
+                return this.activities[this.selectedActivityKey] || { title: 'Activity', materials: [] };
             },
             filteredMaterials() {
                 if (!this.currentActivity || !this.currentActivity.materials) return [];

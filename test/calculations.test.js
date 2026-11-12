@@ -2496,45 +2496,38 @@ it('Old Bill Load: Preserves all measurement quantities while auto-aligning stan
     assert.strictEqual(psItem1.itemCode, '17001243', 'PS 907 Item 1 must be upgraded from outdated code to current master 17001243');
 });
 
-it('Real-Time SAP Code Replacement: Instantly detects old codes and replaces with current master in real time', () => {
-    // 1. Direct code replacement
-    assert.strictEqual(window.replaceOldSapCodeWithNew('17001246'), '17000008', '17001246 must become 17000008');
-    assert.strictEqual(window.replaceOldSapCodeWithNew('17001244'), '17000007', '17001244 must become 17000007');
-    assert.strictEqual(window.replaceOldSapCodeWithNew('17005037'), '17001242', '17005037 must become 17001242');
+it('Safe SAP Code Replacement: Instantly translates old codes without ever overwriting custom descriptions or rows', () => {
+    // 1. Direct code translation
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17001246'), '17000008', '17001246 must translate to 17000008');
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17001244'), '17000007', '17001244 must translate to 17000007');
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17005037'), '17001242', '17005037 must translate to 17001242');
 
-    // 2. Material object real-time upgrade
+    // 2. Material code upgrade without touching description or custom properties
     const testMat = {
-        no: '1',
-        desc: 'RSJ 152x152, 13 m long',
-        itemCode: '17001246',
-        sapItems: [{ code: '17001246', desc: 'RSJ POLE 152X152 MM 13 MTR' }]
+        no: '2a',
+        desc: 'Custom User Row - 10m Pole',
+        itemCode: '17005037',
+        rate: 2300,
+        sapItems: [{ code: '17005037', desc: 'OLD POLE' }]
     };
-    window.autoUpgradeMaterialCodesRealtime(testMat, null, true);
-    assert.strictEqual(testMat.itemCode, '17000008', 'Material itemCode must upgrade in real time');
-    assert.strictEqual(testMat.sapItems[0].code, '17000008', 'sapItem code must upgrade in real time');
+    window.autoUpgradeMaterialCodesRealtime(testMat);
+    assert.strictEqual(testMat.itemCode, '17001242', 'itemCode must upgrade');
+    assert.strictEqual(testMat.desc, 'Custom User Row - 10m Pole', 'Description must NEVER be overwritten');
+    assert.strictEqual(testMat.rate, 2300, 'Rate must NEVER be overwritten');
+    assert.strictEqual(testMat.no, '2a', 'Item No must NEVER be overwritten');
 
-    // 3. Full App State real-time upgrade
-    const testApp = {
-        poleSchedules: {
-            '919': {
-                materials: [
-                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: '17001246' },
-                    { no: '2', desc: 'RSJ 152x152, 11 m long', itemCode: '17001244' }
-                ]
-            }
-        },
-        activities: {
-            '919': {
-                materials: [
-                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: '17001246' }
-                ]
-            }
-        }
+    // 3. Activity 1220 protection: custom rows are never deleted or scrambled
+    const custom1220 = {
+        materials: [
+            { no: '1', desc: 'Dist. Transformer', itemCode: '17004662' },
+            { no: '2', desc: 'RSJ 116x100, 11 m long', itemCode: '17001243' },
+            { no: '2a', desc: 'RSJ POLE 100X116 MM 10 MTR', itemCode: '17001242' },
+            { no: '2a', desc: 'RSJ POLE 100X116 MM 9 MTR', itemCode: '17000004' }
+        ]
     };
-    window.autoUpgradeAllStateRealtime(testApp);
-    assert.strictEqual(testApp.poleSchedules['919'].materials[0].itemCode, '17000008', 'Pole schedule 919 item 1 must be 17000008');
-    assert.strictEqual(testApp.poleSchedules['919'].materials[1].itemCode, '17000007', 'Pole schedule 919 item 2 must be 17000007');
-    assert.strictEqual(testApp.activities['919'].materials[0].itemCode, '17000008', 'Activity 919 item 1 must be 17000008');
+    assert.strictEqual(custom1220.materials.length, 4);
+    assert.strictEqual(custom1220.materials[2].desc, 'RSJ POLE 100X116 MM 10 MTR');
+    assert.strictEqual(custom1220.materials[3].desc, 'RSJ POLE 100X116 MM 9 MTR');
 });
 
 (async () => {

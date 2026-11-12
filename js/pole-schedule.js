@@ -75,28 +75,13 @@ window.PoleScheduleModule = {
 
     getCurrentPoleSchedule() {
         const key = this.selectedPoleScheduleKey || '907';
-        let s = (this.poleSchedules && this.poleSchedules[key])
-            ? this.poleSchedules[key]
-            : ((typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) ? defaultPoleSchedules[key] : null);
-
-        // ⚡ Real-Time Old Code Replacement & Master Alignment
-        if (s && Array.isArray(s.materials) && typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) {
-            const defSched = defaultPoleSchedules[key];
-            const norm = str => String(str || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            s.materials.forEach((m, idx) => {
-                if (!m || m.isSection || m.isSpan || m.isExtra || m.isCustom) return;
-                let defMat = defSched.materials[idx];
-                const mNorm = norm(m.desc);
-                if (!defMat || norm(defMat.desc) !== mNorm) {
-                    defMat = defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && norm(dm.desc) === mNorm)
-                          || defSched.materials.find(dm => dm && !dm.isSection && !dm.isSpan && dm.no === m.no);
-                }
-                if (typeof window.autoUpgradeMaterialCodesRealtime === 'function') {
-                    window.autoUpgradeMaterialCodesRealtime(m, defMat, true);
-                }
-            });
+        if (this.poleSchedules && this.poleSchedules[key]) {
+            return this.poleSchedules[key];
         }
-        return s || { title: 'Pole Schedule', materials: [] };
+        if (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]) {
+            return defaultPoleSchedules[key];
+        }
+        return { title: 'Pole Schedule', materials: [] };
     },
 
     getPoleScheduleMaterials() {
