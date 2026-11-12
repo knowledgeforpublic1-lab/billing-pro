@@ -791,6 +791,9 @@ window.PoleScheduleModule = {
         this.selectedPoleScheduleKey = key;
         this.poleScheduleSubTab = 'schedule';
         this.ensurePoleScheduleQuantities(key);
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+            this.syncPoleScheduleToBillingAndReconciliation(key);
+        }
         try { localStorage.setItem('billing_selected_pole_schedule_key', key); } catch (e) { }
     },
 
@@ -961,8 +964,16 @@ window.PoleScheduleModule = {
                         } else if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
                             isMatch = false;
                         } else {
-                            // If multiple am in act.materials share this exact primary code, use description to disambiguate
-                            const duplicateAmCode = act.materials.some((oAm, oIdx) => oIdx !== actMatIdx && expandSapCodes(oAm.itemCode).some(code => amCodes.has(code)));
+                            // If multiple am in act.materials share this exact matching code, use description to disambiguate
+                            const smMatchingCodes = [...smCodes].filter(code => amCodes.has(code));
+                            const duplicateAmCode = act.materials.some((oAm, oIdx) => {
+                                if (oIdx === actMatIdx) return false;
+                                const oCodes = new Set([
+                                    ...expandSapCodes(oAm.itemCode),
+                                    ...(Array.isArray(oAm.sapItems) ? oAm.sapItems.map(s => s && s.code) : [])
+                                ].flatMap(expandSapCodes));
+                                return smMatchingCodes.some(code => oCodes.has(code));
+                            });
                             if (duplicateAmCode) {
                                 const isTopCleatSynonym = /\btop\s*(?:cleat|fitting)\b/i.test(amDesc) && /\btop\s*(?:cleat|fitting)\b/i.test(smDesc);
                                 const isCutPointSynonym = /\b(cut\s*point|spcp)\b/i.test(amDesc) && /\b(cut\s*point|spcp)\b/i.test(smDesc);

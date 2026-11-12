@@ -1549,6 +1549,23 @@ window.SyncModule = {
                             });
                         }
                     });
+                    // Activity 919 clamp mapping upgrade: if Material 5 has old default code 17001294, upgrade to 5 clamp SAP items
+                    if (this.activities['919'] && Array.isArray(this.activities['919'].materials)) {
+                        const m5 = this.activities['919'].materials[4];
+                        if (m5 && /flats for stay & c clamps/i.test(m5.desc || '')) {
+                            const codes = (m5.sapItems || []).map(s => s && s.code);
+                            if (codes.length <= 1 && (codes.includes('17001294') || !codes.length)) {
+                                if (typeof defaultActivities !== 'undefined' && defaultActivities['919'] && defaultActivities['919'].materials[4]) {
+                                    const defM5 = defaultActivities['919'].materials[4];
+                                    m5.itemCode = defM5.itemCode;
+                                    m5.sapDescription = defM5.sapDescription;
+                                    m5.sapUom = defM5.sapUom;
+                                    m5.docHeader = defM5.docHeader;
+                                    m5.sapItems = JSON.parse(JSON.stringify(defM5.sapItems));
+                                }
+                            }
+                        }
+                    }
                 }
                 if (parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = parsed.selectedPoleScheduleKey;
                 if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
@@ -1563,6 +1580,16 @@ window.SyncModule = {
                     Object.keys(defaultPoleSchedules).forEach(k => {
                         if (!this.poleSchedules[k] || !Array.isArray(this.poleSchedules[k].materials) || this.poleSchedules[k].materials.length === 0) {
                             this.poleSchedules[k] = JSON.parse(JSON.stringify(defaultPoleSchedules[k]));
+                        }
+                    });
+                }
+                // Pole Schedule 919 clamps: ensure items with clamp codes link to Activity material "5"
+                if (this.poleSchedules && this.poleSchedules['919'] && Array.isArray(this.poleSchedules['919'].materials)) {
+                    const psMats = this.poleSchedules['919'].materials;
+                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
+                    psMats.forEach(m => {
+                        if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
+                            m.activityMaterialNo = "5";
                         }
                     });
                 }

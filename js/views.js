@@ -479,6 +479,9 @@ window.ViewsModule = {
         if (typeof this.initQuantitiesForActivity === 'function') {
             this.initQuantitiesForActivity(this.selectedActivityKey);
         }
+        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function' && this.selectedActivityKey) {
+            this.syncPoleScheduleToBillingAndReconciliation(this.selectedActivityKey);
+        }
         // billing.js wale version me yahi save tha — merge shadowing me kho gaya tha, wapas add kiya
         this.saveToStorage();
     },
@@ -865,6 +868,12 @@ window.ViewsModule = {
                 }
             }
             this.activities = { ...this.activities };
+            if (typeof this.persistActivitiesToMasterFile === "function") {
+                this.persistActivitiesToMasterFile(true);
+            }
+            if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                this.syncPoleScheduleToBillingAndReconciliation(k);
+            }
             if (typeof this.scheduleMappingSync === 'function') {
                 this.scheduleMappingSync();
             }

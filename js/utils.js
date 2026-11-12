@@ -305,6 +305,11 @@ window.UtilsModule = {
                     if (viewName === 'taxInvoice') viewName = 'invoice';
                     this.currentView = viewName;
                     try { localStorage.setItem('billing_current_view', viewName); } catch(e) {}
+                    if (viewName === 'detail') {
+                        if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function' && this.selectedActivityKey) {
+                            this.syncPoleScheduleToBillingAndReconciliation(this.selectedActivityKey);
+                        }
+                    }
                     if (viewName === 'reconciliation') {
                         this.recoRevision = (this.recoRevision || 0) + 1;
                     }

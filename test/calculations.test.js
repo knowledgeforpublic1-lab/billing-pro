@@ -2074,6 +2074,95 @@ it('Pole Schedule Row Deletion: Successfully deletes custom or unnecessary row a
     }
 });
 
+it('Activity 919 Pole Schedule Clamps Sync: 5 SAP Clamps & Fish Plate sum up into Activity 919 Material 5', () => {
+    const actMaster = require('../js/data/default-activities.js');
+    const psMaster = require('../js/data/default-pole-schedules.js');
+
+    // 1. Verify master structures
+    const act919 = JSON.parse(JSON.stringify(actMaster['919']));
+    const ps919 = JSON.parse(JSON.stringify(psMaster['919']));
+
+    assert.ok(act919, 'Activity 919 must exist in master');
+    assert.ok(ps919, 'Pole Schedule 919 must exist in master');
+
+    const m5 = act919.materials[4];
+    assert.ok(m5, 'Activity 919 must have material 5');
+    assert.strictEqual(m5.no, '5');
+    assert.ok(/flats for stay & c clamps/i.test(m5.desc));
+
+    // Verify all 5 SAP codes are mapped on Material 5
+    const expectedCodes = ['17005046', '17005047', '17005048', '17005049', '17005085'];
+    const actualCodes = (m5.sapItems || []).map(s => s && s.code);
+    expectedCodes.forEach(code => {
+        assert.ok(actualCodes.includes(code), `Material 5 must have SAP code ${code}`);
+    });
+
+    // 2. Test syncPoleScheduleToBillingAndReconciliation
+    const mockApp = {
+        selectedPoleScheduleKey: '919',
+        poleSchedules: { '919': ps919 },
+        activities: { '919': act919 },
+        poleScheduleLocations: { '919': [{ name: 'River Location 1' }, { name: 'River Location 2' }] },
+        activityLocations: { '919': [{ name: 'River Location 1' }, { name: 'River Location 2' }] },
+        poleScheduleQuantities: {
+            '919': [
+                new Array(40).fill(''),
+                new Array(40).fill('')
+            ]
+        },
+        activityQuantities: {
+            '919': [
+                new Array(25).fill(''),
+                new Array(25).fill('')
+            ]
+        },
+        isPoleScheduleNutBoltItem: () => false,
+        getPoleScheduleLocations: () => [{ name: 'River Location 1' }, { name: 'River Location 2' }],
+        evalGridFormula: val => val,
+        evalFormula: val => val
+    };
+
+    // Find indices in PS 919 for the 5 items
+    const idxBkClA = ps919.materials.findIndex(m => m.itemCode === '17005046');
+    const idxBkClB = ps919.materials.findIndex(m => m.itemCode === '17005085');
+    const idxStayClA = ps919.materials.findIndex(m => m.itemCode === '17005047');
+    const idxStayClB = ps919.materials.findIndex(m => m.itemCode === '17005048');
+    const idxFishPlate = ps919.materials.findIndex(m => m.itemCode === '17005049');
+
+    assert.ok(idxBkClA >= 0, 'Back clamp A type must exist in PS 919');
+    assert.ok(idxBkClB >= 0, 'Back clamp B type must exist in PS 919');
+    assert.ok(idxStayClA >= 0, 'Stay Set clamp A type must exist in PS 919');
+    assert.ok(idxStayClB >= 0, 'Stay Set clamp B type must exist in PS 919');
+    assert.ok(idxFishPlate >= 0, 'Fish plate must exist in PS 919');
+
+    // Fill quantities in Loc 1:
+    // Back clamp A: 4
+    // Back clamp B: 2
+    // Stay Set clamp A: 3
+    // Stay Set clamp B: 3
+    // Fish plate: 6
+    // Sum should be 4 + 2 + 3 + 3 + 6 = 18
+    mockApp.poleScheduleQuantities['919'][0][idxBkClA] = '4';
+    mockApp.poleScheduleQuantities['919'][0][idxBkClB] = '2';
+    mockApp.poleScheduleQuantities['919'][0][idxStayClA] = '3';
+    mockApp.poleScheduleQuantities['919'][0][idxStayClB] = '3';
+    mockApp.poleScheduleQuantities['919'][0][idxFishPlate] = '6';
+
+    // Fill quantities in Loc 2:
+    // Back clamp A: 2
+    // Fish plate: 4
+    // Sum should be 2 + 4 = 6
+    mockApp.poleScheduleQuantities['919'][1][idxBkClA] = '2';
+    mockApp.poleScheduleQuantities['919'][1][idxFishPlate] = '4';
+
+    // Run syncPoleScheduleToBillingAndReconciliation
+    global.PoleScheduleModule.syncPoleScheduleToBillingAndReconciliation.call(mockApp, '919');
+
+    // Check Material 5 quantities in Activity 919
+    assert.strictEqual(mockApp.activityQuantities['919'][0][4], 18, 'Loc 1 Material 5 must be sum of all 5 clamp items (18)');
+    assert.strictEqual(mockApp.activityQuantities['919'][1][4], 6, 'Loc 2 Material 5 must be sum of clamp items (6)');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

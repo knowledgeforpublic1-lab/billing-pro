@@ -730,15 +730,39 @@ const defaultActivities = {
         "desc": "M.S. Flats for stay & C clamps(50 X 10mm)",
         "unit": "no",
         "rate": 10,
-        "itemCode": "17001294",
-        "sapDescription": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-        "sapUom": "NOS",
+        "itemCode": "17005046, 17005047, 17005048, 17005049, 17005085",
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG | MS-STAY CL A TP-100X116-50X10X310-1.21KG | MS-STAY CL B TP-100X116-50X10X310-1.21KG | MS-FISH PLATE-50X10X254-0.99KG | MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
+        "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17001294",
-            "desc": "BARBED WIRE CLAMP 100X116 25X3X320 MM",
-            "uom": "NOS",
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-STAY CL A TP-100X116-50X10X310-1.21KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005049",
+            "desc": "MS-FISH PLATE-50X10X254-0.99KG",
+            "uom": "NO",
+            "docHeader": "0031006347"
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL B TYPE-100X116-50X10X400-1.57KG",
+            "uom": "NO",
             "docHeader": "0031006347"
           }
         ]
