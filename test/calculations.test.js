@@ -2372,6 +2372,130 @@ it('Pair Unit Conversion: Pair in Activity / Pole Schedule -> 1:1 in Activity Bi
     assert.strictEqual(sapMap['17005048'].totalQty, 6, 'Total consumed for 17005048 must be 6 Nos');
 });
 
+it('Old Bill Load: Preserves all measurement quantities while auto-aligning standard item codes with latest master SAP codes', () => {
+    const defaultActivities = require('../js/data/default-activities.js');
+    const defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
+
+    // Simulate an old bill loaded from storage with outdated SAP codes but real contractor quantities
+    const oldSavedBill = {
+        activities: {
+            '919': {
+                title: 'Activity 919',
+                materials: [
+                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: 'OLD_WRONG_CODE_1', sapItems: [{ code: 'OLD_WRONG_CODE_1' }] },
+                    { no: '2', desc: 'RSJ 152x152, 11 m long', itemCode: 'OLD_WRONG_CODE_2', sapItems: [{ code: 'OLD_WRONG_CODE_2' }] },
+                    { no: '3', desc: 'RSJ 116x100, 11 m long', itemCode: '17001243' },
+                    { no: '4', desc: 'RSJ 116x100, 9 m long', itemCode: '17000004' },
+                    { no: '5', desc: 'M.S. Flats for stay & C clamps(50 X 10mm)', itemCode: '17001294', sapItems: [{ code: '17001294' }] },
+                    { no: 'EXTRA-1', desc: 'User Custom Extra Item', itemCode: 'CUSTOM-999', isExtra: true }
+                ]
+            }
+        },
+        poleSchedules: {
+            '907': {
+                materials: [
+                    { no: '1', desc: 'RSJ 152x152, 13 m long', itemCode: '17001246', sapItems: [{ code: '17001246' }] }
+                ]
+            }
+        },
+        activityQuantities: {
+            '919': [
+                ['25', '18', '5', '12', '40', '9'] // Exact measurements entered by user
+            ]
+        },
+        poleScheduleQuantities: {
+            '907': [
+                ['14']
+            ]
+        }
+    };
+
+    const mockApp = {
+        activities: oldSavedBill.activities,
+        poleSchedules: oldSavedBill.poleSchedules,
+        activityQuantities: oldSavedBill.activityQuantities,
+        poleScheduleQuantities: oldSavedBill.poleScheduleQuantities
+    };
+
+    // Run Universal Master SAP Alignment (from loadStorage logic)
+    if (typeof defaultActivities !== 'undefined' && mockApp.activities) {
+        Object.keys(defaultActivities).forEach(k => {
+            const defAct = defaultActivities[k];
+            const curAct = mockApp.activities[k];
+            if (defAct && Array.isArray(defAct.materials) && curAct && Array.isArray(curAct.materials)) {
+                curAct.materials.forEach((m, idx) => {
+                    if (!m || m.isExtra || m.isCustom) return;
+                    let defMat = defAct.materials[idx];
+                    if (!defMat || defMat.no !== m.no) {
+                        defMat = defAct.materials.find(dm => dm && dm.no === m.no && !dm.isSection);
+                    }
+                    if (defMat) {
+                        if (defMat.itemCode) m.itemCode = defMat.itemCode;
+                        if (defMat.sapDescription) m.sapDescription = defMat.sapDescription;
+                        if (defMat.sapUom) m.sapUom = defMat.sapUom;
+                        if (defMat.docHeader) m.docHeader = defMat.docHeader;
+                        if (Array.isArray(defMat.sapItems) && defMat.sapItems.length > 0) {
+                            m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                        }
+                        if (defMat.unit && !m.unit) m.unit = defMat.unit;
+                    }
+                });
+            }
+        });
+    }
+
+    if (typeof defaultPoleSchedules !== 'undefined' && mockApp.poleSchedules) {
+        Object.keys(defaultPoleSchedules).forEach(k => {
+            const defSched = defaultPoleSchedules[k];
+            const curSched = mockApp.poleSchedules[k];
+            if (defSched && Array.isArray(defSched.materials) && curSched && Array.isArray(curSched.materials)) {
+                curSched.materials.forEach((m, idx) => {
+                    if (!m || m.isSection || m.isSpan || m.isExtra || m.isCustom) return;
+                    let defMat = defSched.materials[idx];
+                    if (!defMat || defMat.no !== m.no) {
+                        defMat = defSched.materials.find(dm => dm && dm.no === m.no && !dm.isSection && !dm.isSpan);
+                    }
+                    if (defMat) {
+                        if (defMat.itemCode) m.itemCode = defMat.itemCode;
+                        if (defMat.desc) m.desc = defMat.desc;
+                        if (defMat.sapDescription) m.sapDescription = defMat.sapDescription;
+                        if (defMat.sapUom) m.sapUom = defMat.sapUom;
+                        if (defMat.docHeader) m.docHeader = defMat.docHeader;
+                        if (defMat.activityMaterialNo !== undefined) m.activityMaterialNo = defMat.activityMaterialNo;
+                        if (Array.isArray(defMat.sapItems) && defMat.sapItems.length > 0) {
+                            m.sapItems = JSON.parse(JSON.stringify(defMat.sapItems));
+                        }
+                        if (defMat.unit && !m.unit) m.unit = defMat.unit;
+                    }
+                });
+            }
+        });
+    }
+
+    // 1. Verify Quantities are 100% PRESERVED
+    assert.strictEqual(mockApp.activityQuantities['919'][0][0], '25', 'Quantity 25 for item 1 must be preserved');
+    assert.strictEqual(mockApp.activityQuantities['919'][0][4], '40', 'Quantity 40 for item 5 must be preserved');
+    assert.strictEqual(mockApp.activityQuantities['919'][0][5], '9', 'Quantity 9 for custom extra item must be preserved');
+    assert.strictEqual(mockApp.poleScheduleQuantities['907'][0][0], '14', 'Pole schedule quantity 14 must be preserved');
+
+    // 2. Verify User Custom Extra Item is UNTOUCHED
+    const customExtra = mockApp.activities['919'].materials[5];
+    assert.strictEqual(customExtra.itemCode, 'CUSTOM-999', 'Custom extra item code must not be altered');
+
+    // 3. Verify Standard items have UPGRADED to latest Master SAP codes
+    const actItem1 = mockApp.activities['919'].materials[0];
+    assert.notStrictEqual(actItem1.itemCode, 'OLD_WRONG_CODE_1', 'Outdated code must be replaced');
+    assert.strictEqual(actItem1.itemCode, '17000008', 'Must be aligned with current master 17000008');
+
+    const actItem5 = mockApp.activities['919'].materials[4];
+    assert.ok(actItem5.sapItems.length === 5, 'Act 919 Item 5 must be upgraded to all 5 clamp SAP codes');
+    assert.ok(actItem5.itemCode.includes('17005046'), 'Must include clamp code 17005046');
+    assert.ok(actItem5.itemCode.includes('17005047'), 'Must include clamp code 17005047');
+
+    const psItem1 = mockApp.poleSchedules['907'].materials[0];
+    assert.strictEqual(psItem1.itemCode, '17001243', 'PS 907 Item 1 must be upgraded from outdated code to current master 17001243');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
