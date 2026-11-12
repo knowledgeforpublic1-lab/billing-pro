@@ -41,6 +41,16 @@
             <div class="boot-bar"><span></span></div>
         </div>
     </div>
+    <script>
+        // 🛡️ Fail-safe: Boot splash must always fade out within 2.5s no matter what
+        setTimeout(function() {
+            var sp = document.getElementById('bootSplash');
+            if (sp) {
+                sp.classList.add('hide');
+                setTimeout(function() { try { sp.remove(); } catch(e){} }, 500);
+            }
+        }, 2500);
+    </script>
 
     <!-- SVG Icon Sprite — crisp monochrome icons (currentColor, theme-safe) -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">

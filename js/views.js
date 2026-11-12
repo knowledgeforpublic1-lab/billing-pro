@@ -339,24 +339,16 @@ window.ViewsModule = {
     },
     getActLocations(actKey) {
         if (!actKey) return this.locations || [];
-        if (!this.activityLocations) this.activityLocations = {};
-        // If this activity has poleScheduleLocations, ensure activityLocations matches
+        // If this activity has poleScheduleLocations, prefer it
         if (this.poleScheduleLocations && Array.isArray(this.poleScheduleLocations[actKey]) && this.poleScheduleLocations[actKey].length > 0) {
-            const psLocs = this.poleScheduleLocations[actKey];
-            if (!this.activityLocations[actKey] || this.activityLocations[actKey].length !== psLocs.length) {
-                this.activityLocations[actKey] = JSON.parse(JSON.stringify(psLocs));
-                this.activityLocations = { ...this.activityLocations };
-            }
+            return this.poleScheduleLocations[actKey];
         }
-        if (this.activityLocations[actKey] && Array.isArray(this.activityLocations[actKey]) && this.activityLocations[actKey].length > 0) {
+        if (this.activityLocations && this.activityLocations[actKey] && Array.isArray(this.activityLocations[actKey]) && this.activityLocations[actKey].length > 0) {
             return this.activityLocations[actKey];
         }
-        // Initialize an independent editable copy for this specific activity
-        const base = (this.locations && Array.isArray(this.locations) && this.locations.length > 0)
-            ? JSON.parse(JSON.stringify(this.locations))
+        return (this.locations && Array.isArray(this.locations) && this.locations.length > 0)
+            ? this.locations
             : [{ name: 'Location 1' }];
-        this.activityLocations[actKey] = base;
-        return this.activityLocations[actKey];
     },
     addLocation() {
         if (this.isFinalized) {

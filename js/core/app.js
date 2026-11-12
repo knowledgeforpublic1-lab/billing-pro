@@ -796,26 +796,21 @@
 
                                 if (itemTotalQty <= 0) return;
 
-                                // Auto-heal missing SAP items in O(1) from defaultPoleSchedules if missing
-                                if (!m.itemCode || !m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
-                                    const defSched = (typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null;
-                                    const defMat = defSched && defSched.materials && defSched.materials[mIdx];
-                                    if (defMat) {
-                                        if (!m.itemCode && defMat.itemCode) m.itemCode = defMat.itemCode;
-                                        if (!m.sapDescription && defMat.sapDescription) m.sapDescription = defMat.sapDescription;
-                                        if (!m.sapUom && defMat.sapUom) m.sapUom = defMat.sapUom;
-                                        if ((!m.sapItems || m.sapItems.length === 0) && defMat.sapItems) {
-                                            m.sapItems = defMat.sapItems;
-                                        }
-                                    }
-                                }
-
+                                // Read SAP items safely without mutating material state in computed getter
                                 let sItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [];
-                                if (sItems.length === 0 && m.itemCode && m.itemCode !== 'N/A' && m.itemCode !== '—') {
+                                const defSched = (typeof defaultPoleSchedules !== 'undefined') ? defaultPoleSchedules[actKey] : null;
+                                const defMat = defSched && defSched.materials && defSched.materials[mIdx];
+                                const mItemCode = m.itemCode || (defMat && defMat.itemCode);
+                                const mSapDesc = m.sapDescription || (defMat && defMat.sapDescription) || m.desc || mItemCode;
+                                const mSapUom = m.sapUom || (defMat && defMat.sapUom) || m.unit || 'No';
+
+                                if (sItems.length === 0 && defMat && defMat.sapItems && defMat.sapItems.length > 0) {
+                                    sItems = defMat.sapItems;
+                                } else if (sItems.length === 0 && mItemCode && mItemCode !== 'N/A' && mItemCode !== '—') {
                                     sItems = [{
-                                        code: m.itemCode,
-                                        desc: m.sapDescription || m.desc || m.itemCode,
-                                        uom: m.sapUom || m.unit || 'No',
+                                        code: mItemCode,
+                                        desc: mSapDesc,
+                                        uom: mSapUom,
                                         qty: 1
                                     }];
                                 }
@@ -895,14 +890,18 @@
                                 }
 
 
-                                if (!m.sapItems || m.sapItems.length === 0 || !m.sapItems[0].code) {
-                                    if (typeof this.ensureMaterialSap === 'function') {
-                                        this.ensureMaterialSap(m, mIdx);
-                                    }
+                                let actSapItems = (m.sapItems && m.sapItems.length > 0) ? m.sapItems : [];
+                                if (actSapItems.length === 0 && m.itemCode && m.itemCode !== 'N/A' && m.itemCode !== '—') {
+                                    actSapItems = [{
+                                        code: m.itemCode,
+                                        desc: m.sapDescription || m.desc || m.itemCode,
+                                        uom: m.sapUom || m.unit || 'No',
+                                        qty: 1
+                                    }];
                                 }
 
-                                if (m.sapItems && m.sapItems.length > 0) {
-                                    m.sapItems.forEach(s => {
+                                if (actSapItems.length > 0) {
+                                    actSapItems.forEach(s => {
                                         if (!s.code) return;
                                         allActivityKeys.add(actKey);
 
@@ -1464,16 +1463,16 @@
                     );
                 }
 
-                for (let i = 0; i < filtered.length; i++) {
-                    const r = filtered[i];
+                return filtered.map(r => {
                     const thisB = Number(r.totalQty) || 0;
                     const net = Number(r.sapNetIssue !== undefined ? r.sapNetIssue : (r.sapIssuedQty || 0));
-                    r._cum = thisB;
-                    r._bal = Math.round((net - thisB) * 100) / 100;
-                    r._isUnmapped = unmappedSet ? unmappedSet.has(r.code) : false;
-                }
-
-                return filtered;
+                    return {
+                        ...r,
+                        _cum: thisB,
+                        _bal: Math.round((net - thisB) * 100) / 100,
+                        _isUnmapped: unmappedSet ? unmappedSet.has(r.code) : false
+                    };
+                });
             },
             reconIssuedCount() {
                 try {
@@ -2231,7 +2230,10 @@
         try {
             if (vm && vm.sectionErrors) {
                 const sec = vm.currentView || 'reconciliation';
-                vm.sectionErrors[sec] = (err && (err.message || String(err))) || 'Component render issue';
+                const msg = (err && (err.message || String(err))) || 'Component render issue';
+                if (vm.sectionErrors[sec] !== msg) {
+                    vm.sectionErrors[sec] = msg;
+                }
             }
         } catch(e) {}
     };

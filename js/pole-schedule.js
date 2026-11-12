@@ -1579,46 +1579,7 @@ window.PoleScheduleModule = {
     getRecoCellTitle(row, col) {
         if (!row || !row.activities || !row.activities[col]) return `Activity ${col}: 0 ${row.uom || ''}`;
         const tot = typeof this.format2Dec === 'function' ? this.format2Dec(row.activities[col]) : row.activities[col];
-        const actLocs = (typeof this.getActLocations === 'function') ? this.getActLocations(col) : [];
-        if (actLocs.length <= 1) {
-            return `Activity ${col}: ${tot} ${row.uom || ''}`;
-        }
-        const lines = [`Activity ${col} (Total: ${tot} ${row.uom || ''}):`];
-        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[col]) || null;
-        const actQ = (this.activityQuantities && this.activityQuantities[col]) || null;
-        const sched = (this.poleSchedules && this.poleSchedules[col]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[col]);
-        const act = this.activities && this.activities[col];
-
-        actLocs.forEach((loc, lIdx) => {
-            const locName = loc.name || `Loc ${lIdx + 1}`;
-            let lQty = 0;
-            if (qMatrix && sched && sched.materials) {
-                sched.materials.forEach((m, mIdx) => {
-                    if (m.isSection || m.isSpan) return;
-                    const hasCode = (m.sapItems && m.sapItems.some(s => s.code === row.code)) || m.itemCode === row.code;
-                    if (hasCode) {
-                        const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
-                        if (raw !== '' && raw !== null && raw !== undefined) {
-                            const n = Number(raw);
-                            if (!isNaN(n)) lQty += n;
-                        }
-                    }
-                });
-            } else if (actQ && act && act.materials && actQ[lIdx]) {
-                act.materials.forEach((m, mIdx) => {
-                    const hasCode = (m.sapItems && m.sapItems.some(s => s.code === row.code)) || m.itemCode === row.code;
-                    if (hasCode) {
-                        const raw = actQ[lIdx][mIdx];
-                        if (raw !== '' && raw !== null && raw !== undefined) {
-                            const n = Number(raw);
-                            if (!isNaN(n)) lQty += n;
-                        }
-                    }
-                });
-            }
-            lines.push(`• ${locName}: ${typeof this.format2Dec === 'function' ? this.format2Dec(lQty) : lQty} ${row.uom || ''}`);
-        });
-        return lines.join('\n');
+        return `Activity ${col}: ${tot} ${row.uom || ''}`;
     },
 
 
