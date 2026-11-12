@@ -712,6 +712,9 @@
                                 <button type="button" @click="openConcretingCalculator" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700; height: 28px; border-color: rgba(139, 92, 246, 0.4); color: #c4b5fd;" title="Open detailed Concreting & Muffing modal">
                                     <span>📐 Details</span>
                                 </button>
+                                <button v-if="getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalNos > 0" type="button" @click="openNutBoltCalculator" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; font-weight: 700; height: 28px; border-color: rgba(16, 185, 129, 0.4); color: #10b981;" title="Nut Bolt Calculator & total weight summary">
+                                    <span>🔩 {{ getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalKg }} kg ({{ getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalNos }} nos)</span>
+                                </button>
                             </div>
                         </div>
 
@@ -753,6 +756,9 @@
                                             <td class="text-center font-mono text-muted">—</td>
                                             <td :colspan="2 + getPoleScheduleLocations().length + 4" style="color: var(--text-main); font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
                                                 {{ item.desc }} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted); text-transform: none;">({{ item.unit }})</span>
+                                                <span v-if="isPoleScheduleNutBoltSection(item) && getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalKg > 0" class="badge" style="margin-left: 10px; background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.78rem; text-transform: none; font-weight: 800; padding: 2px 8px; border-radius: 4px;">
+                                                    🔩 Total Weight: {{ getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalKg }} Kg ({{ getPoleScheduleNutBoltSummary(selectedPoleScheduleKey).totalNos }} Nos)
+                                                </span>
                                             </td>
                                         </template>
 
@@ -791,6 +797,9 @@
                                                     </span>
                                                     <span v-else-if="isPoleScheduleStayItem(item)" style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 1px 4px; border-radius: 4px; font-weight: 700;">
                                                         Stay Set (0.125 m³)
+                                                    </span>
+                                                    <span v-else-if="isPoleScheduleNutBoltItem(item)" style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); padding: 1px 4px; border-radius: 4px; font-weight: 700;" :title="'Unit weight: ' + poleScheduleNutBoltUnitWeight(item) + ' kg/pc. Activity Sheet me weight (kg) auto transfer hoga.'">
+                                                        🔩 {{ poleScheduleNutBoltUnitWeight(item) }} kg/no
                                                     </span>
                                                 </div>
                                                 <div v-if="item.sapDescription && item.sapDescription !== item.desc" style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">

@@ -2530,6 +2530,96 @@ it('Safe SAP Code Replacement: Instantly translates old codes without ever overw
     assert.strictEqual(custom1220.materials[3].desc, 'RSJ POLE 100X116 MM 9 MTR');
 });
 
+it('Pole Schedule Nut Bolt Weight Auto-Conversion: Entered in Nos in Pole Schedule, auto-calculates to Kg in Activity Billing across all schedules', () => {
+    const actMaster = require('../js/data/default-activities.js');
+    const psMaster = require('../js/data/default-pole-schedules.js');
+
+    const app = {
+        poleSchedules: JSON.parse(JSON.stringify(psMaster)),
+        activities: JSON.parse(JSON.stringify(actMaster)),
+        selectedPoleScheduleKey: '907',
+        poleScheduleLocations: {
+            '907': [{ name: 'Loc 1' }],
+            '1220': [{ name: 'Loc 1' }],
+            '1425A': [{ name: 'Loc 1' }],
+            '922': [{ name: 'Loc 1' }]
+        },
+        poleScheduleQuantities: {
+            '907': { 0: { 29: '10', 30: '5', 31: '20' } },
+            '1220': { 0: { 68: '10', 69: '20', 70: '15', 71: '8' } },
+            '1425A': { 0: { 33: '10', 34: '5', 35: '2', 36: '4', 37: '6' } },
+            '922': { 0: { 36: '10', 37: '20', 38: '5', 39: '8', 40: '15' } }
+        },
+        activityQuantities: {
+            '907': [new Array(30).fill('')],
+            '1220': [new Array(30).fill('')],
+            '1425A': [new Array(30).fill('')],
+            '922': [new Array(30).fill('')]
+        },
+        nutBoltData: [
+            { size: '16×200', unit: 'nos', weight: 0.380, qty: '' },
+            { size: '16×150', unit: 'nos', weight: 0.299, qty: '' },
+            { size: '16×100', unit: 'nos', weight: 0.220, qty: '' },
+            { size: '16×75', unit: 'nos', weight: 0.180, qty: '' },
+            { size: '16×65', unit: 'nos', weight: 0.164, qty: '' },
+            { size: '16×50', unit: 'nos', weight: 0.140, qty: '' },
+            { size: '16×35', unit: 'nos', weight: 0.119, qty: '' },
+            { size: '12×225', unit: 'nos', weight: 0.225, qty: '' },
+            { size: '12×190', unit: 'nos', weight: 0.170, qty: '' },
+            { size: '12×175', unit: 'nos', weight: 0.203, qty: '' },
+            { size: '12×150', unit: 'nos', weight: 0.173, qty: '' },
+            { size: '12×140', unit: 'nos', weight: 0.173, qty: '' },
+            { size: '12×125', unit: 'nos', weight: 0.148, qty: '' },
+            { size: '12×100', unit: 'nos', weight: 0.120, qty: '' },
+            { size: '12×65', unit: 'nos', weight: 0.085, qty: '' },
+            { size: '12×35', unit: 'nos', weight: 0.049, qty: '' },
+            { size: '8×50', unit: 'nos', weight: 0.060, qty: '' },
+            { size: '6×75', unit: 'nos', weight: 0.022, qty: '' },
+            { size: '6×50', unit: 'nos', weight: 0.014, qty: '' }
+        ],
+        getPoleScheduleLocations(k) { return this.poleScheduleLocations[k] || [{ name: 'Loc 1' }]; },
+        evalGridFormula(v) { return v; }
+    };
+
+    // Attach PoleScheduleModule methods
+    Object.assign(app, global.PoleScheduleModule);
+
+    // 1. Test Schedule 907 -> Activity 907 (Material 6: G.I.Nut Bolts, unit Kg.)
+    // 10 of 16x75 (0.180) + 5 of 16x150 (0.299) + 20 of 6x75 (0.022) = 1.8 + 1.495 + 0.44 = 3.735 kg
+    app.syncPoleScheduleToBillingAndReconciliation('907');
+    assert.strictEqual(app.activityQuantities['907'][0][6], 3.735, 'Activity 907 G.I.Nut Bolts must equal 3.735 Kg');
+
+    // 2. Test Schedule 1220 -> Activity 1220 (Material 20: G.I.Nut Bolts, unit Kg.)
+    // 10 of 16x150 (0.299) + 20 of 16x75 (0.180) + 15 of 6x50 (0.014) + 8 of 16x35 (0.119) = 2.99 + 3.6 + 0.21 + 0.952 = 7.752 kg
+    app.syncPoleScheduleToBillingAndReconciliation('1220');
+    assert.strictEqual(app.activityQuantities['1220'][0][20], 7.752, 'Activity 1220 G.I.Nut Bolts must equal 7.752 Kg');
+
+    // 3. Test Schedule 1425A -> Activity 1425A (Material 18: G.I.Nut Bolts, unit Kg.)
+    // 10 of 12x35 (0.049) + 5 of 12x65 (0.085) + 2 of 12x150 (0.173) + 4 of 12x175 (0.203) + 6 of 12x190 (0.170) = 0.49 + 0.425 + 0.346 + 0.812 + 1.02 = 3.093 kg
+    app.syncPoleScheduleToBillingAndReconciliation('1425A');
+    assert.strictEqual(app.activityQuantities['1425A'][0][18], 3.093, 'Activity 1425A G.I.Nut Bolts must equal 3.093 Kg');
+
+    // 4. Test Activity 922 with user-added G.I.Nut Bolts item
+    // Add extra row: G.I.Nut Bolts (unit: Kg)
+    const extraNbMatIdx = app.activities['922'].materials.length;
+    app.activities['922'].materials.push({
+        no: '19',
+        desc: 'G.I.Nut Bolts',
+        unit: 'Kg',
+        itemCode: '17000613'
+    });
+    // 10 of 16x150 (0.299) + 20 of 16x75 (0.180) + 5 of 16x50 (0.140) + 8 of 16x35 (0.119) + 15 of 6x50 (0.014)
+    // = 2.99 + 3.6 + 0.70 + 0.952 + 0.21 = 8.452 kg
+    app.syncPoleScheduleToBillingAndReconciliation('922');
+    assert.strictEqual(app.activityQuantities['922'][0][extraNbMatIdx], 8.452, 'Activity 922 G.I.Nut Bolts must equal 8.452 Kg');
+
+    // 5. Verify getPoleScheduleNutBoltSummary returns accurate totals
+    const sum907 = app.getPoleScheduleNutBoltSummary('907');
+    assert.strictEqual(sum907.totalNos, 35);
+    assert.strictEqual(sum907.totalKg, 3.735);
+    assert.strictEqual(sum907.hasWeight, true);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

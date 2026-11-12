@@ -880,14 +880,30 @@ window.PoleScheduleModule = {
                 }
                 return clean;
             }).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
+            const checkSmNutBolt = m => {
+                if (typeof this.isPoleScheduleNutBoltItem === 'function') return this.isPoleScheduleNutBoltItem(m);
+                const mod = (typeof window !== 'undefined' && window.PoleScheduleModule) || (typeof global !== 'undefined' && global.PoleScheduleModule);
+                return mod && typeof mod.isPoleScheduleNutBoltItem === 'function' ? mod.isPoleScheduleNutBoltItem(m) : false;
+            };
+            const checkAmNutBolt = m => {
+                if (typeof this.isActivityNutBoltItem === 'function') return this.isActivityNutBoltItem(m);
+                const mod = (typeof window !== 'undefined' && window.PoleScheduleModule) || (typeof global !== 'undefined' && global.PoleScheduleModule);
+                return mod && typeof mod.isActivityNutBoltItem === 'function' ? mod.isActivityNutBoltItem(m) : false;
+            };
+            const getSmNutBoltWeight = m => {
+                if (typeof this.poleScheduleNutBoltUnitWeight === 'function') return this.poleScheduleNutBoltUnitWeight(m);
+                const mod = (typeof window !== 'undefined' && window.PoleScheduleModule) || (typeof global !== 'undefined' && global.PoleScheduleModule);
+                return mod && typeof mod.poleScheduleNutBoltUnitWeight === 'function' ? mod.poleScheduleNutBoltUnitWeight(m) : 0;
+            };
+
             // Helper to get conversion ratio for sm -> actMat
             const getRatio = (smMat, actMat) => {
-                // 🔩 Nut-bolt special: Pole Schedule me entry Nos me hoti hai, activity sheet (unit kg)
+                // 🔩 Nut-bolt special: Pole Schedule me entry Nos me hoti hai, activity sheet (unit kg/MT)
                 // me direct weight (kg) chahiye — unit wazan per piece se auto convert
-                if (actMat && /kg/i.test(String(actMat.unit || '')) && smMat && this.isPoleScheduleNutBoltItem(smMat)) {
-                    const w = this.poleScheduleNutBoltUnitWeight(smMat);
+                if (actMat && smMat && checkSmNutBolt(smMat) && checkAmNutBolt(actMat)) {
+                    const w = getSmNutBoltWeight(smMat);
                     if (w > 0) {
-                        const u = String(actMat.unit || '').toLowerCase();
+                        const u = String(actMat.unit || '').toLowerCase().trim();
                         return (u === 'mt' || u === 'mts' || u === 'mt.' || u === 'tonne' || u === 'tonnes') ? (w / 1000) : w;
                     }
                 }
@@ -936,6 +952,7 @@ window.PoleScheduleModule = {
                     ...(Array.isArray(am.sapItems) ? am.sapItems.map(sap => sap && sap.code) : [])
                 ].flatMap(expandSapCodes));
                 const amDesc = String(am.desc || '').trim().toLowerCase();
+                const amIsNutBolt = checkAmNutBolt(am);
 
                 // Find all matching pole schedule materials for this am
                 const matchingSmList = [];
@@ -946,6 +963,7 @@ window.PoleScheduleModule = {
                         ...(Array.isArray(sm.sapItems) ? sm.sapItems.map(sap => sap && sap.code) : [])
                     ].flatMap(expandSapCodes));
                     const smDesc = String(sm.desc || '').trim().toLowerCase();
+                    const smIsNutBolt = checkSmNutBolt(sm);
 
                     let isMatch = false;
                     const hasExplicitActivityLink = sm.activityMaterialNo !== undefined && sm.activityMaterialNo !== null && String(sm.activityMaterialNo).trim() !== '';
@@ -954,18 +972,22 @@ window.PoleScheduleModule = {
                         // material can therefore collect quantities from each linked
                         // Pole Schedule component, even when its primary code differs.
                         isMatch = String(sm.activityMaterialNo) === String(am.no);
+                    } else if (amIsNutBolt) {
+                        // 🔩 NUT-BOLT SPECIAL ACCUMULATION:
+                        // Activity sheet me Nut-Bolt (unit Kg) Pole Schedule ke SAARE Nut-Bolt rows (Nos) ko
+                        // unit weight se multiply karke sum karega!
+                        isMatch = smIsNutBolt;
+                    } else if (smIsNutBolt) {
+                        // Pole Schedule ka Nut-Bolt gair-nutbolt activity item se kabhi match nahi hoga
+                        isMatch = false;
                     } else if ([...smCodes].some(code => amCodes.has(code))) {
                         // 🛡️ Category safety guard: A pole can only match a pole, cross arm only a cross arm
                         const smIsPole = /\b(rsj|pole|psc)\b/i.test(smDesc);
                         const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
                         const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
                         const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
-                        // 🔩 Nut-bolt sirf nut-bolt se match hoga
-                        const smIsNutBolt = this.isPoleScheduleNutBoltItem(sm);
-                        const amIsNutBolt = /\bnut\s*&?\s*bolts?\b/i.test(amDesc);
-                        if (smIsNutBolt !== amIsNutBolt) {
-                            isMatch = false;
-                        } else if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
+
+                        if (smIsPole !== amIsPole || smIsCrossArm !== amIsCrossArm) {
                             isMatch = false;
                         } else {
                             // If multiple am in act.materials share this exact matching code, use description to disambiguate
@@ -998,9 +1020,7 @@ window.PoleScheduleModule = {
                             const amIsPole = /\b(rsj|pole|psc)\b/i.test(amDesc);
                             const smIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(smDesc);
                             const amIsCrossArm = /\b(cross\s*arm|v-cross)\b/i.test(amDesc);
-                            const smIsNutBolt = this.isPoleScheduleNutBoltItem(sm);
-                            const amIsNutBolt = /\bnut\s*&?\s*bolts?\b/i.test(amDesc);
-                            if (smIsNutBolt === amIsNutBolt && smIsPole === amIsPole && smIsCrossArm === amIsCrossArm) {
+                            if (smIsPole === amIsPole && smIsCrossArm === amIsCrossArm) {
                                 isMatch = true;
                             }
                         }
@@ -1329,8 +1349,140 @@ window.PoleScheduleModule = {
     isPoleScheduleNutBoltItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
         const d = String(item.desc || '').toLowerCase();
-        const sapDesc = (Array.isArray(item.sapItems) && item.sapItems.length) ? String(item.sapItems[0].desc || '').toLowerCase() : '';
-        return /\bnut\s*&?\s*bolts?\b/.test(d) || /\bnut\s*&?\s*bolts?\b/.test(sapDesc);
+        // Exclude eye bolt / I bolt / foundation bolt / anchor bolt
+        if (/\b(?:i[-\s]*bolt|eye[-\s]*bolt)\b/i.test(d)) return false;
+        const sapDesc = (Array.isArray(item.sapItems) && item.sapItems.length)
+            ? item.sapItems.map(s => String((s && s.desc) || '')).join(' ').toLowerCase()
+            : String(item.sapDescription || '').toLowerCase();
+        if (/\b(?:i[-\s]*bolt|eye[-\s]*bolt)\b/i.test(sapDesc)) return false;
+
+        // 1. Matches N/B or NB (e.g. N/B 16*75, NB 16*75)
+        if (/\b(?:n\/b|n\s*\/\s*b|nb)\b/i.test(d)) return true;
+        // 2. Matches nut bolt / nut boult / nut & bolt
+        if (/\bnut\s*&?\s*bou?lts?\b/i.test(d) || /\bnut\s*&?\s*bou?lts?\b/i.test(sapDesc)) return true;
+        // 3. SAP descriptions e.g. "HDG BOLT ... NUT" or "BOLT ... NUT"
+        if (/\bbolt\b/i.test(sapDesc) && /\bnut\b/i.test(sapDesc)) return true;
+        // 4. Check known nut-bolt SAP codes
+        const code = String(item.itemCode || '').trim();
+        const knownNutBoltCodes = new Set(['17000613', '17000614', '17000617', '17000619', '17000620', '17000625', '17000627', '17000632', '17000636', '17000637', '17005513']);
+        if (code && knownNutBoltCodes.has(code)) return true;
+
+        return false;
+    },
+
+    isActivityNutBoltItem(item) {
+        if (!item || item.isSection) return false;
+        const d = String(item.desc || '').toLowerCase();
+        if (/\b(?:i[-\s]*bolt|eye[-\s]*bolt)\b/i.test(d)) return false;
+        const sapDesc = (Array.isArray(item.sapItems) && item.sapItems.length)
+            ? item.sapItems.map(s => String((s && s.desc) || '')).join(' ').toLowerCase()
+            : String(item.sapDescription || '').toLowerCase();
+        if (/\b(?:i[-\s]*bolt|eye[-\s]*bolt)\b/i.test(sapDesc)) return false;
+        if (/\b(?:n\/b|n\s*\/\s*b|nb)\b/i.test(d)) return true;
+        if (/\bnut\s*&?\s*bou?lts?\b/i.test(d) || /\bnut\s*&?\s*bou?lts?\b/i.test(sapDesc)) return true;
+        if (/\bbolt\b/i.test(sapDesc) && /\bnut\b/i.test(sapDesc)) return true;
+        const code = String(item.itemCode || '').trim();
+        if (code === '17000613') return true;
+        return false;
+    },
+
+    isPoleScheduleNutBoltSection(item) {
+        if (!item || !item.isSection) return false;
+        const d = String(item.desc || '').toLowerCase();
+        return /\bnut\s*&?\s*bou?lts?\b/i.test(d) || /\b(?:n\/b|n\s*\/\s*b|nb)\b/i.test(d);
+    },
+
+    poleScheduleNutBoltUnitWeight(item) {
+        if (!item) return 0;
+        if (item.unitWeight && Number(item.unitWeight) > 0) return Number(item.unitWeight);
+        if (item.weight && Number(item.weight) > 0) return Number(item.weight);
+
+        const text = String(item.desc || '') + ' ' + String(item.sapDescription || '') + ' ' + (Array.isArray(item.sapItems) ? item.sapItems.map(s => (s && s.desc) || '').join(' ') : '');
+        const mm = text.match(/(?:M\s*)?(\d{1,2})\s*[*xX×/]\s*(\d{2,3})/i);
+        let key = '';
+        if (mm) {
+            key = parseInt(mm[1], 10) + 'x' + parseInt(mm[2], 10);
+        }
+
+        // 1. Check in this.nutBoltData if available
+        if (key && Array.isArray(this.nutBoltData)) {
+            const hit = this.nutBoltData.find(n => String(n.size || '').toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '') === key);
+            if (hit && Number(hit.weight) > 0) return Number(hit.weight);
+        }
+
+        // 2. Standard Indian electricity board Nut & Bolt weights (kg/piece with nut & washer)
+        const STANDARD_NUT_BOLT_WEIGHTS = {
+            '16x200': 0.380,
+            '16x150': 0.299,
+            '16x100': 0.220,
+            '16x75':  0.180,
+            '16x65':  0.164,
+            '16x50':  0.140,
+            '16x35':  0.119,
+            '12x225': 0.225,
+            '12x190': 0.170,
+            '12x175': 0.203,
+            '12x150': 0.173,
+            '12x140': 0.173,
+            '12x125': 0.148,
+            '12x100': 0.120,
+            '12x65':  0.085,
+            '12x35':  0.049,
+            '8x50':   0.060,
+            '6x75':   0.022,
+            '6x50':   0.014
+        };
+        if (key && STANDARD_NUT_BOLT_WEIGHTS[key]) {
+            return STANDARD_NUT_BOLT_WEIGHTS[key];
+        }
+
+        // 3. Fallback by SAP code
+        const code = String(item.itemCode || '').trim();
+        const codeWeights = {
+            '17000637': 0.380, // 16x200
+            '17000636': 0.299, // 16x150
+            '17000619': 0.220, // 16x100
+            '17000625': 0.180, // 16x75 / 16x65
+            '17000620': 0.119, // 16x35 / 16x50
+            '17000627': 0.014, // 6x50 / 8x50
+            '17000614': 0.049, // 12x35
+            '17000617': 0.085, // 12x65
+            '17000613': 0.173, // 12x150
+            '17000632': 0.203, // 12x175
+            '17005513': 0.170  // 12x190
+        };
+        if (code && codeWeights[code]) return codeWeights[code];
+
+        // 4. Generic Nut Bolt row with no size defaults to 0.180 kg (standard M16x75)
+        if (/\bnut\s*&?\s*bou?lts?\b/i.test(String(item.desc || ''))) return 0.180;
+
+        return 0;
+    },
+
+    calculateLocationNutBolt(key, lIdx) {
+        const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        if (!sched || !Array.isArray(sched.materials)) return { totalNos: 0, totalKg: 0 };
+        const qMatrix = (this.poleScheduleQuantities && this.poleScheduleQuantities[k]) || {};
+        const locRow = qMatrix[lIdx] || {};
+
+        let totalNos = 0;
+        let totalKg = 0;
+        sched.materials.forEach((m, mIdx) => {
+            if (!this.isPoleScheduleNutBoltItem(m)) return;
+            const raw = locRow[mIdx];
+            if (raw === '' || raw === null || raw === undefined) return;
+            const n = typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(raw))) : parseFloat(raw);
+            if (!isNaN(n) && n > 0) {
+                const w = this.poleScheduleNutBoltUnitWeight(m);
+                totalNos += n;
+                totalKg += n * w;
+            }
+        });
+        return {
+            totalNos: Math.round(totalNos * 1000) / 1000,
+            totalKg: Math.round(totalKg * 1000) / 1000
+        };
     },
 
     poleScheduleMuffUnitVol(sched) {
@@ -1353,16 +1505,6 @@ window.PoleScheduleModule = {
             });
         }
         return (maxH >= 1.5) ? 0.048 : 0.027; // 400x400 for >=9m pole, baaki 300x300
-    },
-
-    poleScheduleNutBoltUnitWeight(item) {
-        if (!item) return 0;
-        let text = String(item.desc || '') + ' ' + (Array.isArray(item.sapItems) ? item.sapItems.map(s => s.desc || '').join(' ') : '');
-        const mm = String(text).toUpperCase().match(/M(\d+)\s*[X×/]\s*(\d+)/);
-        if (!mm) return 0;
-        const key = parseInt(mm[1], 10) + 'x' + parseInt(mm[2], 10);
-        const hit = (this.nutBoltData || []).find(n => String(n.size || '').toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '') === key);
-        return hit ? Math.max(0, Number(hit.weight) || 0) : 0;
     },
 
     getPoleScheduleNutBoltSummary(key) {
@@ -2235,6 +2377,12 @@ window.PoleScheduleModule = {
         }
         if (this.isPoleScheduleConcreteItem(item)) {
             return '🧱 Auto-calculated Concreting from Auger ' + this.selectedAugerSize + ' inch + Stays: ' + (qty || '0') + ' ' + (item.unit || '');
+        }
+        if (this.isPoleScheduleNutBoltItem(item)) {
+            const w = this.poleScheduleNutBoltUnitWeight(item);
+            const n = parseFloat(qty) || 0;
+            const kg = Math.round(n * w * 1000) / 1000;
+            return `🔩 Nut Bolt: ${n} Nos × ${w} kg/pc = ${kg} Kg (Activity Sheet me weight auto transfer hoga)`;
         }
         return '';
     }
