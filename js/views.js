@@ -755,6 +755,13 @@ window.ViewsModule = {
             items[0].desc = s.desc;
             items[0].uom = s.uom || 'No';
             items[0].docHeader = s.docHeader || '0031006347';
+            this.activeSapManagerItem.desc = s.desc;
+        } else if (items.length === 1) {
+            items[0].code = s.code;
+            items[0].desc = s.desc;
+            items[0].uom = s.uom || 'No';
+            items[0].docHeader = s.docHeader || '0031006347';
+            this.activeSapManagerItem.desc = s.desc;
         } else {
             if (!items.some(x => x.code === s.code)) {
                 items.push({
@@ -846,6 +853,7 @@ window.ViewsModule = {
                     targetMat.itemCode = this.activeSapManagerItem.itemCode;
                     targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
                     targetMat.sapUom = this.activeSapManagerItem.sapUom;
+                    if (this.activeSapManagerItem.desc) targetMat.desc = this.activeSapManagerItem.desc;
                     if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
                 }
             }
@@ -864,6 +872,7 @@ window.ViewsModule = {
                     targetMat.itemCode = this.activeSapManagerItem.itemCode;
                     targetMat.sapDescription = this.activeSapManagerItem.sapDescription;
                     targetMat.sapUom = this.activeSapManagerItem.sapUom;
+                    if (this.activeSapManagerItem.desc) targetMat.desc = this.activeSapManagerItem.desc;
                     if (this.activeSapManagerItem.docHeader) targetMat.docHeader = this.activeSapManagerItem.docHeader;
                 }
             }

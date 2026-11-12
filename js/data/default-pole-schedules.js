@@ -2211,18 +2211,18 @@ const defaultPoleSchedules = {
       },
       {
         "no": "37",
-        "itemCode": "17005037",
-        "desc": "RSJ 116*100 08m Pole",
+        "itemCode": "17001242",
+        "desc": "RSJ 116x100, 10 m long",
         "unit": "No.",
-        "rate": 1500,
+        "rate": 2300,
         "isExtra": true,
-        "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
+        "sapDescription": "RSJ POLE 100X116 MM 10 MTR",
         "sapUom": "NO",
         "docHeader": "0031006347",
         "sapItems": [
           {
-            "code": "17005037",
-            "desc": "RSJ POLE 100X116 MM 8 MTR",
+            "code": "17001242",
+            "desc": "RSJ POLE 100X116 MM 10 MTR",
             "uom": "NO",
             "docHeader": "0031006347"
           }
