@@ -171,7 +171,7 @@
                 this._resetInactivityTimer();
             }
         } else {
-            this.portalPasswordError = 'Galat Password! Kripya sahi Portal Password (Rakesh@123) dalein.';
+            this.portalPasswordError = 'Galat Password! Kripya sahi Password dalein.';
         }
     };
 
@@ -258,7 +258,7 @@
                 try { cb(); } catch(err) { console.error('Admin callback error:', err); }
             }
         } else {
-            this.adminPasswordError = 'Galat Password! Kripya sahi Admin Password (Rakesh@123) dalein.';
+            this.adminPasswordError = 'Galat Password! Kripya sahi Admin Password dalein.';
         }
     };
 
