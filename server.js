@@ -10,12 +10,19 @@ const https = require('https');
 const app = express();
 
 // API routes (/api/billing) — helmet/rate-limit/auth api/index.js ke andar.
-// IMPORTANT: apiApp ko sirf /api/* par chalao. Agar local MONGODB_URI nahi hai,
-// to live Vercel backend se transparently proxy karo taaki local dev me sabhi
-// MongoDB bills, 62 contractors aur sync seamless chalein.
+// IMPORTANT: apiApp ko sirf /api/* par chalao. Agar local database (Firebase/MongoDB) nahi hai,
+// to live Vercel backend se transparently proxy karo taaki local dev me sabhi bills,
+// 62 contractors aur sync seamless chalein.
 app.use((req, res, next) => {
   if (req.path === '/api' || req.path.startsWith('/api/')) {
-    if (process.env.MONGODB_URI) {
+    const fs = require('fs');
+    const hasFirebase = !!(
+      process.env.FIREBASE_SERVICE_ACCOUNT ||
+      process.env.FIREBASE_PROJECT_ID ||
+      fs.existsSync(path.join(__dirname, 'serviceAccountKey.json')) ||
+      fs.existsSync(path.join(__dirname, 'firebase-key.json'))
+    );
+    if (hasFirebase || process.env.MONGODB_URI) {
       return apiApp(req, res, next);
     }
     const targetUrl = 'https://billing-pro-dusky.vercel.app' + req.originalUrl;

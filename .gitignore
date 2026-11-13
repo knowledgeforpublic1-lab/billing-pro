@@ -14,6 +14,8 @@ contractor_data.json
 
 .vercel
 .env*
+*serviceAccountKey*.json
+*firebase*.json
 # Local backup zips + Office lock files — repo me nahi
 BACKUP_FULL_2026-09-22.zip
 BACKUP_WORKING_2026-09-22.zip

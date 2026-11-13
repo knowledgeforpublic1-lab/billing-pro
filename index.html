@@ -405,7 +405,7 @@
                                     <div class="apptoolbar" style="border-bottom: 1px solid #c4c4c4; background: #eef0f3;">
                                         <span class="mtitle">🕘 System Status & Cloud Connection</span>
                                         <span class="sp"></span>
-                                        <span style="font-size: 0.68rem; color: #777;">MongoDB Atlas · rev {{ cloudRev }}</span>
+                                        <span style="font-size: 0.68rem; color: #777;">Firebase Cloud · rev {{ cloudRev }}</span>
                                     </div>
                                     <table class="alv">
                                         <colgroup>
@@ -418,7 +418,7 @@
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td class="ctr"><span class="st g">● Connected</span></td><td>Database</td><td>MongoDB Atlas Cluster (Primary)</td><td>System Engine</td><td class="ctr mono">rev {{ cloudRev }}</td>
+                                                <td class="ctr"><span class="st g">● Connected</span></td><td>Database</td><td>Firebase Firestore (Primary)</td><td>System Engine</td><td class="ctr mono">rev {{ cloudRev }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="ctr"><span class="st g">● Active</span></td><td>Active Bill</td><td>{{ effectiveBillNo || 'RSL/RA/02' }} — {{ getContractorDisplayName() || 'M/s Ranjeet Singh' }}</td><td>RK — R. Kushawaha</td><td class="ctr mono">{{ activeBillId }}</td>
@@ -2528,7 +2528,7 @@
                         <span style="font-size: 1.3rem;">📚</span>
                         <div>
                             <div class="modal-title" style="font-size: 1rem; font-weight: 800; color: var(--text-main);">SAP Material Master</div>
-                            <div style="font-size: 0.73rem; color: var(--text-muted);">{{ sapMaterialsMaster.length }} items ⬢ ☁️ MongoDB me save ⬢ har PC/phone par auto-sync</div>
+                            <div style="font-size: 0.73rem; color: var(--text-muted);">{{ sapMaterialsMaster.length }} items ⬢ ☁️ Firebase Cloud me save ⬢ har PC/phone par auto-sync</div>
                         </div>
                     </div>
                     <button class="modal-close" @click="showSapMasterModal = false">✕</button>
@@ -2743,7 +2743,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: DATABASE BILLS (MONGODB) -->
+                    <!-- TAB 2: DATABASE BILLS (FIREBASE / CLOUD) -->
                     <div v-else-if="savedBillsModalTab === 'database'">
                         <!-- Search & Actions Bar -->
                         <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
@@ -2751,7 +2751,7 @@
                                 <input type="text" v-model="savedBillsSearchQuery" placeholder="🔍 Search bill by Bill No, Date, Contractor, Project..."
                                     style="width: 100%; padding: 0.45rem 0.75rem; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-input); color: var(--text-main); font-size: 0.84rem; outline: none;">
                             </div>
-                            <button type="button" class="btn btn-secondary" @click="loadSavedBillsList" :disabled="isLoadingBills" title="Refresh bills list from MongoDB" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                            <button type="button" class="btn btn-secondary" @click="loadSavedBillsList" :disabled="isLoadingBills" title="Refresh bills list from Firebase Cloud" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
                                 <span :class="{ 'spin-anim': isLoadingBills }">🔄</span>
                                 <span>Refresh</span>
                             </button>
@@ -2760,7 +2760,7 @@
                         <!-- Loading State -->
                         <div v-if="isLoadingBills" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
                             <div class="spin-anim" style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
-                            <div style="font-size: 0.88rem; font-weight: 600;">Loading saved bills from MongoDB...</div>
+                            <div style="font-size: 0.88rem; font-weight: 600;">Loading saved bills from Firebase Cloud...</div>
                         </div>
 
                         <!-- Bills Cards List -->

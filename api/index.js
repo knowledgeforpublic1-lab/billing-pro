@@ -1,9 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const db = require('./db');
 
 const app = express();
 
@@ -91,225 +91,89 @@ function pickAllowedKeys(obj) {
     return out;
 }
 
-// MongoDB Connection Caching for Serverless
-let cachedDb = null;
-
-async function connectToDatabase() {
-    if (cachedDb) {
-        return cachedDb;
-    }
-    const MONGODB_URI = process.env.MONGODB_URI;
-    if (!MONGODB_URI) {
-        throw new Error('MONGODB_URI env is not defined. Vercel env variables ya local .env me set karo.');
-    }
-
-    log.info('DB', 'Connecting to MongoDB Atlas...');
-    const client = await mongoose.connect(MONGODB_URI, { family: 4 });
-    cachedDb = client;
-    log.info('DB', 'Successfully connected to MongoDB Atlas');
-    return client;
-}
-
-// 500 ka exact kaaran client tak pahuchao (password kabhi nahi bhejte — sirf hint)
-function dbErrorHint(err) {
-    const msg = (err && err.message ? err.message : String(err || ''));
-    if (/MONGODB_URI env is not defined/.test(msg)) return 'MONGODB_URI env missing hai — Vercel env vars me dalo + redeploy karo';
-    if (/bad auth|authentication failed/i.test(msg)) return 'MongoDB username/password galat hai — Atlas Database Access me check karo';
-    if (/IP|whitelist|network|timed out|ECONNREFUSED|ENOTFOUND/i.test(msg)) return 'MongoDB tak network nahi pahunch raha — Atlas Network Access me 0.0.0.0/0 allow karo';
-    return 'Database error — Vercel Logs me pura error dekho';
-}
-
-// Billing State Schema and Model (rev = optimistic-concurrency version;
-// purana khula tab naya cloud data overwrite na kar paye)
-const billingStateSchema = new mongoose.Schema({
-    dataId: { type: String, default: 'main-billing-state', unique: true },
-    billNo: { type: String, default: '' },
-    raNo: { type: String, default: '' },
-    workOrderNo: { type: String, default: '' },
-    taxableAmount: { type: Number, default: 0 },
-    gstAmount: { type: Number, default: 0 },
-    grandTotal: { type: Number, default: 0 },
-    billDate: { type: String, default: '' },
-    contractorName: { type: String, default: '' },
-    projectName: { type: String, default: '' },
-    isFinalized: { type: Boolean, default: false },
-    stateData: { type: Object, required: true },
-    rev: { type: Number, default: 0 },
-    updatedAt: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const BillingState = mongoose.models.BillingState || mongoose.model('BillingState', billingStateSchema);
-
-// Health endpoint — DB connection status
+// Health endpoint — DB connection status (Firebase Firestore / MongoDB)
 app.get('/api/health', async (req, res) => {
     try {
-        const ready = mongoose.connection.readyState === 1;
+        let provider = db.getProvider();
+        let connected = false;
+        try {
+            const resConn = await db.connect();
+            provider = resConn.provider || provider;
+            connected = true;
+        } catch (e) {
+            connected = false;
+        }
         res.json({
-            ok: ready,
-            readyState: ready ? 'connected' : 'disconnected',
+            ok: connected,
+            provider,
+            readyState: connected ? 'connected' : 'disconnected',
             timestamp: new Date().toISOString()
         });
     } catch (err) {
         log.error('HEALTH', 'Health check failed', err);
-        res.status(500).json({ ok: false, readyState: 'error', error: err.message, timestamp: new Date().toISOString() });
+        res.status(500).json({ ok: false, provider: db.getProvider(), readyState: 'error', error: err.message, timestamp: new Date().toISOString() });
     }
 });
 
 // Routes
 app.get('/api/billing', requireApiKey, async (req, res) => {
     try {
-        await connectToDatabase();
         const rawDataId = (req.query && req.query.dataId && String(req.query.dataId).trim())
             ? String(req.query.dataId).trim()
             : '';
         let state = null;
         if (!rawDataId || rawDataId === 'latest') {
-            state = await BillingState.findOne({}).sort({ updatedAt: -1 });
+            state = await db.getLatestBillingState();
         } else {
-            state = await BillingState.findOne({ dataId: rawDataId });
+            state = await db.getBillingState(rawDataId);
             // If requested dataId was not found, fallback to the latest active bill
             if (!state) {
-                state = await BillingState.findOne({}).sort({ updatedAt: -1 });
+                state = await db.getLatestBillingState();
             }
         }
         if (!state) {
             log.info('GET', `No billing state found for ${rawDataId || 'latest'} — returning null`);
             return res.json({ success: true, data: null, dataId: rawDataId || 'main-billing-state' });
         }
-        log.info('GET', `Billing state fetched for ${state.dataId} (rev: ${state.rev || 0})`);
+        log.info('GET', `Billing state fetched for ${state.dataId} (rev: ${state.rev || 0}, provider: ${db.getProvider()})`);
         res.json({ success: true, dataId: state.dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         log.error('GET', 'Error fetching billing data', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
 app.get('/api/bills', requireApiKey, async (req, res) => {
     try {
-        await connectToDatabase();
-        const docs = await BillingState.find({})
-            .select('dataId billNo raNo workOrderNo taxableAmount gstAmount grandTotal billDate contractorName projectName isFinalized rev updatedAt createdAt stateData.projectMeta stateData.invoiceData stateData.activities stateData.activityQuantities')
-            .sort({ updatedAt: -1 })
-            .lean();
-        
-        const bills = docs.map(doc => {
-            const pm = (doc.stateData && doc.stateData.projectMeta) || {};
-            const inv = (doc.stateData && doc.stateData.invoiceData) || {};
-
-            let ra = String(doc.raNo || pm.raNo || inv.raNo || '').trim();
-            let billNo = String(doc.billNo || pm.billNo || inv.invoiceNo || '').trim();
-            if (billNo === 'Main Bill') billNo = '';
-
-            let displayBillNo = '';
-            if (billNo) {
-                displayBillNo = billNo;
-            } else if (ra) {
-                displayBillNo = 'RA-' + ra.padStart(2, '0');
-            } else {
-                displayBillNo = doc.dataId === 'main-billing-state' ? 'Main Bill' : 'Draft Bill';
-            }
-
-            const workOrderNo = doc.workOrderNo || inv.workOrderNo || pm.workOrderNo || pm.poNo || inv.poNo || '—';
-            const contractor = doc.contractorName || inv.contractorName || inv.contractorFirm || pm.contractorName || pm.contractorFirm || 'Not Assigned';
-            const billDate = doc.billDate || inv.invoiceDate || pm.billDate || pm.date || '—';
-
-            let taxable = Number(doc.taxableAmount || 0);
-            let gst = Number(doc.gstAmount || 0);
-            let grand = Number(doc.grandTotal || 0);
-
-            if (taxable === 0 && Array.isArray(inv.items) && inv.items.length > 0) {
-                taxable = inv.items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
-                taxable = Math.round(taxable * 100) / 100;
-            }
-
-            if (taxable === 0 && doc.stateData && doc.stateData.activities) {
-                const acts = doc.stateData.activities || {};
-                const qts = doc.stateData.activityQuantities || {};
-                let actSum = 0;
-                Object.keys(acts).forEach(k => {
-                    const act = acts[k];
-                    if (act && act.rate) {
-                        let q = 0;
-                        const qRow = qts[k];
-                        if (Array.isArray(qRow)) {
-                            qRow.forEach(locRow => {
-                                if (Array.isArray(locRow)) locRow.forEach(v => { q += Number(v) || 0; });
-                                else q += Number(locRow) || 0;
-                            });
-                        } else if (qRow && typeof qRow === 'object') {
-                            Object.values(qRow).forEach(v => { q += Number(v) || 0; });
-                        } else {
-                            q = Number(qRow) || 0;
-                        }
-                        actSum += q * (Number(act.rate) || 0);
-                    }
-                });
-                if (actSum > 0) {
-                    taxable = Math.round(actSum * 0.85 * 100) / 100;
-                }
-            }
-
-            if (gst === 0 && taxable > 0) {
-                if (inv.gstType === 'NONE') {
-                    gst = 0;
-                } else {
-                    gst = Math.round(taxable * 0.18 * 100) / 100;
-                }
-            }
-
-            if (grand === 0 && taxable > 0) {
-                grand = Math.round((taxable + gst) * 100) / 100;
-            }
-
-            return {
-                dataId: doc.dataId || 'main-billing-state',
-                billNo: displayBillNo,
-                raNo: ra,
-                workOrderNo: workOrderNo,
-                billDate: billDate,
-                contractorName: contractor,
-                projectName: doc.projectName || pm.projectName || 'Billing Project',
-                taxableAmount: taxable,
-                gstAmount: gst,
-                totalAmount: grand,
-                grandTotal: grand,
-                isFinalized: doc.isFinalized !== undefined ? !!doc.isFinalized : !!(doc.stateData && doc.stateData.isFinalized),
-                rev: doc.rev || 0,
-                updatedAt: doc.updatedAt || new Date()
-            };
-        });
-        res.json({ success: true, bills });
+        const bills = await db.listBills();
+        res.json({ success: true, bills, provider: db.getProvider() });
     } catch (err) {
         log.error('GET-BILLS', 'Error fetching bills list', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
 app.post('/api/billing/delete', requireApiKey, async (req, res) => {
     try {
-        await connectToDatabase();
         const dataId = req.body && req.body.dataId ? String(req.body.dataId).trim() : '';
         if (!dataId) {
             return res.status(400).json({ success: false, error: 'dataId is required' });
         }
-        const count = await BillingState.countDocuments();
+        const count = await db.countBills();
         if (count <= 1) {
             return res.status(400).json({ success: false, error: 'Cannot delete the only existing bill. Database me kam se kam ek bill hona chahiye.' });
         }
-        await BillingState.deleteOne({ dataId });
-        log.info('DELETE-BILL', `Bill deleted: ${dataId}`);
+        await db.deleteBillingState(dataId);
+        log.info('DELETE-BILL', `Bill deleted: ${dataId} (${db.getProvider()})`);
         res.json({ success: true, message: 'Bill deleted successfully' });
     } catch (err) {
         log.error('DELETE-BILL', 'Error deleting bill', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
 app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
     try {
-        await connectToDatabase();
-
         if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
             log.warn('POST', 'Invalid payload received (not a JSON object)');
             return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
@@ -334,7 +198,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
                 ? String(req.query.dataId).trim()
                 : '');
         if (!dataId || dataId === 'latest') {
-            const latestDoc = await BillingState.findOne({}).sort({ updatedAt: -1 });
+            const latestDoc = await db.getLatestBillingState();
             dataId = (latestDoc && latestDoc.dataId) ? latestDoc.dataId : 'main-billing-state';
         }
 
@@ -342,7 +206,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
 
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
-        const existing = await BillingState.findOne({ dataId });
+        const existing = await db.getBillingState(dataId);
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
             log.warn('POST', 'Save rejected — bill is finalized/locked');
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
@@ -465,66 +329,50 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         let metaGrand = Math.round((metaTaxable + metaGst) * 100) / 100;
 
         const nextRev = curRev + 1;
-        await BillingState.findOneAndUpdate(
-            { dataId },
-            {
-                dataId,
-                billNo: metaBillNo,
-                raNo: metaRaNo,
-                workOrderNo: metaWoNo,
-                taxableAmount: metaTaxable,
-                gstAmount: metaGst,
-                grandTotal: metaGrand,
-                billDate: metaBillDate,
-                contractorName: metaContractor,
-                projectName: metaProject,
-                isFinalized: metaIsFinalized,
-                stateData: dataToSave,
-                rev: nextRev,
-                updatedAt: new Date()
-            },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        await db.saveBillingState(dataId, {
+            dataId,
+            billNo: metaBillNo,
+            raNo: metaRaNo,
+            workOrderNo: metaWoNo,
+            taxableAmount: metaTaxable,
+            gstAmount: metaGst,
+            grandTotal: metaGrand,
+            billDate: metaBillDate,
+            contractorName: metaContractor,
+            projectName: metaProject,
+            isFinalized: metaIsFinalized,
+            stateData: dataToSave,
+            rev: nextRev,
+            updatedAt: new Date().toISOString()
+        });
 
-        log.info('POST', `Data saved successfully for ${dataId} (rev: ${nextRev}, payload: ${rawLen} bytes)`);
-        res.json({ success: true, message: 'Data saved successfully', dataId, rev: nextRev });
+        log.info('POST', `Data saved successfully for ${dataId} (rev: ${nextRev}, payload: ${rawLen} bytes, provider: ${db.getProvider()})`);
+        res.json({ success: true, message: 'Data saved successfully', dataId, rev: nextRev, provider: db.getProvider() });
     } catch (err) {
         log.error('POST', 'Error saving billing data', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
 // ============ Reconciliation (Excel-parsed dataset) — online copy ============
-const reconciliationStateSchema = new mongoose.Schema({
-    dataId: { type: String, default: 'main-reconciliation-state', unique: true },
-    stateData: { type: Object, required: true },
-    rev: { type: Number, default: 0 },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-const ReconciliationState = mongoose.models.ReconciliationState
-    || mongoose.model('ReconciliationState', reconciliationStateSchema);
 
 app.get('/api/reconciliation', requireApiKey, async (req, res) => {
     try {
-        await connectToDatabase();
-        const state = await ReconciliationState.findOne({ dataId: 'main-reconciliation-state' });
+        const state = await db.getReconciliationState();
         if (!state) {
             log.info('GET-RECON', 'No reconciliation state found — returning null');
             return res.json({ success: true, data: null });
         }
-        log.info('GET-RECON', `Reconciliation state fetched (rev: ${state.rev || 0})`);
+        log.info('GET-RECON', `Reconciliation state fetched (rev: ${state.rev || 0}, provider: ${db.getProvider()})`);
         res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         log.error('GET-RECON', 'Error fetching reconciliation data', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
 app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) => {
     try {
-        await connectToDatabase();
-
         if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
             return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
         }
@@ -541,7 +389,7 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
         const incoming = req.body.data && typeof req.body.data === 'object' && !Array.isArray(req.body.data)
             ? req.body.data : req.body;
         const incomingContractors = Array.isArray(incoming.Contractors) ? incoming.Contractors : [];
-        const existing = await ReconciliationState.findOne({ dataId: 'main-reconciliation-state' });
+        const existing = await db.getReconciliationState();
         const existingContractors = (existing && existing.stateData && Array.isArray(existing.stateData.Contractors))
             ? existing.stateData.Contractors : [];
 
@@ -558,16 +406,12 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
         }
 
         const nextRev = ((existing && typeof existing.rev === 'number') ? existing.rev : 0) + 1;
-        await ReconciliationState.findOneAndUpdate(
-            { dataId: 'main-reconciliation-state' },
-            { stateData: incoming, rev: nextRev, updatedAt: new Date() },
-            { upsert: true, new: true }
-        );
-        log.info('POST-RECON', `Saved (rev: ${nextRev}, payload: ${rawLen} bytes)`);
-        res.json({ success: true, message: 'Reconciliation data saved', rev: nextRev });
+        await db.saveReconciliationState(incoming, nextRev);
+        log.info('POST-RECON', `Saved (rev: ${nextRev}, payload: ${rawLen} bytes, provider: ${db.getProvider()})`);
+        res.json({ success: true, message: 'Reconciliation data saved', rev: nextRev, provider: db.getProvider() });
     } catch (err) {
         log.error('POST-RECON', 'Error saving reconciliation data', err);
-        res.status(500).json({ success: false, error: dbErrorHint(err) });
+        res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
 });
 
@@ -849,28 +693,14 @@ app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit
             log.warn(ctx, `Disk file write failed (e.g. read-only serverless environment): ${fsErr.message}`);
         }
 
-        // Also persist to MongoDB for cross-PC synchronization
+        // Also persist to Cloud Database for cross-PC synchronization
         try {
-            await connectToDatabase();
-            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
-                key: { type: String, unique: true },
-                data: { type: Object },
-                updatedAt: { type: Date, default: Date.now }
-            }));
-            await DefaultConfig.findOneAndUpdate(
-                { key: 'poleSchedulesMaster' },
-                { key: 'poleSchedulesMaster', data: poleSchedules, updatedAt: new Date() },
-                { upsert: true, new: true }
-            );
-
+            await db.saveDefaultConfig('poleSchedulesMaster', poleSchedules);
             // Also update all BillingState documents so live bills immediately inherit updated schedules
-            await BillingState.updateMany(
-                {},
-                { $set: { 'stateData.poleSchedules': poleSchedules, updatedAt: new Date() }, $inc: { rev: 1 } }
-            );
-            log.info(ctx, 'Successfully synced pole schedules to MongoDB Atlas for cross-PC default persistence');
+            await db.updateAllBillsPoleSchedules(poleSchedules);
+            log.info(ctx, `Successfully synced pole schedules to Cloud Database (${db.getProvider()}) for cross-PC persistence`);
         } catch (dbErr) {
-            log.warn(ctx, `MongoDB backup skipped/failed: ${dbErr.message}`);
+            log.warn(ctx, `Cloud backup skipped/failed: ${dbErr.message}`);
         }
 
         return res.json({
@@ -888,15 +718,9 @@ app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit
 app.get('/api/default-pole-schedules', async (req, res) => {
     try {
         try {
-            await connectToDatabase();
-            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
-                key: { type: String, unique: true },
-                data: { type: Object },
-                updatedAt: { type: Date, default: Date.now }
-            }));
-            const record = await DefaultConfig.findOne({ key: 'poleSchedulesMaster' });
+            const record = await db.getDefaultConfig('poleSchedulesMaster');
             if (record && record.data && Object.keys(record.data).length > 0) {
-                return res.json({ success: true, poleSchedules: record.data, source: 'mongodb' });
+                return res.json({ success: true, poleSchedules: record.data, source: db.getProvider() });
             }
         } catch (e) {}
 
@@ -912,9 +736,7 @@ app.get('/api/default-pole-schedules', async (req, res) => {
     }
 });
 
-// POST: UI Mapping ↔ hardcode default-activities.js (+ SAP master) on disk & MongoDB
-// Pole-schedules flow jaisa hi — Mapping tab ke push/sync par user ki mapping
-// MongoDB DefaultConfig me master save hoti hai taaki har PC/phone par same mile.
+// POST: UI Mapping ↔ hardcode default-activities.js (+ SAP master) on disk & Cloud Database
 app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-ACTIVITIES';
     try {
@@ -956,48 +778,28 @@ app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '1
             }
         }
 
-        // MongoDB DefaultConfig — cross-PC master persistence
-        let mongoSaved = false;
+        // Cloud Database DefaultConfig — cross-PC master persistence
+        let cloudSaved = false;
         try {
-            await connectToDatabase();
-            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
-                key: { type: String, unique: true },
-                data: { type: Object },
-                updatedAt: { type: Date, default: Date.now }
-            }));
             if (isActObj) {
-                await DefaultConfig.findOneAndUpdate(
-                    { key: 'activitiesMaster' },
-                    { key: 'activitiesMaster', data: activities, updatedAt: new Date() },
-                    { upsert: true, new: true }
-                );
+                await db.saveDefaultConfig('activitiesMaster', activities);
+                await db.updateAllBillsActivities(activities);
             }
             if (isSapArr) {
-                await DefaultConfig.findOneAndUpdate(
-                    { key: 'sapMaterialsMaster' },
-                    { key: 'sapMaterialsMaster', data: Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []) , updatedAt: new Date() },
-                    { upsert: true, new: true }
-                );
+                await db.saveDefaultConfig('sapMaterialsMaster', Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []));
             }
-
-            // Live bills ko turant updated mapping do (pole-schedules jaisa hi behavior)
-            if (isActObj) {
-                await BillingState.updateMany(
-                    {},
-                    { $set: { 'stateData.activities': activities, updatedAt: new Date() }, $inc: { rev: 1 } }
-                );
-            }
-            mongoSaved = true;
-            log.info(ctx, 'Successfully synced activities mapping to MongoDB Atlas (DefaultConfig + live bills)');
+            cloudSaved = true;
+            log.info(ctx, `Successfully synced activities mapping to Cloud Database (${db.getProvider()})`);
         } catch (dbErr) {
-            log.warn(ctx, `MongoDB backup skipped/failed: ${dbErr.message}`);
+            log.warn(ctx, `Cloud backup skipped/failed: ${dbErr.message}`);
         }
 
         return res.json({
             success: true,
             message: 'Mapping master disk & cloud me save ho gayi!',
             files: wroteFiles,
-            mongoSaved,
+            cloudSaved,
+            provider: db.getProvider(),
             count: isActObj ? Object.keys(activities).length : 0
         });
     } catch (err) {
@@ -1006,19 +808,13 @@ app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '1
     }
 });
 
-// GET: Fetch default activities mapping from Cloud (MongoDB) ya disk file
+// GET: Fetch default activities mapping from Cloud ya disk file
 app.get('/api/default-activities', async (req, res) => {
     try {
         try {
-            await connectToDatabase();
-            const DefaultConfig = mongoose.models.DefaultConfig || mongoose.model('DefaultConfig', new mongoose.Schema({
-                key: { type: String, unique: true },
-                data: { type: Object },
-                updatedAt: { type: Date, default: Date.now }
-            }));
-            const record = await DefaultConfig.findOne({ key: 'activitiesMaster' });
+            const record = await db.getDefaultConfig('activitiesMaster');
             if (record && record.data && Object.keys(record.data).length > 0) {
-                return res.json({ success: true, activities: record.data, source: 'mongodb' });
+                return res.json({ success: true, activities: record.data, source: db.getProvider() });
             }
         } catch (e) {}
 

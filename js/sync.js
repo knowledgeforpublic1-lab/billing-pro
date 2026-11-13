@@ -1108,7 +1108,8 @@ window.SyncModule = {
     },
     getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
-    async syncToMongoNow(opts) {
+    syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
+    async syncToCloudNow(opts) {
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
@@ -1149,7 +1150,7 @@ window.SyncModule = {
             if (res.status === 423) {
                 this.lastSentHash = hash;
                 this.syncStatus = 'local';
-                console.info('Mongo: bill locked hai, local copy safe hai');
+                console.info('Cloud: bill locked hai, local copy safe hai');
                 if (manual) this.showToast('Bill locked — Unlock first to sync', '🔒');
                 return false;
             }
@@ -1216,7 +1217,7 @@ window.SyncModule = {
             return true;
         } catch (err) {
             this.syncStatus = 'error';
-            console.error('Mongo sync failed (local copy safe hai):', err);
+            console.error('Cloud sync failed (local copy safe hai):', err);
             const m = String((err && err.message) || 'network/server error').slice(0, 150);
             this.showToast('Cloud sync FAIL: ' + m + '. Local copy safe, retrying...', '⚠️');
             this._scheduleSyncRetry();
