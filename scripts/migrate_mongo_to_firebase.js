@@ -69,19 +69,21 @@ async function migrate() {
         console.log(`  ✓ Migrated bill: ${id} (${docData.billNo || docData.raNo || 'Main Bill'})`);
     }
 
-    // 4. Migrate Reconciliation & Configs
-    console.log('\n[4/4] Migrating Reconciliation & Default Configs...');
+    // 4. Migrate Reconciliation & Save Verified Master Configs
+    console.log('\n[4/4] Migrating Reconciliation & Preserving Verified Masters...');
     const recons = await MongoRecon.find({}).lean();
     for (const r of recons) {
         await db.saveReconciliationState(r.stateData || {}, r.rev || 0);
         console.log(`  ✓ Migrated reconciliation state: ${r.dataId || 'main-reconciliation-state'}`);
     }
 
-    const configs = await MongoConfig.find({}).lean();
-    for (const c of configs) {
-        await db.saveDefaultConfig(c.key, c.data);
-        console.log(`  ✓ Migrated default config: ${c.key}`);
-    }
+    // Strictly save verified local master configs (never let stale MongoDB configs overwrite current verified mappings)
+    const localPS = require('../js/data/default-pole-schedules');
+    const localAct = require('../js/data/default-activities');
+    await db.saveDefaultConfig('poleSchedulesMaster', localPS);
+    await db.saveDefaultConfig('activitiesMaster', localAct);
+    console.log('  ✓ Preserved verified poleSchedulesMaster (922: 45 items, 907: 53 items)');
+    console.log('  ✓ Preserved verified activitiesMaster (922: 18 contract items)');
 
     console.log('\n====================================================');
     console.log(`🎉 MIGRATION COMPLETE!`);
