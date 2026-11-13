@@ -193,18 +193,28 @@
     };
 
     allMethods.startAdminElevatedTimer = function() {
+        this.adminElevatedSecondsLeft = 300;
         if (this._adminElevatedTimer) clearTimeout(this._adminElevatedTimer);
         const ELEVATED_DURATION_MS = 5 * 60 * 1000; // 5 minutes
         this._adminElevatedTimer = setTimeout(() => {
             if (this.isAdminElevated) {
                 this.isAdminElevated = false;
                 this.isAdminUnlocked = false;
+                this.adminElevatedSecondsLeft = 300;
                 console.info('[AdminElevated] 5-minute administrative window expired. Returning to standard portal access.');
                 if (typeof this.showToast === 'function') {
                     this.showToast('Admin 5-minute session samapt: Standard Portal access active.', 'info');
                 }
             }
         }, ELEVATED_DURATION_MS);
+    };
+
+    allMethods.formatTimerDisplay = function(seconds) {
+        if (seconds == null || isNaN(seconds)) return '05:00';
+        const s = Math.max(0, Math.floor(seconds));
+        const m = Math.floor(s / 60);
+        const remSec = s % 60;
+        return (m < 10 ? '0' + m : m) + ':' + (remSec < 10 ? '0' + remSec : remSec);
     };
 
     allMethods.openAdminModal = function(pendingCallback) {
@@ -298,6 +308,8 @@
                 portalPasswordError: '',
                 showPortalPasswordText: false,
                 isAdminElevated: false,
+                adminElevatedSecondsLeft: 300,
+                inactivitySecondsLeft: 300,
                 isAdminUnlocked: false,
                 showAdminModal: false,
                 showAdminPasswordText: false,
@@ -2395,9 +2407,29 @@
                 };
 
                 const resetInactivityTimer = () => {
+                    this.inactivitySecondsLeft = 300;
                     if (inactivityTimer) clearTimeout(inactivityTimer);
                     inactivityTimer = setTimeout(onInactivityTrigger, INACTIVITY_TIMEOUT_MS);
                 };
+
+                // Live 1-second countdown ticker for UI countdown display
+                if (this._countdownTicker) clearInterval(this._countdownTicker);
+                this._countdownTicker = setInterval(() => {
+                    if (this.isPortalUnlocked) {
+                        if (this.inactivitySecondsLeft > 0) {
+                            this.inactivitySecondsLeft--;
+                        }
+                        if (this.isAdminElevated) {
+                            if (this.adminElevatedSecondsLeft > 0) {
+                                this.adminElevatedSecondsLeft--;
+                            } else {
+                                this.isAdminElevated = false;
+                                this.isAdminUnlocked = false;
+                                this.adminElevatedSecondsLeft = 300;
+                            }
+                        }
+                    }
+                }, 1000);
 
                 const userActivityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
                 userActivityEvents.forEach(evt => {

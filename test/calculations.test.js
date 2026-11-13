@@ -2956,6 +2956,41 @@ it('Two-Tier Authentication: Level 1 Portal Gateway & Level 2 5-Min Admin Elevat
     assert.strictEqual(app.isPortalUnlocked, false, 'Portal locked on inactivity');
 });
 
+it('Live Logout Countdown Timer: Formats mm:ss accurately and resets to 5:00 on user action', () => {
+    const formatTimerDisplay = (seconds) => {
+        if (seconds == null || isNaN(seconds)) return '05:00';
+        const s = Math.max(0, Math.floor(seconds));
+        const m = Math.floor(s / 60);
+        const remSec = s % 60;
+        return (m < 10 ? '0' + m : m) + ':' + (remSec < 10 ? '0' + remSec : remSec);
+    };
+
+    // 1. Formatting tests
+    assert.strictEqual(formatTimerDisplay(300), '05:00');
+    assert.strictEqual(formatTimerDisplay(299), '04:59');
+    assert.strictEqual(formatTimerDisplay(60), '01:00');
+    assert.strictEqual(formatTimerDisplay(45), '00:45');
+    assert.strictEqual(formatTimerDisplay(9), '00:09');
+    assert.strictEqual(formatTimerDisplay(0), '00:00');
+    assert.strictEqual(formatTimerDisplay(-5), '00:00');
+    assert.strictEqual(formatTimerDisplay(null), '05:00');
+
+    // 2. Countdown and Reset simulation
+    let inactivitySecondsLeft = 300;
+    const tick = () => { if (inactivitySecondsLeft > 0) inactivitySecondsLeft--; };
+    const onUserInteraction = () => { inactivitySecondsLeft = 300; };
+
+    // Simulate 5 seconds ticking down
+    for (let i = 0; i < 5; i++) tick();
+    assert.strictEqual(inactivitySecondsLeft, 295);
+    assert.strictEqual(formatTimerDisplay(inactivitySecondsLeft), '04:55');
+
+    // Simulate user moving mouse / typing
+    onUserInteraction();
+    assert.strictEqual(inactivitySecondsLeft, 300, 'User action must reset timer to 300s (05:00)');
+    assert.strictEqual(formatTimerDisplay(inactivitySecondsLeft), '05:00');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

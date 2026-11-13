@@ -174,15 +174,26 @@
                 <span class="sys-sync-link sync-chip" @click="syncToMongoNow({ manual: true })" style="cursor: pointer;" :title="'Cloud rev ' + cloudRev + ' · Click to sync'">
                     <span class="sync-dot"></span> {{ syncStatus === 'synced' ? 'Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save Online') }} · rev {{ cloudRev }}
                 </span>
+
+                <!-- ⏱️ Live Inactivity Logout Countdown Timer (Synced ke bagal me) -->
+                <span v-if="isPortalUnlocked" 
+                      class="logout-timer-chip" 
+                      :class="{ 'warning': inactivitySecondsLeft <= 60 && inactivitySecondsLeft > 20, 'danger': inactivitySecondsLeft <= 20 }"
+                      :title="'Inactivity Logout Timer: ' + formatTimerDisplay(inactivitySecondsLeft) + ' baki hai. 5 minute tak koi mouse/keyboard movement na ho to kaam save karke logout ho jayega. Koi bhi kaam karne se timer wapas 05:00 reset ho jata hai.'">
+                    <span class="timer-icon">{{ inactivitySecondsLeft <= 20 ? '🚨' : (inactivitySecondsLeft <= 60 ? '⚠️' : '⏱️') }}</span>
+                    <span class="timer-label">Logout in</span>
+                    <span class="timer-value">{{ formatTimerDisplay(inactivitySecondsLeft) }}</span>
+                </span>
+
                 <span class="u user-chip" 
                       @click="onUserChipClick" 
                       :class="{ 'is-admin-active': isAdminElevated }"
                       style="cursor: pointer; user-select: none;"
-                      :title="isAdminElevated ? 'Rakesh Kushawaha (Admin 5-Min Elevated Mode Active) · Click to lock Admin mode' : 'Rakesh Kushawaha · Portal Active (Click for Admin Mode)'">
+                      :title="isAdminElevated ? 'Rakesh Kushawaha (Admin 5-Min Elevated Mode Active · ' + formatTimerDisplay(adminElevatedSecondsLeft) + ' baki) · Click to lock Admin mode' : 'Rakesh Kushawaha · Portal Active (Click for Admin Mode)'">
                     <span class="avatar-rk">RK</span>
                     <span>Rakesh Kushawaha</span>
                     <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin Elevated (5 Min)' : 'Portal Active'"></span>
-                    <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN 5m</span>
+                    <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN {{ formatTimerDisplay(adminElevatedSecondsLeft) }}</span>
                 </span>
             </div>
         </div>
