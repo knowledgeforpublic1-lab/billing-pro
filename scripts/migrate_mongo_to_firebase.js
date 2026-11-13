@@ -64,7 +64,7 @@ async function migrate() {
         if (docData.updatedAt instanceof Date) docData.updatedAt = docData.updatedAt.toISOString();
         if (docData.createdAt instanceof Date) docData.createdAt = docData.createdAt.toISOString();
 
-        await firestore.collection('billing_states').doc(id).set(docData, { merge: true });
+        await db.saveBillingState(id, docData);
         billsMigrated++;
         console.log(`  ✓ Migrated bill: ${id} (${docData.billNo || docData.raNo || 'Main Bill'})`);
     }
@@ -73,21 +73,13 @@ async function migrate() {
     console.log('\n[4/4] Migrating Reconciliation & Default Configs...');
     const recons = await MongoRecon.find({}).lean();
     for (const r of recons) {
-        const docData = { ...r };
-        delete docData._id;
-        delete docData.__v;
-        if (docData.updatedAt instanceof Date) docData.updatedAt = docData.updatedAt.toISOString();
-        await firestore.collection('reconciliation_states').doc(r.dataId || 'main-reconciliation-state').set(docData, { merge: true });
+        await db.saveReconciliationState(r.stateData || {}, r.rev || 0);
         console.log(`  ✓ Migrated reconciliation state: ${r.dataId || 'main-reconciliation-state'}`);
     }
 
     const configs = await MongoConfig.find({}).lean();
     for (const c of configs) {
-        const docData = { ...c };
-        delete docData._id;
-        delete docData.__v;
-        if (docData.updatedAt instanceof Date) docData.updatedAt = docData.updatedAt.toISOString();
-        await firestore.collection('default_configs').doc(c.key).set(docData, { merge: true });
+        await db.saveDefaultConfig(c.key, c.data);
         console.log(`  ✓ Migrated default config: ${c.key}`);
     }
 
@@ -106,3 +98,4 @@ migrate().catch(err => {
     console.error('Migration failed:', err);
     process.exit(1);
 });
+

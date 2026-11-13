@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const admin = require('firebase-admin');
+const { cert, initializeApp, getApps, applicationDefault } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const mongoose = require('mongoose');
 
@@ -78,13 +78,13 @@ function tryInitFirebase() {
         try {
             if (saEnv.startsWith('{')) {
                 const saJson = JSON.parse(saEnv);
-                credential = admin.credential.cert(saJson);
+                credential = cert(saJson);
                 log.info('DB-INIT', 'Firebase credential loaded from FIREBASE_SERVICE_ACCOUNT JSON env');
             } else {
                 const p = path.isAbsolute(saEnv) ? saEnv : path.join(__dirname, '..', saEnv);
                 if (fs.existsSync(p)) {
                     const saJson = JSON.parse(fs.readFileSync(p, 'utf8'));
-                    credential = admin.credential.cert(saJson);
+                    credential = cert(saJson);
                     log.info('DB-INIT', `Firebase credential loaded from file: ${saEnv}`);
                 }
             }
@@ -99,7 +99,7 @@ function tryInitFirebase() {
             if (privateKey.includes('\\n')) {
                 privateKey = privateKey.replace(/\\n/g, '\n');
             }
-            credential = admin.credential.cert({
+            credential = cert({
                 projectId,
                 clientEmail,
                 privateKey
@@ -112,13 +112,22 @@ function tryInitFirebase() {
 
     // 3. Check default local files (for local dev)
     if (!credential) {
+        const rootDir = path.join(__dirname, '..');
         const defaultFiles = ['serviceAccountKey.json', 'firebase-service-account.json', 'firebase-key.json'];
+        try {
+            const rootFiles = fs.readdirSync(rootDir);
+            const sdkFile = rootFiles.find(f => f.includes('firebase-adminsdk') && f.endsWith('.json'));
+            if (sdkFile && !defaultFiles.includes(sdkFile)) {
+                defaultFiles.unshift(sdkFile);
+            }
+        } catch (e) { }
+
         for (const fname of defaultFiles) {
-            const p = path.join(__dirname, '..', fname);
+            const p = path.join(rootDir, fname);
             if (fs.existsSync(p)) {
                 try {
                     const saJson = JSON.parse(fs.readFileSync(p, 'utf8'));
-                    credential = admin.credential.cert(saJson);
+                    credential = cert(saJson);
                     log.info('DB-INIT', `Firebase credential loaded from local ${fname}`);
                     break;
                 } catch (err) {
@@ -131,9 +140,9 @@ function tryInitFirebase() {
     // 4. Default Application Credentials (GCP environment)
     if (!credential && projectId) {
         try {
-            credential = admin.credential.applicationDefault();
+            credential = applicationDefault();
             log.info('DB-INIT', 'Firebase using applicationDefault credentials');
-        } catch (e) {}
+        } catch (e) { }
     }
 
     if (!credential) {
@@ -141,16 +150,14 @@ function tryInitFirebase() {
     }
 
     try {
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential,
-                databaseURL: process.env.FIREBASE_DATABASE_URL
-            });
-        }
-        const db = getFirestore();
+        const app = getApps().length ? getApps()[0] : initializeApp({
+            credential,
+            databaseURL: process.env.FIREBASE_DATABASE_URL
+        });
+        const db = getFirestore(app);
         try {
             db.settings({ ignoreUndefinedProperties: true });
-        } catch (e) {}
+        } catch (e) { }
         firestoreDb = db;
         activeProvider = 'firebase';
         log.info('DB-INIT', '✅ Connected to Google Firebase Firestore successfully');
@@ -227,6 +234,72 @@ function getErrorHint(err) {
     return 'Database error — logs me pura error dekho';
 }
 
+// Threshold below Firestore 1MB document limit (safety margin for metadata)
+const FIRESTORE_MAX_DOC_SIZE = 750000;
+
+async function writeFirestoreWithChunking(docRef, docData) {
+    const serialized = JSON.stringify(docData);
+    if (serialized.length <= FIRESTORE_MAX_DOC_SIZE) {
+        const toSave = { ...docData };
+        if (toSave.updatedAt instanceof Date) toSave.updatedAt = toSave.updatedAt.toISOString();
+        if (toSave.createdAt instanceof Date) toSave.createdAt = toSave.createdAt.toISOString();
+        toSave._isChunked = false;
+        await docRef.set(toSave, { merge: true });
+        return;
+    }
+
+    log.info('DB-CHUNK', `Document ${docRef.path} size (${serialized.length} chars) exceeds 750KB, writing in chunks...`);
+    const totalChunks = Math.ceil(serialized.length / FIRESTORE_MAX_DOC_SIZE);
+    const chunksColl = docRef.collection('chunks');
+    const writePromises = [];
+    for (let i = 0; i < totalChunks; i++) {
+        const slice = serialized.substring(i * FIRESTORE_MAX_DOC_SIZE, (i + 1) * FIRESTORE_MAX_DOC_SIZE);
+        writePromises.push(chunksColl.doc(String(i)).set({ chunk: slice }));
+    }
+    await Promise.all(writePromises);
+
+    // Save metadata stub on the parent document
+    const stub = { ...docData };
+    delete stub.stateData;
+    delete stub.data;
+    stub._isChunked = true;
+    stub.totalChunks = totalChunks;
+    if (stub.updatedAt instanceof Date) stub.updatedAt = stub.updatedAt.toISOString();
+    if (stub.createdAt instanceof Date) stub.createdAt = stub.createdAt.toISOString();
+    await docRef.set(stub, { merge: true });
+    log.info('DB-CHUNK', `✓ Successfully saved ${docRef.path} across ${totalChunks} chunks`);
+}
+
+async function readFirestoreWithChunking(docSnap) {
+    if (!docSnap || !docSnap.exists) return null;
+    const data = docSnap.data();
+    if (!data || !data._isChunked) return data;
+
+    const totalChunks = data.totalChunks || 0;
+    const chunksColl = docSnap.ref.collection('chunks');
+    const readPromises = [];
+    for (let i = 0; i < totalChunks; i++) {
+        readPromises.push(chunksColl.doc(String(i)).get());
+    }
+    const chunkSnaps = await Promise.all(readPromises);
+    let fullJson = '';
+    for (const snap of chunkSnaps) {
+        if (snap.exists) {
+            fullJson += (snap.data().chunk || '');
+        }
+    }
+    try {
+        const parsed = JSON.parse(fullJson);
+        const merged = { ...data, ...parsed };
+        delete merged._isChunked;
+        delete merged.totalChunks;
+        return merged;
+    } catch (e) {
+        log.error('DB-CHUNK', `Error parsing chunked document ${docSnap.ref.path}`, e);
+        return data;
+    }
+}
+
 // ==========================================
 // BILLING STATE OPERATIONS
 // ==========================================
@@ -236,8 +309,7 @@ async function getBillingState(dataId) {
     if (activeProvider === 'firebase') {
         const docRef = firestoreDb.collection('billing_states').doc(dataId);
         const snap = await docRef.get();
-        if (!snap.exists) return null;
-        return snap.data();
+        return await readFirestoreWithChunking(snap);
     } else {
         const doc = await MongoBillingState.findOne({ dataId }).lean();
         return doc;
@@ -249,7 +321,7 @@ async function getLatestBillingState() {
     if (activeProvider === 'firebase') {
         const snap = await firestoreDb.collection('billing_states').orderBy('updatedAt', 'desc').limit(1).get();
         if (snap.empty) return null;
-        return snap.docs[0].data();
+        return await readFirestoreWithChunking(snap.docs[0]);
     } else {
         const doc = await MongoBillingState.findOne({}).sort({ updatedAt: -1 }).lean();
         return doc;
@@ -400,12 +472,7 @@ async function saveBillingState(dataId, updateDoc) {
     await connect();
     if (activeProvider === 'firebase') {
         const docRef = firestoreDb.collection('billing_states').doc(dataId);
-        // Ensure updatedAt is string/ISO for clean serialization
-        const toSave = { ...updateDoc };
-        if (toSave.updatedAt instanceof Date) {
-            toSave.updatedAt = toSave.updatedAt.toISOString();
-        }
-        await docRef.set(toSave, { merge: true });
+        await writeFirestoreWithChunking(docRef, updateDoc);
     } else {
         await MongoBillingState.findOneAndUpdate(
             { dataId },
@@ -467,8 +534,7 @@ async function getReconciliationState() {
     await connect();
     if (activeProvider === 'firebase') {
         const snap = await firestoreDb.collection('reconciliation_states').doc('main-reconciliation-state').get();
-        if (!snap.exists) return null;
-        return snap.data();
+        return await readFirestoreWithChunking(snap);
     } else {
         return await MongoReconciliationState.findOne({ dataId: 'main-reconciliation-state' }).lean();
     }
@@ -483,7 +549,8 @@ async function saveReconciliationState(stateData, nextRev) {
         updatedAt: new Date().toISOString()
     };
     if (activeProvider === 'firebase') {
-        await firestoreDb.collection('reconciliation_states').doc('main-reconciliation-state').set(docData, { merge: true });
+        const docRef = firestoreDb.collection('reconciliation_states').doc('main-reconciliation-state');
+        await writeFirestoreWithChunking(docRef, docData);
     } else {
         await MongoReconciliationState.findOneAndUpdate(
             { dataId: 'main-reconciliation-state' },
