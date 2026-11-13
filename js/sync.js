@@ -970,8 +970,75 @@ window.SyncModule = {
         const success = await this.deleteBillFromCloud(b.dataId);
         if (success) {
             this.showToast(`Bill [${billLabel}] deleted from database 🗑️`, '🗑️');
+            this.selectedDashboardBillIds = (this.selectedDashboardBillIds || []).filter(id => id !== b.dataId);
             await this.loadSavedBillsList();
         }
+    },
+    toggleSelectAllDashboardBills() {
+        const list = (this.savedBillsList && this.savedBillsList.length ? this.savedBillsList.slice(0, 8) : []);
+        if (list.length === 0) return;
+        if (this.isAllDashboardBillsSelected) {
+            this.selectedDashboardBillIds = [];
+        } else {
+            this.selectedDashboardBillIds = list.map(b => b.dataId);
+        }
+    },
+    async deleteSelectedDashboardBills() {
+        const ids = (this.selectedDashboardBillIds || []).slice();
+        if (ids.length === 0) {
+            this.showToast('Pehle bills select karein', 'ℹ️');
+            return;
+        }
+        const count = ids.length;
+        const ok = confirm(`Kya aap sach me in ${count} bills ko database se DELETE karna chahte hain?\n\nYeh action wapas nahi hoga.`);
+        if (!ok) return;
+
+        this.showToast(`${count} bills delete ho rahe hain...`, '⏳');
+        this._isLoading = true;
+        let deletedCount = 0;
+        let hadActive = false;
+
+        for (const id of ids) {
+            if (id === this.activeBillId) {
+                hadActive = true;
+            }
+            try {
+                const success = await this.deleteBillFromCloud(id);
+                if (success) deletedCount++;
+            } catch(e) {
+                console.error('Failed to delete bill ' + id, e);
+            }
+        }
+
+        if (hadActive) {
+            this.resetAllManualDataKeepMapping({ resetLocations: true });
+            if (!this.projectMeta) this.projectMeta = {};
+            const today = new Date().toISOString().slice(0, 10);
+            this.projectMeta.contractorName = '';
+            this.projectMeta.workOrderNo = '';
+            this.projectMeta.billNo = '';
+            this.projectMeta.raNo = '';
+            this.projectMeta.billDate = today;
+            if (this.invoiceData) {
+                ['contractorName', 'contractorPan', 'contractorGstin', 'bankAccountName', 'bankAccountNo', 'bankIfsc', 'bankName', 'workOrderNo', 'workOrderDate', 'divisionName', 'subDivName', 'locationName', 'feederName'].forEach(k => { this.invoiceData[k] = ''; });
+                this.invoiceData.invoiceNo = '';
+                this.invoiceData.raNo = '';
+                this.invoiceData.invoiceDate = today;
+                this.invoiceData.newBillBlank = true;
+            }
+            this.activeBillId = 'main-billing-state';
+            this.cloudRev = 0;
+            this.lastSentHash = '';
+            this.cloudConflict = false;
+            try { localStorage.setItem('lk_billing_active_bill_id', 'main-billing-state'); } catch(e) {}
+            try { this.saveToStorage(); } catch(e) {}
+            try { await this.syncToMongoNow({ manual: true, force: true }); } catch(e) {}
+        }
+
+        this.selectedDashboardBillIds = [];
+        this._isLoading = false;
+        await this.loadSavedBillsList();
+        this.showToast(`${deletedCount} bills successfully delete ho gaye 🗑️`, '🗑️');
     },
     // 🗑️ Active (draft) bill ko DISCARD / DELETE karo — database se delete + BLANK workspace
     async discardActiveBill(targetBill) {

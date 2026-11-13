@@ -325,6 +325,7 @@
                     try { return (localStorage.getItem('billing_theme') || 'dark') !== 'light'; }
                     catch(e) { return true; }
                 })(),
+                selectedDashboardBillIds: [],
                 themeMode: (function() {
                     try {
                         var m = localStorage.getItem('billing_theme_mode');
@@ -666,6 +667,12 @@
         },
 
         computed: {
+            isAllDashboardBillsSelected() {
+                const list = (this.savedBillsList && this.savedBillsList.length ? this.savedBillsList.slice(0, 8) : []);
+                if (list.length === 0) return false;
+                const sel = this.selectedDashboardBillIds || [];
+                return list.every(b => sel.includes(b.dataId));
+            },
             appsScriptRawCode() { return window.APPS_SCRIPT_SOURCE_CODE || ""; },
             currentPoleSchedule() {
                 return typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : { title: 'Pole Schedule', materials: [] };

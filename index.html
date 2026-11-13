@@ -427,15 +427,28 @@
                                         <span class="mtitle">📋 Recent RA Billing Workbooks & Cloud Status</span>
                                         <span class="sp"></span>
                                         <button class="tbtn" @click="openSavedBillsManager('database')">Manage All Bills ({{ savedBillsList ? savedBillsList.length : 0 }})</button>
+                                        <button class="tbtn" :style="{ color: selectedDashboardBillIds.length > 0 ? '#dc2626' : '#888', borderColor: selectedDashboardBillIds.length > 0 ? '#ef4444' : '#c4c4c4', fontWeight: selectedDashboardBillIds.length > 0 ? '700' : '400', background: selectedDashboardBillIds.length > 0 ? 'rgba(239, 68, 68, 0.1)' : 'transparent', cursor: selectedDashboardBillIds.length > 0 ? 'pointer' : 'not-allowed' }" :disabled="selectedDashboardBillIds.length === 0" @click="deleteSelectedDashboardBills" title="Select kiye gaye bills ko ek sath delete karein">
+                                            🗑️ Delete Selected <span v-if="selectedDashboardBillIds.length > 0">({{ selectedDashboardBillIds.length }})</span>
+                                        </button>
                                         <button class="tbtn primary" @click="openNewBillModal">+ New RA Bill</button>
                                     </div>
                                     <table class="alv" style="table-layout: fixed; width: 100%;">
                                         <colgroup>
-                                            <col style="width:10%"><col style="width:22%"><col style="width:10%"><col style="width:9%">
-                                            <col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:15%">
+                                            <col style="width:36px;">
+                                            <col style="width:11%;">
+                                            <col style="width:21%;">
+                                            <col style="width:9%;">
+                                            <col style="width:8%;">
+                                            <col style="width:12%;">
+                                            <col style="width:9%;">
+                                            <col style="width:11%;">
+                                            <col style="width:15%;">
                                         </colgroup>
                                         <thead>
                                             <tr>
+                                                <th style="width:36px; text-align: center; padding: 0.15rem;">
+                                                    <input type="checkbox" :checked="isAllDashboardBillsSelected" @change="toggleSelectAllDashboardBills" title="Sabhi bills select/deselect karein" style="cursor: pointer; width: 14px; height: 14px; margin: 0; vertical-align: middle;">
+                                                </th>
                                                 <th>Bill / RA No</th><th>Contractor Firm</th><th>Work Order No</th><th>Date</th>
                                                 <th class="num">Taxable Amount (85%)</th><th class="num">GST</th><th class="num">Grand Total</th>
                                                 <th class="ctr">Quick Actions</th>
@@ -443,6 +456,9 @@
                                         </thead>
                                         <tbody>
                                             <tr v-for="b in (savedBillsList && savedBillsList.length ? savedBillsList.slice(0, 8) : [])" :key="b.dataId">
+                                                <td style="text-align: center; padding: 0.15rem;">
+                                                    <input type="checkbox" :value="b.dataId" v-model="selectedDashboardBillIds" style="cursor: pointer; width: 14px; height: 14px; margin: 0; vertical-align: middle;">
+                                                </td>
                                                 <td class="mono lk" style="cursor: pointer;" title="Open this bill">
                                                     <span @click="openBill(b.dataId); switchView('invoice')">{{ b.billNo || 'Main Bill' }}</span>
                                                     <button class="no-print" @click.stop="renameBill(b)" title="Rename Bill / RA No" style="background: none; border: none; cursor: pointer; color: var(--accent-indigo, #6366f1); font-size: 0.72rem; padding: 0 3px; margin-left: 4px;">✏️</button>
@@ -453,15 +469,15 @@
                                                 <td class="money">{{ b.taxableAmount ? '₹' + formatCurrency(b.taxableAmount) : '₹0.00' }}</td>
                                                 <td class="money">{{ b.gstAmount ? '₹' + formatCurrency(b.gstAmount) : '₹0.00' }}</td>
                                                 <td class="money"><b>{{ (b.grandTotal || b.totalAmount) ? '₹' + formatCurrency(b.grandTotal || b.totalAmount) : '₹0.00' }}</b></td>
-                                                <td class="ctr" style="white-space: nowrap; padding: 0.18rem 0.25rem;">
-                                                    <button class="tbtn primary" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem;" @click="openBill(b.dataId); switchView('invoice')" title="Tax Invoice dekhein / edit karein">Invoice</button>
-                                                    <button class="tbtn" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px;" @click="openBill(b.dataId); switchView('detail')" title="Activity Billing dekhein / edit karein">Activities</button>
-                                                    <button class="tbtn" style="padding: 0.12rem 0.38rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px; color: var(--accent-indigo, #6366f1);" @click="renameBill(b)" title="Rename Bill / RA No">✏️</button>
-                                                    <button class="tbtn" style="padding: 0.12rem 0.38rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" @click="deleteBill(b)" title="Is Bill ko Delete karein">🗑️</button>
+                                                <td class="ctr" style="white-space: nowrap; padding: 0.12rem 0.2rem;">
+                                                    <button class="tbtn primary" style="padding: 2px 6px; min-height: 1.35rem; font-size: 0.68rem;" @click="openBill(b.dataId); switchView('invoice')" title="Tax Invoice dekhein / edit karein">Invoice</button>
+                                                    <button class="tbtn" style="padding: 2px 6px; min-height: 1.35rem; font-size: 0.68rem; margin-left: 2px;" @click="openBill(b.dataId); switchView('detail')" title="Activity Billing dekhein / edit karein">Activities</button>
+                                                    <button class="tbtn" style="padding: 2px 5px; min-height: 1.35rem; font-size: 0.68rem; margin-left: 2px; color: var(--accent-indigo, #6366f1);" @click="renameBill(b)" title="Rename Bill / RA No">✏️</button>
+                                                    <button class="tbtn" style="padding: 2px 5px; min-height: 1.35rem; font-size: 0.68rem; margin-left: 2px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" @click="deleteBill(b)" title="Is Bill ko Delete karein">🗑️</button>
                                                 </td>
                                             </tr>
                                             <tr v-if="!savedBillsList || savedBillsList.length === 0">
-                                                <td colspan="8" style="text-align: center; color: #888; padding: 1.5rem;">
+                                                <td colspan="9" style="text-align: center; color: #888; padding: 1.5rem;">
                                                     <span v-if="isLoadingBills">🔄 Loading saved bills⬦</span>
                                                     <span v-else>No saved bills found. Your current bill remains active locally.</span>
                                                 </td>
