@@ -84,7 +84,6 @@ window.SyncModule = {
         }
     },
     async deleteBillFromCloud(dataId) {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.deleteBillFromCloud(dataId))) return false;
         try {
             const headers = { 'Content-Type': 'application/json' };
             try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
@@ -493,7 +492,6 @@ window.SyncModule = {
         }
     },
     async openNewBillModal() {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.openNewBillModal())) return;
         const now = new Date();
         const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
         if (!this.newBillForm) this.newBillForm = {};
@@ -961,7 +959,6 @@ window.SyncModule = {
     },
     async deleteBill(b) {
         if (!b) return;
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.deleteBill(b))) return;
         if (b.dataId === this.activeBillId) {
             alert('Yeh bill abhi active (open) hai. Pehle koi doosra bill open karein, phir isko delete karein.');
             return;
@@ -969,22 +966,21 @@ window.SyncModule = {
         const ok = confirm(`Kya aap sach me Bill [${b.billNo || b.dataId}] ko database se DELETE karna chahte hain?\n\nYeh action wapas nahi hoga.`);
         if (!ok) return;
 
-        this.showToast(`Deleting bill [${b.billNo}]...`, '⏳');
+        this.showToast(`Deleting bill [${b.billNo || b.dataId}]...`, '⏳');
         const success = await this.deleteBillFromCloud(b.dataId);
         if (success) {
-            this.showToast(`Bill [${b.billNo}] deleted from database 🗑️`, '🗑️');
+            this.showToast(`Bill [${b.billNo || b.dataId}] deleted from database 🗑️`, '🗑️');
             await this.loadSavedBillsList();
         }
     },
     // 🗑️ Active (draft) bill ko DISCARD karo — database se delete + BLANK workspace
-    async discardActiveBill() {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.discardActiveBill())) return;
-        const id = this.activeBillId || 'main-billing-state';
-        if (id === 'main-billing-state') {
+    async discardActiveBill(targetBill) {
+        const targetId = (targetBill && (targetBill.dataId || targetBill.id)) || this.activeBillId || 'main-billing-state';
+        if (targetId === 'main-billing-state') {
             this.showToast('Main workspace discard nahi hota — uske liye New RA Bill bana kar draft ke roop me use karo', 'ℹ️');
             return;
         }
-        const name = (this.projectMeta && this.projectMeta.billNo) || id;
+        const name = (targetBill && targetBill.billNo) || (this.projectMeta && this.projectMeta.billNo) || targetId;
         const ok = confirm(`Kya aap Bill [${name}] ko DISCARD karna chahte hain?\n\n• Ye bill database se DELETE ho jayega\n• Workspace BLANK ho jayega (SAP mapping safe rahega)\n\nYeh action wapas nahi hoga!`);
         if (!ok) return;
 
@@ -1018,7 +1014,7 @@ window.SyncModule = {
         if (typeof this.takeSnapshot === 'function') this.takeSnapshot();
 
         // 3) Ab discarded bill ka doc database se delete karo
-        const deleted = await this.deleteBillFromCloud(id);
+        const deleted = await this.deleteBillFromCloud(targetId);
         if (deleted) {
             this.showToast(`Bill [${name}] discard ho gaya 🗑️ Blank workspace ready hai`, '🗑️');
         }

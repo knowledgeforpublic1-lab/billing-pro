@@ -259,7 +259,9 @@
             if (this.adminPendingCallback) {
                 const cb = this.adminPendingCallback;
                 this.adminPendingCallback = null;
-                try { cb(); } catch(err) { console.error('Admin callback error:', err); }
+                setTimeout(() => {
+                    try { cb(); } catch(err) { console.error('Admin callback error:', err); }
+                }, 50);
             }
         } else {
             this.adminPasswordError = 'Galat Password! Kripya sahi Admin Password dalein.';
