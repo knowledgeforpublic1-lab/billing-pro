@@ -423,10 +423,10 @@
                                         <button class="tbtn" @click="openSavedBillsManager('database')">Manage All Bills ({{ savedBillsList ? savedBillsList.length : 0 }})</button>
                                         <button class="tbtn primary" @click="openNewBillModal">+ New RA Bill</button>
                                     </div>
-                                    <table class="alv">
+                                    <table class="alv" style="table-layout: fixed; width: 100%;">
                                         <colgroup>
-                                            <col style="width:10%"><col style="width:23%"><col style="width:11%"><col style="width:9%">
-                                            <col style="width:13%"><col style="width:10%"><col style="width:13%"><col style="width:11%">
+                                            <col style="width:10%"><col style="width:23%"><col style="width:10%"><col style="width:9%">
+                                            <col style="width:13%"><col style="width:10%"><col style="width:12%"><col style="width:13%">
                                         </colgroup>
                                         <thead>
                                             <tr>
@@ -441,16 +441,16 @@
                                                     <span @click="openBill(b.dataId); switchView('invoice')">{{ b.billNo || 'Main Bill' }}</span>
                                                     <button class="no-print" @click.stop="renameBill(b)" title="Rename Bill / RA No" style="background: none; border: none; cursor: pointer; color: var(--accent-indigo, #6366f1); font-size: 0.72rem; padding: 0 3px; margin-left: 4px;">✏️</button>
                                                 </td>
-                                                <td>{{ b.contractorName || 'Not Assigned' }}</td>
+                                                <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="b.contractorName || 'Not Assigned'">{{ b.contractorName || 'Not Assigned' }}</td>
                                                 <td class="mono">{{ b.workOrderNo || '—' }}</td>
                                                 <td>{{ b.billDate || '—' }}</td>
                                                 <td class="money">{{ b.taxableAmount ? '₹' + formatCurrency(b.taxableAmount) : '₹0.00' }}</td>
                                                 <td class="money">{{ b.gstAmount ? '₹' + formatCurrency(b.gstAmount) : '₹0.00' }}</td>
                                                 <td class="money"><b>{{ (b.grandTotal || b.totalAmount) ? '₹' + formatCurrency(b.grandTotal || b.totalAmount) : '₹0.00' }}</b></td>
-                                                <td class="ctr">
-                                                    <button class="tbtn primary" style="padding: 0.15rem 0.5rem; min-height: 1.4rem; font-size: 0.7rem;" @click="openBill(b.dataId); switchView('invoice')">Invoice</button>
-                                                    <button class="tbtn" style="padding: 0.15rem 0.5rem; min-height: 1.4rem; font-size: 0.7rem; margin-left: 3px;" @click="openBill(b.dataId); switchView('detail')">Activities</button>
-                                                    <button class="tbtn" style="padding: 0.15rem 0.45rem; min-height: 1.4rem; font-size: 0.7rem; margin-left: 3px; color: #818cf8;" @click="renameBill(b)" title="Rename Bill / RA No">✏️ Rename</button>
+                                                <td class="ctr" style="white-space: nowrap; padding: 0.18rem 0.25rem;">
+                                                    <button class="tbtn primary" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem;" @click="openBill(b.dataId); switchView('invoice')">Invoice</button>
+                                                    <button class="tbtn" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px;" @click="openBill(b.dataId); switchView('detail')">Activities</button>
+                                                    <button class="tbtn" style="padding: 0.12rem 0.38rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px; color: var(--accent-indigo, #6366f1);" @click="renameBill(b)" title="Rename Bill / RA No">✏️</button>
                                                 </td>
                                             </tr>
                                             <tr v-if="!savedBillsList || savedBillsList.length === 0">

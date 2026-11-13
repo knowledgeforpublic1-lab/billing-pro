@@ -4961,12 +4961,12 @@ html[data-theme="light"] .view-section > .glass-panel .table-responsive > div[st
 
 @media screen and (min-width: 769px) {
     html[data-theme="light"] table.billing-table tbody td {
-        font-size: 0.85rem !important;
-        line-height: 1.45 !important;
+        font-size: 0.8rem !important;
+        line-height: 1.35 !important;
     }
 
     html[data-theme="light"] table.billing-table thead th {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
     }
 }
 
@@ -5759,19 +5759,19 @@ html[data-theme="light"] .text-dim {
     color: #5d5f64 !important;
 }
 
-/* Dense data screens were using 11–12px text; raise table text without changing layout. */
+/* Dense data screens — aligned with dark mode enterprise density */
 html[data-theme="light"] table.billing-table {
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
 }
 
 html[data-theme="light"] table.billing-table thead th {
-    font-size: 0.8rem !important;
+    font-size: 0.75rem !important;
     letter-spacing: 0.35px !important;
 }
 
 html[data-theme="light"] table.billing-table tbody td {
-    font-size: 0.85rem !important;
-    line-height: 1.4 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
 }
 
 html[data-theme="light"] .editable-cell,
@@ -5779,7 +5779,7 @@ html[data-theme="light"] .qty-input,
 html[data-theme="light"] .reco-input-cell,
 html[data-theme="light"] .filter-select,
 html[data-theme="light"] .filter-input {
-    font-size: 0.9rem !important;
+    font-size: 0.82rem !important;
 }
 
 @media screen and (max-width: 768px) {
