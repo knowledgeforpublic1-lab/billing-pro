@@ -1734,8 +1734,12 @@ html.soft .work {
   color: #3f382c !important;
 }
 
-html.soft .sysbar {
-  background: linear-gradient(180deg, #162032 0%, #0f172a 100%) !important;
+html.soft .sysbar,
+html[data-theme="soft"] .sysbar {
+  background: linear-gradient(180deg, #78633c 0%, #685430 50%, #594726 100%) !important;
+  border-bottom: 2px solid #c9a86a !important;
+  color: #fff8ea !important;
+  box-shadow: 0 2px 10px rgba(60, 48, 25, 0.4) !important;
 }
 
 html.soft .sidebar {
@@ -2479,8 +2483,6 @@ html.soft .statbar .r {
    OPTION 3: MODERN TECH MINIMALIST BRANDING
    ============================================================ */
 .sysbar {
-  background: linear-gradient(180deg, #162032 0%, #0f172a 100%) !important;
-  border-bottom: 2px solid #0284c7 !important;
   height: 2.3rem !important;
   color: #f1f5f9 !important;
   display: flex !important;
@@ -2488,7 +2490,102 @@ html.soft .statbar .r {
   gap: 0.7rem !important;
   padding: 0 0.85rem !important;
   font-size: 0.7rem !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  flex-shrink: 0 !important;
+  z-index: 70 !important;
+}
+
+/* ☀️ 1. SAP Light Mode System Bar (Steel Slate with Corporate Blue Accent) */
+html:not([data-theme="dark"]):not(.soft) .sysbar,
+html[data-theme="light"] .sysbar,
+html.light .sysbar {
+  background: linear-gradient(180deg, #3d5570 0%, #354a5f 55%, #2a3d4f 100%) !important;
+  border-bottom: 2px solid #0a6ed1 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 2px 8px rgba(9, 20, 32, 0.25) !important;
+}
+html:not([data-theme="dark"]):not(.soft) .sysbar .logo,
+html[data-theme="light"] .sysbar .logo,
+html.light .sysbar .logo {
+  background: linear-gradient(135deg, #1483e2 0%, #0a6ed1 60%, #0854a0 100%) !important;
+  box-shadow: 0 2px 8px rgba(10, 110, 209, 0.35) !important;
+}
+html:not([data-theme="dark"]):not(.soft) .sysbar .pulse-beacon,
+html[data-theme="light"] .sysbar .pulse-beacon,
+html.light .sysbar .pulse-beacon {
+  background: #60a5fa !important;
+  box-shadow: 0 0 8px #60a5fa !important;
+}
+
+/* 🌙 2. Midnight Dark Mode System Bar (Tech Charcoal Navy with Cyan Accent) */
+html[data-theme="dark"] .sysbar,
+html.dark .sysbar {
+  background: linear-gradient(180deg, #131b26 0%, #0a0f15 100%) !important;
+  border-bottom: 2px solid #0284c7 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+}
+html[data-theme="dark"] .sysbar .logo,
+html.dark .sysbar .logo {
+  background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%) !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35) !important;
+}
+html[data-theme="dark"] .sysbar .pulse-beacon,
+html.dark .sysbar .pulse-beacon {
+  background: #38bdf8 !important;
+  box-shadow: 0 0 8px #38bdf8 !important;
+}
+
+/* 🍵 3. Soft Comfort Mode System Bar (Warm Earthy Khaki-Brown with Gold Accent) */
+html.soft .sysbar,
+html[data-theme="soft"] .sysbar {
+  background: linear-gradient(180deg, #78633c 0%, #685430 50%, #594726 100%) !important;
+  border-bottom: 2px solid #c9a86a !important;
+  color: #fff8ea !important;
+  box-shadow: 0 2px 10px rgba(60, 48, 25, 0.4) !important;
+}
+html.soft .sysbar .logo,
+html[data-theme="soft"] .sysbar .logo {
+  background: linear-gradient(135deg, #a6833d 0%, #7d6740 100%) !important;
+  box-shadow: 0 2px 8px rgba(166, 131, 61, 0.35) !important;
+}
+html.soft .sysbar .pulse-beacon,
+html[data-theme="soft"] .sysbar .pulse-beacon {
+  background: #fbbf24 !important;
+  box-shadow: 0 0 8px #fbbf24 !important;
+}
+html.soft .sysbar .brand-name strong.pro-text,
+html[data-theme="soft"] .sysbar .brand-name strong.pro-text {
+  color: #fde68a !important;
+}
+html.soft .sysbar .brand-ver,
+html[data-theme="soft"] .sysbar .brand-ver {
+  background: rgba(251, 191, 36, 0.15) !important;
+  color: #fde68a !important;
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+html.soft .sysbar .sys-project,
+html[data-theme="soft"] .sysbar .sys-project {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffeed1 !important;
+}
+html.soft .sysbar .sync-chip,
+html[data-theme="soft"] .sysbar .sync-chip {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #a7f3d0 !important;
+}
+html.soft .sysbar .logout-timer-chip,
+html[data-theme="soft"] .sysbar .logout-timer-chip {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #fde68a !important;
+}
+html.soft .sysbar .user-chip,
+html[data-theme="soft"] .sysbar .user-chip {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #fff8ea !important;
 }
 
 .sysbar .logo {

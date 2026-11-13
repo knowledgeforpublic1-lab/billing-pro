@@ -51,19 +51,22 @@
     };
 
     allMethods.applyTheme = function() {
-        const mode = this.themeMode || 'light';
+        const mode = (this.themeMode === 'soft' || this.themeMode === 'dark') ? this.themeMode : 'light';
         const dark = mode === 'dark';
         this.isDarkMode = dark;
         const html = document.documentElement;
         const body = document.body;
-        html.dataset.theme = dark ? 'dark' : 'light';
+        html.dataset.theme = mode;
         html.classList.toggle('soft', mode === 'soft');
         html.classList.toggle('dark', dark);
         html.classList.toggle('dark-mode', dark);
+        html.classList.toggle('light', mode === 'light');
         if (body) {
+            body.dataset.theme = mode;
             body.classList.toggle('dark', dark);
             body.classList.toggle('dark-mode', dark);
             body.classList.toggle('soft', mode === 'soft');
+            body.classList.toggle('light', mode === 'light');
         }
     };
 
