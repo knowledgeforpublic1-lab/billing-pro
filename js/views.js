@@ -351,6 +351,7 @@ window.ViewsModule = {
             : [{ name: 'Location 1' }];
     },
     addLocation() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.addLocation())) return;
         if (this.isFinalized) {
             this.showToast('⚠️ Bill is locked. Please unlock first.', '🔒');
             return;

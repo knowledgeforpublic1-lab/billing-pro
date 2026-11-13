@@ -678,6 +678,7 @@ window.PoleScheduleModule = {
     },
 
     addPoleScheduleLocation() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.addPoleScheduleLocation())) return;
         if (this.isFinalized) {
             this.showToast('⚠️ Bill finalized hai. Pehle unlock karein.', '🔒');
             return;
@@ -749,6 +750,7 @@ window.PoleScheduleModule = {
     },
 
     removePoleScheduleLocation(lIdx) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.removePoleScheduleLocation(lIdx))) return;
         if (this.isFinalized) return;
         const k = this.selectedPoleScheduleKey || '907';
         const locs = this.getPoleScheduleLocations(k);
@@ -1726,6 +1728,7 @@ window.PoleScheduleModule = {
 
 
     openPoleScheduleAddMaterialModal(insertAfterIdx = -1) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.openPoleScheduleAddMaterialModal(insertAfterIdx))) return;
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;
@@ -2047,6 +2050,7 @@ window.PoleScheduleModule = {
     },
 
     removePoleScheduleMaterial(mIdx) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.removePoleScheduleMaterial(mIdx))) return;
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;

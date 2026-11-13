@@ -781,6 +781,7 @@ window.BillingModule = {
     },
 
     finalizeBill() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.finalizeBill())) return;
         const billedActKeys = Object.keys(this.activities).filter(k => this.getActivityBilled85Amount(k) > 0);
         if (billedActKeys.length === 0) {
             if (!confirm('Abhi kisi bhi activity mein data / amount nahi hai. Kya aap phir bhi Bill Finalize karna chahte hain?')) {
@@ -798,6 +799,7 @@ window.BillingModule = {
     },
 
     unlockBill() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.unlockBill())) return;
         if (confirm('Kya aap Bill ko editing ke liye unlock karna chahte hain?')) {
             this.isFinalized = false;
             this.saveToStorage();

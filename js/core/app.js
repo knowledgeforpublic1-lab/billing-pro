@@ -142,9 +142,76 @@
         }
     };
 
+    // 🔒 Admin Mode / Password Authentication Methods
+    allMethods.openAdminModal = function(pendingCallback) {
+        this.adminPendingCallback = (typeof pendingCallback === 'function') ? pendingCallback : null;
+        this.adminPasswordInput = '';
+        this.adminPasswordError = '';
+        this.showAdminModal = true;
+        this.$nextTick(() => {
+            const inp = document.getElementById('adminPasswordModalInput');
+            if (inp) {
+                inp.focus();
+                if (typeof inp.select === 'function') inp.select();
+            }
+        });
+    };
+
+    allMethods.closeAdminModal = function() {
+        this.showAdminModal = false;
+        this.adminPendingCallback = null;
+        this.adminPasswordInput = '';
+        this.adminPasswordError = '';
+    };
+
+    allMethods.verifyAdminPassword = function() {
+        const entered = (this.adminPasswordInput || '').trim();
+        if (entered === 'Rakesh@123') {
+            this.isAdminUnlocked = true;
+            try { sessionStorage.setItem('billing_admin_unlocked', 'true'); } catch(e) {}
+            this.showAdminModal = false;
+            this.adminPasswordError = '';
+            if (typeof this.showToast === 'function') {
+                this.showToast('Admin Mode Unlocked — Edit permissions active', 'success');
+            }
+            if (this.adminPendingCallback) {
+                const cb = this.adminPendingCallback;
+                this.adminPendingCallback = null;
+                try { cb(); } catch(err) { console.error('Admin callback error:', err); }
+            }
+        } else {
+            this.adminPasswordError = 'Galat Password! Kripya sahi Admin Password (Rakesh@123) dalein.';
+        }
+    };
+
+    allMethods.lockAdminMode = function() {
+        this.isAdminUnlocked = false;
+        try { sessionStorage.removeItem('billing_admin_unlocked'); } catch(e) {}
+        if (typeof this.showToast === 'function') {
+            this.showToast('Admin Mode Locked — Ab app View-Only mode me hai', 'info');
+        }
+    };
+
+    allMethods.checkAdminAccess = function(actionCallback) {
+        if (this.isAdminUnlocked) {
+            if (typeof actionCallback === 'function') actionCallback();
+            return true;
+        }
+        this.openAdminModal(actionCallback);
+        return false;
+    };
+
     const app = Vue.createApp({
         data() {
             return {
+                isAdminUnlocked: (function() {
+                    try { return sessionStorage.getItem('billing_admin_unlocked') === 'true'; }
+                    catch(e) { return false; }
+                })(),
+                showAdminModal: false,
+                adminPasswordInput: '',
+                adminPasswordError: '',
+                adminPendingCallback: null,
                 isDarkMode: (function() {
                     try { return (localStorage.getItem('billing_theme') || 'dark') !== 'light'; }
                     catch(e) { return true; }

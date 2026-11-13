@@ -54,6 +54,9 @@ app.use((req, res, next) => {
     next();
 });
 
+// Admin Password (default: Rakesh@123, can be overridden via ADMIN_PASSWORD env)
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'Rakesh@123').trim();
+
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
 // API_KEY set nahi hai to check skip (backward compatible).
@@ -113,6 +116,15 @@ app.get('/api/health', async (req, res) => {
         log.error('HEALTH', 'Health check failed', err);
         res.status(500).json({ ok: false, provider: db.getProvider(), readyState: 'error', error: err.message, timestamp: new Date().toISOString() });
     }
+});
+
+// Admin Password verification endpoint
+app.post('/api/admin/verify', (req, res) => {
+    const password = (req.body && req.body.password ? String(req.body.password).trim() : '');
+    if (password === ADMIN_PASSWORD) {
+        return res.json({ success: true, message: 'Admin verified successfully' });
+    }
+    return res.status(401).json({ success: false, error: 'Incorrect Admin Password' });
 });
 
 // Routes

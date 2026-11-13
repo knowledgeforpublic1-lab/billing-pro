@@ -84,6 +84,7 @@ window.SyncModule = {
         }
     },
     async deleteBillFromCloud(dataId) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.deleteBillFromCloud(dataId))) return false;
         try {
             const headers = { 'Content-Type': 'application/json' };
             try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
@@ -492,6 +493,7 @@ window.SyncModule = {
         }
     },
     async openNewBillModal() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.openNewBillModal())) return;
         const now = new Date();
         const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
         if (!this.newBillForm) this.newBillForm = {};
@@ -959,6 +961,7 @@ window.SyncModule = {
     },
     async deleteBill(b) {
         if (!b) return;
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.deleteBill(b))) return;
         if (b.dataId === this.activeBillId) {
             alert('Yeh bill abhi active (open) hai. Pehle koi doosra bill open karein, phir isko delete karein.');
             return;
@@ -975,6 +978,7 @@ window.SyncModule = {
     },
     // 🗑️ Active (draft) bill ko DISCARD karo — database se delete + BLANK workspace
     async discardActiveBill() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.discardActiveBill())) return;
         const id = this.activeBillId || 'main-billing-state';
         if (id === 'main-billing-state') {
             this.showToast('Main workspace discard nahi hota — uske liye New RA Bill bana kar draft ke roop me use karo', 'ℹ️');
@@ -1110,6 +1114,12 @@ window.SyncModule = {
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
     async syncToCloudNow(opts) {
+        if (!this.isAdminUnlocked) {
+            if (opts && opts.manual && typeof this.checkAdminAccess === 'function') {
+                this.checkAdminAccess(() => this.syncToCloudNow(opts));
+            }
+            return false;
+        }
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
@@ -1291,7 +1301,7 @@ window.SyncModule = {
         } catch(e) {}
     },
     saveToStorage() {
-        if (this._isLoading) return;
+        if (this._isLoading || this.isAdminUnlocked === false) return;
         try {
             try {
                 if (this.invoiceData && this.invoiceData.autoSync) {
