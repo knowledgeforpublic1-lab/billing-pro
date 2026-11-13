@@ -2819,19 +2819,30 @@ it('User Chip Login & 5-Minute Inactivity Auto-Lock: auto-saves progress and res
     assert.strictEqual(appState.activeBillId, 'bill-101');
 });
 
-it('Scoped Admin Access: Free normal billing data entry vs Password-protected Mapping & Pole Schedule row add/delete', () => {
+it('Two-Tier Authentication: Level 1 Portal Gateway & Level 2 5-Min Admin Elevation for DB mutations', () => {
     let mappingUnlocked = false;
     let poleScheduleRowAdded = false;
     let poleScheduleRowDeleted = false;
     let normalBillingEditWorked = false;
+    let savedToStorage = false;
+    let flushedSync = false;
 
     const app = {
-        isAdminUnlocked: false,
+        isPortalUnlocked: false,
+        isAdminElevated: false,
         showAdminModal: false,
         adminPendingCallback: null,
         adminPasswordInput: '',
-        checkAdminAccess(cb) {
-            if (this.isAdminUnlocked) {
+        portalPasswordInput: '',
+        verifyPortalPassword() {
+            if ((this.portalPasswordInput || '').trim() === 'Rakesh@123') {
+                this.isPortalUnlocked = true;
+                return true;
+            }
+            return false;
+        },
+        checkAdminElevated(cb) {
+            if (this.isAdminElevated) {
                 if (typeof cb === 'function') cb();
                 return true;
             }
@@ -2841,7 +2852,7 @@ it('Scoped Admin Access: Free normal billing data entry vs Password-protected Ma
         },
         verifyAdminPassword() {
             if ((this.adminPasswordInput || '').trim() === 'Rakesh@123') {
-                this.isAdminUnlocked = true;
+                this.isAdminElevated = true;
                 this.showAdminModal = false;
                 if (this.adminPendingCallback) {
                     const cb = this.adminPendingCallback;
@@ -2851,60 +2862,98 @@ it('Scoped Admin Access: Free normal billing data entry vs Password-protected Ma
             }
         },
         mappingLocks: { sap: true },
-        // Normal billing quantity edit (NO PASSWORD REQUIRED)
+        // Normal billing quantity edit (FREE IN PORTAL)
         onQtyCellChange(row, loc, val) {
-            normalBillingEditWorked = true;
+            if (this.isPortalUnlocked) {
+                normalBillingEditWorked = true;
+            }
         },
-        // Mapping Lock Unlock (REQUIRES PASSWORD)
+        // Mapping Lock Unlock (REQUIRES LEVEL 2 ADMIN)
         toggleMappingLock(field) {
-            if (this.mappingLocks[field] && !this.isAdminUnlocked) {
-                this.checkAdminAccess(() => this.toggleMappingLock(field));
+            if (this.mappingLocks[field] && !this.isAdminElevated) {
+                this.checkAdminElevated(() => this.toggleMappingLock(field));
                 return;
             }
             this.mappingLocks[field] = !this.mappingLocks[field];
             mappingUnlocked = !this.mappingLocks[field];
         },
-        // Pole Schedule Row Add (REQUIRES PASSWORD)
+        // Pole Schedule Row Add (REQUIRES LEVEL 2 ADMIN)
         addPoleScheduleRow() {
-            if (!this.isAdminUnlocked) {
-                this.checkAdminAccess(() => this.addPoleScheduleRow());
+            if (!this.isAdminElevated) {
+                this.checkAdminElevated(() => this.addPoleScheduleRow());
                 return;
             }
             poleScheduleRowAdded = true;
         },
-        // Pole Schedule Row Delete (REQUIRES PASSWORD)
+        // Pole Schedule Row Delete (REQUIRES LEVEL 2 ADMIN)
         deletePoleScheduleRow() {
-            if (!this.isAdminUnlocked) {
-                this.checkAdminAccess(() => this.deletePoleScheduleRow());
+            if (!this.isAdminElevated) {
+                this.checkAdminElevated(() => this.deletePoleScheduleRow());
                 return;
             }
             poleScheduleRowDeleted = true;
+        },
+        // 5-Min Elevation Expiry
+        expireAdminElevation() {
+            this.isAdminElevated = false;
+        },
+        // 5-Min Inactivity Portal Auto-Save & Lock
+        onPortalInactivityTimeout() {
+            if (this.isPortalUnlocked) {
+                savedToStorage = true;
+                flushedSync = true;
+                this.isAdminElevated = false;
+                this.isPortalUnlocked = false;
+            }
         }
     };
 
-    // 1. Normal billing data entry works freely without password
-    app.onQtyCellChange(0, 0, 15);
-    assert.strictEqual(normalBillingEditWorked, true, 'Normal billing data entry must NOT be blocked by password');
-    assert.strictEqual(app.showAdminModal, false, 'Admin modal must NOT open for normal billing');
+    // 1. Initial State: Portal is locked
+    assert.strictEqual(app.isPortalUnlocked, false, 'Portal must start locked');
+    app.onQtyCellChange(0, 0, 10);
+    assert.strictEqual(normalBillingEditWorked, false, 'Cannot work until portal unlocked');
 
-    // 2. Mapping unlock requires password
-    app.toggleMappingLock('sap');
-    assert.strictEqual(mappingUnlocked, false, 'Mapping must NOT unlock without password');
-    assert.strictEqual(app.showAdminModal, true, 'Admin modal must open when attempting to edit mapping');
+    // 2. Unlock Level 1 (Portal Gate) with Rakesh@123
+    app.portalPasswordInput = 'Rakesh@123';
+    assert.strictEqual(app.verifyPortalPassword(), true);
+    assert.strictEqual(app.isPortalUnlocked, true, 'Portal is now unlocked');
 
-    // Enter correct password
+    // 3. Normal billing works smoothly without password
+    app.onQtyCellChange(0, 0, 10);
+    assert.strictEqual(normalBillingEditWorked, true, 'Normal billing works freely in portal');
+    assert.strictEqual(app.showAdminModal, false, 'Admin modal is NOT shown for regular billing');
+
+    // 4. Structural change (Pole Schedule Row Add) triggers Level 2 Admin Elevation
+    app.addPoleScheduleRow();
+    assert.strictEqual(poleScheduleRowAdded, false, 'Row must not add before admin verification');
+    assert.strictEqual(app.showAdminModal, true, 'Admin elevation modal must open');
+
+    // Enter admin password Rakesh@123
     app.adminPasswordInput = 'Rakesh@123';
     app.verifyAdminPassword();
-    assert.strictEqual(app.isAdminUnlocked, true);
-    assert.strictEqual(mappingUnlocked, true, 'Mapping unlocks after password verified');
+    assert.strictEqual(app.isAdminElevated, true, 'Level 2 Admin access activated');
+    assert.strictEqual(poleScheduleRowAdded, true, 'Row successfully added without recursion');
 
-    // 3. Pole Schedule Row Add works when unlocked
-    app.addPoleScheduleRow();
-    assert.strictEqual(poleScheduleRowAdded, true);
-
-    // 4. Pole Schedule Row Delete works when unlocked
+    // 5. Subsequent structural mutations (Delete row & Mapping unlock) work directly during 5-minute elevated window
     app.deletePoleScheduleRow();
-    assert.strictEqual(poleScheduleRowDeleted, true);
+    assert.strictEqual(poleScheduleRowDeleted, true, 'Row deleted during active 5-min admin window');
+
+    app.toggleMappingLock('sap');
+    assert.strictEqual(mappingUnlocked, true, 'Mapping unlocked during active 5-min admin window');
+
+    // 6. After 5 minutes, Level 2 Admin Elevation expires
+    app.expireAdminElevation();
+    assert.strictEqual(app.isAdminElevated, false, 'Admin elevation expired');
+    // But Portal remains unlocked and working!
+    assert.strictEqual(app.isPortalUnlocked, true, 'Portal access remains fully intact');
+
+    // 7. After 5 minutes of total portal inactivity: auto-save all work and lock portal
+    savedToStorage = false;
+    flushedSync = false;
+    app.onPortalInactivityTimeout();
+    assert.strictEqual(savedToStorage, true, 'Work must be auto-saved on inactivity');
+    assert.strictEqual(flushedSync, true, 'Sync must be flushed on inactivity');
+    assert.strictEqual(app.isPortalUnlocked, false, 'Portal locked on inactivity');
 });
 
 (async () => {

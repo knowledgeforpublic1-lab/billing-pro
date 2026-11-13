@@ -1728,7 +1728,10 @@ window.PoleScheduleModule = {
 
 
     openPoleScheduleAddMaterialModal(insertAfterIdx = -1) {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.openPoleScheduleAddMaterialModal(insertAfterIdx))) return;
+        if (typeof this.checkAdminElevated === 'function' && !this.isAdminElevated) {
+            this.checkAdminElevated(() => this.openPoleScheduleAddMaterialModal(insertAfterIdx));
+            return;
+        }
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;
@@ -1882,7 +1885,10 @@ window.PoleScheduleModule = {
     },
 
     duplicatePoleScheduleMaterial(mIdx) {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.duplicatePoleScheduleMaterial(mIdx))) return;
+        if (typeof this.checkAdminElevated === 'function' && !this.isAdminElevated) {
+            this.checkAdminElevated(() => this.duplicatePoleScheduleMaterial(mIdx));
+            return;
+        }
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;
@@ -2051,7 +2057,10 @@ window.PoleScheduleModule = {
     },
 
     removePoleScheduleMaterial(mIdx) {
-        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.removePoleScheduleMaterial(mIdx))) return;
+        if (typeof this.checkAdminElevated === 'function' && !this.isAdminElevated) {
+            this.checkAdminElevated(() => this.removePoleScheduleMaterial(mIdx));
+            return;
+        }
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;

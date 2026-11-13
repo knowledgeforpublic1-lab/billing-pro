@@ -81,6 +81,80 @@
         </datalist>
 
         <!-- ============================================================
+             PORTAL GATEWAY LOGIN SCREEN (Level 1 Portal Protection)
+             ============================================================ -->
+        <div v-if="!isPortalUnlocked" class="portal-lock-overlay" style="position: fixed; inset: 0; z-index: 9999999; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, #1e293b 0%, #090d16 100%); padding: 20px;">
+            <div class="portal-auth-card" style="width: 440px; max-width: 95vw; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(56, 189, 248, 0.2); overflow: hidden; padding: 32px 28px; text-align: center;">
+                
+                <!-- Logo & Brand Header -->
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%); border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); margin-bottom: 16px;">
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 8.5 2 15.5 12 22 22 15.5 22 8.5 12 2" stroke="#38bdf8" fill="rgba(56, 189, 248, 0.3)"/>
+                        <circle cx="12" cy="12" r="3" fill="#ffffff"/>
+                        <path d="M12 2v7M12 15v7M2 8.5l6 3.5M16 12l6-3.5" stroke="#38bdf8"/>
+                    </svg>
+                </div>
+
+                <div style="font-size: 1.45rem; font-weight: 800; color: #ffffff; letter-spacing: -0.3px; margin-bottom: 4px;">
+                    Billing<span style="color: #38bdf8;">Pro</span> <span style="font-size: 0.8rem; font-weight: 700; background: rgba(56, 189, 248, 0.18); color: #38bdf8; padding: 2px 7px; border-radius: 6px; vertical-align: middle;">6.0</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin-bottom: 22px; letter-spacing: 0.3px;">
+                    {{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}
+                </div>
+
+                <!-- User Profile Pill -->
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 22px; text-align: left;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: #ffffff; flex-shrink: 0;">
+                        RK
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: #f8fafc;">Rakesh Kushawaha</div>
+                        <div style="font-size: 0.73rem; color: #94a3b8;">Billing Engineer · Portal Access</div>
+                    </div>
+                    <span style="font-size: 0.95rem;">🔒</span>
+                </div>
+
+                <!-- Login Form -->
+                <form @submit.prevent="verifyPortalPassword">
+                    <div style="position: relative; margin-bottom: 14px; text-align: left;">
+                        <label style="display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
+                            Portal Password
+                        </label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <span style="position: absolute; left: 12px; font-size: 1rem; color: #64748b; pointer-events: none;">🔑</span>
+                            <input :type="showPortalPasswordText ? 'text' : 'password'" 
+                                   v-model="portalPasswordInput" 
+                                   placeholder="Password dalein (Rakesh@123)..." 
+                                   autocomplete="current-password" 
+                                   autofocus 
+                                   style="width: 100%; box-sizing: border-box; padding: 12px 42px 12px 36px; font-size: 0.95rem; border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 10px; outline: none; background: rgba(15, 23, 42, 0.7); color: #ffffff; transition: all 0.2s;"
+                                   @focus="$event.target.style.borderColor = '#38bdf8'; $event.target.style.boxShadow = '0 0 0 3px rgba(56, 189, 248, 0.25)'"
+                                   @blur="$event.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'; $event.target.style.boxShadow = 'none'">
+                            <button type="button" 
+                                    @click="showPortalPasswordText = !showPortalPasswordText" 
+                                    style="position: absolute; right: 10px; background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 1rem;"
+                                    :title="showPortalPasswordText ? 'Hide Password' : 'Show Password'">
+                                {{ showPortalPasswordText ? '🙈' : '👁️' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="portalPasswordError" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; font-size: 0.8rem; font-weight: 600; padding: 8px 12px; border-radius: 8px; margin-bottom: 14px; text-align: left; display: flex; align-items: center; gap: 8px;">
+                        <span>⚠️</span> {{ portalPasswordError }}
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 12px 20px; font-size: 0.92rem; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); cursor: pointer; transition: all 0.2s;">
+                        🔓 Unlock Portal & Begin Work
+                    </button>
+                </form>
+
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 18px;">
+                    🛡️ 5-Minute Inactivity Auto-Save Protection Active
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
              1. BillingPro 6.0 Enterprise System Bar (Modern Tech Minimalist)
              ============================================================ -->
         <div class="sysbar no-print">
@@ -102,13 +176,13 @@
                 </span>
                 <span class="u user-chip" 
                       @click="onUserChipClick" 
-                      :class="{ 'is-admin-active': isAdminUnlocked }"
+                      :class="{ 'is-admin-active': isAdminElevated }"
                       style="cursor: pointer; user-select: none;"
-                      :title="isAdminUnlocked ? 'Rakesh Kushawaha (Admin Mode Active) · Click to Lock / Logout' : 'Rakesh Kushawaha · Click to Login (Password)'">
+                      :title="isAdminElevated ? 'Rakesh Kushawaha (Admin 5-Min Elevated Mode Active) · Click to lock Admin mode' : 'Rakesh Kushawaha · Portal Active (Click for Admin Mode)'">
                     <span class="avatar-rk">RK</span>
                     <span>Rakesh Kushawaha</span>
-                    <span class="user-chip-status" :class="isAdminUnlocked ? 'active' : 'locked'" :title="isAdminUnlocked ? 'Admin Active' : 'Locked (Click to Login)'"></span>
-                    <span v-if="!isAdminUnlocked" class="user-chip-auth-action">Login</span>
+                    <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin Elevated (5 Min)' : 'Portal Active'"></span>
+                    <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN 5m</span>
                 </span>
             </div>
         </div>

@@ -157,6 +157,71 @@
         });
     };
 
+    allMethods.verifyPortalPassword = function() {
+        const entered = (this.portalPasswordInput || '').trim();
+        if (entered === 'Rakesh@123') {
+            this.isPortalUnlocked = true;
+            try { sessionStorage.setItem('billing_portal_unlocked', 'true'); } catch(e) {}
+            this.portalPasswordError = '';
+            this.portalPasswordInput = '';
+            this.showPortalPasswordText = false;
+            if (typeof this.showToast === 'function') {
+                this.showToast('Welcome Rakesh Kushawaha! Portal Unlocked.', 'success');
+            }
+            if (typeof this._resetInactivityTimer === 'function') {
+                this._resetInactivityTimer();
+            }
+        } else {
+            this.portalPasswordError = 'Galat Password! Kripya sahi Portal Password (Rakesh@123) dalein.';
+        }
+    };
+
+    allMethods.logoutPortal = function() {
+        try { if (typeof this.saveToStorage === 'function') this.saveToStorage(); } catch(e) {}
+        try { if (typeof this.flushPendingSync === 'function') this.flushPendingSync(); } catch(e) {}
+        this.isPortalUnlocked = false;
+        this.isAdminElevated = false;
+        this.isAdminUnlocked = false;
+        if (this._adminElevatedTimer) {
+            clearTimeout(this._adminElevatedTimer);
+            this._adminElevatedTimer = null;
+        }
+        try { sessionStorage.removeItem('billing_portal_unlocked'); } catch(e) {}
+        if (typeof this.showToast === 'function') {
+            this.showToast('Portal Logged Out — Sara data surakshit save kar diya gaya hai.', 'info');
+        }
+    };
+
+    allMethods.startAdminElevatedTimer = function() {
+        if (this._adminElevatedTimer) clearTimeout(this._adminElevatedTimer);
+        const ELEVATED_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+        this._adminElevatedTimer = setTimeout(() => {
+            if (this.isAdminElevated) {
+                this.isAdminElevated = false;
+                this.isAdminUnlocked = false;
+                console.info('[AdminElevated] 5-minute administrative window expired. Returning to standard portal access.');
+                if (typeof this.showToast === 'function') {
+                    this.showToast('Admin 5-minute session samapt: Standard Portal access active.', 'info');
+                }
+            }
+        }, ELEVATED_DURATION_MS);
+    };
+
+    allMethods.openAdminModal = function(pendingCallback) {
+        this.adminPendingCallback = (typeof pendingCallback === 'function') ? pendingCallback : null;
+        this.adminPasswordInput = '';
+        this.adminPasswordError = '';
+        this.showAdminPasswordText = false;
+        this.showAdminModal = true;
+        this.$nextTick(() => {
+            const inp = document.getElementById('adminPasswordModalInput');
+            if (inp) {
+                inp.focus();
+                if (typeof inp.select === 'function') inp.select();
+            }
+        });
+    };
+
     allMethods.closeAdminModal = function() {
         this.showAdminModal = false;
         this.adminPendingCallback = null;
@@ -168,12 +233,15 @@
     allMethods.verifyAdminPassword = function() {
         const entered = (this.adminPasswordInput || '').trim();
         if (entered === 'Rakesh@123') {
+            this.isAdminElevated = true;
             this.isAdminUnlocked = true;
-            try { sessionStorage.setItem('billing_admin_unlocked', 'true'); } catch(e) {}
+            this.startAdminElevatedTimer();
             this.showAdminModal = false;
             this.adminPasswordError = '';
+            this.adminPasswordInput = '';
+            this.showAdminPasswordText = false;
             if (typeof this.showToast === 'function') {
-                this.showToast('Admin Mode Unlocked — Edit permissions active', 'success');
+                this.showToast('Admin Mode Active — 5 minutes ke liye valid hai', 'success');
             }
             if (this.adminPendingCallback) {
                 const cb = this.adminPendingCallback;
@@ -186,18 +254,20 @@
     };
 
     allMethods.lockAdminMode = function() {
+        this.isAdminElevated = false;
         this.isAdminUnlocked = false;
-        try { sessionStorage.removeItem('billing_admin_unlocked'); } catch(e) {}
+        if (this._adminElevatedTimer) {
+            clearTimeout(this._adminElevatedTimer);
+            this._adminElevatedTimer = null;
+        }
         if (typeof this.showToast === 'function') {
-            this.showToast('Admin Mode Locked — Ab app View-Only mode me hai', 'info');
+            this.showToast('Admin Mode Locked — Portal standard mode me chal raha hai', 'info');
         }
     };
 
     allMethods.onUserChipClick = function() {
-        if (this.isAdminUnlocked) {
-            if (confirm('Aap Admin session ko LOCK / LOGOUT karna chahte hain?')) {
-                try { if (typeof this.saveToStorage === 'function') this.saveToStorage(); } catch(e) {}
-                try { if (typeof this.flushPendingSync === 'function') this.flushPendingSync(); } catch(e) {}
+        if (this.isAdminElevated) {
+            if (confirm('Aap Admin Elevated privilege ko Lock karna chahte hain? (Portal खुला रहेगा)')) {
                 this.lockAdminMode();
             }
         } else {
@@ -205,8 +275,9 @@
         }
     };
 
-    allMethods.checkAdminAccess = function(actionCallback) {
-        if (this.isAdminUnlocked) {
+    allMethods.checkAdminElevated = function(actionCallback) {
+        if (this.isAdminElevated) {
+            this.startAdminElevatedTimer();
             if (typeof actionCallback === 'function') actionCallback();
             return true;
         }
@@ -214,13 +285,20 @@
         return false;
     };
 
+    allMethods.checkAdminAccess = allMethods.checkAdminElevated;
+
     const app = Vue.createApp({
         data() {
             return {
-                isAdminUnlocked: (function() {
-                    try { return sessionStorage.getItem('billing_admin_unlocked') === 'true'; }
+                isPortalUnlocked: (function() {
+                    try { return sessionStorage.getItem('billing_portal_unlocked') === 'true'; }
                     catch(e) { return false; }
                 })(),
+                portalPasswordInput: '',
+                portalPasswordError: '',
+                showPortalPasswordText: false,
+                isAdminElevated: false,
+                isAdminUnlocked: false,
                 showAdminModal: false,
                 showAdminPasswordText: false,
                 adminPasswordInput: '',
@@ -2278,33 +2356,40 @@
                 }
             });
 
-            // ⏰ 5-Minute Inactivity Auto-Lock & Auto-Save
-            // User 5 minute tak koi interaction na kare to sara kaam auto-save karke Admin logout/lock ho jaye
+            // ⏰ 5-Minute Inactivity Auto-Save & Portal Auto-Logout
+            // User 5 minute tak portal par koi kaam na kare to sara kaam auto-save karke portal logout/lock ho jaye
             try {
                 const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
                 let inactivityTimer = null;
 
                 const onInactivityTrigger = async () => {
-                    if (this.isAdminUnlocked) {
-                        console.info('[InactivityWatchdog] 5 minutes of inactivity detected. Auto-saving and locking session...');
+                    if (this.isPortalUnlocked) {
+                        console.info('[PortalWatchdog] 5 minutes of inactivity: auto-saving work and locking portal...');
                         // 1. Auto-save all work to storage
                         try {
                             if (typeof this.saveToStorage === 'function') this.saveToStorage();
                         } catch (e) {
-                            console.warn('[InactivityWatchdog] saveToStorage error:', e);
+                            console.warn('[PortalWatchdog] saveToStorage error:', e);
                         }
                         // 2. Flush pending cloud sync
                         try {
                             if (typeof this.flushPendingSync === 'function') await this.flushPendingSync();
                         } catch (e) {
-                            console.warn('[InactivityWatchdog] flushPendingSync error:', e);
+                            console.warn('[PortalWatchdog] flushPendingSync error:', e);
                         }
-                        // 3. Lock admin session (logout)
+                        // 3. Lock both Admin elevation and Portal session
+                        this.isAdminElevated = false;
                         this.isAdminUnlocked = false;
+                        this.isPortalUnlocked = false;
+                        if (this._adminElevatedTimer) {
+                            clearTimeout(this._adminElevatedTimer);
+                            this._adminElevatedTimer = null;
+                        }
+                        try { sessionStorage.removeItem('billing_portal_unlocked'); } catch (e) {}
                         try { sessionStorage.removeItem('billing_admin_unlocked'); } catch (e) {}
                         // 4. Toast notification
                         if (typeof this.showToast === 'function') {
-                            this.showToast('5 minute inactivity: Kaam save karke session logout ho gaya hai.', 'info');
+                            this.showToast('5 minute inactivity: Kaam save karke Portal lock ho gaya hai.', 'info');
                         }
                     }
                 };

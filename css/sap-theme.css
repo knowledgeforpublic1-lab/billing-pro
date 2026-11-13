@@ -1296,6 +1296,10 @@ html.soft .statbar .r { color: #8f836d !important; }
   background: #10b981 !important;
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.8) !important;
 }
+.sysbar .user-chip-status.portal {
+  background: #38bdf8 !important;
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.7) !important;
+}
 .sysbar .user-chip-status.locked {
   background: #f59e0b !important;
   box-shadow: 0 0 4px rgba(245, 158, 11, 0.6) !important;
