@@ -162,6 +162,7 @@
         this.adminPendingCallback = null;
         this.adminPasswordInput = '';
         this.adminPasswordError = '';
+        this.showAdminPasswordText = false;
     };
 
     allMethods.verifyAdminPassword = function() {
@@ -221,6 +222,7 @@
                     catch(e) { return false; }
                 })(),
                 showAdminModal: false,
+                showAdminPasswordText: false,
                 adminPasswordInput: '',
                 adminPasswordError: '',
                 adminPendingCallback: null,

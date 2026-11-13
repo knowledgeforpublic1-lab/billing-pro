@@ -13,6 +13,12 @@ window.MappingModule = {
     },
     toggleMappingLock(field) {
         if (!this.mappingLocks) this.mappingLocks = { rate: true, sap: true, qty: true };
+        if (this.mappingLocks[field] && !this.isAdminUnlocked) {
+            if (typeof this.checkAdminAccess === 'function') {
+                this.checkAdminAccess(() => this.toggleMappingLock(field));
+            }
+            return;
+        }
         this.mappingLocks[field] = !this.mappingLocks[field];
         this.persistMappingLocks();
         this.saveToStorage();
@@ -31,6 +37,7 @@ window.MappingModule = {
         this.showSapMasterModal = true;
     },
     addSapMasterRow() {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.addSapMasterRow())) return;
         if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
         if (!Array.isArray(this.sapMaterialsMaster)) this.sapMaterialsMaster = [];
         this.sapMasterSearch = '';
@@ -41,6 +48,7 @@ window.MappingModule = {
         });
     },
     removeSapMasterRow(row) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.removeSapMasterRow(row))) return;
         if (this.isFinalized) { this.showToast('Bill locked hai — pehle Unlock karo', '🔒'); return; }
         if (!row) return;
         const label = row.code ? '[' + row.code + '] ' + (row.desc || '') : (row.desc || 'nayi row');

@@ -542,33 +542,31 @@
                                     </td>
                                     <td class="text-center">
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked && openAdminModal()"
-                                            @focus="isAdminUnlocked && $event.target.select()"
-                                            @change="isAdminUnlocked && saveToStorage()">
+                                            :readonly="isFinalized"
+                                            @focus="$event.target.select()"
+                                            @change="saveToStorage()">
                                     </td>
                                     <td v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="locIdx" class="text-right">
                                         <input type="text" inputmode="decimal"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
                                             v-model="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" :data-row="item.origIndex" :data-loc="locIdx" placeholder="0"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked && openAdminModal()"
-                                            @focus="isAdminUnlocked && $event.target.select()"
-                                            @keydown.enter.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
-                                            @keydown.tab.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, $event.shiftKey ? 'left' : 'right')"
-                                            @keydown.down.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
-                                            @keydown.up.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'up')"
-                                            @keydown.right.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
-                                            @keydown.left.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
-                                            @paste="isAdminUnlocked && handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="isAdminUnlocked && saveToStorage()"
-                                            @change="isAdminUnlocked && onQtyCellChange($event, item.origIndex, locIdx)"
-                                            @blur="isAdminUnlocked && onQtyCellBlur($event, item.origIndex, locIdx)">
+                                            :readonly="isFinalized"
+                                            @focus="$event.target.select()"
+                                            @keydown.enter.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
+                                            @keydown.tab.prevent="handleGridKeyNav($event, item.origIndex, locIdx, $event.shiftKey ? 'left' : 'right')"
+                                            @keydown.down.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
+                                            @keydown.up.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'up')"
+                                            @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
+                                            @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
+                                            @paste="handleGridPaste($event, item.origIndex, locIdx)"
+                                            @input="saveToStorage()"
+                                            @change="onQtyCellChange($event, item.origIndex, locIdx)"
+                                            @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
                                         <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked ? openAdminModal() : (initQuantitiesForActivity(selectedActivityKey), $event.target.select())"
-                                            @focus="!isAdminUnlocked ? openAdminModal() : (initQuantitiesForActivity(selectedActivityKey), $event.target.select())">
+                                            :readonly="isFinalized"
+                                            @click="initQuantitiesForActivity(selectedActivityKey), $event.target.select()"
+                                            @focus="initQuantitiesForActivity(selectedActivityKey), $event.target.select()">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
                                     <td class="text-right highlight-100">{{ formatCurrency(calculateItemAmount(item.origIndex, 1)) }}</td>
@@ -630,33 +628,31 @@
                                     </td>
                                     <td class="text-center">
                                         <input type="text" v-model="item.unit" class="editable-cell text-center" style="width: 38px;"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked && openAdminModal()"
-                                            @focus="isAdminUnlocked && $event.target.select()"
-                                            @change="isAdminUnlocked && saveToStorage()">
+                                            :readonly="isFinalized"
+                                            @focus="$event.target.select()"
+                                            @change="saveToStorage()">
                                     </td>
                                     <td v-for="(loc, locIdx) in getActLocations(selectedActivityKey)" :key="locIdx" class="text-right">
                                         <input type="text" inputmode="decimal"
                                             v-if="activityQuantities[selectedActivityKey] && activityQuantities[selectedActivityKey][locIdx]"
                                             v-model="activityQuantities[selectedActivityKey][locIdx][item.origIndex]"
                                             class="qty-input" :data-row="item.origIndex" :data-loc="locIdx" placeholder="0"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked && openAdminModal()"
-                                            @focus="isAdminUnlocked && $event.target.select()"
-                                            @keydown.enter.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
-                                            @keydown.tab.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, $event.shiftKey ? 'left' : 'right')"
-                                            @keydown.down.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
-                                            @keydown.up.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'up')"
-                                            @keydown.right.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
-                                            @keydown.left.prevent="isAdminUnlocked && handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
-                                            @paste="isAdminUnlocked && handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="isAdminUnlocked && saveToStorage()"
-                                            @change="isAdminUnlocked && onQtyCellChange($event, item.origIndex, locIdx)"
-                                            @blur="isAdminUnlocked && onQtyCellBlur($event, item.origIndex, locIdx)">
+                                            :readonly="isFinalized"
+                                            @focus="$event.target.select()"
+                                            @keydown.enter.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
+                                            @keydown.tab.prevent="handleGridKeyNav($event, item.origIndex, locIdx, $event.shiftKey ? 'left' : 'right')"
+                                            @keydown.down.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'down')"
+                                            @keydown.up.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'up')"
+                                            @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
+                                            @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
+                                            @paste="handleGridPaste($event, item.origIndex, locIdx)"
+                                            @input="saveToStorage()"
+                                            @change="onQtyCellChange($event, item.origIndex, locIdx)"
+                                            @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
                                         <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
-                                            :readonly="!isAdminUnlocked || isFinalized"
-                                            @click="!isAdminUnlocked ? openAdminModal() : (initQuantitiesForActivity(selectedActivityKey), $event.target.select())"
-                                            @focus="!isAdminUnlocked ? openAdminModal() : (initQuantitiesForActivity(selectedActivityKey), $event.target.select())">
+                                            :readonly="isFinalized"
+                                            @click="initQuantitiesForActivity(selectedActivityKey), $event.target.select()"
+                                            @focus="initQuantitiesForActivity(selectedActivityKey), $event.target.select()">
                                     </td>
                                     <td class="text-right font-mono font-semibold" style="width: 65px;">{{ formatCurrency(item.rate) }}</td>
                                     <td class="text-right highlight-100">{{ formatCurrency(calculateItemAmount(item.origIndex, 1)) }}</td>
@@ -837,19 +833,18 @@
                                                     :value="getPoleScheduleCellQty(lIdx, item.origIndex)"
                                                     :data-ps-row="item.origIndex" :data-ps-loc="lIdx"
                                                     :title="getPoleScheduleCellTooltip(item, lIdx)"
-                                                    :readonly="!isAdminUnlocked || isFinalized"
-                                                    @click="!isAdminUnlocked && openAdminModal()"
-                                                    @input="isAdminUnlocked && onPoleScheduleQtyInput(lIdx, item.origIndex, $event)"
-                                                    @change="isAdminUnlocked && onPoleScheduleQtyChange(lIdx, item.origIndex, $event)"
-                                                    @blur="isAdminUnlocked && onPoleScheduleQtyBlur(lIdx, item.origIndex, $event)"
-                                                    @focus="isAdminUnlocked && $event.target.select()"
-                                                    @keydown.enter.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'down')"
-                                                    @keydown.tab.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, $event.shiftKey ? 'left' : 'right')"
-                                                    @keydown.down.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'down')"
-                                                    @keydown.up.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'up')"
-                                                    @keydown.right.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'right')"
-                                                    @keydown.left.prevent="isAdminUnlocked && handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'left')"
-                                                    @paste="isAdminUnlocked && handlePoleSchedulePaste($event, item.origIndex, lIdx)"
+                                                    :readonly="isFinalized"
+                                                    @input="onPoleScheduleQtyInput(lIdx, item.origIndex, $event)"
+                                                    @change="onPoleScheduleQtyChange(lIdx, item.origIndex, $event)"
+                                                    @blur="onPoleScheduleQtyBlur(lIdx, item.origIndex, $event)"
+                                                    @focus="$event.target.select()"
+                                                    @keydown.enter.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'down')"
+                                                    @keydown.tab.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, $event.shiftKey ? 'left' : 'right')"
+                                                    @keydown.down.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'down')"
+                                                    @keydown.up.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'up')"
+                                                    @keydown.right.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'right')"
+                                                    @keydown.left.prevent="handlePoleScheduleKeyNav($event, item.origIndex, lIdx, 'left')"
+                                                    @paste="handlePoleSchedulePaste($event, item.origIndex, lIdx)"
                                                     class="qty-input editable-cell text-right font-mono"
                                                     :class="{ 'cell-unissued-warn': isPoleScheduleItemUnissued(item) && Number(getPoleScheduleCellQty(lIdx, item.origIndex)) > 0 }"
                                                     :placeholder="item.isSpan ? 'Span' : '0'"
@@ -1147,9 +1142,8 @@
                                 <td>
                                     <input type="text" v-model="it.desc" class="inv-input-clean"
                                         placeholder="Activity or Work Description"
-                                        :readonly="!isAdminUnlocked || isFinalized"
-                                        @click="!isAdminUnlocked && openAdminModal()"
-                                        style="width: 100%; font-weight: 600;" @focus="isAdminUnlocked && (editingInvoiceRow = it)" @blur="editingInvoiceRow = null" @change="isAdminUnlocked && onInvoiceRowEdit(it)">
+                                        :readonly="isFinalized"
+                                        style="width: 100%; font-weight: 600;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
                                     <div v-if="(it.actKey === '907' || (it.desc && /^(?:Activity\s+)?907\s*:/i.test(it.desc))) && getActivity907AaacTotalRmt() > 0"
                                         style="font-size: 0.72rem; color: var(--primary); font-weight: 600; margin-top: 2px;">
                                         ⚡ AAAC: {{ getActivity907AaacTotalRmt().toLocaleString() }} Rmt ÷ {{ projectMeta.aaacDivisor }} = {{ it.qty }} KM
@@ -1157,29 +1151,26 @@
                                 </td>
                                 <td class="text-center">
                                     <input type="text" v-model="it.unit" class="inv-input-clean text-center"
-                                        :readonly="!isAdminUnlocked || isFinalized"
-                                        @click="!isAdminUnlocked && openAdminModal()"
-                                        style="width: 100%;" @focus="isAdminUnlocked && (editingInvoiceRow = it)" @blur="editingInvoiceRow = null" @change="isAdminUnlocked && onInvoiceRowEdit(it)">
+                                        :readonly="isFinalized"
+                                        style="width: 100%;" @focus="editingInvoiceRow = it" @blur="editingInvoiceRow = null" @change="onInvoiceRowEdit(it)">
                                 </td>
                                 <td class="text-right">
                                     <input type="text" v-model="it.qty"
                                         class="inv-input-clean text-right font-mono" style="width: 100%;"
-                                        :readonly="!isAdminUnlocked || isFinalized"
-                                        @click="!isAdminUnlocked && openAdminModal()"
-                                        @focus="isAdminUnlocked && ($event.target.select(), editingInvoiceRow = it)"
-                                        @blur="isAdminUnlocked && onInvoiceFieldBlur(it, 'qty', $event)"
-                                        @change="isAdminUnlocked && onInvoiceRowEdit(it)"
+                                        :readonly="isFinalized"
+                                        @focus="$event.target.select(), editingInvoiceRow = it"
+                                        @blur="onInvoiceFieldBlur(it, 'qty', $event)"
+                                        @change="onInvoiceRowEdit(it)"
                                         @keydown.enter="$event.target.blur()">
                                 </td>
                                 <td class="text-right font-mono" style="font-weight: 700;">
                                     <input type="text" v-model="it.amount"
                                         class="inv-input-clean text-right font-mono"
                                         style="width: 100%; font-weight: 700;"
-                                        :readonly="!isAdminUnlocked || isFinalized"
-                                        @click="!isAdminUnlocked && openAdminModal()"
-                                        @focus="isAdminUnlocked && ($event.target.select(), editingInvoiceRow = it)"
-                                        @blur="isAdminUnlocked && onInvoiceFieldBlur(it, 'amount', $event)"
-                                        @change="isAdminUnlocked && onInvoiceRowEdit(it)"
+                                        :readonly="isFinalized"
+                                        @focus="$event.target.select(), editingInvoiceRow = it"
+                                        @blur="onInvoiceFieldBlur(it, 'amount', $event)"
+                                        @change="onInvoiceRowEdit(it)"
                                         @keydown.enter="$event.target.blur()">
                                 </td>
                                 <td class="no-print text-center" style="white-space: nowrap;">
@@ -3196,30 +3187,80 @@
         </div>
 
         <!-- ============================================ -->
-        <!-- Admin Password Authentication Modal          -->
+        <!-- 🔒 Admin Password Authentication Modal (Clean & Modern) -->
         <!-- ============================================ -->
-        <div v-if="showAdminModal" class="modal-backdrop" @click.self="closeAdminModal" @keydown.esc="closeAdminModal" style="z-index: 99999; display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(2px);">
-            <div class="modal" style="width: 390px; max-width: 92vw; background: var(--bg-card, #ffffff); border-radius: 8px; box-shadow: 0 20px 35px rgba(0,0,0,0.4); border: 1px solid var(--border-color, #e2e8f0); overflow: hidden;">
-                <div style="background: #1e293b; color: #ffffff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem;">
-                        <span style="font-size: 1.15rem;">🔒</span> Admin Login (Rakesh Kushawaha)
+        <div v-if="showAdminModal" class="modal-backdrop" @click.self="closeAdminModal" @keydown.esc="closeAdminModal" style="z-index: 99999; display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(6px); padding: 16px;">
+            <div class="modal auth-modal-card" style="width: 440px; max-width: 95vw; background: var(--bg-card, #ffffff); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08); overflow: hidden;">
+                <!-- Header with Gradient & RK Avatar -->
+                <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; color: #ffffff; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35); letter-spacing: 0.5px;">
+                            RK
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.05rem; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px;">
+                                Rakesh Kushawaha
+                                <span style="font-size: 0.65rem; background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: 0.3px;">ADMIN</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
+                                Master Mapping & Structure Security
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" @click="closeAdminModal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.25rem; cursor: pointer; line-height: 1; padding: 0 4px;">✕</button>
+                    <button type="button" @click="closeAdminModal" title="Close (Esc)" style="background: rgba(255, 255, 255, 0.08); border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; line-height: 1; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;">✕</button>
                 </div>
-                <div style="padding: 20px 18px;">
-                    <p style="margin: 0 0 14px 0; font-size: 0.83rem; color: var(--text-muted, #475569); line-height: 1.45;">
-                        Billing Pro me edit, save aur changes karne ke liye Admin Password dalein:
-                    </p>
+
+                <!-- Body Content -->
+                <div style="padding: 24px 22px;">
+                    <!-- Informative security banner -->
+                    <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 10px; padding: 10px 12px; margin-bottom: 20px;">
+                        <span style="font-size: 1.15rem; line-height: 1.2;">🛡️</span>
+                        <div style="font-size: 0.81rem; color: var(--text-main, #334155); line-height: 1.45;">
+                            <strong>Security Verification:</strong> Material Mapping ya Pole Schedule rows add/delete karne ke liye Admin Password verify karein.
+                        </div>
+                    </div>
+
                     <form @submit.prevent="verifyAdminPassword">
+                        <!-- Password input group with icon & eye toggle -->
                         <div style="margin-bottom: 14px;">
-                            <input type="password" id="adminPasswordModalInput" v-model="adminPasswordInput" placeholder="Admin password dalein..." autocomplete="current-password" autofocus style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 0.92rem; border: 1.5px solid #94a3b8; border-radius: 6px; outline: none; background: var(--bg-input, #ffffff); color: var(--text-main, #0f172a);">
+                            <label style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted, #64748b); margin-bottom: 7px;">
+                                Admin Password
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <span style="position: absolute; left: 12px; font-size: 1rem; color: #94a3b8; pointer-events: none; z-index: 2;">🔒</span>
+                                <input :type="showAdminPasswordText ? 'text' : 'password'" 
+                                       id="adminPasswordModalInput" 
+                                       v-model="adminPasswordInput" 
+                                       placeholder="Admin Password dalein..." 
+                                       autocomplete="current-password" 
+                                       autofocus 
+                                       style="width: 100%; box-sizing: border-box; padding: 11px 42px 11px 36px; font-size: 0.95rem; border: 1.5px solid var(--border-strong, #cbd5e1); border-radius: 10px; outline: none; background: var(--bg-input, #ffffff); color: var(--text-main, #0f172a); transition: border-color 0.2s, box-shadow 0.2s;">
+                                <button type="button" 
+                                        @click="showAdminPasswordText = !showAdminPasswordText" 
+                                        style="position: absolute; right: 10px; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px; font-size: 1rem; line-height: 1;"
+                                        :title="showAdminPasswordText ? 'Hide Password' : 'Show Password'">
+                                    {{ showAdminPasswordText ? '🙈' : '👁️' }}
+                                </button>
+                            </div>
                         </div>
-                        <div v-if="adminPasswordError" style="color: #dc2626; font-size: 0.78rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 5px;">
-                            <span>⚠️</span> {{ adminPasswordError }}
+
+                        <!-- Error Message Badge -->
+                        <div v-if="adminPasswordError" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 0.8rem; font-weight: 600; padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1rem;">⚠️</span>
+                            <span>{{ adminPasswordError }}</span>
                         </div>
-                        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
-                            <button type="button" class="btn btn-secondary" @click="closeAdminModal" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 4px; font-weight: 600;">Cancel</button>
-                            <button type="submit" class="btn btn-primary" style="padding: 6px 18px; font-size: 0.82rem; font-weight: 700; border-radius: 4px; background: #2563eb; color: #ffffff;">Login / Unlock</button>
+
+                        <!-- Quick note that normal billing is open -->
+                        <div style="font-size: 0.74rem; color: var(--text-muted, #94a3b8); margin-bottom: 20px; line-height: 1.4;">
+                            💡 Normal bill entry (quantities, rates, save online) bina password ke hamesha available hai.
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                            <button type="button" class="btn btn-secondary" @click="closeAdminModal" style="padding: 9px 16px; font-size: 0.85rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 9px 22px; font-size: 0.88rem; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                <span>🔓</span> Unlock & Proceed
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -2819,6 +2819,94 @@ it('User Chip Login & 5-Minute Inactivity Auto-Lock: auto-saves progress and res
     assert.strictEqual(appState.activeBillId, 'bill-101');
 });
 
+it('Scoped Admin Access: Free normal billing data entry vs Password-protected Mapping & Pole Schedule row add/delete', () => {
+    let mappingUnlocked = false;
+    let poleScheduleRowAdded = false;
+    let poleScheduleRowDeleted = false;
+    let normalBillingEditWorked = false;
+
+    const app = {
+        isAdminUnlocked: false,
+        showAdminModal: false,
+        adminPendingCallback: null,
+        adminPasswordInput: '',
+        checkAdminAccess(cb) {
+            if (this.isAdminUnlocked) {
+                if (typeof cb === 'function') cb();
+                return true;
+            }
+            this.adminPendingCallback = cb;
+            this.showAdminModal = true;
+            return false;
+        },
+        verifyAdminPassword() {
+            if ((this.adminPasswordInput || '').trim() === 'Rakesh@123') {
+                this.isAdminUnlocked = true;
+                this.showAdminModal = false;
+                if (this.adminPendingCallback) {
+                    const cb = this.adminPendingCallback;
+                    this.adminPendingCallback = null;
+                    cb();
+                }
+            }
+        },
+        mappingLocks: { sap: true },
+        // Normal billing quantity edit (NO PASSWORD REQUIRED)
+        onQtyCellChange(row, loc, val) {
+            normalBillingEditWorked = true;
+        },
+        // Mapping Lock Unlock (REQUIRES PASSWORD)
+        toggleMappingLock(field) {
+            if (this.mappingLocks[field] && !this.isAdminUnlocked) {
+                this.checkAdminAccess(() => this.toggleMappingLock(field));
+                return;
+            }
+            this.mappingLocks[field] = !this.mappingLocks[field];
+            mappingUnlocked = !this.mappingLocks[field];
+        },
+        // Pole Schedule Row Add (REQUIRES PASSWORD)
+        addPoleScheduleRow() {
+            if (!this.isAdminUnlocked) {
+                this.checkAdminAccess(() => this.addPoleScheduleRow());
+                return;
+            }
+            poleScheduleRowAdded = true;
+        },
+        // Pole Schedule Row Delete (REQUIRES PASSWORD)
+        deletePoleScheduleRow() {
+            if (!this.isAdminUnlocked) {
+                this.checkAdminAccess(() => this.deletePoleScheduleRow());
+                return;
+            }
+            poleScheduleRowDeleted = true;
+        }
+    };
+
+    // 1. Normal billing data entry works freely without password
+    app.onQtyCellChange(0, 0, 15);
+    assert.strictEqual(normalBillingEditWorked, true, 'Normal billing data entry must NOT be blocked by password');
+    assert.strictEqual(app.showAdminModal, false, 'Admin modal must NOT open for normal billing');
+
+    // 2. Mapping unlock requires password
+    app.toggleMappingLock('sap');
+    assert.strictEqual(mappingUnlocked, false, 'Mapping must NOT unlock without password');
+    assert.strictEqual(app.showAdminModal, true, 'Admin modal must open when attempting to edit mapping');
+
+    // Enter correct password
+    app.adminPasswordInput = 'Rakesh@123';
+    app.verifyAdminPassword();
+    assert.strictEqual(app.isAdminUnlocked, true);
+    assert.strictEqual(mappingUnlocked, true, 'Mapping unlocks after password verified');
+
+    // 3. Pole Schedule Row Add works when unlocked
+    app.addPoleScheduleRow();
+    assert.strictEqual(poleScheduleRowAdded, true);
+
+    // 4. Pole Schedule Row Delete works when unlocked
+    app.deletePoleScheduleRow();
+    assert.strictEqual(poleScheduleRowDeleted, true);
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);

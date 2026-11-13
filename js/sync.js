@@ -1114,12 +1114,6 @@ window.SyncModule = {
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
     async syncToCloudNow(opts) {
-        if (!this.isAdminUnlocked) {
-            if (opts && opts.manual && typeof this.checkAdminAccess === 'function') {
-                this.checkAdminAccess(() => this.syncToCloudNow(opts));
-            }
-            return false;
-        }
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
@@ -1301,7 +1295,7 @@ window.SyncModule = {
         } catch(e) {}
     },
     saveToStorage() {
-        if (this._isLoading || this.isAdminUnlocked === false) return;
+        if (this._isLoading) return;
         try {
             try {
                 if (this.invoiceData && this.invoiceData.autoSync) {

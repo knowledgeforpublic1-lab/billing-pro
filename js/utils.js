@@ -351,6 +351,12 @@ window.UtilsModule = {
                 },
                 switchView(viewName) {
                     if (viewName === 'taxInvoice') viewName = 'invoice';
+                    if (viewName === 'mapping' && !this.isAdminUnlocked) {
+                        if (typeof this.checkAdminAccess === 'function') {
+                            this.checkAdminAccess(() => this.switchView('mapping'));
+                            return;
+                        }
+                    }
                     this.currentView = viewName;
                     try { localStorage.setItem('billing_current_view', viewName); } catch(e) {}
                     if (viewName === 'detail') {

@@ -1882,6 +1882,7 @@ window.PoleScheduleModule = {
     },
 
     duplicatePoleScheduleMaterial(mIdx) {
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(() => this.duplicatePoleScheduleMaterial(mIdx))) return;
         if (this.isFinalized) {
             this.showToast('Bill is finalized & locked. Unlock first.', '🔒');
             return;
