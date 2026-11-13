@@ -540,7 +540,7 @@ app.get('/api/gdrive-files', requireApiKey, async (req, res) => {
 
         const text = await gasResponse.text();
         let json;
-        try { json = JSON.parse(text); } catch(e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
+        try { json = JSON.parse(text); } catch (e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
 
         if (gasResponse.ok && json.ok) {
             return res.json({ success: true, files: json.files || [], rootFolder: json.rootFolder || folderName, rootFolderUrl: json.rootFolderUrl || '' });
@@ -551,7 +551,7 @@ app.get('/api/gdrive-files', requireApiKey, async (req, res) => {
                 details: json
             });
         }
-    } catch(err) {
+    } catch (err) {
         log.error(ctx, 'List files error', err);
         res.status(500).json({ success: false, error: 'Failed to list files from Google Drive: ' + (err.message || 'Unknown error') });
     }
@@ -581,7 +581,7 @@ app.get('/api/gdrive-file', requireApiKey, async (req, res) => {
 
         const text = await gasResponse.text();
         let json;
-        try { json = JSON.parse(text); } catch(e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
+        try { json = JSON.parse(text); } catch (e) { json = { ok: false, error: 'Invalid response from Google Apps Script' }; }
 
         if (gasResponse.ok && json.ok && json.fileData) {
             let outBase64 = json.fileData;
@@ -600,7 +600,7 @@ app.get('/api/gdrive-file', requireApiKey, async (req, res) => {
                     }
                     outBase64 = Buffer.from(u8).toString('base64');
                 }
-            } catch(e) {}
+            } catch (e) { }
             return res.json({ success: true, fileData: outBase64, fileName: json.fileName, mimeType: json.mimeType });
         } else {
             return res.status(502).json({
@@ -609,7 +609,7 @@ app.get('/api/gdrive-file', requireApiKey, async (req, res) => {
                 details: json
             });
         }
-    } catch(err) {
+    } catch (err) {
         log.error(ctx, 'Get file error', err);
         res.status(500).json({ success: false, error: 'Failed to get file from Google Drive: ' + (err.message || 'Unknown error') });
     }
@@ -697,7 +697,7 @@ app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit
         const targetPath = pathMod.join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
 
         const content = '/**\n * @file Default Pole Schedules Master Data\n * @description Standard bill-of-materials pole schedules for 11 KV RSJ/PSC line activities.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping).\n */\n\nconst defaultPoleSchedules = ' + JSON.stringify(poleSchedules, null, 2) + ';\n\nif (typeof window !== \'undefined\') {\n    window.defaultPoleSchedules = defaultPoleSchedules;\n}\nif (typeof module !== \'undefined\' && module.exports) {\n    module.exports = defaultPoleSchedules;\n}\n';
-        
+
         try {
             fsMod.writeFileSync(targetPath, content, 'utf8');
             log.info(ctx, `Successfully written ${Object.keys(poleSchedules).length} pole schedules to default-pole-schedules.js on disk`);
@@ -734,7 +734,7 @@ app.get('/api/default-pole-schedules', async (req, res) => {
             if (record && record.data && Object.keys(record.data).length > 0) {
                 return res.json({ success: true, poleSchedules: record.data, source: db.getProvider() });
             }
-        } catch (e) {}
+        } catch (e) { }
 
         const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
         if (require('fs').existsSync(targetPath)) {
@@ -828,7 +828,7 @@ app.get('/api/default-activities', async (req, res) => {
             if (record && record.data && Object.keys(record.data).length > 0) {
                 return res.json({ success: true, activities: record.data, source: db.getProvider() });
             }
-        } catch (e) {}
+        } catch (e) { }
 
         const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-activities.js');
         if (require('fs').existsSync(targetPath)) {
