@@ -25,6 +25,7 @@ demo_saas_navbar.html
 *.jpg
 
 scratch/
+backups/
 
 # SAP UI demo (static pages) — sirf local, push list me kabhi nahi
 sap-ui-demo/
