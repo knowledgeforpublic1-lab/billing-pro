@@ -222,7 +222,7 @@
                 <div class="sgroup">System</div>
                 <a href="#" @click.prevent="openSavedBillsManager('database')"><span class="ico">📁</span><span>Saved RA Bills</span></a>
                 <a href="#" @click.prevent="openNewBillModal"><span class="ico">➕</span><span>New RA Bill</span></a>
-                <a href="#" @click.prevent="toggleTheme" :title="themeMode === 'dark' ? 'Switch to SAP Light Theme' : 'Switch to Dark Theme'"><span class="ico">{{ themeMode === 'dark' ? '🌙' : '☀️' }}</span><span>{{ themeMode === 'dark' ? 'Dark Theme' : 'SAP Light' }}</span></a>
+                <a href="#" @click.prevent="showThemeModal = true" :title="'Visual Theme: ' + currentThemeMeta.name + ' — Click to choose'"><span class="ico">{{ currentThemeMeta.icon }}</span><span>{{ currentThemeMeta.name }}</span></a>
             </aside>
 
             <!-- Main Work Area -->
@@ -3354,6 +3354,78 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             THEME PICKER MODAL (5 Executive Visual Themes)
+             ============================================================ -->
+        <div v-if="showThemeModal" class="modal-backdrop no-print" @click.self="showThemeModal = false" @keydown.esc="showThemeModal = false" style="z-index: 999999; display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(10, 15, 26, 0.78); backdrop-filter: blur(8px); padding: 16px;">
+            <div class="modal theme-modal-card" style="width: 580px; max-width: 95vw; background: var(--bg-card, #141b22); border-radius: 18px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1); overflow: hidden; animation: cardFadePop 0.3s ease;">
+                <!-- Modal Header -->
+                <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                            🎨
+                        </div>
+                        <div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">Visual Themes & Appearance</div>
+                            <div style="font-size: 0.73rem; color: #94a3b8;">Choose your favorite portal theme · Auto-saved locally</div>
+                        </div>
+                    </div>
+                    <button @click="showThemeModal = false" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 4px 8px; border-radius: 6px;" title="Close">✕</button>
+                </div>
+
+                <!-- Theme Options Grid -->
+                <div style="padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; max-height: 65vh; overflow-y: auto; background: var(--bg-main, #0d1217);">
+                    <div v-for="t in themesList" :key="t.id"
+                         @click="setTheme(t.id)"
+                         :style="{
+                             border: themeMode === t.id ? ('2px solid ' + t.accent) : '1.5px solid var(--border-subtle, #26313c)',
+                             background: themeMode === t.id ? 'rgba(56, 189, 248, 0.08)' : 'var(--bg-card, #141b22)',
+                             boxShadow: themeMode === t.id ? ('0 0 20px ' + t.accent + '25') : 'none',
+                             borderRadius: '12px',
+                             padding: '14px',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s',
+                             display: 'flex',
+                             flexDirection: 'column',
+                             justifyContent: 'space-between',
+                             gap: '12px'
+                         }">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">{{ t.icon }}</span>
+                                <div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main, #ffffff);">{{ t.name }}</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted, #94a3b8);">{{ t.subtitle }}</div>
+                                </div>
+                            </div>
+                            <span v-if="themeMode === t.id" :style="{ background: t.accent, color: '#ffffff', fontSize: '0.62rem', fontWeight: '800', padding: '3px 8px', borderRadius: '10px', letterSpacing: '0.5px' }">
+                                ✓ ACTIVE
+                            </span>
+                        </div>
+
+                        <!-- Color Swatches Bar -->
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(0,0,0,0.22); border-radius: 8px;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted, #94a3b8); font-weight: 600;">Colors:</span>
+                            <span style="width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);" :style="{ background: t.bg }" title="Workspace Background"></span>
+                            <span style="width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);" :style="{ background: t.card }" title="Cards / Tables"></span>
+                            <span style="width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);" :style="{ background: t.sysbar }" title="Top Navbar"></span>
+                            <span style="width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); margin-left: auto;" :style="{ background: t.accent }" title="Accent Highlight"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div style="padding: 14px 20px; border-top: 1px solid var(--border-subtle, #26313c); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card, #141b22);">
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.78rem; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;" @click="toggleTheme">
+                        <span>🔄</span> Next Theme (Cycle)
+                    </button>
+                    <button type="button" class="btn btn-primary" style="font-size: 0.8rem; padding: 7px 20px; font-weight: 700;" @click="showThemeModal = false">
+                        Done
+                    </button>
                 </div>
             </div>
         </div>

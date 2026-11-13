@@ -51,18 +51,26 @@
     };
 
     allMethods.applyTheme = function() {
-        const mode = (this.themeMode === 'light') ? 'light' : 'dark';
-        const dark = mode === 'dark';
-        this.isDarkMode = dark;
+        const validThemes = ['dark', 'light', 'ocean', 'emerald', 'amber'];
+        const current = validThemes.includes(this.themeMode) ? this.themeMode : 'dark';
+        this.themeMode = current;
+        const isDark = current !== 'light';
+        this.isDarkMode = isDark;
         const html = document.documentElement;
         const body = document.body;
-        html.dataset.theme = dark ? 'dark' : 'light';
+        html.dataset.theme = current;
+        validThemes.forEach(t => {
+            html.classList.remove(t);
+            if (body) body.classList.remove(t);
+        });
+        html.classList.add(current);
         html.classList.remove('soft');
-        html.classList.toggle('dark', dark);
-        html.classList.toggle('dark-mode', dark);
+        html.classList.toggle('dark', isDark);
+        html.classList.toggle('dark-mode', isDark);
         if (body) {
-            body.classList.toggle('dark', dark);
-            body.classList.toggle('dark-mode', dark);
+            body.classList.toggle('dark', isDark);
+            body.classList.toggle('dark-mode', isDark);
+            body.classList.add(current);
             body.classList.remove('soft');
         }
     };
@@ -112,16 +120,23 @@
         });
     };
 
-    allMethods.toggleTheme = function() {
-        const next = (this.themeMode === 'dark') ? 'light' : 'dark';
+    allMethods.setTheme = function(next) {
+        const validThemes = ['dark', 'light', 'ocean', 'emerald', 'amber'];
+        if (!validThemes.includes(next)) next = 'dark';
         this.themeMode = next;
         try {
             localStorage.setItem('billing_theme_mode', next);
-            localStorage.setItem('billing_theme', next);
+            localStorage.setItem('billing_theme', next === 'light' ? 'light' : 'dark');
         } catch(e) {}
         this.applyTheme();
-        const label = next === 'dark' ? 'Dark Theme 🌙' : 'SAP Light Theme ☀️';
-        if (typeof this.showToast === 'function') this.showToast(label, '🎨');
+        const meta = (this.themesList || []).find(t => t.id === next) || { name: next, icon: '🎨' };
+        if (typeof this.showToast === 'function') this.showToast(`${meta.name} ${meta.icon} Applied`, '🎨');
+    };
+
+    allMethods.toggleTheme = function() {
+        const validThemes = ['dark', 'light', 'ocean', 'emerald', 'amber'];
+        const nextIdx = (validThemes.indexOf(this.themeMode) + 1) % validThemes.length;
+        this.setTheme(validThemes[nextIdx]);
     };
 
         // 🛡️ Error Recovery Method
@@ -319,11 +334,20 @@
                     try { return (localStorage.getItem('billing_theme') || 'dark') !== 'light'; }
                     catch(e) { return true; }
                 })(),
+                showThemeModal: false,
+                themesList: [
+                    { id: 'dark', name: 'Midnight Navy', icon: '🌙', subtitle: 'Executive Tech Dark', bg: '#0d1217', card: '#141b22', sysbar: '#131b26', accent: '#38bdf8' },
+                    { id: 'light', name: 'SAP Classic Light', icon: '☀️', subtitle: 'Clean Enterprise White', bg: '#f9f9f9', card: '#ffffff', sysbar: '#162032', accent: '#0a6ed1' },
+                    { id: 'ocean', name: 'Nordic Ocean', icon: '🌊', subtitle: 'Deep Sapphire & Teal', bg: '#06131e', card: '#0b1e2d', sysbar: '#071521', accent: '#06b6d4' },
+                    { id: 'emerald', name: 'Forest Emerald', icon: '🌲', subtitle: 'Deep Pine & Mint', bg: '#05140e', card: '#092017', sysbar: '#061810', accent: '#10b981' },
+                    { id: 'amber', name: 'Obsidian Amber', icon: '⚡', subtitle: 'Charcoal Black & Gold', bg: '#0d0d11', card: '#16161c', sysbar: '#111116', accent: '#f59e0b' }
+                ],
                 themeMode: (function() {
                     try {
                         var m = localStorage.getItem('billing_theme_mode');
-                        if (m === 'light') return 'light';
-                        return 'dark';
+                        var valid = ['dark', 'light', 'ocean', 'emerald', 'amber'];
+                        if (valid.indexOf(m) !== -1) return m;
+                        return (localStorage.getItem('billing_theme') === 'light') ? 'light' : 'dark';
                     } catch(e) { return 'dark'; }
                 })(),
                 isFinalized: false,
@@ -660,6 +684,10 @@
         },
 
         computed: {
+            currentThemeMeta() {
+                const list = this.themesList || [];
+                return list.find(t => t.id === this.themeMode) || { id: 'dark', name: 'Midnight Navy', icon: '🌙' };
+            },
             appsScriptRawCode() { return window.APPS_SCRIPT_SOURCE_CODE || ""; },
             currentPoleSchedule() {
                 return typeof this.getCurrentPoleSchedule === 'function' ? this.getCurrentPoleSchedule() : { title: 'Pole Schedule', materials: [] };

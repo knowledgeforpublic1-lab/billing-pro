@@ -3595,3 +3595,277 @@ table.pro-table-typo th div {
     transform: scale(1.04);
   }
 }
+
+/* ============================================================
+   17. EXPANDED THEME SUITE: OCEAN, EMERALD, AMBER
+   ============================================================ */
+
+/* 🌊 1. Nordic Ocean Theme */
+html[data-theme="ocean"],
+html.ocean,
+body.ocean {
+  --sys: #091a27;
+  --accent: #06b6d4;
+  --menu-bg: #0d2133;
+  --grid-line: #163650;
+  --head-bg: #0e273c;
+  --zebra: #081724;
+  --bg-main: #06131e;
+  --card-bg: #0c1e2e;
+  --border-subtle: #16354f;
+  --border-strong: #204b6f;
+  --text-main: #f0f9ff;
+  --text-muted: #94a3b8;
+}
+
+html[data-theme="ocean"] body,
+html[data-theme="ocean"] #app,
+html[data-theme="ocean"] .frame,
+html[data-theme="ocean"] .work {
+  background: #06131e !important;
+  color: #e0f2fe !important;
+}
+
+html[data-theme="ocean"] .sysbar {
+  background: linear-gradient(180deg, #0e2436 0%, #071521 100%) !important;
+  border-bottom: 2px solid #06b6d4 !important;
+}
+
+html[data-theme="ocean"] .sidebar {
+  background: #091a27 !important;
+  border-right-color: #16354f !important;
+}
+
+html[data-theme="ocean"] .sidebar a.on {
+  background: #0f2e46 !important;
+  color: #38bdf8 !important;
+  border-left-color: #06b6d4 !important;
+}
+
+html[data-theme="ocean"] .grid-wrap,
+html[data-theme="ocean"] .kbox,
+html[data-theme="ocean"] .borders,
+html[data-theme="ocean"] .table-card,
+html[data-theme="ocean"] .alv-card,
+html[data-theme="ocean"] .abstract-card,
+html[data-theme="ocean"] .glass-panel,
+html[data-theme="ocean"] .ps-schedule-card,
+html[data-theme="ocean"] .reco-control-card,
+html[data-theme="ocean"] .invoice-card {
+  background: #0b1e2d !important;
+  border-color: #173b57 !important;
+  color: #e0f2fe !important;
+}
+
+html[data-theme="ocean"] table.alv,
+html[data-theme="ocean"] table.billing-table,
+html[data-theme="ocean"] table.modern-table,
+html[data-theme="ocean"] table.reconciliation-table {
+  background: #091824 !important;
+}
+
+html[data-theme="ocean"] table th {
+  background: #0e273c !important;
+  color: #67e8f9 !important;
+  border-color: #1a4261 !important;
+}
+
+html[data-theme="ocean"] table td {
+  background: #0a1b28 !important;
+  border-color: #14334a !important;
+  color: #e0f2fe !important;
+}
+
+html[data-theme="ocean"] table tbody tr:nth-child(even) td {
+  background: #071521 !important;
+}
+
+html[data-theme="ocean"] table tbody tr:hover td {
+  background: #11324c !important;
+}
+
+html[data-theme="ocean"] .apptoolbar,
+html[data-theme="ocean"] .filter-bar-card {
+  background: #0c2030 !important;
+  border-color: #173b57 !important;
+}
+
+/* 🌲 2. Forest Emerald Theme */
+html[data-theme="emerald"],
+html.emerald,
+body.emerald {
+  --sys: #071c14;
+  --accent: #10b981;
+  --menu-bg: #0c261c;
+  --grid-line: #183c2e;
+  --head-bg: #0e2b20;
+  --zebra: #081a12;
+  --bg-main: #05140e;
+  --card-bg: #0a2118;
+  --border-subtle: #173a2d;
+  --border-strong: #225240;
+  --text-main: #f0fdf4;
+  --text-muted: #94a3b8;
+}
+
+html[data-theme="emerald"] body,
+html[data-theme="emerald"] #app,
+html[data-theme="emerald"] .frame,
+html[data-theme="emerald"] .work {
+  background: #05140e !important;
+  color: #dcfce7 !important;
+}
+
+html[data-theme="emerald"] .sysbar {
+  background: linear-gradient(180deg, #0e2c20 0%, #061810 100%) !important;
+  border-bottom: 2px solid #10b981 !important;
+}
+
+html[data-theme="emerald"] .sidebar {
+  background: #081d15 !important;
+  border-right-color: #173b2d !important;
+}
+
+html[data-theme="emerald"] .sidebar a.on {
+  background: #0f3325 !important;
+  color: #34d399 !important;
+  border-left-color: #10b981 !important;
+}
+
+html[data-theme="emerald"] .grid-wrap,
+html[data-theme="emerald"] .kbox,
+html[data-theme="emerald"] .borders,
+html[data-theme="emerald"] .table-card,
+html[data-theme="emerald"] .alv-card,
+html[data-theme="emerald"] .abstract-card,
+html[data-theme="emerald"] .glass-panel,
+html[data-theme="emerald"] .ps-schedule-card,
+html[data-theme="emerald"] .reco-control-card,
+html[data-theme="emerald"] .invoice-card {
+  background: #092017 !important;
+  border-color: #183e2f !important;
+  color: #dcfce7 !important;
+}
+
+html[data-theme="emerald"] table.alv,
+html[data-theme="emerald"] table.billing-table,
+html[data-theme="emerald"] table.modern-table,
+html[data-theme="emerald"] table.reconciliation-table {
+  background: #071912 !important;
+}
+
+html[data-theme="emerald"] table th {
+  background: #0d2c20 !important;
+  color: #6ee7b7 !important;
+  border-color: #1a4937 !important;
+}
+
+html[data-theme="emerald"] table td {
+  background: #081c14 !important;
+  border-color: #143729 !important;
+  color: #dcfce7 !important;
+}
+
+html[data-theme="emerald"] table tbody tr:nth-child(even) td {
+  background: #06150f !important;
+}
+
+html[data-theme="emerald"] table tbody tr:hover td {
+  background: #103829 !important;
+}
+
+html[data-theme="emerald"] .apptoolbar,
+html[data-theme="emerald"] .filter-bar-card {
+  background: #0b251b !important;
+  border-color: #183e2f !important;
+}
+
+/* ⚡ 3. Obsidian Amber / Gold Theme */
+html[data-theme="amber"],
+html.amber,
+body.amber {
+  --sys: #15151a;
+  --accent: #f59e0b;
+  --menu-bg: #1d1d24;
+  --grid-line: #2d2d38;
+  --head-bg: #22222b;
+  --zebra: #141419;
+  --bg-main: #0d0d11;
+  --card-bg: #17171e;
+  --border-subtle: #292934;
+  --border-strong: #3f3f50;
+  --text-main: #fefce8;
+  --text-muted: #a1a1aa;
+}
+
+html[data-theme="amber"] body,
+html[data-theme="amber"] #app,
+html[data-theme="amber"] .frame,
+html[data-theme="amber"] .work {
+  background: #0d0d11 !important;
+  color: #fef3c7 !important;
+}
+
+html[data-theme="amber"] .sysbar {
+  background: linear-gradient(180deg, #1f1f28 0%, #111116 100%) !important;
+  border-bottom: 2px solid #f59e0b !important;
+}
+
+html[data-theme="amber"] .sidebar {
+  background: #131318 !important;
+  border-right-color: #262633 !important;
+}
+
+html[data-theme="amber"] .sidebar a.on {
+  background: #242431 !important;
+  color: #fbbf24 !important;
+  border-left-color: #f59e0b !important;
+}
+
+html[data-theme="amber"] .grid-wrap,
+html[data-theme="amber"] .kbox,
+html[data-theme="amber"] .borders,
+html[data-theme="amber"] .table-card,
+html[data-theme="amber"] .alv-card,
+html[data-theme="amber"] .abstract-card,
+html[data-theme="amber"] .glass-panel,
+html[data-theme="amber"] .ps-schedule-card,
+html[data-theme="amber"] .reco-control-card,
+html[data-theme="amber"] .invoice-card {
+  background: #16161c !important;
+  border-color: #2a2a38 !important;
+  color: #fef3c7 !important;
+}
+
+html[data-theme="amber"] table.alv,
+html[data-theme="amber"] table.billing-table,
+html[data-theme="amber"] table.modern-table,
+html[data-theme="amber"] table.reconciliation-table {
+  background: #111116 !important;
+}
+
+html[data-theme="amber"] table th {
+  background: #21212b !important;
+  color: #fde68a !important;
+  border-color: #353545 !important;
+}
+
+html[data-theme="amber"] table td {
+  background: #141419 !important;
+  border-color: #242430 !important;
+  color: #fef3c7 !important;
+}
+
+html[data-theme="amber"] table tbody tr:nth-child(even) td {
+  background: #0f0f13 !important;
+}
+
+html[data-theme="amber"] table tbody tr:hover td {
+  background: #272735 !important;
+}
+
+html[data-theme="amber"] .apptoolbar,
+html[data-theme="amber"] .filter-bar-card {
+  background: #181820 !important;
+  border-color: #2a2a38 !important;
+}
