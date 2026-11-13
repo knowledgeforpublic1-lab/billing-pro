@@ -51,19 +51,19 @@
     };
 
     allMethods.applyTheme = function() {
-        const mode = this.themeMode || 'light';
+        const mode = (this.themeMode === 'light') ? 'light' : 'dark';
         const dark = mode === 'dark';
         this.isDarkMode = dark;
         const html = document.documentElement;
         const body = document.body;
         html.dataset.theme = dark ? 'dark' : 'light';
-        html.classList.toggle('soft', mode === 'soft');
+        html.classList.remove('soft');
         html.classList.toggle('dark', dark);
         html.classList.toggle('dark-mode', dark);
         if (body) {
             body.classList.toggle('dark', dark);
             body.classList.toggle('dark-mode', dark);
-            body.classList.toggle('soft', mode === 'soft');
+            body.classList.remove('soft');
         }
     };
 
@@ -113,15 +113,14 @@
     };
 
     allMethods.toggleTheme = function() {
-        const order = ['light', 'dark', 'soft'];
-        const cur = this.themeMode || 'light';
-        this.themeMode = order[(order.indexOf(cur) + 1) % order.length];
+        const next = (this.themeMode === 'dark') ? 'light' : 'dark';
+        this.themeMode = next;
         try {
-            localStorage.setItem('billing_theme_mode', this.themeMode);
-            localStorage.setItem('billing_theme', this.themeMode === 'dark' ? 'dark' : 'light');
+            localStorage.setItem('billing_theme_mode', next);
+            localStorage.setItem('billing_theme', next);
         } catch(e) {}
         this.applyTheme();
-        const label = this.themeMode === 'dark' ? 'Dark Mode' : (this.themeMode === 'soft' ? 'Soft Comfort Mode' : 'SAP Light Mode');
+        const label = next === 'dark' ? 'Dark Theme 🌙' : 'SAP Light Theme ☀️';
         if (typeof this.showToast === 'function') this.showToast(label, '🎨');
     };
 
@@ -323,8 +322,8 @@
                 themeMode: (function() {
                     try {
                         var m = localStorage.getItem('billing_theme_mode');
-                        if (m === 'dark' || m === 'soft') return m;
-                        return (localStorage.getItem('billing_theme') === 'light') ? 'light' : 'dark';
+                        if (m === 'light') return 'light';
+                        return 'dark';
                     } catch(e) { return 'dark'; }
                 })(),
                 isFinalized: false,

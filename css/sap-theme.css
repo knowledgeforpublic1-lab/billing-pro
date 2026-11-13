@@ -958,7 +958,7 @@ html.soft {
 }
 
 html.soft body, html.soft #app, html.soft .work { background: #f5f0e6 !important; color: #3f382c !important; }
-html.soft .sysbar { background: linear-gradient(180deg, #7d6740 0%, #6e5a35 55%, #614f2d 100%) !important; }
+html.soft .sysbar { background: linear-gradient(180deg, #162032 0%, #0f172a 100%) !important; }
 html.soft .sidebar { background: #faf6ea !important; border-right-color: #ddd2b8 !important; }
 html.soft .sidebar a { color: #5c5138 !important; }
 html.soft .sidebar a:hover { background: #efe6cf !important; color: #4a3f28 !important; }

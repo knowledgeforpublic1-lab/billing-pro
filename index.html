@@ -216,7 +216,7 @@
                 <div class="sgroup">System</div>
                 <a href="#" @click.prevent="openSavedBillsManager('database')"><span class="ico">📁</span><span>Saved RA Bills</span></a>
                 <a href="#" @click.prevent="openNewBillModal"><span class="ico">➕</span><span>New RA Bill</span></a>
-                <a href="#" @click.prevent="toggleTheme" title="Theme cycle: SAP Light → Dark → Soft Comfort"><span class="ico">{{ themeMode === 'dark' ? '🌙' : (themeMode === 'soft' ? '🍵' : '☀️') }}</span><span>{{ themeMode === 'dark' ? 'Dark Theme' : (themeMode === 'soft' ? 'Soft Comfort' : 'SAP Light') }}</span></a>
+                <a href="#" @click.prevent="toggleTheme" :title="themeMode === 'dark' ? 'Switch to SAP Light Theme' : 'Switch to Dark Theme'"><span class="ico">{{ themeMode === 'dark' ? '🌙' : '☀️' }}</span><span>{{ themeMode === 'dark' ? 'Dark Theme' : 'SAP Light' }}</span></a>
             </aside>
 
             <!-- Main Work Area -->
