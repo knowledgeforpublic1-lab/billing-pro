@@ -431,8 +431,8 @@
                                     </div>
                                     <table class="alv" style="table-layout: fixed; width: 100%;">
                                         <colgroup>
-                                            <col style="width:10%"><col style="width:23%"><col style="width:10%"><col style="width:9%">
-                                            <col style="width:13%"><col style="width:10%"><col style="width:12%"><col style="width:13%">
+                                            <col style="width:10%"><col style="width:22%"><col style="width:10%"><col style="width:9%">
+                                            <col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:15%">
                                         </colgroup>
                                         <thead>
                                             <tr>
@@ -454,9 +454,10 @@
                                                 <td class="money">{{ b.gstAmount ? '₹' + formatCurrency(b.gstAmount) : '₹0.00' }}</td>
                                                 <td class="money"><b>{{ (b.grandTotal || b.totalAmount) ? '₹' + formatCurrency(b.grandTotal || b.totalAmount) : '₹0.00' }}</b></td>
                                                 <td class="ctr" style="white-space: nowrap; padding: 0.18rem 0.25rem;">
-                                                    <button class="tbtn primary" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem;" @click="openBill(b.dataId); switchView('invoice')">Invoice</button>
-                                                    <button class="tbtn" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px;" @click="openBill(b.dataId); switchView('detail')">Activities</button>
+                                                    <button class="tbtn primary" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem;" @click="openBill(b.dataId); switchView('invoice')" title="Tax Invoice dekhein / edit karein">Invoice</button>
+                                                    <button class="tbtn" style="padding: 0.12rem 0.42rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px;" @click="openBill(b.dataId); switchView('detail')" title="Activity Billing dekhein / edit karein">Activities</button>
                                                     <button class="tbtn" style="padding: 0.12rem 0.38rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px; color: var(--accent-indigo, #6366f1);" @click="renameBill(b)" title="Rename Bill / RA No">✏️</button>
+                                                    <button class="tbtn" style="padding: 0.12rem 0.38rem; min-height: 1.35rem; font-size: 0.69rem; margin-left: 2px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" @click="deleteBill(b)" title="Is Bill ko Delete karein">🗑️</button>
                                                 </td>
                                             </tr>
                                             <tr v-if="!savedBillsList || savedBillsList.length === 0">
@@ -2953,8 +2954,7 @@
 
                                     <!-- Delete Button -->
                                     <button type="button" class="btn btn-danger" @click="deleteBill(b)"
-                                        :disabled="b.dataId === activeBillId || savedBillsList.length <= 1"
-                                        :title="b.dataId === activeBillId ? 'Active bill ko delete nahi kar sakte' : 'Is bill ko database se delete karein'"
+                                        :title="'Is bill ko database se delete karein'"
                                         style="padding: 5px 9px; font-size: 0.78rem;">
                                         <span>🗑️</span>
                                     </button>

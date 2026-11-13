@@ -960,31 +960,34 @@ window.SyncModule = {
     async deleteBill(b) {
         if (!b) return;
         if (b.dataId === this.activeBillId) {
-            alert('Yeh bill abhi active (open) hai. Pehle koi doosra bill open karein, phir isko delete karein.');
-            return;
+            return this.discardActiveBill(b);
         }
-        const ok = confirm(`Kya aap sach me Bill [${b.billNo || b.dataId}] ko database se DELETE karna chahte hain?\n\nYeh action wapas nahi hoga.`);
+        const billLabel = b.billNo || b.dataId;
+        const ok = confirm(`Kya aap sach me Bill [${billLabel}] ko database se DELETE karna chahte hain?\n\nYeh action wapas nahi hoga.`);
         if (!ok) return;
 
-        this.showToast(`Deleting bill [${b.billNo || b.dataId}]...`, '⏳');
+        this.showToast(`Deleting bill [${billLabel}]...`, '⏳');
         const success = await this.deleteBillFromCloud(b.dataId);
         if (success) {
-            this.showToast(`Bill [${b.billNo || b.dataId}] deleted from database 🗑️`, '🗑️');
+            this.showToast(`Bill [${billLabel}] deleted from database 🗑️`, '🗑️');
             await this.loadSavedBillsList();
         }
     },
-    // 🗑️ Active (draft) bill ko DISCARD karo — database se delete + BLANK workspace
+    // 🗑️ Active (draft) bill ko DISCARD / DELETE karo — database se delete + BLANK workspace
     async discardActiveBill(targetBill) {
         const targetId = (targetBill && (targetBill.dataId || targetBill.id)) || this.activeBillId || 'main-billing-state';
         if (targetId === 'main-billing-state') {
-            this.showToast('Main workspace discard nahi hota — uske liye New RA Bill bana kar draft ke roop me use karo', 'ℹ️');
+            const ok = confirm(`Current workspace ko BLANK karna chahte hain?\n\n• Sari filled measurements aur amounts clear ho jayengi\n• SAP material mapping bilkul SAFE rahegi`);
+            if (!ok) return;
+            this.resetAllManualDataKeepMapping({ resetLocations: true });
+            this.showToast('Workspace blank ho gaya', 'ℹ️');
             return;
         }
         const name = (targetBill && targetBill.billNo) || (this.projectMeta && this.projectMeta.billNo) || targetId;
-        const ok = confirm(`Kya aap Bill [${name}] ko DISCARD karna chahte hain?\n\n• Ye bill database se DELETE ho jayega\n• Workspace BLANK ho jayega (SAP mapping safe rahega)\n\nYeh action wapas nahi hoga!`);
+        const ok = confirm(`Kya aap Bill [${name}] ko DELETE karna chahte hain?\n\n• Ye bill database se DELETE ho jayega\n• Workspace BLANK ho jayega (SAP mapping safe rahega)\n\nYeh action wapas nahi hoga!`);
         if (!ok) return;
 
-        this.showToast(`Discarding bill [${name}]...`, '⏳');
+        this.showToast(`Deleting bill [${name}]...`, '⏳');
         // 1) Workspace BLANK karo — quantities/bill-no/invoice sab clear, SAP mapping intact
         this._isLoading = true;
         this.resetAllManualDataKeepMapping({ resetLocations: true });
@@ -1016,7 +1019,7 @@ window.SyncModule = {
         // 3) Ab discarded bill ka doc database se delete karo
         const deleted = await this.deleteBillFromCloud(targetId);
         if (deleted) {
-            this.showToast(`Bill [${name}] discard ho gaya 🗑️ Blank workspace ready hai`, '🗑️');
+            this.showToast(`Bill [${name}] delete ho gaya 🗑️ Blank workspace ready hai`, '🗑️');
         }
         await this.loadSavedBillsList();
         this.showSavedBillsModal = false;
