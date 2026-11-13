@@ -97,18 +97,19 @@
                 <span class="pulse-beacon"></span>{{ projectMeta.projectName || 'RDSS T-10 GADCHIROLI' }}
             </span>
             <div class="right" style="display: flex; align-items: center; gap: 8px;">
-                <!-- 🔒 Admin Password Protection Mode Badge -->
-                <span v-if="!isAdminUnlocked" class="admin-chip locked" @click="openAdminModal" title="Admin Mode is Locked (View-Only). Click to enter password and unlock editing.">
-                    <span style="font-size: 0.85rem;">🔒</span> Read-Only (Unlock to Edit)
-                </span>
-                <span v-else class="admin-chip unlocked" @click="lockAdminMode" title="Admin Mode Active (Edit Mode). Click to lock back to View-Only.">
-                    <span style="font-size: 0.85rem;">🔓</span> Admin Mode (Click to Lock)
-                </span>
-
                 <span class="sys-sync-link sync-chip" @click="syncToMongoNow({ manual: true })" style="cursor: pointer;" :title="'Cloud rev ' + cloudRev + ' · Click to sync'">
                     <span class="sync-dot"></span> {{ syncStatus === 'synced' ? 'Synced' : (syncStatus === 'syncing' ? 'Syncing...' : 'Save Online') }} · rev {{ cloudRev }}
                 </span>
-                <span class="u user-chip" title="Billing Engineer"><span class="avatar-rk">RK</span> Rakesh Kushawaha</span>
+                <span class="u user-chip" 
+                      @click="onUserChipClick" 
+                      :class="{ 'is-admin-active': isAdminUnlocked }"
+                      style="cursor: pointer; user-select: none;"
+                      :title="isAdminUnlocked ? 'Rakesh Kushawaha (Admin Mode Active) · Click to Lock / Logout' : 'Rakesh Kushawaha · Click to Login (Password)'">
+                    <span class="avatar-rk">RK</span>
+                    <span>Rakesh Kushawaha</span>
+                    <span class="user-chip-status" :class="isAdminUnlocked ? 'active' : 'locked'" :title="isAdminUnlocked ? 'Admin Active' : 'Locked (Click to Login)'"></span>
+                    <span v-if="!isAdminUnlocked" class="user-chip-auth-action">Login</span>
+                </span>
             </div>
         </div>
 
@@ -3201,13 +3202,13 @@
             <div class="modal" style="width: 390px; max-width: 92vw; background: var(--bg-card, #ffffff); border-radius: 8px; box-shadow: 0 20px 35px rgba(0,0,0,0.4); border: 1px solid var(--border-color, #e2e8f0); overflow: hidden;">
                 <div style="background: #1e293b; color: #ffffff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem;">
-                        <span style="font-size: 1.15rem;">🔒</span> Admin Authentication
+                        <span style="font-size: 1.15rem;">🔒</span> Admin Login (Rakesh Kushawaha)
                     </div>
                     <button type="button" @click="closeAdminModal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.25rem; cursor: pointer; line-height: 1; padding: 0 4px;">✕</button>
                 </div>
                 <div style="padding: 20px 18px;">
                     <p style="margin: 0 0 14px 0; font-size: 0.83rem; color: var(--text-muted, #475569); line-height: 1.45;">
-                        Kisi bhi tarah ke <strong>changes (data entry, save, delete, settings)</strong> karne ke liye Admin Password dalein:
+                        Billing Pro me edit, save aur changes karne ke liye Admin Password dalein:
                     </p>
                     <form @submit.prevent="verifyAdminPassword">
                         <div style="margin-bottom: 14px;">
@@ -3218,7 +3219,7 @@
                         </div>
                         <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
                             <button type="button" class="btn btn-secondary" @click="closeAdminModal" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 4px; font-weight: 600;">Cancel</button>
-                            <button type="submit" class="btn btn-primary" style="padding: 6px 18px; font-size: 0.82rem; font-weight: 700; border-radius: 4px; background: #2563eb; color: #ffffff;">Unlock Edit Mode</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 6px 18px; font-size: 0.82rem; font-weight: 700; border-radius: 4px; background: #2563eb; color: #ffffff;">Login / Unlock</button>
                         </div>
                     </form>
                 </div>

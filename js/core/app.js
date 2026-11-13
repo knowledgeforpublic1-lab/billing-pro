@@ -192,6 +192,18 @@
         }
     };
 
+    allMethods.onUserChipClick = function() {
+        if (this.isAdminUnlocked) {
+            if (confirm('Aap Admin session ko LOCK / LOGOUT karna chahte hain?')) {
+                try { if (typeof this.saveToStorage === 'function') this.saveToStorage(); } catch(e) {}
+                try { if (typeof this.flushPendingSync === 'function') this.flushPendingSync(); } catch(e) {}
+                this.lockAdminMode();
+            }
+        } else {
+            this.openAdminModal();
+        }
+    };
+
     allMethods.checkAdminAccess = function(actionCallback) {
         if (this.isAdminUnlocked) {
             if (typeof actionCallback === 'function') actionCallback();
@@ -2263,6 +2275,52 @@
                     }
                 }
             });
+
+            // ⏰ 5-Minute Inactivity Auto-Lock & Auto-Save
+            // User 5 minute tak koi interaction na kare to sara kaam auto-save karke Admin logout/lock ho jaye
+            try {
+                const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+                let inactivityTimer = null;
+
+                const onInactivityTrigger = async () => {
+                    if (this.isAdminUnlocked) {
+                        console.info('[InactivityWatchdog] 5 minutes of inactivity detected. Auto-saving and locking session...');
+                        // 1. Auto-save all work to storage
+                        try {
+                            if (typeof this.saveToStorage === 'function') this.saveToStorage();
+                        } catch (e) {
+                            console.warn('[InactivityWatchdog] saveToStorage error:', e);
+                        }
+                        // 2. Flush pending cloud sync
+                        try {
+                            if (typeof this.flushPendingSync === 'function') await this.flushPendingSync();
+                        } catch (e) {
+                            console.warn('[InactivityWatchdog] flushPendingSync error:', e);
+                        }
+                        // 3. Lock admin session (logout)
+                        this.isAdminUnlocked = false;
+                        try { sessionStorage.removeItem('billing_admin_unlocked'); } catch (e) {}
+                        // 4. Toast notification
+                        if (typeof this.showToast === 'function') {
+                            this.showToast('5 minute inactivity: Kaam save karke session logout ho gaya hai.', 'info');
+                        }
+                    }
+                };
+
+                const resetInactivityTimer = () => {
+                    if (inactivityTimer) clearTimeout(inactivityTimer);
+                    inactivityTimer = setTimeout(onInactivityTrigger, INACTIVITY_TIMEOUT_MS);
+                };
+
+                const userActivityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+                userActivityEvents.forEach(evt => {
+                    window.addEventListener(evt, resetInactivityTimer, { passive: true });
+                });
+                resetInactivityTimer();
+                this._resetInactivityTimer = resetInactivityTimer;
+            } catch (e) {
+                console.warn('[InactivityWatchdog] init error:', e);
+            }
         }
     });
 

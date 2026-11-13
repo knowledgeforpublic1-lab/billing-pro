@@ -7085,50 +7085,5 @@ html[data-theme="light"] .excel-filter-popover {
     }
 }
 
-/* ============================================================
-   ADMIN MODE / VIEW-ONLY LOCK STYLING
-   ============================================================ */
-.admin-chip {
-    padding: 3px 10px;
-    border-radius: 9999px;
-    font-size: 0.74rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s ease;
-    user-select: none;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-}
-.admin-chip.locked {
-    background: #fef2f2 !important;
-    border: 1px solid #f87171 !important;
-    color: #991b1b !important;
-}
-.admin-chip.locked:hover {
-    background: #fee2e2 !important;
-    border-color: #ef4444 !important;
-}
-.admin-chip.unlocked {
-    background: #ecfdf5 !important;
-    border: 1px solid #34d399 !important;
-    color: #065f46 !important;
-}
-.admin-chip.unlocked:hover {
-    background: #d1fae5 !important;
-    border-color: #10b981 !important;
-}
 
-/* Dark mode admin chip adjustments */
-html[data-theme="dark"] .admin-chip.locked {
-    background: rgba(239, 68, 68, 0.2) !important;
-    border-color: rgba(239, 68, 68, 0.5) !important;
-    color: #fca5a5 !important;
-}
-html[data-theme="dark"] .admin-chip.unlocked {
-    background: rgba(16, 185, 129, 0.2) !important;
-    border-color: rgba(16, 185, 129, 0.5) !important;
-    color: #6ee7b7 !important;
-}
 

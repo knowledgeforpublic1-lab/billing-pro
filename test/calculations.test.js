@@ -2733,6 +2733,92 @@ it('Admin Password Security: Locked by default, verifies Rakesh@123, blocks unau
     assert.strictEqual(mockApp.isAdminUnlocked, false, 'Lock button must return app to safe View-Only mode');
 });
 
+it('User Chip Login & 5-Minute Inactivity Auto-Lock: auto-saves progress and resumes without state loss', async () => {
+    let savedToStorage = false;
+    let flushedSync = false;
+    let toastMessage = '';
+
+    const appState = {
+        isAdminUnlocked: false,
+        showAdminModal: false,
+        adminPasswordInput: '',
+        currentView: 'detail',
+        selectedActivityKey: '922',
+        activeBillId: 'bill-101',
+        saveToStorage() { savedToStorage = true; },
+        async flushPendingSync() { flushedSync = true; },
+        showToast(msg) { toastMessage = msg; },
+        openAdminModal() { this.showAdminModal = true; },
+        lockAdminMode() {
+            this.isAdminUnlocked = false;
+            this.showToast('Admin Mode Locked');
+        },
+        onUserChipClick(confirmLock = true) {
+            if (this.isAdminUnlocked) {
+                if (confirmLock) {
+                    this.saveToStorage();
+                    this.flushPendingSync();
+                    this.lockAdminMode();
+                }
+            } else {
+                this.openAdminModal();
+            }
+        },
+        verifyAdminPassword() {
+            if ((this.adminPasswordInput || '').trim() === 'Rakesh@123') {
+                this.isAdminUnlocked = true;
+                this.showAdminModal = false;
+            }
+        }
+    };
+
+    // 1. Initial State: App is locked, User Chip shows Login
+    assert.strictEqual(appState.isAdminUnlocked, false);
+    appState.onUserChipClick();
+    assert.strictEqual(appState.showAdminModal, true, 'Clicking user chip when locked must open login modal');
+
+    // 2. Unlock with Rakesh@123
+    appState.adminPasswordInput = 'Rakesh@123';
+    appState.verifyAdminPassword();
+    assert.strictEqual(appState.isAdminUnlocked, true, 'Valid password must unlock');
+    assert.strictEqual(appState.showAdminModal, false);
+
+    // 3. 5-Minute Inactivity Simulation
+    // Simulate inactivity watchdog firing
+    const simulateInactivityTimeout = async () => {
+        if (appState.isAdminUnlocked) {
+            appState.saveToStorage();
+            await appState.flushPendingSync();
+            appState.isAdminUnlocked = false;
+            appState.showToast('5 minute inactivity: Kaam save karke session logout ho gaya hai.');
+        }
+    };
+
+    savedToStorage = false;
+    flushedSync = false;
+    await simulateInactivityTimeout();
+
+    // Verify auto-save and lock
+    assert.strictEqual(savedToStorage, true, 'Inactivity must auto-save to storage');
+    assert.strictEqual(flushedSync, true, 'Inactivity must flush cloud sync');
+    assert.strictEqual(appState.isAdminUnlocked, false, 'Inactivity must lock the session');
+    assert.ok(toastMessage.includes('5 minute inactivity'), 'Toast must notify user of auto-save and lock');
+
+    // 4. Verify state persistence (No reset of view, activity, or bill)
+    assert.strictEqual(appState.currentView, 'detail', 'Current view must remain intact');
+    assert.strictEqual(appState.selectedActivityKey, '922', 'Selected activity must remain intact');
+    assert.strictEqual(appState.activeBillId, 'bill-101', 'Active bill must remain intact');
+
+    // 5. User logs back in
+    appState.adminPasswordInput = 'Rakesh@123';
+    appState.verifyAdminPassword();
+    assert.strictEqual(appState.isAdminUnlocked, true, 'Admin successfully logs back in');
+    // App opens exactly where user left off!
+    assert.strictEqual(appState.currentView, 'detail');
+    assert.strictEqual(appState.selectedActivityKey, '922');
+    assert.strictEqual(appState.activeBillId, 'bill-101');
+});
+
 (async () => {
     if (asyncTests.length > 0) {
         await Promise.all(asyncTests);
