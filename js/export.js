@@ -21,59 +21,64 @@ window.ExportModule = {
     addStandardSignOffBlock(ws, startRow, totalCols) {
         if (!ws || totalCols < 1) return startRow;
 
-        const borderBox = {
-            top: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            left: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            bottom: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            right: { style: 'thin', color: { argb: 'FF94A3B8' } }
-        };
+        const thinSide = { style: 'thin', color: { argb: 'FF94A3B8' } };
 
-        // Har pair ke upar signing space — pehli pair se pehle 5 khali lines, baaki pairs se pehle 3.
+        // Horizontal format: title ek row me (left + right), "(Authorized Signatory)" uske niche apni row me.
+        // Signing space har pair ke upar — pehli pair se pehle 5 khali lines, baaki pairs se pehle 3.
         const gapBeforePair = [5, 3, 3];
         const pairs = [
-            [
-                { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
-                { main: 'Billing Engineer', sub: '(Authorized Signatory)' }
-            ],
-            [
-                { main: 'Site Engineer/ Supervisor', sub: '(Authorized Signatory)' },
-                { main: 'Division Incharge', sub: '(Authorized Signatory)' }
-            ],
-            [
-                { main: 'Division Incharge', sub: '(Authorized Signatory)' },
-                { main: 'Project Manager', sub: '(Authorized Signatory)' }
-            ]
+            ['Sub -Contractor', 'Billing Engineer'],
+            ['Site Engineer/ Supervisor', 'Division Incharge'],
+            ['Division Incharge', 'Project Manager']
         ];
+
+        const leftEnd = Math.max(1, Math.floor(totalCols / 2));
+        const rightStart = leftEnd + 1;
+        const rightEnd = totalCols;
 
         let signRow = startRow;
         for (let p = 0; p < pairs.length; p++) {
             for (let g = 0; g < gapBeforePair[p]; g++) {
                 ws.getRow(signRow + g).height = 18;
             }
-            signRow += gapBeforePair[p];
-            ws.getRow(signRow).height = 45;
+            const titleRow = signRow + gapBeforePair[p];
+            const subRow = titleRow + 1;
+            ws.getRow(titleRow).height = 18;
+            ws.getRow(subRow).height = 16;
 
-            // Left box (sheet ke left half) — left aligned
-            const leftEnd = Math.max(1, Math.floor(totalCols / 2));
-            if (leftEnd > 1) ws.mergeCells(signRow, 1, signRow, leftEnd);
-            const left = ws.getCell(signRow, 1);
-            left.value = pairs[p][0].main + '\n' + pairs[p][0].sub;
-            left.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-            left.alignment = { horizontal: 'left', vertical: 'bottom', wrapText: true };
-            for (let c = 1; c <= leftEnd; c++) ws.getCell(signRow, c).border = borderBox;
+            const renderBox = (startCol, endCol, title) => {
+                if (!endCol || endCol < startCol) return;
+                if (endCol > startCol) {
+                    ws.mergeCells(titleRow, startCol, titleRow, endCol);
+                    ws.mergeCells(subRow, startCol, subRow, endCol);
+                }
+                const align = (startCol === 1) ? 'left' : 'right';
+                const tCell = ws.getCell(titleRow, startCol);
+                tCell.value = title;
+                tCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+                tCell.alignment = { horizontal: align, vertical: 'bottom' };
+                const sCell = ws.getCell(subRow, startCol);
+                sCell.value = '(Authorized Signatory)';
+                sCell.font = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF1E3A8A' } };
+                sCell.alignment = { horizontal: align, vertical: 'top' };
+                // 2-row box ka perimeter border
+                for (let c = startCol; c <= endCol; c++) {
+                    ws.getCell(titleRow, c).border = {
+                        top: thinSide,
+                        left: (c === startCol) ? thinSide : undefined,
+                        right: (c === endCol) ? thinSide : undefined
+                    };
+                    ws.getCell(subRow, c).border = {
+                        bottom: thinSide,
+                        left: (c === startCol) ? thinSide : undefined,
+                        right: (c === endCol) ? thinSide : undefined
+                    };
+                }
+            };
+            renderBox(1, leftEnd, pairs[p][0]);
+            renderBox(rightStart, rightEnd, pairs[p][1]);
 
-            // Right box (sheet ke right half) — right aligned
-            const rightStart = leftEnd + 1;
-            const rightEnd = totalCols;
-            if (rightEnd >= rightStart) {
-                if (rightEnd > rightStart) ws.mergeCells(signRow, rightStart, signRow, rightEnd);
-                const right = ws.getCell(signRow, rightStart);
-                right.value = pairs[p][1].main + '\n' + pairs[p][1].sub;
-                right.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-                right.alignment = { horizontal: 'right', vertical: 'bottom', wrapText: true };
-                for (let c = rightStart; c <= rightEnd; c++) ws.getCell(signRow, c).border = borderBox;
-            }
-            signRow++;
+            signRow = subRow + 1;
         }
         return signRow - 1;
     },
