@@ -30,11 +30,11 @@ window.RecoFilterModule = {
         }
     },
     isRecoColumnFiltered(key) { return !!(this.recoColumnFilters || {})[key]; },
-    applyRecoColumnFilters(rows) {
+    applyRecoColumnFilters(rows, excludedKey) {
         const columns = this.getRecoFilterColumns();
         let result = rows.filter(row => columns.every(col => {
             const filter = (this.recoColumnFilters || {})[col.key];
-            if (!filter) return true;
+            if (!filter || col.key === excludedKey) return true;
             const value = this.getRecoFilterValue(row, col.key);
             if (filter.values && !filter.values.includes(String(value))) return false;
             if (filter.text && !String(value).toLowerCase().includes(filter.text.toLowerCase())) return false;
@@ -66,7 +66,9 @@ window.RecoFilterModule = {
     getRecoFilterOptions(key) {
         const col = this.getRecoFilterColumns().find(c => c.key === key);
         if (!col) return [];
-        const values = new Set((this.recoBaseRows || []).map(row => String(this.getRecoFilterValue(row, key))));
+        // Excel cascades choices through other columns, while keeping this column editable.
+        const rows = this.applyRecoColumnFilters(this.recoBaseRows || [], key);
+        const values = new Set(rows.map(row => String(this.getRecoFilterValue(row, key))));
         return [...values].sort((a, b) => col.numeric ? Number(a) - Number(b) : a.localeCompare(b, undefined, { numeric: true }));
     },
     openRecoColumnFilter(key, event) {
@@ -94,28 +96,48 @@ window.RecoFilterModule = {
         this.$nextTick(() => { if (this.$refs.recoFilterSearchInput) this.$refs.recoFilterSearchInput.focus(); });
     },
     closeRecoColumnFilter() { this.recoFilterActiveKey = ''; },
+    getRecoFilterSearchOptions() {
+        const query = this.recoFilterSearch.trim().toLowerCase();
+        return this.getRecoFilterOptions(this.recoFilterActiveKey).filter(value => value.toLowerCase().includes(query));
+    },
+    getActiveRecoFilters() {
+        return this.getRecoFilterColumns().filter(col => this.isRecoColumnFiltered(col.key)).map(col => {
+            const filter = this.recoColumnFilters[col.key];
+            const conditions = [];
+            if (filter.values) conditions.push(filter.values.length + ' selected');
+            if (filter.text) conditions.push('Contains: ' + filter.text);
+            if (filter.operator) {
+                const symbols = { eq: '=', ne: '≠', gt: '>', ge: '≥', lt: '<', le: '≤' };
+                conditions.push((symbols[filter.operator] || '') + ' ' + filter.number);
+            }
+            return { key: col.key, label: col.label, summary: conditions.join(' · ') };
+        });
+    },
+    removeRecoColumnFilter(key) {
+        const filters = { ...this.recoColumnFilters };
+        delete filters[key];
+        this.recoColumnFilters = filters;
+    },
     onRecoFilterSearchChange() {
         // Excel's value search selects its matching results. Keeping all the
         // old hidden selections made Search -> Apply appear to do nothing.
-        const query = this.recoFilterSearch.trim().toLowerCase();
-        this.recoFilterDraft.values = this.getRecoFilterOptions(this.recoFilterActiveKey)
-            .filter(value => value.toLowerCase().includes(query));
+        this.recoFilterDraft.values = this.getRecoFilterSearchOptions();
     },
     selectAllRecoFilterValues(checked) {
-        const visible = this.getRecoFilterOptions(this.recoFilterActiveKey).filter(value => value.toLowerCase().includes(this.recoFilterSearch.toLowerCase()));
+        const visible = this.getRecoFilterSearchOptions();
         const selected = new Set(this.recoFilterDraft.values);
         visible.forEach(value => checked ? selected.add(value) : selected.delete(value));
         this.recoFilterDraft.values = [...selected];
     },
     applyRecoColumnFilter() {
         const draft = this.recoFilterDraft;
-        if (draft.operator && (String(draft.number).trim() === '' || !Number.isFinite(Number(String(draft.number).replace(/,/g, ''))))) {
+        if (draft.operator && (String(draft.number).replace(/,/g, '').trim() === '' || !Number.isFinite(Number(String(draft.number).replace(/,/g, ''))))) {
             this.showToast('Number filter ke liye valid quantity enter karein', '⚠️');
             return;
         }
         const all = this.getRecoFilterOptions(this.recoFilterActiveKey);
         const filter = {
-            values: all.every(value => draft.values.includes(value)) ? null : draft.values.slice(),
+            values: draft.values.length > 0 && all.every(value => draft.values.includes(value)) ? null : draft.values.slice(),
             text: draft.text.trim(), operator: draft.operator, number: draft.number
         };
         const filters = { ...this.recoColumnFilters };
@@ -125,9 +147,7 @@ window.RecoFilterModule = {
         this.closeRecoColumnFilter();
     },
     clearRecoColumnFilter() {
-        const filters = { ...this.recoColumnFilters };
-        delete filters[this.recoFilterActiveKey];
-        this.recoColumnFilters = filters;
+        this.removeRecoColumnFilter(this.recoFilterActiveKey);
         this.closeRecoColumnFilter();
     },
     sortRecoColumn(direction) {

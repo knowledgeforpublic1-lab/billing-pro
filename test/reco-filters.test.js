@@ -43,9 +43,12 @@ app.applyRecoColumnFilter();
 assert.deepEqual(app.applyRecoColumnFilters(rows).map(r => r.code), ['17005037', '17000004']);
 
 let options;
+const directives = {};
+const clickListeners = new Set();
 const context = {
     window: { RecoFilterModule: window.RecoFilterModule }, console,
-    Vue: { createApp(value) { options = value; return { directive() {}, config: {}, mount() { return {}; } }; } }
+    document: { addEventListener(type, fn) { if (type === "click") clickListeners.add(fn); }, removeEventListener(type, fn) { if (type === "click") clickListeners.delete(fn); } },
+    Vue: { createApp(value) { options = value; return { directive(name, directive) { directives[name] = directive; }, config: {}, mount() { return {}; } }; } }
 };
 vm.runInNewContext(fs.readFileSync('js/core/app.js', 'utf8'), context);
 app.pivotReconciliationData = { columns: ['907'] };
@@ -67,3 +70,50 @@ assert.deepEqual(app.applyRecoColumnFilters(rows).map(row => row.code), ['WIRE']
 app.clearAllRecoColumnFilters();
 assert.equal(app.applyRecoColumnFilters(rows).length, 3, 'Clearing restores all rows without changing data');
 console.log('Reco column filters: text, checklists, numeric conditions, activity quantities, sorting, filtered totals and source data preservation passed.');
+
+// Exercise the real Vue directive lifecycle, including re-renders before close.
+const outside = directives['click-outside'];
+const insideTarget = {};
+const element = { contains(target) { return target === insideTarget; } };
+let oldCalls = 0, newCalls = 0;
+outside.mounted(element, { value() { oldCalls++; } });
+outside.updated(element, { value() { newCalls++; } });
+for (const fn of clickListeners) fn({ target: insideTarget });
+assert.equal(newCalls, 0, 'Checkbox/search clicks inside the menu keep it open');
+for (const fn of clickListeners) fn({ target: {} });
+assert.equal(newCalls, 1, 'Outside click uses the current callback after a render');
+assert.equal(oldCalls, 0, 'Updates do not retain the old callback');
+outside.unmounted(element);
+assert.equal(clickListeners.size, 0, 'Closing a rendered popup removes its document listener');
+for (let i = 0; i < 5; i++) {
+    outside.mounted(element, { value() { newCalls++; } });
+    outside.updated(element, { value() { newCalls++; } });
+    outside.unmounted(element);
+}
+assert.equal(clickListeners.size, 0, 'Reopening filters never accumulates stale listeners');
+
+app.clearAllRecoColumnFilters();
+app.recoColumnFilters = { desc: { text: 'pole' } };
+assert.deepEqual(app.getRecoFilterOptions('unit'), ['NO'], 'Menu choices follow other active filters');
+assert.deepEqual(app.getRecoFilterOptions('desc'), ['RSJ Pole', 'RSJ Pole 9m', 'Stay wire'], 'A column keeps its own excluded values available for editing');
+app.removeRecoColumnFilter('desc');
+app.recoFilterActiveKey = 'desc';
+app.recoFilterSearch = '  WIRE  ';
+app.recoFilterDraft = { values: [], text: '', operator: '', number: '' };
+app.onRecoFilterSearchChange();
+assert.deepEqual(app.getRecoFilterSearchOptions(), ['Stay wire'], 'Search and checklist use the same trimmed case-insensitive query');
+app.applyRecoColumnFilter();
+assert.deepEqual(app.applyRecoColumnFilters(rows).map(r => r.code), ['WIRE']);
+assert.deepEqual(app.getActiveRecoFilters(), [{key:'desc',label:'Items Description',summary:'1 selected'}], 'Active filter labels identify their columns');
+app.recoColumnFilters.balance = { operator: 'lt', number: 0 };
+app.removeRecoColumnFilter('desc');
+assert.deepEqual(app.applyRecoColumnFilters(rows).map(r => r.code), ['17000004'], 'Removing one filter retains other columns');
+app.recoFilterActiveKey = 'balance';
+app.clearRecoColumnFilter();
+assert.equal(app.applyRecoColumnFilters(rows).length, 3);
+app.recoFilterActiveKey = 'issue';
+app.recoFilterDraft = { values: ['10','20','100'], text: '', operator: 'gt', number: ',,,' };
+app.applyRecoColumnFilter();
+assert.equal(app.recoFilterActiveKey, 'issue', 'Invalid numeric input keeps menu open for correction');
+assert.equal(app.isRecoColumnFiltered('issue'), false);
+console.log('Reco filters: repeated popup lifecycle, cascading choices, active column indicators and individual clearing passed.');

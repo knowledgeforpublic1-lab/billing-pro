@@ -1492,7 +1492,7 @@
             },
             recoHeaderColumns() { return this.getRecoFilterColumns(); },
             recoFilterOptions() {
-                return this.getRecoFilterOptions(this.recoFilterActiveKey).filter(value => value.toLowerCase().includes(this.recoFilterSearch.toLowerCase()));
+                return this.getRecoFilterSearchOptions();
             },
             reconRows() {
                 return this.applyRecoColumnFilters(this.recoBaseRows || []);
@@ -2293,26 +2293,22 @@
     app.directive('reco-fit', window.RecoFitDirective);
     app.directive('click-outside', {
         mounted(el, binding) {
+            el._clickOutsideCallback = binding.value;
+            // Keep one stable listener so unmount removes the one registered.
             el._clickOutsideHandler = (event) => {
-                if (!(el === event.target || el.contains(event.target))) {
-                    if (typeof binding.value === 'function') {
-                        binding.value(event);
-                    }
+                if (!(el === event.target || el.contains(event.target)) && typeof el._clickOutsideCallback === 'function') {
+                    el._clickOutsideCallback(event);
                 }
             };
             document.addEventListener('click', el._clickOutsideHandler);
         },
         updated(el, binding) {
-            el._clickOutsideHandler = (event) => {
-                if (!(el === event.target || el.contains(event.target))) {
-                    if (typeof binding.value === 'function') {
-                        binding.value(event);
-                    }
-                }
-            };
+            el._clickOutsideCallback = binding.value;
         },
         unmounted(el) {
             document.removeEventListener('click', el._clickOutsideHandler);
+            delete el._clickOutsideHandler;
+            delete el._clickOutsideCallback;
         }
     });
 

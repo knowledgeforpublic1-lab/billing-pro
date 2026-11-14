@@ -28,7 +28,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261114_compact_reco">
+    <link rel="stylesheet" href="css/style.css?v=20261114_reco_filter_fix">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
 </head>
 
@@ -1676,6 +1676,12 @@
                 <div v-if="Object.keys(recoColumnFilters).length || recoColumnSort" class="reco-layout-controls no-print" role="group" aria-label="Reconciliation filters">
                     <button v-if="Object.keys(recoColumnFilters).length || recoColumnSort" type="button" class="btn btn-secondary" @click="clearAllRecoColumnFilters">Clear column filters</button>
                     <span v-if="Object.keys(recoColumnFilters).length">{{ reconRows.length }} / {{ recoBaseRows.length }} rows · {{ Object.keys(recoColumnFilters).length }} filters</span>
+                    <button v-for="filter in getActiveRecoFilters()" :key="filter.key" type="button" class="reco-active-filter-chip"
+                            :title="filter.label + ': ' + filter.summary + ' — remove filter'" :aria-label="'Remove filter from ' + filter.label" @click="removeRecoColumnFilter(filter.key)">
+                        <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z" fill="currentColor"/></svg>
+                        {{ filter.label }}: {{ filter.summary }} <span aria-hidden="true">×</span>
+                    </button>
+                    <button v-if="recoColumnSort" type="button" class="reco-sort-chip" title="Remove sorting" @click="recoColumnSort = null">{{ (recoHeaderColumns.find(col => col.key === recoColumnSort.key) || {}).label }} {{ recoColumnSort.direction === 'asc' ? '↑' : '↓' }} ×</button>
                 </div>
                     <div class="table-responsive reco-table-viewport" v-reco-fit="{ enabled: true, columns: reconColCount }">
                         <table class="billing-table pro-table-typo reco-sheet-table">
@@ -1696,12 +1702,12 @@
                                 <th v-for="col in recoHeaderColumns" :key="col.key" class="reco-filter-heading"
                                     :class="{ 'reco-filter-active': isRecoColumnFiltered(col.key), 'text-right': col.numeric, 'text-center': !col.numeric }"
                                     :style="col.color ? { borderTop: '3px solid ' + col.color } : {}"
-                                    :title="col.label + ' — click to filter'" @click.stop="openRecoColumnFilter(col.key, $event)">
+                                    :title="col.label + (isRecoColumnFiltered(col.key) ? ' — FILTER APPLIED (click to edit)' : ' — click to filter')" @click.stop="openRecoColumnFilter(col.key, $event)">
                                     <div class="reco-header-label">
                                         <span>{{ col.header || col.label }}</span>
                                         <button type="button" class="reco-filter-trigger no-print" :class="{ active: isRecoColumnFiltered(col.key) }"
-                                            :aria-label="'Filter ' + col.label" aria-haspopup="dialog" :aria-expanded="recoFilterActiveKey === col.key"
-                                            @click.stop="openRecoColumnFilter(col.key, $event)">▾</button>
+                                            :aria-label="'Filter ' + col.label" :title="isRecoColumnFiltered(col.key) ? 'Filter applied to ' + col.label : 'Filter ' + col.label" aria-haspopup="dialog" :aria-expanded="recoFilterActiveKey === col.key"
+                                            @click.stop="openRecoColumnFilter(col.key, $event)"><svg v-if="isRecoColumnFiltered(col.key)" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z" fill="currentColor"/></svg><span v-else aria-hidden="true">▾</span></button>
                                     </div>
                                     <div v-if="col.sublabel" class="reco-header-sublabel" :style="{ color: col.color }">{{ col.sublabel }}</div>
                                     <span v-if="recoColumnSort && recoColumnSort.key === col.key" class="no-print">{{ recoColumnSort.direction === 'asc' ? '↑' : '↓' }}</span>
@@ -1820,11 +1826,12 @@
                 <label class="reco-filter-condition">Number filter
                     <select v-model="recoFilterDraft.operator" aria-label="Number filter condition"><option value="">Any quantity</option><option value="eq">Equals (=)</option><option value="ne">Does not equal (≠)</option><option value="gt">Greater than (&gt;)</option><option value="ge">Greater than or equal (≥)</option><option value="lt">Less than (&lt;)</option><option value="le">Less than or equal (≤)</option></select>
                 </label>
-                <input v-if="recoFilterDraft.operator" v-model="recoFilterDraft.number" type="text" inputmode="decimal" placeholder="Enter quantity, e.g. 0" aria-label="Filter quantity">
+                <input v-if="recoFilterDraft.operator" v-model="recoFilterDraft.number" type="text" inputmode="decimal" placeholder="Enter quantity, e.g. 0" aria-label="Filter quantity" @keydown.enter.prevent="applyRecoColumnFilter">
             </template>
-            <input v-else v-model="recoFilterDraft.text" type="text" placeholder="Text contains…" aria-label="Text contains">
-            <input ref="recoFilterSearchInput" v-model="recoFilterSearch" @input="onRecoFilterSearchChange" type="search" placeholder="Search values…" aria-label="Search column values">
+            <input v-else v-model="recoFilterDraft.text" type="text" placeholder="Text contains…" aria-label="Text contains" @keydown.enter.prevent="applyRecoColumnFilter">
+            <input ref="recoFilterSearchInput" v-model="recoFilterSearch" @input="onRecoFilterSearchChange" type="search" placeholder="Search values…" aria-label="Search column values" @keydown.enter.prevent="applyRecoColumnFilter">
             <div class="reco-filter-selection-actions"><button type="button" @click="selectAllRecoFilterValues(true)">Select all</button><button type="button" @click="selectAllRecoFilterValues(false)">Deselect all</button></div>
+            <div class="reco-filter-selection-count" role="status">{{ recoFilterDraft.values.length }} selected · {{ recoFilterOptions.length }} {{ recoFilterSearch.trim() ? 'matching' : 'available' }} values</div>
             <div class="reco-filter-value-list">
                 <label v-for="value in recoFilterOptions" :key="value" :title="value || '(Blanks)'"><input type="checkbox" v-model="recoFilterDraft.values" :value="value"><span>{{ value || '(Blanks)' }}</span></label>
                 <span v-if="!recoFilterOptions.length">No matching values</span>
@@ -3434,7 +3441,7 @@
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
-    <script defer src="js/reco-filters.js?v=20261114_reco_search_apply"></script>
+    <script defer src="js/reco-filters.js?v=20261114_reco_filter_fix"></script>
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
     <script defer src="js/views.js?v=20261114_conductor_km"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
@@ -3443,7 +3450,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_smooth_login"></script>
+    <script defer src="js/core/app.js?v=20261114_reco_filter_fix"></script>
 </body>
 
 </html>

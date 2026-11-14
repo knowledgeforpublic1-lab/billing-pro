@@ -7123,3 +7123,12 @@ html[data-theme="light"] .excel-filter-popover {
 
 
 
+
+/* Active filters remain visible even when the sheet is scaled to fit. */
+.reco-table-viewport .reco-sheet-table th.reco-filter-active { background: #d6eedf !important; color: #14532d !important; box-shadow: inset 0 -3px #15803d; }
+.reco-filter-trigger { display: inline-flex; align-items: center; justify-content: center; }
+.reco-filter-trigger.active { background: #166534 !important; color: #fff !important; border-color: #14532d; }
+.reco-active-filter-chip, .reco-sort-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid #15803d; border-radius: 4px; color: #14532d; background: #dcfce7; cursor: pointer; font: inherit; }
+.reco-sort-chip { background: var(--bg-card); color: var(--text-main); border-color: var(--border-strong); }
+.reco-filter-selection-count { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+.reco-filter-popup-footer { position: sticky; bottom: -12px; padding: 8px 0; background: var(--bg-card, #fff); }
