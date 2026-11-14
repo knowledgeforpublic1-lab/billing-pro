@@ -1164,6 +1164,8 @@ window.SyncModule = {
         try {
             const c = Object.assign({}, obj);
             delete c.savedAt; delete c.baseRev;
+            // Transport-only fields are absent from local snapshots.
+            delete c.dataId; delete c.force;
             const json = JSON.stringify(c);
             if (typeof window !== 'undefined' && typeof window.computeFullHash === 'function') {
                 return window.computeFullHash(json);
@@ -1183,19 +1185,9 @@ window.SyncModule = {
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
-            if (manual) {
-                this.syncStatus = 'error';
-                this.showToast('Refresh first — another PC saved changes. Then redo your changes', '⚠️');
-                return false;
-            }
-            console.warn('Sync blocked: cloudConflict — auto-recovering by re-fetching server rev');
-            try {
-                const rRes = await fetch('/api/billing', {
-                    headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
-                });
-                if (rRes.ok) { const rj = await rRes.json(); if (rj && typeof rj.rev === 'number') { this.cloudRev = rj.rev; this.cloudConflict = false; console.info('Auto-recovered: cloudRev updated to ' + rj.rev); } }
-                else { this._scheduleSyncRetry(); return false; }
-            } catch(e) { this._scheduleSyncRetry(); return false; }
+            this.syncStatus = 'error';
+            if (manual) this.showToast('Local aur cloud dono par changes hain. Quantities safe hain; conflict resolve hone tak cloud save roka gaya hai.', '⚠️');
+            return false;
         }
         try {
             const payload = this.buildSyncPayload(force ? { force: true } : {});
@@ -1317,11 +1309,14 @@ window.SyncModule = {
     },
     async refreshFromCloud() {
         try {
+            if (this._saveTimer) { clearTimeout(this._saveTimer); this._saveTimer = null; }
+            // Keep the current quantities locally before fetching any server copy.
+            this.saveToStorage();
             if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
             if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
             this.showToast('Loading fresh data from cloud...', '🔄');
-            await this.loadFromStorage({ forceServer: true });
-            this.showToast('Fresh data loaded', '🔄');
+            await this.loadFromStorage();
+            if (!this.cloudConflict) this.showToast('Refresh complete — local entries preserved', '🔄');
         } catch (e) {
             console.error('Refresh failed', e);
             this.showToast('Refresh failed — check internet', '⚠️');
@@ -1520,16 +1515,21 @@ window.SyncModule = {
           }
           let syncedHash = this.getSyncedHash();
           if (serverHash && !syncedHash) { syncedHash = serverHash; this.setSyncedHash(serverHash); }
-          const localDirty = !!(localRaw && localHash && serverHash && localHash !== serverHash && localHash !== syncedHash && serverHash === syncedHash);
+          const localDirty = !!(localRaw && localHash && serverHash && localHash !== serverHash && localHash !== syncedHash);
           const serverRevIsNewer = (typeof this._loadedRev === 'number' && typeof localRev === 'number' && this._loadedRev > localRev);
-          if (serverRaw && !forceServer && localDirty && !serverRevIsNewer) {
+          if (serverRaw && !forceServer && localDirty) {
               // Sirf is PC me unsynced change hai, cloud purana hai → LOCAL jeetega + turant push
               raw = localRaw;
               fromMongo = false;
               if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
-              console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
-              try { this.showToast('Unsaved changes found on this PC — saving to cloud...', '🔄'); } catch(e) {}
-              setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
+              if (serverRevIsNewer) {
+                  this.cloudConflict = true;
+                  try { this.showToast('Local quantities safe hain. Cloud par bhi changes hain — sync conflict resolve karna hoga.', '⚠️'); } catch(e) {}
+              } else {
+                  console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
+                  try { this.showToast('Unsaved changes found on this PC — saving to cloud...', '🔄'); } catch(e) {}
+                  setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
+              }
           } else if (serverRaw && (forceServer || !localRaw || serverRevIsNewer || serverUpdatedAt >= localSavedAt)) {
               raw = serverRaw;
               fromMongo = true;

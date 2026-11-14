@@ -64,9 +64,10 @@
                     await new Promise((resolve, reject) => {
                         const tx = db.transaction(STORE_NAME, 'readwrite');
                         const store = tx.objectStore(STORE_NAME);
-                        const putReq = store.put(strVal, key);
-                        putReq.onsuccess = () => resolve();
-                        putReq.onerror = () => reject(putReq.error);
+                        store.put(strVal, key);
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                        tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));
                     });
                 }
             } catch (idbErr) {
@@ -75,9 +76,11 @@
         },
 
         /**
-         * Asynchronously get key-value with IndexedDB priority
+         * Read the newest bill snapshot across both storage copies.
          */
         async getItemAsync(key) {
+            let localValue = null;
+            try { localValue = localStorage.getItem(key); } catch (e) {}
             try {
                 const db = await getDB();
                 if (db) {
@@ -89,6 +92,15 @@
                         getReq.onerror = () => resolve(null);
                     });
                     if (val !== undefined && val !== null) {
+                        // Reload may interrupt the IndexedDB write after the
+                        // synchronous localStorage copy was already saved.
+                        if (localValue !== null && localValue !== val) {
+                            try {
+                                const local = JSON.parse(localValue);
+                                const stored = JSON.parse(val);
+                                if (Number(local && local.savedAt) > Number(stored && stored.savedAt || 0)) return localValue;
+                            } catch (e) {}
+                        }
                         return val;
                     }
                 }
@@ -98,7 +110,7 @@
 
             // Fallback to LocalStorage
             try {
-                return localStorage.getItem(key);
+                return localValue;
             } catch (e) {
                 return null;
             }
