@@ -28,7 +28,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261114_reco_fit">
+    <link rel="stylesheet" href="css/style.css?v=20261114_reco_filters">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
 </head>
 
@@ -1673,6 +1673,8 @@
                     <span>Sheet view:</span>
                     <button type="button" class="btn" :class="recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="recoFitToScreen" @click="recoFitToScreen = true" title="Saare columns screen ki width mein dikhayein">↔ Fit to Screen</button>
                     <button type="button" class="btn" :class="!recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="!recoFitToScreen" @click="recoFitToScreen = false" title="Bade text mein padhein; zarurat par horizontal scroll karein">Actual Size</button>
+                    <button v-if="Object.keys(recoColumnFilters).length || recoColumnSort" type="button" class="btn btn-secondary" @click="clearAllRecoColumnFilters">Clear column filters</button>
+                    <span v-if="Object.keys(recoColumnFilters).length">{{ reconRows.length }} / {{ recoBaseRows.length }} rows · {{ Object.keys(recoColumnFilters).length }} filters</span>
                 </div>
                     <div class="table-responsive reco-table-viewport" v-reco-fit="{ enabled: recoFitToScreen, columns: reconColCount }">
                         <table class="billing-table pro-table-typo reco-sheet-table">
@@ -1690,40 +1692,24 @@
                                 </th>
                             </tr>
                             <tr>
-                                <th style="width: 36px;" class="text-center">SR NO.</th>
-                                <th style="width: 75px;" class="text-center">Row Labels</th>
-                                <th style="min-width: 320px;">ITEMS DESCRIPTION</th>
-                                <th style="width: 45px;" class="text-center">UNIT</th>
-                                <th style="width: 70px; border-top: 3px solid #38bdf8;" class="text-right" :title="currentContractorSapInfo ? '⚡ Gross Issue from SAP Stock (' + currentContractorSapInfo + ')' : 'SAP Gross Material Issue Quantity'">
-                                    ISSUE
-                                    <div v-if="currentContractorSapInfo" style="font-size: 0.58rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Gross Issue</div>
-                                </th>
-                                <th style="width: 65px; border-top: 3px solid #f87171;" class="text-right" title="MRN (Material Return Note) / Site Return Quantity">
-                                    MRN
-                                    <div style="font-size: 0.58rem; color: #f87171; font-weight: 700; text-transform: uppercase;">Return</div>
-                                </th>
-                                <th style="width: 75px; border-top: 3px solid #60a5fa;" class="text-right" :title="currentContractorSapInfo ? '⚡ Auto-Synced Net Issue from SAP Stock (' + currentContractorSapInfo + ')' : 'SAP Net Material Issue Quantity'">
-                                    NET ISSUE
-                                    <div v-if="currentContractorSapInfo" style="font-size: 0.58rem; color: #60a5fa; font-weight: 700; text-transform: uppercase;">⚡ Net Issue</div>
-                                </th>
-
-                                <th v-for="col in reconColumns" :key="col" :title="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
-                                    {{ col }}
-                                </th>
-                                <th style="width: 80px; border-top: 3px solid #818cf8;" class="text-right" title="Is Bill me Activity Consumption ka Total">
-                                    THIS BILL
-                                    <div style="font-size: 0.58rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase;">Is Bill Qty</div>
-                                </th>
-
-                                <th style="width: 85px; border-top: 3px solid #fbbf24;" class="text-right" title="Bacha hua Material = Net Issue - This Bill">
-                                    BALANCE
-                                    <div style="font-size: 0.58rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">Net - Bill</div>
+                                <th v-for="col in recoHeaderColumns" :key="col.key" class="reco-filter-heading"
+                                    :class="{ 'reco-filter-active': isRecoColumnFiltered(col.key), 'text-right': col.numeric, 'text-center': !col.numeric }"
+                                    :style="col.color ? { borderTop: '3px solid ' + col.color } : {}"
+                                    :title="col.label + ' — click to filter'" @click.stop="openRecoColumnFilter(col.key, $event)">
+                                    <div class="reco-header-label">
+                                        <span>{{ col.header || col.label }}</span>
+                                        <button type="button" class="reco-filter-trigger no-print" :class="{ active: isRecoColumnFiltered(col.key) }"
+                                            :aria-label="'Filter ' + col.label" aria-haspopup="dialog" :aria-expanded="recoFilterActiveKey === col.key"
+                                            @click.stop="openRecoColumnFilter(col.key, $event)">▾</button>
+                                    </div>
+                                    <div v-if="col.sublabel" class="reco-header-sublabel" :style="{ color: col.color }">{{ col.sublabel }}</div>
+                                    <span v-if="recoColumnSort && recoColumnSort.key === col.key" class="no-print">{{ recoColumnSort.direction === 'asc' ? '↑' : '↓' }}</span>
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(row, idx) in reconRows" :key="row.code">
-                                <td class="text-center">{{ idx + 1 }}</td>
+                                <td class="text-center">{{ row._recoSrNo }}</td>
                                 <td class="text-center font-mono font-bold" style="color: var(--primary);">
                                     <div>{{ row.code }}</div>
                                 </td>
@@ -1770,7 +1756,7 @@
                             </tr>
                             <tr v-if="reconRows.length === 0">
                                 <td :colspan="9 + (reconColCount || 0)" class="text-center" style="padding: 2rem; color: var(--text-muted);">
-                                    No SAP Materials mapped with quantities yet.
+                                    No SAP materials match the current filters.
                                 </td></tr>
                         </tbody>
                         <tfoot>
@@ -1823,6 +1809,27 @@
     <span>Client: <strong>{{ projectMeta.clientName || 'Ashoka Buildcon Ltd.' }}</strong></span>
     <span class="r">🛡️ 100% Client Auditable · SHA-256 Engine · Billing Pro v6.0</span>
 </div>
+
+        <!-- Column filter is outside the scaled table so it stays readable. -->
+        <div v-if="recoFilterActiveKey && currentView === 'reconciliation'" class="reco-filter-popover no-print" :style="recoFilterPosition"
+             v-click-outside="closeRecoColumnFilter" role="dialog" aria-labelledby="reco-filter-title" @keydown.esc.stop="closeRecoColumnFilter">
+            <div class="reco-filter-popup-title"><strong id="reco-filter-title">{{ recoFilterLabel }}</strong><button type="button" aria-label="Close column filter" @click="closeRecoColumnFilter">✕</button></div>
+            <div class="reco-filter-sort-actions"><button type="button" @click="sortRecoColumn('asc')">↑ {{ recoFilterNumeric ? 'Smallest to Largest' : 'Sort A → Z' }}</button><button type="button" @click="sortRecoColumn('desc')">↓ {{ recoFilterNumeric ? 'Largest to Smallest' : 'Sort Z → A' }}</button></div>
+            <template v-if="recoFilterNumeric">
+                <label class="reco-filter-condition">Number filter
+                    <select v-model="recoFilterDraft.operator" aria-label="Number filter condition"><option value="">Any quantity</option><option value="eq">Equals (=)</option><option value="ne">Does not equal (≠)</option><option value="gt">Greater than (&gt;)</option><option value="ge">Greater than or equal (≥)</option><option value="lt">Less than (&lt;)</option><option value="le">Less than or equal (≤)</option></select>
+                </label>
+                <input v-if="recoFilterDraft.operator" v-model="recoFilterDraft.number" type="text" inputmode="decimal" placeholder="Enter quantity, e.g. 0" aria-label="Filter quantity">
+            </template>
+            <input v-else v-model="recoFilterDraft.text" type="text" placeholder="Text contains…" aria-label="Text contains">
+            <input ref="recoFilterSearchInput" v-model="recoFilterSearch" type="search" placeholder="Search values…" aria-label="Search column values">
+            <div class="reco-filter-selection-actions"><button type="button" @click="selectAllRecoFilterValues(true)">Select all</button><button type="button" @click="selectAllRecoFilterValues(false)">Deselect all</button></div>
+            <div class="reco-filter-value-list">
+                <label v-for="value in recoFilterOptions" :key="value" :title="value || '(Blanks)'"><input type="checkbox" v-model="recoFilterDraft.values" :value="value"><span>{{ value || '(Blanks)' }}</span></label>
+                <span v-if="!recoFilterOptions.length">No matching values</span>
+            </div>
+            <div class="reco-filter-popup-footer"><button type="button" class="btn btn-secondary" @click="clearRecoColumnFilter">Clear filter</button><button type="button" class="btn btn-primary" @click="applyRecoColumnFilter">Apply</button></div>
+        </div>
 
         <!-- MODAL: SAP MATERIAL COMPONENTS MANAGER (Single & Multiple SAP Codes) -->
         <div class="modal-overlay" v-if="showSapItemManagerModal" @click.self="closeSapItemManager">
@@ -3420,11 +3427,12 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_contractor_mapping"></script>
+    <script defer src="js/sync.js?v=20261114_reco_filters"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
+    <script defer src="js/reco-filters.js?v=20261114_reco_filters"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
     <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
@@ -3432,7 +3440,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_reco_fit"></script>
+    <script defer src="js/core/app.js?v=20261114_reco_filters"></script>
 </body>
 
 </html>

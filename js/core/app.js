@@ -27,6 +27,7 @@
         window.MappingModule || {},
         window.ContractorMappingModule || {},
         window.ViewsModule || {},
+        window.RecoFilterModule || {},
         window.ExportModule || {},
         window.StockImporterModule || {},
         window.OldRecoImporterModule || {},
@@ -552,6 +553,14 @@
                 recoRevision: 0,
                 recoSearchQuery: '',
                 recoFitToScreen: true,
+                recoColumnFilters: {},
+                recoColumnSort: null,
+                recoFilterActiveKey: '',
+                recoFilterLabel: '',
+                recoFilterNumeric: false,
+                recoFilterPosition: {},
+                recoFilterSearch: '',
+                recoFilterDraft: { values: [], text: '', operator: '', number: '' },
                 activeRecoCell: null,
                 activeRecoCellFormula: '',
                 focusedRecoInput: null,
@@ -1620,13 +1629,20 @@
                     reverseTotals: revTotals
                 };
             },
+            recoHeaderColumns() { return this.getRecoFilterColumns(); },
+            recoFilterOptions() {
+                return this.getRecoFilterOptions(this.recoFilterActiveKey).filter(value => value.toLowerCase().includes(this.recoFilterSearch.toLowerCase()));
+            },
             reconRows() {
+                return this.applyRecoColumnFilters(this.recoBaseRows || []);
+            },
+            recoBaseRows() {
                 const _rev = this.recoRevision;
                 const rows = (this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : [];
                 const unmappedSet = this.unmappedContractorIssuedRowsSet;
                 const q = (this.recoSearchQuery || '').trim().toLowerCase();
 
-                let filtered = rows;
+                let filtered = rows.map((row, index) => ({ ...row, _recoSrNo: index + 1 }));
 
                 if (this.reconFilterOnlyIssued) {
                     filtered = filtered.filter(r => {
@@ -1636,7 +1652,7 @@
                         return (net > 0 || gross > 0 || issued > 0);
                     });
                 } else if (this.reconFilterZeroOnly) {
-                    filtered = rows.filter(r => (
+                    filtered = filtered.filter(r => (
                         r.totalQty > 0 || 
                         (r.sapIssuedQty && r.sapIssuedQty !== 0) || 
                         (r.sapGrossIssue && r.sapGrossIssue !== 0) ||
@@ -2016,6 +2032,7 @@
                 flush: 'sync',
                 handler() {
                     if (this._isLoading || this._loadingContractorMapping || this.isPerformingHistoryAction) return;
+                    this.clearAllRecoColumnFilters();
                     this.switchContractorMapping();
                     this.saveToStorage();
                 }
@@ -2058,7 +2075,7 @@
             pctStage2() { this.debouncedSave(); },
             pctStage3() { this.debouncedSave(); },
             isFinalized() { this.saveToStorage(); },
-            currentView() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+            currentView() { this.closeRecoColumnFilter(); this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
             poleScheduleSubTab(v) {
                 try { localStorage.setItem('billing_pole_schedule_subtab', v || 'schedule'); } catch(e) {}
                 this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } });

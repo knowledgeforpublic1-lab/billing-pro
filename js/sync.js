@@ -1453,6 +1453,7 @@ window.SyncModule = {
         }
     },
     async loadFromStorage(opts) {
+          if (typeof this.clearAllRecoColumnFilters === 'function') this.clearAllRecoColumnFilters();
           this._loadingContractorMapping = true;
           const forceServer = !!(opts && opts.forceServer);
           let raw = null;

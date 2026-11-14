@@ -7090,6 +7090,24 @@ html[data-theme="light"] .excel-filter-popover {
     .reco-table-viewport .reco-sheet-table col:nth-child(3) { width: 22% !important; }
 }
 
+.reco-filter-heading { cursor: pointer; }
+.reco-header-label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.reco-header-label > span { min-width: 0; width: 100%; }
+.reco-filter-trigger { width: 18px; height: 20px; flex-shrink: 0; padding: 0; border: 1px solid var(--border-strong); border-radius: 3px; background: var(--bg-card); color: var(--text-main); font: 12px sans-serif; cursor: pointer; }
+.reco-filter-trigger.active { background: #166534; color: #fff; border-color: #166534; }
+.reco-header-sublabel { font-size: 0.58rem; }
+.reco-filter-popover { position: fixed; z-index: 5000; width: min(296px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow-y: auto; padding: 12px; box-sizing: border-box; background: var(--bg-card, #fff); color: var(--text-main, #172033); border: 1px solid var(--border-strong, #aab3bf); border-radius: 8px; box-shadow: 0 10px 32px #0004; font: 13px/1.4 var(--font-main, sans-serif); }
+.reco-filter-popup-title, .reco-filter-popup-footer, .reco-filter-selection-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.reco-filter-popup-title button, .reco-filter-selection-actions button, .reco-filter-sort-actions button { padding: 4px 6px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input, #f5f6f8); color: inherit; cursor: pointer; font: inherit; }
+.reco-filter-sort-actions { display: grid; gap: 4px; margin-bottom: 10px; }
+.reco-filter-sort-actions button { text-align: left; }
+.reco-filter-popover > input, .reco-filter-condition select { display: block; width: 100%; box-sizing: border-box; padding: 6px 8px; margin: 6px 0; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input, #fff); color: inherit; font: inherit; }
+.reco-filter-value-list { max-height: 150px; min-height: 34px; overflow-y: auto; border: 1px solid var(--border-subtle); padding: 4px; margin-bottom: 10px; }
+.reco-filter-value-list label { display: flex; align-items: center; gap: 7px; padding: 3px; cursor: pointer; }
+.reco-filter-value-list label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reco-filter-value-list input { flex-shrink: 0; }
+.reco-filter-popup-footer { margin-bottom: 0; }
+
 /* ALV filler spacer - print me mat dikhana */
 @media print { .alv-filler-row { display: none !important; } }
 
