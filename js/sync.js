@@ -1656,7 +1656,10 @@ window.SyncModule = {
                     });
                     // Saved activity mappings are user data. Never replace them with defaults.
                 }
-                if (parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = parsed.selectedPoleScheduleKey;
+                // Navigation belongs to this browser; an older cloud bill must not change it.
+                let lastPoleSheet = '';
+                try { lastPoleSheet = localStorage.getItem('billing_selected_pole_schedule_key') || ''; } catch(e) {}
+                if (lastPoleSheet || parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = lastPoleSheet || parsed.selectedPoleScheduleKey;
                 if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
                 if (parsed.poleScheduleLocations && typeof parsed.poleScheduleLocations === 'object') this.poleScheduleLocations = parsed.poleScheduleLocations;
                 if (parsed.poleScheduleQuantities && typeof parsed.poleScheduleQuantities === 'object') this.poleScheduleQuantities = parsed.poleScheduleQuantities;

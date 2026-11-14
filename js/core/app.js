@@ -279,7 +279,7 @@
                     // 🔄 Refresh par wahi activity wapas jis par user tha
                     try {
                         const saved = localStorage.getItem('billing_selected_activity_key');
-                        if (saved && ((typeof defaultActivities !== 'undefined' && defaultActivities[saved]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[saved]))) return saved;
+                        if (saved) return saved;
                     } catch(e) {}
                     return '1220';
                 })(),
@@ -1936,16 +1936,16 @@
             pctStage2() { this.debouncedSave(); },
             pctStage3() { this.debouncedSave(); },
             isFinalized() { this.saveToStorage(); },
-            currentView() { this.closeRecoColumnFilter(); this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); },
+            currentView: { flush: 'sync', handler(v) { try { localStorage.setItem('billing_current_view', v); } catch(e) {} this.closeRecoColumnFilter(); this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); } },
             poleScheduleSubTab(v) {
                 try { localStorage.setItem('billing_pole_schedule_subtab', v || 'schedule'); } catch(e) {}
                 this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } });
             },
             // 🔄 Selected activity yaad rakho — refresh par same activity/page wapas
-            selectedActivityKey(v) {
+            selectedActivityKey: { flush: 'sync', handler(v) {
                 try { localStorage.setItem('billing_selected_activity_key', v); } catch(e) {}
-            },
-            selectedPoleScheduleKey() { this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); }
+            } },
+            selectedPoleScheduleKey: { flush: 'sync', handler(v) { try { localStorage.setItem('billing_selected_pole_schedule_key', v); } catch(e) {} this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); } }
         },
 
         methods: allMethods,
