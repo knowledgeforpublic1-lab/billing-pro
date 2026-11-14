@@ -1620,40 +1620,7 @@ window.SyncModule = {
                             });
                         }
                     });
-                    // Activity 919 clamp mapping upgrade: if Material 5 has old default code 17001294, upgrade to 5 clamp SAP items
-                    if (this.activities['919'] && Array.isArray(this.activities['919'].materials)) {
-                        const m5 = this.activities['919'].materials[4];
-                        if (m5 && /flats for stay & c clamps/i.test(m5.desc || '')) {
-                            const codes = (m5.sapItems || []).map(s => s && s.code);
-                            if (codes.length <= 1 && (codes.includes('17001294') || !codes.length)) {
-                                if (typeof defaultActivities !== 'undefined' && defaultActivities['919'] && defaultActivities['919'].materials[4]) {
-                                    const defM5 = defaultActivities['919'].materials[4];
-                                    m5.itemCode = defM5.itemCode;
-                                    m5.sapDescription = defM5.sapDescription;
-                                    m5.sapUom = defM5.sapUom;
-                                    m5.docHeader = defM5.docHeader;
-                                    m5.sapItems = JSON.parse(JSON.stringify(defM5.sapItems));
-                                }
-                            }
-                        }
-                    }
-                    // Activity 922 clamp mapping upgrade: if Material 2 has old default code 17001294, upgrade to 5 clamp SAP items
-                    if (this.activities['922'] && Array.isArray(this.activities['922'].materials)) {
-                        const m2 = this.activities['922'].materials[1];
-                        if (m2 && /flats for stay & c clamps/i.test(m2.desc || '')) {
-                            const codes = (m2.sapItems || []).map(s => s && s.code);
-                            if (codes.length <= 1 && (codes.includes('17001294') || !codes.length)) {
-                                if (typeof defaultActivities !== 'undefined' && defaultActivities['922'] && defaultActivities['922'].materials[1]) {
-                                    const defM2 = defaultActivities['922'].materials[1];
-                                    m2.itemCode = defM2.itemCode;
-                                    m2.sapDescription = defM2.sapDescription;
-                                    m2.sapUom = defM2.sapUom;
-                                    m2.docHeader = defM2.docHeader;
-                                    m2.sapItems = JSON.parse(JSON.stringify(defM2.sapItems));
-                                }
-                            }
-                        }
-                    }
+                    // Saved activity mappings are user data. Never replace them with defaults.
                 }
                 if (parsed.selectedPoleScheduleKey) this.selectedPoleScheduleKey = parsed.selectedPoleScheduleKey;
                 if (parsed.poleScheduleSubTab) this.poleScheduleSubTab = parsed.poleScheduleSubTab;
@@ -1672,47 +1639,7 @@ window.SyncModule = {
                     });
                 }
 
-                // Pole Schedule 919: ensure 13m/11m poles use valid master codes and link to Activity Material 1, and clamps link to 5
-                if (this.poleSchedules && this.poleSchedules['919'] && Array.isArray(this.poleSchedules['919'].materials)) {
-                    const psMats = this.poleSchedules['919'].materials;
-                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
-                    psMats.forEach(m => {
-                        if (!m) return;
-                        if (clampCodes.includes(String(m.itemCode || '').trim())) {
-                            m.activityMaterialNo = "5";
-                        }
-                        if (m.itemCode === '17001246' || /152x152.*13\s*m/i.test(m.desc || '')) {
-                            m.itemCode = '17000008';
-                            m.sapDescription = 'RSJ POLE 152X152 MM 13 MTR';
-                            m.activityMaterialNo = "1";
-                            if (m.sapItems && m.sapItems[0]) {
-                                m.sapItems[0].code = '17000008';
-                                m.sapItems[0].desc = 'RSJ POLE 152X152 MM 13 MTR';
-                            }
-                        } else if (m.itemCode === '17001244' || /152x152.*11\s*m/i.test(m.desc || '')) {
-                            m.itemCode = '17000007';
-                            m.sapDescription = 'RSJ POLE 152X152 MM 11 MTR';
-                            m.activityMaterialNo = "1";
-                            if (m.sapItems && m.sapItems[0]) {
-                                m.sapItems[0].code = '17000007';
-                                m.sapItems[0].desc = 'RSJ POLE 152X152 MM 11 MTR';
-                            }
-                        }
-                    });
-                }
-
-                // Pole Schedule 922 clamps & items: ensure clamp codes link to Activity material "2"
-                if (this.poleSchedules && this.poleSchedules['922'] && Array.isArray(this.poleSchedules['922'].materials)) {
-                    const psMats = this.poleSchedules['922'].materials;
-                    const clampCodes = ['17005046', '17005085', '17005047', '17005048', '17005049'];
-                    psMats.forEach(m => {
-                        if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
-                            m.activityMaterialNo = "2";
-                        }
-                        // 17005037 is a valid eight-metre pole, not a retired
-                        // ten-metre code. Preserve the user's mapping on load.
-                    });
-                }
+                // Preserve saved SAP codes, descriptions and activity links in every schedule.
                 if (parsed.masterAbstractList && Array.isArray(parsed.masterAbstractList) && parsed.masterAbstractList.length > 0) {
                     this.masterAbstractList = parsed.masterAbstractList;
                 }

@@ -84,3 +84,84 @@ assert.equal(JSON.parse(poleApp.saved)['907'].materials[poleIndex].itemCode, '17
 assert.equal(window.replaceOldSapCodeWithNew('17005037'), '17005037');
 assert.equal(window.replaceOldSapCodeWithNew('17005037, 17001242'), '17005037, 17001242');
 console.log('907 eight-metre pole: selected code, stock status, tooltip and saved mapping passed.');
+
+async function checkAllSchedules() {
+    require('../js/sync.js');
+    const schedules = require('../js/data/default-pole-schedules.js');
+    const selectedCodes = ['17005037', '17001246', '17001244', 'CUSTOM-POLE-99'];
+    const all = makeApp();
+    all.poleSchedules = JSON.parse(JSON.stringify(schedules));
+    Object.assign(all, {
+        getPoleScheduleItemTotalQty() { return 0; },
+        isPoleScheduleItemUnissued: window.PoleScheduleModule.isPoleScheduleItemUnissued,
+        isSapCodeIssuedToActiveContractor: window.PoleScheduleModule.isSapCodeIssuedToActiveContractor,
+        getActiveContractorSapStock() {
+            return { materials: Object.fromEntries(selectedCodes.map(code => [code, { netIssue: 10 }])) };
+        }
+    });
+    for (const key of Object.keys(schedules)) {
+        all.selectedPoleScheduleKey = key;
+        const index = schedules[key].materials.findIndex(m => !m.isSection && !m.isSpan);
+        assert.ok(index >= 0, key + ': material row exists');
+        const originalDesc = schedules[key].materials[index].desc;
+        for (const code of selectedCodes) {
+            // A search filter exercises display copies while retaining source indices.
+            all.poleScheduleSearchQuery = originalDesc;
+            const displayed = all.getFilteredPoleScheduleMaterials().find(m => m.origIndex === index);
+            all.openSapItemManager(displayed, index, 'poleSchedule', key);
+            all.activeSapManagerItem.sapItems = [];
+            all.selectSapItemForManager({ code, desc: 'Selected contractor material', uom: 'NO' });
+            all.closeSapItemManager();
+            const mapped = all.getFilteredPoleScheduleMaterials().find(m => m.origIndex === index);
+            assert.ok(mapped, key + ': mapped row stays visible under description search');
+            assert.equal(mapped.itemCode, code, key + ': selected code displayed');
+            assert.equal(all.isPoleScheduleItemUnissued(mapped), false, key + ': exact issued code checked');
+            assert.equal(mapped.desc, originalDesc, key + ': description preserved');
+            assert.equal(JSON.parse(all.saved)[key].materials[index].itemCode, code, key + ': code saved');
+        }
+        // These descriptions triggered the previous 919 load-time overrides.
+        all.poleSchedules[key].materials[index].desc = 'RSJ 152x152, 13 m long';
+        all.poleSchedules[key].materials[index].activityMaterialNo = 'CUSTOM-LINK';
+    }
+
+    const snapshot = {
+        poleSchedules: all.poleSchedules,
+        activities: {
+            '919': { materials: Array.from({ length: 5 }, (_, i) => ({
+                no: String(i + 1), desc: 'Flats for stay & C clamps',
+                itemCode: '17001294', sapItems: [{ code: '17001294', qty: 1 }]
+            })) },
+            '922': { materials: [{ no: '1' }, {
+                no: '2', desc: 'Flats for stay & C clamps', itemCode: '17001294',
+                sapItems: [{ code: '17001294', qty: 1 }]
+            }] }
+        },
+        poleScheduleQuantities: { '919': { 0: { 1: 7 } } }
+    };
+    const expected = JSON.parse(JSON.stringify(snapshot));
+    const previousFetch = global.fetch;
+    const previousStorage = global.localStorage;
+    const previousDefaults = global.defaultActivities;
+    try {
+        global.defaultActivities = require('../js/data/default-activities.js');
+        global.localStorage = { getItem() { return null; }, setItem() {} };
+        global.fetch = async () => ({ ok: true, json: async () => ({ success: true, data: snapshot, rev: 1 }) });
+        const loaded = Object.assign(makeApp(), {
+            loadFromStorage: window.SyncModule.loadFromStorage,
+            stableStateHash: window.SyncModule.stableStateHash,
+            getSyncedHash() { return ''; }, setSyncedHash() {},
+            initDefaultSampleQuantities() {}, normalizeAllContractorBanks() {}, checkAndApplyAutoGstRule() {}
+        });
+        await loaded.loadFromStorage({ forceServer: true });
+        assert.deepEqual(loaded.poleSchedules, expected.poleSchedules, 'All mappings and custom links survive actual cloud reload');
+        assert.deepEqual(loaded.activities['919'], expected.activities['919'], '919 single-code clamp mapping survives reload');
+        assert.equal(loaded.activities['922'].materials[1].itemCode, '17001294', '922 selected clamp code survives reload');
+        assert.deepEqual(loaded.poleScheduleQuantities, expected.poleScheduleQuantities, 'Measurement quantities preserved');
+    } finally {
+        global.fetch = previousFetch;
+        global.localStorage = previousStorage;
+        global.defaultActivities = previousDefaults;
+    }
+    console.log(`All ${Object.keys(schedules).length} Pole Schedules: mapping, stock status, save and cloud reload passed.`);
+}
+checkAllSchedules().catch(err => { console.error(err); process.exitCode = 1; });

@@ -877,9 +877,6 @@ window.PoleScheduleModule = {
         if (qMatrix) {
             const expandSapCodes = value => String(value || '').split(/[,|]/).map(code => {
                 let clean = code.trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
-                if (typeof window.replaceOldSapCodeWithNew === 'function') {
-                    clean = window.replaceOldSapCodeWithNew(clean);
-                }
                 return clean;
             }).filter(code => code && !['—', 'N/A', 'NA', '-'].includes(code));
             const checkSmNutBolt = m => {
@@ -2341,14 +2338,12 @@ window.PoleScheduleModule = {
         if (item.itemCode && item.itemCode !== 'N/A' && item.itemCode !== 'NA' && !String(item.itemCode).startsWith('EXTRA-')) {
             String(item.itemCode).split(',').forEach(c => {
                 let clean = c.trim();
-                if (typeof window.replaceOldSapCodeWithNew === 'function') clean = window.replaceOldSapCodeWithNew(clean);
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
             });
         }
         if (Array.isArray(item.sapItems)) {
             item.sapItems.forEach(si => {
                 let clean = String(si && si.code || '').trim();
-                if (typeof window.replaceOldSapCodeWithNew === 'function') clean = window.replaceOldSapCodeWithNew(clean);
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !String(clean).startsWith('EXTRA-') && !codes.includes(clean)) {
                     codes.push(clean);
                 }
