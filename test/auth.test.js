@@ -23,7 +23,7 @@ const firebase = async (url, request) => {
     throw new Error('Unexpected Firebase operation');
 };
 async function main() {
-    const auth = createAuth({ db, config: { apiKey: 'public-test-key' }, env: { AUTH_SESSION_SECRET: 'test-only-secret-with-enough-randomness' }, fetchImpl: firebase, now: () => time });
+    const auth = createAuth({ db, config: { apiKey: 'public-test-key' }, env: { AUTH_SESSION_SECRET: 'test-only-secret-with-enough-randomness', AUTH_IDLE_MINUTES: '5' }, fetchImpl: firebase, now: () => time });
     const app = express();
     app.use(express.json());
     app.use('/api/auth', auth.router);

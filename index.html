@@ -91,7 +91,7 @@
         <!-- ============================================================
              PORTAL GATEWAY LOGIN SCREEN (Level 1 Portal Protection)
              ============================================================ -->
-        <div v-if="!isPortalUnlocked || !workspaceReady" class="portal-lock-overlay">
+        <div v-if="authReady && (!isPortalUnlocked || !workspaceReady)" class="portal-lock-overlay">
             <!-- Animated Ambient Tech Canvas -->
             <div class="portal-bg-canvas">
                 <div class="portal-bg-grid"></div>
@@ -133,7 +133,7 @@
                 </div>
 
                 <!-- Login Form -->
-                <form @submit.prevent="verifyPortalPassword">
+                <form v-if="!isPortalUnlocked" @submit.prevent="verifyPortalPassword">
                     <div style="position: relative; margin-bottom: 14px; text-align: left;">
                         <label style="display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
                             Portal Password
@@ -168,6 +168,13 @@
                     <button type="button" @click="forgotPortalPassword" :disabled="resetBusy || authBusy" style="display: block; margin: 12px auto 0; border: 0; background: transparent; color: #7dd3fc; cursor: pointer; text-decoration: underline;">{{ resetBusy ? 'Sending reset email…' : 'Forgot password?' }}</button>
                     <p v-if="passwordResetMessage" role="status" style="margin-top: 12px; font-size: 0.82rem; color: #86efac;">{{ passwordResetMessage }}</p>
                 </form>
+
+                <!-- Session valid hai, workspace load ho raha hai — login form ki jagah loader -->
+                <div v-else style="text-align: center; padding: 6px 0 2px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">⏳</div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #f8fafc;">Session restore ho gaya</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Saved bill open ho raha hai…</div>
+                </div>
             </div>
         </div>
 
@@ -196,7 +203,7 @@
                 <span v-if="isPortalUnlocked" 
                       class="logout-timer-chip" 
                       :class="{ 'warning': inactivitySecondsLeft <= 60 && inactivitySecondsLeft > 20, 'danger': inactivitySecondsLeft <= 20 }"
-                      :title="'Inactivity Logout Timer: ' + formatTimerDisplay(inactivitySecondsLeft) + ' baki hai. 5 minute tak koi mouse/keyboard movement na ho to kaam save karke logout ho jayega. Koi bhi kaam karne se timer wapas 05:00 reset ho jata hai.'">
+                      :title="'Inactivity Logout Timer: ' + formatTimerDisplay(inactivitySecondsLeft) + ' baki hai. ' + authIdleMinutes + ' minute tak koi mouse/keyboard movement na ho to kaam save karke logout ho jayega. Koi bhi kaam karne se timer reset ho jata hai.'">
                     <span class="timer-icon">{{ inactivitySecondsLeft <= 20 ? '🚨' : (inactivitySecondsLeft <= 60 ? '⚠️' : '⏱️') }}</span>
                     <span class="timer-label">Logout in</span>
                     <span class="timer-value">{{ formatTimerDisplay(inactivitySecondsLeft) }}</span>

@@ -3,11 +3,13 @@ const crypto = require('node:crypto');
 const rateLimit = require('express-rate-limit');
 
 const COOKIE = 'billing_session';
-const IDLE_MS = 5 * 60 * 1000;
 const MAX_MS = 24 * 60 * 60 * 1000;
 
 module.exports = function createAuth({ db, config, env = process.env, fetchImpl = global.fetch, now = Date.now }) {
     const router = express.Router();
+    // Idle lock window: default 4 hours — chai/lunch break ke baad refresh par dobara login nahi.
+    // AUTH_IDLE_MINUTES env se tune karo (5 minute security floor rakha hai).
+    const IDLE_MS = Math.max(5, Number(env.AUTH_IDLE_MINUTES) || 240) * 60 * 1000;
     const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT;
     const encryptionKey = secret && crypto.createHash('sha256').update('billing-auth-v1\0' + secret).digest();
     const encrypt = value => {
@@ -43,7 +45,8 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             authenticated: true,
             serverTime: now(),
             expiresAt: Math.min(session.lastActivityAt + IDLE_MS, session.maxExpiresAt),
-            adminExpiresAt: session.adminExpiresAt || 0
+            adminExpiresAt: session.adminExpiresAt || 0,
+            idleMinutes: Math.round(IDLE_MS / 60000)
         };
     }
     async function ownerEmail() {

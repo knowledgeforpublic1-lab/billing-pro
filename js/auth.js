@@ -29,6 +29,7 @@
             this._authClockOffset = Number(result.serverTime || Date.now()) - Date.now();
             this.sessionExpiresAt = result.expiresAt;
             this.adminExpiresAt = result.adminExpiresAt || 0;
+            if (result.idleMinutes) this.authIdleMinutes = Number(result.idleMinutes);
             this.isPortalUnlocked = true;
             this.isAdminElevated = this.adminExpiresAt > this.authNow();
             this.isAdminUnlocked = this.isAdminElevated;
@@ -180,7 +181,10 @@
         checkAdminAccess(callback) { return this.checkAdminElevated(callback); },
         formatTimerDisplay(seconds) {
             const total = Math.max(0, Math.floor(Number(seconds) || 0));
-            return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+            const hours = Math.floor(total / 3600);
+            const minutes = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+            const secs = String(total % 60).padStart(2, '0');
+            return hours > 0 ? hours + ':' + minutes + ':' + secs : minutes + ':' + secs;
         },
         updateAuthCountdown() {
             if (!this.isPortalUnlocked) return;

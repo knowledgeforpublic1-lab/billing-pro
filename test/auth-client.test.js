@@ -23,16 +23,17 @@ async function main() {
         workspaceReady: false, workspaceLoading: false,
         initPortalWatchdog() {}, $nextTick: async () => {},
         initializeWorkspace() { initializes++; return new Promise(resolve => { finishLoading = resolve; }); },
-        sessionExpiresAt: 0, adminExpiresAt: 0
+        sessionExpiresAt: 0, adminExpiresAt: 0, authIdleMinutes: 240
     });
     assert.equal(await app.restorePortalSession(), false);
     assert.equal(app.isPortalUnlocked, false, 'A sessionStorage boolean cannot unlock the app');
     assert.equal(app.authReady, true);
     await app.verifyPortalPassword();
     assert.equal(reloads, 0, 'Wrong password keeps portal locked');
-    response = { ok: true, status: 200, json: async () => ({ success: true, authenticated: true, serverTime: time, expiresAt: time + 300000, adminExpiresAt: 0 }) };
+    response = { ok: true, status: 200, json: async () => ({ success: true, authenticated: true, serverTime: time, expiresAt: time + 300000, adminExpiresAt: 0, idleMinutes: 5 }) };
     const login = app.verifyPortalPassword();
     await new Promise(resolve => setImmediate(resolve));
+    assert.equal(app.authIdleMinutes, 5, 'Server-configured idle window feeds the UI timer text');
     assert.equal(app.workspaceLoading, true);
     assert.equal(app.workspaceReady, false, 'Workspace stays covered until saved quantities finish loading');
     assert.equal(app.authBusy, true);
@@ -49,6 +50,8 @@ async function main() {
     time += 120000;
     app.updateAuthCountdown();
     assert.equal(app.inactivitySecondsLeft, 180, 'Countdown uses the actual deadline');
+    assert.equal(app.formatTimerDisplay(14400), '4:00:00', 'Long idle windows show hours');
+    assert.equal(app.formatTimerDisplay(180), '03:00');
     app.adminPendingCallback = () => { throw Error('Stale callback must be cleared'); };
     time = expiry + 1;
     app.updateAuthCountdown();

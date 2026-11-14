@@ -163,6 +163,7 @@
                 passwordResetMessage: '',
                 sessionExpiresAt: 0,
                 adminExpiresAt: 0,
+                authIdleMinutes: 240,
                 portalPasswordInput: '',
                 portalPasswordError: '',
                 showPortalPasswordText: false,

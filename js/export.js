@@ -28,44 +28,54 @@ window.ExportModule = {
             right: { style: 'thin', color: { argb: 'FF94A3B8' } }
         };
 
-        // Spacer row before signature block
-        ws.getRow(startRow).height = 14;
-        const signRow = startRow + 1;
-        ws.getRow(signRow).height = 55;
-
-        const titles = [
-            { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
-            { main: 'Billing Engineer', sub: '(Authorized Signatory)' },
-            { main: 'Site Engineer/ Supervisor', sub: '(Authorized Signatory)' },
-            { main: 'Division Incharge', sub: '(Authorized Signatory)' },
-            { main: 'Project Manager', sub: '(Authorized Signatory)' }
+        // Har pair ke upar signing space — pehli pair se pehle 5 khali lines, baaki pairs se pehle 3.
+        const gapBeforePair = [5, 3, 3];
+        const pairs = [
+            [
+                { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
+                { main: 'Billing Engineer', sub: '(Authorized Signatory)' }
+            ],
+            [
+                { main: 'Site Engineer/ Supervisor', sub: '(Authorized Signatory)' },
+                { main: 'Division Incharge', sub: '(Authorized Signatory)' }
+            ],
+            [
+                { main: 'Division Incharge', sub: '(Authorized Signatory)' },
+                { main: 'Project Manager', sub: '(Authorized Signatory)' }
+            ]
         ];
 
-        const numBoxes = 5;
-        let currentCol = 1;
-
-        for (let i = 0; i < numBoxes; i++) {
-            const remainingBoxes = numBoxes - i;
-            const remainingCols = totalCols - currentCol + 1;
-            const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
-            const endCol = (i === numBoxes - 1) ? totalCols : (currentCol + span - 1);
-
-            if (endCol >= currentCol) {
-                if (endCol > currentCol) {
-                    ws.mergeCells(signRow, currentCol, signRow, endCol);
-                }
-                const cell = ws.getCell(signRow, currentCol);
-                cell.value = titles[i].main + '\n' + titles[i].sub;
-                cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-                cell.alignment = { horizontal: 'center', vertical: 'bottom', wrapText: true };
-
-                for (let c = currentCol; c <= endCol; c++) {
-                    ws.getCell(signRow, c).border = borderBox;
-                }
+        let signRow = startRow;
+        for (let p = 0; p < pairs.length; p++) {
+            for (let g = 0; g < gapBeforePair[p]; g++) {
+                ws.getRow(signRow + g).height = 18;
             }
-            currentCol = endCol + 1;
+            signRow += gapBeforePair[p];
+            ws.getRow(signRow).height = 45;
+
+            // Left box (sheet ke left half) — left aligned
+            const leftEnd = Math.max(1, Math.floor(totalCols / 2));
+            if (leftEnd > 1) ws.mergeCells(signRow, 1, signRow, leftEnd);
+            const left = ws.getCell(signRow, 1);
+            left.value = pairs[p][0].main + '\n' + pairs[p][0].sub;
+            left.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+            left.alignment = { horizontal: 'left', vertical: 'bottom', wrapText: true };
+            for (let c = 1; c <= leftEnd; c++) ws.getCell(signRow, c).border = borderBox;
+
+            // Right box (sheet ke right half) — right aligned
+            const rightStart = leftEnd + 1;
+            const rightEnd = totalCols;
+            if (rightEnd >= rightStart) {
+                if (rightEnd > rightStart) ws.mergeCells(signRow, rightStart, signRow, rightEnd);
+                const right = ws.getCell(signRow, rightStart);
+                right.value = pairs[p][1].main + '\n' + pairs[p][1].sub;
+                right.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+                right.alignment = { horizontal: 'right', vertical: 'bottom', wrapText: true };
+                for (let c = rightStart; c <= rightEnd; c++) ws.getCell(signRow, c).border = borderBox;
+            }
+            signRow++;
         }
-        return signRow;
+        return signRow - 1;
     },
     async exportMaterialMappingExcel() {
         const workbook = new ExcelJS.Workbook();

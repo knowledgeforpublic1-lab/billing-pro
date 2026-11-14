@@ -6,7 +6,7 @@ The registered email lives privately in the database's `portalAuthOwnerV1` confi
 
 After verification, the browser receives an opaque HttpOnly, SameSite=Strict cookie (Secure on HTTPS). Provider tokens are encrypted in private server session records. A dedicated `AUTH_SESSION_SECRET` is recommended; existing private database credentials are used if it is absent. Rotating the encryption secret requires a new login.
 
-Sessions expire after five minutes without real activity, with a maximum lifetime of one day. Looking up the session or refreshing the page does not extend inactivity expiry. The frontend countdown uses the server's deadline. Local entries are saved before locking; no default/blank bill is saved while logged out. Activity touches cannot revive expired sessions.
+Sessions expire after four hours without real activity by default (configurable via the `AUTH_IDLE_MINUTES` environment variable, 5-minute security floor), with a maximum lifetime of one day. Looking up the session or refreshing the page does not extend inactivity expiry. The frontend countdown uses the server's deadline. Local entries are saved before locking; no default/blank bill is saved while logged out. Activity touches cannot revive expired sessions.
 
 Admin elevation requires server-side password verification and lasts five minutes. Bill deletion, shared-master writes, material-row structural changes and finalize/unlock transitions require valid elevation on the server. Routine bill quantity saves remain available to the authenticated owner.
 
