@@ -1315,6 +1315,13 @@ window.PoleScheduleModule = {
         return /^(?:\d+(?:\.\d+)?\s*(?:m|mtr|meters?|metres?)\s+)?(?:(?:steel|tubular|wooden|concrete|cement|spun|prestressed)\s+)*poles?\b/i.test(d);
     },
 
+    isPoleSchedulePoleConcretingItem(item) {
+        // PSC is still a pole for quantities and muffing, but has no
+        // pole-foundation concreting, regardless of its contractor SAP code.
+        return this.isPoleSchedulePoleItem(item) &&
+            !/\bp\s*\.?\s*s\s*\.?\s*c\b|\bprestressed\s+(?:cement\s+)?concrete\b/i.test(String(item.desc || ''));
+    },
+
     isPoleScheduleStayItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
         const d = String(item.desc || '').toLowerCase();
@@ -1561,7 +1568,7 @@ window.PoleScheduleModule = {
 
             if (this.isPoleSchedulePoleItem(m)) {
                 totalPoles += q;
-                if (wantPole) {
+                if (wantPole && this.isPoleSchedulePoleConcretingItem(m)) {
                     const h = this.getPoleFoundationDepth(m.desc);
                     poleVol += q * Math.PI * r * r * h;
                 }

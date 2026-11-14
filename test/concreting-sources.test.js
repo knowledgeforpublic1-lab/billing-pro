@@ -50,3 +50,28 @@ for (const key of Object.keys(defaults)) {
     assert.equal(app.calculateLocationConcreting(key, 0).totalVol, 0, key + ': unrelated items alone contribute zero');
 }
 console.log('Concreting: HT Stay Set and physical poles only; clamps, LT stays, accessories and stale concrete/muffing excluded across all 12 schedules.');
+
+// PSC foundation volume is excluded while physical pole quantities and the
+// independently enabled muffing remain available.
+const mixed = Object.assign({}, methods, {
+    selectedAugerSize: 22, stayConcretingUnitVol: 0.125, psMuffingSize: '300',
+    psAutoPole: true, psAutoStay: true, psAutoMuffing: true,
+    poleSchedules: { mixed: { materials: [
+        item('RSJ 116x100, 9 m long'), item('PSC Pole 8 Mtr (140 KG)'),
+        item('H.T.Stay Set'), item('Concreting'), item('Muffing')
+    ] } },
+    poleScheduleQuantities: { mixed: { 0: { 0: 2, 1: 10, 2: 3 } } }
+});
+const result = mixed.calculateLocationConcreting('mixed', 0);
+const rsjFoundation = 2 * Math.PI * 0.2794 ** 2 * 1.5;
+assert.equal(result.poleVol, Math.round(rsjFoundation * 1000) / 1000, 'Only RSJ poles add foundation volume');
+assert.equal(result.stayVol, 0.375, 'HT stay foundation unchanged');
+assert.equal(result.totalPoles, 12, 'PSC physical pole quantities preserved');
+assert.equal(result.totalMuff, 0.324, 'Independent muffing unchanged');
+assert.equal(result.totalVol, Math.round((rsjFoundation + 0.375) * 1000) / 1000, 'PSC foundation excluded from combined concrete');
+mixed.poleScheduleQuantities.mixed[0] = { 1: 10 };
+mixed.psAutoMuffing = false;
+assert.equal(mixed.calculateLocationConcreting('mixed', 0).totalVol, 0, 'PSC alone contributes zero foundation concrete');
+assert.equal(mixed.isPoleSchedulePoleConcretingItem(item('PSC Pole 8 Mtr (140 KG)')), false);
+assert.equal(mixed.isPoleSchedulePoleConcretingItem(item('RSJ 116x100, 9 m long')), true);
+console.log('PSC poles: foundation concreting excluded, quantities and separate muffing preserved.');

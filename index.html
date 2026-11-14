@@ -813,7 +813,7 @@
                                         <option :value="22">22 inch (r = 0.279 m)</option>
                                     </select>
                                 </div>
-                                <label class="ps-cs-switch" title="Pole pad foundation concreting auto-fill (Auger size ke hisab se)">
+                                <label class="ps-cs-switch" title="Pole pad foundation concreting auto-fill (Auger size ke hisab se). PSC pole ki foundation concreting exclude hai.">
                                     <input type="checkbox" v-model="psAutoPole" @change="recalculatePoleScheduleConcreting(selectedPoleScheduleKey, true)">
                                     <span>🪵 Pole</span>
                                 </label>
@@ -3427,7 +3427,7 @@
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
-    <script defer src="js/pole-schedule.js?v=20261114_concrete_sources"></script>
+    <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
