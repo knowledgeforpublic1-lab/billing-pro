@@ -1825,7 +1825,7 @@
     <span class="r">🛡️ 100% Client Auditable · SHA-256 Engine · Billing Pro v6.0</span>
 </div>
 
-        <div v-if="cloudConflict" role="alert" class="no-print" style="position:fixed;top:10px;left:50%;transform:translateX(-50%);width:min(920px, 95vw);z-index:99999;padding:12px 18px;background:linear-gradient(135deg, #78350f 0%, #451a03 100%);color:#fef3c7;border:2px solid #f59e0b;border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div v-if="cloudConflict && !cloudConflictDismissed" role="alert" class="no-print" style="position:fixed;top:10px;left:50%;transform:translateX(-50%);width:min(920px, 95vw);z-index:99999;padding:12px 18px;background:linear-gradient(135deg, #78350f 0%, #451a03 100%);color:#fef3c7;border:2px solid #f59e0b;border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
                 <span style="font-size:1.4rem;">⚠️</span>
                 <div>
@@ -3463,7 +3463,7 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_safe_storage"></script>
+    <script defer src="js/sync.js?v=20261114_conflict_review"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
@@ -3477,7 +3477,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_safe_storage"></script>
+    <script defer src="js/core/app.js?v=20261114_conflict_review"></script>
 </body>
 
 </html>

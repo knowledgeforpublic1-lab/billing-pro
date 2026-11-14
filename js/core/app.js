@@ -328,6 +328,7 @@
                 // cloudConflict = stale tab ne push kiya jo reject hua, Refresh zaroori
                 cloudRev: 0,
                 cloudConflict: false,
+                cloudConflictDismissed: false,
                 sapMaterialsMaster: typeof defaultSapMaterialsMaster !== 'undefined' ? defaultSapMaterialsMaster : [],
                 pctStage1: 85,
                 pctStage2: 10,

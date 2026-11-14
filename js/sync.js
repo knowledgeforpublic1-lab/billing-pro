@@ -1182,22 +1182,39 @@ window.SyncModule = {
     },
     getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
+    async backupConflictCopies() {
+        const res = await fetch('/api/billing?dataId=' + encodeURIComponent(this.activeBillId || 'latest'));
+        if (!res.ok) throw new Error('Cloud backup load nahi hua');
+        const cloud = await res.json();
+        if (!cloud.success || !cloud.data) throw new Error('Cloud backup missing');
+        const local = this.buildSyncPayload();
+        const key = 'lk_billing_conflict_backup_' + (this.activeBillId || 'latest') + '_' + Date.now();
+        const value = JSON.stringify({ local, cloud, savedAt: Date.now() });
+        if (window.BillingStorage) {
+            const result = await window.BillingStorage.setItem(key, value);
+            if (result && result.saved === false) throw new Error('Backup save failed');
+            if (await window.BillingStorage.getItemAsync(key) !== value) throw new Error('Backup verification failed');
+        } else { localStorage.setItem(key, value); }
+    },
     async resolveConflictKeepLocal() {
-        this.cloudConflict = false;
-        this.showToast('Is PC ka data cloud par save ho raha hai...', '⏳');
-        const ok = await this.syncToCloudNow({ manual: true, force: true });
-        if (ok) {
-            this.showToast('Conflict resolved — Is PC ka data cloud par save ho gaya ✅', '✅');
-        }
+        if (!window.confirm('Is PC ki copy cloud par replace hogi. Dono copies ka backup pehle banega. Continue?')) return;
+        try {
+            await this.backupConflictCopies();
+            this.cloudConflict = false;
+            const ok = await this.syncToCloudNow({ manual: true, force: true });
+            if (!ok) this.cloudConflict = true; this.cloudConflictDismissed = false;
+        } catch(e) { this.cloudConflict = true; this.cloudConflictDismissed = false; this.showToast(e.message, '⚠️'); }
     },
     async resolveConflictLoadCloud() {
-        this.cloudConflict = false;
-        this.showToast('Cloud se latest data load ho raha hai...', '⏳');
-        await this.loadFromStorage({ forceServer: true });
-        this.showToast('Conflict resolved — Cloud ka latest data load ho gaya ☁️', '✅');
+        if (!window.confirm('Cloud copy yahan khulegi. Current entries ka backup pehle banega. Continue?')) return;
+        try {
+            await this.backupConflictCopies();
+            await this.loadFromStorage({ forceServer: true, preserveLocalBackup: true, dataId: this.activeBillId || 'latest' });
+        } catch(e) { this.cloudConflict = true; this.cloudConflictDismissed = false; this.showToast(e.message, '⚠️'); }
     },
     dismissConflictBanner() {
-        this.cloudConflict = false;
+        // Hide the notice only. A dismissed warning must not unlock cloud writes.
+        this.cloudConflictDismissed = true;
     },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
     async syncToCloudNow(opts) {
@@ -1255,7 +1272,7 @@ window.SyncModule = {
                 try { rj = await res.json(); } catch(e) {}
                 // Keep the revision this local snapshot was based on. Retrying
                 // with a newer revision would overwrite another device's work.
-                this.cloudConflict = true;
+                this.cloudConflict = true; this.cloudConflictDismissed = false;
                 this.syncStatus = 'error';
                 if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
                 this._syncRetryTimer = null;
@@ -1587,7 +1604,7 @@ window.SyncModule = {
               fromMongo = false;
               if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
               if (serverRevIsNewer) {
-                  this.cloudConflict = true;
+                  this.cloudConflict = true; this.cloudConflictDismissed = false;
                   try { this.showToast('Local quantities safe hain. Cloud par bhi changes hain — sync conflict resolve karna hoga.', '⚠️'); } catch(e) {}
               } else {
                   console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');

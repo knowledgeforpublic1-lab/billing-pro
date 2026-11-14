@@ -51,6 +51,23 @@ async function main() {
     context.window.BillingStorage={setItem:async()=>{throw Error('Disk failed');}};
     local.saveToStorage();await local._localSavePromise;
     assert.equal(local.localSaveFailed,true,'Rejected storage promise is handled and surfaced');
+    app.cloudConflict = true;
+    app.dismissConflictBanner();
+    assert.equal(app.cloudConflict,true,'Dismissing banner must not re-enable cloud writes');
+    context.window.confirm = () => true;
+    let writes = 0;
+    const resolving = Object.assign({}, methods, {cloudConflict:true,showToast(){},async backupConflictCopies(){throw Error('Disk full');},async syncToCloudNow(){writes++;return true;} });
+    await resolving.resolveConflictKeepLocal();
+    assert.equal(writes,0,'Failed backup blocks destructive conflict resolution');
+    assert.equal(resolving.cloudConflict,true);
+    const steps=[];
+    resolving.backupConflictCopies=async()=>{steps.push('backup');};
+    resolving.syncToCloudNow=async()=>{steps.push('write');return false;};
+    await resolving.resolveConflictKeepLocal();
+    assert.deepEqual(steps,['backup','write']);
+    assert.equal(resolving.cloudConflict,true,'Failed resolution remains blocked');
+    resolving.loadFromStorage=async opts=>{assert.equal(opts.preserveLocalBackup,true);assert.equal(opts.forceServer,true);};
+    await resolving.resolveConflictLoadCloud();
     let loads = 0;
     const refreshing = Object.assign({}, methods, {
         async saveToStorage() { await Promise.resolve(); this.localSaveFailed = true; },
