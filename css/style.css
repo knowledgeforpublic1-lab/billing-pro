@@ -7074,6 +7074,22 @@ html[data-theme="light"] .excel-filter-popover {
     color: #0a5da8 !important;
 }
 
+/* Reconciliation: show every column without changing the underlying data. */
+.reco-sheet-panel { min-width: 0; max-width: 100%; }
+.reco-layout-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 10px; font-size: 0.8rem; }
+.reco-layout-controls .btn { padding: 4px 10px; }
+.reco-table-viewport { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; }
+.reco-table-viewport table.reco-sheet-table { table-layout: fixed; min-width: 0; }
+.reco-table-viewport .reco-sheet-table th,
+.reco-table-viewport .reco-sheet-table td { min-width: 0 !important; padding: 5px 4px !important; overflow-wrap: anywhere; white-space: normal !important; }
+.reco-table-viewport .reco-sheet-table .reco-material-description { white-space: normal !important; overflow-wrap: anywhere; }
+@media print {
+    .reco-table-viewport { overflow: visible; }
+    .reco-table-viewport table.reco-sheet-table { zoom: 1 !important; width: 100% !important; }
+    .reco-table-viewport .reco-sheet-table col { width: auto !important; }
+    .reco-table-viewport .reco-sheet-table col:nth-child(3) { width: 22% !important; }
+}
+
 /* ALV filler spacer - print me mat dikhana */
 @media print { .alv-filler-row { display: none !important; } }
 

@@ -551,6 +551,7 @@
                 hasCustomOldReco: false,
                 recoRevision: 0,
                 recoSearchQuery: '',
+                recoFitToScreen: true,
                 activeRecoCell: null,
                 activeRecoCellFormula: '',
                 focusedRecoInput: null,
@@ -2468,6 +2469,7 @@
     });
 
     // Custom directive: click-outside
+    app.directive('reco-fit', window.RecoFitDirective);
     app.directive('click-outside', {
         mounted(el, binding) {
             el._clickOutsideHandler = (event) => {

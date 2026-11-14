@@ -28,7 +28,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261111_typo_ramp_2">
+    <link rel="stylesheet" href="css/style.css?v=20261114_reco_fit">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
 </head>
 
@@ -1668,9 +1668,20 @@
                 </div>
             </div>
 
-            <div class="glass-panel">
-                    <div class="table-responsive">
-                        <table class="billing-table pro-table-typo">
+            <div class="glass-panel reco-sheet-panel">
+                <div class="reco-layout-controls no-print" role="group" aria-label="Reconciliation sheet size">
+                    <span>Sheet view:</span>
+                    <button type="button" class="btn" :class="recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="recoFitToScreen" @click="recoFitToScreen = true" title="Saare columns screen ki width mein dikhayein">↔ Fit to Screen</button>
+                    <button type="button" class="btn" :class="!recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="!recoFitToScreen" @click="recoFitToScreen = false" title="Bade text mein padhein; zarurat par horizontal scroll karein">Actual Size</button>
+                </div>
+                    <div class="table-responsive reco-table-viewport" v-reco-fit="{ enabled: recoFitToScreen, columns: reconColCount }">
+                        <table class="billing-table pro-table-typo reco-sheet-table">
+                        <colgroup>
+                            <col style="width: 36px;"><col style="width: 82px;"><col style="width: 240px;"><col style="width: 48px;">
+                            <col span="3" style="width: 82px;">
+                            <col v-for="col in reconColumns" :key="col" style="width: 68px;">
+                            <col span="2" style="width: 82px;">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th :colspan="9 + (reconColCount || 0)" style="background: linear-gradient(90deg, #1e1b4b 0%, #1e293b 50%, #1e1b4b 100%); color: #ffffff; text-align: center; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.7px; padding: 9px 14px; border: none; text-transform: uppercase; border-bottom: 2px solid rgba(99, 102, 241, 0.4);">
@@ -1696,7 +1707,7 @@
                                     <div v-if="currentContractorSapInfo" style="font-size: 0.58rem; color: #60a5fa; font-weight: 700; text-transform: uppercase;">⚡ Net Issue</div>
                                 </th>
 
-                                <th v-for="col in reconColumns" :key="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
+                                <th v-for="col in reconColumns" :key="col" :title="col" class="text-center" style="width: 50px; min-width: 46px; font-size: 0.72rem; padding: 0.25rem 0.2rem;">
                                     {{ col }}
                                 </th>
                                 <th style="width: 80px; border-top: 3px solid #818cf8;" class="text-right" title="Is Bill me Activity Consumption ka Total">
@@ -1717,7 +1728,7 @@
                                     <div>{{ row.code }}</div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 600; font-size: 0.8rem; color: var(--text-main); white-space: nowrap; letter-spacing: 0.01em;">
+                                    <div class="reco-material-description" :title="row.desc" style="font-weight: 600; font-size: 0.8rem; color: var(--text-main); letter-spacing: 0.01em;">
                                         {{ row.desc }}
                                     </div>
                                 </td>
@@ -3413,6 +3424,7 @@
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
+    <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
     <script defer src="js/pole-schedule.js?v=20261114_contractor_mapping"></script>
@@ -3420,7 +3432,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_contractor_mapping"></script>
+    <script defer src="js/core/app.js?v=20261114_reco_fit"></script>
 </body>
 
 </html>
