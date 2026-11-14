@@ -7136,6 +7136,6 @@ html[data-theme="light"] .excel-filter-popover {
 /* Uniform compact header: reserve equal label, control and subtitle rows. */
 .reco-table-viewport .reco-sheet-table th.reco-filter-heading { text-align: center !important; vertical-align: top !important; padding: 4px 2px !important; }
 .reco-header-label { gap: 3px; }
-.reco-header-label > span { display: flex; align-items: center; justify-content: center; height: 24px; white-space: normal; line-height: 12px; overflow-wrap: normal; }
+.reco-header-label > span { display: flex; align-items: center; justify-content: center; height: 14px; white-space: normal; line-height: 12px; overflow-wrap: normal; }
 .reco-filter-trigger { width: 20px; height: 18px; font-size: 12px; }
-.reco-header-sublabel { min-height: 18px; margin-top: 3px; line-height: 9px; text-align: center; overflow-wrap: normal; }
+.reco-header-sublabel { min-height: 0; margin-top: 1px; line-height: 9px; text-align: center; overflow-wrap: normal; }
