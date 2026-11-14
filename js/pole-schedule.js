@@ -2334,10 +2334,6 @@ window.PoleScheduleModule = {
 
     isPoleScheduleItemUnissued(item) {
         if (!item || item.isSection || item.isSpan) return false;
-        if (typeof window.replaceOldSapCodeWithNew === 'function' && item.itemCode) {
-            const upgraded = window.replaceOldSapCodeWithNew(item.itemCode);
-            if (upgraded !== item.itemCode) item.itemCode = upgraded;
-        }
         const s = this.getActiveContractorSapStock();
         if (!s || !s.materials) return false; // Agar koi contractor select nahi hai to alert na dikhayein
 

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 global.window = global;
 require('../js/views.js');
 require('../js/pole-schedule.js');
+require('../js/utils.js');
 
 function makeApp() {
     return Object.assign({
@@ -54,3 +55,32 @@ app.selectSapItemForManager(sap);
 assert.equal(JSON.parse(app.saved)['907'].materials[0].itemCode, sap.code);
 assert.equal(app.poleSchedules['907'].materials[1].itemCode, 'N/A');
 console.log('SAP mapping: source row, visible badge, save/reopen, remove, N/A and activity isolation passed.');
+
+// Real 907 eight-metre pole: rendering the stock badge used to translate
+// 17005037 into the unrelated ten-metre code 17001242 on the display copy.
+const poleApp = makeApp();
+Object.assign(poleApp, {
+    isPoleScheduleItemUnissued: window.PoleScheduleModule.isPoleScheduleItemUnissued,
+    isSapCodeIssuedToActiveContractor: window.PoleScheduleModule.isSapCodeIssuedToActiveContractor,
+    getPoleScheduleItemStockTooltip: window.PoleScheduleModule.getPoleScheduleItemStockTooltip,
+    getActiveContractorSapStock() {
+        return { contractorName: 'Test contractor', materials: {
+            '17005037': { netIssue: 12, uom: 'NO' }
+        } };
+    }
+});
+poleApp.poleSchedules['907'] = JSON.parse(JSON.stringify(require('../js/data/default-pole-schedules.js')['907']));
+const poleIndex = poleApp.poleSchedules['907'].materials.findIndex(m => m.itemCode === '17005037');
+assert.ok(poleIndex >= 0);
+row = poleApp.getFilteredPoleScheduleMaterials().find(m => m.origIndex === poleIndex);
+poleApp.openSapItemManager(row, row.origIndex, 'poleSchedule', '907');
+poleApp.selectSapItemForManager({ code: '17005037', desc: 'RSJ POLE 100X116 MM 8 MTR', uom: 'NO' });
+poleApp.closeSapItemManager();
+row = poleApp.getFilteredPoleScheduleMaterials().find(m => m.origIndex === poleIndex);
+assert.equal(poleApp.isPoleScheduleItemUnissued(row), false, 'Issued eight-metre code must not show Unissued');
+assert.equal(row.itemCode, '17005037', 'Stock badge rendering must not replace the selected code');
+assert.match(poleApp.getPoleScheduleItemStockTooltip(row), /Stock OK/);
+assert.equal(JSON.parse(poleApp.saved)['907'].materials[poleIndex].itemCode, '17005037');
+assert.equal(window.replaceOldSapCodeWithNew('17005037'), '17005037');
+assert.equal(window.replaceOldSapCodeWithNew('17005037, 17001242'), '17005037, 17001242');
+console.log('907 eight-metre pole: selected code, stock status, tooltip and saved mapping passed.');

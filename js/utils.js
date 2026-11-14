@@ -27,7 +27,6 @@ if (typeof window === 'undefined') {
 const KNOWN_SAP_CODE_MIGRATIONS = {
     '17001246': '17000008', // RSJ 152x152, 13 m long (River Crossing Pole)
     '17001244': '17000007', // RSJ 152x152, 11 m long (River Crossing Pole)
-    '17005037': '17001242', // RSJ 116x100, 10 m long (Activity 922 Pole)
 };
 
 function replaceOldSapCodeWithNew(rawCode) {

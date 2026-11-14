@@ -1709,17 +1709,8 @@ window.SyncModule = {
                         if (m && clampCodes.includes(String(m.itemCode || '').trim())) {
                             m.activityMaterialNo = "2";
                         }
-                        // Auto-upgrade 8m pole (17005037) to 10m pole (17001242) so it never reverts
-                        if (m && (m.itemCode === '17005037' || /08m Pole|8 m long/i.test(m.desc || ''))) {
-                            m.itemCode = '17001242';
-                            m.desc = 'RSJ 116x100, 10 m long';
-                            m.sapDescription = 'RSJ POLE 100X116 MM 10 MTR';
-                            m.rate = 2300;
-                            if (m.sapItems && m.sapItems[0]) {
-                                m.sapItems[0].code = '17001242';
-                                m.sapItems[0].desc = 'RSJ POLE 100X116 MM 10 MTR';
-                            }
-                        }
+                        // 17005037 is a valid eight-metre pole, not a retired
+                        // ten-metre code. Preserve the user's mapping on load.
                     });
                 }
                 if (parsed.masterAbstractList && Array.isArray(parsed.masterAbstractList) && parsed.masterAbstractList.length > 0) {

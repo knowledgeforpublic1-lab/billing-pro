@@ -2500,7 +2500,7 @@ it('Safe SAP Code Replacement: Instantly translates old codes without ever overw
     // 1. Direct code translation
     assert.strictEqual(window.replaceOldSapCodeWithNew('17001246'), '17000008', '17001246 must translate to 17000008');
     assert.strictEqual(window.replaceOldSapCodeWithNew('17001244'), '17000007', '17001244 must translate to 17000007');
-    assert.strictEqual(window.replaceOldSapCodeWithNew('17005037'), '17001242', '17005037 must translate to 17001242');
+    assert.strictEqual(window.replaceOldSapCodeWithNew('17005037'), '17005037', 'Valid eight-metre pole code must stay unchanged');
 
     // 2. Material code upgrade without touching description or custom properties
     const testMat = {
@@ -2511,7 +2511,8 @@ it('Safe SAP Code Replacement: Instantly translates old codes without ever overw
         sapItems: [{ code: '17005037', desc: 'OLD POLE' }]
     };
     window.autoUpgradeMaterialCodesRealtime(testMat);
-    assert.strictEqual(testMat.itemCode, '17001242', 'itemCode must upgrade');
+    assert.strictEqual(testMat.itemCode, '17005037', 'Valid selected pole code must be preserved');
+    assert.strictEqual(testMat.sapItems[0].code, '17005037', 'SAP component must retain the eight-metre code');
     assert.strictEqual(testMat.desc, 'Custom User Row - 10m Pole', 'Description must NEVER be overwritten');
     assert.strictEqual(testMat.rate, 2300, 'Rate must NEVER be overwritten');
     assert.strictEqual(testMat.no, '2a', 'Item No must NEVER be overwritten');
