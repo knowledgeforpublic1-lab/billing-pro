@@ -49,9 +49,11 @@
         async setItem(key, value) {
             const strVal = typeof value === 'string' ? value : JSON.stringify(value);
 
+            const result = { localStorage: false, indexedDB: false, saved: false };
             // 1. Try writing to LocalStorage (synchronous fast-boot cache)
             try {
                 localStorage.setItem(key, strVal);
+                result.localStorage = true;
             } catch (err) {
                 // If LocalStorage quota exceeded, don't crash — log warning and rely on IndexedDB
                 console.warn(`[StorageEngine] LocalStorage quota exceeded for key [${key}], persisting safely to IndexedDB only.`);
@@ -69,10 +71,13 @@
                         tx.onerror = () => reject(tx.error);
                         tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));
                     });
+                    result.indexedDB = true;
                 }
             } catch (idbErr) {
                 console.error(`[StorageEngine] IndexedDB write failed for key [${key}]:`, idbErr);
             }
+            result.saved = result.localStorage || result.indexedDB;
+            return result;
         },
 
         /**

@@ -156,6 +156,7 @@
                 isPortalUnlocked: false,
                 authReady: false,
                 authBusy: false,
+                localSaveFailed: false,
                 workspaceReady: false,
                 workspaceLoading: false,
                 resetBusy: false,

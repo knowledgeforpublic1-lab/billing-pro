@@ -1825,6 +1825,8 @@
     <span class="r">🛡️ 100% Client Auditable · SHA-256 Engine · Billing Pro v6.0</span>
 </div>
 
+        <div v-if="cloudConflict" role="alert" class="no-print" style="position:fixed;top:8px;left:12px;right:12px;z-index:9000;padding:12px;background:#78350f;color:white;border:2px solid #fbbf24;border-radius:6px;">⚠ Cloud conflict — doosre computer par bhi changes hain. Automatic cloud save roka gaya hai; dono copies compare kiye bina overwrite nahi hoga.</div>
+        <div v-if="localSaveFailed" role="alert" class="no-print" style="position:fixed;bottom:30px;left:12px;right:12px;z-index:9000;padding:12px;background:#7f1d1d;color:white;border:2px solid #f87171;border-radius:6px;">⚠ Local save failed — browser mein copy save nahi hui. Page band/refresh karne se pehle cloud save confirm karein ya backup export karein.</div>
         <!-- Column filter is outside the scaled table so it stays readable. -->
         <div v-if="recoFilterActiveKey && currentView === 'reconciliation'" class="reco-filter-popover no-print" :style="recoFilterPosition"
              v-click-outside="closeRecoColumnFilter" role="dialog" aria-labelledby="reco-filter-title" @keydown.esc.stop="closeRecoColumnFilter">
@@ -3436,7 +3438,7 @@
     <script defer src="js/data/default-invoice.js?v=20261111_stock_exact"></script>
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
-    <script defer src="js/core/storage.js?v=20261114_preserve_quantity_refresh"></script>
+    <script defer src="js/core/storage.js?v=20261114_safe_storage"></script>
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
@@ -3444,7 +3446,7 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_resume_view"></script>
+    <script defer src="js/sync.js?v=20261114_safe_storage"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
@@ -3458,7 +3460,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_refresh_animation"></script>
+    <script defer src="js/core/app.js?v=20261114_safe_storage"></script>
 </body>
 
 </html>

@@ -1189,7 +1189,7 @@ window.SyncModule = {
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
             this.syncStatus = 'error';
-            if (manual) this.showToast('Local aur cloud dono par changes hain. Quantities safe hain; conflict resolve hone tak cloud save roka gaya hai.', '⚠️');
+            if (manual) this.showToast('Local aur cloud dono par changes hain. Conflict resolve hone tak cloud save roka gaya hai.', '⚠️');
             return false;
         }
         if (manual && typeof this.persistContractorMapping === 'function' && this.contractorMappingId()) {
@@ -1216,15 +1216,14 @@ window.SyncModule = {
                 body: json
             });
             if (res.status === 423) {
-                this.lastSentHash = hash;
                 this.syncStatus = 'local';
-                console.info('Cloud: bill locked hai, local copy safe hai');
+                console.info('Cloud: bill locked hai; cloud write rejected');
                 if (manual) this.showToast('Bill locked — Unlock first to sync', '🔒');
                 return false;
             }
             if (res.status === 401) {
                 this.syncStatus = 'error';
-                this.showToast('Cloud sync FAIL: API key wrong/missing — changes saved locally only. Set billing_api_key in localStorage.', '🔑');
+                this.showToast('Login session expire ho gaya. Cloud save nahi hua; dobara login karein.', '🔑');
                 this._scheduleSyncRetry();
                 return false;
             }
@@ -1237,19 +1236,13 @@ window.SyncModule = {
             if (res.status === 409) {
                 let rj = null;
                 try { rj = await res.json(); } catch(e) {}
-                if (rj && typeof rj.rev === 'number') this.cloudRev = rj.rev;
+                // Keep the revision this local snapshot was based on. Retrying
+                // with a newer revision would overwrite another device's work.
+                this.cloudConflict = true;
                 this.syncStatus = 'error';
-                console.warn('Sync 409 conflict: updating cloudRev and auto-retrying push...');
-                // Auto-recover without destroying local unsaved edits: update cloudRev and retry
-                if (!manual && rj && typeof rj.rev === 'number') {
-                    this.cloudConflict = false;
-                    this._scheduleSyncRetry();
-                    return false;
-                }
-                try {
-                    const srvMsg = (rj && rj.error) ? String(rj.error).slice(0, 150) : '';
-                    this.showToast('⚠️ ' + (srvMsg || 'Another PC saved in between! Click Refresh on toolbar to load it'), '⚠️');
-                } catch(e) {}
+                if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
+                this._syncRetryTimer = null;
+                this.showToast('Cloud par doosre changes hain. Automatic save roka gaya hai; local aur cloud copies compare karni hongi.', '⚠️');
                 return false;
             }
             if (!res.ok) {
@@ -1285,9 +1278,9 @@ window.SyncModule = {
             return true;
         } catch (err) {
             this.syncStatus = 'error';
-            console.error('Cloud sync failed (local copy safe hai):', err);
+            console.error('Cloud sync failed:', err);
             const m = String((err && err.message) || 'network/server error').slice(0, 150);
-            this.showToast('Cloud sync FAIL: ' + m + '. Local copy safe, retrying...', '⚠️');
+            this.showToast('Cloud sync FAIL: ' + m + '. Cloud save nahi hua; retrying...', '⚠️');
             this._scheduleSyncRetry();
             return false;
         }
@@ -1317,7 +1310,11 @@ window.SyncModule = {
         try {
             if (this._saveTimer) { clearTimeout(this._saveTimer); this._saveTimer = null; }
             // Keep the current quantities locally before fetching any server copy.
-            this.saveToStorage();
+            await this.saveToStorage();
+            if (this.localSaveFailed) {
+                this.showToast('Refresh roka gaya: local save fail hua. Pehle cloud save ya backup export karein.', '⚠️');
+                return;
+            }
             if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
             if (this._mappingSyncTimer) { clearTimeout(this._mappingSyncTimer); this._mappingSyncTimer = null; }
             this.showToast('Loading fresh data from cloud...', '🔄');
@@ -1439,9 +1436,23 @@ window.SyncModule = {
                 ? ('lk_billing_state_' + curBillId)
                 : 'lk_billing_app_state_v10';
             if (window.BillingStorage && typeof window.BillingStorage.setItem === 'function') {
-                window.BillingStorage.setItem(localKey, JSON.stringify(dataToSave));
+                const sequence = this._localSaveSequence = (this._localSaveSequence || 0) + 1;
+                this._localSavePromise = Promise.resolve(window.BillingStorage.setItem(localKey, JSON.stringify(dataToSave))).then(result => {
+                    if (sequence !== this._localSaveSequence) return result;
+                    this.localSaveFailed = !!(result && result.saved === false);
+                    if (this.localSaveFailed) this.showToast('Local save FAIL: browser storage mein copy nahi bani. Page band/refresh na karein; cloud save ya backup export karein.', '⚠️');
+                    return result;
+                }).catch(error => {
+                    if (sequence === this._localSaveSequence) {
+                        this.localSaveFailed = true;
+                        this.showToast('Local save FAIL. Page band/refresh na karein; cloud save ya backup export karein.', '⚠️');
+                    }
+                    console.error('Local persistence failed:', error);
+                    return { saved: false };
+                });
             } else {
                 localStorage.setItem(localKey, JSON.stringify(dataToSave));
+                this.localSaveFailed = false;
             }
             try { localStorage.setItem('lk_billing_active_bill_id', curBillId); } catch(e) {}
             try { localStorage.setItem('lk_billing_mapping_locks_v1', JSON.stringify(this.mappingLocks)); } catch(e) {}
@@ -1450,7 +1461,10 @@ window.SyncModule = {
                 this.takeSnapshot();
             }
             this.scheduleRemoteSync();
+            return this._localSavePromise;
         } catch (e) {
+            this.localSaveFailed = true;
+            this.showToast('Local save FAIL. Page band/refresh na karein; backup export karein.', '⚠️');
             console.error('Save error', e);
         }
     },
@@ -1586,7 +1600,7 @@ window.SyncModule = {
           } else {
               try { this.showToast('No data found in cloud or local', 'ℹ️'); } catch(e) {}
           }
-          this.syncStatus = fromMongo ? 'synced' : (serverRaw ? 'syncing' : 'local');
+          this.syncStatus = this.cloudConflict ? 'error' : (fromMongo ? 'synced' : (serverRaw ? 'syncing' : 'local'));
           if (fromMongo && raw) {
               try {
                   let h = 0;
