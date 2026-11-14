@@ -150,7 +150,7 @@ window.ExportModule = {
         const rcols = revOn ? (this.reverseReconColumns || []) : [];
 
         // 🎯 Exactly what is displayed in reconRows on screen (same rows, same filters, same order):
-        const expRows = (this.reconRows && this.reconRows.length > 0)
+        const expRows = Array.isArray(this.reconRows)
             ? this.reconRows
             : ((this.pivotReconciliationData && this.pivotReconciliationData.rows) ? this.pivotReconciliationData.rows : []);
 
@@ -239,6 +239,7 @@ window.ExportModule = {
 
             row.eachCell((c, colNum) => {
                 c.border = thinBorder;
+                if (colNum >= 5 && typeof this.isRecoKmUnit === 'function' && this.isRecoKmUnit(rowObj.uom)) c.numFmt = '#,##0.######';
                 c.alignment = { vertical: 'middle' };
                 if (colNum === 3) {
                     c.alignment.horizontal = 'left';
@@ -272,9 +273,9 @@ window.ExportModule = {
             sumBal += bal;
         });
 
-        totalRow.getCell(5).value = Math.round(sumGross * 100) / 100 || '';
-        totalRow.getCell(6).value = Math.round(sumMrn * 100) / 100 || '';
-        totalRow.getCell(7).value = Math.round(sumNet * 100) / 100 || '';
+        totalRow.getCell(5).value = Math.round(sumGross * 1000000) / 1000000 || '';
+        totalRow.getCell(6).value = Math.round(sumMrn * 1000000) / 1000000 || '';
+        totalRow.getCell(7).value = Math.round(sumNet * 1000000) / 1000000 || '';
 
         if (hasCustomOldRecoCols) {
             recoCols.forEach((orc, ocIdx) => {
@@ -291,7 +292,7 @@ window.ExportModule = {
                         colSum += Number(val || 0);
                     });
                 }
-                totalRow.getCell(cIdx).value = Math.round(colSum * 100) / 100 || '';
+                totalRow.getCell(cIdx).value = Math.round(colSum * 1000000) / 1000000 || '';
             });
         }
 
@@ -303,7 +304,7 @@ window.ExportModule = {
                     const val = (typeof this.reconCellLoc === 'function') ? this.reconCellLoc(r.code, rc) : 0;
                     colSum += Number(val || 0);
                 });
-                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
+                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 1000000) / 1000000 || '';
             });
         } else {
             (pData.columns || []).forEach((col, cIdx) => {
@@ -311,20 +312,20 @@ window.ExportModule = {
                 expRows.forEach(r => {
                     colSum += Number((r.activities && r.activities[col]) || 0);
                 });
-                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 100) / 100 || '';
+                totalRow.getCell(midColStart + cIdx).value = Math.round(colSum * 1000000) / 1000000 || '';
             });
         }
 
         const endColStart = midColStart + (revOn ? rcols.length : (pData.columns || []).length);
-        totalRow.getCell(endColStart).value = Math.round(sumThisBill * 100) / 100 || '';
-        totalRow.getCell(endColStart + 1).value = Math.round(sumBal * 100) / 100 || 0;
+        totalRow.getCell(endColStart).value = Math.round(sumThisBill * 1000000) / 1000000 || '';
+        totalRow.getCell(endColStart + 1).value = Math.round(sumBal * 1000000) / 1000000 || 0;
 
         totalRow.eachCell((c, colNum) => {
             c.border = headerBorder;
             c.font = { name: 'Calibri', size: 10, bold: true };
             if (colNum >= 5) {
                 c.alignment = { horizontal: 'right', vertical: 'middle' };
-                c.numFmt = '#,##0.00';
+                c.numFmt = '#,##0.######';
             }
         });
         totalRow.height = 22;

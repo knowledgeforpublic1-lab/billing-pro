@@ -28,7 +28,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261114_reco_filters">
+    <link rel="stylesheet" href="css/style.css?v=20261114_compact_reco">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
 </head>
 
@@ -134,6 +134,7 @@
                             <span style="position: absolute; left: 12px; font-size: 1rem; color: #64748b; pointer-events: none;">🔑</span>
                             <input :type="showPortalPasswordText ? 'text' : 'password'" 
                                    v-model="portalPasswordInput" 
+                                   name="password" maxlength="256" autocapitalize="off" :spellcheck="false"
                                    placeholder="Enter Password..." 
                                    autocomplete="current-password" 
                                    autofocus 
@@ -153,9 +154,12 @@
                         <span>⚠️</span> {{ portalPasswordError }}
                     </div>
 
-                    <button type="submit" style="width: 100%; padding: 12px 20px; font-size: 0.92rem; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); cursor: pointer; transition: all 0.2s;">
-                        🔓 Unlock Portal & Begin Work
+                    <p style="margin: 0 0 10px; font-size: 0.76rem; color: #94a3b8;">Firebase mein apne registered account ka naya password use karein.</p>
+                    <button type="submit" :disabled="authBusy || !authReady || !portalPasswordInput" style="width: 100%; padding: 12px 20px; font-size: 0.92rem; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); cursor: pointer; transition: all 0.2s;">
+                        {{ authBusy ? 'Verifying…' : '🔓 Unlock Portal & Begin Work' }}
                     </button>
+                    <button type="button" @click="forgotPortalPassword" :disabled="resetBusy || authBusy" style="display: block; margin: 12px auto 0; border: 0; background: transparent; color: #7dd3fc; cursor: pointer; text-decoration: underline;">{{ resetBusy ? 'Sending reset email…' : 'Forgot password?' }}</button>
+                    <p v-if="passwordResetMessage" role="status" style="margin-top: 12px; font-size: 0.82rem; color: #86efac;">{{ passwordResetMessage }}</p>
                 </form>
             </div>
         </div>
@@ -201,6 +205,7 @@
                     <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin Elevated (5 Min)' : 'Portal Active'"></span>
                     <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN {{ formatTimerDisplay(adminElevatedSecondsLeft) }}</span>
                 </span>
+                <button v-if="isPortalUnlocked" type="button" class="btn btn-secondary" :disabled="authBusy" @click="logoutPortal" title="Save current work and log out" style="padding: 4px 8px; font-size: 0.74rem;">Logout</button>
             </div>
         </div>
 
@@ -1669,14 +1674,11 @@
             </div>
 
             <div class="glass-panel reco-sheet-panel">
-                <div class="reco-layout-controls no-print" role="group" aria-label="Reconciliation sheet size">
-                    <span>Sheet view:</span>
-                    <button type="button" class="btn" :class="recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="recoFitToScreen" @click="recoFitToScreen = true" title="Saare columns screen ki width mein dikhayein">↔ Fit to Screen</button>
-                    <button type="button" class="btn" :class="!recoFitToScreen ? 'btn-primary' : 'btn-secondary'" :aria-pressed="!recoFitToScreen" @click="recoFitToScreen = false" title="Bade text mein padhein; zarurat par horizontal scroll karein">Actual Size</button>
+                <div v-if="Object.keys(recoColumnFilters).length || recoColumnSort" class="reco-layout-controls no-print" role="group" aria-label="Reconciliation filters">
                     <button v-if="Object.keys(recoColumnFilters).length || recoColumnSort" type="button" class="btn btn-secondary" @click="clearAllRecoColumnFilters">Clear column filters</button>
                     <span v-if="Object.keys(recoColumnFilters).length">{{ reconRows.length }} / {{ recoBaseRows.length }} rows · {{ Object.keys(recoColumnFilters).length }} filters</span>
                 </div>
-                    <div class="table-responsive reco-table-viewport" v-reco-fit="{ enabled: recoFitToScreen, columns: reconColCount }">
+                    <div class="table-responsive reco-table-viewport" v-reco-fit="{ enabled: true, columns: reconColCount }">
                         <table class="billing-table pro-table-typo reco-sheet-table">
                         <colgroup>
                             <col style="width: 36px;"><col style="width: 82px;"><col style="width: 240px;"><col style="width: 48px;">
@@ -1738,11 +1740,11 @@
                                 </td>
 
                                 <td v-for="col in reconColumns" :key="col" class="text-center font-mono" :title="getRecoCellTitle(row, col)" style="cursor: default;">
-                                    {{ row.activities[col] > 0 ? format2Dec(row.activities[col]) : '' }}
+                                    {{ row.activities[col] > 0 ? formatRecoQuantity(row.activities[col], row) : '' }}
                                 </td>
                                 <!-- THIS BILL -->
                                 <td class="text-right font-mono" style="background: rgba(99, 102, 241, 0.06); font-size: 0.88rem; color: #cbd5e1;" title="Is bill ka kul consumption">
-                                    <span v-if="row.totalQty > 0">{{ format2Dec(row.totalQty) }}</span>
+                                    <span v-if="row.totalQty > 0">{{ formatRecoQuantity(row.totalQty, row) }}</span>
                                     <span v-else style="color: var(--text-muted); opacity: 0.3;">-</span>
                                 </td>
 
@@ -1751,7 +1753,7 @@
                                     :style="row._bal < 0 ? 'background: rgba(239, 68, 68, 0.20); color: #f87171;' : 'background: rgba(245, 158, 11, 0.08); color: #fbbf24;'" 
                                     style="font-size: 0.90rem;"
                                     :title="row._bal < 0 ? '⚠️ OVER-CONSUMPTION ALERT! Net Issue se jyada material reconcile ho chuka hai' : 'Bacha hua balance'">
-                                    <span>{{ format2Dec(row._bal) }}</span>
+                                    <span>{{ formatRecoQuantity(row._bal, row) }}</span>
                                 </td>
                             </tr>
                             <tr v-if="reconRows.length === 0">
@@ -1765,24 +1767,24 @@
                                     TOTAL / SUMMARY ({{ reconRows.length }} Items)
                                 </td>
                                 <td class="text-right font-mono font-bold" style="color: #94a3b8; font-size: 0.88rem;">
-                                    {{ reconTotals.grossIssue > 0 ? reconTotals.grossIssue.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.grossIssue > 0 ? reconTotals.grossIssue.toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
                                 <td class="text-right font-mono font-bold" style="color: #f87171; font-size: 0.88rem;">
-                                    {{ reconTotals.mrnReturn > 0 ? reconTotals.mrnReturn.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.mrnReturn > 0 ? reconTotals.mrnReturn.toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
                                 <td class="text-right font-mono font-bold" style="background: rgba(59, 130, 246, 0.22); color: #93c5fd; font-size: 0.94rem;">
-                                    {{ reconTotals.netIssue > 0 ? reconTotals.netIssue.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.netIssue > 0 ? reconTotals.netIssue.toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
 
                                 <td v-for="col in reconColumns" :key="col" class="text-center font-mono font-bold" style="color: #cbd5e1; font-size: 0.85rem;">
-                                    {{ reconTotals.activities[col] > 0 ? reconTotals.activities[col].toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.activities[col] > 0 ? reconTotals.activities[col].toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
                                 <td class="text-right font-mono font-bold" style="background: rgba(99, 102, 241, 0.18); color: #c7d2fe; font-size: 0.92rem;">
-                                    {{ reconTotals.thisBill > 0 ? reconTotals.thisBill.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.thisBill > 0 ? reconTotals.thisBill.toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
 
                                 <td class="text-right font-mono font-bold" style="background: rgba(245, 158, 11, 0.20); color: #fde68a; font-size: 0.94rem;">
-                                    {{ reconTotals.balance ? reconTotals.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-' }}
+                                    {{ reconTotals.balance ? reconTotals.balance.toLocaleString('en-IN', { maximumFractionDigits: 6 }) : '-' }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -1980,7 +1982,7 @@
                                     <div style="font-size: 0.74rem; color: var(--accent-green); font-weight: 700; font-family: monospace; display: flex; align-items: center; gap: 4px;">
                                         <span style="color: var(--text-muted);">Reco Qty:</span>
                                         <span style="background: rgba(16, 185, 129, 0.12); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                                            {{ getSapComponentCalculatedRecoQty(activeSapManagerItem, sItem) }} {{ sItem.uom || (activeSapManagerItem ? activeSapManagerItem.unit : 'No') }}
+                                            {{ getSapComponentCalculatedRecoQty(activeSapManagerItem, sItem) }} {{ getRecoTargetUnit(activeSapManagerItem, sItem) }}
                                             <span v-if="sItem.isManual" style="color: var(--accent-amber); font-weight: 800; margin-left: 2px;" title="Manual fixed entry">✍️</span>
                                         </span>
                                     </div>
@@ -3378,13 +3380,13 @@
 
                         <!-- Quick note that normal billing is open -->
                         <div style="font-size: 0.74rem; color: var(--text-muted, #94a3b8); margin-bottom: 20px; line-height: 1.4;">
-                            💡 Normal bill entry (quantities, rates, save online) bina password ke hamesha available hai.
+                            💡 Portal login ke baad normal bill entry available hai. Protected changes ke liye Admin verification chahiye.
                         </div>
 
                         <!-- Action Buttons -->
                         <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
                             <button type="button" class="btn btn-secondary" @click="closeAdminModal" style="padding: 9px 16px; font-size: 0.85rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
-                            <button type="submit" class="btn btn-primary" style="padding: 9px 22px; font-size: 0.88rem; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <button type="submit" class="btn btn-primary" :disabled="authBusy" style="padding: 9px 22px; font-size: 0.88rem; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                                 <span>🔓</span> Unlock & Proceed
                             </button>
                         </div>
@@ -3424,23 +3426,25 @@
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
+    <script defer src="js/auth.js?v=20261114_server_login"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_bill_recovery"></script>
+    <script defer src="js/sync.js?v=20261114_server_login"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
     <script defer src="js/reco-filters.js?v=20261114_reco_search_apply"></script>
-    <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
-    <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
+    <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
+    <script defer src="js/views.js?v=20261114_conductor_km"></script>
+    <script defer src="js/export.js?v=20261114_conductor_km"></script>
     <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_bill_recovery"></script>
+    <script defer src="js/core/app.js?v=20261114_server_login"></script>
 </body>
 
 </html>

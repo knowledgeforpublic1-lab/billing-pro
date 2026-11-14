@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const db = require('./db');
+const auth = require('./auth')({ db, config: require('./auth-settings') });
 
 const app = express();
 
@@ -54,14 +55,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Admin Password (default: Rakesh@123, can be overridden via ADMIN_PASSWORD env)
-const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'Rakesh@123').trim();
+app.use('/api/auth', auth.router);
+app.use('/api', (req, res, next) => req.path === '/health' ? next() : auth.middleware(req, res, next));
 
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
 // API_KEY set nahi hai to check skip (backward compatible).
 function requireApiKey(req, res, next) {
     try {
+        if (req.authSession) return next();
         const expected = (process.env.API_KEY || '').trim();
         if (!expected) return next();
         const got = (req.header('x-api-key') || '').trim()
@@ -119,13 +121,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Admin Password verification endpoint
-app.post('/api/admin/verify', (req, res) => {
-    const password = (req.body && req.body.password ? String(req.body.password).trim() : '');
-    if (password === ADMIN_PASSWORD) {
-        return res.json({ success: true, message: 'Admin verified successfully' });
-    }
-    return res.status(401).json({ success: false, error: 'Incorrect Admin Password' });
-});
+app.post('/api/admin/verify', auth.requireAdmin, (req, res) => res.json({ success: true }));
 
 // Routes
 app.get('/api/billing', requireApiKey, async (req, res) => {
@@ -162,7 +158,7 @@ app.get('/api/bills', requireApiKey, async (req, res) => {
     }
 });
 
-app.post('/api/billing/delete', requireApiKey, async (req, res) => {
+app.post('/api/billing/delete', requireApiKey, auth.requireAdmin, async (req, res) => {
     try {
         const dataId = req.body && req.body.dataId ? String(req.body.dataId).trim() : '';
         if (!dataId) {
@@ -216,6 +212,19 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
         const existing = await db.getBillingState(dataId);
+        if (existing && existing.stateData) {
+            const previous = existing.stateData;
+            const finalizedChanged = dataToSave.isFinalized !== undefined && !!dataToSave.isFinalized !== !!previous.isFinalized;
+            const structureChanged = ['activities', 'poleSchedules'].some(kind => Object.entries(dataToSave[kind] || {}).some(([key, group]) => {
+                const oldRows = previous[kind] && previous[kind][key] && previous[kind][key].materials;
+                if (!Array.isArray(oldRows) || !Array.isArray(group && group.materials)) return false;
+                return JSON.stringify(oldRows.map(row => [row.no, !!row.isSection, !!row.isSpan])) !==
+                    JSON.stringify(group.materials.map(row => [row.no, !!row.isSection, !!row.isSpan]));
+            }));
+            if ((finalizedChanged || structureChanged) && !(req.authSession && req.authSession.adminExpiresAt > Date.now())) {
+                return res.status(403).json({ success: false, error: 'Admin verification required for structural/finalize changes' });
+            }
+        }
         if (existing && existing.stateData && existing.stateData.isFinalized && dataToSave.isFinalized !== false) {
             log.warn('POST', 'Save rejected — bill is finalized/locked');
             return res.status(423).json({ success: false, error: 'Bill is finalized/locked. Unlock first.' });
@@ -726,7 +735,7 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
 });
 
 // POST: Save shared pole schedule defaults without overwriting existing bills.
-app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
+app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-POLE-SCHEDULES';
     try {
         const { poleSchedules } = req.body || {};
@@ -788,7 +797,7 @@ app.get('/api/default-pole-schedules', async (req, res) => {
 });
 
 // POST: UI Mapping ↔ hardcode default-activities.js (+ SAP master) on disk & Cloud Database
-app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
+app.post('/api/save-default-activities', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-ACTIVITIES';
     try {
         const body = req.body || {};

@@ -18,6 +18,15 @@ const context = {
     process: { env: { API_KEY: 'test-key' } }, console,
     require(name) {
         if (name === './db') return db;
+        if (name === './auth') return () => ({
+            router: apiRequire('express').Router(),
+            middleware(req, res, next) {
+                if (req.headers['x-api-key'] !== 'test-key') return res.status(401).json({ success: false });
+                req.authSession = { adminExpiresAt: Date.now() + 300000 };
+                next();
+            },
+            requireAdmin(req, res, next) { next(); }
+        });
         if (name === 'dotenv') return { config() {} };
         // Legacy default-master requests must not write actual source files in tests.
         if (name === 'fs') return { writeFileSync() {} };

@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node test/reco-filters.test.js && node test/concreting-sources.test.js && node test/contractor-mapping-api.test.js && node test/contractor-mapping.test.js && node test/quantity-persistence.test.js && node test/sap-mapping.test.js && node test/calculations.test.js",
+    "test": "node test/auth.test.js && node test/auth-client.test.js && node test/conductor-units.test.js && node test/reco-filters.test.js && node test/concreting-sources.test.js && node test/contractor-mapping-api.test.js && node test/contractor-mapping.test.js && node test/quantity-persistence.test.js && node test/sap-mapping.test.js && node test/calculations.test.js",
     "audit": "node scripts/software_health_check.js",
     "update-stock": "node scripts/build_stock_index.js"
   }

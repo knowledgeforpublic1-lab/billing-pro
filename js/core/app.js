@@ -28,6 +28,7 @@
         window.ContractorMappingModule || {},
         window.ViewsModule || {},
         window.RecoFilterModule || {},
+        window.RecoUnitModule || {},
         window.ExportModule || {},
         window.StockImporterModule || {},
         window.OldRecoImporterModule || {},
@@ -147,170 +148,18 @@
         }
     };
 
-    // 🔒 Admin Mode / Password Authentication Methods
-    allMethods.openAdminModal = function(pendingCallback) {
-        this.adminPendingCallback = (typeof pendingCallback === 'function') ? pendingCallback : null;
-        this.adminPasswordInput = '';
-        this.adminPasswordError = '';
-        this.showAdminModal = true;
-        this.$nextTick(() => {
-            const inp = document.getElementById('adminPasswordModalInput');
-            if (inp) {
-                inp.focus();
-                if (typeof inp.select === 'function') inp.select();
-            }
-        });
-    };
-
-    allMethods.verifyPortalPassword = function() {
-        const entered = (this.portalPasswordInput || '').trim();
-        if (entered === 'Rakesh@123') {
-            this.isPortalUnlocked = true;
-            try { sessionStorage.setItem('billing_portal_unlocked', 'true'); } catch(e) {}
-            this.portalPasswordError = '';
-            this.portalPasswordInput = '';
-            this.showPortalPasswordText = false;
-            if (typeof this.showToast === 'function') {
-                this.showToast('Welcome Rakesh Kushawaha! Portal Unlocked.', 'success');
-            }
-            if (typeof this._resetInactivityTimer === 'function') {
-                this._resetInactivityTimer();
-            }
-        } else {
-            this.portalPasswordError = 'Galat Password! Kripya sahi Password dalein.';
-        }
-    };
-
-    allMethods.logoutPortal = function() {
-        try { if (typeof this.saveToStorage === 'function') this.saveToStorage(); } catch(e) {}
-        try { if (typeof this.flushPendingSync === 'function') this.flushPendingSync(); } catch(e) {}
-        this.isPortalUnlocked = false;
-        this.isAdminElevated = false;
-        this.isAdminUnlocked = false;
-        if (this._adminElevatedTimer) {
-            clearTimeout(this._adminElevatedTimer);
-            this._adminElevatedTimer = null;
-        }
-        try { sessionStorage.removeItem('billing_portal_unlocked'); } catch(e) {}
-        if (typeof this.showToast === 'function') {
-            this.showToast('Portal Logged Out — Sara data surakshit save kar diya gaya hai.', 'info');
-        }
-    };
-
-    allMethods.startAdminElevatedTimer = function() {
-        this.adminElevatedSecondsLeft = 300;
-        if (this._adminElevatedTimer) clearTimeout(this._adminElevatedTimer);
-        const ELEVATED_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-        this._adminElevatedTimer = setTimeout(() => {
-            if (this.isAdminElevated) {
-                this.isAdminElevated = false;
-                this.isAdminUnlocked = false;
-                this.adminElevatedSecondsLeft = 300;
-                console.info('[AdminElevated] 5-minute administrative window expired. Returning to standard portal access.');
-                if (typeof this.showToast === 'function') {
-                    this.showToast('Admin 5-minute session samapt: Standard Portal access active.', 'info');
-                }
-            }
-        }, ELEVATED_DURATION_MS);
-    };
-
-    allMethods.formatTimerDisplay = function(seconds) {
-        if (seconds == null || isNaN(seconds)) return '05:00';
-        const s = Math.max(0, Math.floor(seconds));
-        const m = Math.floor(s / 60);
-        const remSec = s % 60;
-        return (m < 10 ? '0' + m : m) + ':' + (remSec < 10 ? '0' + remSec : remSec);
-    };
-
-    allMethods.openAdminModal = function(pendingCallback) {
-        this.adminPendingCallback = (typeof pendingCallback === 'function') ? pendingCallback : null;
-        this.adminPasswordInput = '';
-        this.adminPasswordError = '';
-        this.showAdminPasswordText = false;
-        this.showAdminModal = true;
-        this.$nextTick(() => {
-            const inp = document.getElementById('adminPasswordModalInput');
-            if (inp) {
-                inp.focus();
-                if (typeof inp.select === 'function') inp.select();
-            }
-        });
-    };
-
-    allMethods.closeAdminModal = function() {
-        this.showAdminModal = false;
-        this.adminPendingCallback = null;
-        this.adminPasswordInput = '';
-        this.adminPasswordError = '';
-        this.showAdminPasswordText = false;
-    };
-
-    allMethods.verifyAdminPassword = function() {
-        const entered = (this.adminPasswordInput || '').trim();
-        if (entered === 'Rakesh@123') {
-            this.isAdminElevated = true;
-            this.isAdminUnlocked = true;
-            this.startAdminElevatedTimer();
-            this.showAdminModal = false;
-            this.adminPasswordError = '';
-            this.adminPasswordInput = '';
-            this.showAdminPasswordText = false;
-            if (typeof this.showToast === 'function') {
-                this.showToast('Admin Mode Active — 5 minutes ke liye valid hai', 'success');
-            }
-            if (this.adminPendingCallback) {
-                const cb = this.adminPendingCallback;
-                this.adminPendingCallback = null;
-                setTimeout(() => {
-                    try { cb(); } catch(err) { console.error('Admin callback error:', err); }
-                }, 50);
-            }
-        } else {
-            this.adminPasswordError = 'Galat Password! Kripya sahi Admin Password dalein.';
-        }
-    };
-
-    allMethods.lockAdminMode = function() {
-        this.isAdminElevated = false;
-        this.isAdminUnlocked = false;
-        if (this._adminElevatedTimer) {
-            clearTimeout(this._adminElevatedTimer);
-            this._adminElevatedTimer = null;
-        }
-        if (typeof this.showToast === 'function') {
-            this.showToast('Admin Mode Locked — Portal standard mode me chal raha hai', 'info');
-        }
-    };
-
-    allMethods.onUserChipClick = function() {
-        if (this.isAdminElevated) {
-            if (confirm('Aap Admin Elevated privilege ko Lock karna chahte hain? (Portal खुला रहेगा)')) {
-                this.lockAdminMode();
-            }
-        } else {
-            this.openAdminModal();
-        }
-    };
-
-    allMethods.checkAdminElevated = function(actionCallback) {
-        if (this.isAdminElevated) {
-            this.startAdminElevatedTimer();
-            if (typeof actionCallback === 'function') actionCallback();
-            return true;
-        }
-        this.openAdminModal(actionCallback);
-        return false;
-    };
-
-    allMethods.checkAdminAccess = allMethods.checkAdminElevated;
+    Object.assign(allMethods, window.AuthModule || {});
 
     const app = Vue.createApp({
         data() {
             return {
-                isPortalUnlocked: (function() {
-                    try { return sessionStorage.getItem('billing_portal_unlocked') === 'true'; }
-                    catch(e) { return false; }
-                })(),
+                isPortalUnlocked: false,
+                authReady: false,
+                authBusy: false,
+                resetBusy: false,
+                passwordResetMessage: '',
+                sessionExpiresAt: 0,
+                adminExpiresAt: 0,
                 portalPasswordInput: '',
                 portalPasswordError: '',
                 showPortalPasswordText: false,
@@ -552,7 +401,6 @@
                 hasCustomOldReco: false,
                 recoRevision: 0,
                 recoSearchQuery: '',
-                recoFitToScreen: true,
                 recoColumnFilters: {},
                 recoColumnSort: null,
                 recoFilterActiveKey: '',
@@ -908,6 +756,7 @@
                             activities: {}
                         };
                     } else {
+                        if (sItem.uom) sapMap[matCode].uom = sItem.uom;
                         sapMap[matCode].sapIssuedQty = numQty;
                         sapMap[matCode].sapGrossIssue = grossQty;
                         sapMap[matCode].sapMrnReturn = mrnQty;
@@ -938,6 +787,7 @@
                             activities: {}
                         };
                     } else if (!sapIssuesMap[matCode]) {
+                        if (oItem.uom || oItem.unit) sapMap[matCode].uom = oItem.uom || oItem.unit;
                         // Sirf tabhi issue update karo jab SAP stock dump me ye code na ho
                         if (this.hasCustomOldReco || oNet > 0 || oGross > 0 || oMrn > 0) {
                             sapMap[matCode].sapGrossIssue = oGross;
@@ -1056,13 +906,14 @@
                                         if (isPairSource && !isPairTarget) {
                                             finalQty = finalQty * 2;
                                         }
+                                        if (typeof this.getRecoUnitDivisor === 'function') finalQty /= this.getRecoUnitDivisor(m, s, sapMap[s.code].uom);
                                     }
                                     const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
                                     if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
                                         finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                     }
 
-                                    finalQty = Math.round(finalQty * 100) / 100;
+                                    finalQty = typeof this.roundRecoQuantity === 'function' ? this.roundRecoQuantity(finalQty, sapMap[s.code].uom) : Math.round(finalQty * 100) / 100;
                                     sapMap[s.code].totalQty += finalQty;
 
                                     if (!sapMap[s.code].activities[actKey]) {
@@ -1142,13 +993,14 @@
                                             if (isPairSource && !isPairTarget) {
                                                 finalQty = finalQty * 2;
                                             }
+                                            if (typeof this.getRecoUnitDivisor === 'function') finalQty /= this.getRecoUnitDivisor(m, s, sapMap[s.code].uom);
                                         }
                                         const itemRoundMode = (s.roundMode && s.roundMode !== 'default') ? s.roundMode : (this.mappingRoundMode || 'none');
                                         if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
                                             finalQty = this.applyRoundValue(finalQty, itemRoundMode);
                                         }
 
-                                        finalQty = Math.round(finalQty * 100) / 100;
+                                        finalQty = typeof this.roundRecoQuantity === 'function' ? this.roundRecoQuantity(finalQty, sapMap[s.code].uom) : Math.round(finalQty * 100) / 100;
                                         sapMap[s.code].totalQty += finalQty;
 
                                         if (!sapMap[s.code].activities[actKey]) {
@@ -1165,6 +1017,13 @@
                 const columns = Array.from(allActivityKeys).sort((a, b) => parseInt(a) - parseInt(b));
                 const hasCustomEdits = (this.customOldRecoEdits && Object.keys(this.customOldRecoEdits).length > 0);
                 const rows = Object.values(sapMap)
+                    .map(row => {
+                        if (typeof this.roundRecoQuantity === 'function') {
+                            row.totalQty = this.roundRecoQuantity(row.totalQty, row.uom);
+                            Object.keys(row.activities).forEach(key => { row.activities[key] = this.roundRecoQuantity(row.activities[key], row.uom); });
+                        }
+                        return row;
+                    })
                     .filter(row => 
                         row.totalQty > 0 || 
                         Object.keys(row.activities).length > 0 || 
@@ -1618,13 +1477,13 @@
                 }
 
                 return {
-                    grossIssue: Math.round(grossIssue * 100) / 100,
-                    mrnReturn: Math.round(mrnReturn * 100) / 100,
-                    netIssue: Math.round(netIssue * 100) / 100,
-                    prevRecon: Math.round(prevReconTotal * 100) / 100,
-                    thisBill: Math.round(thisBillTotal * 100) / 100,
-                    cumulativeRecon: Math.round(cumulativeReconTotal * 100) / 100,
-                    balance: Math.round(balanceTotal * 100) / 100,
+                    grossIssue: Math.round(grossIssue * 1000000) / 1000000,
+                    mrnReturn: Math.round(mrnReturn * 1000000) / 1000000,
+                    netIssue: Math.round(netIssue * 1000000) / 1000000,
+                    prevRecon: Math.round(prevReconTotal * 1000000) / 1000000,
+                    thisBill: Math.round(thisBillTotal * 1000000) / 1000000,
+                    cumulativeRecon: Math.round(cumulativeReconTotal * 1000000) / 1000000,
+                    balance: Math.round(balanceTotal * 1000000) / 1000000,
                     activities: actTotals,
                     reverseTotals: revTotals
                 };
@@ -1674,7 +1533,7 @@
                     return {
                         ...r,
                         _cum: thisB,
-                        _bal: Math.round((net - thisB) * 100) / 100,
+                        _bal: typeof this.roundRecoQuantity === 'function' ? this.roundRecoQuantity(net - thisB, r.uom) : Math.round((net - thisB) * 100) / 100,
                         _isUnmapped: unmappedSet ? unmappedSet.has(r.code) : false
                     };
                 });
@@ -2113,6 +1972,12 @@
                 this.$nextTick(this._alvSchedule);
             } catch (e) { }
             this._isLoading = true;
+            if (!await this.restorePortalSession()) {
+                const splash = document.getElementById('bootSplash');
+                if (splash) splash.classList.add('hide');
+                return;
+            }
+            this.initPortalWatchdog();
             const recoveryBillId = new URLSearchParams(window.location.search).get('billId');
             const recoveryLoaded = await this.loadFromStorage(recoveryBillId ? { dataId: recoveryBillId, forceServer: true, preserveLocalBackup: true } : undefined);
             if (recoveryBillId && recoveryLoaded === false) return;
@@ -2423,78 +2288,7 @@
                 }
             });
 
-            // ⏰ 5-Minute Inactivity Auto-Save & Portal Auto-Logout
-            // User 5 minute tak portal par koi kaam na kare to sara kaam auto-save karke portal logout/lock ho jaye
-            try {
-                const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-                let inactivityTimer = null;
 
-                const onInactivityTrigger = async () => {
-                    if (this.isPortalUnlocked) {
-                        console.info('[PortalWatchdog] 5 minutes of inactivity: auto-saving work and locking portal...');
-                        // 1. Auto-save all work to storage
-                        try {
-                            if (typeof this.saveToStorage === 'function') this.saveToStorage();
-                        } catch (e) {
-                            console.warn('[PortalWatchdog] saveToStorage error:', e);
-                        }
-                        // 2. Flush pending cloud sync
-                        try {
-                            if (typeof this.flushPendingSync === 'function') await this.flushPendingSync();
-                        } catch (e) {
-                            console.warn('[PortalWatchdog] flushPendingSync error:', e);
-                        }
-                        // 3. Lock both Admin elevation and Portal session
-                        this.isAdminElevated = false;
-                        this.isAdminUnlocked = false;
-                        this.isPortalUnlocked = false;
-                        if (this._adminElevatedTimer) {
-                            clearTimeout(this._adminElevatedTimer);
-                            this._adminElevatedTimer = null;
-                        }
-                        try { sessionStorage.removeItem('billing_portal_unlocked'); } catch (e) {}
-                        try { sessionStorage.removeItem('billing_admin_unlocked'); } catch (e) {}
-                        // 4. Toast notification
-                        if (typeof this.showToast === 'function') {
-                            this.showToast('5 minute inactivity: Kaam save karke Portal lock ho gaya hai.', 'info');
-                        }
-                    }
-                };
-
-                const resetInactivityTimer = () => {
-                    this.inactivitySecondsLeft = 300;
-                    if (inactivityTimer) clearTimeout(inactivityTimer);
-                    inactivityTimer = setTimeout(onInactivityTrigger, INACTIVITY_TIMEOUT_MS);
-                };
-
-                // Live 1-second countdown ticker for UI countdown display
-                if (this._countdownTicker) clearInterval(this._countdownTicker);
-                this._countdownTicker = setInterval(() => {
-                    if (this.isPortalUnlocked) {
-                        if (this.inactivitySecondsLeft > 0) {
-                            this.inactivitySecondsLeft--;
-                        }
-                        if (this.isAdminElevated) {
-                            if (this.adminElevatedSecondsLeft > 0) {
-                                this.adminElevatedSecondsLeft--;
-                            } else {
-                                this.isAdminElevated = false;
-                                this.isAdminUnlocked = false;
-                                this.adminElevatedSecondsLeft = 300;
-                            }
-                        }
-                    }
-                }, 1000);
-
-                const userActivityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
-                userActivityEvents.forEach(evt => {
-                    window.addEventListener(evt, resetInactivityTimer, { passive: true });
-                });
-                resetInactivityTimer();
-                this._resetInactivityTimer = resetInactivityTimer;
-            } catch (e) {
-                console.warn('[InactivityWatchdog] init error:', e);
-            }
         }
     });
 

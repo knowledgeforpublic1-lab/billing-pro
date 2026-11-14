@@ -622,7 +622,19 @@
 
 <div id="toast"></div>
 
+<script src="js/auth.js?v=20261114_server_login"></script>
 <script>
+window.addEventListener('billing-session-expired', function () {
+  if (document.getElementById('mobile-login-required')) return;
+  var banner = document.createElement('div');
+  banner.id = 'mobile-login-required';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;padding:14px;background:#fff3cd;color:#392b00;text-align:center;font:14px sans-serif';
+  banner.appendChild(document.createTextNode('Login required. Your local entries are retained. '));
+  var link = document.createElement('a');
+  link.href = '/'; link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Open secure login';
+  banner.appendChild(link);
+  document.body.appendChild(banner);
+});
 (function () {
   'use strict';
   var LS_KEY = 'lk_billing_app_state_v10';

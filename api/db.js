@@ -593,7 +593,19 @@ async function saveDefaultConfig(key, data) {
     }
 }
 
+async function patchDefaultConfig(key, changes) {
+    await connect();
+    if (activeProvider === 'firebase') {
+        await firestoreDb.collection('default_configs').doc(key).set({ key, data: changes, updatedAt: new Date().toISOString() }, { merge: true });
+    } else {
+        const fields = { updatedAt: new Date() };
+        Object.entries(changes).forEach(([field, value]) => { fields['data.' + field] = value; });
+        await MongoDefaultConfig.updateOne({ key }, { $set: fields });
+    }
+}
+
 module.exports = {
+    patchDefaultConfig,
     connect,
     getProvider,
     isConnected: () => Boolean(firestoreDb || (mongoDb && mongoose.connection && mongoose.connection.readyState === 1)),

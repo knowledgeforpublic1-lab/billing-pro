@@ -2,8 +2,8 @@
 window.RecoFilterModule = {
     getRecoFilterColumns() {
         return [
-            { key: 'sr', label: 'SR NO.', numeric: true },
-            { key: 'code', label: 'Row Labels / SAP Code', header: 'Row Labels' },
+            { key: 'sr', label: 'SR NO.', header: 'Sr.', numeric: true },
+            { key: 'code', label: 'Row Labels / SAP Code', header: 'SAP Code' },
             { key: 'desc', label: 'Items Description' },
             { key: 'unit', label: 'Unit' },
             { key: 'issue', label: 'Issue', numeric: true, sublabel: 'Gross Issue', color: '#38bdf8' },

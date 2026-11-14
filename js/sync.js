@@ -1184,6 +1184,7 @@ window.SyncModule = {
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
     async syncToCloudNow(opts) {
+        if (this.authReady === false || (this.authReady === true && !this.isPortalUnlocked)) return false;
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
         if (this.cloudConflict) {
@@ -1365,6 +1366,7 @@ window.SyncModule = {
         } catch(e) {}
     },
     saveToStorage() {
+        if (this.authReady === false || (this.authReady === true && !this.isPortalUnlocked)) return;
         if (this._isLoading) return;
         try {
             if (typeof this.switchContractorMapping === 'function' && !this._loadingContractorMapping) {

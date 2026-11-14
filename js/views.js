@@ -989,6 +989,7 @@ window.ViewsModule = {
     },
     getSapComponentCalculatedRecoQty(item, sItem, actKeyOverride) {
         if (!item) return '0.00';
+        const targetUnit = typeof this.getRecoTargetUnit === 'function' ? this.getRecoTargetUnit(item, sItem) : (sItem.uom || item.sapUom);
         const itemRoundMode = (sItem && sItem.roundMode && sItem.roundMode !== 'default') ? sItem.roundMode : (this.mappingRoundMode || 'none');
         if (sItem && sItem.isManual) {
             const mRaw = (sItem.manualQty !== undefined && sItem.manualQty !== null && sItem.manualQty !== '') ? sItem.manualQty : sItem.qty;
@@ -998,17 +999,19 @@ window.ViewsModule = {
             if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
                 recoQty = this.applyRoundValue(recoQty, itemRoundMode);
             }
-            return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
+            return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(typeof this.isRecoKmUnit === 'function' && this.isRecoKmUnit(targetUnit) ? 6 : 2)).toString();
         }
         let totalActQty = 0;
-        const actKey = actKeyOverride || this.selectedActivityKey;
-        const qMatrix = (this.activityQuantities && this.activityQuantities[actKey]) ? this.activityQuantities[actKey] : [];
+        const isPoleManager = this.activeSapManagerItem === item && this.activeSapManagerContextType === 'poleSchedule';
+        const actKey = actKeyOverride || (isPoleManager ? this.activeSapManagerContextKey : this.selectedActivityKey);
+        const matrices = isPoleManager ? this.poleScheduleQuantities : this.activityQuantities;
+        const qMatrix = (matrices && matrices[actKey]) || [];
         let origIdx = (item.origIndex !== undefined) ? item.origIndex : (this.activeSapManagerOrigIndex >= 0 ? this.activeSapManagerOrigIndex : -1);
         if (origIdx < 0 && actKey && this.activities[actKey] && this.activities[actKey].materials) {
             origIdx = this.activities[actKey].materials.indexOf(item);
         }
         if (origIdx >= 0) {
-            qMatrix.forEach(locArr => {
+            Object.values(qMatrix).forEach(locArr => {
                 const raw = locArr[origIdx];
                 const evalVal = (typeof this.evalFormula === 'function') ? this.evalFormula(raw) : raw;
                 const v = (evalVal === '' || evalVal === null || evalVal === undefined) ? 0 : parseFloat(evalVal);
@@ -1019,9 +1022,10 @@ window.ViewsModule = {
         const factorEval = (typeof this.evalFormula === 'function') ? this.evalFormula(factorRaw) : factorRaw;
         const factor = isNaN(Number(factorEval)) ? 1 : Number(factorEval);
         let recoQty = totalActQty * factor;
+        if (typeof this.getRecoUnitDivisor === 'function') recoQty /= this.getRecoUnitDivisor(item, sItem, targetUnit);
         if (itemRoundMode && itemRoundMode !== 'none' && typeof this.applyRoundValue === 'function') {
             recoQty = this.applyRoundValue(recoQty, itemRoundMode);
         }
-        return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(2)).toString();
+        return (itemRoundMode === 'round' || itemRoundMode === 'ceil' || itemRoundMode === 'floor') ? String(recoQty) : Number(recoQty.toFixed(typeof this.isRecoKmUnit === 'function' && this.isRecoKmUnit(targetUnit) ? 6 : 2)).toString();
     }
 };
