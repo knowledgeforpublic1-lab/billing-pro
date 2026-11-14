@@ -78,7 +78,8 @@
                     this.workspaceLoading = false;
                     this._workspacePromise = null;
                     const splash = document.getElementById('bootSplash');
-                    if (splash) splash.classList.add('hide');
+                    if (typeof window.dismissBillingSplash === 'function') window.dismissBillingSplash();
+                    else if (splash) splash.classList.add('hide');
                 }
             })();
             return this._workspacePromise;

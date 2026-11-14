@@ -1976,7 +1976,8 @@
             this._isLoading = true;
             if (!await this.restorePortalSession()) {
                 const splash = document.getElementById('bootSplash');
-                if (splash) splash.classList.add('hide');
+                if (typeof window.dismissBillingSplash === 'function') window.dismissBillingSplash();
+                    else if (splash) splash.classList.add('hide');
                 return;
             }
             await this.preparePortalWorkspace();

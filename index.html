@@ -42,14 +42,22 @@
         </div>
     </div>
     <script>
-        // 🛡️ Fail-safe: Boot splash must always fade out within 2.5s no matter what
-        setTimeout(function() {
-            var sp = document.getElementById('bootSplash');
-            if (sp) {
-                sp.classList.add('hide');
-                setTimeout(function() { try { sp.remove(); } catch(e){} }, 500);
-            }
-        }, 2500);
+        // Let the existing brand animation play once, even on a fast refresh.
+        (function () {
+            const started = performance.now();
+            let timer;
+            window.dismissBillingSplash = function () {
+                if (timer) return;
+                timer = setTimeout(function () {
+                    const splash = document.getElementById('bootSplash');
+                    if (!splash) return;
+                    splash.classList.add('hide');
+                    setTimeout(function () { splash.remove(); }, 500);
+                }, Math.max(0, 1100 - (performance.now() - started)));
+            };
+            // Always release the splash if startup is slow or unavailable.
+            setTimeout(window.dismissBillingSplash, 2500);
+        })();
     </script>
 
     <!-- SVG Icon Sprite — crisp monochrome icons (currentColor, theme-safe) -->
@@ -3432,7 +3440,7 @@
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
-    <script defer src="js/auth.js?v=20261114_smooth_login"></script>
+    <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
@@ -3450,7 +3458,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_resume_view"></script>
+    <script defer src="js/core/app.js?v=20261114_refresh_animation"></script>
 </body>
 
 </html>
