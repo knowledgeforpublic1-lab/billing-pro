@@ -80,7 +80,7 @@ function requireApiKey(req, res, next) {
 // Sirf ye fields save honge — kachra / history / bade blob Mongo me nahi jayenge (space kam hai)
 const ALLOWED_SYNC_KEYS = new Set([
     'isFinalized', 'projectMeta', 'selectedCompanyId', 'contractorsList',
-    'selectedContractorId', 'pctStage1', 'pctStage2', 'pctStage3',
+    'selectedContractorId', 'contractorMappingState', 'pctStage1', 'pctStage2', 'pctStage3',
     'locations', 'activityLocations', 'activities', 'masterAbstractList', 'activityQuantities',
     'dataId', 'invoiceData', 'mappingLocks', 'mappingRoundMode', 'sapMaterialsMaster', 'savedAt',
     'poleSchedules', 'poleScheduleLocations', 'poleScheduleQuantities', 'selectedPoleScheduleKey', 'poleScheduleSubTab'
@@ -684,7 +684,51 @@ app.post('/api/gdrive-upload', requireApiKey, express.json({ limit: '15mb' }), a
     }
 });
 
-// POST: Save pole schedules permanently to js/data/default-pole-schedules.js on disk & Cloud
+// Contractor overrides never update another contractor's bill or the shared defaults.
+function contractorMappingKey(id) {
+    if (typeof id !== 'string' || !id.trim() || id.length > 160 || ['custom', '__proto__', 'constructor', 'prototype'].includes(id)) return null;
+    return 'contractor_mapping_' + encodeURIComponent(id);
+}
+app.get('/api/contractor-mapping', requireApiKey, async (req, res) => {
+    const key = contractorMappingKey(req.query.contractorId);
+    if (!key) return res.status(400).json({ success: false, error: 'Valid contractorId required' });
+    try {
+        const record = await db.getDefaultConfig(key);
+        const profile = record && record.data && record.data.serialized ? JSON.parse(record.data.serialized) : null;
+        res.json({ success: true, profile });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Contractor mapping load failed' });
+    }
+});
+app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
+    const { contractorId, profile } = req.body || {};
+    const key = contractorMappingKey(contractorId);
+    if (!key || !profile || profile.version !== 1 || !profile.rows ||
+        !profile.rows.activities || !profile.rows.poleSchedules ||
+        typeof profile.rows.activities !== 'object' || typeof profile.rows.poleSchedules !== 'object') {
+        return res.status(400).json({ success: false, error: 'Valid contractorId and mapping profile required' });
+    }
+    const validRows = ['activities', 'poleSchedules'].every(kind =>
+        !Array.isArray(profile.rows[kind]) && Object.values(profile.rows[kind]).every(schedule =>
+            schedule && typeof schedule === 'object' && !Array.isArray(schedule) && Object.values(schedule).every(row =>
+                row && typeof row === 'object' && !Array.isArray(row) &&
+                (row.sapItems === undefined || (Array.isArray(row.sapItems) && row.sapItems.every(item => item && typeof item === 'object'))) &&
+                ['itemCode', 'sapDescription', 'sapUom', 'docHeader'].every(field => row[field] === undefined || typeof row[field] === 'string')
+            )
+        )
+    );
+    if (!validRows) return res.status(400).json({ success: false, error: 'Invalid material mapping rows' });
+    try {
+        const stored = { version: 1, rows: profile.rows, updatedAt: Number(profile.updatedAt) || Date.now(), dirty: false };
+        // A string replaces the complete override map even on Firestore merge writes.
+        await db.saveDefaultConfig(key, { serialized: JSON.stringify(stored) });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Contractor mapping save failed' });
+    }
+});
+
+// POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-POLE-SCHEDULES';
     try {
@@ -708,8 +752,6 @@ app.post('/api/save-default-pole-schedules', requireApiKey, express.json({ limit
         // Also persist to Cloud Database for cross-PC synchronization
         try {
             await db.saveDefaultConfig('poleSchedulesMaster', poleSchedules);
-            // Also update all BillingState documents so live bills immediately inherit updated schedules
-            await db.updateAllBillsPoleSchedules(poleSchedules);
             log.info(ctx, `Successfully synced pole schedules to Cloud Database (${db.getProvider()}) for cross-PC persistence`);
         } catch (dbErr) {
             log.warn(ctx, `Cloud backup skipped/failed: ${dbErr.message}`);
@@ -795,7 +837,6 @@ app.post('/api/save-default-activities', requireApiKey, express.json({ limit: '1
         try {
             if (isActObj) {
                 await db.saveDefaultConfig('activitiesMaster', activities);
-                await db.updateAllBillsActivities(activities);
             }
             if (isSapArr) {
                 await db.saveDefaultConfig('sapMaterialsMaster', Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []));

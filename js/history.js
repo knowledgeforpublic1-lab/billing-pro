@@ -11,6 +11,10 @@ window.HistoryModule = {
                     if (this.isPerformingHistoryAction) return;
                     const snap = JSON.stringify({
                         activities: this.activities,
+                        poleSchedules: this.poleSchedules,
+                        poleScheduleQuantities: this.poleScheduleQuantities,
+                        poleScheduleLocations: this.poleScheduleLocations,
+                        contractorMappingState: this.contractorMappingState,
                         masterAbstractList: this.masterAbstractList,
                         activityQuantities: this.activityQuantities,
                         locations: this.locations,
@@ -59,6 +63,10 @@ window.HistoryModule = {
                     try {
                         const state = JSON.parse(snapStr);
                         if (state.activities) this.activities = JSON.parse(JSON.stringify(state.activities));
+                        if (state.poleSchedules) this.poleSchedules = JSON.parse(JSON.stringify(state.poleSchedules));
+                        if (state.poleScheduleQuantities) this.poleScheduleQuantities = JSON.parse(JSON.stringify(state.poleScheduleQuantities));
+                        if (state.poleScheduleLocations) this.poleScheduleLocations = JSON.parse(JSON.stringify(state.poleScheduleLocations));
+                        if (state.contractorMappingState) this.contractorMappingState = JSON.parse(JSON.stringify(state.contractorMappingState));
                         if (state.masterAbstractList) this.masterAbstractList = JSON.parse(JSON.stringify(state.masterAbstractList));
                         if (state.activityQuantities) this.activityQuantities = JSON.parse(JSON.stringify(state.activityQuantities));
                         if (state.locations) this.locations = JSON.parse(JSON.stringify(state.locations));
@@ -70,6 +78,8 @@ window.HistoryModule = {
                             this.contractorsList = JSON.parse(JSON.stringify(state.contractorsList));
                         }
                         if (state.selectedContractorId) this.selectedContractorId = state.selectedContractorId;
+                        if (typeof this.contractorMappingId === 'function') this._activeMappingContractorId = this.contractorMappingId();
+                        if (typeof this.captureContractorMapping === 'function') this.captureContractorMapping(true);
                         if (state.pctStage1 !== undefined) this.pctStage1 = state.pctStage1;
                         if (state.pctStage2 !== undefined) this.pctStage2 = state.pctStage2;
                         if (state.pctStage3 !== undefined) this.pctStage3 = state.pctStage3;
@@ -92,6 +102,10 @@ window.HistoryModule = {
                             locations: this.locations,
                             activityLocations: this.activityLocations,
                             activities: this.activities,
+                            poleSchedules: this.poleSchedules,
+                            poleScheduleQuantities: this.poleScheduleQuantities,
+                            poleScheduleLocations: this.poleScheduleLocations,
+                            contractorMappingState: this.contractorMappingState,
                             masterAbstractList: this.masterAbstractList,
                             activityQuantities: this.activityQuantities,
                             invoiceData: this.invoiceData,

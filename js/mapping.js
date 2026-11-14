@@ -79,12 +79,27 @@ window.MappingModule = {
     persistSapMaster() {
         this.saveToStorage();
         this.scheduleMappingSync();
+        // The SAP catalogue is shared; material-to-code assignments are scoped.
+        this.persistSapCatalogue();
+    },
+    async persistSapCatalogue() {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            try { const key = localStorage.getItem('billing_api_key'); if (key) headers['x-api-key'] = key; } catch (e) {}
+            await fetch('/api/save-default-activities', {
+                method: 'POST', headers,
+                body: JSON.stringify({ sapMaterialsMaster: this.sapMaterialsMaster || [] })
+            });
+        } catch (e) { /* The bill/local copy still contains the catalogue. */ }
     },
     // ============ 💾 MAPPING MASTER — disk + MongoDB persistence ============
     // Pole-schedule master persist jaisa hi: user ki SAP mapping ko
     // default-activities.js + MongoDB DefaultConfig (activitiesMaster) me save karta hai
     // taaki deploy/push ke baad bhi wahi mapping sab jagah mile.
     async persistActivitiesToMasterFile(silent = false) {
+        if (typeof this.persistContractorMapping === 'function') {
+            return this.persistContractorMapping(silent);
+        }
         try {
             if (!this.activities || typeof this.activities !== 'object' || Object.keys(this.activities).length === 0) {
                 if (!silent && typeof this.showToast === 'function') this.showToast('No activities mapping found to save', '⚠️');

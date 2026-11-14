@@ -25,6 +25,7 @@
         window.SyncModule || {},
         window.BillingModule || {},
         window.MappingModule || {},
+        window.ContractorMappingModule || {},
         window.ViewsModule || {},
         window.ExportModule || {},
         window.StockImporterModule || {},
@@ -556,6 +557,7 @@
                 customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
+                contractorMappingState: null,
                 contractorForm: {
                     name: '',
                     pan: '',
@@ -2009,6 +2011,14 @@
         },
 
         watch: {
+            selectedContractorId: {
+                flush: 'sync',
+                handler() {
+                    if (this._isLoading || this._loadingContractorMapping || this.isPerformingHistoryAction) return;
+                    this.switchContractorMapping();
+                    this.saveToStorage();
+                }
+            },
             activityQuantities: {
                 handler() { this.debouncedSave(); },
                 deep: true

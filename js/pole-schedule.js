@@ -2108,6 +2108,9 @@ window.PoleScheduleModule = {
     },
 
     async persistPoleSchedulesToMasterFile(silent = false) {
+        if (typeof this.persistContractorMapping === 'function') {
+            return this.persistContractorMapping(silent);
+        }
         try {
             if (!this.poleSchedules || typeof this.poleSchedules !== "object" || Object.keys(this.poleSchedules).length === 0) {
                 if (!silent && typeof this.showToast === "function") this.showToast("No pole schedules found to save", "⚠️");

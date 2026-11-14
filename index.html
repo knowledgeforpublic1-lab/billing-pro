@@ -352,10 +352,10 @@
                         <button class="btn btn-secondary ico-btn" @click="addPoleScheduleLocation" title="+ Location — naya location column jodo" style="color: #b91c1c;"><svg class="ic"><use href="#ic-pin"/></svg></button>
                         <button class="btn btn-excel ico-btn" @click="exportPoleScheduleExcel(false)" title="Export — pura pole schedule Excel me download karo (formulas ke saath)"><svg class="ic"><use href="#ic-export"/></svg></button>
                         <details class="ps-more-actions no-print">
-                            <summary class="btn btn-secondary ico-btn" title="More actions — Save as Default / Reset to Default" style="color: #475569;"><svg class="ic"><use href="#ic-dots"/></svg></summary>
+                            <summary class="btn btn-secondary ico-btn" title="More actions — Save Contractor Mapping / Reset to Default" style="color: #475569;"><svg class="ic"><use href="#ic-dots"/></svg></summary>
                             <div class="ps-more-actions-menu">
-                                <button class="btn btn-secondary" @click="persistPoleSchedulesToMasterFile(false)" title="Save this schedule as the default through the configured API, or download the master file.">
-                                    💾 Save as Default
+                                <button class="btn btn-secondary" @click="persistPoleSchedulesToMasterFile(false)" title="Selected contractor ki SAP mapping save karein. Doosre contractors ki mapping nahi badlegi.">
+                                    💾 Save Contractor Mapping
                                 </button>
                                 <button class="btn btn-secondary" @click="resetPoleScheduleToDefault()" title="Restore this activity from the official default schedule.">
                                     ↺ Reset to Default
@@ -1822,6 +1822,7 @@
                             <span>🏷️ SAP Item Manager</span>
                             <span class="badge font-mono" style="background: rgba(99, 102, 241, 0.2); color: var(--accent-indigo); font-size: 0.76rem; padding: 2px 8px; border-radius: 999px;">Item #{{ activeSapManagerItem ? activeSapManagerItem.no : '' }}</span>
                         </div>
+                        <div style="font-size: 0.78rem; color: var(--accent-indigo); margin-top: 4px;">Contractor mapping: {{ selectedContractorName || 'Select a contractor' }}</div>
                         <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
                             {{ activeSapManagerItem ? activeSapManagerItem.desc : '' }}
                         </div>
@@ -3405,20 +3406,21 @@
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
-    <script defer src="js/history.js?v=20261111_realtime_mongo_sync"></script>
+    <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_preserve_quantity_refresh"></script>
+    <script defer src="js/sync.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
-    <script defer src="js/mapping.js?v=20261111_realtime_mongo_sync"></script>
+    <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
+    <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
-    <script defer src="js/pole-schedule.js?v=20261114_preserve_all_schedule_mappings"></script>
+    <script defer src="js/pole-schedule.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_pole_sap_context"></script>
+    <script defer src="js/core/app.js?v=20261114_contractor_mapping"></script>
 </body>
 
 </html>

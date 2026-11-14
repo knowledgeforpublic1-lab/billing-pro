@@ -1099,6 +1099,7 @@ window.SyncModule = {
         }, 120);
     },
     buildSyncPayload(extra = {}) {
+        if (typeof this.captureContractorMapping === 'function') this.captureContractorMapping();
         if (this.invoiceData && typeof this.invoiceData === 'object') {
             if (this.projectMeta && this.projectMeta.workOrderNo && !this.invoiceData.workOrderNo) {
                 this.invoiceData.workOrderNo = this.projectMeta.workOrderNo;
@@ -1119,6 +1120,7 @@ window.SyncModule = {
             selectedCompanyId: this.selectedCompanyId,
             contractorsList: this.contractorsList,
             selectedContractorId: this.selectedContractorId,
+            contractorMappingState: this.contractorMappingState,
             pctStage1: this.pctStage1,
             pctStage2: this.pctStage2,
             pctStage3: this.pctStage3,
@@ -1188,6 +1190,9 @@ window.SyncModule = {
             this.syncStatus = 'error';
             if (manual) this.showToast('Local aur cloud dono par changes hain. Quantities safe hain; conflict resolve hone tak cloud save roka gaya hai.', '⚠️');
             return false;
+        }
+        if (manual && typeof this.persistContractorMapping === 'function' && this.contractorMappingId()) {
+            await this.persistContractorMapping(false);
         }
         try {
             const payload = this.buildSyncPayload(force ? { force: true } : {});
@@ -1331,6 +1336,9 @@ window.SyncModule = {
             if (this._masterMapTimer) {
                 clearTimeout(this._masterMapTimer);
                 this._masterMapTimer = null;
+                if (typeof this.persistContractorMapping === 'function') {
+                    this.persistContractorMapping(true);
+                } else {
                 try {
                     const masterPayload = JSON.stringify({
                         activities: this.activities,
@@ -1340,6 +1348,7 @@ window.SyncModule = {
                     try { const k = localStorage.getItem('billing_api_key'); if (k) masterHeaders['x-api-key'] = k; } catch(e) {}
                     fetch('/api/save-default-activities', { method: 'POST', headers: masterHeaders, body: masterPayload, keepalive: true }).catch(() => {});
                 } catch (masterErr) {}
+                }
             }
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
@@ -1358,6 +1367,10 @@ window.SyncModule = {
     saveToStorage() {
         if (this._isLoading) return;
         try {
+            if (typeof this.switchContractorMapping === 'function' && !this._loadingContractorMapping) {
+                this.switchContractorMapping();
+                this.captureContractorMapping();
+            }
             try {
                 if (this.invoiceData && this.invoiceData.autoSync) {
                     this.updateSyncTaxInvoiceFromActivities();
@@ -1398,6 +1411,7 @@ window.SyncModule = {
                 selectedCompanyId: this.selectedCompanyId,
                 contractorsList: this.contractorsList,
                 selectedContractorId: this.selectedContractorId,
+                contractorMappingState: this.contractorMappingState,
                 pctStage1: this.pctStage1,
                 pctStage2: this.pctStage2,
                 pctStage3: this.pctStage3,
@@ -1439,6 +1453,7 @@ window.SyncModule = {
         }
     },
     async loadFromStorage(opts) {
+          this._loadingContractorMapping = true;
           const forceServer = !!(opts && opts.forceServer);
           let raw = null;
           let fromMongo = false;
@@ -1564,6 +1579,7 @@ window.SyncModule = {
           if (raw) {
             try {
                 const parsed = JSON.parse(raw);
+                this.contractorMappingState = parsed.contractorMappingState || null;
                 let loadedHasCatalog = false;
                 if (Array.isArray(parsed.sapMaterialsMaster) && parsed.sapMaterialsMaster.length > 0) {
                     // ☁️ SAP Material Master ka cloud copy yahan se aata hai
@@ -1717,6 +1733,11 @@ window.SyncModule = {
         }
         this._syncRetryCount = 0;
         if (this._syncRetryTimer) { clearTimeout(this._syncRetryTimer); this._syncRetryTimer = null; }
+        this._loadingContractorMapping = false;
+        if (typeof this.initializeContractorMappings === 'function') {
+            this.initializeContractorMappings();
+            if (this.contractorMappingId()) this.loadContractorMapping(this.contractorMappingId());
+        }
     },
     initDefaultSampleQuantities() {
         Object.keys(this.activities).forEach(k => {
