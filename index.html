@@ -83,7 +83,7 @@
         <!-- ============================================================
              PORTAL GATEWAY LOGIN SCREEN (Level 1 Portal Protection)
              ============================================================ -->
-        <div v-if="!isPortalUnlocked" class="portal-lock-overlay">
+        <div v-if="!isPortalUnlocked || !workspaceReady" class="portal-lock-overlay">
             <!-- Animated Ambient Tech Canvas -->
             <div class="portal-bg-canvas">
                 <div class="portal-bg-grid"></div>
@@ -154,8 +154,8 @@
                         <span>⚠️</span> {{ portalPasswordError }}
                     </div>
 
-                    <button type="submit" :disabled="authBusy || !authReady || !portalPasswordInput" style="width: 100%; padding: 12px 20px; font-size: 0.92rem; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); cursor: pointer; transition: all 0.2s;">
-                        {{ authBusy ? 'Verifying…' : '🔓 Unlock Portal & Begin Work' }}
+                    <button type="submit" :disabled="authBusy || workspaceLoading || !authReady || !portalPasswordInput" style="width: 100%; padding: 12px 20px; font-size: 0.92rem; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); cursor: pointer; transition: all 0.2s;">
+                        {{ workspaceLoading ? 'Opening saved bill…' : (authBusy ? 'Verifying…' : '🔓 Unlock Portal & Begin Work') }}
                     </button>
                     <button type="button" @click="forgotPortalPassword" :disabled="resetBusy || authBusy" style="display: block; margin: 12px auto 0; border: 0; background: transparent; color: #7dd3fc; cursor: pointer; text-decoration: underline;">{{ resetBusy ? 'Sending reset email…' : 'Forgot password?' }}</button>
                     <p v-if="passwordResetMessage" role="status" style="margin-top: 12px; font-size: 0.82rem; color: #86efac;">{{ passwordResetMessage }}</p>
@@ -3425,11 +3425,11 @@
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
-    <script defer src="js/auth.js?v=20261114_server_login"></script>
+    <script defer src="js/auth.js?v=20261114_smooth_login"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_server_login"></script>
+    <script defer src="js/sync.js?v=20261114_smooth_login"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
@@ -3443,7 +3443,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_server_login"></script>
+    <script defer src="js/core/app.js?v=20261114_smooth_login"></script>
 </body>
 
 </html>

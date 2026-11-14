@@ -55,10 +55,33 @@
                 this.applyAuthSession(await this.authRequest('login', { password: this.portalPasswordInput }));
                 this.portalPasswordInput = '';
                 this.showPortalPasswordText = false;
-                window.location.reload();
+                await this.preparePortalWorkspace();
             } catch (e) {
                 this.portalPasswordError = e.message || 'Login nahi hua. Dobara try karein.';
             } finally { this.authBusy = false; }
+        },
+        async preparePortalWorkspace() {
+            this.initPortalWatchdog();
+            // Re-login keeps the loaded bill and unsynced quantities in memory.
+            if (this.workspaceReady) return;
+            if (this._workspacePromise) return this._workspacePromise;
+            this.workspaceLoading = true;
+            this._isLoading = true;
+            this._workspacePromise = (async () => {
+                try {
+                    await this.initializeWorkspace();
+                    this.workspaceReady = true;
+                    await this.$nextTick();
+                } catch (e) {
+                    this.portalPasswordError = e.message || 'Saved bill open nahi hua. Dobara try karein.';
+                } finally {
+                    this.workspaceLoading = false;
+                    this._workspacePromise = null;
+                    const splash = document.getElementById('bootSplash');
+                    if (splash) splash.classList.add('hide');
+                }
+            })();
+            return this._workspacePromise;
         },
         async forgotPortalPassword() {
             if (this.resetBusy) return;

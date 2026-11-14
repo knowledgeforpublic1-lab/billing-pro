@@ -156,6 +156,8 @@
                 isPortalUnlocked: false,
                 authReady: false,
                 authBusy: false,
+                workspaceReady: false,
+                workspaceLoading: false,
                 resetBusy: false,
                 passwordResetMessage: '',
                 sessionExpiresAt: 0,
@@ -1977,10 +1979,16 @@
                 if (splash) splash.classList.add('hide');
                 return;
             }
-            this.initPortalWatchdog();
+            await this.preparePortalWorkspace();
+
+        }
+    });
+
+    // Shared startup after session restore or password login; never reload the page.
+    allMethods.initializeWorkspace = async function() {
             const recoveryBillId = new URLSearchParams(window.location.search).get('billId');
             const recoveryLoaded = await this.loadFromStorage(recoveryBillId ? { dataId: recoveryBillId, forceServer: true, preserveLocalBackup: true } : undefined);
-            if (recoveryBillId && recoveryLoaded === false) return;
+            if (recoveryBillId && recoveryLoaded === false) throw new Error('Saved bill load nahi hua. Dobara try karein.');
             if (recoveryBillId) {
                 this.selectedPoleScheduleKey = '907';
                 this.currentView = 'poleSchedule';
@@ -1993,16 +2001,6 @@
                 window.history.replaceState(null, '', cleanUrl.toString());
             }
 
-            // ⚡ Boot splash fade-out — app render ready, flash hataya gaya
-            try {
-                this.$nextTick(() => {
-                    const sp = document.getElementById('bootSplash');
-                    if (sp) {
-                        sp.classList.add('hide');
-                        setTimeout(() => { try { sp.remove(); } catch (e) {} }, 500);
-                    }
-                });
-            } catch (e) {}
             try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}
             
             // Backup default stock & check for custom uploaded stock in IndexedDB
@@ -2289,8 +2287,7 @@
             });
 
 
-        }
-    });
+    };
 
     // Custom directive: click-outside
     app.directive('reco-fit', window.RecoFitDirective);
