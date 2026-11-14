@@ -9449,6 +9449,4126 @@ const defaultPoleSchedules = {
         ]
       }
     ]
+  },
+  "dept_all": {
+    "title": "Departmental Bill — All 5 Activities (135 Items)",
+    "activityCode": "dept_all",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Dept 907 — 11 KV Single Circuit Pin Type on RSJ Poles (40 Items)",
+        "unit": "",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000004",
+        "desc": "RSJ 116x100, 9 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
+        "sapItems": [
+          {
+            "code": "17000004",
+            "desc": "RSJ POLE 100X116 MM 9 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17005037",
+        "desc": "RSJ 116x100, 8 m long",
+        "unit": "No.",
+        "rate": 1500,
+        "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
+        "sapItems": [
+          {
+            "code": "17005037",
+            "desc": "RSJ POLE 100X116 MM 8 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17004792",
+        "desc": "11 kv Guarding channel MS 75x40 with clamp",
+        "unit": "Nos",
+        "rate": 500,
+        "sapDescription": "11KV GUARDING CHANNEL",
+        "sapItems": [
+          {
+            "code": "17004792",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005042, 17005043",
+        "desc": "Cut Point Set with Channel,angle and clamps",
+        "unit": "Set",
+        "rate": 1250,
+        "sapDescription": "Cut Point Set with Channel, Angle, Clamp",
+        "sapItems": [
+          {
+            "code": "17005042",
+            "desc": "Cut Point Set with Channel, Angle, Clamp",
+            "uom": "Set",
+            "qty": 1
+          },
+          {
+            "code": "17005043",
+            "desc": "Cut Point Set with Channel, Angle, Clamp",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17005050",
+        "desc": "11 KV  V cross arm with clamp",
+        "unit": "No.",
+        "rate": 50,
+        "sapDescription": "11KV V CROSS ARM WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17005050",
+            "desc": "11KV V CROSS ARM WITH CLAMP",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17001276",
+        "desc": "11 KV Top fitting with clamp",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "11KV TOP CLEAT 75X40X325 MM",
+        "sapItems": [
+          {
+            "code": "17001276",
+            "desc": "11KV TOP CLEAT 75X40X325 MM",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000625, 17000627, 17000636",
+        "desc": "G.I.Nut Bolts",
+        "unit": "Kg.",
+        "rate": 10,
+        "sapDescription": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+        "sapItems": [
+          {
+            "code": "17000625",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000627",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000636",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17001397",
+        "desc": "11 kV Pin Insulators with G.I. Pins",
+        "unit": "No.",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No.",
+        "rate": 30,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware for 55 Sq.mm AAAC",
+        "unit": "Set",
+        "rate": 20,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17001261",
+        "desc": "AAAC 55 mm2",
+        "unit": "Rmt",
+        "rate": 6,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "N/A",
+        "desc": "Sleeve Joints",
+        "unit": "No.",
+        "rate": 10,
+        "sapDescription": "",
+        "sapItems": []
+      },
+      {
+        "no": "13",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 400,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000239",
+        "desc": "G.I.Stay Wire 7/4mm(8 SWG)",
+        "unit": "Kg.",
+        "rate": 5,
+        "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000239",
+            "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17001368",
+        "desc": "Earthing Sets H.T",
+        "unit": "Set",
+        "rate": 170,
+        "sapDescription": "EARTHING SET HT",
+        "sapItems": [
+          {
+            "code": "17001368",
+            "desc": "EARTHING SET HT",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "17000237",
+        "desc": "G.I.Barbed Wire  A' type.",
+        "unit": "Kg.",
+        "rate": 10,
+        "sapDescription": "GI BARBED WIRE WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17000237",
+            "desc": "GI BARBED WIRE WITH CLAMP",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "17001294",
+        "desc": "Barbed wire Clamp",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "GI BARBED WIRE  clamp",
+        "sapItems": [
+          {
+            "code": "17001294",
+            "desc": "GI BARBED WIRE  clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "18",
+        "itemCode": "17000751",
+        "desc": "Danger Board in yard.",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "DANGER BOARD with Clamp",
+        "sapItems": [
+          {
+            "code": "17000751",
+            "desc": "DANGER BOARD with Clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17001300",
+        "desc": "Danger Board Clamp",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "DANGER BOARD Clamp",
+        "sapItems": [
+          {
+            "code": "17001300",
+            "desc": "DANGER BOARD Clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6 (14 CMT)",
+        "unit": "Cmt.",
+        "rate": 1000,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "21",
+        "itemCode": "17000243",
+        "desc": "G.I.Wire 8 SWG/ 6 SWG",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "22",
+        "itemCode": "17000776",
+        "desc": "Black Bituminus Paint",
+        "unit": "Ltr",
+        "rate": 10,
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "23",
+        "itemCode": "17000778",
+        "desc": "Red Oxide Paint for 1 coats",
+        "unit": "Ltr",
+        "rate": 14,
+        "sapDescription": "RED OXIDE",
+        "sapItems": [
+          {
+            "code": "17000778",
+            "desc": "RED OXIDE",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "24",
+        "itemCode": "17000775",
+        "desc": "Aluminium Paint for 1 coat",
+        "unit": "Ltr",
+        "rate": 10,
+        "sapDescription": "PAINT ALUMINIUM",
+        "sapItems": [
+          {
+            "code": "17000775",
+            "desc": "PAINT ALUMINIUM",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "25",
+        "itemCode": "17001356",
+        "desc": "Wedge connectors RABIT To RABIT or equivalent AAAC",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "WEDGE CONNECTOR",
+        "sapItems": [
+          {
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "26",
+        "itemCode": "17000007",
+        "desc": "RSJ 116x100, 11 m long",
+        "unit": "No.",
+        "rate": 2500,
+        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+        "sapItems": [
+          {
+            "code": "17000007",
+            "desc": "RSJ POLE 100X116 MM 11 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "27",
+        "itemCode": "17001242",
+        "desc": "RSJ 116x100, 10 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 10 MTR",
+        "sapItems": [
+          {
+            "code": "17001242",
+            "desc": "RSJ POLE 100X116 MM 10 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "28",
+        "itemCode": "N/A",
+        "desc": "Tree Cutting /Tree Trimming",
+        "unit": "LS",
+        "rate": 1200,
+        "sapDescription": "TREE CUTTING",
+        "sapItems": []
+      },
+      {
+        "no": "29",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Pole Pit",
+        "unit": "Nos",
+        "rate": 1200,
+        "sapDescription": "Pole Pit",
+        "sapItems": []
+      },
+      {
+        "no": "30",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Earthing Pit/Stay Pit",
+        "unit": "Nos",
+        "rate": 600,
+        "sapDescription": "EARTHING/ STAY Pit",
+        "sapItems": []
+      },
+      {
+        "no": "31",
+        "itemCode": "17004980, 17005597",
+        "desc": "Cover Conducter",
+        "unit": "Rmt",
+        "rate": 6,
+        "sapDescription": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+        "sapItems": [
+          {
+            "code": "17004980",
+            "desc": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+            "uom": "Rmt",
+            "qty": 1
+          },
+          {
+            "code": "17005597",
+            "desc": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "32",
+        "itemCode": "N/A",
+        "desc": "Pole Shifting",
+        "unit": "Nos",
+        "rate": 100,
+        "sapDescription": "POLE SHIFTING + SHIFTING",
+        "sapItems": []
+      },
+      {
+        "no": "33",
+        "itemCode": "17000702",
+        "desc": "Strain Hardware for 55 Sq.mm DOG",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "17000702",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "34",
+        "itemCode": "N/A",
+        "desc": "STAY GROUTING",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "STAY GROUTING WITH ROD HT",
+        "sapItems": []
+      },
+      {
+        "no": "35",
+        "itemCode": "17005046, 17005085, 17005047, 17005048",
+        "desc": "CLAMP",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "36",
+        "itemCode": "N/A",
+        "desc": "Pole Dismantle",
+        "unit": "Nos",
+        "rate": 700,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "37",
+        "itemCode": "N/A",
+        "desc": "MATERIAL COUNTING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "MATERIAL COUNTING",
+        "sapItems": []
+      },
+      {
+        "no": "38",
+        "itemCode": "N/A",
+        "desc": "RESTRINGING stringing AAAC 55 sq.mm Rabbit",
+        "unit": "Rmt",
+        "rate": 3,
+        "sapDescription": "RESTRINGING",
+        "sapItems": []
+      },
+      {
+        "no": "39",
+        "itemCode": "17005064",
+        "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+        "sapItems": [
+          {
+            "code": "17005064",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "40",
+        "itemCode": "N/A",
+        "desc": "material  unloading & Loading",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Sand & Stone Shifting From WALNI S/S - MENDHA S/S. + Sand & Stone Shifting From MENDHA S/S. to moushi",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Dept 916 — Laying of 1 Km 11 KV 3C 95 mm2 XLPE UG Cable (11 Items)",
+        "unit": "",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000195",
+        "desc": "Laying and Excavation of XLPE Cable 11 KV, 3 C / 95mm sq.",
+        "unit": "mtr",
+        "rate": 225,
+        "sapDescription": "CABLE AL 11KV XLPE 3X95 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17000195",
+            "desc": "CABLE AL 11KV XLPE 3X95 SQMM ARM",
+            "uom": "mtr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "N/A",
+        "desc": "R.C.C. Pipe 150 mm 2 M",
+        "unit": "No",
+        "rate": 10,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "3",
+        "itemCode": "N/A",
+        "desc": "Half round cement pipe ( l50mm X lmtr)",
+        "unit": "No.",
+        "rate": 10,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "4",
+        "itemCode": "N/A",
+        "desc": "11 kV heat shrinkable Straight through joint kit for 3 CX 95",
+        "unit": "No.",
+        "rate": 2200,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "5",
+        "itemCode": "17000725",
+        "desc": "11 kV heat shrinkable Outdoor termination joint kit for3 C X 95",
+        "unit": "No.",
+        "rate": 2000,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "17000725",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "11000123",
+        "desc": "Sand",
+        "unit": "Cmt",
+        "rate": 2000,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "11000123",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "Cmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "N/A",
+        "desc": "Misc. for XLPE U/G Cable",
+        "unit": "LS",
+        "rate": 1900,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "8",
+        "itemCode": "N/A",
+        "desc": "UG Cable Soil Filling",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "9",
+        "itemCode": "17005775",
+        "desc": "UG Cable Supp CH-",
+        "unit": "No.",
+        "rate": 125,
+        "sapDescription": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
+        "sapItems": [
+          {
+            "code": "17005775",
+            "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "N/A",
+        "desc": "Sand Laying",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "11",
+        "itemCode": "N/A",
+        "desc": "UG CABLE PULLING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "CABLE FIXING + UG CABLE TRENCH DIGGING MANUALLY",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Dept 6723 — 11 kV A.B. Switch 400 Amp DP Structure (21 Items)",
+        "unit": "",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000023",
+        "desc": "11KV A.B. Swtch, 400 A",
+        "unit": "Set",
+        "rate": 1800,
+        "sapDescription": "AB SWITCH 11 KV 400 AMP",
+        "sapItems": [
+          {
+            "code": "17000023",
+            "desc": "AB SWITCH 11 KV 400 AMP",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17005040",
+        "desc": "MS Channel Top Channel (100x50x6 mm)",
+        "unit": "No",
+        "rate": 125,
+        "sapDescription": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
+        "sapItems": [
+          {
+            "code": "17005040",
+            "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17005061",
+        "desc": "M.S.Channel AB switch (75x40x6 mm)",
+        "unit": "No",
+        "rate": 125,
+        "sapDescription": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
+        "sapItems": [
+          {
+            "code": "17005061",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 600,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware forWeasel/Squirrel",
+        "unit": "Set",
+        "rate": 10,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No",
+        "rate": 35,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000004",
+        "desc": "RSJ 116x100, 9 m long",
+        "unit": "No",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
+        "sapItems": [
+          {
+            "code": "17000004",
+            "desc": "RSJ POLE 100X116 MM 9 MTR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6",
+        "unit": "CMT",
+        "rate": 1000,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "9",
+        "itemCode": "17005064, 17005620, 17005773",
+        "desc": "HGT EXT",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+        "sapItems": [
+          {
+            "code": "17005064",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17005620",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17005773",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17000008",
+        "desc": "RSJ 116x100, 13 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 152X152 MM 13 MTR",
+        "sapItems": [
+          {
+            "code": "17000008",
+            "desc": "RSJ POLE 152X152 MM 13 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17005044",
+        "desc": "BELTING ANG FOR DP STRUCTURE",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+        "sapItems": [
+          {
+            "code": "17005044",
+            "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17005045",
+        "desc": "BRACING ANG FOR DP STRUCUTRE",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
+        "sapItems": [
+          {
+            "code": "17005045",
+            "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17005039, 17004792",
+        "desc": "DP GUARDING CH WITH CLAMP",
+        "unit": "No.",
+        "rate": 500,
+        "sapDescription": "11KV GUARDING CHANNEL",
+        "sapItems": [
+          {
+            "code": "17005039",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17004792",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000243",
+        "desc": "8SWG GI WIRE FOR EARTHING & GUARDING",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17001356",
+        "desc": "Wedge connectors RABIT To RABIT or equivalent AAAC",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "WEDGE CONNECTOR",
+        "sapItems": [
+          {
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "17001314, 17001315, 17005068",
+        "desc": "AB Switch Pipe Support Rod & Eye Bolt",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+        "sapItems": [
+          {
+            "code": "17001314",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17001315",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005068",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "N/A",
+        "desc": "Dismantle & Erection",
+        "unit": "",
+        "rate": 0,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "18",
+        "itemCode": "17005050",
+        "desc": "33 KV  V cross arm with clamp",
+        "unit": "No.",
+        "rate": 50,
+        "sapDescription": "11KV V CROSS ARM WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17005050",
+            "desc": "11KV V CROSS ARM WITH CLAMP",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17001276",
+        "desc": "33 KV Top fitting with clamp",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "11KV TOP CLEAT 75X40X325 MM",
+        "sapItems": [
+          {
+            "code": "17001276",
+            "desc": "11KV TOP CLEAT 75X40X325 MM",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "17001397",
+        "desc": "33 kV Pin Insulators with G.I. Pins",
+        "unit": "No.",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "21",
+        "itemCode": "N/A",
+        "desc": "AB SWITCH SETTING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "AB SWITCH SETTING",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Dept 1220A — DTC (34 Items)",
+        "unit": "",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000158",
+        "desc": "Dist. Transformer 100 KVA 11/0.43 kv",
+        "unit": "No",
+        "rate": 3000,
+        "sapDescription": "DIST TRANS 11/0.433 KV 100 KVA 4STR AL",
+        "sapItems": [
+          {
+            "code": "17000158",
+            "desc": "DIST TRANS 11/0.433 KV 100 KVA 4STR AL",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17000007",
+        "desc": "RSJ 116x100, 11 m long",
+        "unit": "No",
+        "rate": 2500,
+        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+        "sapItems": [
+          {
+            "code": "17000007",
+            "desc": "RSJ POLE 100X116 MM 11 MTR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17005059, 17005060",
+        "desc": "Top & Bottom MS Channel (100x50x6 mm)",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+        "sapItems": [
+          {
+            "code": "17005059",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005060",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005061, 17005062",
+        "desc": "AB Switch, HG Fuse, LTDB Channel (75x40x6 mm) withSupport Angle",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+        "sapItems": [
+          {
+            "code": "17005061",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005062",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17005046, 17005085, 17005047, 17005048",
+        "desc": "M.S.Flat 50 x 6 mm for Stay and Back Clamp",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17001397",
+        "desc": "11 kV Pin Insulators with G.I. Pins",
+        "unit": "No",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000081",
+        "desc": "L.T.Dist.Boxes 100 KVA vuth KITKAT",
+        "unit": "No",
+        "rate": 900,
+        "sapDescription": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+        "sapItems": [
+          {
+            "code": "17000081",
+            "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17000128",
+        "desc": "L.As. 11 KV (Gapless type) with disconector",
+        "unit": "Set",
+        "rate": 800,
+        "sapDescription": "LA 11 KV GAPLESS WITH DISCONNECTOR",
+        "sapItems": [
+          {
+            "code": "17000128",
+            "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 400,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17001368",
+        "desc": "Earthing Sets H.T",
+        "unit": "Set",
+        "rate": 285,
+        "sapDescription": "EARTHING SET HT",
+        "sapItems": [
+          {
+            "code": "17001368",
+            "desc": "EARTHING SET HT",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17000026",
+        "desc": "11KV H.G.Fuses",
+        "unit": "Set",
+        "rate": 900,
+        "sapDescription": "HORN GAP FUSE 11 KV",
+        "sapItems": [
+          {
+            "code": "17000026",
+            "desc": "HORN GAP FUSE 11 KV",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17000023",
+        "desc": "11KV A.B. Swtch, 400 A",
+        "unit": "Set",
+        "rate": 1800,
+        "sapDescription": "AB SWITCH 11 KV 400 AMP",
+        "sapItems": [
+          {
+            "code": "17000023",
+            "desc": "AB SWITCH 11 KV 400 AMP",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17000751",
+        "desc": "Danger Board in yard.",
+        "unit": "No",
+        "rate": 10,
+        "sapDescription": "DANGER BOARD with Clamp",
+        "sapItems": [
+          {
+            "code": "17000751",
+            "desc": "DANGER BOARD with Clamp",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000775, 17000776, 17000778",
+        "desc": "Painting/H ardware & support with numbering of pole",
+        "unit": "LS",
+        "rate": 25,
+        "sapDescription": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+        "sapItems": [
+          {
+            "code": "17000775",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          },
+          {
+            "code": "17000776",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          },
+          {
+            "code": "17000778",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17000108",
+        "desc": "DTC Metring Cth Box, single core L.T. XLPE cable (70sq.mm & 120 Sq.mm).",
+        "unit": "No",
+        "rate": 1600,
+        "sapDescription": "LT CT METER BOX FOR 100 KVA DTC",
+        "sapItems": [
+          {
+            "code": "17000108",
+            "desc": "LT CT METER BOX FOR 100 KVA DTC",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005188",
+        "desc": "DTC Metering 1x70 sqmm Cable",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "CABLE AL LT XLPE 1X70 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17005188",
+            "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
+            "uom": "M",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17000651",
+        "desc": "LUGS 70 Sq.mm",
+        "unit": "NO",
+        "rate": 0,
+        "sapDescription": "Lugs 70Sq.mm",
+        "sapItems": [
+          {
+            "code": "17000651",
+            "desc": "Lugs 70Sq.mm",
+            "uom": "NO",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17004596",
+        "desc": "DTC Metering 1x120 sqmm Cable",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "CABLE AL LT XLPE 1X120 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17004596",
+            "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
+            "uom": "M",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17001130",
+        "desc": "LUGS 120 Sq.mm",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "Lugs 120 Sq.mm",
+        "sapItems": [
+          {
+            "code": "17001130",
+            "desc": "Lugs 120 Sq.mm",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "N/A",
+        "desc": "Sundries",
+        "unit": "",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "17",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6",
+        "unit": "CMT",
+        "rate": 2700,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "18",
+        "itemCode": "17000239",
+        "desc": "GI STAY WIRE (7X4MM DIA)",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000239",
+            "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17000237",
+        "desc": "G.I. Barbed Wire",
+        "unit": "Kg.",
+        "rate": 5,
+        "sapDescription": "GI BARBED WIRE WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17000237",
+            "desc": "GI BARBED WIRE WITH CLAMP",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "17000243",
+        "desc": "8SWG GI WIRE FOR EARTHING & GUARDING",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "21",
+        "itemCode": "17000625, 17000627, 17000636",
+        "desc": "G.I.Nut Bolts",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+        "sapItems": [
+          {
+            "code": "17000625",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000627",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000636",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "22",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No.",
+        "rate": 30,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "23",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware for 55 Sq.mm AAAC",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "24",
+        "itemCode": "17001261",
+        "desc": "AAAC 55 mm2",
+        "unit": "Rmt",
+        "rate": 15,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "25",
+        "itemCode": "N/A",
+        "desc": "DTC RECTIFICATION",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "DTC RECTIFICATION WORK",
+        "sapItems": []
+      },
+      {
+        "no": "26",
+        "itemCode": "N/A",
+        "desc": "take of structure remove",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "27",
+        "itemCode": "N/A",
+        "desc": "Water Pipeline Trench work",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "28",
+        "itemCode": "N/A",
+        "desc": "CLAMP",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "CLAMPS (All types )",
+        "sapItems": []
+      },
+      {
+        "no": "29",
+        "itemCode": "17005065",
+        "desc": "MS-TR BELTING ANG",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "",
+        "sapItems": [
+          {
+            "code": "17005065",
+            "desc": "MS-TR BELTING ANG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "30",
+        "itemCode": "17005067",
+        "desc": "MS-TR SIDE BELTING ANG",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "",
+        "sapItems": [
+          {
+            "code": "17005067",
+            "desc": "MS-TR SIDE BELTING ANG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "",
+        "desc": "Dept 1425A — 5 Wire LT Line on PSC Pole 8 Mtr (29 Items)",
+        "unit": "",
+        "rate": 0,
+        "isSection": true
+      },
+      {
+        "no": "1",
+        "itemCode": "17000000",
+        "desc": "PSC Pole  8  Mtr (140  KG)",
+        "unit": "No",
+        "rate": 1000,
+        "sapDescription": "PSC POLE 8 MTR 200 KGS",
+        "sapItems": [
+          {
+            "code": "17000000",
+            "desc": "PSC POLE 8 MTR 200 KGS",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17001261",
+        "desc": "AAAC  55  mm2",
+        "unit": "Rmt",
+        "rate": 3,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17000120",
+        "desc": "ACSR  Weasel",
+        "unit": "Rmt",
+        "rate": 2,
+        "sapDescription": "ACSR WEASEL CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17000120",
+            "desc": "ACSR WEASEL CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005592",
+        "desc": "MS  angle  50x50x6  mm  for LT  Bracket",
+        "unit": "No",
+        "rate": 90,
+        "sapDescription": "LT BRACKET 980X385-7.7KG",
+        "sapItems": [
+          {
+            "code": "17005592",
+            "desc": "LT BRACKET 980X385-7.7KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "N/A",
+        "desc": "M.S. Flats(50  X  10mm)  for Clamps",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "LT STAY CLAMP A TYPE + LT STAY CLAMP B TYPE",
+        "sapItems": []
+      },
+      {
+        "no": "6",
+        "itemCode": "17000056",
+        "desc": "L.T.Shackle  Insulator",
+        "unit": "No",
+        "rate": 6,
+        "sapDescription": "LT SHACKLE INSULATOR",
+        "sapItems": [
+          {
+            "code": "17000056",
+            "desc": "LT SHACKLE INSULATOR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17001150",
+        "desc": "Aluminium  Bobbins  for neutral",
+        "unit": "No",
+        "rate": 2,
+        "sapDescription": "LT NEUTRAL BOBBIN + ALUMINIUM BOBBINS",
+        "sapItems": [
+          {
+            "code": "17001150",
+            "desc": "LT NEUTRAL BOBBIN + ALUMINIUM BOBBINS",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17000696",
+        "desc": "L.T.Shackle  hardware",
+        "unit": "No",
+        "rate": 3,
+        "sapDescription": "LT SHACKLE HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000696",
+            "desc": "LT SHACKLE HARDWARE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "N/A",
+        "desc": "Jointing Sleeves  for AAC",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "10",
+        "itemCode": "N/A",
+        "desc": "PG Clamp",
+        "unit": "No",
+        "rate": 8,
+        "sapDescription": "PG CLAMP",
+        "sapItems": []
+      },
+      {
+        "no": "11",
+        "itemCode": "17001369",
+        "desc": "Earthing Sets  L.T.",
+        "unit": "No",
+        "rate": 285,
+        "sapDescription": "EARTHING SET LT",
+        "sapItems": [
+          {
+            "code": "17001369",
+            "desc": "EARTHING SET LT",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17005091",
+        "desc": "L.T. Stay sets",
+        "unit": "No",
+        "rate": 400,
+        "sapDescription": "LT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005091",
+            "desc": "LT STAY SET COMPLETE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17000238",
+        "desc": "G.I.Stay Wire  7/3.15mm(10SWG)",
+        "unit": "Kg.",
+        "rate": 8,
+        "sapDescription": "GI STAY WIRE 7/3.15 MM 10 SWG",
+        "sapItems": [
+          {
+            "code": "17000238",
+            "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000058",
+        "desc": "Stay Insulators",
+        "unit": "No",
+        "rate": 4,
+        "sapDescription": "LT STAY INSULATOR",
+        "sapItems": [
+          {
+            "code": "17000058",
+            "desc": "LT STAY INSULATOR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "17000243",
+        "desc": "G.I.Wire  8  SWG/ 6  SWG",
+        "unit": "Kg.",
+        "rate": 4,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "18",
+        "itemCode": "17000057",
+        "desc": "L.T.Spacers",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "LT SPACER 4 WIRE + LT SPACER 5 WIRE",
+        "sapItems": [
+          {
+            "code": "17000057",
+            "desc": "LT SPACER 4 WIRE + LT SPACER 5 WIRE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "N/A",
+        "desc": "G.I.N ut Bolts",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "NUT BOLT",
+        "sapItems": []
+      },
+      {
+        "no": "21",
+        "itemCode": "N/A",
+        "desc": "Concreting ration  1:3  6",
+        "unit": "CMT",
+        "rate": 2700,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Pole Pit",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "Pole Pit",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "17005082, 17005083",
+        "desc": "U-Clamp for LT",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+        "sapItems": [
+          {
+            "code": "17005082",
+            "desc": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005083",
+            "desc": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005077",
+        "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+        "sapItems": [
+          {
+            "code": "17005077",
+            "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005078",
+        "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+        "sapItems": [
+          {
+            "code": "17005078",
+            "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "MS-LT 5 PIN ANGLE-50X50X6X1220-5.49KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 5 PIN ANGLE",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "PSC Pole Shifting",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "POLE SHIFTING",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "CLAMP",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "CLAMPS (All types )",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "Dismantle PSC Pole/STAY",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "UG CABLE Trenching Work MANUALLY AT WALNI S/S",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "UG CABLE TRENCH DIGGING MANUALLY",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "17006214",
+        "desc": "LT Guarding Angle",
+        "unit": "No.",
+        "rate": 100,
+        "sapDescription": "LT GUARDING CH",
+        "sapItems": [
+          {
+            "code": "17006214",
+            "desc": "LT GUARDING CH",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "LT rectification work",
+        "unit": "LS",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      }
+    ]
+  },
+  "dept_907": {
+    "title": "Dept 907 — 11 KV Single Circuit Pin Type on RSJ Poles (40 Items)",
+    "activityCode": "dept_907",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "1",
+        "itemCode": "17000004",
+        "desc": "RSJ 116x100, 9 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
+        "sapItems": [
+          {
+            "code": "17000004",
+            "desc": "RSJ POLE 100X116 MM 9 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17005037",
+        "desc": "RSJ 116x100, 8 m long",
+        "unit": "No.",
+        "rate": 1500,
+        "sapDescription": "RSJ POLE 100X116 MM 8 MTR",
+        "sapItems": [
+          {
+            "code": "17005037",
+            "desc": "RSJ POLE 100X116 MM 8 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17004792",
+        "desc": "11 kv Guarding channel MS 75x40 with clamp",
+        "unit": "Nos",
+        "rate": 500,
+        "sapDescription": "11KV GUARDING CHANNEL",
+        "sapItems": [
+          {
+            "code": "17004792",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005042, 17005043",
+        "desc": "Cut Point Set with Channel,angle and clamps",
+        "unit": "Set",
+        "rate": 1250,
+        "sapDescription": "Cut Point Set with Channel, Angle, Clamp",
+        "sapItems": [
+          {
+            "code": "17005042",
+            "desc": "Cut Point Set with Channel, Angle, Clamp",
+            "uom": "Set",
+            "qty": 1
+          },
+          {
+            "code": "17005043",
+            "desc": "Cut Point Set with Channel, Angle, Clamp",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17005050",
+        "desc": "11 KV  V cross arm with clamp",
+        "unit": "No.",
+        "rate": 50,
+        "sapDescription": "11KV V CROSS ARM WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17005050",
+            "desc": "11KV V CROSS ARM WITH CLAMP",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17001276",
+        "desc": "11 KV Top fitting with clamp",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "11KV TOP CLEAT 75X40X325 MM",
+        "sapItems": [
+          {
+            "code": "17001276",
+            "desc": "11KV TOP CLEAT 75X40X325 MM",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000625, 17000627, 17000636",
+        "desc": "G.I.Nut Bolts",
+        "unit": "Kg.",
+        "rate": 10,
+        "sapDescription": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+        "sapItems": [
+          {
+            "code": "17000625",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000627",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000636",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17001397",
+        "desc": "11 kV Pin Insulators with G.I. Pins",
+        "unit": "No.",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No.",
+        "rate": 30,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware for 55 Sq.mm AAAC",
+        "unit": "Set",
+        "rate": 20,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17001261",
+        "desc": "AAAC 55 mm2",
+        "unit": "Rmt",
+        "rate": 6,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "N/A",
+        "desc": "Sleeve Joints",
+        "unit": "No.",
+        "rate": 10,
+        "sapDescription": "",
+        "sapItems": []
+      },
+      {
+        "no": "13",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 400,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000239",
+        "desc": "G.I.Stay Wire 7/4mm(8 SWG)",
+        "unit": "Kg.",
+        "rate": 5,
+        "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000239",
+            "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17001368",
+        "desc": "Earthing Sets H.T",
+        "unit": "Set",
+        "rate": 170,
+        "sapDescription": "EARTHING SET HT",
+        "sapItems": [
+          {
+            "code": "17001368",
+            "desc": "EARTHING SET HT",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "17000237",
+        "desc": "G.I.Barbed Wire  A' type.",
+        "unit": "Kg.",
+        "rate": 10,
+        "sapDescription": "GI BARBED WIRE WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17000237",
+            "desc": "GI BARBED WIRE WITH CLAMP",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "17001294",
+        "desc": "Barbed wire Clamp",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "GI BARBED WIRE  clamp",
+        "sapItems": [
+          {
+            "code": "17001294",
+            "desc": "GI BARBED WIRE  clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "18",
+        "itemCode": "17000751",
+        "desc": "Danger Board in yard.",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "DANGER BOARD with Clamp",
+        "sapItems": [
+          {
+            "code": "17000751",
+            "desc": "DANGER BOARD with Clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17001300",
+        "desc": "Danger Board Clamp",
+        "unit": "No.",
+        "rate": 5,
+        "sapDescription": "DANGER BOARD Clamp",
+        "sapItems": [
+          {
+            "code": "17001300",
+            "desc": "DANGER BOARD Clamp",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6 (14 CMT)",
+        "unit": "Cmt.",
+        "rate": 1000,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "21",
+        "itemCode": "17000243",
+        "desc": "G.I.Wire 8 SWG/ 6 SWG",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "22",
+        "itemCode": "17000776",
+        "desc": "Black Bituminus Paint",
+        "unit": "Ltr",
+        "rate": 10,
+        "sapDescription": "PAINT BLACK BITUMINUS",
+        "sapItems": [
+          {
+            "code": "17000776",
+            "desc": "PAINT BLACK BITUMINUS",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "23",
+        "itemCode": "17000778",
+        "desc": "Red Oxide Paint for 1 coats",
+        "unit": "Ltr",
+        "rate": 14,
+        "sapDescription": "RED OXIDE",
+        "sapItems": [
+          {
+            "code": "17000778",
+            "desc": "RED OXIDE",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "24",
+        "itemCode": "17000775",
+        "desc": "Aluminium Paint for 1 coat",
+        "unit": "Ltr",
+        "rate": 10,
+        "sapDescription": "PAINT ALUMINIUM",
+        "sapItems": [
+          {
+            "code": "17000775",
+            "desc": "PAINT ALUMINIUM",
+            "uom": "Ltr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "25",
+        "itemCode": "17001356",
+        "desc": "Wedge connectors RABIT To RABIT or equivalent AAAC",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "WEDGE CONNECTOR",
+        "sapItems": [
+          {
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "26",
+        "itemCode": "17000007",
+        "desc": "RSJ 116x100, 11 m long",
+        "unit": "No.",
+        "rate": 2500,
+        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+        "sapItems": [
+          {
+            "code": "17000007",
+            "desc": "RSJ POLE 100X116 MM 11 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "27",
+        "itemCode": "17001242",
+        "desc": "RSJ 116x100, 10 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 10 MTR",
+        "sapItems": [
+          {
+            "code": "17001242",
+            "desc": "RSJ POLE 100X116 MM 10 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "28",
+        "itemCode": "N/A",
+        "desc": "Tree Cutting /Tree Trimming",
+        "unit": "LS",
+        "rate": 1200,
+        "sapDescription": "TREE CUTTING",
+        "sapItems": []
+      },
+      {
+        "no": "29",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Pole Pit",
+        "unit": "Nos",
+        "rate": 1200,
+        "sapDescription": "Pole Pit",
+        "sapItems": []
+      },
+      {
+        "no": "30",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Earthing Pit/Stay Pit",
+        "unit": "Nos",
+        "rate": 600,
+        "sapDescription": "EARTHING/ STAY Pit",
+        "sapItems": []
+      },
+      {
+        "no": "31",
+        "itemCode": "17004980, 17005597",
+        "desc": "Cover Conducter",
+        "unit": "Rmt",
+        "rate": 6,
+        "sapDescription": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+        "sapItems": [
+          {
+            "code": "17004980",
+            "desc": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+            "uom": "Rmt",
+            "qty": 1
+          },
+          {
+            "code": "17005597",
+            "desc": "COVERED CONDUCTOR 50 SQMM + COVERED CONDUCTOR 55 SQMM",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "32",
+        "itemCode": "N/A",
+        "desc": "Pole Shifting",
+        "unit": "Nos",
+        "rate": 100,
+        "sapDescription": "POLE SHIFTING + SHIFTING",
+        "sapItems": []
+      },
+      {
+        "no": "33",
+        "itemCode": "17000702",
+        "desc": "Strain Hardware for 55 Sq.mm DOG",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "17000702",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "34",
+        "itemCode": "N/A",
+        "desc": "STAY GROUTING",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "STAY GROUTING WITH ROD HT",
+        "sapItems": []
+      },
+      {
+        "no": "35",
+        "itemCode": "17005046, 17005085, 17005047, 17005048",
+        "desc": "CLAMP",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "36",
+        "itemCode": "N/A",
+        "desc": "Pole Dismantle",
+        "unit": "Nos",
+        "rate": 700,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "37",
+        "itemCode": "N/A",
+        "desc": "MATERIAL COUNTING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "MATERIAL COUNTING",
+        "sapItems": []
+      },
+      {
+        "no": "38",
+        "itemCode": "N/A",
+        "desc": "RESTRINGING stringing AAAC 55 sq.mm Rabbit",
+        "unit": "Rmt",
+        "rate": 3,
+        "sapDescription": "RESTRINGING",
+        "sapItems": []
+      },
+      {
+        "no": "39",
+        "itemCode": "17005064",
+        "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+        "sapItems": [
+          {
+            "code": "17005064",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "40",
+        "itemCode": "N/A",
+        "desc": "material  unloading & Loading",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Sand & Stone Shifting From WALNI S/S - MENDHA S/S. + Sand & Stone Shifting From MENDHA S/S. to moushi",
+        "sapItems": []
+      }
+    ]
+  },
+  "dept_916": {
+    "title": "Dept 916 — Laying of 1 Km 11 KV 3C 95 mm2 XLPE UG Cable (11 Items)",
+    "activityCode": "dept_916",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "1",
+        "itemCode": "17000195",
+        "desc": "Laying and Excavation of XLPE Cable 11 KV, 3 C / 95mm sq.",
+        "unit": "mtr",
+        "rate": 225,
+        "sapDescription": "CABLE AL 11KV XLPE 3X95 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17000195",
+            "desc": "CABLE AL 11KV XLPE 3X95 SQMM ARM",
+            "uom": "mtr",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "N/A",
+        "desc": "R.C.C. Pipe 150 mm 2 M",
+        "unit": "No",
+        "rate": 10,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "3",
+        "itemCode": "N/A",
+        "desc": "Half round cement pipe ( l50mm X lmtr)",
+        "unit": "No.",
+        "rate": 10,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "4",
+        "itemCode": "N/A",
+        "desc": "11 kV heat shrinkable Straight through joint kit for 3 CX 95",
+        "unit": "No.",
+        "rate": 2200,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "5",
+        "itemCode": "17000725",
+        "desc": "11 kV heat shrinkable Outdoor termination joint kit for3 C X 95",
+        "unit": "No.",
+        "rate": 2000,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "17000725",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "11000123",
+        "desc": "Sand",
+        "unit": "Cmt",
+        "rate": 2000,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": [
+          {
+            "code": "11000123",
+            "desc": "Not in OCT-26 SHIVANI",
+            "uom": "Cmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "N/A",
+        "desc": "Misc. for XLPE U/G Cable",
+        "unit": "LS",
+        "rate": 1900,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "8",
+        "itemCode": "N/A",
+        "desc": "UG Cable Soil Filling",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "9",
+        "itemCode": "17005775",
+        "desc": "UG Cable Supp CH-",
+        "unit": "No.",
+        "rate": 125,
+        "sapDescription": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
+        "sapItems": [
+          {
+            "code": "17005775",
+            "desc": "MS CH FOR CABLE SUPPORT75X42X6X2100-15KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "N/A",
+        "desc": "Sand Laying",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "11",
+        "itemCode": "N/A",
+        "desc": "UG CABLE PULLING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "CABLE FIXING + UG CABLE TRENCH DIGGING MANUALLY",
+        "sapItems": []
+      }
+    ]
+  },
+  "dept_6723": {
+    "title": "Dept 6723 — 11 kV A.B. Switch 400 Amp DP Structure (21 Items)",
+    "activityCode": "dept_6723",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "1",
+        "itemCode": "17000023",
+        "desc": "11KV A.B. Swtch, 400 A",
+        "unit": "Set",
+        "rate": 1800,
+        "sapDescription": "AB SWITCH 11 KV 400 AMP",
+        "sapItems": [
+          {
+            "code": "17000023",
+            "desc": "AB SWITCH 11 KV 400 AMP",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17005040",
+        "desc": "MS Channel Top Channel (100x50x6 mm)",
+        "unit": "No",
+        "rate": 125,
+        "sapDescription": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
+        "sapItems": [
+          {
+            "code": "17005040",
+            "desc": "MS-TOP CHANNEL-DP-100X50X6X3150-30.1KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17005061",
+        "desc": "M.S.Channel AB switch (75x40x6 mm)",
+        "unit": "No",
+        "rate": 125,
+        "sapDescription": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
+        "sapItems": [
+          {
+            "code": "17005061",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 600,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware forWeasel/Squirrel",
+        "unit": "Set",
+        "rate": 10,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No",
+        "rate": 35,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000004",
+        "desc": "RSJ 116x100, 9 m long",
+        "unit": "No",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 100X116 MM 9 MTR",
+        "sapItems": [
+          {
+            "code": "17000004",
+            "desc": "RSJ POLE 100X116 MM 9 MTR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6",
+        "unit": "CMT",
+        "rate": 1000,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "9",
+        "itemCode": "17005064, 17005620, 17005773",
+        "desc": "HGT EXT",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+        "sapItems": [
+          {
+            "code": "17005064",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17005620",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17005773",
+            "desc": "MS-11KV HGT EXT BRKT-75X40X6X1000-7.14KG + MS-11KV HGT EXT BRKT-75X40X6X1830-27.8KG + HGT EXT CHANNEL 100X50X6X2300-26.6KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17000008",
+        "desc": "RSJ 116x100, 13 m long",
+        "unit": "No.",
+        "rate": 2100,
+        "sapDescription": "RSJ POLE 152X152 MM 13 MTR",
+        "sapItems": [
+          {
+            "code": "17000008",
+            "desc": "RSJ POLE 152X152 MM 13 MTR",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17005044",
+        "desc": "BELTING ANG FOR DP STRUCTURE",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+        "sapItems": [
+          {
+            "code": "17005044",
+            "desc": "MS-BELTING ANGLE-DP-50X50X6X1860-8.37KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17005045",
+        "desc": "BRACING ANG FOR DP STRUCUTRE",
+        "unit": "No.",
+        "rate": 150,
+        "sapDescription": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
+        "sapItems": [
+          {
+            "code": "17005045",
+            "desc": "MS-BRACING ANGLE-DP-50X50X6X3500-15.75KG",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17005039, 17004792",
+        "desc": "DP GUARDING CH WITH CLAMP",
+        "unit": "No.",
+        "rate": 500,
+        "sapDescription": "11KV GUARDING CHANNEL",
+        "sapItems": [
+          {
+            "code": "17005039",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "No.",
+            "qty": 1
+          },
+          {
+            "code": "17004792",
+            "desc": "11KV GUARDING CHANNEL",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000243",
+        "desc": "8SWG GI WIRE FOR EARTHING & GUARDING",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17001356",
+        "desc": "Wedge connectors RABIT To RABIT or equivalent AAAC",
+        "unit": "Nos",
+        "rate": 5,
+        "sapDescription": "WEDGE CONNECTOR",
+        "sapItems": [
+          {
+            "code": "17001356",
+            "desc": "WEDGE CONNECTOR",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "17001314, 17001315, 17005068",
+        "desc": "AB Switch Pipe Support Rod & Eye Bolt",
+        "unit": "Nos",
+        "rate": 0,
+        "sapDescription": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+        "sapItems": [
+          {
+            "code": "17001314",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17001315",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          },
+          {
+            "code": "17005068",
+            "desc": "STUD FOR AB SW HANDLE CH 50X50X6X760 MM + SUPPORT ANGLE FOR AB SW 50X50X6X500 MM + MS-ANG SUPP OP ROD-50X50X6X650-2.92KG",
+            "uom": "Nos",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "N/A",
+        "desc": "Dismantle & Erection",
+        "unit": "",
+        "rate": 0,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "18",
+        "itemCode": "17005050",
+        "desc": "33 KV  V cross arm with clamp",
+        "unit": "No.",
+        "rate": 50,
+        "sapDescription": "11KV V CROSS ARM WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17005050",
+            "desc": "11KV V CROSS ARM WITH CLAMP",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17001276",
+        "desc": "33 KV Top fitting with clamp",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "11KV TOP CLEAT 75X40X325 MM",
+        "sapItems": [
+          {
+            "code": "17001276",
+            "desc": "11KV TOP CLEAT 75X40X325 MM",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "17001397",
+        "desc": "33 kV Pin Insulators with G.I. Pins",
+        "unit": "No.",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "21",
+        "itemCode": "N/A",
+        "desc": "AB SWITCH SETTING",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "AB SWITCH SETTING",
+        "sapItems": []
+      }
+    ]
+  },
+  "dept_1220A": {
+    "title": "Dept 1220A — DTC (34 Items)",
+    "activityCode": "dept_1220A",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "1",
+        "itemCode": "17000158",
+        "desc": "Dist. Transformer 100 KVA 11/0.43 kv",
+        "unit": "No",
+        "rate": 3000,
+        "sapDescription": "DIST TRANS 11/0.433 KV 100 KVA 4STR AL",
+        "sapItems": [
+          {
+            "code": "17000158",
+            "desc": "DIST TRANS 11/0.433 KV 100 KVA 4STR AL",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17000007",
+        "desc": "RSJ 116x100, 11 m long",
+        "unit": "No",
+        "rate": 2500,
+        "sapDescription": "RSJ POLE 100X116 MM 11 MTR",
+        "sapItems": [
+          {
+            "code": "17000007",
+            "desc": "RSJ POLE 100X116 MM 11 MTR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17005059, 17005060",
+        "desc": "Top & Bottom MS Channel (100x50x6 mm)",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+        "sapItems": [
+          {
+            "code": "17005059",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005060",
+            "desc": "MS-11KV TOP CH-100X50X6X2700-25.81KG + MS-11KV TR BASE CH-100X50X6X2700-25.81KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005061, 17005062",
+        "desc": "AB Switch, HG Fuse, LTDB Channel (75x40x6 mm) withSupport Angle",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+        "sapItems": [
+          {
+            "code": "17005061",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005062",
+            "desc": "MS-AB SWITCH MTG CH-75X40X6X2700-19.28KG + MS-11KV HG F MTG CH-75X40X6X2700-19.28KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "17005046, 17005085, 17005047, 17005048",
+        "desc": "M.S.Flat 50 x 6 mm for Stay and Back Clamp",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+        "sapItems": [
+          {
+            "code": "17005046",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005085",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005047",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005048",
+            "desc": "MS-BK CL A TYPE-100X116-50X10X390-1.53KG + MS-BK CL B TYPE-100X116-50X10X400-1.57KG + MS-STAY CL A TP-100X116-50X10X310-1.21KG + MS-STAY CL B TP-100X116-50X10X310-1.21KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "6",
+        "itemCode": "17001397",
+        "desc": "11 kV Pin Insulators with G.I. Pins",
+        "unit": "No",
+        "rate": 15,
+        "sapDescription": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+        "sapItems": [
+          {
+            "code": "17001397",
+            "desc": "PIN INSULATOR WITH GI PIN 11KV 5KN POLY",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17000081",
+        "desc": "L.T.Dist.Boxes 100 KVA vuth KITKAT",
+        "unit": "No",
+        "rate": 900,
+        "sapDescription": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+        "sapItems": [
+          {
+            "code": "17000081",
+            "desc": "DIST BOX WITH KITKAT FOR 100 KVA DTC",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17000128",
+        "desc": "L.As. 11 KV (Gapless type) with disconector",
+        "unit": "Set",
+        "rate": 800,
+        "sapDescription": "LA 11 KV GAPLESS WITH DISCONNECTOR",
+        "sapItems": [
+          {
+            "code": "17000128",
+            "desc": "LA 11 KV GAPLESS WITH DISCONNECTOR",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "17005052",
+        "desc": "H.T.Stay Set",
+        "unit": "Set",
+        "rate": 400,
+        "sapDescription": "HT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005052",
+            "desc": "HT STAY SET COMPLETE",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "10",
+        "itemCode": "17001368",
+        "desc": "Earthing Sets H.T",
+        "unit": "Set",
+        "rate": 285,
+        "sapDescription": "EARTHING SET HT",
+        "sapItems": [
+          {
+            "code": "17001368",
+            "desc": "EARTHING SET HT",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "11",
+        "itemCode": "17000026",
+        "desc": "11KV H.G.Fuses",
+        "unit": "Set",
+        "rate": 900,
+        "sapDescription": "HORN GAP FUSE 11 KV",
+        "sapItems": [
+          {
+            "code": "17000026",
+            "desc": "HORN GAP FUSE 11 KV",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17000023",
+        "desc": "11KV A.B. Swtch, 400 A",
+        "unit": "Set",
+        "rate": 1800,
+        "sapDescription": "AB SWITCH 11 KV 400 AMP",
+        "sapItems": [
+          {
+            "code": "17000023",
+            "desc": "AB SWITCH 11 KV 400 AMP",
+            "uom": "Set",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17000751",
+        "desc": "Danger Board in yard.",
+        "unit": "No",
+        "rate": 10,
+        "sapDescription": "DANGER BOARD with Clamp",
+        "sapItems": [
+          {
+            "code": "17000751",
+            "desc": "DANGER BOARD with Clamp",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000775, 17000776, 17000778",
+        "desc": "Painting/H ardware & support with numbering of pole",
+        "unit": "LS",
+        "rate": 25,
+        "sapDescription": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+        "sapItems": [
+          {
+            "code": "17000775",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          },
+          {
+            "code": "17000776",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          },
+          {
+            "code": "17000778",
+            "desc": "PAINT ALUMINIUM + PAINT BLACK BITUMINUS + RED OXIDE",
+            "uom": "LS",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "15",
+        "itemCode": "17000108",
+        "desc": "DTC Metring Cth Box, single core L.T. XLPE cable (70sq.mm & 120 Sq.mm).",
+        "unit": "No",
+        "rate": 1600,
+        "sapDescription": "LT CT METER BOX FOR 100 KVA DTC",
+        "sapItems": [
+          {
+            "code": "17000108",
+            "desc": "LT CT METER BOX FOR 100 KVA DTC",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005188",
+        "desc": "DTC Metering 1x70 sqmm Cable",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "CABLE AL LT XLPE 1X70 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17005188",
+            "desc": "CABLE AL LT XLPE 1X70 SQMM ARM",
+            "uom": "M",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17000651",
+        "desc": "LUGS 70 Sq.mm",
+        "unit": "NO",
+        "rate": 0,
+        "sapDescription": "Lugs 70Sq.mm",
+        "sapItems": [
+          {
+            "code": "17000651",
+            "desc": "Lugs 70Sq.mm",
+            "uom": "NO",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17004596",
+        "desc": "DTC Metering 1x120 sqmm Cable",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "CABLE AL LT XLPE 1X120 SQMM ARM",
+        "sapItems": [
+          {
+            "code": "17004596",
+            "desc": "CABLE AL LT XLPE 1X120 SQMM ARM",
+            "uom": "M",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17001130",
+        "desc": "LUGS 120 Sq.mm",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "Lugs 120 Sq.mm",
+        "sapItems": [
+          {
+            "code": "17001130",
+            "desc": "Lugs 120 Sq.mm",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "16",
+        "itemCode": "N/A",
+        "desc": "Sundries",
+        "unit": "",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "17",
+        "itemCode": "N/A",
+        "desc": "Concreting ration 1:3 6",
+        "unit": "CMT",
+        "rate": 2700,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "18",
+        "itemCode": "17000239",
+        "desc": "GI STAY WIRE (7X4MM DIA)",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "GI STAY WIRE 7/4 MM 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000239",
+            "desc": "GI STAY WIRE 7/4 MM 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "17000237",
+        "desc": "G.I. Barbed Wire",
+        "unit": "Kg.",
+        "rate": 5,
+        "sapDescription": "GI BARBED WIRE WITH CLAMP",
+        "sapItems": [
+          {
+            "code": "17000237",
+            "desc": "GI BARBED WIRE WITH CLAMP",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "20",
+        "itemCode": "17000243",
+        "desc": "8SWG GI WIRE FOR EARTHING & GUARDING",
+        "unit": "Kg.",
+        "rate": 2,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "21",
+        "itemCode": "17000625, 17000627, 17000636",
+        "desc": "G.I.Nut Bolts",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+        "sapItems": [
+          {
+            "code": "17000625",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000627",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          },
+          {
+            "code": "17000636",
+            "desc": "NUT BOLT + HDG BOLT FT M16X75 NUT 1 SPRG 1 PL WSHR + HDG BOLT FT M8X50 NUT 1 SPRG 1 PL WSHR + HDG BOLT HT M16X150 NUT 1 SPRG 1 PL WSHR",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "22",
+        "itemCode": "17000046",
+        "desc": "Disc Insulator 11 KV 70 KN",
+        "unit": "No.",
+        "rate": 30,
+        "sapDescription": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+        "sapItems": [
+          {
+            "code": "17000046",
+            "desc": "DISC INSULATOR 11KV 70KN B & S POLYMER",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "23",
+        "itemCode": "17000704",
+        "desc": "Strain Hardware for 55 Sq.mm AAAC",
+        "unit": "No.",
+        "rate": 20,
+        "sapDescription": "STRAIN HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000704",
+            "desc": "STRAIN HARDWARE",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "24",
+        "itemCode": "17001261",
+        "desc": "AAAC 55 mm2",
+        "unit": "Rmt",
+        "rate": 15,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "25",
+        "itemCode": "N/A",
+        "desc": "DTC RECTIFICATION",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "DTC RECTIFICATION WORK",
+        "sapItems": []
+      },
+      {
+        "no": "26",
+        "itemCode": "N/A",
+        "desc": "take of structure remove",
+        "unit": "No.",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "27",
+        "itemCode": "N/A",
+        "desc": "Water Pipeline Trench work",
+        "unit": "M",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "28",
+        "itemCode": "N/A",
+        "desc": "CLAMP",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "CLAMPS (All types )",
+        "sapItems": []
+      },
+      {
+        "no": "29",
+        "itemCode": "17005065",
+        "desc": "MS-TR BELTING ANG",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "",
+        "sapItems": [
+          {
+            "code": "17005065",
+            "desc": "MS-TR BELTING ANG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "30",
+        "itemCode": "17005067",
+        "desc": "MS-TR SIDE BELTING ANG",
+        "unit": "No",
+        "rate": 250,
+        "sapDescription": "",
+        "sapItems": [
+          {
+            "code": "17005067",
+            "desc": "MS-TR SIDE BELTING ANG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      }
+    ]
+  },
+  "dept_1425A": {
+    "title": "Dept 1425A — 5 Wire LT Line on PSC Pole 8 Mtr (29 Items)",
+    "activityCode": "dept_1425A",
+    "isDepartmental": true,
+    "materials": [
+      {
+        "no": "1",
+        "itemCode": "17000000",
+        "desc": "PSC Pole  8  Mtr (140  KG)",
+        "unit": "No",
+        "rate": 1000,
+        "sapDescription": "PSC POLE 8 MTR 200 KGS",
+        "sapItems": [
+          {
+            "code": "17000000",
+            "desc": "PSC POLE 8 MTR 200 KGS",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "2",
+        "itemCode": "17001261",
+        "desc": "AAAC  55  mm2",
+        "unit": "Rmt",
+        "rate": 3,
+        "sapDescription": "AAAC RABBIT CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17001261",
+            "desc": "AAAC RABBIT CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "3",
+        "itemCode": "17000120",
+        "desc": "ACSR  Weasel",
+        "unit": "Rmt",
+        "rate": 2,
+        "sapDescription": "ACSR WEASEL CONDUCTOR",
+        "sapItems": [
+          {
+            "code": "17000120",
+            "desc": "ACSR WEASEL CONDUCTOR",
+            "uom": "Rmt",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "4",
+        "itemCode": "17005592",
+        "desc": "MS  angle  50x50x6  mm  for LT  Bracket",
+        "unit": "No",
+        "rate": 90,
+        "sapDescription": "LT BRACKET 980X385-7.7KG",
+        "sapItems": [
+          {
+            "code": "17005592",
+            "desc": "LT BRACKET 980X385-7.7KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "5",
+        "itemCode": "N/A",
+        "desc": "M.S. Flats(50  X  10mm)  for Clamps",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "LT STAY CLAMP A TYPE + LT STAY CLAMP B TYPE",
+        "sapItems": []
+      },
+      {
+        "no": "6",
+        "itemCode": "17000056",
+        "desc": "L.T.Shackle  Insulator",
+        "unit": "No",
+        "rate": 6,
+        "sapDescription": "LT SHACKLE INSULATOR",
+        "sapItems": [
+          {
+            "code": "17000056",
+            "desc": "LT SHACKLE INSULATOR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "7",
+        "itemCode": "17001150",
+        "desc": "Aluminium  Bobbins  for neutral",
+        "unit": "No",
+        "rate": 2,
+        "sapDescription": "LT NEUTRAL BOBBIN + ALUMINIUM BOBBINS",
+        "sapItems": [
+          {
+            "code": "17001150",
+            "desc": "LT NEUTRAL BOBBIN + ALUMINIUM BOBBINS",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "8",
+        "itemCode": "17000696",
+        "desc": "L.T.Shackle  hardware",
+        "unit": "No",
+        "rate": 3,
+        "sapDescription": "LT SHACKLE HARDWARE",
+        "sapItems": [
+          {
+            "code": "17000696",
+            "desc": "LT SHACKLE HARDWARE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "9",
+        "itemCode": "N/A",
+        "desc": "Jointing Sleeves  for AAC",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      },
+      {
+        "no": "10",
+        "itemCode": "N/A",
+        "desc": "PG Clamp",
+        "unit": "No",
+        "rate": 8,
+        "sapDescription": "PG CLAMP",
+        "sapItems": []
+      },
+      {
+        "no": "11",
+        "itemCode": "17001369",
+        "desc": "Earthing Sets  L.T.",
+        "unit": "No",
+        "rate": 285,
+        "sapDescription": "EARTHING SET LT",
+        "sapItems": [
+          {
+            "code": "17001369",
+            "desc": "EARTHING SET LT",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "12",
+        "itemCode": "17005091",
+        "desc": "L.T. Stay sets",
+        "unit": "No",
+        "rate": 400,
+        "sapDescription": "LT STAY SET COMPLETE",
+        "sapItems": [
+          {
+            "code": "17005091",
+            "desc": "LT STAY SET COMPLETE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "13",
+        "itemCode": "17000238",
+        "desc": "G.I.Stay Wire  7/3.15mm(10SWG)",
+        "unit": "Kg.",
+        "rate": 8,
+        "sapDescription": "GI STAY WIRE 7/3.15 MM 10 SWG",
+        "sapItems": [
+          {
+            "code": "17000238",
+            "desc": "GI STAY WIRE 7/3.15 MM 10 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "14",
+        "itemCode": "17000058",
+        "desc": "Stay Insulators",
+        "unit": "No",
+        "rate": 4,
+        "sapDescription": "LT STAY INSULATOR",
+        "sapItems": [
+          {
+            "code": "17000058",
+            "desc": "LT STAY INSULATOR",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "17",
+        "itemCode": "17000243",
+        "desc": "G.I.Wire  8  SWG/ 6  SWG",
+        "unit": "Kg.",
+        "rate": 4,
+        "sapDescription": "GI WIRE 8 SWG",
+        "sapItems": [
+          {
+            "code": "17000243",
+            "desc": "GI WIRE 8 SWG",
+            "uom": "Kg.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "18",
+        "itemCode": "17000057",
+        "desc": "L.T.Spacers",
+        "unit": "No",
+        "rate": 12,
+        "sapDescription": "LT SPACER 4 WIRE + LT SPACER 5 WIRE",
+        "sapItems": [
+          {
+            "code": "17000057",
+            "desc": "LT SPACER 4 WIRE + LT SPACER 5 WIRE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "19",
+        "itemCode": "N/A",
+        "desc": "G.I.N ut Bolts",
+        "unit": "Kg.",
+        "rate": 3,
+        "sapDescription": "NUT BOLT",
+        "sapItems": []
+      },
+      {
+        "no": "21",
+        "itemCode": "N/A",
+        "desc": "Concreting ration  1:3  6",
+        "unit": "CMT",
+        "rate": 2700,
+        "sapDescription": "POLE CONCRETING With Material",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "Hard Rock Pole Pit",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "Pole Pit",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "17005082, 17005083",
+        "desc": "U-Clamp for LT",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+        "sapItems": [
+          {
+            "code": "17005082",
+            "desc": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+            "uom": "No",
+            "qty": 1
+          },
+          {
+            "code": "17005083",
+            "desc": "U-CLAMP SHACKLE FOR LT LINE + U-CLAMP BOBBIN  FOR LT LINE",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005077",
+        "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+        "sapItems": [
+          {
+            "code": "17005077",
+            "desc": "MS-LT 2 PIN ANGLE-50X50X6X610-2.75KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "17005078",
+        "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+        "sapItems": [
+          {
+            "code": "17005078",
+            "desc": "MS-LT 4 PIN ANGLE-50X50X6X1220-5.49KG",
+            "uom": "No",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "MS-LT 5 PIN ANGLE-50X50X6X1220-5.49KG",
+        "unit": "No",
+        "rate": 100,
+        "sapDescription": "MS-LT 5 PIN ANGLE",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "PSC Pole Shifting",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "POLE SHIFTING",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "CLAMP",
+        "unit": "No",
+        "rate": 5,
+        "sapDescription": "CLAMPS (All types )",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "Dismantle PSC Pole/STAY",
+        "unit": "No",
+        "rate": 0,
+        "sapDescription": "Pole dismental",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "UG CABLE Trenching Work MANUALLY AT WALNI S/S",
+        "unit": "LS",
+        "rate": 500,
+        "sapDescription": "UG CABLE TRENCH DIGGING MANUALLY",
+        "sapItems": []
+      },
+      {
+        "no": "",
+        "itemCode": "17006214",
+        "desc": "LT Guarding Angle",
+        "unit": "No.",
+        "rate": 100,
+        "sapDescription": "LT GUARDING CH",
+        "sapItems": [
+          {
+            "code": "17006214",
+            "desc": "LT GUARDING CH",
+            "uom": "No.",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "no": "",
+        "itemCode": "N/A",
+        "desc": "LT rectification work",
+        "unit": "LS",
+        "rate": 0,
+        "sapDescription": "Not in OCT-26 SHIVANI",
+        "sapItems": []
+      }
+    ]
   }
 };
 

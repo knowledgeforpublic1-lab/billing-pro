@@ -245,15 +245,25 @@
                     <!-- ⚡ Pole Schedule tools (sirf Pole Schedule view me) -->
                     <template v-if="currentView === 'poleSchedule' || currentView === 'abstract'">
                         <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input ps-schedule-select" title="Select Pole Schedule — Activity choose karo" style="font-weight: 700; font-size: 0.82rem; width: min(420px, 30vw); padding: 3px 8px; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px; cursor: pointer;">
-                            <option value="907">⚡ Activity 907 — RSJ Line with V-Cross Arm (53 Items)</option>
-                            <option value="919">⚡ Activity 919 — River Crossing DP on RSJ 152x152 (37 Items)</option>
-                            <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
-                            <option value="924">⚡ Activity 924 — Single Pole Cut Point Structure (43 Items)</option>
-                            <option value="934A">⚡ Activity 934A — 11 KV Single Circuit Pin Type on RSJ (43 Items)</option>
-                            <option value="1220">⚡ Activity 1220 — 100 KVA Dist. Transformer Center (72 Items)</option>
-                            <option value="1230">⚡ Activity 1230 — 11 KV Specially Designed Transformer with DP Structure (54 Items)</option>
-                            <option value="1425A">⚡ Activity 1425A — 3 Phase 5 Wire LT Line on PSC Pole (41 Items)</option>
-                            <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
+                            <optgroup label="⚡ Contractor Pole Schedules (Contract Activities)">
+                                <option value="907">⚡ Activity 907 — RSJ Line with V-Cross Arm (53 Items)</option>
+                                <option value="919">⚡ Activity 919 — River Crossing DP on RSJ 152x152 (37 Items)</option>
+                                <option value="922">⚡ Activity 922 — Double Pole (DP) Cut Point Structure (45 Items)</option>
+                                <option value="924">⚡ Activity 924 — Single Pole Cut Point Structure (43 Items)</option>
+                                <option value="934A">⚡ Activity 934A — 11 KV Single Circuit Pin Type on RSJ (43 Items)</option>
+                                <option value="1220">⚡ Activity 1220 — 100 KVA Dist. Transformer Center (72 Items)</option>
+                                <option value="1230">⚡ Activity 1230 — 11 KV Specially Designed Transformer with DP Structure (54 Items)</option>
+                                <option value="1425A">⚡ Activity 1425A — 3 Phase 5 Wire LT Line on PSC Pole (41 Items)</option>
+                                <option value="6723">⚡ Activity 6723 — 11 kV A.B. Switch DP Structure (41 Items)</option>
+                            </optgroup>
+                            <optgroup label="🏢 Departmental Bill (Item Issue Mapping Check)">
+                                <option value="dept_all">🏢 Departmental Bill — All 5 Activities (135 Items)</option>
+                                <option value="dept_907">🏢 Dept 907 — 11 KV RSJ Line (40 Items)</option>
+                                <option value="dept_6723">🏢 Dept 6723 — 11 kV AB Switch DP (21 Items)</option>
+                                <option value="dept_916">🏢 Dept 916 — 11 KV 3C 95 sqmm XLPE UG Cable (11 Items)</option>
+                                <option value="dept_1220A">🏢 Dept 1220A — DTC (34 Items)</option>
+                                <option value="dept_1425A">🏢 Dept 1425A — 5 Wire LT Line on PSC Pole (29 Items)</option>
+                            </optgroup>
                         </select>
                         <input type="text" v-model="poleScheduleSearchQuery" placeholder="🔍 Search Pole Schedule..." title="Pole Schedule search — item no, description, SAP code; khaali karo to sab items" @keydown.esc="poleScheduleSearchQuery = ''" style="font-size: 0.75rem; padding: 3px 8px; width: min(220px, 18vw); font-weight: 600; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px;">
                         <button v-if="poleScheduleSearchQuery" class="tbtn ico-btn" @click="poleScheduleSearchQuery = ''" title="Search clear karo" style="color: #64748b;">✕</button>
@@ -984,6 +994,12 @@
                                                     </span>
                                                     <div style="font-size:0.72rem; color:var(--accent-green); white-space:nowrap;">↳ Activity {{ selectedPoleScheduleKey }}<span v-if="getPoleScheduleRateLink(item).isSplit"> · {{ formatCurrency(getPoleScheduleRateLink(item).sourceRate) }} ÷ {{ getPoleScheduleRateLink(item).scheduleMatchCount }} rows</span></div>
                                                 </template>
+                                                <template v-else-if="getPoleScheduleRateValue(item) > 0">
+                                                    <span :title="'Departmental / Fixed Rate: ₹' + formatCurrency(getPoleScheduleRateValue(item))">
+                                                        {{ formatCurrency(getPoleScheduleRateValue(item)) }}
+                                                    </span>
+                                                    <div style="font-size:0.68rem; color:var(--text-muted); white-space:nowrap;">Dept Rate</div>
+                                                </template>
                                                 <span v-else :title="'Pole Schedule SAP code: ' + (getPoleScheduleRateLink(item).code || 'not mapped') + ' ⬢ Activity ' + selectedPoleScheduleKey + ' mein exact SAP mapping match nahi mila.'" style="font-size:0.68rem; color:var(--accent-amber); white-space:nowrap;">
                                                     {{ getPoleScheduleRateLink(item).status === 'ambiguous' ? 'Multiple matches' : (getPoleScheduleRateLink(item).status === 'unmapped' ? 'Map SAP code' : (getPoleScheduleRateLink(item).status === 'activity-missing' ? 'Activity missing' : 'No rate match')) }}
                                                 </span>
@@ -1006,7 +1022,7 @@
                                 </tr>
                                 <tfoot class="ps-schedule-totals" style="background: var(--bg-card); font-weight: 800; border-top: 2px solid var(--border-color);">
                                     <tr>
-                                        <th colspan="5" class="text-right">TOTAL (ACTIVITY {{ selectedPoleScheduleKey }})</th>
+                                        <th colspan="5" class="text-right">TOTAL {{ String(selectedPoleScheduleKey).startsWith('dept_') ? '(DEPARTMENTAL BILL)' : '(ACTIVITY ' + selectedPoleScheduleKey + ')' }}</th>
                                         <th :colspan="getPoleScheduleLocations().length" class="text-center text-muted" style="font-size: 0.8rem;">
                                             Across {{ getPoleScheduleLocations().length }} Locations
                                         </th>

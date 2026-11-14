@@ -70,7 +70,10 @@ window.PoleScheduleModule = {
 
     getPoleScheduleRateValue(item, scheduleKey) {
         const link = this.getPoleScheduleRateLink(item, scheduleKey);
-        return link.status === 'linked' ? link.rate : 0;
+        if (link.status === 'linked') return link.rate;
+        // 🏢 For unlinked schedules (e.g. Departmental Bill or standalone templates), fall back to item.rate directly
+        const r = Number(item && (typeof this.evalFormula === 'function' ? this.evalFormula(item.rate) : item.rate));
+        return (Number.isFinite(r) && r > 0) ? r : 0;
     },
 
     getCurrentPoleSchedule() {
@@ -835,6 +838,13 @@ window.PoleScheduleModule = {
 
     syncPoleScheduleToBillingAndReconciliation(key) {
         const k = key || this.selectedPoleScheduleKey || '907';
+        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+
+        // 🛡️ Departmental Bill is strictly unlinked as requested by user:
+        // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
+        if (k && (String(k).startsWith('dept_') || (sched && sched.isDepartmental))) {
+            return;
+        }
 
         // 1. Ensure locations synchronization across both Pole Schedule & Activity Billing
         const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : [{ name: 'Location 1' }]);
@@ -843,7 +853,6 @@ window.PoleScheduleModule = {
         if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
         this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(locs));
 
-        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
         if (!sched || !Array.isArray(sched.materials)) return;
 
         // Ensure this.activities[k] exists
@@ -2347,14 +2356,14 @@ window.PoleScheduleModule = {
 
         const codes = [];
         if (item.itemCode && item.itemCode !== 'N/A' && item.itemCode !== 'NA' && !String(item.itemCode).startsWith('EXTRA-')) {
-            String(item.itemCode).split(',').forEach(c => {
-                let clean = c.trim();
+            String(item.itemCode).split(/[,|\/]/).forEach(c => {
+                let clean = c.replace(/\(Store\)/i, '').trim();
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
             });
         }
         if (Array.isArray(item.sapItems)) {
             item.sapItems.forEach(si => {
-                let clean = String(si && si.code || '').trim();
+                let clean = String(si && si.code || '').replace(/\(Store\)/i, '').trim();
                 if (clean && clean !== 'N/A' && clean !== 'NA' && !String(clean).startsWith('EXTRA-') && !codes.includes(clean)) {
                     codes.push(clean);
                 }
@@ -2375,10 +2384,29 @@ window.PoleScheduleModule = {
         if (this.isPoleScheduleItemUnissued(item)) {
             return `⚠️ Stock Issue nahi hai! Contractor '${cName}' ko code [${item.itemCode}] pe koi material issue nahi hua hai (Reco Net Issue: 0). Click to edit SAP Code.`;
         }
-        if (s && s.materials && s.materials[item.itemCode]) {
-            const m = s.materials[item.itemCode];
-            const net = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
-            return `📦 Stock OK: ${cName} ko ${net} ${m.uom || item.unit || ''} issue hai (Reco Net Issue). Click to edit.`;
+        const codes = [];
+        String(item.itemCode).split(/[,|\/]/).forEach(c => {
+            let clean = c.replace(/\(Store\)/i, '').trim();
+            if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
+        });
+        if (Array.isArray(item.sapItems)) {
+            item.sapItems.forEach(si => {
+                let clean = String(si && si.code || '').replace(/\(Store\)/i, '').trim();
+                if (clean && clean !== 'N/A' && clean !== 'NA' && !codes.includes(clean)) codes.push(clean);
+            });
+        }
+        if (s && s.materials) {
+            const found = [];
+            codes.forEach(c => {
+                if (s.materials[c]) {
+                    const m = s.materials[c];
+                    const net = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+                    if (net > 0) found.push(`[${c}] ${net} ${m.uom || item.unit || ''}`);
+                }
+            });
+            if (found.length > 0) {
+                return `📦 Stock OK (${cName}): ${found.join(', ')} (Reco Net Issue). Click to edit.`;
+            }
         }
         return item.sapDescription ? (item.sapDescription + ' (Click to edit SAP Code)') : 'Click to edit SAP Code';
     },

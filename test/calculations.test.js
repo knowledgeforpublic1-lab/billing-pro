@@ -487,6 +487,7 @@ it('SAP Stock: Unmapped and Mismatched Contractor Issued Items Detection & Red H
             }
             if (this.poleSchedules) {
                 Object.values(this.poleSchedules).forEach(sched => {
+                    if (sched && sched.isDepartmental) return;
                     if (sched && Array.isArray(sched.materials)) {
                         sched.materials.forEach(m => {
                             if (Array.isArray(m.sapItems)) {

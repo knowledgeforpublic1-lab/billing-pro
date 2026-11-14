@@ -810,6 +810,10 @@
                 ]);
 
                 candidateActKeys.forEach(actKey => {
+                    // 🛡️ Departmental Bill is strictly unlinked from Contractor Reconciliation:
+                    // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
+                    if (String(actKey).startsWith('dept_')) return;
+
                     // Check if this activity has Pole Schedule entries
                     const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[actKey];
                     let hasPsQty = false;
@@ -1253,7 +1257,11 @@
                     });
                 }
                 if (this.poleSchedules) {
-                    Object.values(this.poleSchedules).forEach(sched => {
+                    Object.entries(this.poleSchedules).forEach(([psKey, sched]) => {
+                        // 🛡️ Departmental Bill is strictly unlinked from contractor contract mappings:
+                        // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
+                        if (sched && sched.isDepartmental) return;
+                        if (String(psKey).startsWith('dept_')) return;
                         if (sched && Array.isArray(sched.materials)) {
                             sched.materials.forEach(m => {
                                 if (Array.isArray(m.sapItems)) {
