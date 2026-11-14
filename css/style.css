@@ -7132,3 +7132,10 @@ html[data-theme="light"] .excel-filter-popover {
 .reco-sort-chip { background: var(--bg-card); color: var(--text-main); border-color: var(--border-strong); }
 .reco-filter-selection-count { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
 .reco-filter-popup-footer { position: sticky; bottom: -12px; padding: 8px 0; background: var(--bg-card, #fff); }
+
+/* Uniform compact header: reserve equal label, control and subtitle rows. */
+.reco-table-viewport .reco-sheet-table th.reco-filter-heading { text-align: center !important; vertical-align: top !important; padding: 4px 2px !important; }
+.reco-header-label { gap: 3px; }
+.reco-header-label > span { display: flex; align-items: center; justify-content: center; height: 24px; white-space: normal; line-height: 12px; overflow-wrap: normal; }
+.reco-filter-trigger { width: 20px; height: 18px; font-size: 12px; }
+.reco-header-sublabel { min-height: 18px; margin-top: 3px; line-height: 9px; text-align: center; overflow-wrap: normal; }

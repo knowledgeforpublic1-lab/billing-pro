@@ -8,9 +8,11 @@
             const table = el.querySelector('table');
             if (!table || !el.clientWidth) return;
             const options = el._recoFitValue;
-            const width = Math.max(el.clientWidth - 2, 816 + Math.max(0, Number(options.columns) || 0) * 68);
+            // Leave room for collapsed borders and fractional browser zoom rounding.
+            const available = Math.max(1, el.clientWidth - 6);
+            const width = Math.max(available, 816 + Math.max(0, Number(options.columns) || 0) * 68);
             table.style.width = width + 'px';
-            table.style.zoom = options.enabled ? String(Math.min(1, (el.clientWidth - 2) / width)) : '1';
+            table.style.zoom = options.enabled ? String(Math.min(1, available / width)) : '1';
             if (options.enabled) el.scrollLeft = 0;
         });
     }
