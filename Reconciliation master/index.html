@@ -17,10 +17,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=20261108_shared_ui_2">
+    <link rel="stylesheet" href="styles.css?v=20261114_dashboard">
     
     <!-- Chart.js, SheetJS & ExcelJS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <script src="xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 </head>
@@ -72,6 +72,13 @@
 
         <!-- 1. OVERVIEW TAB -->
         <div id="tab-overview" class="tab-content">
+            <div class="dashboard-controls control-card">
+                <div><h2>Material Intelligence</h2><p id="dashboardContext"></p></div>
+                <label>Contractor <select id="dashboardContractor" onchange="renderOverview()"><option value="">All contractor entries</option></select></label>
+                <label>Show <select id="dashboardTop" onchange="renderOverview()"><option value="8">Top 8</option><option value="15">Top 15</option></select></label>
+                <button class="btn btn-secondary" onclick="document.getElementById('dashboardContractor').value='';document.getElementById('dashboardTop').value='8';renderOverview()">Reset</button>
+            </div>
+            <p id="dashboardQuality" class="dashboard-quality" role="status"></p>
             <!-- KPI Grid -->
             <div class="kpi-grid" style="margin-bottom: 24px;">
                 <div class="kpi-card" style="--card-accent: #3b82f6; --card-icon-bg: rgba(59, 130, 246, 0.12);">
@@ -96,7 +103,7 @@
                     <div class="kpi-info">
                         <h3>Total Net Issue Value</h3>
                         <div id="kpi-issue-cost" class="kpi-value">₹ 0.00</div>
-                        <div class="kpi-subtext">Cumulative material issued</div>
+                        <div class="kpi-subtext">Valued at available debit rates</div>
                     </div>
                     <div class="kpi-icon">💰</div>
                 </div>
@@ -105,7 +112,7 @@
                     <div class="kpi-info">
                         <h3>Balance Stock Liability</h3>
                         <div id="kpi-balance-cost" class="kpi-value">₹ 0.00</div>
-                        <div class="kpi-subtext">Unerected material cost</div>
+                        <div class="kpi-subtext">Positive balances only; deficits shown separately</div>
                     </div>
                     <div class="kpi-icon">⚖️</div>
                 </div>
@@ -115,7 +122,7 @@
             <div class="charts-grid">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>📈 Top Consumed / Erected Materials</h3>
+                        <h3>Top consumed materials · ₹</h3>
                     </div>
                     <div class="chart-container">
                         <canvas id="chartCons"></canvas>
@@ -124,13 +131,18 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>⚠️ Top Contractor Stock Liabilities</h3>
+                        <h3>Top contractor balances · ₹</h3>
                     </div>
                     <div class="chart-container">
                         <canvas id="chartBal"></canvas>
                     </div>
                 </div>
             </div>
+            <div class="charts-grid" style="margin-top:20px">
+                <div class="chart-card"><div class="chart-header"><h3>Top material balances · ₹</h3></div><div class="chart-container"><canvas id="chartMaterialBalance"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><h3>Issue / consumption / balance comparison · ₹</h3></div><div class="chart-container"><canvas id="chartValueComparison"></canvas></div></div>
+            </div>
+            <p class="dashboard-hint">Click contractor or material bars to open details. No quantities with different units are added together. No activity is ranked when its value is zero.</p>
         </div>
 
         <!-- 2. CONTRACTOR VIEW TAB -->
@@ -711,8 +723,9 @@
     </footer>
 
     <!-- Data (embedded as JS for file:// compatibility) -->
-    <script src="data.js?v=20260901_3"></script>
+    <script src="data.js?v=20261114_stock"></script>
+    <script src="analytics.js?v=20261114_dashboard"></script>
     <!-- App JS -->
-    <script src="app.js?v=20260901_3"></script>
+    <script src="app.js?v=20261114_dashboard"></script>
 </body>
 </html>

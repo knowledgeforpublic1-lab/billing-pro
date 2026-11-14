@@ -134,11 +134,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log('Loaded freshest data from cloud (MongoDB)');
             }
         }
-        // Local jeeta (ya cloud me kuch nahi) to use cloud me push kar do — self-heal
-        if (rawData && !cloudUsed) {
-            const localCopy = JSON.stringify(rawData);
-            setTimeout(() => { saveReconCloud(localCopy).catch(() => {}); }, 1500);
-        }
+        // Opening a dashboard is read-only; never push a cached copy over cloud.
+        window.masterDataSource = cloudUsed ? 'Cloud database' : 'Local / embedded snapshot';
         
         if (rawData) {
             console.log('Loaded Data:', rawData);
@@ -478,130 +475,33 @@ function closeMultiSelectDropdown() {
 
 
 // 1. OVERVIEW DASHBOARD
+let overviewCharts = [];
 function renderOverview() {
     if (!rawData) return;
-    
-    let totalContractors = rawData.ContractorCount || 0;
-    let totalItemsTracked = 0;
-    let totalNetIssueCost = 0;
-    let totalBalanceCost = 0;
-    let totalConsumptionQty = 0;
-    
-    const matConsMap = {};
-    const contractorBalMap = {};
-    
-    rawData.Contractors.forEach(c => {
-        let cBalCost = 0;
-        c.Items.forEach(i => {
-            totalItemsTracked++;
-            const issueCost = i.NetIssue * i.DebitRate;
-            totalNetIssueCost += issueCost;
-            totalBalanceCost += i.BalanceCost;
-            totalConsumptionQty += i.Consumption;
-            cBalCost += i.BalanceCost;
-            
-            const matName = i.ItemDescription.trim().toUpperCase();
-            matConsMap[matName] = (matConsMap[matName] || 0) + i.Consumption;
-        });
-        contractorBalMap[c.ContractorName] = cBalCost;
+    const select = document.getElementById('dashboardContractor');
+    if (select && select.options.length === 1) (rawData.Contractors||[]).forEach((c,i)=>{
+        const option=document.createElement('option');option.value=String(i);option.textContent=c.ContractorName+' (#'+(i+1)+')';select.appendChild(option);
     });
-    
-    animateKpiValue('kpi-contractors', totalContractors, v => Math.round(v).toLocaleString('en-IN'));
-    animateKpiValue('kpi-items', totalItemsTracked, v => Math.round(v).toLocaleString('en-IN'));
-    animateKpiValue('kpi-issue-cost', totalNetIssueCost, formatCurrency);
-    animateKpiValue('kpi-balance-cost', totalBalanceCost, formatCurrency);
-    
-    renderOverviewCharts(matConsMap, contractorBalMap);
-}
-
-function renderOverviewCharts(matConsMap, contractorBalMap) {
-    // Top 8 Consumed Materials
-    const topMats = Object.entries(matConsMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8);
-        
-    const matLabels = topMats.map(m => m[0].length > 25 ? m[0].substring(0, 22) + '...' : m[0]);
-    const matData = topMats.map(m => m[1]);
-    
-    const ctx1 = document.getElementById('chartCons').getContext('2d');
-    if (topConsChart) topConsChart.destroy();
-    
-    topConsChart = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-            labels: matLabels,
-            datasets: [{
-                label: 'Total Quantity Consumed / Erected',
-                data: matData,
-                backgroundColor: 'rgba(59, 130, 246, 0.75)',
-                borderColor: '#3b82f6',
-                borderWidth: 1,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 900, easing: 'easeOutQuart' },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: '#1e293b', titleColor: '#fff', bodyColor: '#cbd5e1' }
-            },
-            scales: {
-                x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
-                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-            }
-        }
-    });
-    
-    // Top 8 Contractors by Balance Liability
-    const topContractors = Object.entries(contractorBalMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8);
-        
-    const conLabels = topContractors.map(c => c[0].length > 20 ? c[0].substring(0, 18) + '...' : c[0]);
-    const conData = topContractors.map(c => c[1]);
-    
-    const ctx2 = document.getElementById('chartBal').getContext('2d');
-    if (topBalChart) topBalChart.destroy();
-    
-    topBalChart = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: conLabels,
-            datasets: [{
-                data: conData,
-                backgroundColor: [
-                    '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
-                    '#8b5cf6', '#06b6d4', '#ec4899', '#64748b'
-                ],
-                borderWidth: 2,
-                borderColor: '#151c2c'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
-            onClick: (event, elements, chart) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const contractorName = topContractors[index][0];
-                    openContractorModal(contractorName);
-                }
-            },
-            plugins: {
-                legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 } } },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            return `${ctx.label}: ${formatCurrency(ctx.raw)}`;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    const stats=MasterAnalytics.build(rawData,select ? select.value : '');
+    const count=Number(document.getElementById('dashboardTop').value)||8;
+    animateKpiValue('kpi-contractors',stats.contractors,v=>Math.round(v).toLocaleString('en-IN'));
+    animateKpiValue('kpi-items',stats.rows,v=>Math.round(v).toLocaleString('en-IN'));
+    animateKpiValue('kpi-issue-cost',stats.issue,formatCurrency);
+    animateKpiValue('kpi-balance-cost',stats.balance,formatCurrency);
+    document.getElementById('dashboardContext').textContent=(window.masterDataSource || 'Loaded dataset')+' | Stock source: '+(rawData.StockSource?.generatedAt||rawData.ExtractedAt||'Not available').slice(0,10)+' | Consumption as of: '+(rawData.ConsumptionDataAsOf||rawData.ExtractedAt||'Not available').slice(0,10)+' | '+stats.updated+'/'+stats.contractors+' entries have updated stock mapping';
+    document.getElementById('dashboardQuality').textContent=stats.missingRates+' rows have missing/zero rates · '+stats.negativeRows+' rows have negative balance · Excess consumption value: '+formatCurrency(stats.deficit)+'. Values use debit rates; unpriced rows are excluded from value totals. Historical issue rows absent from the stock snapshot may remain; this is a mixed-date reconciliation, not a stock movement trend.';
+    overviewCharts.forEach(c=>c.destroy());overviewCharts=[];
+    if(typeof Chart==='undefined'){document.getElementById('dashboardQuality').textContent+=' Charts could not load. Check internet and refresh.';return;}
+    const money=v=>formatCurrency(Number(v)||0);
+    const bar=(id,rows,label,color,onClick)=>{
+        overviewCharts.push(new Chart(document.getElementById(id),{type:'bar',data:{labels:rows.map(r=>r.label),datasets:[{label,data:rows.map(r=>r.value),backgroundColor:color,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>money(ctx.raw)}}},scales:{x:{beginAtZero:true,ticks:{color:'#94a3b8',callback:v=>'₹ '+Intl.NumberFormat('en-IN',{notation:'compact'}).format(v)}},y:{ticks:{color:'#94a3b8',callback:function(v){const t=this.getLabelForValue(v);return t.length>34?t.slice(0,31)+'…':t;}}}},onClick:(event,elements)=>{if(elements.length&&onClick)onClick(rows[elements[0].index]);}}}));
+    };
+    const mats=stats.materials.filter(m=>m.consumed>0).slice(0,count).map(m=>({...m,label:m.code+' · '+m.label+' ('+m.unit+')',value:m.consumed}));
+    const openMaterial=row=>{selectedMaterials.clear();if(row.code)selectedMaterials.add(row.code);document.querySelector('[data-tab="material"]').click();updateMaterialTags();updateSelectedCount();renderMaterialView();};
+    bar('chartCons',mats,'Consumed value (₹)','#3b82f6',openMaterial);
+    bar('chartBal',stats.ranking.filter(r=>r.value>0).slice(0,count).map(r=>({...r,label:r.name})),'Positive balance value (₹)','#f59e0b',r=>openContractorModal(r.name,r.index));
+    bar('chartMaterialBalance',stats.materials.filter(m=>m.balance>0).sort((a,b)=>b.balance-a.balance).slice(0,count).map(m=>({...m,label:m.code+' · '+m.label+' ('+m.unit+')',value:m.balance})),'Material balance value (₹)','#8b5cf6',openMaterial);
+    bar('chartValueComparison',[{label:'Net issued',value:stats.issue},{label:'Consumed',value:stats.consumed},{label:'WIP',value:stats.wip},{label:'Positive balance',value:stats.balance},{label:'Excess consumption',value:stats.deficit}],'Debit-rate value (₹)',['#3b82f6','#10b981','#06b6d4','#f59e0b','#ef4444']);
 }
 
 // 2. CONTRACTOR VIEW
@@ -2611,15 +2511,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- MODAL AND PRINT LOGIC ---
 
 let currentModalContractor = "";
+let currentModalEntry = null;
 
-function openContractorModal(contractorName) {
+function openContractorModal(contractorName, entryIndex) {
     currentModalContractor = contractorName;
     const modal = document.getElementById("contractorModal");
     const title = document.getElementById("modalContractorName");
     const tbody = document.getElementById("modalTableBody");
     
     // Find the contractor data
-    const contractor = DATA.Contractors.find(c => c.ContractorName === contractorName);
+    const contractor = Number.isInteger(entryIndex) ? rawData.Contractors[entryIndex] : rawData.Contractors.find(c => c.ContractorName === contractorName);
+    currentModalEntry = contractor;
     if (!contractor) return;
 
     title.textContent = "Balance Material: " + contractorName;
@@ -2666,7 +2568,7 @@ window.addEventListener("click", (event) => {
 
 function downloadModalCSV() {
     if (!currentModalContractor) return;
-    const contractor = DATA.Contractors.find(c => c.ContractorName === currentModalContractor);
+    const contractor = currentModalEntry || rawData.Contractors.find(c => c.ContractorName === currentModalContractor);
     if (!contractor) return;
     
     const items = (contractor.Items || []).filter(item => item.BalanceQty > 0 || item.BalanceCost > 0);
