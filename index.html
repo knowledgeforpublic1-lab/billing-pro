@@ -1825,7 +1825,24 @@
     <span class="r">🛡️ 100% Client Auditable · SHA-256 Engine · Billing Pro v6.0</span>
 </div>
 
-        <div v-if="cloudConflict" role="alert" class="no-print" style="position:fixed;top:8px;left:12px;right:12px;z-index:9000;padding:12px;background:#78350f;color:white;border:2px solid #fbbf24;border-radius:6px;">⚠ Cloud conflict — doosre computer par bhi changes hain. Automatic cloud save roka gaya hai; dono copies compare kiye bina overwrite nahi hoga.</div>
+        <div v-if="cloudConflict" role="alert" class="no-print" style="position:fixed;top:10px;left:50%;transform:translateX(-50%);width:min(920px, 95vw);z-index:99999;padding:12px 18px;background:linear-gradient(135deg, #78350f 0%, #451a03 100%);color:#fef3c7;border:2px solid #f59e0b;border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
+                <span style="font-size:1.4rem;">⚠️</span>
+                <div>
+                    <div style="font-size:0.86rem;font-weight:700;color:#ffffff;">Cloud Conflict — Doosre Computer par bhi changes hue hain!</div>
+                    <div style="font-size:0.75rem;color:#fde68a;">Data surakshit hai. Kripya chunein ki aapko is computer ka data rakhna hai ya cloud ka:</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" @click="resolveConflictKeepLocal" style="padding:6px 14px;font-size:0.76rem;font-weight:700;background:#0284c7;border:1px solid #38bdf8;color:#ffffff;border-radius:5px;cursor:pointer;" title="Is PC ka kaam final mankar cloud par save karein">
+                    💾 Is PC Ka Data Rakhein
+                </button>
+                <button type="button" class="btn btn-secondary" @click="resolveConflictLoadCloud" style="padding:6px 14px;font-size:0.76rem;font-weight:700;background:#334155;border:1px solid #64748b;color:#f8fafc;border-radius:5px;cursor:pointer;" title="Doosre computer / cloud ka data yahan load karein">
+                    ☁️ Cloud Data Load Karein
+                </button>
+                <button type="button" @click="dismissConflictBanner" style="background:none;border:none;color:#fde68a;font-size:1.2rem;cursor:pointer;padding:2px 6px;margin-left:4px;" title="Dismiss">✕</button>
+            </div>
+        </div>
         <div v-if="localSaveFailed" role="alert" class="no-print" style="position:fixed;bottom:30px;left:12px;right:12px;z-index:9000;padding:12px;background:#7f1d1d;color:white;border:2px solid #f87171;border-radius:6px;">⚠ Local save failed — browser mein copy save nahi hui. Page band/refresh karne se pehle cloud save confirm karein ya backup export karein.</div>
         <!-- Column filter is outside the scaled table so it stays readable. -->
         <div v-if="recoFilterActiveKey && currentView === 'reconciliation'" class="reco-filter-popover no-print" :style="recoFilterPosition"

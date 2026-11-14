@@ -1182,6 +1182,23 @@ window.SyncModule = {
     },
     getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
     setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
+    async resolveConflictKeepLocal() {
+        this.cloudConflict = false;
+        this.showToast('Is PC ka data cloud par save ho raha hai...', '⏳');
+        const ok = await this.syncToCloudNow({ manual: true, force: true });
+        if (ok) {
+            this.showToast('Conflict resolved — Is PC ka data cloud par save ho gaya ✅', '✅');
+        }
+    },
+    async resolveConflictLoadCloud() {
+        this.cloudConflict = false;
+        this.showToast('Cloud se latest data load ho raha hai...', '⏳');
+        await this.loadFromStorage({ forceServer: true });
+        this.showToast('Conflict resolved — Cloud ka latest data load ho gaya ☁️', '✅');
+    },
+    dismissConflictBanner() {
+        this.cloudConflict = false;
+    },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
     async syncToCloudNow(opts) {
         if (this.authReady === false || (this.authReady === true && !this.isPortalUnlocked)) return false;
