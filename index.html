@@ -1822,7 +1822,7 @@
                 <input v-if="recoFilterDraft.operator" v-model="recoFilterDraft.number" type="text" inputmode="decimal" placeholder="Enter quantity, e.g. 0" aria-label="Filter quantity">
             </template>
             <input v-else v-model="recoFilterDraft.text" type="text" placeholder="Text contains…" aria-label="Text contains">
-            <input ref="recoFilterSearchInput" v-model="recoFilterSearch" type="search" placeholder="Search values…" aria-label="Search column values">
+            <input ref="recoFilterSearchInput" v-model="recoFilterSearch" @input="onRecoFilterSearchChange" type="search" placeholder="Search values…" aria-label="Search column values">
             <div class="reco-filter-selection-actions"><button type="button" @click="selectAllRecoFilterValues(true)">Select all</button><button type="button" @click="selectAllRecoFilterValues(false)">Deselect all</button></div>
             <div class="reco-filter-value-list">
                 <label v-for="value in recoFilterOptions" :key="value" :title="value || '(Blanks)'"><input type="checkbox" v-model="recoFilterDraft.values" :value="value"><span>{{ value || '(Blanks)' }}</span></label>
@@ -3427,12 +3427,12 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261114_reco_filters"></script>
+    <script defer src="js/sync.js?v=20261114_bill_recovery"></script>
     <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
-    <script defer src="js/reco-filters.js?v=20261114_reco_filters"></script>
+    <script defer src="js/reco-filters.js?v=20261114_reco_search_apply"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
     <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
@@ -3440,7 +3440,7 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_reco_filters"></script>
+    <script defer src="js/core/app.js?v=20261114_bill_recovery"></script>
 </body>
 
 </html>

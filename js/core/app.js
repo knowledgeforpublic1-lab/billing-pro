@@ -2113,7 +2113,20 @@
                 this.$nextTick(this._alvSchedule);
             } catch (e) { }
             this._isLoading = true;
-            await this.loadFromStorage();
+            const recoveryBillId = new URLSearchParams(window.location.search).get('billId');
+            const recoveryLoaded = await this.loadFromStorage(recoveryBillId ? { dataId: recoveryBillId, forceServer: true, preserveLocalBackup: true } : undefined);
+            if (recoveryBillId && recoveryLoaded === false) return;
+            if (recoveryBillId) {
+                this.selectedPoleScheduleKey = '907';
+                this.currentView = 'poleSchedule';
+                this.poleScheduleSearchQuery = '';
+                this.poleScheduleColumnFilters = {};
+                this.poleScheduleFilterQty = 'ALL';
+                this.poleScheduleFilterSap = 'ALL';
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('billId');
+                window.history.replaceState(null, '', cleanUrl.toString());
+            }
 
             // ⚡ Boot splash fade-out — app render ready, flash hataya gaya
             try {

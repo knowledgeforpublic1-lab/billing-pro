@@ -1482,6 +1482,7 @@ window.SyncModule = {
                   throw new Error('API Error: ' + res.status);
               }
               const json = await res.json();
+              if (opts && opts.preserveLocalBackup && (!json.data || json.dataId !== targetBillId)) throw new Error('Requested recovery bill was not returned');
               if (json && json.success && json.data) {
                   serverRaw = JSON.stringify(json.data);
                   try { serverUpdatedAt = json.updatedAt ? new Date(json.updatedAt).getTime() : 0; } catch(e) { serverUpdatedAt = 0; }
@@ -1496,6 +1497,11 @@ window.SyncModule = {
               }
           } catch (err) {
               console.error('Failed to load from MongoDB API:', err);
+              if (opts && opts.preserveLocalBackup) {
+                  this._loadingContractorMapping = false;
+                  this.showToast('Recovery bill load nahi hua; data replace nahi kiya gaya. Internet check karke dobara kholein.', '⚠️');
+                  return false;
+              }
           }
           // Local copy padho.
           // RULE: jo change abhi cloud me nahi gaya (unsynced local), wo reload par
@@ -1523,6 +1529,15 @@ window.SyncModule = {
                   localRev = (typeof lp.baseRev === 'number') ? lp.baseRev : 0;
                   localHash = this.stableStateHash(lp);
               } catch(e) {}
+          }
+          if (opts && opts.preserveLocalBackup && localRaw) {
+              const backupKey = 'lk_billing_recovery_' + effectiveBillId + '_' + Date.now();
+              if (window.BillingStorage && typeof window.BillingStorage.setItem === 'function') {
+                  await window.BillingStorage.setItem(backupKey, localRaw);
+                  if (await window.BillingStorage.getItemAsync(backupKey) !== localRaw) throw new Error('Local backup failed; recovery stopped without replacing data');
+              } else {
+                  localStorage.setItem(backupKey, localRaw);
+              }
           }
           let serverHash = '';
           if (serverRaw) {

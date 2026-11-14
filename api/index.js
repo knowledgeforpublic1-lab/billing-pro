@@ -138,10 +138,7 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
             state = await db.getLatestBillingState();
         } else {
             state = await db.getBillingState(rawDataId);
-            // If requested dataId was not found, fallback to the latest active bill
-            if (!state) {
-                state = await db.getLatestBillingState();
-            }
+            // A missing ID must not silently open a different contractor's bill.
         }
         if (!state) {
             log.info('GET', `No billing state found for ${rawDataId || 'latest'} — returning null`);

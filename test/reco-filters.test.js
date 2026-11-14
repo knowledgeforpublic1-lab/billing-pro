@@ -58,4 +58,12 @@ assert.equal(JSON.stringify(rows), original, 'Filtering and sorting never mutate
 app.clearAllRecoColumnFilters();
 assert.equal(app.applyRecoColumnFilters(rows).length, 3);
 assert.equal(app.recoColumnSort, null);
+app.recoFilterActiveKey = 'desc';
+app.recoFilterSearch = 'wire';
+app.recoFilterDraft = { values: app.getRecoFilterOptions('desc'), text: '', operator: '', number: '' };
+app.onRecoFilterSearchChange();
+app.applyRecoColumnFilter();
+assert.deepEqual(app.applyRecoColumnFilters(rows).map(row => row.code), ['WIRE'], 'Search then Apply filters to matching values');
+app.clearAllRecoColumnFilters();
+assert.equal(app.applyRecoColumnFilters(rows).length, 3, 'Clearing restores all rows without changing data');
 console.log('Reco column filters: text, checklists, numeric conditions, activity quantities, sorting, filtered totals and source data preservation passed.');

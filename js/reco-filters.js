@@ -94,6 +94,13 @@ window.RecoFilterModule = {
         this.$nextTick(() => { if (this.$refs.recoFilterSearchInput) this.$refs.recoFilterSearchInput.focus(); });
     },
     closeRecoColumnFilter() { this.recoFilterActiveKey = ''; },
+    onRecoFilterSearchChange() {
+        // Excel's value search selects its matching results. Keeping all the
+        // old hidden selections made Search -> Apply appear to do nothing.
+        const query = this.recoFilterSearch.trim().toLowerCase();
+        this.recoFilterDraft.values = this.getRecoFilterOptions(this.recoFilterActiveKey)
+            .filter(value => value.toLowerCase().includes(query));
+    },
     selectAllRecoFilterValues(checked) {
         const visible = this.getRecoFilterOptions(this.recoFilterActiveKey).filter(value => value.toLowerCase().includes(this.recoFilterSearch.toLowerCase()));
         const selected = new Set(this.recoFilterDraft.values);

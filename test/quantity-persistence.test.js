@@ -79,6 +79,18 @@ async function main() {
     });
     await refreshing.refreshFromCloud();
     assert.deepEqual(order, ['save', 'load'], 'Toolbar Refresh persists pending quantities before using safe reload rules');
+    const backupWrites = new Map();
+    context.window.BillingStorage = {
+        async getItemAsync(key) { return backupWrites.get(key) || local; },
+        async setItem(key, value) { backupWrites.set(key, value); }
+    };
+    server = { data: edited, rev: 3 };
+    context.fetch = async () => ({ ok: true, json: async () => ({ success: true, data: server.data, dataId: 'recover-bill', rev: 3 }) });
+    local = JSON.stringify(old);
+    loaded = app();
+    await loaded.loadFromStorage({ dataId: 'recover-bill', forceServer: true, preserveLocalBackup: true });
+    assert.ok([...backupWrites.keys()].some(key => key.startsWith('lk_billing_recovery_recover-bill_')), 'Recovery keeps the previous local snapshot');
+    assert.equal(loaded.poleScheduleQuantities['907'][0][1], 23, 'Recovery opens the selected filled bill');
     console.log('Quantity persistence: newest storage copy, browser/toolbar refresh, unsynced edits and cloud conflicts passed.');
 }
 main().catch(err => { console.error(err); process.exitCode = 1; });
