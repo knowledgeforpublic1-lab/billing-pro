@@ -2552,39 +2552,50 @@ window.PoleScheduleModule = {
                 cell.border = doubleBottomBorder;
             }
 
-            // ✍️ Sign-off Box (2 rows below total)
-            const signRowIdx = curRow + 3;
-            ws.getRow(signRowIdx - 1).height = 14;
+            // ✍️ 5-Box Authorized Signatory Sign-off Block
+            const signSpacerRow = curRow + 2;
+            ws.getRow(signSpacerRow).height = 14;
+            const signRowIdx = signSpacerRow + 1;
+            ws.getRow(signRowIdx).height = 55;
 
-            const signCols = Math.floor(totalCols / 3);
-            const box1Start = 'A';
-            const box1End = colNumToLetter(Math.max(2, signCols));
-            const box2Start = colNumToLetter(Math.max(2, signCols) + 1);
-            const box2End = colNumToLetter(Math.max(4, signCols * 2));
-            const box3Start = colNumToLetter(Math.max(4, signCols * 2) + 1);
-            const box3End = lastColLetter;
+            const signTitles = [
+                { main: "Sub -Contractor", sub: "(Authorized Signatory)" },
+                { main: "Billing Engineer", sub: "(Authorized Signatory)" },
+                { main: "Site Engineer/ Supervisor", sub: "(Authorized Signatory)" },
+                { main: "Division Incharge", sub: "(Authorized Signatory)" },
+                { main: "Project Manager", sub: "(Authorized Signatory)" }
+            ];
 
-            ws.mergeCells(`${box1Start}${signRowIdx}:${box1End}${signRowIdx + 2}`);
-            const sBox1 = ws.getCell(`${box1Start}${signRowIdx}`);
-            sBox1.value = `PREPARED BY:\n\n${contractorName}\n(Authorized Signatory)`;
-            sBox1.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
-            sBox1.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-            sBox1.border = thinBorder;
+            const signBorder = {
+                top: { style: "thin", color: { argb: "FF94A3B8" } },
+                left: { style: "thin", color: { argb: "FF94A3B8" } },
+                bottom: { style: "thin", color: { argb: "FF94A3B8" } },
+                right: { style: "thin", color: { argb: "FF94A3B8" } }
+            };
 
-            ws.mergeCells(`${box2Start}${signRowIdx}:${box2End}${signRowIdx + 2}`);
-            const sBox2 = ws.getCell(`${box2Start}${signRowIdx}`);
-            sBox2.value = `CHECKED & VERIFIED BY:\n\nSite Engineer / Quality Dept.\n(Ashoka Buildcon Ltd.)`;
-            sBox2.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
-            sBox2.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-            sBox2.border = thinBorder;
+            const numSignBoxes = 5;
+            let currentSignCol = 1;
+            for (let i = 0; i < numSignBoxes; i++) {
+                const remainingBoxes = numSignBoxes - i;
+                const remainingCols = totalCols - currentSignCol + 1;
+                const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
+                const endCol = (i === numSignBoxes - 1) ? totalCols : (currentSignCol + span - 1);
 
-            ws.mergeCells(`${box3Start}${signRowIdx}:${box3End}${signRowIdx + 2}`);
-            const sBox3 = ws.getCell(`${box3Start}${signRowIdx}`);
-            sBox3.value = `APPROVED BY:\n\nProject Manager / Billing In-Charge\n(RDSS T-10 Gadchiroli)`;
-            sBox3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
-            sBox3.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-            sBox3.border = thinBorder;
+                if (endCol >= currentSignCol) {
+                    if (endCol > currentSignCol) {
+                        ws.mergeCells(signRowIdx, currentSignCol, signRowIdx, endCol);
+                    }
+                    const cell = ws.getCell(signRowIdx, currentSignCol);
+                    cell.value = signTitles[i].main + "\n" + signTitles[i].sub;
+                    cell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF1E3A8A" } };
+                    cell.alignment = { horizontal: "center", vertical: "bottom", wrapText: true };
 
+                    for (let c = currentSignCol; c <= endCol; c++) {
+                        ws.getCell(signRowIdx, c).border = signBorder;
+                    }
+                }
+                currentSignCol = endCol + 1;
+            }
             // 📏 Set Generous & Exact Column Widths
             ws.getColumn(1).width = 10; // Item No
             ws.getColumn(2).width = 16; // SAP Code

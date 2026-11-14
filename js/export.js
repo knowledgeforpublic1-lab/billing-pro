@@ -18,6 +18,55 @@ window.ExportModule = {
         }
         return letter || 'A';
     },
+    addStandardSignOffBlock(ws, startRow, totalCols) {
+        if (!ws || totalCols < 1) return startRow;
+
+        const borderBox = {
+            top: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            left: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            bottom: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            right: { style: 'thin', color: { argb: 'FF94A3B8' } }
+        };
+
+        // Spacer row before signature block
+        ws.getRow(startRow).height = 14;
+        const signRow = startRow + 1;
+        ws.getRow(signRow).height = 55;
+
+        const titles = [
+            { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
+            { main: 'Billing Engineer', sub: '(Authorized Signatory)' },
+            { main: 'Site Engineer/ Supervisor', sub: '(Authorized Signatory)' },
+            { main: 'Division Incharge', sub: '(Authorized Signatory)' },
+            { main: 'Project Manager', sub: '(Authorized Signatory)' }
+        ];
+
+        const numBoxes = 5;
+        let currentCol = 1;
+
+        for (let i = 0; i < numBoxes; i++) {
+            const remainingBoxes = numBoxes - i;
+            const remainingCols = totalCols - currentCol + 1;
+            const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
+            const endCol = (i === numBoxes - 1) ? totalCols : (currentCol + span - 1);
+
+            if (endCol >= currentCol) {
+                if (endCol > currentCol) {
+                    ws.mergeCells(signRow, currentCol, signRow, endCol);
+                }
+                const cell = ws.getCell(signRow, currentCol);
+                cell.value = titles[i].main + '\n' + titles[i].sub;
+                cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+                cell.alignment = { horizontal: 'center', vertical: 'bottom', wrapText: true };
+
+                for (let c = currentCol; c <= endCol; c++) {
+                    ws.getCell(signRow, c).border = borderBox;
+                }
+            }
+            currentCol = endCol + 1;
+        }
+        return signRow;
+    },
     async exportMaterialMappingExcel() {
         const workbook = new ExcelJS.Workbook();
         workbook.creator = 'Billing Pro Studio';
@@ -338,6 +387,7 @@ window.ExportModule = {
         (revOn ? rcols : (pData.columns || [])).forEach(() => cols.push({ width: 12 }));
         cols.push({ width: 14 }, { width: 14 });
         ws.columns = cols;
+        (this.addStandardSignOffBlock || window.ExportModule.addStandardSignOffBlock)(ws, rowIdx + 1, cols.length);
         return ws;
     },
     addStyledTaxInvoiceToWorkbook(workbook) {
@@ -1396,6 +1446,8 @@ function jsonOut(obj) {
         });
         totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
 
+        (this.addStandardSignOffBlock || window.ExportModule.addStandardSignOffBlock)(ws, rowIdx + 1, 9);
+
         ws.columns = [
             { width: 12 },
             { width: 62 },
@@ -1648,6 +1700,8 @@ function jsonOut(obj) {
             totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
             rowIdx++;
         }
+
+        (this.addStandardSignOffBlock || window.ExportModule.addStandardSignOffBlock)(ws, rowIdx, totalCols);
 
         let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
         this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
