@@ -451,6 +451,8 @@
                 showSapItemManagerModal: false,
                 activeSapManagerItem: null,
                 activeSapManagerOrigIndex: -1,
+                activeSapManagerContextType: null,
+                activeSapManagerContextKey: null,
                 sapManagerSearchQuery: '',
                 sapManagerSuggestions: [],
                 mappingRoundMode: (function() { try { return localStorage.getItem('lk_billing_mapping_round_mode') || 'none'; } catch(e) { return 'none'; } })(),

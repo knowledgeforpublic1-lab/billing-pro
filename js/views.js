@@ -685,6 +685,33 @@ window.ViewsModule = {
             this.activeSapManagerContextType = isPole ? 'poleSchedule' : 'activity';
         }
         this.activeSapManagerContextKey = contextKey || (this.activeSapManagerContextType === 'poleSchedule' ? (this.selectedPoleScheduleKey || '907') : (this.selectedActivityKey || '907'));
+
+        // Table rows are filtered/sorted copies. Edit the source material so the
+        // badge, modal and saved schedule all observe the same mapping.
+        const key = this.activeSapManagerContextKey;
+        const source = this.activeSapManagerContextType === 'poleSchedule'
+            ? (this.poleSchedules && this.poleSchedules[key])
+            : (this.activities && this.activities[key]);
+        const materials = source && source.materials;
+        if (Array.isArray(materials)) {
+            let index = this.activeSapManagerOrigIndex;
+            if (!Number.isInteger(index) || index < 0 || !materials[index]) {
+                index = materials.indexOf(item);
+                if (index < 0 && item.no !== undefined) {
+                    const matches = materials.map((m, i) => String(m.no) === String(item.no) ? i : -1).filter(i => i >= 0);
+                    if (matches.length === 1) index = matches[0];
+                }
+            }
+            if (index < 0 || !materials[index]) {
+                this.showToast('Material row nahi mili. Schedule dobara kholkar mapping karein.', '⚠️');
+                return;
+            }
+            this.activeSapManagerOrigIndex = index;
+            item = materials[index];
+        } else {
+            this.showToast('Schedule nahi mila. Dobara kholkar mapping karein.', '⚠️');
+            return;
+        }
         
         // Ensure valid sapItems array
         if (!item.sapItems || !Array.isArray(item.sapItems)) {
@@ -748,13 +775,11 @@ window.ViewsModule = {
             items[0].desc = s.desc;
             items[0].uom = s.uom || 'No';
             items[0].docHeader = s.docHeader || '0031006347';
-            this.activeSapManagerItem.desc = s.desc;
         } else if (items.length === 1) {
             items[0].code = s.code;
             items[0].desc = s.desc;
             items[0].uom = s.uom || 'No';
             items[0].docHeader = s.docHeader || '0031006347';
-            this.activeSapManagerItem.desc = s.desc;
         } else {
             if (!items.some(x => x.code === s.code)) {
                 items.push({
@@ -851,6 +876,11 @@ window.ViewsModule = {
                 }
             }
             this.poleSchedules = { ...this.poleSchedules };
+            if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                this.syncPoleScheduleToBillingAndReconciliation(k);
+            }
+            // Persist the workspace before starting requests that may sync it.
+            this.saveToStorage();
             if (typeof this.persistPoleSchedulesToMasterFile === "function") {
                 this.persistPoleSchedulesToMasterFile(true);
             }
