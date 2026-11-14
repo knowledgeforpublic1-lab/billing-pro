@@ -2246,30 +2246,389 @@ window.PoleScheduleModule = {
         if (typeof this.showToast === 'function') this.showToast('Pole Schedule ' + k + ' successfully reset to official default master (' + count + ' items)!', '✅');
     },
 
-    exportPoleScheduleExcel(onlyFiltered = false) {
-        if (typeof XLSX === 'undefined') {
-            this.showToast('XLSX library not loaded', '❌');
-            return;
-        }
+    async exportPoleScheduleExcel(onlyFiltered = false) {
         const k = this.selectedPoleScheduleKey || '907';
         const sched = this.getCurrentPoleSchedule();
         const mats = (onlyFiltered && typeof this.getFilteredPoleScheduleMaterials === 'function')
             ? this.getFilteredPoleScheduleMaterials()
             : this.getPoleScheduleMaterials();
-        const locs = this.getPoleScheduleLocations();
-        const contractorName = typeof this.getContractorDisplayName === 'function' ? this.getContractorDisplayName() : 'CONTRACTOR';
-        const billNo = this.effectiveBillNo || 'BILL';
+        const locs = (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : [{ name: 'Location 1' }]);
+        const contractorName = (typeof this.getContractorDisplayName === 'function') ? this.getContractorDisplayName() : (this.selectedContractorName || 'CONTRACTOR');
+        const billNo = this.effectiveBillNo || (this.invoiceData && this.invoiceData.invoiceNo) || 'BILL';
+        const woNo = (this.invoiceData && this.invoiceData.workOrderNo) || '—';
+        const feederName = (this.invoiceData && this.invoiceData.feederName) || '—';
+        const pctStage1 = Number(this.pctStage1) || 85;
+        const stage1Ratio = pctStage1 / 100;
+        const cleanK = String(k).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const cleanContractor = contractorName.replace(/[^a-zA-Z0-9]/g, '_');
+        const cleanBillNo = String(billNo).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filterSuffix = onlyFiltered ? `_Filtered_${mats.filter(m => !m.isSection).length}_Items` : '';
+        const filename = `Pole_Schedule_${cleanK}_${cleanContractor}_${cleanBillNo}${filterSuffix}.xlsx`;
+
+        // 🌟 Helper for 1-based column number to letter ('A', 'B', ... 'Z', 'AA', etc.)
+        const colNumToLetter = (colNum) => {
+            let temp, letter = '';
+            let n = colNum;
+            while (n > 0) {
+                temp = (n - 1) % 26;
+                letter = String.fromCharCode(temp + 65) + letter;
+                n = Math.floor((n - temp - 1) / 26);
+            }
+            return letter;
+        };
+
+        const totalCols = 8 + locs.length;
+        const lastColLetter = colNumToLetter(totalCols);
+        const firstLocCol = colNumToLetter(5);
+        const lastLocCol = colNumToLetter(4 + locs.length);
+        const totQtyCol = colNumToLetter(5 + locs.length);
+        const rateCol = colNumToLetter(6 + locs.length);
+        const amt100Col = colNumToLetter(7 + locs.length);
+        const amtStage1Col = colNumToLetter(8 + locs.length);
+
+        // 🌟 1. Primary: Use ExcelJS for rich, beautiful, formula-driven Excel export
+        if (typeof ExcelJS !== 'undefined') {
+            if (typeof this.showToast === 'function') this.showToast('Generating formatted Pole Schedule Excel...', '⏳');
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Billing Pro Studio';
+            workbook.created = new Date();
+
+            const sheetName = (onlyFiltered ? `Filtered_${cleanK}` : `Pole_Schedule_${cleanK}`).substring(0, 31);
+            const ws = workbook.addWorksheet(sheetName, {
+                views: [{ showGridLines: true }],
+                pageSetup: {
+                    paperSize: 9, // A4
+                    orientation: 'landscape',
+                    fitToPage: true,
+                    fitToWidth: 1,
+                    fitToHeight: 0,
+                    horizontalCentered: true,
+                    margins: { left: 0.25, right: 0.25, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 }
+                }
+            });
+
+            const thinBorder = {
+                top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+            const headerBorder = {
+                top: { style: 'medium', color: { argb: 'FF0F172A' } },
+                left: { style: 'thin', color: { argb: 'FF334155' } },
+                bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+                right: { style: 'thin', color: { argb: 'FF334155' } }
+            };
+            const doubleBottomBorder = {
+                top: { style: 'thin', color: { argb: 'FF0F172A' } },
+                left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                bottom: { style: 'double', color: { argb: 'FF0F172A' } },
+                right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+
+            // 🏢 Row 1: Company Header Banner
+            ws.mergeCells(`A1:${lastColLetter}1`);
+            const r1 = ws.getCell('A1');
+            r1.value = 'ASHOKA BUILDCON LIMITED — RDSS T-10 GADCHIROLI';
+            r1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+            r1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            r1.alignment = { horizontal: 'center', vertical: 'middle' };
+            ws.getRow(1).height = 30;
+
+            // 📐 Row 2: Schedule Title Banner
+            ws.mergeCells(`A2:${lastColLetter}2`);
+            const r2 = ws.getCell('A2');
+            r2.value = `${(sched.title || ('POLE SCHEDULE — ' + k)).toUpperCase()} ${onlyFiltered ? '(FILTERED ITEMS)' : ''}`;
+            r2.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            r2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+            r2.alignment = { horizontal: 'center', vertical: 'middle' };
+            ws.getRow(2).height = 24;
+
+            // 📋 Row 3: Meta Information Banner
+            ws.mergeCells(`A3:${lastColLetter}3`);
+            const r3 = ws.getCell('A3');
+            const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            r3.value = `Contractor: ${contractorName}    |    Bill / RA No: ${billNo}    |    Work Order: ${woNo}    |    Feeder: ${feederName}    |    Date: ${dateStr}`;
+            r3.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E293B' } };
+            r3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+            r3.alignment = { horizontal: 'center', vertical: 'middle' };
+            r3.border = thinBorder;
+            ws.getRow(3).height = 22;
+
+            // Row 4: Spacer
+            ws.getRow(4).height = 8;
+
+            // 🏷️ Row 5: Table Header
+            const headerRow = ws.getRow(5);
+            const headers = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
+            locs.forEach(loc => headers.push(loc.name || 'Location'));
+            headers.push('Total Qty', 'Unit Rate (₹)', '100% Amount (₹)', `${pctStage1}% Amount (₹)`);
+            headerRow.values = headers;
+            headerRow.height = 32;
+
+            headerRow.eachCell((cell, colIdx) => {
+                cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                if (colIdx >= 5 && colIdx <= 4 + locs.length) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+                } else if (colIdx > 4 + locs.length) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+                } else {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+                }
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = headerBorder;
+            });
+
+            let curRow = 6;
+            const startDataRow = 6;
+            const dataRowIndices = [];
+
+            // 📝 Data Rows
+            mats.forEach((m, mIdx) => {
+                const origIdx = m.origIndex !== undefined ? m.origIndex : mIdx;
+                const row = ws.getRow(curRow);
+
+                if (m.isSection) {
+                    ws.mergeCells(`A${curRow}:${lastColLetter}${curRow}`);
+                    const secCell = row.getCell(1);
+                    secCell.value = window.sanitizeExcelText ? window.sanitizeExcelText(m.desc || '') : (m.desc || '');
+                    secCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FF1E1B4B' } };
+                    secCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
+                    secCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                    row.height = 24;
+                    for (let c = 1; c <= totalCols; c++) {
+                        row.getCell(c).border = thinBorder;
+                    }
+                    curRow++;
+                    return;
+                }
+
+                dataRowIndices.push(curRow);
+                row.height = 21;
+
+                // Alternating zebra striping
+                const isEven = (dataRowIndices.length % 2 === 0);
+                const rowBg = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+                // Col A: Item No
+                const cNo = row.getCell(1);
+                cNo.value = window.sanitizeExcelText ? window.sanitizeExcelText(m.no || '') : (m.no || '');
+                cNo.alignment = { horizontal: 'center', vertical: 'middle' };
+                cNo.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF334155' } };
+
+                // Col B: SAP Code
+                const cSap = row.getCell(2);
+                cSap.value = m.itemCode ? String(m.itemCode).trim() : '—';
+                cSap.alignment = { horizontal: 'center', vertical: 'middle' };
+                cSap.font = { name: 'Calibri', size: 9.5, bold: !!m.itemCode, color: { argb: m.itemCode ? 'FF0F172A' : 'FF94A3B8' } };
+                cSap.numFmt = '@';
+
+                // Col C: Description
+                const cDesc = row.getCell(3);
+                cDesc.value = window.sanitizeExcelText ? window.sanitizeExcelText(m.desc || '') : (m.desc || '');
+                cDesc.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true, indent: 1 };
+                cDesc.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
+
+                // Col D: Unit
+                const cUnit = row.getCell(4);
+                cUnit.value = window.sanitizeExcelText ? window.sanitizeExcelText(m.unit || '') : (m.unit || '');
+                cUnit.alignment = { horizontal: 'center', vertical: 'middle' };
+                cUnit.font = { name: 'Calibri', size: 9.5, color: { argb: 'FF475569' } };
+
+                // Dynamic Location Columns (Col E .. lastLocCol)
+                locs.forEach((_, lIdx) => {
+                    const cLoc = row.getCell(5 + lIdx);
+                    const q = this.getPoleScheduleCellQty(lIdx, origIdx);
+                    const num = (q !== '' && q !== null && q !== undefined)
+                        ? (typeof this.evalGridFormula === 'function' ? Number(this.evalGridFormula(String(q))) : parseFloat(q))
+                        : '';
+                    if (num !== '' && !isNaN(num) && num > 0) {
+                        cLoc.value = num;
+                        cLoc.numFmt = Number.isInteger(num) ? '#,##0' : '#,##0.00';
+                    } else {
+                        cLoc.value = '';
+                    }
+                    cLoc.alignment = { horizontal: 'right', vertical: 'middle' };
+                    cLoc.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
+                });
+
+                // Total Qty (Col totQtyCol)
+                const cTotQty = row.getCell(5 + locs.length);
+                const totQtyVal = this.getPoleScheduleItemTotalQty(origIdx);
+                const sumFormula = locs.length === 1
+                    ? `${firstLocCol}${curRow}`
+                    : `SUM(${firstLocCol}${curRow}:${lastLocCol}${curRow})`;
+                cTotQty.value = { formula: sumFormula, result: totQtyVal > 0 ? totQtyVal : 0 };
+                cTotQty.numFmt = '#,##0.00';
+                cTotQty.alignment = { horizontal: 'right', vertical: 'middle' };
+                cTotQty.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF047857' } };
+
+                // Unit Rate (Col rateCol)
+                const cRate = row.getCell(6 + locs.length);
+                const rateVal = this.getPoleScheduleRateValue(m, k);
+                cRate.value = rateVal > 0 ? rateVal : 0;
+                cRate.numFmt = '#,##0.00';
+                cRate.alignment = { horizontal: 'right', vertical: 'middle' };
+                cRate.font = { name: 'Calibri', size: 10, color: { argb: 'FF334155' } };
+
+                // 100% Amount (Col amt100Col)
+                const cAmt100 = row.getCell(7 + locs.length);
+                const amt100Val = this.getPoleScheduleItemAmount100(m, origIdx);
+                cAmt100.value = { formula: `${totQtyCol}${curRow}*${rateCol}${curRow}`, result: amt100Val > 0 ? amt100Val : 0 };
+                cAmt100.numFmt = '#,##0.00';
+                cAmt100.alignment = { horizontal: 'right', vertical: 'middle' };
+                cAmt100.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+
+                // Stage 1 (85%) Amount (Col amtStage1Col)
+                const cAmtS1 = row.getCell(8 + locs.length);
+                const amtS1Val = this.getPoleScheduleItemAmountStage1(m, origIdx);
+                cAmtS1.value = { formula: `${amt100Col}${curRow}*${stage1Ratio}`, result: amtS1Val > 0 ? amtS1Val : 0 };
+                cAmtS1.numFmt = '#,##0.00';
+                cAmtS1.alignment = { horizontal: 'right', vertical: 'middle' };
+                cAmtS1.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFB45309' } };
+
+                // Apply borders & zebra fill
+                for (let c = 1; c <= totalCols; c++) {
+                    const cell = row.getCell(c);
+                    cell.border = thinBorder;
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                }
+
+                curRow++;
+            });
+
+            const endDataRow = curRow - 1;
+
+            // 🌟 Grand Total Footer Row
+            const totRow = ws.getRow(curRow);
+            totRow.height = 28;
+
+            ws.mergeCells(`A${curRow}:D${curRow}`);
+            const totLabelCell = totRow.getCell(1);
+            totLabelCell.value = String(k).startsWith('dept_') ? 'TOTAL (DEPARTMENTAL BILL)' : `TOTAL (ACTIVITY ${k})`;
+            totLabelCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+            totLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+            // Location Totals
+            locs.forEach((_, lIdx) => {
+                const cLocTot = totRow.getCell(5 + lIdx);
+                const colLet = colNumToLetter(5 + lIdx);
+                cLocTot.value = (endDataRow >= startDataRow) ? { formula: `SUM(${colLet}${startDataRow}:${colLet}${endDataRow})` } : 0;
+                cLocTot.numFmt = '#,##0.00';
+                cLocTot.alignment = { horizontal: 'right', vertical: 'middle' };
+                cLocTot.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FF0F172A' } };
+            });
+
+            // Total Qty
+            const totQtyCell = totRow.getCell(5 + locs.length);
+            totQtyCell.value = (endDataRow >= startDataRow) ? { formula: `SUM(${totQtyCol}${startDataRow}:${totQtyCol}${endDataRow})` } : 0;
+            totQtyCell.numFmt = '#,##0.00';
+            totQtyCell.alignment = { horizontal: 'right', vertical: 'middle' };
+            totQtyCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF047857' } };
+
+            // Unit Rate
+            const totRateCell = totRow.getCell(6 + locs.length);
+            totRateCell.value = '—';
+            totRateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            totRateCell.font = { name: 'Calibri', size: 10, color: { argb: 'FF94A3B8' } };
+
+            // Total 100% Amount
+            const totAmt100Cell = totRow.getCell(7 + locs.length);
+            totAmt100Cell.value = (endDataRow >= startDataRow) ? { formula: `SUM(${amt100Col}${startDataRow}:${amt100Col}${endDataRow})` } : 0;
+            totAmt100Cell.numFmt = '₹#,##0.00';
+            totAmt100Cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            totAmt100Cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+
+            // Total Stage 1 Amount
+            const totAmtS1Cell = totRow.getCell(8 + locs.length);
+            totAmtS1Cell.value = (endDataRow >= startDataRow) ? { formula: `SUM(${amtStage1Col}${startDataRow}:${amtStage1Col}${endDataRow})` } : 0;
+            totAmtS1Cell.numFmt = '₹#,##0.00';
+            totAmtS1Cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            totAmtS1Cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFB45309' } };
+
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = totRow.getCell(c);
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }; // Warm Champagne
+                cell.border = doubleBottomBorder;
+            }
+
+            // ✍️ Sign-off Box (2 rows below total)
+            const signRowIdx = curRow + 3;
+            ws.getRow(signRowIdx - 1).height = 14;
+
+            const signCols = Math.floor(totalCols / 3);
+            const box1Start = 'A';
+            const box1End = colNumToLetter(Math.max(2, signCols));
+            const box2Start = colNumToLetter(Math.max(2, signCols) + 1);
+            const box2End = colNumToLetter(Math.max(4, signCols * 2));
+            const box3Start = colNumToLetter(Math.max(4, signCols * 2) + 1);
+            const box3End = lastColLetter;
+
+            ws.mergeCells(`${box1Start}${signRowIdx}:${box1End}${signRowIdx + 2}`);
+            const sBox1 = ws.getCell(`${box1Start}${signRowIdx}`);
+            sBox1.value = `PREPARED BY:\n\n${contractorName}\n(Authorized Signatory)`;
+            sBox1.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
+            sBox1.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            sBox1.border = thinBorder;
+
+            ws.mergeCells(`${box2Start}${signRowIdx}:${box2End}${signRowIdx + 2}`);
+            const sBox2 = ws.getCell(`${box2Start}${signRowIdx}`);
+            sBox2.value = `CHECKED & VERIFIED BY:\n\nSite Engineer / Quality Dept.\n(Ashoka Buildcon Ltd.)`;
+            sBox2.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
+            sBox2.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            sBox2.border = thinBorder;
+
+            ws.mergeCells(`${box3Start}${signRowIdx}:${box3End}${signRowIdx + 2}`);
+            const sBox3 = ws.getCell(`${box3Start}${signRowIdx}`);
+            sBox3.value = `APPROVED BY:\n\nProject Manager / Billing In-Charge\n(RDSS T-10 Gadchiroli)`;
+            sBox3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
+            sBox3.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            sBox3.border = thinBorder;
+
+            // 📏 Set Generous & Exact Column Widths
+            ws.getColumn(1).width = 10; // Item No
+            ws.getColumn(2).width = 16; // SAP Code
+            ws.getColumn(3).width = 46; // Description
+            ws.getColumn(4).width = 10; // Unit
+            locs.forEach((_, lIdx) => {
+                ws.getColumn(5 + lIdx).width = 16; // Location columns
+            });
+            ws.getColumn(5 + locs.length).width = 16; // Total Qty
+            ws.getColumn(6 + locs.length).width = 15; // Unit Rate
+            ws.getColumn(7 + locs.length).width = 18; // 100% Amount
+            ws.getColumn(8 + locs.length).width = 18; // Stage 1 Amount
+
+            // Download file in browser
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            if (typeof this.showToast === 'function') this.showToast(`Excel downloaded: ${filename} 🎉`, '📗');
+            return;
+        }
+
+        // 🌟 2. Fallback to XLSX if ExcelJS is not present
+        if (typeof XLSX === 'undefined') {
+            if (typeof this.showToast === 'function') this.showToast('Excel export library not available', '❌');
+            return;
+        }
 
         const rows = [];
         rows.push([`ASHOKA BUILDCON LIMITED — RDSS T-10 GADCHIROLI`]);
         rows.push([`${sched.title || ('Pole Schedule ' + k)} ${onlyFiltered ? '(FILTERED ITEMS)' : ''}`]);
-        rows.push([`Contractor: ${contractorName} | Bill No: ${billNo} | Date: ${new Date().toLocaleDateString('en-IN')}`]);
+        rows.push([`Contractor: ${contractorName} | Bill No: ${billNo} | Work Order: ${woNo} | Date: ${new Date().toLocaleDateString('en-IN')}`]);
         rows.push([]);
 
         // Header row
         const header = ['Item No', 'SAP Code', 'Material Description', 'Unit'];
         locs.forEach(loc => header.push(loc.name || 'Location'));
-        header.push('Total Qty', 'Unit Rate', '100% Amount', `${this.pctStage1 || 85}% Amount`);
+        header.push('Total Qty', 'Unit Rate', '100% Amount', `${pctStage1}% Amount`);
         rows.push(header);
 
         let runningTotQty = 0;
@@ -2320,14 +2679,16 @@ window.PoleScheduleModule = {
         rows.push(totalRow);
 
         const ws = XLSX.utils.aoa_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        const sheetName = onlyFiltered ? `Filtered_${k}` : `Pole_Schedule_${k}`;
-        XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
+        const colWidths = [{ wch: 10 }, { wch: 16 }, { wch: 45 }, { wch: 10 }];
+        locs.forEach(() => colWidths.push({ wch: 15 }));
+        colWidths.push({ wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 16 });
+        ws['!cols'] = colWidths;
 
-        const filterSuffix = onlyFiltered ? `_Filtered_${mats.filter(m => !m.isSection).length}_Items` : '';
-        const filename = `Pole_Schedule_${k}_${contractorName.replace(/[^a-zA-Z0-9]/g, '_')}_${billNo}${filterSuffix}.xlsx`;
+        const wb = XLSX.utils.book_new();
+        const sheetName = (onlyFiltered ? `Filtered_${cleanK}` : `Pole_Schedule_${cleanK}`).substring(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
         XLSX.writeFile(wb, filename);
-        this.showToast(`Excel exported: ${filename}`, '📗');
+        if (typeof this.showToast === 'function') this.showToast(`Excel exported: ${filename}`, '📗');
     },
 
     // ─── CONTRACTOR SAP STOCK VERIFICATION & RED ALERT (User Requested) ───
