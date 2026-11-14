@@ -817,9 +817,9 @@
                                     <input type="checkbox" v-model="psAutoPole" @change="recalculatePoleScheduleConcreting(selectedPoleScheduleKey, true)">
                                     <span>🪵 Pole</span>
                                 </label>
-                                <label class="ps-cs-switch" title="Stay set concreting auto-fill (0.125 m³ per stay)">
+                                <label class="ps-cs-switch" title="Sirf HT Stay Set se concreting (0.125 m³ per set). Stay CL/clamps, LT Stay, wire aur insulators include nahi hote.">
                                     <input type="checkbox" v-model="psAutoStay" @change="recalculatePoleScheduleConcreting(selectedPoleScheduleKey, true)">
-                                    <span>🔗 Stay set</span>
+                                    <span>🔗 HT Stay Set</span>
                                 </label>
                                 <label class="ps-cs-switch" title="Muffing auto-fill (har pole pe 1 muffing, concrete m³)">
                                     <input type="checkbox" v-model="psAutoMuffing" @change="recalculatePoleScheduleConcreting(selectedPoleScheduleKey, true)">
@@ -915,7 +915,7 @@
                                                     <span v-if="isPoleScheduleItemUnissued(item)" style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid #ef4444; padding: 1px 5px; border-radius: 4px; font-weight: 800;" :title="getPoleScheduleItemStockTooltip(item)">
                                                         ⚠️ Unissued (0)
                                                     </span>
-                                                    <span v-if="isPoleScheduleConcreteItem(item)" class="badge-concrete-auto" title="Auger size aur stays se automatically calculate hota hai">
+                                                    <span v-if="isPoleScheduleConcreteItem(item)" class="badge-concrete-auto" title="Pole + HT Stay Set se calculate hota hai; Stay CL aur accessories exclude hain">
                                                         <span>🧱</span>
                                                         <span>Auto-Concreting</span>
                                                     </span>
@@ -3427,7 +3427,7 @@
     <script defer src="js/reco-layout.js?v=20261114_reco_fit"></script>
     <script defer src="js/views.js?v=20261114_pole_sap_source"></script>
     <script defer src="js/export.js?v=20261111_gdrive_toast_fix"></script>
-    <script defer src="js/pole-schedule.js?v=20261114_contractor_mapping"></script>
+    <script defer src="js/pole-schedule.js?v=20261114_concrete_sources"></script>
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 

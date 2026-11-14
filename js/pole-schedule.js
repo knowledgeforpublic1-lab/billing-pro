@@ -1308,20 +1308,21 @@ window.PoleScheduleModule = {
     isPoleSchedulePoleItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
         const d = String(item.desc || '').toLowerCase();
-        if (d.includes('rsj') || d.includes('psc')) return true;
-        if (d.includes('pole') && !d.includes('earthing') && !d.includes('clamp') && !d.includes('top') && !d.includes('bracket') && !d.includes('cap')) {
-            return true;
-        }
-        return false;
+        // A reference to a pole in an accessory name is not a foundation.
+        if (/\b(?:clamps?|cl|earthing|earth|top|brackets?|caps?|cross\s*arms?|guarding|painting|hardware|support|numbering|switch(?:es)?|transformer|mounted|erection|dismantling|transport|labou?r|testing|stringing|insulators?|stay|wire|muffing|concreting|foundation|bolts?|plates?|fittings?)\b/i.test(d)) return false;
+        const hasPoleSize = /\b\d+(?:\.\d+)?\s*(?:m|mtr|mtrs|meters?|metres?)\b/i.test(d);
+        if (/\b(?:rsj|psc|pcc|rcc)\b/i.test(d)) return /\bpoles?\b/i.test(d) || hasPoleSize;
+        return /^(?:\d+(?:\.\d+)?\s*(?:m|mtr|meters?|metres?)\s+)?(?:(?:steel|tubular|wooden|concrete|cement|spun|prestressed)\s+)*poles?\b/i.test(d);
     },
 
     isPoleScheduleStayItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
         const d = String(item.desc || '').toLowerCase();
-        if (d.includes('stay set') || (d.includes('stay') && !d.includes('wire') && !d.includes('clamp') && !d.includes('insulator') && !d.includes('bow'))) {
-            return true;
-        }
-        return false;
+        // Only the HT stay assembly needs stay concreting. Exclude accessories
+        // before matching: "HT Stay Set clamp" must never pass as a Stay Set.
+        if (/\b(?:clamps?|cl|wire|insulators?|bow|rod|plate|bolt|eye|concreting|concrete|muffing)\b/i.test(d)) return false;
+        const normalized = d.replace(/\bh\s*[.\-/]?\s*t\.?/gi, 'ht').replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
+        return /\bht\s*stay\s*sets?\b|\bstay\s*sets?\s*ht\b/i.test(normalized);
     },
 
     isPoleScheduleConcreteItem(item) {
@@ -1617,7 +1618,7 @@ window.PoleScheduleModule = {
         if (muffIdx !== -1) {
             if (wantMuff && res.totalMuff > 0) {
                 this.poleScheduleQuantities[k][lIdx][muffIdx] = Math.round(res.totalMuff * 1000) / 1000;
-            } else if (!wantMuff) {
+            } else {
                 this.poleScheduleQuantities[k][lIdx][muffIdx] = '';
             }
         }
@@ -1650,7 +1651,7 @@ window.PoleScheduleModule = {
         locs.forEach((_, lIdx) => {
             const res = this.calculateLocationConcreting(k, lIdx);
             if (concreteIdx !== -1) {
-                if (shouldFillConcrete && (res.totalVol > 0 || force)) {
+                if (shouldFillConcrete) {
                     this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';
                 } else if (!shouldFillConcrete) {
                     this.poleScheduleQuantities[k][lIdx][concreteIdx] = '';
@@ -1661,9 +1662,9 @@ window.PoleScheduleModule = {
 
             // 🧱 Separate Muffing row auto-fill
             if (muffIdx !== -1) {
-                if (wantMuff && (res.totalMuff > 0 || (force && res.totalPoles > 0))) {
+                if (wantMuff && res.totalMuff > 0) {
                     this.poleScheduleQuantities[k][lIdx][muffIdx] = res.totalMuff > 0 ? Math.round(res.totalMuff * 1000) / 1000 : '';
-                } else if (!wantMuff) {
+                } else {
                     this.poleScheduleQuantities[k][lIdx][muffIdx] = '';
                 }
             }
@@ -2384,7 +2385,7 @@ window.PoleScheduleModule = {
             return `⚠️ Alert: Is item (${item.itemCode || ''}) ka stock contractor '${cName}' ko issue nahi hai! (Reco Net Issue: 0)`;
         }
         if (this.isPoleScheduleConcreteItem(item)) {
-            return '🧱 Auto-calculated Concreting from Auger ' + this.selectedAugerSize + ' inch + Stays: ' + (qty || '0') + ' ' + (item.unit || '');
+            return '🧱 Auto-calculated Concreting from poles + HT Stay Sets (clamps excluded), Auger ' + this.selectedAugerSize + ' inch: ' + (qty || '0') + ' ' + (item.unit || '');
         }
         if (this.isPoleScheduleNutBoltItem(item)) {
             const w = this.poleScheduleNutBoltUnitWeight(item);
