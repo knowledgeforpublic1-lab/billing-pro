@@ -67,7 +67,9 @@
                 newContractorForm: { name: '', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' },
                 newIssueForm: { date: getTodayStr(), itemId: '', quantity: '', reference: '' },
                 exportFrom: '2026-09-01',
-                exportTo: getTodayStr()
+                exportTo: getTodayStr(),
+                exportFilter: 'active',
+                exportSearch: ''
             };
         },
 
@@ -470,6 +472,91 @@
                 this.newIssueForm = { date: getTodayStr(), itemId: '', quantity: '', reference: '' };
                 this.saveProgress();
                 this.showToast('Material issue record added! 📦', 'success');
+            },
+
+            getExportDays() {
+                if (!this.exportFrom || !this.exportTo || this.exportFrom > this.exportTo) return [];
+                const days = [];
+                const dStart = new Date(this.exportFrom + 'T00:00:00Z');
+                const dEnd = new Date(this.exportTo + 'T00:00:00Z');
+                for (let d = new Date(dStart); d <= dEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+                    days.push(d.toISOString().slice(0, 10));
+                }
+                return days.slice(0, 62);
+            },
+
+            getExportDayReport(date) {
+                return this.contractorReports.find(r => r.date === date);
+            },
+
+            getExportDayQty(itemId, date) {
+                const rep = this.getExportDayReport(date);
+                return (rep && rep.quantities && Number(rep.quantities[itemId])) || 0;
+            },
+
+            getExportItemTotal(itemId) {
+                const days = this.getExportDays();
+                return days.reduce((sum, d) => sum + this.getExportDayQty(itemId, d), 0);
+            },
+
+            getExportDayManpower(date, key) {
+                const rep = this.getExportDayReport(date);
+                if (!rep || !rep.manpower) return 0;
+                if (key === 'total') {
+                    return (Number(rep.manpower.leader) || 0) + (Number(rep.manpower.skilled) || 0) + (Number(rep.manpower.unskilled) || 0);
+                }
+                return Number(rep.manpower[key]) || 0;
+            },
+
+            getExportPreviewItems() {
+                const items = this.items || [];
+                const filter = this.exportFilter || 'active';
+                const q = String(this.exportSearch || '').trim().toLowerCase();
+
+                return items.filter(it => {
+                    if (q) {
+                        const matches = String(it.name || '').toLowerCase().includes(q) ||
+                                        String(it.code || '').toLowerCase().includes(q);
+                        if (!matches) return false;
+                    }
+                    if (filter === 'all') return true;
+                    const stock = this.getItemStock(it);
+                    const totalRangeConsumed = this.getExportItemTotal(it.id);
+                    if (filter === 'issued') {
+                        return (stock && stock.totalIssued > 0);
+                    }
+                    return (stock && stock.totalIssued > 0) || totalRangeConsumed > 0;
+                });
+            },
+
+            setExportRange(rangeType) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                if (rangeType === 'sep2026') {
+                    this.exportFrom = '2026-09-01';
+                    this.exportTo = '2026-09-30';
+                } else if (rangeType === 'current_month') {
+                    const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+                    this.exportFrom = `${year}-${month}-01`;
+                    this.exportTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+                } else if (rangeType === 'last30') {
+                    const d30 = new Date();
+                    d30.setDate(d30.getDate() - 29);
+                    this.exportFrom = d30.toISOString().slice(0, 10);
+                    this.exportTo = now.toISOString().slice(0, 10);
+                }
+            },
+
+            formatShortDay(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const mIdx = parseInt(parts[1], 10) - 1;
+                    return `${parts[2]}-${monthNames[mIdx] || parts[1]}`;
+                }
+                return dateStr;
             },
 
             async downloadExcelReport() {

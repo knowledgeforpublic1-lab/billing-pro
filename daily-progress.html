@@ -64,90 +64,47 @@
 
         <!-- Main Workspace -->
         <div class="main">
-            <header>
+            <header class="app-header-compact">
                 <div class="header-left">
-                    <span>📅 Site Operations</span>
-                    <span>/</span>
-                    <strong>{{ currentTab === 'entry' ? 'Daily Progress Entry' : (currentTab === 'stock' ? 'Material & Stock Register' : (currentTab === 'history' ? 'Saved Report History' : 'Excel Report Export')) }}</strong>
+                    <span class="brand-chip-compact">📅 SiteDiary</span>
+                    
+                    <div class="contractor-select-compact" title="CONTRACTOR / LABOUR TEAM">
+                        <span class="compact-label">CONTRACTOR / LABOUR TEAM:</span>
+                        <select v-model="selectedContractorId" title="Choose contractor team">
+                            <option v-for="c in contractors" :key="c.id" :value="c.id">{{ c.name }}</option>
+                        </select>
+                        <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
+                    </div>
+
+                    <div class="date-stepper-compact">
+                        <button type="button" @click="navigateDay(-1)" title="Previous Day">◀</button>
+                        <input type="date" v-model="selectedDate" title="Choose date">
+                        <button type="button" @click="navigateDay(1)" title="Next Day">▶</button>
+                        <button type="button" class="btn-today-compact" @click="setToday" title="Jump to Today">Today</button>
+                    </div>
                 </div>
 
                 <div class="header-right">
                     <span class="sync-badge" :class="{ unsaved: dirty }">
                         <span style="font-size: 8px;">●</span>
-                        <span>{{ dirty ? 'Unsaved changes' : 'Cloud synchronized' }}</span>
+                        <span>{{ dirty ? 'Unsaved' : 'Synced' }}</span>
                     </span>
                     <button type="button" class="btn-header-share" @click="copyShareLink" title="Contractor ko bhejne ke liye share link copy karein">
-                        <span>🔗</span><span>Share Link</span>
+                        <span>📋</span><span>Share Link</span>
                     </button>
                 </div>
             </header>
 
             <main>
-                <!-- Context Panel: Contractor & Date -->
-                <section class="context-panel">
-                    <div>
-                        <label class="field-label">CONTRACTOR / LABOUR TEAM</label>
-                        <div class="contractor-select-wrap">
-                            <span class="contractor-initials">
-                                {{ (activeContractor.name || 'MS').slice(0, 2).toUpperCase() }}
-                            </span>
-                            <select v-model="selectedContractorId">
-                                <option v-for="c in contractors" :key="c.id" :value="c.id">
-                                    {{ c.name }}
-                                </option>
-                            </select>
-                            <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" style="border:0; background: rgba(56,189,248,0.2); color:#38bdf8; width: 28px; height: 28px; border-radius: 6px; font-weight: 800; font-size: 13px; display: grid; place-items: center; flex-shrink:0;">➕</button>
-                        </div>
-                    </div>
-
-                    <div class="project-details">
-                        <label class="field-label">PROJECT &amp; FEEDER</label>
-                        <strong>{{ activeContractor.project || 'Gadchiroli (T-10)' }}</strong>
-                        <span style="display: block; font-size: 11px; margin-top: 3px;">Feeder: {{ activeContractor.feeder || 'ANGARA' }} · Eng: {{ activeContractor.engineer || 'AMIT GOMASE' }}</span>
-                    </div>
-
-                    <div>
-                        <label class="field-label">WORK DATE</label>
-                        <div class="date-stepper-wrap">
-                            <button type="button" @click="navigateDay(-1)" title="Previous Day">◀</button>
-                            <input type="date" v-model="selectedDate" title="Choose date">
-                            <button type="button" @click="navigateDay(1)" title="Next Day">▶</button>
-                            <button type="button" class="btn-today" @click="setToday" title="Jump to Today">Today</button>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- TAB 1: DAILY PROGRESS ENTRY -->
                 <div v-if="currentTab === 'entry'">
-                    <!-- Stat Grid -->
-                    <div class="stat-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon green">📦</div>
-                            <div class="stat-info">
-                                <small>Materials Consumed Today</small>
-                                <strong>{{ enteredCount }} <em>items entered</em></strong>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon amber">👷</div>
-                            <div class="stat-info">
-                                <small>Total Manpower on Site</small>
-                                <strong>{{ totalManpower }} <em>workers</em></strong>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon blue">📋</div>
-                            <div class="stat-info">
-                                <small>Report Status</small>
-                                <strong style="font-size: 18px;">
-                                    <span v-if="dirty" style="color: #fbbf24;">● Changes Pending</span>
-                                    <span v-else-if="version" style="color: #4ade80;">✓ Saved (v{{ version }})</span>
-                                    <span v-else style="color: #94a3b8;">New Entry</span>
-                                </strong>
-                            </div>
-                        </div>
+                    <!-- Single-line Compact Status Banner -->
+                    <div class="compact-strip">
+                        <span>📦 <strong>{{ enteredCount }}</strong> of <strong>{{ issuedItemsCount }}</strong> items entered</span>
+                        <span>👷 <strong>{{ totalManpower }}</strong> workers on site</span>
+                        <span v-if="dirty" style="color: #fbbf24;">● Changes Pending</span>
+                        <span v-else-if="version" style="color: #4ade80;">✓ Saved (v{{ version }})</span>
+                        <span v-else style="color: #94a3b8;">Ready for {{ selectedDate }}</span>
                     </div>
 
                     <!-- Two-column Entry Layout -->
@@ -417,37 +374,186 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: DOWNLOAD EXCEL REPORTS -->
+                <!-- TAB 4: DOWNLOAD EXCEL REPORTS & LIVE PREVIEW -->
                 <div v-if="currentTab === 'download'">
-                    <div class="panel" style="max-width: 600px; margin: 0 auto;">
-                        <div class="panel-header">
-                            <h2><span>📥</span> Export Multi-Sheet Excel Report</h2>
-                        </div>
-                        <p class="panel-sub">
-                            Company ke official format me date-wise progress report download karein (30 din per sheet).
-                        </p>
+                    <div class="dp-excel-preview-wrap">
+                        <!-- Toolbar with Date Range, Presets & Download -->
+                        <div class="dp-excel-toolbar no-print">
+                            <div class="dp-excel-range-inputs">
+                                <div class="dp-excel-date-field">
+                                    <label>From</label>
+                                    <input type="date" v-model="exportFrom" title="Start Date">
+                                </div>
+                                <div class="dp-excel-date-field">
+                                    <label>To</label>
+                                    <input type="date" v-model="exportTo" title="End Date">
+                                </div>
+                                <div class="dp-excel-quick-ranges">
+                                    <button type="button" @click="setExportRange('sep2026')" title="September 2026">Sep 2026</button>
+                                    <button type="button" @click="setExportRange('current_month')" title="Current Month">This Month</button>
+                                    <button type="button" @click="setExportRange('last30')" title="Last 30 Days">Last 30 Days</button>
+                                </div>
+                            </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                    <input type="search"
+                                           v-model="exportSearch"
+                                           placeholder="Search material in sheet..."
+                                           style="background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #ffffff; font-size: 11px; padding: 4px 8px; width: 170px; outline: none;">
+                                    <select v-model="exportFilter"
+                                            style="background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #ffffff; font-size: 11px; padding: 4px 6px; outline: none; cursor: pointer;">
+                                        <option value="active">Active Items Only ({{ getExportPreviewItems().length }})</option>
+                                        <option value="issued">Issued Stock Only</option>
+                                        <option value="all">All Sheet Rows ({{ items.length }})</option>
+                                    </select>
+                                </div>
+
+                                <button type="button"
+                                        class="btn-header-share"
+                                        :disabled="busy || !exportFrom || !exportTo || exportFrom > exportTo"
+                                        @click="downloadExcelReport"
+                                        style="font-size: 12px; padding: 6px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                    <span>{{ busy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sheet Meta Header -->
+                        <div class="dp-excel-meta-bar">
                             <div>
-                                <label class="field-label">FROM DATE</label>
-                                <input type="date" v-model="exportFrom" style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; color: #fff; font-size: 12px;">
+                                <strong>RDSS GADCHIROLI (T-10) — DAILY PROGRESS REGISTER</strong>
+                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ activeContractor.feeder || 'ANGARA' }} · Team: {{ activeContractor.name }}</span>
                             </div>
                             <div>
-                                <label class="field-label">TO DATE</label>
-                                <input type="date" v-model="exportTo" style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; color: #fff; font-size: 12px;">
+                                <span style="color: #38bdf8; font-weight: 700;">{{ getExportDays().length }} Days Range</span>
+                                <span style="opacity: 0.6; margin-left: 6px;">({{ exportFrom }} — {{ exportTo }})</span>
                             </div>
                         </div>
 
-                        <div style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; font-size: 12px; color: #38bdf8;">
-                            ✓ Contractor: <strong>{{ activeContractor.name }}</strong><br>
-                            ✓ Template layout &amp; date-wise formulas preserved<br>
-                            ✓ Multi-sheet export for ranges over 30 days
-                        </div>
+                        <!-- Scrollable Excel Sheet Table -->
+                        <div class="dp-excel-table-scroll">
+                            <table class="dp-excel-sheet-table">
+                                <thead>
+                                    <tr>
+                                        <th class="st-row">Row</th>
+                                        <th class="st-code">SAP Code</th>
+                                        <th class="st-name">Material Description</th>
+                                        <th class="st-unit">Unit</th>
+                                        <th class="st-issue" title="Total Stock Issued to Contractor up to Work Date">Net Issue</th>
+                                        <th v-for="(day, idx) in getExportDays()" :key="day" class="dp-excel-day-hdr" :title="day">
+                                            <div style="font-size: 9px; opacity: 0.6;">D{{ idx + 1 }}</div>
+                                            <div>{{ formatShortDay(day) }}</div>
+                                        </th>
+                                        <th class="dp-excel-tot-col" title="Sum of entered consumption across this date range">Range Consumed</th>
+                                        <th class="dp-excel-bal-col" title="Net Issue minus Range Consumed">Net Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Manpower Row: Total -->
+                                    <tr class="dp-excel-mp-row">
+                                        <td class="st-row">6</td>
+                                        <td class="st-code">MANPOWER</td>
+                                        <td class="st-name" style="font-weight: 800;">TOTAL MANPOWER ON SITE</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getExportDays()" :key="'tot-mp-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getExportDayManpower(day, 'total') > 0" class="dp-excel-val" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">
+                                                {{ getExportDayManpower(day, 'total') }}
+                                            </span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getExportDays().reduce((acc, d) => acc + getExportDayManpower(d, 'total'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Leader -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">8</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Team Leader</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getExportDays()" :key="'ldr-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getExportDayManpower(day, 'leader') > 0">{{ getExportDayManpower(day, 'leader') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getExportDays().reduce((acc, d) => acc + getExportDayManpower(d, 'leader'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Skilled -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">9</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Skilled Labour</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getExportDays()" :key="'sk-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getExportDayManpower(day, 'skilled') > 0">{{ getExportDayManpower(day, 'skilled') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getExportDays().reduce((acc, d) => acc + getExportDayManpower(d, 'skilled'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Unskilled -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">10</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Unskilled Labour</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getExportDays()" :key="'unsk-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getExportDayManpower(day, 'unskilled') > 0">{{ getExportDayManpower(day, 'unskilled') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getExportDays().reduce((acc, d) => acc + getExportDayManpower(d, 'unskilled'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
 
-                        <button type="button" class="btn-save-progress" :disabled="busy" @click="downloadExcelReport" style="width: 100%; justify-content: center;">
-                            <span>📥</span>
-                            <span>{{ busy ? 'Generating Excel...' : 'Download Excel (.xlsx) Report' }}</span>
-                        </button>
+                                    <!-- Material Items -->
+                                    <tr v-for="it in getExportPreviewItems()" :key="it.id">
+                                        <td class="st-row">{{ it.row }}</td>
+                                        <td class="st-code">{{ it.code || 'ITEM' }}</td>
+                                        <td class="st-name" :title="it.name">{{ it.name }}</td>
+                                        <td class="st-unit">{{ it.unit }}</td>
+                                        <td class="st-issue">
+                                            <span v-if="getItemStock(it).totalIssued > 0" style="color: #38bdf8; font-weight: 700;">
+                                                {{ getItemStock(it).totalIssued }}
+                                            </span>
+                                            <span v-else style="color: #64748b; opacity: 0.5;">0</span>
+                                        </td>
+                                        <td v-for="day in getExportDays()" :key="it.id + '-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getExportDayQty(it.id, day) > 0" class="dp-excel-val">
+                                                {{ getExportDayQty(it.id, day) }}
+                                            </span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            <span v-if="getExportItemTotal(it.id) > 0" style="color: #fbbf24;">
+                                                {{ getExportItemTotal(it.id) }}
+                                            </span>
+                                            <span v-else style="color: #64748b; opacity: 0.4;">0</span>
+                                        </td>
+                                        <td class="dp-excel-bal-col" :class="getItemStock(it).totalIssued - getExportItemTotal(it.id) < 0 ? 'dp-excel-bal-negative' : 'dp-excel-bal-positive'">
+                                            {{ Math.round((getItemStock(it).totalIssued - getExportItemTotal(it.id)) * 100) / 100 }}
+                                        </td>
+                                    </tr>
+
+                                    <tr v-if="!getExportPreviewItems().length">
+                                        <td :colspan="5 + getExportDays().length + 2" style="text-align: center; padding: 30px; color: #94a3b8;">
+                                            Koi item match nahi hua. "All Sheet Rows" filter select karein ya search clear karein.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>

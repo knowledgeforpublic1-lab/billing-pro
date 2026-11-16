@@ -454,6 +454,8 @@
                 dailyProgressModal: '',
                 dailyProgressExportFrom: '2026-09-01',
                 dailyProgressExportTo: '2026-09-30',
+                dailyProgressExportFilter: 'active',
+                dailyProgressExportSearch: '',
                 dailyProgressNewIssue: { date: '', itemId: '15', quantity: '', reference: '' },
                 dailyProgressNewContractor: { name: '', project: 'Gadchiroli (T-10)', feeder: 'ANGARA', engineer: 'AMIT GOMASE' },
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),

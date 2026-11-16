@@ -652,6 +652,103 @@ window.DailyProgressModule = {
         }
     },
 
+    // ─── LIVE EXCEL SHEET PREVIEW HELPERS ──────────────────────────────────────
+
+    getDailyProgressExportDays() {
+        const from = this.dailyProgressExportFrom;
+        const to = this.dailyProgressExportTo;
+        if (!from || !to || from > to) return [];
+        const days = [];
+        const dStart = new Date(from + 'T00:00:00Z');
+        const dEnd = new Date(to + 'T00:00:00Z');
+        for (let d = new Date(dStart); d <= dEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+            days.push(d.toISOString().slice(0, 10));
+        }
+        return days.slice(0, 62); // cap preview to 62 days for high performance
+    },
+
+    getDailyProgressDayReport(date) {
+        const cid = this.dailyProgressContractorId;
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        return reports.find(r => r.contractorId === cid && r.date === date);
+    },
+
+    getDailyProgressExportQty(itemId, date) {
+        const rep = this.getDailyProgressDayReport(date);
+        return (rep && rep.quantities && Number(rep.quantities[itemId])) || 0;
+    },
+
+    getDailyProgressExportItemTotal(itemId) {
+        const days = this.getDailyProgressExportDays();
+        return days.reduce((sum, d) => sum + this.getDailyProgressExportQty(itemId, d), 0);
+    },
+
+    getDailyProgressDayManpower(date, key) {
+        const rep = this.getDailyProgressDayReport(date);
+        if (!rep || !rep.manpower) return 0;
+        if (key === 'total') {
+            return (Number(rep.manpower.leader) || 0) + (Number(rep.manpower.skilled) || 0) + (Number(rep.manpower.unskilled) || 0);
+        }
+        return Number(rep.manpower[key]) || 0;
+    },
+
+    getDailyProgressExportPreviewItems() {
+        const items = this.dailyProgressSeedItems || [];
+        const filter = this.dailyProgressExportFilter || 'active'; // 'active', 'issued', 'all'
+        const q = String(this.dailyProgressExportSearch || '').trim().toLowerCase();
+
+        return items.filter(it => {
+            if (q) {
+                const matches = String(it.name || '').toLowerCase().includes(q) ||
+                                String(it.code || '').toLowerCase().includes(q);
+                if (!matches) return false;
+            }
+            if (filter === 'all') return true;
+            const stock = this.getDailyProgressItemStock(it);
+            const totalRangeConsumed = this.getDailyProgressExportItemTotal(it.id);
+            if (filter === 'issued') {
+                return (stock && stock.totalIssued > 0);
+            }
+            // default 'active': either has stock issued or has consumption in this date range
+            return (stock && stock.totalIssued > 0) || totalRangeConsumed > 0;
+        });
+    },
+
+    setDailyProgressExportRange(rangeType) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        if (rangeType === 'sep2026') {
+            this.dailyProgressExportFrom = '2026-09-01';
+            this.dailyProgressExportTo = '2026-09-30';
+        } else if (rangeType === 'current_month') {
+            const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+            this.dailyProgressExportFrom = `${year}-${month}-01`;
+            this.dailyProgressExportTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+        } else if (rangeType === 'last7') {
+            const d7 = new Date();
+            d7.setDate(d7.getDate() - 6);
+            this.dailyProgressExportFrom = d7.toISOString().slice(0, 10);
+            this.dailyProgressExportTo = now.toISOString().slice(0, 10);
+        } else if (rangeType === 'last30') {
+            const d30 = new Date();
+            d30.setDate(d30.getDate() - 29);
+            this.dailyProgressExportFrom = d30.toISOString().slice(0, 10);
+            this.dailyProgressExportTo = now.toISOString().slice(0, 10);
+        }
+    },
+
+    formatShortDayHeader(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const mIdx = parseInt(parts[1], 10) - 1;
+            return `${parts[2]}-${monthNames[mIdx] || parts[1]}`;
+        }
+        return dateStr;
+    },
+
     copyDailyProgressShareLink() {
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const cid = this.dailyProgressContractorId || '';

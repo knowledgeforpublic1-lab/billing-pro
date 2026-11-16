@@ -1903,35 +1903,27 @@
                                 <span>📥</span><span>Export</span>
                             </button>
                         </div>
+                        <div style="display: inline-flex; align-items: center; gap: 5px; margin-left: 6px;">
+                            <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.72rem; padding: 4px 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>📋</span><span>Share</span>
+                            </button>
+                            <a :href="'daily-progress.html?contractor=' + dailyProgressContractorId + '&date=' + dailyProgressDate" target="_blank" class="btn btn-secondary" title="Dedicated shareable page open karein" style="font-size: 0.72rem; padding: 4px 8px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">
+                                <span>↗</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Single-Line Dense Status Strip (~24px high) -->
                 <div class="dp-status-strip no-print">
                     <div class="dp-status-items">
-                        <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> issued items entered</span>
-                        <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> people (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
-                        <span v-if="dailyProgressActiveContractor">🏢 <strong>{{ dailyProgressActiveContractor.project || 'Gadchiroli (T-10)' }}</strong> <small>({{ dailyProgressActiveContractor.feeder || 'ANGARA' }})</small></span>
+                        <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> items entered</span>
+                        <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
                     </div>
                     <div class="dp-save-badge">
                         <span v-if="dailyProgressDirty" style="color: #f59e0b;">● Unsaved Changes</span>
                         <span v-else-if="dailyProgressVersion" style="color: #22c55e;">✓ Saved (v{{ dailyProgressVersion }})</span>
                         <span v-else style="color: var(--text-muted);">Ready for {{ formatDisplayDate(dailyProgressDate) }}</span>
-                    </div>
-                </div>
-
-                <div class="dp-share-bar no-print" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 8px 14px; margin-bottom: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-main);">
-                        <span style="font-size: 1.1rem;">🔗</span>
-                        <span><strong>Shareable Daily Progress Page:</strong> Contractors/Supervisors ko seedha share karne ke liye dedicated page link available hai.</span>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" style="font-size: 0.76rem; padding: 4px 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-                            <span>📋</span><span>Copy Share Link</span>
-                        </button>
-                        <a :href="'daily-progress.html?contractor=' + dailyProgressContractorId + '&date=' + dailyProgressDate" target="_blank" class="btn btn-secondary" style="font-size: 0.76rem; padding: 4px 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
-                            <span>↗</span><span>Open Page</span>
-                        </a>
                     </div>
                 </div>
 
@@ -2250,41 +2242,185 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: DOWNLOAD EXCEL REPORT -->
+                <!-- TAB 4: DOWNLOAD EXCEL REPORT & LIVE SHEET PREVIEW -->
                 <div v-if="dailyProgressTab === 'download'">
-                    <div class="dp-panel" style="max-width: 680px; margin: 0 auto;">
-                        <div class="dp-panel-header">
-                            <h2><span>📥</span> Generate Excel Progress Report</h2>
-                        </div>
-                        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
-                            Generates an Excel workbook directly mapped into your supplied template layout with project headers, date-wise quantities (30 days per sheet), manpower tallies, and column totals.
-                        </p>
+                    <div class="dp-excel-preview-wrap">
+                        <!-- Toolbar with Date Range, Presets & Download -->
+                        <div class="dp-excel-toolbar no-print">
+                            <div class="dp-excel-range-inputs">
+                                <div class="dp-excel-date-field">
+                                    <label>From</label>
+                                    <input type="date" v-model="dailyProgressExportFrom" title="Start Date">
+                                </div>
+                                <div class="dp-excel-date-field">
+                                    <label>To</label>
+                                    <input type="date" v-model="dailyProgressExportTo" title="End Date">
+                                </div>
+                                <div class="dp-excel-quick-ranges">
+                                    <button type="button" @click="setDailyProgressExportRange('sep2026')" title="September 2026">Sep 2026</button>
+                                    <button type="button" @click="setDailyProgressExportRange('current_month')" title="Current Month">This Month</button>
+                                    <button type="button" @click="setDailyProgressExportRange('last30')" title="Last 30 Days">Last 30 Days</button>
+                                </div>
+                            </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                    <input type="search"
+                                           v-model="dailyProgressExportSearch"
+                                           placeholder="Search material in sheet..."
+                                           style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.72rem; padding: 4px 8px; width: 170px; outline: none;">
+                                    <select v-model="dailyProgressExportFilter"
+                                            style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.72rem; padding: 4px 6px; outline: none; cursor: pointer;">
+                                        <option value="active">Active Items Only ({{ getDailyProgressExportPreviewItems().length }})</option>
+                                        <option value="issued">Issued Stock Only</option>
+                                        <option value="all">All Sheet Rows ({{ (dailyProgressSeedItems || []).length }})</option>
+                                    </select>
+                                </div>
+
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
+                                        @click="downloadDailyProgressExcel"
+                                        style="font-size: 0.76rem; padding: 5px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                    <span>{{ dailyProgressBusy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sheet Meta Header -->
+                        <div class="dp-excel-meta-bar">
                             <div>
-                                <label class="dp-context-label">From Date</label>
-                                <input type="date" class="dp-search-input" style="width: 100%; box-sizing: border-box;" v-model="dailyProgressExportFrom">
+                                <strong>RDSS GADCHIROLI (T-10) — DAILY PROGRESS REGISTER</strong>
+                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.feeder) || 'ANGARA' }} · Team: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }}</span>
                             </div>
                             <div>
-                                <label class="dp-context-label">To Date</label>
-                                <input type="date" class="dp-search-input" style="width: 100%; box-sizing: border-box;" v-model="dailyProgressExportTo">
+                                <span style="color: #38bdf8; font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
+                                <span style="opacity: 0.6; margin-left: 6px;">({{ formatDisplayDate(dailyProgressExportFrom) }} — {{ formatDisplayDate(dailyProgressExportTo) }})</span>
                             </div>
                         </div>
 
-                        <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 14px; margin-bottom: 20px;">
-                            <div style="font-weight: 700; color: #4ade80; font-size: 0.85rem;">✓ Original Excel Format Preserved</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
-                                Matches exact public/template.xlsx formatting with row numbers, sum formulas, and date headers.
-                            </div>
-                        </div>
+                        <!-- Scrollable Excel Sheet Table -->
+                        <div class="dp-excel-table-scroll">
+                            <table class="dp-excel-sheet-table">
+                                <thead>
+                                    <tr>
+                                        <th class="st-row">Row</th>
+                                        <th class="st-code">SAP Code</th>
+                                        <th class="st-name">Material Description</th>
+                                        <th class="st-unit">Unit</th>
+                                        <th class="st-issue" title="Total Stock Issued to Contractor up to Work Date">Net Issue</th>
+                                        <th v-for="(day, idx) in getDailyProgressExportDays()" :key="day" class="dp-excel-day-hdr" :title="day">
+                                            <div style="font-size: 0.6rem; opacity: 0.6;">D{{ idx + 1 }}</div>
+                                            <div>{{ formatShortDayHeader(day) }}</div>
+                                        </th>
+                                        <th class="dp-excel-tot-col" title="Sum of entered consumption across this date range">Range Consumed</th>
+                                        <th class="dp-excel-bal-col" title="Net Issue minus Range Consumed">Net Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Manpower Row: Total -->
+                                    <tr class="dp-excel-mp-row">
+                                        <td class="st-row">6</td>
+                                        <td class="st-code">MANPOWER</td>
+                                        <td class="st-name" style="font-weight: 800;">TOTAL MANPOWER ON SITE</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="'tot-mp-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getDailyProgressDayManpower(day, 'total') > 0" class="dp-excel-val" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">
+                                                {{ getDailyProgressDayManpower(day, 'total') }}
+                                            </span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getDailyProgressExportDays().reduce((acc, d) => acc + getDailyProgressDayManpower(d, 'total'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Leader -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">8</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Team Leader</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="'ldr-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getDailyProgressDayManpower(day, 'leader') > 0">{{ getDailyProgressDayManpower(day, 'leader') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getDailyProgressExportDays().reduce((acc, d) => acc + getDailyProgressDayManpower(d, 'leader'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Skilled -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">9</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Skilled Labour</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="'sk-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getDailyProgressDayManpower(day, 'skilled') > 0">{{ getDailyProgressDayManpower(day, 'skilled') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getDailyProgressExportDays().reduce((acc, d) => acc + getDailyProgressDayManpower(d, 'skilled'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
+                                    <!-- Manpower Row: Unskilled -->
+                                    <tr class="dp-excel-mp-row" style="background: rgba(245, 158, 11, 0.02);">
+                                        <td class="st-row">10</td>
+                                        <td class="st-code"></td>
+                                        <td class="st-name" style="padding-left: 20px; font-weight: 500;">Unskilled Labour</td>
+                                        <td class="st-unit">NOS</td>
+                                        <td class="st-issue">-</td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="'unsk-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getDailyProgressDayManpower(day, 'unskilled') > 0">{{ getDailyProgressDayManpower(day, 'unskilled') }}</span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            {{ getDailyProgressExportDays().reduce((acc, d) => acc + getDailyProgressDayManpower(d, 'unskilled'), 0) }}
+                                        </td>
+                                        <td class="dp-excel-bal-col">-</td>
+                                    </tr>
 
-                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo" @click="downloadDailyProgressExcel" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem;">
-                                <span>{{ dailyProgressBusy ? '⏳ Preparing Excel...' : '📥 Download Excel Report' }}</span>
-                            </button>
-                            <button type="button" class="tbtn" @click="dailyProgressExportFrom = '2026-09-01'; dailyProgressExportTo = '2026-09-30'" style="padding: 8px 14px; font-size: 0.78rem;">
-                                Use September 2026 Range
-                            </button>
+                                    <!-- Material Items -->
+                                    <tr v-for="it in getDailyProgressExportPreviewItems()" :key="it.id">
+                                        <td class="st-row">{{ it.row }}</td>
+                                        <td class="st-code">{{ it.code || 'ITEM' }}</td>
+                                        <td class="st-name" :title="it.name">{{ it.name }}</td>
+                                        <td class="st-unit">{{ it.unit }}</td>
+                                        <td class="st-issue">
+                                            <span v-if="getDailyProgressItemStock(it).totalIssued > 0" style="color: #38bdf8; font-weight: 700;">
+                                                {{ getDailyProgressItemStock(it).totalIssued }}
+                                            </span>
+                                            <span v-else style="color: var(--text-muted); opacity: 0.5;">0</span>
+                                        </td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="it.id + '-' + day" class="dp-excel-day-cell">
+                                            <span v-if="getDailyProgressExportQty(it.id, day) > 0" class="dp-excel-val">
+                                                {{ getDailyProgressExportQty(it.id, day) }}
+                                            </span>
+                                            <span v-else class="dp-excel-val-zero">-</span>
+                                        </td>
+                                        <td class="dp-excel-tot-col">
+                                            <span v-if="getDailyProgressExportItemTotal(it.id) > 0" style="color: #fbbf24;">
+                                                {{ getDailyProgressExportItemTotal(it.id) }}
+                                            </span>
+                                            <span v-else style="color: var(--text-muted); opacity: 0.4;">0</span>
+                                        </td>
+                                        <td class="dp-excel-bal-col" :class="getDailyProgressItemStock(it).totalIssued - getDailyProgressExportItemTotal(it.id) < 0 ? 'dp-excel-bal-negative' : 'dp-excel-bal-positive'">
+                                            {{ Math.round((getDailyProgressItemStock(it).totalIssued - getDailyProgressExportItemTotal(it.id)) * 100) / 100 }}
+                                        </td>
+                                    </tr>
+
+                                    <tr v-if="!getDailyProgressExportPreviewItems().length">
+                                        <td :colspan="5 + getDailyProgressExportDays().length + 2" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                            Koi item match nahi hua. "All Sheet Rows" filter select karein ya search clear karein.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
