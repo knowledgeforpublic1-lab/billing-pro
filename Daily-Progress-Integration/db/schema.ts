@@ -1,0 +1,4 @@
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+export const contractors = sqliteTable('contractors', {id:text('id').primaryKey(), name:text('name').notNull(), project:text('project').notNull(), feeder:text('feeder').notNull(), engineer:text('engineer').notNull()});
+export const reports = sqliteTable('reports', {contractorId:text('contractor_id').notNull(),date:text('date').notNull(),data:text('data').notNull(),version:integer('version').notNull().default(1)}, t=>[primaryKey({columns:[t.contractorId,t.date]})]);
+export const issues = sqliteTable('issues', {id:text('id').primaryKey(),contractorId:text('contractor_id').notNull(),date:text('date').notNull(),itemId:text('item_id').notNull(),quantity:text('quantity').notNull(),reference:text('reference').notNull()});

@@ -33,7 +33,8 @@
         window.StockImporterModule || {},
         window.OldRecoImporterModule || {},
         window.PoleScheduleModule || {},
-        window.SapWorkOrdersModule || {}
+        window.SapWorkOrdersModule || {},
+        window.DailyProgressModule || {}
     );
 
     allMethods.updateAlvFiller = function() {
@@ -427,6 +428,24 @@
                 newSapWoForm: { docHeader: '', contractorName: '', vendorCode: '' },
                 customSapWorkOrders: {},
                 customOldRecoEdits: {},
+                // Daily Progress Integration State
+                dailyProgressTab: 'entry',
+                dailyProgressDate: '',
+                dailyProgressContractorId: 'mangesh-sonwane',
+                dailyProgressData: null,
+                dailyProgressQuantities: {},
+                dailyProgressManpower: { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 },
+                dailyProgressRemarks: '',
+                dailyProgressVersion: 0,
+                dailyProgressSearch: '',
+                dailyProgressFilter: 'all',
+                dailyProgressDirty: false,
+                dailyProgressBusy: false,
+                dailyProgressModal: '',
+                dailyProgressExportFrom: '2026-09-01',
+                dailyProgressExportTo: '2026-09-30',
+                dailyProgressNewIssue: { date: '', itemId: '15', quantity: '', reference: '' },
+                dailyProgressNewContractor: { name: '', project: 'Gadchiroli (T-10)', feeder: 'ANGARA', engineer: 'AMIT GOMASE' },
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
                 contractorMappingState: null,
@@ -1171,6 +1190,79 @@
                     }
                 } catch(e) {}
                 return String(raw).slice(0, 10);
+            },
+
+            // Daily Progress Computed Properties
+            dailyProgressSeedItems() {
+                return (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
+            },
+            dailyProgressActiveContractor() {
+                const data = this.dailyProgressData;
+                const cid = this.dailyProgressContractorId;
+                if (!data || !data.contractors) return null;
+                return data.contractors.find(c => c.id === cid) || data.contractors[0] || null;
+            },
+            dailyProgressContractors() {
+                return (this.dailyProgressData && this.dailyProgressData.contractors) || [];
+            },
+            dailyProgressReports() {
+                const data = this.dailyProgressData;
+                const cid = this.dailyProgressContractorId;
+                if (!data || !data.reports) return [];
+                return data.reports.filter(r => r.contractorId === cid);
+            },
+            dailyProgressIssues() {
+                const data = this.dailyProgressData;
+                const cid = this.dailyProgressContractorId;
+                if (!data || !data.issues) return [];
+                return data.issues.filter(i => i.contractorId === cid);
+            },
+            dailyProgressVisibleItems() {
+                const items = this.dailyProgressSeedItems;
+                const q = String(this.dailyProgressSearch || '').trim().toLowerCase();
+                const filter = this.dailyProgressFilter || 'all';
+                const enteredMap = this.dailyProgressQuantities || {};
+
+                return items.filter(it => {
+                    if (q) {
+                        const matchName = String(it.name || '').toLowerCase().includes(q);
+                        const matchCode = String(it.code || '').toLowerCase().includes(q);
+                        if (!matchName && !matchCode) return false;
+                    }
+                    if (filter === 'entered') {
+                        return Number(enteredMap[it.id]) > 0;
+                    }
+                    if (filter === 'issued') {
+                        const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
+                        return stock && stock.totalIssued > 0;
+                    }
+                    if (filter === 'overconsumed') {
+                        const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
+                        return stock && stock.balance < 0;
+                    }
+                    return true;
+                });
+            },
+            dailyProgressSelectedCount() {
+                const qMap = this.dailyProgressQuantities || {};
+                return Object.values(qMap).filter(n => Number(n) > 0).length;
+            },
+            dailyProgressTotalManpower() {
+                const m = this.dailyProgressManpower || {};
+                return (Number(m.leader) || 0) + (Number(m.skilled) || 0) + (Number(m.unskilled) || 0);
+            },
+            dailyProgressActiveStockItems() {
+                const items = this.dailyProgressSeedItems;
+                const q = String(this.dailyProgressSearch || '').trim().toLowerCase();
+                return items.filter(it => {
+                    const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
+                    const isActive = stock && (stock.totalIssued > 0 || stock.totalConsumed > 0);
+                    if (!isActive) return false;
+                    if (q) {
+                        return String(it.name || '').toLowerCase().includes(q) || String(it.code || '').toLowerCase().includes(q);
+                    }
+                    return true;
+                });
             },
 
             visibleOldRecoColumns() {
@@ -2073,6 +2165,7 @@
 
             try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}
             try { if (typeof this.loadCustomSapWorkOrders === 'function') this.loadCustomSapWorkOrders(); } catch(e) {}
+            try { if (typeof this.initDailyProgress === 'function') this.initDailyProgress(); } catch(e) {}
             
             // Backup default stock & check for custom uploaded stock in IndexedDB
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {

@@ -104,6 +104,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261116">
 </head>
 
 <body>
@@ -309,6 +310,7 @@
                 <a href="#" :class="{ 'on': currentView === 'invoice' || currentView === 'taxInvoice' }" @click.prevent="switchView('invoice')"><span class="ico">📄</span><span>Tax Invoice</span></a>
                 <a href="#" :class="{ 'on': currentView === 'detail' }" @click.prevent="switchView('detail')"><span class="ico">⚡</span><span>Activity Billing</span></a>
                 <a href="#" :class="{ 'on': currentView === 'poleSchedule' || currentView === 'abstract' }" @click.prevent="switchView('poleSchedule')"><span class="ico">📐</span><span>Pole Schedule</span></a>
+                <a href="#" :class="{ 'on': currentView === 'dailyProgress' }" @click.prevent="switchView('dailyProgress')"><span class="ico">📅</span><span>Daily Progress</span></a>
                 <div class="sgroup">Reconciliation</div>
                 <a href="#" :class="{ 'on': currentView === 'reconciliation' }" @click.prevent="switchView('reconciliation')"><span class="ico">📑</span><span>Reconciliation Sheet</span></a>
                 <a href="#" :class="{ 'on': currentView === 'masterrecon' }" @click.prevent="switchView('masterrecon')"><span class="ico">🌐</span><span>Master Reconciliation</span></a>
@@ -459,22 +461,23 @@
                             </button>
                             <div class="stock-as-on-date-wrap" style="position: relative; display: inline-flex; align-items: center;" :title="stockAsOnDate ? ('Stock As-On: ' + formatDisplayDate(stockAsOnDate) + ' (Click to change date)') : 'Stock As-On Date chunein — is date tak ka stock calculate hoga (Click to change)'">
                                 <input type="date"
+                                       ref="stockDatePickerInput"
                                        v-model="stockAsOnDate"
+                                       @input="onStockAsOnDateChange"
                                        @change="onStockAsOnDateChange"
-                                       :max="todayDateStr"
                                        style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
                                        title="Date select karein: is date tak ka material issue calculate hoga">
                                 <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"
-                                      :style="stockAsOnDate ? 'background: #2563eb; color: #ffffff; border-color: #60a5fa;' : ''">
+                                      :style="stockAsOnDate ? 'background: #2563eb; color: #ffffff; border-color: #60a5fa;' : ''"
+                                      @click="$refs.stockDatePickerInput && $refs.stockDatePickerInput.showPicker && $refs.stockDatePickerInput.showPicker()">
                                     <span>📅</span>
                                     <span>{{ stockAsOnDate ? formatDisplayDate(stockAsOnDate) : stockUpdatedDate }}</span>
                                     <span v-if="stockAsOnDate" style="font-size: 0.58rem; background: #fbbf24; color: #000; padding: 0 4px; border-radius: 3px; font-weight: 900; letter-spacing: 0.3px;">AS-ON</span>
                                 </span>
                             </div>
-                            <button v-if="stockAsOnDate || hasCustomStock"
-                                    type="button"
+                            <button type="button"
                                     @click="resetStockDateAndDefault"
-                                    :title="stockAsOnDate ? 'Date filter reset karein — latest stock wapas dikhayein' : 'Reset to default built-in stock database'"
+                                    title="Date reset karein — current date (aaj) tak ka stock dikhayein"
                                     style="height: 26px; padding: 0 8px; font-size: 0.74rem; font-weight: 800; border: none; background: rgba(220, 38, 38, 0.12); border-radius: 4px; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
                                     onmouseover="this.style.background='rgba(220,38,38,0.25)'"
                                     onmouseout="this.style.background='rgba(220,38,38,0.12)'">
@@ -1844,6 +1847,500 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- VIEW: DAILY PROGRESS REGISTER -->
+        <div class="view-section animate-fade-in" v-if="currentView === 'dailyProgress'">
+            <div class="daily-progress-container">
+                <!-- Top Header & Sub-navigation -->
+                <div class="dp-header-bar no-print">
+                    <div class="dp-title-group">
+                        <h1><span>📅</span> Daily Progress Register</h1>
+                        <p>Track daily field operations, material consumption, site manpower &amp; SAP stock balances</p>
+                    </div>
+                    <div class="dp-sub-nav">
+                        <button type="button" :class="{ active: dailyProgressTab === 'entry' }" @click="dailyProgressTab = 'entry'">
+                            <span>⚡</span><span>Daily Entry</span>
+                        </button>
+                        <button type="button" :class="{ active: dailyProgressTab === 'stock' }" @click="dailyProgressTab = 'stock'">
+                            <span>📦</span><span>Material &amp; Stock</span>
+                        </button>
+                        <button type="button" :class="{ active: dailyProgressTab === 'history' }" @click="dailyProgressTab = 'history'">
+                            <span>📋</span><span>Report History</span>
+                            <span v-if="dailyProgressReports.length" style="background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 10px; font-size: 0.65rem;">{{ dailyProgressReports.length }}</span>
+                        </button>
+                        <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="dailyProgressTab = 'download'">
+                            <span>📥</span><span>Download Reports</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Context Selector Card -->
+                <div class="dp-context-card no-print">
+                    <div class="dp-context-item">
+                        <div>
+                            <span class="dp-context-label">Contractor / Labour Team</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <select class="dp-contractor-select" :value="dailyProgressContractorId" @change="onDailyProgressContractorChange($event.target.value)">
+                                    <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                </select>
+                                <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="tbtn primary" style="height: 32px; padding: 0 10px; font-size: 0.78rem;">➕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dp-context-item" v-if="dailyProgressActiveContractor">
+                        <div style="border-left: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); padding-left: 16px;">
+                            <span class="dp-context-label">Project &amp; Feeder</span>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main, #fff);">
+                                {{ dailyProgressActiveContractor.project || 'Gadchiroli (T-10)' }}
+                                <span style="color: var(--text-muted); font-size: 0.75rem;">· Feeder: {{ dailyProgressActiveContractor.feeder || 'ANGARA' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dp-context-item">
+                        <div>
+                            <span class="dp-context-label">Work Date</span>
+                            <div class="dp-date-stepper">
+                                <button type="button" @click="navigateDailyProgressDay(-1)" title="Previous Day">◀</button>
+                                <input type="date" class="dp-date-input" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value)">
+                                <button type="button" @click="navigateDailyProgressDay(1)" title="Next Day">▶</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 1: DAILY ENTRY -->
+                <div v-if="dailyProgressTab === 'entry'">
+                    <!-- Stat Grid -->
+                    <div class="dp-stat-grid">
+                        <div class="dp-stat-card">
+                            <div class="dp-stat-icon green">📦</div>
+                            <div>
+                                <div class="dp-stat-val">{{ dailyProgressSelectedCount }}</div>
+                                <div class="dp-stat-label">Materials Consumed Today</div>
+                            </div>
+                        </div>
+                        <div class="dp-stat-card">
+                            <div class="dp-stat-icon amber">👷</div>
+                            <div>
+                                <div class="dp-stat-val">{{ dailyProgressTotalManpower }}</div>
+                                <div class="dp-stat-label">Total Site Manpower</div>
+                            </div>
+                        </div>
+                        <div class="dp-stat-card">
+                            <div class="dp-stat-icon blue">📝</div>
+                            <div>
+                                <div class="dp-stat-val" style="font-size: 1rem;">
+                                    <span v-if="dailyProgressDirty" style="color: #f59e0b;">● Unsaved Changes</span>
+                                    <span v-else-if="dailyProgressVersion" style="color: #22c55e;">✓ Saved (v{{ dailyProgressVersion }})</span>
+                                    <span v-else style="color: var(--text-muted);">New Entry</span>
+                                </div>
+                                <div class="dp-stat-label">{{ formatDisplayDate(dailyProgressDate) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Two-column Entry Layout -->
+                    <div class="dp-entry-layout">
+                        <!-- Left: Material Consumption -->
+                        <div class="dp-panel">
+                            <div class="dp-panel-header">
+                                <h2><span>01</span> Material Consumption</h2>
+                                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">{{ dailyProgressVisibleItems.length }} of {{ dailyProgressSeedItems.length }} items</span>
+                            </div>
+
+                            <div class="dp-filter-bar no-print">
+                                <input type="text" class="dp-search-input" v-model="dailyProgressSearch" placeholder="🔍 Search material name or SAP code...">
+                                <select class="dp-filter-select" v-model="dailyProgressFilter">
+                                    <option value="all">All Materials ({{ dailyProgressSeedItems.length }})</option>
+                                    <option value="entered">Entered Today ({{ dailyProgressSelectedCount }})</option>
+                                    <option value="issued">In Stock / Issued</option>
+                                    <option value="overconsumed">⚠️ Overconsumed</option>
+                                </select>
+                            </div>
+
+                            <div class="dp-table-wrap">
+                                <table class="dp-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Description</th>
+                                            <th style="width: 140px; text-align: center;">Stock Balance</th>
+                                            <th style="width: 120px; text-align: right;">Today Consumed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="item in dailyProgressVisibleItems.slice(0, 80)" :key="item.id">
+                                            <td>
+                                                <span class="dp-mat-desc">{{ item.name }}</span>
+                                                <div class="dp-mat-sub">
+                                                    <span v-if="item.code" style="font-family: monospace; color: #60a5fa; font-weight: 700;">SAP: {{ item.code }}</span>
+                                                    <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <span v-if="getDailyProgressItemStock(item).status === 'in_stock'" class="dp-stock-badge in_stock" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed To-Date: ' + getDailyProgressItemStock(item).totalConsumed">
+                                                    ✓ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                                </span>
+                                                <span v-else-if="getDailyProgressItemStock(item).status === 'zero'" class="dp-stock-badge zero" title="All issued stock consumed">
+                                                    0 {{ item.unit }} Balance
+                                                </span>
+                                                <span v-else-if="getDailyProgressItemStock(item).status === 'overconsumed'" class="dp-stock-badge overconsumed" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed: ' + getDailyProgressItemStock(item).totalConsumed">
+                                                    ⚠️ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                                </span>
+                                                <span v-else class="dp-stock-badge awaiting_stock" title="No stock issue recorded for this contractor">
+                                                    Awaiting Stock
+                                                </span>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <div class="dp-qty-field">
+                                                    <input type="number"
+                                                           :value="dailyProgressQuantities[item.id] || ''"
+                                                           @input="onDailyProgressQuantityChange(item.id, $event.target.value)"
+                                                           placeholder="0"
+                                                           min="0"
+                                                           step="any">
+                                                    <span class="dp-qty-unit">{{ item.unit }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="!dailyProgressVisibleItems.length">
+                                            <td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                                No matching materials found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between;">
+                                <span>Showing {{ Math.min(80, dailyProgressVisibleItems.length) }} of {{ dailyProgressVisibleItems.length }} items. Use search to filter any of 401 materials.</span>
+                                <span>¹ Stock balances calculated through {{ formatDisplayDate(dailyProgressDate) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Manpower & Site Notes -->
+                        <div class="dp-side-col">
+                            <div class="dp-panel">
+                                <div class="dp-panel-header">
+                                    <h2><span>02</span> Manpower Details</h2>
+                                </div>
+                                <div class="dp-man-row">
+                                    <span class="dp-man-label">Team Leader</span>
+                                    <div class="dp-stepper">
+                                        <button type="button" @click="onDailyProgressManpowerChange('leader', (dailyProgressManpower.leader || 0) - 1)">−</button>
+                                        <input type="number" :value="dailyProgressManpower.leader || 0" @input="onDailyProgressManpowerChange('leader', $event.target.value)">
+                                        <button type="button" @click="onDailyProgressManpowerChange('leader', (dailyProgressManpower.leader || 0) + 1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="dp-man-row">
+                                    <span class="dp-man-label">Skilled Labour</span>
+                                    <div class="dp-stepper">
+                                        <button type="button" @click="onDailyProgressManpowerChange('skilled', (dailyProgressManpower.skilled || 0) - 1)">−</button>
+                                        <input type="number" :value="dailyProgressManpower.skilled || 0" @input="onDailyProgressManpowerChange('skilled', $event.target.value)">
+                                        <button type="button" @click="onDailyProgressManpowerChange('skilled', (dailyProgressManpower.skilled || 0) + 1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="dp-man-row">
+                                    <span class="dp-man-label">Unskilled Labour</span>
+                                    <div class="dp-stepper">
+                                        <button type="button" @click="onDailyProgressManpowerChange('unskilled', (dailyProgressManpower.unskilled || 0) - 1)">−</button>
+                                        <input type="number" :value="dailyProgressManpower.unskilled || 0" @input="onDailyProgressManpowerChange('unskilled', $event.target.value)">
+                                        <button type="button" @click="onDailyProgressManpowerChange('unskilled', (dailyProgressManpower.unskilled || 0) + 1)">+</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle, rgba(255,255,255,0.1));">
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Total Team Strength</span>
+                                    <span style="font-size: 1.15rem; font-weight: 800; color: #22c55e;">{{ dailyProgressTotalManpower }} people</span>
+                                </div>
+
+                                <details style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.08));">
+                                    <summary style="font-size: 0.74rem; font-weight: 700; color: #60a5fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Equipment &amp; Daily Charges</span>
+                                        <span>▾</span>
+                                    </summary>
+                                    <div class="dp-man-row" style="margin-top: 10px;">
+                                        <span class="dp-man-label" style="font-size: 0.72rem;">Tractor Charges (₹)</span>
+                                        <input type="number" class="dp-date-input" style="width: 80px; text-align: right; border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 4px;" :value="dailyProgressManpower.tractor || 0" @input="onDailyProgressManpowerChange('tractor', $event.target.value)">
+                                    </div>
+                                    <div class="dp-man-row">
+                                        <span class="dp-man-label" style="font-size: 0.72rem;">Augur Machine Rate (₹)</span>
+                                        <input type="number" class="dp-date-input" style="width: 80px; text-align: right; border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 4px;" :value="dailyProgressManpower.augur || 0" @input="onDailyProgressManpowerChange('augur', $event.target.value)">
+                                    </div>
+                                    <div class="dp-man-row">
+                                        <span class="dp-man-label" style="font-size: 0.72rem;">Room Charges (₹)</span>
+                                        <input type="number" class="dp-date-input" style="width: 80px; text-align: right; border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 4px;" :value="dailyProgressManpower.room || 0" @input="onDailyProgressManpowerChange('room', $event.target.value)">
+                                    </div>
+                                </details>
+                            </div>
+
+                            <div class="dp-panel">
+                                <div class="dp-panel-header">
+                                    <h2><span>03</span> Site Notes &amp; Remarks</h2>
+                                </div>
+                                <textarea class="dp-notes-textarea" v-model="dailyProgressRemarks" @input="dailyProgressDirty = true" placeholder="Work location, span details, weather delays or key site remarks..."></textarea>
+                                <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 8px;">
+                                    Supervisor: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.engineer) || 'AMIT GOMASE' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Save Bar -->
+                    <div class="dp-save-bar no-print">
+                        <div class="dp-save-status">
+                            <span class="dp-save-dot" :class="{ dirty: dailyProgressDirty }"></span>
+                            <div>
+                                <strong style="font-size: 0.85rem; color: var(--text-main, #fff);">
+                                    {{ dailyProgressDirty ? 'Changes ready to save' : (dailyProgressVersion ? 'Daily report saved' : 'Ready to record today\'s work') }}
+                                </strong>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">
+                                    {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }} · {{ formatDisplayDate(dailyProgressDate) }}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressContractorId" @click="saveDailyProgressReport" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;">
+                            <span>💾</span>
+                            <span>{{ dailyProgressBusy ? 'Saving...' : 'Save Daily Progress' }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: MATERIAL & STOCK REGISTER -->
+                <div v-if="dailyProgressTab === 'stock'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.3); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;">
+                        <div>
+                            <strong style="font-size: 1rem; color: #93c5fd;">📦 Contractor Stock Register</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                                Material issues from SAP Stock + manual challans vs. Daily consumption balance up to {{ formatDisplayDate(dailyProgressDate) }}
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-primary" @click="dailyProgressModal = 'issue'" style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span>➕</span><span>Record Stock Issue</span>
+                        </button>
+                    </div>
+
+                    <div class="dp-panel">
+                        <div class="dp-panel-header">
+                            <h2><span>01</span> Material Balances</h2>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">As-on {{ formatDisplayDate(dailyProgressDate) }}</span>
+                        </div>
+                        <div class="dp-table-wrap" style="max-height: 480px;">
+                            <table class="dp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Material Description</th>
+                                        <th>Unit</th>
+                                        <th style="text-align: right;">SAP Issued</th>
+                                        <th style="text-align: right;">Manual Issued</th>
+                                        <th style="text-align: right;">Total Issued</th>
+                                        <th style="text-align: right;">Consumed To-Date</th>
+                                        <th style="text-align: right;">Stock Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in dailyProgressActiveStockItems" :key="'stk_' + item.id">
+                                        <td>
+                                            <span class="dp-mat-desc">{{ item.name }}</span>
+                                            <small style="color: #60a5fa; font-family: monospace;">SAP: {{ item.code || 'Work Item' }} · Row {{ item.row }}</small>
+                                        </td>
+                                        <td>{{ item.unit }}</td>
+                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).sapIssued || '—' }}</td>
+                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).manualIssued || '—' }}</td>
+                                        <td style="text-align: right; font-weight: 700; font-family: monospace;">{{ getDailyProgressItemStock(item).totalIssued }}</td>
+                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).totalConsumed }}</td>
+                                        <td style="text-align: right; font-weight: 800; font-family: monospace;">
+                                            <span :style="{ color: getDailyProgressItemStock(item).balance < 0 ? '#ef4444' : '#22c55e' }">
+                                                {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!dailyProgressActiveStockItems.length">
+                                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                            No materials issued or consumed yet for this contractor.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Manual Issues List -->
+                    <div class="dp-panel">
+                        <div class="dp-panel-header">
+                            <h2><span>02</span> Manual Issue Transactions</h2>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">{{ dailyProgressIssues.length }} recorded entries</span>
+                        </div>
+                        <div class="dp-table-wrap">
+                            <table class="dp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Material</th>
+                                        <th style="text-align: right;">Quantity</th>
+                                        <th>Challan / Reference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="iss in dailyProgressIssues" :key="iss.id">
+                                        <td>{{ formatDisplayDate(iss.date) }}</td>
+                                        <td>
+                                            <span>{{ (dailyProgressSeedItems.find(x => x.id === iss.itemId) || {}).name || ('Item ' + iss.itemId) }}</span>
+                                        </td>
+                                        <td style="text-align: right; font-weight: 700; font-family: monospace;">{{ iss.quantity }}</td>
+                                        <td>{{ iss.reference || '—' }}</td>
+                                    </tr>
+                                    <tr v-if="!dailyProgressIssues.length">
+                                        <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                            No manual challans recorded. SAP Stock is auto-linked from stock register.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: REPORT HISTORY -->
+                <div v-if="dailyProgressTab === 'history'">
+                    <div class="dp-panel">
+                        <div class="dp-panel-header">
+                            <h2><span>01</span> Saved Daily Progress Reports</h2>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">{{ dailyProgressReports.length }} saved days</span>
+                        </div>
+                        <div class="dp-table-wrap">
+                            <table class="dp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Work Date</th>
+                                        <th>Items Consumed</th>
+                                        <th>Team Manpower</th>
+                                        <th>Site Notes / Location</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="rep in [...dailyProgressReports].reverse()" :key="rep.date">
+                                        <td style="font-weight: 800; color: #60a5fa;">{{ formatDisplayDate(rep.date) }}</td>
+                                        <td>{{ Object.keys(rep.quantities || {}).length }} items</td>
+                                        <td>{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} people</td>
+                                        <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ rep.remarks || '—' }}</td>
+                                        <td style="text-align: right;">
+                                            <button type="button" class="tbtn primary" style="padding: 3px 10px; font-size: 0.72rem;" @click="dailyProgressDate = rep.date; loadDailyProgressReportForDate(rep.date); dailyProgressTab = 'entry'">
+                                                Open ➔
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!dailyProgressReports.length">
+                                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                            No daily progress reports recorded yet for this contractor.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: DOWNLOAD EXCEL REPORT -->
+                <div v-if="dailyProgressTab === 'download'">
+                    <div class="dp-panel" style="max-width: 680px; margin: 0 auto;">
+                        <div class="dp-panel-header">
+                            <h2><span>📥</span> Generate Excel Progress Report</h2>
+                        </div>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+                            Generates an Excel workbook directly mapped into your supplied template layout with project headers, date-wise quantities (30 days per sheet), manpower tallies, and column totals.
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0;">
+                            <div>
+                                <label class="dp-context-label">From Date</label>
+                                <input type="date" class="dp-search-input" style="width: 100%; box-sizing: border-box;" v-model="dailyProgressExportFrom">
+                            </div>
+                            <div>
+                                <label class="dp-context-label">To Date</label>
+                                <input type="date" class="dp-search-input" style="width: 100%; box-sizing: border-box;" v-model="dailyProgressExportTo">
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+                            <div style="font-weight: 700; color: #4ade80; font-size: 0.85rem;">✓ Original Excel Format Preserved</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                Matches exact public/template.xlsx formatting with row numbers, sum formulas, and date headers.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo" @click="downloadDailyProgressExcel" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem;">
+                                <span>{{ dailyProgressBusy ? '⏳ Preparing Excel...' : '📥 Download Excel Report' }}</span>
+                            </button>
+                            <button type="button" class="tbtn" @click="dailyProgressExportFrom = '2026-09-01'; dailyProgressExportTo = '2026-09-30'" style="padding: 8px 14px; font-size: 0.78rem;">
+                                Use September 2026 Range
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL: ADD MATERIAL ISSUE -->
+                <div v-if="dailyProgressModal === 'issue'" class="dp-modal-backdrop" @click.self="dailyProgressModal = ''">
+                    <div class="dp-modal animate-scale-in">
+                        <div class="dp-modal-header">
+                            <h3>Record Material Issue</h3>
+                            <button type="button" class="tbtn" @click="dailyProgressModal = ''" style="border: none; font-size: 1.1rem; cursor: pointer;">✕</button>
+                        </div>
+                        <form @submit.prevent="addDailyProgressIssue">
+                            <label>Issue Date</label>
+                            <input type="date" required v-model="dailyProgressNewIssue.date">
+
+                            <label>Select Material</label>
+                            <select v-model="dailyProgressNewIssue.itemId" required>
+                                <option v-for="it in dailyProgressSeedItems" :key="it.id" :value="it.id">
+                                    {{ it.name }} ({{ it.unit }}) · SAP: {{ it.code || 'Work Item' }} · Row {{ it.row }}
+                                </option>
+                            </select>
+
+                            <label>Quantity</label>
+                            <input type="number" required min="0.0001" step="any" placeholder="Enter issued quantity" v-model="dailyProgressNewIssue.quantity">
+
+                            <label>Challan / Reference No (Optional)</label>
+                            <input type="text" placeholder="e.g. CH-2026-1049" v-model="dailyProgressNewIssue.reference">
+
+                            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" @click="dailyProgressModal = ''">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Issue</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL: ADD CONTRACTOR -->
+                <div v-if="dailyProgressModal === 'contractor'" class="dp-modal-backdrop" @click.self="dailyProgressModal = ''">
+                    <div class="dp-modal animate-scale-in">
+                        <div class="dp-modal-header">
+                            <h3>Add Contractor / Labour Team</h3>
+                            <button type="button" class="tbtn" @click="dailyProgressModal = ''" style="border: none; font-size: 1.1rem; cursor: pointer;">✕</button>
+                        </div>
+                        <form @submit.prevent="addDailyProgressContractor">
+                            <label>Contractor / Firm Name *</label>
+                            <input type="text" required placeholder="e.g. M/S. MAA KALI ENTERPRISES" v-model="dailyProgressNewContractor.name">
+
+                            <label>Project Name</label>
+                            <input type="text" placeholder="Gadchiroli (T-10)" v-model="dailyProgressNewContractor.project">
+
+                            <label>Feeder Name</label>
+                            <input type="text" placeholder="e.g. ANGARA" v-model="dailyProgressNewContractor.feeder">
+
+                            <label>Supervisor / Engineer</label>
+                            <input type="text" placeholder="e.g. AMIT GOMASE" v-model="dailyProgressNewContractor.engineer">
+
+                            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" @click="dailyProgressModal = ''">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add Contractor</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- VIEW 5: RECONCILIATION SHEET -->
@@ -3964,6 +4461,8 @@
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
+    <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
+    <script defer src="js/daily-progress.js?v=20261116"></script>
     <!-- Core Application (creates and mounts Vue app) -->
     <script defer src="js/core/app.js?v=20261114_conflict_review"></script>
 </body>

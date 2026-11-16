@@ -1,0 +1,121 @@
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('fs');
+const vm = require('vm');
+
+test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persistence', async () => {
+    // 1. Create simulated browser environment
+    const context = {
+        window: {
+            DailyProgressSeed: null,
+            ContractorSapStock: null,
+            DefaultContractorSapStock: null,
+            ExcelJS: require('exceljs')
+        },
+        document: {
+            body: { appendChild() {}, removeChild() {} },
+            createElement() { return { setAttribute() {}, click() {} }; }
+        },
+        localStorage: {
+            _s: {},
+            getItem(k) { return this._s[k] || null; },
+            setItem(k, v) { this._s[k] = String(v); },
+            removeItem(k) { delete this._s[k]; }
+        },
+        console: { log() {}, warn() {}, error() {} },
+        Blob: class { constructor(parts) { this.parts = parts; } },
+        URL: { createObjectURL() { return 'blob://dummy'; }, revokeObjectURL() {} },
+        setTimeout: (fn) => setTimeout(fn, 0),
+        newIntl: Intl
+    };
+    context.window.window = context.window;
+    vm.createContext(context);
+
+    // 2. Load seed file
+    const seedCode = fs.readFileSync('js/data/default-daily-progress.js', 'utf8');
+    vm.runInContext(seedCode, context);
+    const seed = context.window.DailyProgressSeed;
+
+    assert.ok(seed, 'DailyProgressSeed should exist');
+    assert.strictEqual(seed.contractor.id, 'mangesh-sonwane', 'Contractor should be MANGESH SONWANE');
+    assert.strictEqual(seed.items.length, 401, 'Seed should contain exactly 401 items');
+    assert.strictEqual(seed.records.length, 30, 'Seed should contain 30 daily reports for September 2026');
+
+    // 3. Load DailyProgressModule
+    const dpCode = fs.readFileSync('js/daily-progress.js', 'utf8');
+    vm.runInContext(dpCode, context);
+    const dpModule = context.window.DailyProgressModule;
+    assert.ok(dpModule, 'DailyProgressModule should be defined');
+
+    // 4. Test app instance with DailyProgressModule methods
+    const app = {
+        ...dpModule,
+        dailyProgressTab: 'entry',
+        dailyProgressDate: '2026-09-01',
+        dailyProgressContractorId: 'mangesh-sonwane',
+        dailyProgressData: null,
+        dailyProgressQuantities: {},
+        dailyProgressManpower: { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 },
+        dailyProgressRemarks: '',
+        dailyProgressVersion: 0,
+        dailyProgressDirty: false,
+        dailyProgressBusy: false,
+        selectedContractorId: 'mangesh-sonwane',
+        selectedContractorName: 'MANGESH SONWANE',
+        contractorsList: [{ id: 'mangesh-sonwane', name: 'MANGESH SONWANE', feederName: 'ANGARA' }],
+        projectMeta: { zone: 'Gadchiroli (T-10)' },
+        showToast(msg) { this.lastToast = msg; },
+        $set(obj, key, val) { obj[key] = val; },
+        formatDisplayDate(d) { return d; },
+        getContractorSapIssues() {
+            return {
+                materials: {
+                    '11000123': { code: '11000123', desc: 'M SAND 0-6 MM', uom: 'KG', netIssue: 100, issuedQty: 100 },
+                    '11000336': { code: '11000336', desc: 'CEMENT GRADE OPC 53', uom: 'KG', netIssue: 50, issuedQty: 50 }
+                }
+            };
+        }
+    };
+
+    // 5. Test initialization
+    await app.initDailyProgress();
+    assert.ok(app.dailyProgressData, 'dailyProgressData should be initialized');
+    assert.strictEqual(app.dailyProgressData.contractors.length, 1, 'Should have initial contractor');
+    assert.strictEqual(app.dailyProgressData.reports.length, 30, 'Should load 30 seed reports');
+
+    // 6. Test loading report for 2026-09-01
+    app.loadDailyProgressReportForDate('2026-09-01');
+    assert.strictEqual(app.dailyProgressQuantities['15'], 3, 'Item 15 (M SAND) should have 3 KG consumed on 2026-09-01');
+    assert.strictEqual(app.dailyProgressManpower.leader, 1, 'Leader should be 1');
+    assert.strictEqual(app.dailyProgressManpower.skilled, 7, 'Skilled should be 7');
+    assert.strictEqual(app.dailyProgressManpower.unskilled, 6, 'Unskilled should be 6');
+
+    // 7. Test SAP Stock linking & Stock Balance calculation
+    const sandItem = seed.items.find(i => i.id === '15'); // code: '11000123', M SAND
+    assert.ok(sandItem, 'Sand item should exist');
+    const stockInfo = app.getDailyProgressItemStock(sandItem);
+
+    // SAP issued is 100, consumed on 2026-09-01 is 3, balance should be 97
+    assert.strictEqual(stockInfo.sapIssued, 100, 'SAP issued should be 100');
+    assert.strictEqual(stockInfo.totalConsumed, 3, 'Total consumed up to 2026-09-01 should be 3');
+    assert.strictEqual(stockInfo.balance, 97, 'Balance should be 97');
+    assert.strictEqual(stockInfo.status, 'in_stock', 'Status should be in_stock');
+
+    // 8. Test Saving Daily Progress Report
+    app.onDailyProgressQuantityChange('15', 12);
+    assert.strictEqual(app.dailyProgressDirty, true, 'Dirty flag should be true after change');
+    await app.saveDailyProgressReport();
+    assert.strictEqual(app.dailyProgressDirty, false, 'Dirty flag should reset after save');
+    assert.strictEqual(app.dailyProgressQuantities['15'], 12, 'Quantity should be updated to 12');
+
+    // Re-verify stock balance after updated consumption
+    const updatedStock = app.getDailyProgressItemStock(sandItem);
+    assert.strictEqual(updatedStock.totalConsumed, 12, 'Total consumed should now be 12');
+    assert.strictEqual(updatedStock.balance, 88, 'Balance should now be 88');
+
+    // 9. Test Date Navigation
+    app.navigateDailyProgressDay(1);
+    assert.strictEqual(app.dailyProgressDate, '2026-09-02', 'Date should navigate to 2026-09-02');
+
+    console.log('✅ Daily Progress Module: All unit tests passed successfully.');
+});

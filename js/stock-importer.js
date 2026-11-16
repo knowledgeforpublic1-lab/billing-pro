@@ -510,7 +510,7 @@ window.StockImporterModule = {
                 const dhsArray = Array.from(g.dhs || []);
                 const docHeaderDisplay = wosArray.length > 0 ? wosArray.join(', ') : (dhsArray[0] || '');
 
-                const cRecord = {
+                const cRecord = Object.freeze({
                     docHeader: docHeaderDisplay,
                     allWorkOrders: wosArray,
                     vendorCode: g.vendorCode || '',
@@ -520,7 +520,7 @@ window.StockImporterModule = {
                     totalMrnReturn: Math.round(totalMrn * 1000) / 1000,
                     totalNetIssue: Math.round(totalNet * 1000) / 1000,
                     materials: cleanMats
-                };
+                });
 
                 outputData.byContractorNorm[key] = cRecord;
                 if (g.rawNorms) {
@@ -538,6 +538,11 @@ window.StockImporterModule = {
                 outputData.byDocHeader[dh] = outputData.byContractorNorm[key];
             }
         }
+
+        // Freeze root structures to avoid Vue 2 deep-reactivity traversal freezes
+        Object.freeze(outputData.byContractorNorm);
+        Object.freeze(outputData.byDocHeader);
+        Object.freeze(outputData);
 
         return outputData;
     },
@@ -687,14 +692,16 @@ window.StockImporterModule = {
     },
 
     async resetStockDateAndDefault() {
-        if (this.stockAsOnDate) {
+        // User requested: Reset button should reset to current date (today) or latest date
+        const today = (typeof this.todayDateStr === 'string' && this.todayDateStr) ? this.todayDateStr : new Date().toISOString().slice(0, 10);
+        if (this.stockAsOnDate !== today) {
+            this.stockAsOnDate = today;
+            this.recoRevision = (this.recoRevision || 0) + 1;
+            this.showToast('↺ Stock date reset to today (' + this.formatDisplayDate(today) + ')', 'Check');
+        } else {
             this.stockAsOnDate = '';
             this.recoRevision = (this.recoRevision || 0) + 1;
-            this.showToast('↺ Stock date filter reset — Showing latest stock data', 'Check');
-            return;
-        }
-        if (this.hasCustomStock) {
-            await this.resetToDefaultStock();
+            this.showToast('↺ Stock date filter cleared — Showing all latest stock', 'Check');
         }
     },
 

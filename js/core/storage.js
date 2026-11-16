@@ -47,18 +47,50 @@
          * Asynchronously set key-value in IndexedDB + LocalStorage (Dual-Write)
          */
         async setItem(key, value) {
-            const strVal = typeof value === 'string' ? value : JSON.stringify(value);
+            // Bypass LocalStorage and stringify for known large keys (SAP stock, Daily progress)
+            if (key === 'billing_custom_sap_stock' || key === 'billing_daily_progress') {
+                const result = { localStorage: false, indexedDB: false, saved: false };
+                try {
+                    const db = await getDB();
+                    if (db) {
+                        await new Promise((resolve, reject) => {
+                            const tx = db.transaction(STORE_NAME, 'readwrite');
+                            const store = tx.objectStore(STORE_NAME);
+                            store.put(value, key);
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = () => reject(tx.error);
+                            tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));
+                        });
+                        result.indexedDB = true;
+                        result.saved = true;
+                    }
+                } catch (idbErr) {
+                    console.error(`[StorageEngine] IndexedDB write failed for key [${key}]:`, idbErr);
+                }
+                return result;
+            }
+
+            let strVal = null;
+            if (typeof value === 'string') {
+                strVal = value;
+            } else {
+                try {
+                    strVal = JSON.stringify(value);
+                } catch (err) {
+                    console.warn(`[StorageEngine] JSON.stringify skipped for [${key}]:`, err.message);
+                }
+            }
 
             const result = { localStorage: false, indexedDB: false, saved: false };
             // 1. Try writing to LocalStorage (synchronous fast-boot cache, skip if payload > 2.5MB to prevent quota crash)
-            if (strVal.length <= 2500000) {
+            if (strVal && strVal.length <= 2500000) {
                 try {
                     localStorage.setItem(key, strVal);
                     result.localStorage = true;
                 } catch (err) {
                     console.warn(`[StorageEngine] LocalStorage quota exceeded for key [${key}], persisting safely to IndexedDB only.`);
                 }
-            } else {
+            } else if (strVal) {
                 console.info(`[StorageEngine] Key [${key}] payload (${(strVal.length / 1024 / 1024).toFixed(1)}MB) stored safely in IndexedDB (skipping LocalStorage to avoid quota limits).`);
             }
 
@@ -69,7 +101,7 @@
                     await new Promise((resolve, reject) => {
                         const tx = db.transaction(STORE_NAME, 'readwrite');
                         const store = tx.objectStore(STORE_NAME);
-                        store.put(strVal, key);
+                        store.put(strVal !== null ? strVal : value, key);
                         tx.oncomplete = () => resolve();
                         tx.onerror = () => reject(tx.error);
                         tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));
@@ -100,6 +132,10 @@
                         getReq.onerror = () => resolve(null);
                     });
                     if (val !== undefined && val !== null) {
+                        // Native objects stored directly in IndexedDB (e.g. custom stock, daily progress)
+                        if (typeof val !== 'string') {
+                            return val;
+                        }
                         // Reload may interrupt the IndexedDB write after the
                         // synchronous localStorage copy was already saved.
                         if (localValue !== null && localValue !== val) {

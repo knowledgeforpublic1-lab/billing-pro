@@ -364,6 +364,11 @@ window.UtilsModule = {
                     if (viewName === 'reconciliation') {
                         this.recoRevision = (this.recoRevision || 0) + 1;
                     }
+                    if (viewName === 'dailyProgress') {
+                        if (typeof this.syncWithBillingProActiveContractor === 'function') {
+                            this.syncWithBillingProActiveContractor();
+                        }
+                    }
                     if (viewName === 'invoice') {
                         // Ensure contractor name is populated only when a firm is actually selected
                         if (this.selectedContractorId && this.selectedContractorId !== 'custom' && this.invoiceData && (!this.invoiceData.contractorName || this.invoiceData.contractorName === 'CONTRACTOR' || this.invoiceData.contractorName === 'M/s CONTRACTOR')) {
