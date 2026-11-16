@@ -181,7 +181,7 @@
                         try {
                             const localStr = localStorage.getItem('billing_daily_progress');
                             if (localStr) loaded = JSON.parse(localStr);
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     // 3. Merge data
@@ -390,7 +390,7 @@
                     // Save locally first
                     try {
                         localStorage.setItem('billing_daily_progress', JSON.stringify(payload));
-                    } catch (e) {}
+                    } catch (e) { }
 
                     // Save to cloud API
                     try {
@@ -516,7 +516,7 @@
                 return items.filter(it => {
                     if (q) {
                         const matches = String(it.name || '').toLowerCase().includes(q) ||
-                                        String(it.code || '').toLowerCase().includes(q);
+                            String(it.code || '').toLowerCase().includes(q);
                         if (!matches) return false;
                     }
                     if (filter === 'all') return true;
@@ -581,7 +581,7 @@
                     try {
                         const res = await fetch('/api/daily-progress/template');
                         if (res.ok) templateBuffer = await res.arrayBuffer();
-                    } catch (e) {}
+                    } catch (e) { }
 
                     const workbook = new window.ExcelJS.Workbook();
                     if (templateBuffer) {

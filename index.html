@@ -500,6 +500,44 @@
 </button>
                         </div>
                     </template>
+                    <template v-if="currentView === 'dailyProgress'">
+                        <span class="dp-brand-chip" style="font-size: 0.82rem; font-weight: 800; color: var(--text-main, #111); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">📅 Daily Progress</span>
+
+                        <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; padding: 2px 4px 2px 7px;">
+                            <span class="dp-pill-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">TEAM:</span>
+                            <select :value="dailyProgressContractorId" @change="onDailyProgressContractorChange($event.target.value); $event.target.value = dailyProgressContractorId" title="Select Contractor / Labour Team" style="background: transparent; border: none; color: var(--text-main, #111); font-weight: 700; font-size: 0.78rem; cursor: pointer; outline: none; max-width: 250px;">
+                                <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                            <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="dp-icon-add-btn">➕</button>
+                        </div>
+
+                        <div class="dp-date-pill" style="display: inline-flex; align-items: center; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; overflow: hidden;">
+                            <button type="button" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
+                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
+                            <button type="button" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
+                        </div>
+
+                        <div class="dp-segmented-tabs" style="display: inline-flex; background: var(--bg-surface, #e2e8f0); padding: 2px; border-radius: 5px; gap: 2px;">
+                            <button type="button" :class="{ active: dailyProgressTab === 'entry' }" @click="dailyProgressTab = 'entry'" title="Daily Material & Manpower Entry" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                                <span>⚡</span><span>Entry</span>
+                            </button>
+                            <button type="button" :class="{ active: dailyProgressTab === 'stock' }" @click="dailyProgressTab = 'stock'" title="Material & Stock Balances" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                                <span>📦</span><span>Stock</span>
+                            </button>
+                            <button type="button" :class="{ active: dailyProgressTab === 'history' }" @click="dailyProgressTab = 'history'" title="Past Saved Reports" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                                <span>📋</span><span>History</span>
+                                <span v-if="dailyProgressReports.length" class="dp-pill-badge" style="font-size: 0.62rem; margin-left: 2px;">{{ dailyProgressReports.length }}</span>
+                            </button>
+                            <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="dailyProgressTab = 'download'" title="Download Excel Reports" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                                <span>📥</span><span>Export</span>
+                            </button>
+                        </div>
+
+                        <!-- Single Share Button -->
+                        <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
+                            <span>📋</span><span>Share</span>
+                        </button>
+                    </template>
                     <span class="sp"></span>
                     <div class="ps-toolbar-actions" v-if="currentView === 'poleSchedule' || currentView === 'abstract'">
                         <button class="btn btn-primary ico-btn" @click="openPoleScheduleAddMaterialModal(-1)" title="Add Row — is pole schedule me nayi material row jodo"><svg class="ic"><use href="#ic-fileplus"/></svg></button>
@@ -1858,62 +1896,6 @@
         <!-- VIEW: DAILY PROGRESS REGISTER -->
         <div class="view-section animate-fade-in" v-if="currentView === 'dailyProgress'">
             <div class="daily-progress-container">
-                <!-- Ultra-Compact Top Toolbar (Zero Wasted Space) -->
-                <div class="dp-compact-bar no-print">
-                    <!-- Left: Menu Toggle & Title -->
-                    <div class="dp-bar-left">
-                        <button type="button" class="dp-menu-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Show Sidebar Menu' : 'Hide Sidebar Menu'">
-                            <span>{{ sidebarCollapsed ? '☰' : '◀' }}</span>
-                            <span class="dp-btn-label">{{ sidebarCollapsed ? 'Menu' : 'Collapse' }}</span>
-                        </button>
-                        <span class="dp-brand-chip">📅 Daily Progress</span>
-                    </div>
-
-                    <!-- Center: Contractor Dropdown + Date Stepper -->
-                    <div class="dp-bar-center">
-                        <div class="dp-contractor-pill">
-                            <span class="dp-pill-label">Team:</span>
-                            <select :value="dailyProgressContractorId" @change="onDailyProgressContractorChange($event.target.value); $event.target.value = dailyProgressContractorId" title="Select Contractor / Labour Team">
-                                <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
-                            </select>
-                            <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="dp-icon-add-btn">➕</button>
-                        </div>
-
-                        <div class="dp-date-pill">
-                            <button type="button" @click="navigateDailyProgressDay(-1)" title="Previous Day">◀</button>
-                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date">
-                            <button type="button" @click="navigateDailyProgressDay(1)" title="Next Day">▶</button>
-                        </div>
-                    </div>
-
-                    <!-- Right: Segmented Sub-navigation Tabs (Desktop) -->
-                    <div class="dp-bar-right">
-                        <div class="dp-segmented-tabs">
-                            <button type="button" :class="{ active: dailyProgressTab === 'entry' }" @click="dailyProgressTab = 'entry'" title="Daily Material & Manpower Entry">
-                                <span>⚡</span><span>Entry</span>
-                            </button>
-                            <button type="button" :class="{ active: dailyProgressTab === 'stock' }" @click="dailyProgressTab = 'stock'" title="Material & Stock Balances">
-                                <span>📦</span><span>Stock</span>
-                            </button>
-                            <button type="button" :class="{ active: dailyProgressTab === 'history' }" @click="dailyProgressTab = 'history'" title="Past Saved Reports">
-                                <span>📋</span><span>History</span>
-                                <span v-if="dailyProgressReports.length" class="dp-pill-badge">{{ dailyProgressReports.length }}</span>
-                            </button>
-                            <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="dailyProgressTab = 'download'" title="Download Excel Reports">
-                                <span>📥</span><span>Export</span>
-                            </button>
-                        </div>
-                        <div style="display: inline-flex; align-items: center; gap: 5px; margin-left: 6px;">
-                            <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.72rem; padding: 4px 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-                                <span>📋</span><span>Share</span>
-                            </button>
-                            <a :href="'daily-progress.html?contractor=' + dailyProgressContractorId + '&date=' + dailyProgressDate" target="_blank" class="btn btn-secondary" title="Dedicated shareable page open karein" style="font-size: 0.72rem; padding: 4px 8px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">
-                                <span>↗</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Single-Line Dense Status Strip (~24px high) -->
                 <div class="dp-status-strip no-print">
                     <div class="dp-status-items">
