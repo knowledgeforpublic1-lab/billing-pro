@@ -2295,7 +2295,7 @@ window.PoleScheduleModule = {
 
             const sheetName = (onlyFiltered ? `Filtered_${cleanK}` : `Pole_Schedule_${cleanK}`).substring(0, 31);
             const ws = workbook.addWorksheet(sheetName, {
-                views: [{ showGridLines: true }],
+                views: [{ showGridLines: false }],
                 pageSetup: {
                     paperSize: 9, // A4
                     orientation: 'landscape',

@@ -21,15 +21,36 @@ window.ExportModule = {
     addStandardSignOffBlock(ws, startRow, totalCols) {
         if (!ws || totalCols < 1) return startRow;
 
-        // ✍️ 5 lines gap above sign-off block so officials have ample space to sign above
+        // Ensure worksheet does not show raw grid lines
+        ws.views = [{ showGridLines: false }];
+        if (ws.pageSetup) ws.pageSetup.showGridLines = false;
+
+        // ✍️ 5 lines gap above sign-off block so officials have ample space to sign physically
         const gapLines = 5;
+        const cleanWhiteFill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFFFFF' }
+        };
+        const maxClearCols = Math.max(totalCols, 25);
         for (let g = 0; g < gapLines; g++) {
-            ws.getRow(startRow + g).height = 18;
+            const r = startRow + g;
+            ws.getRow(r).height = 18;
+            for (let c = 1; c <= maxClearCols; c++) {
+                const cell = ws.getCell(r, c);
+                cell.fill = cleanWhiteFill;
+                cell.border = {};
+            }
         }
 
-        // Official 5-Box Authorized Signatory Sign-off Block matching print preview exactly
+        // Official 5-Signatory Sign-off Block (Clean without enclosing boxes & grid lines)
         const signRowIdx = startRow + gapLines;
-        ws.getRow(signRowIdx).height = 60;
+        ws.getRow(signRowIdx).height = 42;
+        for (let c = 1; c <= maxClearCols; c++) {
+            const cell = ws.getCell(signRowIdx, c);
+            cell.fill = cleanWhiteFill;
+            cell.border = {};
+        }
 
         const signTitles = [
             { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
@@ -39,20 +60,13 @@ window.ExportModule = {
             { main: 'Project Manager', sub: '(Authorized Signatory)' }
         ];
 
-        const signBorder = {
-            top: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            left: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            bottom: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            right: { style: 'thin', color: { argb: 'FF94A3B8' } }
-        };
-
         const numSignBoxes = 5;
         const colWidths = [];
         for (let col = 1; col <= totalCols; col++) {
             colWidths.push(ws.getColumn(col).width || 15);
         }
 
-        // Find balanced partition across totalCols so all 5 boxes have equal visual widths
+        // Find balanced partition across totalCols so all 5 titles spread across the full width evenly
         let partitions = null;
         let minVariance = Infinity;
 
@@ -63,7 +77,7 @@ window.ExportModule = {
                 const all = currentParts.concat([{ start: startCol, end: endCol, w }]);
                 const widthsArr = all.map(p => p.w);
                 const mean = widthsArr.reduce((a, b) => a + b, 0) / numSignBoxes;
-                const penalty = widthsArr.some(width => width < 22) ? 10000 : 0;
+                const penalty = widthsArr.some(width => width < 18) ? 10000 : 0;
                 const variance = widthsArr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) + penalty;
                 if (variance < minVariance) {
                     minVariance = variance;
@@ -108,10 +122,15 @@ window.ExportModule = {
                         { text: signTitles[i].sub, font: { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF475569' } } }
                     ]
                 };
-                cell.alignment = { horizontal: 'center', vertical: 'bottom', wrapText: true };
+                // Sub-Contractor aligns left, Project Manager aligns right, middle ones center to maximize gap and use full width
+                const horizAlign = (i === 0) ? 'left' : (i === numSignBoxes - 1 ? 'right' : 'center');
+                cell.alignment = { horizontal: horizAlign, vertical: 'bottom', wrapText: true };
+                cell.fill = cleanWhiteFill;
+                cell.border = {};
 
                 for (let col = startCol; col <= endCol; col++) {
-                    ws.getCell(signRowIdx, col).border = signBorder;
+                    ws.getCell(signRowIdx, col).border = {};
+                    ws.getCell(signRowIdx, col).fill = cleanWhiteFill;
                 }
             }
         }
@@ -123,8 +142,8 @@ window.ExportModule = {
         workbook.creator = 'Billing Pro Studio';
         workbook.created = new Date();
         const ws = workbook.addWorksheet('SAP Material Mapping Master', {
-            views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            views: [{ showGridLines: false }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
         const thinBorder = {
             top: { style: 'thin', color: { argb: 'FF888888' } },
@@ -228,8 +247,8 @@ window.ExportModule = {
 
     addStyledReconciliationToWorkbook(workbook, sheetName = 'Reconciliation') {
         const ws = workbook.addWorksheet(sheetName, {
-            views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            views: [{ showGridLines: false }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
         const thinBorder = {
             top: { style: 'thin', color: { argb: 'FF888888' } },
@@ -443,7 +462,7 @@ window.ExportModule = {
     },
     addStyledTaxInvoiceToWorkbook(workbook) {
         const ws = workbook.addWorksheet('Tax Invoice', {
-            views: [{ showGridLines: true }]
+            views: [{ showGridLines: false }]
         });
 
         const borderThin = {
@@ -1351,8 +1370,8 @@ function jsonOut(obj) {
 
     addStyledMasterAbstractToWorkbook(workbook) {
         const ws = workbook.addWorksheet('Master Abstract', {
-            views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            views: [{ showGridLines: false }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true, showGridLines: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
 
         const thinBorder = {
@@ -1518,8 +1537,8 @@ function jsonOut(obj) {
 
         const safeSheetName = `Act ${actKey}`.substring(0, 31);
         const ws = workbook.addWorksheet(safeSheetName, {
-            views: [{ showGridLines: true }],
-            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, showGridLines: true, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
+            views: [{ showGridLines: false }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false, showGridLines: false, margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } }
         });
 
         // Audit format: Sr | Desc | Unit | Loc1..N | Rate | 100% | st1% | st2% | st3%

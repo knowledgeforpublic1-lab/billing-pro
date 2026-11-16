@@ -7149,32 +7149,42 @@ html[data-theme="light"] .excel-filter-popover {
 }
 
 .activity-print-signoff {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0;
-    margin-top: 14px;
-    border: 1px solid #94a3b8;
-    background: #ffffff;
-    border-radius: 4px;
-    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-top: 48px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
     page-break-inside: avoid;
     break-inside: avoid;
 }
 
 .activity-print-signoff .act-sign-box {
+    flex: 1 1 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
-    padding: 38px 6px 8px 6px;
-    border-right: 1px solid #94a3b8;
+    padding: 0 4px;
+    border: none;
+    border-right: none;
     text-align: center;
-    min-height: 70px;
-    background: #ffffff;
+    background: transparent;
+    min-height: auto;
+}
+
+.activity-print-signoff .act-sign-box:first-child {
+    align-items: flex-start;
+    text-align: left;
 }
 
 .activity-print-signoff .act-sign-box:last-child {
-    border-right: none;
+    align-items: flex-end;
+    text-align: right;
 }
 
 .activity-print-signoff .act-sign-title {
@@ -7192,13 +7202,13 @@ html[data-theme="light"] .excel-filter-popover {
 }
 
 html[data-theme="dark"] .activity-print-signoff {
-    background: var(--bg-card, #1e293b);
-    border-color: var(--border-color, #334155);
+    background: transparent;
+    border: none;
 }
 
 html[data-theme="dark"] .activity-print-signoff .act-sign-box {
-    background: var(--bg-card, #1e293b);
-    border-color: var(--border-color, #334155);
+    background: transparent;
+    border: none;
 }
 
 html[data-theme="dark"] .activity-print-signoff .act-sign-title {
@@ -7372,11 +7382,16 @@ html[data-theme="dark"] .activity-print-signoff .act-sign-sub {
 
     /* Print Signoff */
     .activity-print-signoff {
-        display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
-        margin-top: 10px !important;
-        border: 1px solid #94a3b8 !important;
-        background: #ffffff !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-end !important;
+        gap: 8px !important;
+        margin-top: 42px !important;
+        border: none !important;
+        background: transparent !important;
+        width: 100% !important;
+        padding: 0 4px !important;
+        box-sizing: border-box !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         -webkit-print-color-adjust: exact !important;
@@ -7384,14 +7399,27 @@ html[data-theme="dark"] .activity-print-signoff .act-sign-sub {
     }
 
     .activity-print-signoff .act-sign-box {
-        border-right: 1px solid #94a3b8 !important;
-        padding: 34px 4px 6px 4px !important;
-        background: #ffffff !important;
-        min-height: 65px !important;
+        flex: 1 1 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        border: none !important;
+        border-right: none !important;
+        padding: 0 4px !important;
+        background: transparent !important;
+        min-height: auto !important;
+        text-align: center !important;
+    }
+
+    .activity-print-signoff .act-sign-box:first-child {
+        align-items: flex-start !important;
+        text-align: left !important;
     }
 
     .activity-print-signoff .act-sign-box:last-child {
-        border-right: none !important;
+        align-items: flex-end !important;
+        text-align: right !important;
     }
 
     .activity-print-signoff .act-sign-title {
@@ -7539,27 +7567,40 @@ html[data-theme="dark"] .activity-print-signoff .act-sign-sub {
 }
 
 .ep-signoff-grid {
-    display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
-    border: 1px solid #94a3b8 !important;
-    margin-top: 14px !important;
-    background: #ffffff !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
+    border: none !important;
+    margin-top: 48px !important;
+    background: transparent !important;
+    width: 100% !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
 }
 
 .ep-signbox {
+    flex: 1 1 0 !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-end !important;
     align-items: center !important;
-    padding: 40px 6px 8px 6px !important;
-    border-right: 1px solid #94a3b8 !important;
+    padding: 0 4px !important;
+    border: none !important;
+    border-right: none !important;
     text-align: center !important;
-    min-height: 72px !important;
-    background: #ffffff !important;
+    min-height: auto !important;
+    background: transparent !important;
+}
+
+.ep-signbox:first-child {
+    align-items: flex-start !important;
+    text-align: left !important;
 }
 
 .ep-signbox:last-child {
-    border-right: none !important;
+    align-items: flex-end !important;
+    text-align: right !important;
 }
 
 .ep-sign-title {
