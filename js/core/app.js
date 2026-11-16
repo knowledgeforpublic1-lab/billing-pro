@@ -805,9 +805,9 @@
 
                 Object.keys(oldRecoMats).forEach(matCode => {
                     const oItem = oldRecoMats[matCode];
-                    const oNet = Number(oItem.netIssue !== undefined ? oItem.netIssue : (oItem.issuedQty || 0));
-                    const oGross = Number(oItem.grossIssue !== undefined ? oItem.grossIssue : oNet);
-                    const oMrn = Number(oItem.mrnReturn !== undefined ? oItem.mrnReturn : 0);
+                    const oNet = _asOn ? 0 : Number(oItem.netIssue !== undefined ? oItem.netIssue : (oItem.issuedQty || 0));
+                    const oGross = _asOn ? 0 : Number(oItem.grossIssue !== undefined ? oItem.grossIssue : oNet);
+                    const oMrn = _asOn ? 0 : Number(oItem.mrnReturn !== undefined ? oItem.mrnReturn : 0);
 
                     if (!sapMap[matCode]) {
                         sapMap[matCode] = {

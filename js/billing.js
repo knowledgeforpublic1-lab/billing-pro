@@ -29,18 +29,10 @@ window.BillingModule = {
             let totalNet = 0;
 
             for (const [code, mat] of Object.entries(rec.materials || {})) {
-                if (!mat.txns || mat.txns.length === 0) {
-                    filteredMats[code] = mat;
-                    totalGross += Number(mat.grossIssue || 0);
-                    totalMrn += Number(mat.mrnReturn || 0);
-                    totalNet += Number(mat.netIssue !== undefined ? mat.netIssue : (mat.issuedQty || 0));
-                    continue;
-                }
-
                 let mGross = 0;
                 let mMrn = 0;
-                for (const [dt, g, m] of mat.txns) {
-                    if (dt <= asOnDate) {
+                for (const [dt, g, m] of (mat.txns || [])) {
+                    if (dt && dt <= asOnDate) {
                         mGross += Number(g || 0);
                         mMrn += Number(m || 0);
                     }
@@ -49,21 +41,20 @@ window.BillingModule = {
                 mMrn = Math.round(mMrn * 1000) / 1000;
                 const netRound = Math.round((mGross - mMrn) * 1000) / 1000;
 
-                if (mGross !== 0 || mMrn !== 0 || netRound !== 0) {
-                    filteredMats[code] = {
-                        code: mat.code,
-                        desc: mat.desc,
-                        uom: mat.uom,
-                        grossIssue: mGross,
-                        mrnReturn: mMrn,
-                        netIssue: netRound,
-                        issuedQty: netRound,
-                        txns: mat.txns
-                    };
-                    totalGross += mGross;
-                    totalMrn += mMrn;
-                    totalNet += netRound;
-                }
+                // Keep zero rows so old reconciliation cannot replace filtered stock.
+                filteredMats[code] = {
+                    code: mat.code,
+                    desc: mat.desc,
+                    uom: mat.uom,
+                    grossIssue: mGross,
+                    mrnReturn: mMrn,
+                    netIssue: netRound,
+                    issuedQty: netRound,
+                    txns: mat.txns
+                };
+                totalGross += mGross;
+                totalMrn += mMrn;
+                totalNet += netRound;
             }
 
             return {

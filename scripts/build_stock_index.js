@@ -27,7 +27,7 @@ function parseDateToYmd(val) {
   if (typeof val === 'string') {
     const s = val.trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    const m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
     if (m) {
       return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
     }
@@ -197,9 +197,17 @@ async function buildStockIndex() {
   for await (const ws of reader2) {
     if (ws.name !== 'Sheet1') continue;
     let r = 0;
+    let postingDateCol = 0;
     for await (const row of ws) {
       r++;
-      if (r === 1) continue;
+      if (r === 1) {
+        row.eachCell((cell, col) => {
+          const header = String(cell.value || '').toLowerCase().replace(/[^a-z]/g, '');
+          if (['postingdate', 'pstngdate', 'budat'].includes(header)) postingDateCol = col;
+        });
+        if (!postingDateCol) throw new Error('Stock file mein Posting Date column nahi mila.');
+        continue;
+      }
       txnCount++;
 
       const dh = String(row.getCell(16).value || '').trim();
@@ -207,8 +215,8 @@ async function buildStockIndex() {
       const desc = String(row.getCell(10).value || '').trim();
       const uom = String(row.getCell(11).value || '').trim();
       const qty = Number(row.getCell(12).value || 0);
-      const rawDt = row.getCell(4).value || row.getCell(3).value;
-      const dt = parseDateToYmd(rawDt) || '2026-11-11';
+      const rawDt = row.getCell(postingDateCol).value;
+      const dt = parseDateToYmd(rawDt);
 
       if (!dh || !mat) continue;
 

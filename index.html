@@ -471,7 +471,7 @@
                                        @input="onStockAsOnDateChange"
                                        @change="onStockAsOnDateChange"
                                        style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
-                                       title="Date select karein: is date tak ka material issue calculate hoga">
+                                       title="Date select karein: Stock ki Posting Date ke hisaab se is date tak ka material issue calculate hoga">
                                 <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"
                                       :style="stockAsOnDate ? 'background: #2563eb; color: #ffffff; border-color: #60a5fa;' : ''"
                                       @click="$refs.stockDatePickerInput && $refs.stockDatePickerInput.showPicker && $refs.stockDatePickerInput.showPicker()">
@@ -4460,7 +4460,7 @@
 
     <!-- Feature Modules -->
     <script defer src="js/sync.js?v=20261114_conflict_review"></script>
-    <script defer src="js/billing.js?v=20261111_realtime_mongo_sync"></script>
+    <script defer src="js/billing.js?v=20261116_posting_date"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_header"></script>
@@ -4469,14 +4469,14 @@
     <script defer src="js/views.js?v=20261114_conductor_km"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
     <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
-    <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
+    <script defer src="js/stock-importer.js?v=20261116_posting_date"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/daily-progress.js?v=20261116"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261114_conflict_review"></script>
+    <script defer src="js/core/app.js?v=20261116_posting_date"></script>
 </body>
 
 </html>

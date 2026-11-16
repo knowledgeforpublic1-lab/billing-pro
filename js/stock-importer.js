@@ -49,7 +49,7 @@ window.StockImporterModule = {
         if (typeof val === 'string') {
             const s = val.trim();
             if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+            const m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
             if (m) {
                 return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
             }
@@ -216,6 +216,17 @@ window.StockImporterModule = {
             txnRangeEnd = range.e.r + 1;
         }
 
+        // Read Posting Date by header, never substitute Document Date.
+        let postingDateCol = '';
+        for (let c = 0; c <= XLSX.utils.decode_range(s1['!ref'] || 'A1:P1').e.c; c++) {
+            const col = XLSX.utils.encode_col(c);
+            const header = String((s1[col + '1'] || {}).v || '').toLowerCase().replace(/[^a-z]/g, '');
+            if (header === 'postingdate' || header === 'pstngdate' || header === 'budat') {
+                postingDateCol = col;
+                break;
+            }
+        }
+        if (!postingDateCol) throw new Error('Stock file mein Posting Date column nahi mila.');
         const groupMaterials = {};
         let matchedTxns = 0;
 
@@ -239,12 +250,12 @@ window.StockImporterModule = {
             const descCell = s1['J' + r];
             const uomCell = s1['K' + r];
             const qtyCell = s1['L' + r];
-            const dateCell = s1['D' + r] || s1['C' + r];
+            const dateCell = s1[postingDateCol + r];
 
             const desc = descCell ? String(descCell.v).trim() : mat;
             const uom = uomCell ? String(uomCell.v).trim() : 'No';
             const qty = qtyCell ? Number(qtyCell.v) || 0 : 0;
-            const dt = this.parseDateToYmd(dateCell ? dateCell.v : null) || '2026-11-11';
+            const dt = this.parseDateToYmd(dateCell ? dateCell.v : null);
 
             if (!groupMaterials[key]) groupMaterials[key] = {};
             if (!groupMaterials[key][mat]) {
@@ -291,10 +302,11 @@ window.StockImporterModule = {
         }
 
         let headerRowIdx = 0;
-        let cNameCol = -1, woCol = -1, matCol = -1, descCol = -1, uomCol = -1, grossCol = -1, mrnCol = -1, netCol = -1;
+        let cNameCol = -1, woCol = -1, matCol = -1, descCol = -1, uomCol = -1, grossCol = -1, mrnCol = -1, netCol = -1, postingDateCol = -1;
 
         for (let r = 0; r < Math.min(rows.length, 10); r++) {
             const h = (rows[r] || []).map(cell => String(cell || '').toLowerCase().trim());
+            postingDateCol = h.findIndex(c => ['postingdate', 'pstngdate', 'budat'].includes(c.replace(/[^a-z]/g, '')));
             cNameCol = h.findIndex(c => c.includes('contractor') || c.includes('vendor') || c.includes('party') || c.includes('firm'));
             woCol = h.findIndex(c => c.includes('work order') || c.includes('wo') || c.includes('order no') || c.includes('doc header') || c.includes('header text'));
             matCol = h.findIndex(c => 
@@ -450,6 +462,14 @@ window.StockImporterModule = {
             groupMaterials[key][mat].grossIssue += gross;
             groupMaterials[key][mat].mrnReturn += mrn;
             groupMaterials[key][mat].issuedQty += net;
+            if (postingDateCol !== -1) {
+                const dt = this.parseDateToYmd(row[postingDateCol]);
+                const item = groupMaterials[key][mat];
+                if (!item.daily) item.daily = {};
+                if (!item.daily[dt]) item.daily[dt] = [0, 0];
+                item.daily[dt][0] += gross;
+                item.daily[dt][1] += mrn;
+            }
             matchedTxns++;
         }
 
