@@ -734,6 +734,34 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
     }
 });
 
+// GET: Fetch shared daily progress reports across devices
+app.get('/api/daily-progress', requireApiKey, async (req, res) => {
+    try {
+        const record = await db.getDefaultConfig('dailyProgressData');
+        if (record && record.data) {
+            return res.json({ success: true, data: record.data, source: db.getProvider() });
+        }
+        return res.json({ success: true, data: null });
+    } catch (err) {
+        log.error('GET-DAILY-PROGRESS', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// POST: Save shared daily progress reports across devices
+app.post('/api/daily-progress', requireApiKey, writeLimiter, express.json({ limit: '15mb' }), async (req, res) => {
+    try {
+        const payload = req.body && req.body.data;
+        if (!payload) return res.status(400).json({ success: false, error: 'Missing daily progress data payload' });
+        await db.saveDefaultConfig('dailyProgressData', payload);
+        log.info('POST-DAILY-PROGRESS', `Saved daily progress data (${db.getProvider()})`);
+        res.json({ success: true, message: 'Daily progress synced to cloud', provider: db.getProvider() });
+    } catch (err) {
+        log.error('POST-DAILY-PROGRESS', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-POLE-SCHEDULES';

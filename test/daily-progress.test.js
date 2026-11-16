@@ -65,12 +65,21 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
         contractorsList: [{ id: 'mangesh-sonwane', name: 'MANGESH SONWANE', feederName: 'ANGARA' }],
         projectMeta: { zone: 'Gadchiroli (T-10)' },
         showToast(msg) { this.lastToast = msg; },
-        $set(obj, key, val) { obj[key] = val; },
         formatDisplayDate(d) { return d; },
         getContractorSapIssues() {
             return {
                 materials: {
-                    '11000123': { code: '11000123', desc: 'M SAND 0-6 MM', uom: 'KG', netIssue: 100, issuedQty: 100 },
+                    '11000123': {
+                        code: '11000123',
+                        desc: 'M SAND 0-6 MM',
+                        uom: 'KG',
+                        netIssue: 100,
+                        issuedQty: 100,
+                        txns: [
+                            ['2026-09-01', 100, 0],
+                            ['2026-10-15', 50, 0] // Future transaction that must NOT be counted on 2026-09-01
+                        ]
+                    },
                     '11000336': { code: '11000336', desc: 'CEMENT GRADE OPC 53', uom: 'KG', netIssue: 50, issuedQty: 50 }
                 }
             };
@@ -127,6 +136,47 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
     assert.ok(visibleIssued.length > 0, 'There should be issued items visible');
     assert.ok(visibleIssued.length < seed.items.length, 'Issued items count should be less than all 401 items');
     assert.ok(visibleIssued.some(it => it.id === '15'), 'Item 15 (M SAND with 100 SAP issue) should be in visible issued items');
+
+    // 11. Test Vue 3 Reactivity without this.$set
+    assert.strictEqual(typeof app.$set, 'undefined', '$set should NOT exist on app in Vue 3');
+    app.onDailyProgressQuantityChange('15', 55);
+    assert.strictEqual(app.dailyProgressQuantities['15'], 55, 'Quantity must update without $set');
+    assert.strictEqual(app.dailyProgressDirty, true, 'Dirty flag must be true');
+    app.onDailyProgressManpowerChange('skilled', 9);
+    assert.strictEqual(app.dailyProgressManpower.skilled, 9, 'Manpower must update without $set');
+
+    // 12. Test Date-filtered SAP stock (Future transactions excluded)
+    app.dailyProgressDate = '2026-09-01';
+    const stockAtSept = app.getDailyProgressItemStock(sandItem);
+    assert.strictEqual(stockAtSept.sapIssued, 100, 'Future txn on 2026-10-15 must not be included on 2026-09-01');
+    app.dailyProgressDate = '2026-10-20';
+    const stockAtOct = app.getDailyProgressItemStock(sandItem);
+    assert.strictEqual(stockAtOct.sapIssued, 150, 'Both txns (100 + 50) must be included when date is past 2026-10-15');
+
+    // 13. Test Contractor Switch without Data Mixing
+    app.dailyProgressContractorId = 'mangesh-sonwane';
+    app.dailyProgressQuantities = { '15': 99 };
+    app.dailyProgressData.contractors.push({ id: 'contractor-b', name: 'CONTRACTOR B', project: 'P2', feeder: 'F2' });
+    app.contractorsList.push({ id: 'contractor-b', name: 'CONTRACTOR B' });
+    app.selectedContractorId = 'contractor-b';
+    app.selectedContractorName = 'CONTRACTOR B';
+    app.dailyProgressDate = '2026-09-01';
+    app.syncWithBillingProActiveContractor();
+    assert.strictEqual(app.dailyProgressContractorId, 'contractor-b', 'Contractor ID must update');
+    assert.strictEqual(app.dailyProgressQuantities['15'], undefined, 'Previous contractor quantities must NOT leak into new contractor');
+
+    // 14. Test Persistence Failure Handling
+    context.BillingStorage = {
+        setItem() { throw new Error('Simulated disk/quota failure'); }
+    };
+    app.dailyProgressContractorId = 'mangesh-sonwane';
+    app.dailyProgressDate = '2026-09-01';
+    app.dailyProgressDirty = true;
+    const oldVersion = app.dailyProgressVersion;
+    await app.saveDailyProgressReport();
+    assert.strictEqual(app.dailyProgressDirty, true, 'Dirty flag must remain true when storage fails');
+    assert.strictEqual(app.dailyProgressVersion, oldVersion, 'Version must not increment when storage fails');
+    assert.ok(app.lastToast.includes('Failed to save'), 'Error toast must be shown on storage failure');
 
     console.log('✅ Daily Progress Module: All unit tests passed successfully.');
 });

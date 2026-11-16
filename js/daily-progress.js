@@ -77,6 +77,31 @@ window.DailyProgressModule = {
 
         // Load report for active date
         this.loadDailyProgressReportForDate(this.dailyProgressDate);
+
+        // Cross-device Cloud Fetch & Sync
+        try {
+            if (typeof fetch === 'function') {
+                fetch('/api/daily-progress')
+                    .then(r => r.ok ? r.json() : null)
+                    .then(res => {
+                        if (res && res.success && res.data && Array.isArray(res.data.reports) && res.data.reports.length > 0) {
+                            const cloudData = res.data;
+                            const localReportsCount = (this.dailyProgressData && this.dailyProgressData.reports || []).length;
+                            if (cloudData.reports.length >= localReportsCount) {
+                                this.dailyProgressData = cloudData;
+                                this.syncDailyProgressContractorsList();
+                                if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                                    BillingStorage.setItem('billing_daily_progress', cloudData);
+                                }
+                                this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                            }
+                        }
+                    })
+                    .catch(e => console.warn('[DailyProgress] Cloud fetch warning:', e));
+            }
+        } catch (e) {
+            console.warn('[DailyProgress] Cloud fetch init warning:', e);
+        }
     },
 
     syncDailyProgressContractorsList() {
@@ -125,22 +150,42 @@ window.DailyProgressModule = {
             matched = this.dailyProgressData.contractors.find(c => this.normContractorId(c.name) === rawName);
         }
 
+        const prevCid = this.dailyProgressContractorId;
         if (matched) {
             this.dailyProgressContractorId = matched.id;
         } else if (this.dailyProgressData.contractors.length > 0 && !this.dailyProgressContractorId) {
             this.dailyProgressContractorId = this.dailyProgressData.contractors[0].id;
         }
+
+        // If contractor changed or quantities not loaded yet, immediately reload report for current date
+        if (this.dailyProgressContractorId !== prevCid || !this.dailyProgressQuantities) {
+            this.loadDailyProgressReportForDate(this.dailyProgressDate || new Date().toISOString().slice(0, 10));
+        }
     },
 
     async saveDailyProgressData() {
-        if (!this.dailyProgressData) return;
+        if (!this.dailyProgressData) return false;
+
+        // 1. Save to local storage (IndexedDB / LocalStorage) - never swallow errors
+        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+            await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
+        } else if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('billing_daily_progress', JSON.stringify(this.dailyProgressData));
+        }
+
+        // 2. Cloud Sync to /api/daily-progress across devices
         try {
-            if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-                await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
+            if (typeof fetch === 'function') {
+                fetch('/api/daily-progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: this.dailyProgressData })
+                }).catch(err => console.warn('[DailyProgress] Cloud push error:', err));
             }
         } catch (e) {
-            console.error('[DailyProgress] Storage save failed:', e);
+            console.warn('[DailyProgress] Cloud sync trigger error:', e);
         }
+        return true;
     },
 
     // ─── DAILY PROGRESS NAVIGATION & STATE ────────────────────────────────────
@@ -218,13 +263,19 @@ window.DailyProgressModule = {
     onDailyProgressQuantityChange(itemId, val) {
         const num = val === '' ? 0 : Number(val);
         if (isNaN(num) || num < 0) return;
-        this.$set(this.dailyProgressQuantities, itemId, num);
+        // Vue 3 compatible reactive assignment (avoids non-existent this.$set)
+        const qMap = { ...(this.dailyProgressQuantities || {}) };
+        qMap[itemId] = num;
+        this.dailyProgressQuantities = qMap;
         this.dailyProgressDirty = true;
     },
 
     onDailyProgressManpowerChange(key, val) {
         const num = val === '' ? 0 : Math.max(0, Number(val) || 0);
-        this.$set(this.dailyProgressManpower, key, num);
+        // Vue 3 compatible reactive assignment (avoids non-existent this.$set)
+        const mMap = { ...(this.dailyProgressManpower || {}) };
+        mMap[key] = num;
+        this.dailyProgressManpower = mMap;
         this.dailyProgressDirty = true;
     },
 
@@ -302,12 +353,34 @@ window.DailyProgressModule = {
         const curDate = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
         const code = String(item.code || '').trim();
 
-        // 1. SAP Stock Issued to Active Contractor (via ContractorSapStock)
+        // 1. SAP Stock Issued to Active Contractor strictly filtered up to curDate (Work Date)
         let sapIssued = 0;
         const contractorSap = (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
         if (contractorSap && contractorSap.materials && code && contractorSap.materials[code]) {
             const m = contractorSap.materials[code];
-            sapIssued = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+            if (Array.isArray(m.txns) && m.txns.length > 0) {
+                let mGross = 0;
+                let mMrn = 0;
+                for (const [dt, g, mrn] of m.txns) {
+                    if (!dt || dt <= curDate) {
+                        mGross += Number(g || 0);
+                        mMrn += Number(mrn || 0);
+                    }
+                }
+                sapIssued = Math.round((mGross - mMrn) * 1000) / 1000;
+            } else if (m.daily && typeof m.daily === 'object') {
+                let mGross = 0;
+                let mMrn = 0;
+                for (const [dt, arr] of Object.entries(m.daily)) {
+                    if (!dt || dt <= curDate) {
+                        mGross += Number((arr && arr[0]) || 0);
+                        mMrn += Number((arr && arr[1]) || 0);
+                    }
+                }
+                sapIssued = Math.round((mGross - mMrn) * 1000) / 1000;
+            } else {
+                sapIssued = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+            }
         }
 
         // 2. Manual stock issues recorded in Daily Progress
@@ -499,7 +572,27 @@ window.DailyProgressModule = {
                     ws.name = `Progress 1`;
                 } else if (baseWorksheet) {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
-                    // Note: copy base rows / columns if needed
+                    // Copy column definitions and widths from baseWorksheet
+                    if (baseWorksheet.columns) {
+                        ws.columns = baseWorksheet.columns.map(col => ({
+                            header: col.header,
+                            key: col.key,
+                            width: col.width,
+                            style: col.style
+                        }));
+                    }
+                    // Copy all template rows, labels, formulas, formatting from baseWorksheet
+                    baseWorksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+                        const targetRow = ws.getRow(rowNumber);
+                        targetRow.height = row.height;
+                        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                            const targetCell = targetRow.getCell(colNumber);
+                            targetCell.value = cell.value;
+                            if (cell.style) {
+                                targetCell.style = Object.assign({}, cell.style);
+                            }
+                        });
+                    });
                 } else {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                 }
@@ -509,6 +602,19 @@ window.DailyProgressModule = {
                 ws.getCell('A3').value = 'NAME OF FEEDER: ' + (contractor.feeder || 'ANGARA');
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
+
+                // Clear all dynamic data cells across all 30 day columns (E to AH) to remove any template dummy values
+                for (let c = 0; c < 30; c++) {
+                    const colLetter = getColLetter(c + 4);
+                    ws.getCell(colLetter + '6').value = null;
+                    ws.getCell(colLetter + '7').value = null;
+                    for (let mpR = 8; mpR <= 13; mpR++) {
+                        ws.getCell(colLetter + mpR).value = null;
+                    }
+                    seedItems.forEach(it => {
+                        ws.getCell(colLetter + it.row).value = null;
+                    });
+                }
 
                 // Fill days and manpower
                 chunk.forEach((date, i) => {
@@ -530,10 +636,10 @@ window.DailyProgressModule = {
                         ws.getCell(colLetter + (8 + j)).value = r ? (m[k] || 0) : null;
                     });
 
-                    // Material quantities
+                    // Material quantities: write actual quantity if > 0, otherwise cell is clean null
                     seedItems.forEach(it => {
-                        const q = r && r.quantities && r.quantities[it.id];
-                        if (q) {
+                        const q = r && r.quantities && Number(r.quantities[it.id]);
+                        if (q && q > 0) {
                             ws.getCell(colLetter + it.row).value = q;
                         }
                     });
@@ -546,7 +652,7 @@ window.DailyProgressModule = {
                         const rep = reports.find(x => x.date === d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
-                    ws.getCell('AI' + it.row).value = totalConsumedInChunk;
+                    ws.getCell('AI' + it.row).value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
                 });
 
                 // Notes in AJ8
