@@ -1724,6 +1724,26 @@ function jsonOut(obj) {
         ws.columns = widths;
     },
 
+    printCurrentActivity() {
+        const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
+        const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : 'RA';
+        const actKey = this.selectedActivityKey || '';
+        const oldTitle = document.title;
+        document.title = `${cName}_${ra}_Activity_${actKey}_Measurement_Sheet`;
+        if (typeof this.showToast === 'function') {
+            this.showToast('Activity Sheet Print Preview khul raha hai... (Landscape A4)', '🖨️');
+        }
+        setTimeout(() => {
+            try {
+                window.print();
+            } finally {
+                setTimeout(() => {
+                    document.title = oldTitle;
+                }, 1000);
+            }
+        }, 150);
+    },
+
     exportCurrentActivityStyledExcel() {
         this.exportExcelWithExcelJS('single_activity');
     },

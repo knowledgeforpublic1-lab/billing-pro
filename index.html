@@ -76,6 +76,7 @@
 <symbol id="ic-nut" viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7L12 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
 <symbol id="ic-brick" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 9.33h20M2 14.67h20M12 4v5.33M7 9.33v5.34M17 9.33v5.34M12 14.67V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
 <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-printer" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="14" width="12" height="8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       </defs>
     </svg>
     <div id="app" v-cloak>
@@ -284,6 +285,7 @@
                         <button class="tbtn ico-btn" @click="addLocation" :disabled="isFinalized" title="+ Location — naya location column jodo" style="color: #b91c1c;"><svg class="ic"><use href="#ic-pin"/></svg></button>
                         <input type="text" v-model="invoiceData.feederName" @change="saveToStorage" class="form-input" title="Feeder Name — downloaded Excel ke header me print hota hai" placeholder="⚡ Feeder name..." style="font-size: 0.75rem; width: 150px; padding: 3px 8px; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px;">
                         <div class="ps-toolbar-actions">
+                            <button class="btn btn-secondary ico-btn" @click="printCurrentActivity" title="Print Preview — Activity Sheet (Ctrl+P)" style="color: #0284c7;"><svg class="ic"><use href="#ic-printer"/></svg></button>
                             <button class="btn btn-secondary ico-btn" @click="resetFilters" title="Reset — filters reset karo" style="color: #475569;"><svg class="ic"><use href="#ic-refresh"/></svg></button>
                             <button class="btn btn-secondary ico-btn" @click="openNutBoltCalculator" title="Nut Bolt Calculator kholo" style="color: #1d4ed8;"><svg class="ic"><use href="#ic-nut"/></svg></button>
                             <button class="btn btn-secondary ico-btn" @click="openConcretingCalculator" title="Concreting Calculator kholo" style="color: #7c3aed;"><svg class="ic"><use href="#ic-brick"/></svg></button>
@@ -399,6 +401,7 @@
                     <button class="tbtn ico-btn" @click="openSavedBillsManager('database')" title="Open Saved Bills" style="color: #0a66c2;"><svg class="ic"><use href="#ic-folder"/></svg></button>
                     <button class="tbtn primary ico-btn" @click="openNewBillModal" title="New Bill (+ naya RA Bill khologe)" style="color: #ffffff;"><svg class="ic"><use href="#ic-plus"/></svg></button>
                     <button class="tbtn ico-btn" @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()" :title="hasDriveConnected ? 'Drive Connected — click to save bill to Google Drive' : 'Google Drive connect karo'" style="color: #d97706;"><svg class="ic"><use href="#ic-cloud"/></svg></button>
+                    <button v-if="currentView === 'detail'" class="btn btn-secondary ico-btn" @click="printCurrentActivity" title="Print Preview — Activity Sheet ka print preview kholo (Ctrl+P)" style="color: #0284c7;"><svg class="ic"><use href="#ic-printer"/></svg></button>
                     <button v-if="currentView === 'detail'" class="btn btn-excel ico-btn" @click="exportCurrentActivityStyledExcel" title="Export Activity Excel — formulas ke saath download karo"><svg class="ic"><use href="#ic-export"/></svg></button>
                     <button v-if="currentView === 'invoice' || currentView === 'taxInvoice'" class="btn btn-excel ico-btn" @click="exportTaxInvoiceExcel" title="Export Invoice (.xlsx) — formatted tax invoice with formulas"><svg class="ic"><use href="#ic-export"/></svg></button>
                     <button v-if="currentView === 'reconciliation'" class="btn btn-excel ico-btn" @click="exportReconciliationExcel" title="Export Reconciliation Sheet — Excel (.xlsx)"><svg class="ic"><use href="#ic-export"/></svg></button>
@@ -589,6 +592,27 @@
                 </div>
                             </div>
                                 <div class="table-card">
+                    <!-- Official Printable Activity Header (Shown in Print Preview) -->
+                    <div class="activity-print-header">
+                        <div class="act-print-company-banner">
+                            <div class="act-print-company-name">ASHOKA BUILDCON LIMITED — RDSS T-10 GADCHIROLI</div>
+                            <div class="act-print-doc-title">MEASUREMENT SHEET / DETAILED ACTIVITY BILLING</div>
+                        </div>
+                        <div class="act-print-meta-box">
+                            <div class="act-print-meta-col">
+                                <div><strong>Contractor:</strong> {{ getContractorDisplayName() || '—' }}</div>
+                                <div><strong>Work Order No:</strong> {{ (selectedContractorFirm && selectedContractorFirm.workOrderNo) ? selectedContractorFirm.workOrderNo : (invoiceData.workOrderNo || '—') }}</div>
+                            </div>
+                            <div class="act-print-meta-col">
+                                <div><strong>Bill / RA No:</strong> {{ effectiveBillNo || '—' }}</div>
+                                <div><strong>Invoice Date:</strong> {{ (typeof formatDateToDDMMYYYY === 'function' ? formatDateToDDMMYYYY(invoiceData.invoiceDate) : invoiceData.invoiceDate) || '—' }}</div>
+                            </div>
+                            <div class="act-print-meta-col">
+                                <div><strong>Activity:</strong> Activity {{ selectedActivityKey }} — {{ activities[selectedActivityKey] ? activities[selectedActivityKey].title : '' }}</div>
+                                <div><strong>Feeder Name:</strong> {{ invoiceData.feederName || '—' }}</div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="table-responsive">
                         <table class="billing-table">
@@ -610,7 +634,7 @@
                                                     @change="renameLocation(locIdx, loc.name)"
                                                     @keydown.enter="$event.target.blur()"
                                                     :title="'Edit Location ' + (locIdx + 1) + ' Name'">
-                                                <button v-if="getActLocations(selectedActivityKey).length > 1" class="btn-danger"
+                                                <button v-if="getActLocations(selectedActivityKey).length > 1" class="btn-danger no-print"
                                                     style="padding: 2px 5px; font-size: 0.7rem; border-radius: 4px;"
                                                     @click="removeLocation(locIdx)" title="Remove Location">✕</button>
                                             </div>
@@ -625,7 +649,7 @@
                                     </th>
                                     <th class="text-right" style="width: 72px; min-width: 68px;" rowspan="2">{{ pctStage3 }}% Amt
                                     </th>
-                                    <th style="width: 26px;" rowspan="2"></th>
+                                    <th style="width: 26px;" rowspan="2" class="no-print"></th>
                                 </tr>
                                 <tr></tr>
                             </thead>
@@ -710,7 +734,7 @@
                                     <td class="text-right highlight-85">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage1 / 100)) }}</td>
                                     <td class="text-right highlight-10">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage2 / 100)) }}</td>
                                     <td class="text-right highlight-5">{{ formatCurrency(calculateItemAmount(item.origIndex, pctStage3 / 100)) }}</td>
-                                    <td class="text-center">
+                                    <td class="text-center no-print">
                                         <button class="btn-icon" style="padding: 2px 6px; color: var(--accent-red);"
                                             @click="removeItem(item.origIndex)" title="Delete Row">✕</button>
                                     </td>
@@ -812,10 +836,34 @@
                                         formatCurrency(activeTotals.amtStage2) }}</th>
                                     <th class="text-right font-mono" style="color: var(--accent-indigo)">{{
                                         formatCurrency(activeTotals.amtStage3) }}</th>
-                                    <th></th>
+                                    <th class="no-print"></th>
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+
+                    <!-- Official 5-Box Authorized Signatory Sign-off Block -->
+                    <div class="activity-print-signoff">
+                        <div class="act-sign-box">
+                            <div class="act-sign-title">Sub -Contractor</div>
+                            <div class="act-sign-sub">(Authorized Signatory)</div>
+                        </div>
+                        <div class="act-sign-box">
+                            <div class="act-sign-title">Billing Engineer</div>
+                            <div class="act-sign-sub">(Authorized Signatory)</div>
+                        </div>
+                        <div class="act-sign-box">
+                            <div class="act-sign-title">Site Engineer/ Supervisor</div>
+                            <div class="act-sign-sub">(Authorized Signatory)</div>
+                        </div>
+                        <div class="act-sign-box">
+                            <div class="act-sign-title">Division Incharge</div>
+                            <div class="act-sign-sub">(Authorized Signatory)</div>
+                        </div>
+                        <div class="act-sign-box">
+                            <div class="act-sign-title">Project Manager</div>
+                            <div class="act-sign-sub">(Authorized Signatory)</div>
+                        </div>
                     </div>
                 </div>
             </div>

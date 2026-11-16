@@ -7139,3 +7139,270 @@ html[data-theme="light"] .excel-filter-popover {
 .reco-header-label > span { display: flex; align-items: center; justify-content: center; height: 14px; white-space: normal; line-height: 12px; overflow-wrap: normal; }
 .reco-filter-trigger { width: 20px; height: 18px; font-size: 12px; }
 .reco-header-sublabel { min-height: 0; margin-top: 1px; line-height: 9px; text-align: center; overflow-wrap: normal; }
+
+
+/* ============================================================
+   ACTIVITY MEASUREMENT SHEET — PRINT & PREVIEW STYLES
+   ============================================================ */
+.activity-print-header {
+    display: none;
+}
+
+.activity-print-signoff {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-top: 14px;
+    border: 1px solid #94a3b8;
+    background: #ffffff;
+    border-radius: 4px;
+    overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.activity-print-signoff .act-sign-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 38px 6px 8px 6px;
+    border-right: 1px solid #94a3b8;
+    text-align: center;
+    min-height: 70px;
+    background: #ffffff;
+}
+
+.activity-print-signoff .act-sign-box:last-child {
+    border-right: none;
+}
+
+.activity-print-signoff .act-sign-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    line-height: 1.2;
+}
+
+.activity-print-signoff .act-sign-sub {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 2px;
+}
+
+html[data-theme="dark"] .activity-print-signoff {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+html[data-theme="dark"] .activity-print-signoff .act-sign-box {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+html[data-theme="dark"] .activity-print-signoff .act-sign-title {
+    color: #93c5fd;
+}
+
+html[data-theme="dark"] .activity-print-signoff .act-sign-sub {
+    color: #94a3b8;
+}
+
+@media print {
+    @page {
+        size: landscape;
+        margin: 8mm 6mm;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    /* Show Activity Print Header */
+    .activity-print-header {
+        display: block !important;
+        margin-bottom: 8px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .act-print-company-banner {
+        background: #1e293b !important;
+        color: #ffffff !important;
+        padding: 6px 12px !important;
+        text-align: center !important;
+        border-radius: 4px 4px 0 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .act-print-company-name {
+        font-size: 11pt !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .act-print-doc-title {
+        font-size: 8.5pt !important;
+        font-weight: 700 !important;
+        margin-top: 2px !important;
+        color: #cbd5e1 !important;
+    }
+
+    .act-print-meta-box {
+        display: grid !important;
+        grid-template-columns: 1.2fr 1fr 1.3fr !important;
+        gap: 3px 12px !important;
+        padding: 5px 10px !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-top: none !important;
+        font-size: 7.8pt !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .act-print-meta-col > div {
+        margin: 1px 0 !important;
+        line-height: 1.3 !important;
+    }
+
+    .act-print-meta-col strong {
+        color: #334155 !important;
+    }
+
+    /* Activity Container & Table Card */
+    .activity-area,
+    .activity-area .table-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+
+    .activity-area .table-card .table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    .billing-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 7.8pt !important;
+        background: #ffffff !important;
+    }
+
+    .billing-table thead {
+        display: table-header-group !important;
+    }
+
+    .billing-table tfoot {
+        display: table-footer-group !important;
+        position: static !important;
+    }
+
+    .billing-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .billing-table th,
+    .billing-table td {
+        border: 1px solid #94a3b8 !important;
+        padding: 2.5px 3.5px !important;
+        color: #0f172a !important;
+    }
+
+    .billing-table th {
+        background: #f1f5f9 !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .billing-table tfoot th {
+        background: #f1f5f9 !important;
+        font-weight: 800 !important;
+        border-top: 2px solid #0f172a !important;
+        border-bottom: 2px solid #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .billing-table input.editable-cell,
+    .billing-table input.qty-input,
+    .billing-table input.loc-header-input {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #0f172a !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 7.8pt !important;
+        font-family: inherit !important;
+        height: auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+    }
+
+    .billing-table input.qty-input {
+        text-align: right !important;
+    }
+
+    .sap-code-badge {
+        background: transparent !important;
+        border: 1px solid #94a3b8 !important;
+        color: #0f172a !important;
+        padding: 1px 3px !important;
+        font-size: 7pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Print Signoff */
+    .activity-print-signoff {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        margin-top: 10px !important;
+        border: 1px solid #94a3b8 !important;
+        background: #ffffff !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .activity-print-signoff .act-sign-box {
+        border-right: 1px solid #94a3b8 !important;
+        padding: 34px 4px 6px 4px !important;
+        background: #ffffff !important;
+        min-height: 65px !important;
+    }
+
+    .activity-print-signoff .act-sign-box:last-child {
+        border-right: none !important;
+    }
+
+    .activity-print-signoff .act-sign-title {
+        font-size: 7.8pt !important;
+        font-weight: 700 !important;
+        color: #1e3a8a !important;
+    }
+
+    .activity-print-signoff .act-sign-sub {
+        font-size: 6.8pt !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+    }
+}
