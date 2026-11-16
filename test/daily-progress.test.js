@@ -162,6 +162,10 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
     app.selectedContractorName = 'CONTRACTOR B';
     app.dailyProgressDate = '2026-09-01';
     app.syncWithBillingProActiveContractor();
+    assert.strictEqual(app.dailyProgressContractorId, 'mangesh-sonwane', 'Unsaved entry must not silently switch contractor');
+    assert.strictEqual(app.dailyProgressQuantities['15'], 99, 'Unsaved quantities remain with their original contractor');
+    app.dailyProgressDirty = false;
+    app.syncWithBillingProActiveContractor();
     assert.strictEqual(app.dailyProgressContractorId, 'contractor-b', 'Contractor ID must update');
     assert.strictEqual(app.dailyProgressQuantities['15'], undefined, 'Previous contractor quantities must NOT leak into new contractor');
 

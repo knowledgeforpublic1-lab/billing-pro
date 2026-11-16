@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Daily Progress Entry</title>
+  <link rel="stylesheet" href="/css/daily-entry.css?v=20261116">
+  <script defer src="/js/public-daily-entry.js?v=20261116"></script>
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">SITE REGISTER</p><h1>Daily Progress</h1><p id="contractor">Opening your entry link…</p></div><label>Work date<input id="date" type="date" disabled></label></header>
+    <div id="message" role="status" aria-live="polite">Connecting…</div>
+    <div class="actions"><button id="take" hidden>Start / resume entry</button><button id="retry" hidden>Retry pending save</button><button id="recover" hidden>Restore this device’s pending draft</button><button id="copy" hidden>Download pending draft</button></div>
+    <div id="workspace" hidden>
+      <div class="layout">
+        <section><div class="section-heading"><h2>Materials consumed</h2><span id="count"></span></div><label class="search">Search material<input id="search" type="search" placeholder="Material name or SAP code"></label><div id="materials"></div><button id="more" hidden>Show more materials</button></section>
+        <aside><section><h2>Manpower</h2><div id="manpower"></div><details><summary>Equipment &amp; daily charges (₹)</summary><div id="charges"></div></details></section><section><label>Site notes<textarea id="remarks" maxlength="5000" rows="5" placeholder="Work completed, location or site notes"></textarea></label></section></aside>
+      </div>
+      <footer><span id="save-state">Draft not saved yet</span><button id="final" disabled>Save &amp; lock entry</button></footer>
+    </div>
+  </main>
+</body></html>

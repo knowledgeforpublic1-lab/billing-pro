@@ -43,7 +43,7 @@
     font-size: 0.74rem;
     font-weight: 700;
     cursor: pointer;
-    display: inline-flex;
+    display: none;
     align-items: center;
     gap: 4px;
     line-height: 1.3;
@@ -636,6 +636,10 @@
    Replicates the exact native mobile feel from Daily-Progress-Integration
    ========================================================================== */
 @media (max-width: 768px) {
+    .dp-menu-toggle-btn {
+        display: inline-flex;
+    }
+
     .daily-progress-container {
         padding: 4px 6px 120px !important;
     }

@@ -66,7 +66,7 @@ window.DailyProgressModule = {
 
             // Dual-merge contractors from Billing Pro's contractorsList
             this.syncDailyProgressContractorsList();
-            this.saveDailyProgressData();
+            await this.saveDailyProgressData();
         } else {
             this.dailyProgressData = stored;
             this.syncDailyProgressContractorsList();
@@ -78,30 +78,7 @@ window.DailyProgressModule = {
         // Load report for active date
         this.loadDailyProgressReportForDate(this.dailyProgressDate);
 
-        // Cross-device Cloud Fetch & Sync
-        try {
-            if (typeof fetch === 'function') {
-                fetch('/api/daily-progress')
-                    .then(r => r.ok ? r.json() : null)
-                    .then(res => {
-                        if (res && res.success && res.data && Array.isArray(res.data.reports) && res.data.reports.length > 0) {
-                            const cloudData = res.data;
-                            const localReportsCount = (this.dailyProgressData && this.dailyProgressData.reports || []).length;
-                            if (cloudData.reports.length >= localReportsCount) {
-                                this.dailyProgressData = cloudData;
-                                this.syncDailyProgressContractorsList();
-                                if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-                                    BillingStorage.setItem('billing_daily_progress', cloudData);
-                                }
-                                this.loadDailyProgressReportForDate(this.dailyProgressDate);
-                            }
-                        }
-                    })
-                    .catch(e => console.warn('[DailyProgress] Cloud fetch warning:', e));
-            }
-        } catch (e) {
-            console.warn('[DailyProgress] Cloud fetch init warning:', e);
-        }
+
     },
 
     syncDailyProgressContractorsList() {
@@ -151,6 +128,10 @@ window.DailyProgressModule = {
         }
 
         const prevCid = this.dailyProgressContractorId;
+        if (matched && matched.id !== prevCid && (this.dailyProgressDirty || this._dpPendingSave)) {
+            this.showToast('Daily Progress ki pending entry pehle save karein.', 'Alert');
+            return;
+        }
         if (matched) {
             this.dailyProgressContractorId = matched.id;
         } else if (this.dailyProgressData.contractors.length > 0 && !this.dailyProgressContractorId) {
@@ -165,25 +146,13 @@ window.DailyProgressModule = {
 
     async saveDailyProgressData() {
         if (!this.dailyProgressData) return false;
-
-        // 1. Save to local storage (IndexedDB / LocalStorage) - never swallow errors
         if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-            await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
+            const result = await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
+            if (result && result.saved === false) throw new Error('Device storage failed. Changes abhi save nahi hue.');
         } else if (typeof localStorage !== 'undefined') {
             localStorage.setItem('billing_daily_progress', JSON.stringify(this.dailyProgressData));
-        }
-
-        // 2. Cloud Sync to /api/daily-progress across devices
-        try {
-            if (typeof fetch === 'function') {
-                fetch('/api/daily-progress', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: this.dailyProgressData })
-                }).catch(err => console.warn('[DailyProgress] Cloud push error:', err));
-            }
-        } catch (e) {
-            console.warn('[DailyProgress] Cloud sync trigger error:', e);
+        } else {
+            throw new Error('Device storage unavailable');
         }
         return true;
     },
@@ -191,6 +160,7 @@ window.DailyProgressModule = {
     // ─── DAILY PROGRESS NAVIGATION & STATE ────────────────────────────────────
 
     onDailyProgressContractorChange(cid) {
+        if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosra contractor select karein?')) {
             return;
         }
@@ -208,6 +178,7 @@ window.DailyProgressModule = {
     },
 
     onDailyProgressDateChange(newDate) {
+        if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
         if (!newDate) return;
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosri date select karein?')) {
             return;
@@ -217,6 +188,7 @@ window.DailyProgressModule = {
     },
 
     navigateDailyProgressDay(delta) {
+        if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar aage badhein?')) {
             return;
         }
@@ -355,14 +327,26 @@ window.DailyProgressModule = {
 
         // 1. SAP Stock Issued to Active Contractor strictly filtered up to curDate (Work Date)
         let sapIssued = 0;
-        const contractorSap = (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
+        // Resolve against work date, independent of reconciliation's cutoff.
+        const contractorSap = (typeof this.getContractorSapIssues === 'function')
+            ? this.getContractorSapIssues.call(new Proxy(this, {
+                get(target, key) {
+                    if (key === 'stockAsOnDate') return curDate;
+                    if (key === 'selectedContractorId') return cid;
+                    const team = (target.dailyProgressData?.contractors || []).find(c => c.id === cid);
+                    if (key === 'selectedContractorName') return team?.name || '';
+                    if (key === 'invoiceData' || key === 'projectMeta') return { ...(target[key] || {}), workOrderNo: '', contractorName: team?.name || '' };
+                    return Reflect.get(target, key);
+                },
+                set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
+            })) : null;
         if (contractorSap && contractorSap.materials && code && contractorSap.materials[code]) {
             const m = contractorSap.materials[code];
             if (Array.isArray(m.txns) && m.txns.length > 0) {
                 let mGross = 0;
                 let mMrn = 0;
                 for (const [dt, g, mrn] of m.txns) {
-                    if (!dt || dt <= curDate) {
+                    if (dt && dt <= curDate) {
                         mGross += Number(g || 0);
                         mMrn += Number(mrn || 0);
                     }
@@ -372,7 +356,7 @@ window.DailyProgressModule = {
                 let mGross = 0;
                 let mMrn = 0;
                 for (const [dt, arr] of Object.entries(m.daily)) {
-                    if (!dt || dt <= curDate) {
+                    if (dt && dt <= curDate) {
                         mGross += Number((arr && arr[0]) || 0);
                         mMrn += Number((arr && arr[1]) || 0);
                     }
@@ -540,11 +524,11 @@ window.DailyProgressModule = {
             // Load template
             let templateBuffer = null;
             try {
-                const res = await fetch('public/template.xlsx');
+                const res = await fetch('/api/daily-progress/template');
                 if (res.ok) {
                     templateBuffer = await res.arrayBuffer();
                 } else {
-                    const res2 = await fetch('/template.xlsx');
+                    const res2 = await fetch('/api/daily-progress/template');
                     if (res2.ok) templateBuffer = await res2.arrayBuffer();
                 }
             } catch (e) {
@@ -561,6 +545,7 @@ window.DailyProgressModule = {
             }
 
             const baseWorksheet = workbook.worksheets[0];
+            const templateModel = baseWorksheet ? JSON.parse(JSON.stringify(baseWorksheet.model)) : null;
             const getColLetter = (i) => i < 26 ? String.fromCharCode(65 + i) : 'A' + String.fromCharCode(65 + i - 26);
 
             // Chunk days into groups of 30 days per sheet
@@ -572,27 +557,7 @@ window.DailyProgressModule = {
                     ws.name = `Progress 1`;
                 } else if (baseWorksheet) {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
-                    // Copy column definitions and widths from baseWorksheet
-                    if (baseWorksheet.columns) {
-                        ws.columns = baseWorksheet.columns.map(col => ({
-                            header: col.header,
-                            key: col.key,
-                            width: col.width,
-                            style: col.style
-                        }));
-                    }
-                    // Copy all template rows, labels, formulas, formatting from baseWorksheet
-                    baseWorksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-                        const targetRow = ws.getRow(rowNumber);
-                        targetRow.height = row.height;
-                        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                            const targetCell = targetRow.getCell(colNumber);
-                            targetCell.value = cell.value;
-                            if (cell.style) {
-                                targetCell.style = Object.assign({}, cell.style);
-                            }
-                        });
-                    });
+                    ws.model = { ...JSON.parse(JSON.stringify(templateModel)), id: ws.id, name: `Progress ${sheetIdx}`, mergeCells: templateModel.merges };
                 } else {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                 }

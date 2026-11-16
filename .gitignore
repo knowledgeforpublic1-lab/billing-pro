@@ -30,3 +30,6 @@ backups/
 # SAP UI demo (static pages) — sirf local, push list me kabhi nahi
 sap-ui-demo/
 
+
+# Sanitized reusable export template (no historical data)
+!public/daily-progress-template.xlsx

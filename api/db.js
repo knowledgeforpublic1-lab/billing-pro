@@ -604,7 +604,50 @@ async function patchDefaultConfig(key, changes) {
     }
 }
 
+// Small coordination records only. Callbacks are pure: Firestore/CAS may retry them.
+async function atomicDailyRecord(key, change) {
+    await connect();
+    if (activeProvider === 'firebase') {
+        const ref = firestoreDb.collection('daily_progress_control').doc(key);
+        return firestoreDb.runTransaction(async tx => {
+            const snap = await tx.get(ref);
+            const result = change(snap.exists ? snap.data().value : null);
+            if (result.value !== undefined) tx.set(ref, { value: result.value });
+            return result.result;
+        });
+    }
+    const collection = mongoose.connection.collection('daily_progress_control');
+    for (let attempt = 0; attempt < 30; attempt++) {
+        const old = await collection.findOne({ _id: key });
+        const result = change(old ? old.value : null);
+        if (result.value === undefined) return result.result;
+        try {
+            if (!old) {
+                await collection.insertOne({ _id: key, revision: 1, value: result.value });
+                return result.result;
+            }
+            const update = await collection.updateOne({ _id: key, revision: old.revision }, {
+                $set: { value: result.value }, $inc: { revision: 1 }
+            });
+            if (update.modifiedCount) return result.result;
+        } catch (error) { if (error.code !== 11000) throw error; }
+    }
+    throw Object.assign(new Error('Concurrent update. Retry karein.'), { status: 409 });
+}
+async function listDailyRecords(prefix) {
+    await connect();
+    if (activeProvider === 'firebase') {
+        const snap = await firestoreDb.collection('daily_progress_control')
+            .orderBy('__name__').startAt(prefix).endAt(prefix + '\uf8ff').get();
+        return snap.docs.map(doc => ({ key: doc.id, value: doc.data().value }));
+    }
+    const rows = await mongoose.connection.collection('daily_progress_control')
+        .find({ _id: { $gte: prefix, $lt: prefix + '\uffff' } }).toArray();
+    return rows.map(row => ({ key: row._id, value: row.value }));
+}
+
 module.exports = {
+    atomicDailyRecord, listDailyRecords,
     patchDefaultConfig,
     connect,
     getProvider,

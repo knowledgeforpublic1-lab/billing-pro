@@ -104,7 +104,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261116">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261116_mobile_menu">
 </head>
 
 <body>
@@ -1872,7 +1872,7 @@
                     <div class="dp-bar-center">
                         <div class="dp-contractor-pill">
                             <span class="dp-pill-label">Team:</span>
-                            <select :value="dailyProgressContractorId" @change="onDailyProgressContractorChange($event.target.value)" title="Select Contractor / Labour Team">
+                            <select :value="dailyProgressContractorId" @change="onDailyProgressContractorChange($event.target.value); $event.target.value = dailyProgressContractorId" title="Select Contractor / Labour Team">
                                 <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
                             </select>
                             <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="dp-icon-add-btn">➕</button>
@@ -1880,7 +1880,7 @@
 
                         <div class="dp-date-pill">
                             <button type="button" @click="navigateDailyProgressDay(-1)" title="Previous Day">◀</button>
-                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value)" title="Choose date">
+                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date">
                             <button type="button" @click="navigateDailyProgressDay(1)" title="Next Day">▶</button>
                         </div>
                     </div>
@@ -1919,8 +1919,30 @@
                     </div>
                 </div>
 
+                <details class="dp-panel no-print">
+                    <summary style="cursor:pointer;font-weight:700">Public entry links &amp; admin controls</summary>
+                    <p>{{ dailyProgressDriveReady ? 'Google Drive configured. Check connection before sharing links.' : 'Google Drive folder/credentials setup pending — public saves are unavailable.' }}</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+                        <button class="btn btn-secondary" @click="refreshDailyProgressAccess">Refresh status</button>
+                        <button class="btn btn-secondary" @click="checkDailyProgressDrive">Check Google Drive</button>
+                        <button class="btn btn-primary" @click="createDailyProgressLink">Create / replace selected contractor link</button>
+                        <button class="btn btn-secondary" @click="reopenDailyProgressEntry">Admin: Reopen selected date / release editor</button>
+                        <button class="btn btn-secondary" @click="showDailyProgressAudit">Show date activity</button>
+                        <button class="btn btn-secondary" @click="importDailyProgressHistory">Import historical reports to Drive</button>
+                    </div>
+                    <label v-if="dailyProgressPublicLink" style="display:block">Copy and share this contractor link (shown only now):
+                        <input :value="dailyProgressPublicLink" readonly @focus="$event.target.select()" style="width:100%;padding:10px;margin-top:6px">
+                    </label>
+                    <p v-for="link in dailyProgressLinks" :key="link.id">{{ link.name }} — {{ link.disabled ? 'Disabled' : 'Active' }} <button class="btn btn-secondary" :disabled="link.disabled" @click="disableDailyProgressLink(link.id)">Disable link</button></p>
+                    <p v-for="(event, i) in dailyProgressAudit" :key="i">{{ new Date(event.at).toLocaleString() }} — {{ event.action }}</p>
+                </details>
+                <div class="dp-panel no-print" role="status">
+                    {{ dailyProgressAccessMessage || 'Entry status check karein.' }}
+                    <button class="btn btn-secondary" :disabled="dailyProgressBusy" @click="refreshDailyProgressStatus(true)">Start / resume entry</button>
+                </div>
                 <!-- TAB 1: DAILY ENTRY -->
                 <div v-if="dailyProgressTab === 'entry'">
+                    <fieldset :disabled="dailyProgressLocked || dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
                     <!-- Two-column Entry Layout -->
                     <div class="dp-entry-layout">
                         <!-- Left: Material Consumption -->
@@ -1950,7 +1972,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="item in dailyProgressVisibleItems.slice(0, 80)" :key="item.id">
+                                        <tr v-for="item in dailyProgressVisibleItems.slice(0, dailyProgressVisibleLimit)" :key="item.id">
                                             <td>
                                                 <span class="dp-mat-desc">{{ item.name }}</span>
                                                 <div class="dp-mat-sub">
@@ -2016,7 +2038,7 @@
                                 </table>
                             </div>
                             <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between;">
-                                <span>Showing {{ Math.min(80, dailyProgressVisibleItems.length) }} of {{ dailyProgressVisibleItems.length }} {{ dailyProgressFilter === 'issued' ? 'issued materials' : 'materials' }}.</span>
+                                <span><button v-if="dailyProgressVisibleItems.length > dailyProgressVisibleLimit" type="button" class="btn btn-secondary" @click="dailyProgressVisibleLimit += 80">Show more</button> Showing {{ Math.min(dailyProgressVisibleLimit, dailyProgressVisibleItems.length) }} of {{ dailyProgressVisibleItems.length }} {{ dailyProgressFilter === 'issued' ? 'issued materials' : 'materials' }}.</span>
                                 <span>¹ Stock balances calculated through {{ formatDisplayDate(dailyProgressDate) }}</span>
                             </div>
                         </div>
@@ -2088,6 +2110,7 @@
                         </div>
                     </div>
 
+                    </fieldset>
                     <!-- Sticky Save Bar -->
                     <div class="dp-save-bar no-print">
                         <div class="dp-save-status">
@@ -2101,9 +2124,9 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressContractorId" @click="saveDailyProgressReport" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressContractorId || (dailyProgressLocked && !dailyProgressDirty)" @click="saveDailyProgressReport" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;">
                             <span>💾</span>
-                            <span>{{ dailyProgressBusy ? 'Saving...' : 'Save Daily Progress' }}</span>
+                            <span>{{ dailyProgressBusy ? 'Saving...' : 'Save & Lock Daily Progress' }}</span>
                         </button>
                     </div>
                 </div>
@@ -4463,7 +4486,7 @@
     <script defer src="js/core/storage.js?v=20261114_safe_storage"></script>
 
     <!-- Utility Modules -->
-    <script defer src="js/utils.js?v=20261114_preserve_8m_pole"></script>
+    <script defer src="js/utils.js?v=20261116_mobile_menu"></script>
     <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
@@ -4483,9 +4506,10 @@
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
-    <script defer src="js/daily-progress.js?v=20261116"></script>
+    <script defer src="js/daily-progress.js?v=20261116_access_v2"></script>
+    <script defer src="js/daily-progress-access.js?v=20261116_access_v2"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261116_posting_date"></script>
+    <script defer src="js/core/app.js?v=20261116_mobile_menu"></script>
 </body>
 
 </html>

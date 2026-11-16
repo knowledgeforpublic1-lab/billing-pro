@@ -37,6 +37,8 @@ const writeLimiter = rateLimit({
     legacyHeaders: false,
     message: { success: false, error: 'Too many saves, 1 min ruk kar retry karo' }
 });
+const dailyProgress = require('./daily-progress-routes')({ db, auth });
+app.use('/api/daily-entry', dailyProgress.publicRouter);
 app.use('/api/', apiLimiter);
 
 // Attach rate-limit info headers to every response
@@ -55,8 +57,30 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serve the login shell before any confidential seed scripts can load.
+async function servePortalPage(req, res) {
+    res.set('Cache-Control', 'no-store');
+    try {
+        await auth.sessionFor(req);
+        // Existing Vue templates and CDN libraries need the same capabilities as the static app.
+        res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://script.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self'");
+        const file = req.path.startsWith('/mobile') ? 'mobile.html' : req.path.startsWith('/Reconciliation') ? 'Reconciliation master/index.html' : 'index.html';
+        res.sendFile(require('path').join(__dirname, '..', file));
+    } catch (error) {
+        res.sendFile(require('path').join(__dirname, '../portal-login.html'));
+    }
+}
+app.get(['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation master/index.html', '/Reconciliation%20master/index.html'], servePortalPage);
+app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, no-store'); next(); });
 app.use('/api/auth', auth.router);
-app.use('/api', (req, res, next) => req.path === '/health' ? next() : auth.middleware(req, res, next));
+app.use(['/api', '/js/data'], (req, res, next) => req.path === '/health' ? next() : auth.middleware(req, res, next));
+app.use('/api/dp-admin', dailyProgress.adminRouter);
+app.get('/js/data/:file', (req, res) => {
+    res.set('Cache-Control', 'private, no-store');
+    if (!/^[a-zA-Z0-9_-]+\.js$/.test(req.params.file)) return res.status(404).end();
+    res.sendFile(require('path').join(__dirname, '../js/data', req.params.file));
+});
+app.get('/api/daily-progress/template', (req, res) => res.sendFile(require('path').join(__dirname, '../public/daily-progress-template.xlsx')));
 
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
@@ -734,33 +758,9 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
     }
 });
 
-// GET: Fetch shared daily progress reports across devices
-app.get('/api/daily-progress', requireApiKey, async (req, res) => {
-    try {
-        const record = await db.getDefaultConfig('dailyProgressData');
-        if (record && record.data) {
-            return res.json({ success: true, data: record.data, source: db.getProvider() });
-        }
-        return res.json({ success: true, data: null });
-    } catch (err) {
-        log.error('GET-DAILY-PROGRESS', err);
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// POST: Save shared daily progress reports across devices
-app.post('/api/daily-progress', requireApiKey, writeLimiter, express.json({ limit: '15mb' }), async (req, res) => {
-    try {
-        const payload = req.body && req.body.data;
-        if (!payload) return res.status(400).json({ success: false, error: 'Missing daily progress data payload' });
-        await db.saveDefaultConfig('dailyProgressData', payload);
-        log.info('POST-DAILY-PROGRESS', `Saved daily progress data (${db.getProvider()})`);
-        res.json({ success: true, message: 'Daily progress synced to cloud', provider: db.getProvider() });
-    } catch (err) {
-        log.error('POST-DAILY-PROGRESS', err);
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
+// Legacy whole-dataset writes lose concurrent users' changes. Use scoped report APIs.
+app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/dp-admin/data'));
+app.post('/api/daily-progress', (req, res) => res.status(409).json({ success: false, error: 'Whole-dataset saves disabled. Reload and use per-report save.' }));
 
 // POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {
@@ -915,6 +915,12 @@ app.get('/api/default-activities', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+// Unknown portal URLs also show the login gate; never fall through to static index.html.
+app.get('/{*rest}', (req, res) => {
+    if (req.path.startsWith('/api/') || /\.[a-z0-9]+$/i.test(req.path)) return res.status(404).json({ success: false, error: 'Not found' });
+    return servePortalPage(req, res);
 });
 
 // Express JSON body errors (jaise 5MB limit) → Hinglish JSON message (HTML ki jagah)

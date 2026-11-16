@@ -210,5 +210,5 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         if (!(session.adminExpiresAt > now())) throw error(403, 'Admin verification required');
         next();
     });
-    return { router, middleware, requireAdmin };
+    return { router, middleware, requireAdmin, sessionFor };
 };

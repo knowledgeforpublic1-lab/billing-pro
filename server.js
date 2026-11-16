@@ -14,7 +14,7 @@ const app = express();
 // to live Vercel backend se transparently proxy karo taaki local dev me sabhi bills,
 // 62 contractors aur sync seamless chalein.
 app.use((req, res, next) => {
-  if (req.path === '/api' || req.path.startsWith('/api/')) {
+  if (req.path === '/api' || req.path.startsWith('/api/') || req.path.startsWith('/js/data/') || ['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation%20master/index.html', '/Reconciliation master/index.html'].includes(req.path)) {
     const fs = require('fs');
     const hasFirebase = !!(
       process.env.FIREBASE_SERVICE_ACCOUNT ||
@@ -48,6 +48,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get(['/daily-entry', '/daily-entry.html'], (req, res) => res.sendFile(path.join(__dirname, 'daily-entry.html')));
 // Static frontend — poora folder serve MAT karo (xlsx/json/pdf/env leak hote hain).
 // Sirf index.html serve karo; sensitive extensions/data files hard-block.
 app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.status(403).send('Forbidden'));
@@ -82,6 +83,8 @@ app.use((req, res, next) => {
 
 app.use('/demo', express.static(path.join(__dirname, 'sap-ui-demo')));
 app.get(['/old', '/old/index.html'], (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+app.get('/{*rest}', (req, res, next) => apiApp(req, res, next));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Billing Pro local: http://localhost:${PORT}`));

@@ -2,7 +2,17 @@
   "builds": [
     {
       "src": "api/index.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "js/data/**",
+          "index.html",
+          "mobile.html",
+          "portal-login.html",
+          "public/daily-progress-template.xlsx",
+          "Reconciliation master/index.html"
+        ]
+      }
     },
     {
       "src": "index.html",
@@ -13,11 +23,19 @@
       "use": "@vercel/static"
     },
     {
+      "src": "daily-entry.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "css/**",
       "use": "@vercel/static"
     },
     {
-      "src": "js/**",
+      "src": "js/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/core/**",
       "use": "@vercel/static"
     },
     {
@@ -35,6 +53,26 @@
       "status": 403
     },
     {
+      "src": "/js/data/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/daily-entry",
+      "dest": "/daily-entry.html"
+    },
+    {
+      "src": "/(index\\.html)?",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/(mobile(\\.html)?|old(/index\\.html)?)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/Reconciliation(?: |%20)master/index\\.html",
+      "dest": "api/index.js"
+    },
+    {
       "handle": "filesystem"
     },
     {
@@ -43,26 +81,35 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "api/index.js"
     }
   ],
   "headers": [
     {
       "source": "/js/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     },
     {
       "source": "/css/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     },
     {
       "source": "/Reconciliation master/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     }
   ]
