@@ -55,11 +55,16 @@ window.StockImporterModule = {
             throw new Error('XLSX parser library is not loaded. Please check your internet connection and refresh.');
         }
 
-        const wb = XLSX.read(arrayBuffer, {
+        // 🛡️ High-performance Uint8Array slice + memory-optimized flags to prevent V8 "Invalid string length"
+        const u8 = (arrayBuffer instanceof Uint8Array) ? arrayBuffer : new Uint8Array(arrayBuffer);
+        const wb = XLSX.read(u8, {
             type: 'array',
+            cellText: false,     // Critical: Do NOT generate formatted string (.w) for millions of cells
             cellStyles: false,
             cellHTML: false,
-            cellFormula: false
+            cellFormula: false,
+            cellDates: false,
+            cellNF: false
         });
 
         const sheetNames = wb.SheetNames || [];

@@ -50,13 +50,16 @@
             const strVal = typeof value === 'string' ? value : JSON.stringify(value);
 
             const result = { localStorage: false, indexedDB: false, saved: false };
-            // 1. Try writing to LocalStorage (synchronous fast-boot cache)
-            try {
-                localStorage.setItem(key, strVal);
-                result.localStorage = true;
-            } catch (err) {
-                // If LocalStorage quota exceeded, don't crash — log warning and rely on IndexedDB
-                console.warn(`[StorageEngine] LocalStorage quota exceeded for key [${key}], persisting safely to IndexedDB only.`);
+            // 1. Try writing to LocalStorage (synchronous fast-boot cache, skip if payload > 2.5MB to prevent quota crash)
+            if (strVal.length <= 2500000) {
+                try {
+                    localStorage.setItem(key, strVal);
+                    result.localStorage = true;
+                } catch (err) {
+                    console.warn(`[StorageEngine] LocalStorage quota exceeded for key [${key}], persisting safely to IndexedDB only.`);
+                }
+            } else {
+                console.info(`[StorageEngine] Key [${key}] payload (${(strVal.length / 1024 / 1024).toFixed(1)}MB) stored safely in IndexedDB (skipping LocalStorage to avoid quota limits).`);
             }
 
             // 2. Persist full copy to IndexedDB (virtually unlimited capacity)

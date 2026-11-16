@@ -3861,6 +3861,44 @@
             </div>
         </div>
 
+        <!-- MODAL: ADD SAP WORK ORDER -->
+        <div v-if="showAddSapWoModal" class="modal-overlay" style="z-index: 100010;" @click.self="showAddSapWoModal = false">
+            <div class="modal-card" style="max-width: 480px; width: 90%; background: var(--bg-card, #ffffff); border-radius: 10px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 8px;">
+                    <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                        <span>➕</span>
+                        <span>Add New SAP Work Order</span>
+                    </div>
+                    <button type="button" @click="showAddSapWoModal = false" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted);">✕</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Document Header / Work Order No <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" v-model="newSapWoForm.docHeader" placeholder="e.g. 31007890" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; font-weight: 700; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Yeh number stock dump ke Column P (Doc Header) me aata hai</span>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Contractor / Sub-Contractor Name <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" v-model="newSapWoForm.contractorName" placeholder="e.g. Maa Kali Enterprises" class="form-input" style="width: 100%; font-size: 0.85rem; font-weight: 600; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Vendor Code (Optional)
+                        </label>
+                        <input type="text" v-model="newSapWoForm.vendorCode" placeholder="e.g. 500306505" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 12px;">
+                    <button type="button" class="btn btn-secondary" @click="showAddSapWoModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="submitAddSapWorkOrder" style="font-weight: 700;">💾 Save Work Order</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Toast Notifications -->
         <div class="toast-container">
             <div v-for="(toast, idx) in toasts" :key="idx" class="toast">
@@ -3907,44 +3945,6 @@
     <script defer src="js/pole-schedule.js?v=20261114_exclude_psc_concrete"></script>
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
-
-        <!-- MODAL: ADD SAP WORK ORDER -->
-        <div v-if="showAddSapWoModal" class="modal-overlay" style="z-index: 100010;" @click.self="showAddSapWoModal = false">
-            <div class="modal-card" style="max-width: 480px; width: 90%; background: var(--bg-card, #ffffff); border-radius: 10px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 8px;">
-                    <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
-                        <span>➕</span>
-                        <span>Add New SAP Work Order</span>
-                    </div>
-                    <button type="button" @click="showAddSapWoModal = false" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted);">✕</button>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
-                            Document Header / Work Order No <span style="color: #ef4444;">*</span>
-                        </label>
-                        <input type="text" v-model="newSapWoForm.docHeader" placeholder="e.g. 31007890" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; font-weight: 700; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                        <span style="font-size: 0.7rem; color: var(--text-muted);">Yeh number stock dump ke Column P (Doc Header) me aata hai</span>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
-                            Contractor / Sub-Contractor Name <span style="color: #ef4444;">*</span>
-                        </label>
-                        <input type="text" v-model="newSapWoForm.contractorName" placeholder="e.g. Maa Kali Enterprises" class="form-input" style="width: 100%; font-size: 0.85rem; font-weight: 600; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
-                            Vendor Code (Optional)
-                        </label>
-                        <input type="text" v-model="newSapWoForm.vendorCode" placeholder="e.g. 500306505" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 12px;">
-                    <button type="button" class="btn btn-secondary" @click="showAddSapWoModal = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @click="submitAddSapWorkOrder" style="font-weight: 700;">💾 Save Work Order</button>
-                </div>
-            </div>
-        </div>
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <!-- Core Application (creates and mounts Vue app) -->
