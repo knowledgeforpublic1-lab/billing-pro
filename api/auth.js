@@ -7,9 +7,9 @@ const MAX_MS = 24 * 60 * 60 * 1000;
 
 module.exports = function createAuth({ db, config, env = process.env, fetchImpl = global.fetch, now = Date.now }) {
     const router = express.Router();
-    // Idle lock window: default 4 hours — chai/lunch break ke baad refresh par dobara login nahi.
+    // Idle lock window: default 5 minutes inactivity auto-save & auto-lock.
     // AUTH_IDLE_MINUTES env se tune karo (5 minute security floor rakha hai).
-    const IDLE_MS = Math.max(5, Number(env.AUTH_IDLE_MINUTES) || 240) * 60 * 1000;
+    const IDLE_MS = Math.max(5, Number(env.AUTH_IDLE_MINUTES) || 5) * 60 * 1000;
     const LOOKUP_CACHE_MS = env.AUTH_LOOKUP_CACHE_MS !== undefined ? Number(env.AUTH_LOOKUP_CACHE_MS) : 60 * 1000;
     const lookupCache = new Map();
     const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT;

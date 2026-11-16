@@ -30,9 +30,11 @@
             this.sessionExpiresAt = result.expiresAt;
             this.adminExpiresAt = result.adminExpiresAt || 0;
             if (result.idleMinutes) this.authIdleMinutes = Number(result.idleMinutes);
+            else if (!this.authIdleMinutes) this.authIdleMinutes = 5;
             this.isPortalUnlocked = true;
             this.isAdminElevated = this.adminExpiresAt > this.authNow();
             this.isAdminUnlocked = this.isAdminElevated;
+            this.initPortalWatchdog();
             this.updateAuthCountdown();
         },
         async restorePortalSession() {
@@ -100,6 +102,11 @@
         lockPortalLocally() {
             if (this.isPortalUnlocked) {
                 try { this.saveToStorage(); } catch (e) {}
+                try {
+                    if (typeof this.showToast === 'function') {
+                        this.showToast('5 minute inactivity: Kaam save karke session logout ho gaya hai.', 'info');
+                    }
+                } catch (e) {}
             }
             this.isPortalUnlocked = false;
             this.isAdminElevated = false;
@@ -193,6 +200,14 @@
             if (!this.adminElevatedSecondsLeft) { this.isAdminElevated = false; this.isAdminUnlocked = false; }
             if (!this.inactivitySecondsLeft) this.lockPortalLocally();
         },
+        onUserActivity() {
+            if (!this.isPortalUnlocked) return;
+            // Instantly reset the inactivity countdown on user interaction (05:00)
+            const idleSec = (Number(this.authIdleMinutes) || 5) * 60;
+            this.sessionExpiresAt = this.authNow() + idleSec * 1000;
+            this.inactivitySecondsLeft = idleSec;
+            this.recordPortalActivity();
+        },
         async recordPortalActivity() {
             if (!this.isPortalUnlocked || this.authNow() >= this.sessionExpiresAt) { this.updateAuthCountdown(); return; }
             if (this._authTouchPending || Date.now() - (this._authLastTouch || 0) < 20000) return;
@@ -205,10 +220,13 @@
         initPortalWatchdog() {
             if (this._authWatchdogInstalled) return;
             this._authWatchdogInstalled = true;
-            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(event => window.addEventListener(event, () => this.recordPortalActivity(), { passive: true }));
+            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(event => {
+                window.addEventListener(event, () => this.onUserActivity(), { passive: true });
+            });
             window.addEventListener('billing-session-expired', () => this.lockPortalLocally());
             document.addEventListener('visibilitychange', () => this.updateAuthCountdown());
             window.addEventListener('focus', () => this.updateAuthCountdown());
+            if (this._countdownTicker) clearInterval(this._countdownTicker);
             this._countdownTicker = setInterval(() => this.updateAuthCountdown(), 1000);
             this.updateAuthCountdown();
         }
