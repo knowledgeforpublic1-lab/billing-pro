@@ -239,13 +239,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         if (existing && existing.stateData) {
             const previous = existing.stateData;
             const finalizedChanged = dataToSave.isFinalized !== undefined && !!dataToSave.isFinalized !== !!previous.isFinalized;
-            const structureChanged = ['activities', 'poleSchedules'].some(kind => Object.entries(dataToSave[kind] || {}).some(([key, group]) => {
-                const oldRows = previous[kind] && previous[kind][key] && previous[kind][key].materials;
-                if (!Array.isArray(oldRows) || !Array.isArray(group && group.materials)) return false;
-                return JSON.stringify(oldRows.map(row => [row.no, !!row.isSection, !!row.isSpan])) !==
-                    JSON.stringify(group.materials.map(row => [row.no, !!row.isSection, !!row.isSpan]));
-            }));
-            if ((finalizedChanged || structureChanged) && !(req.authSession && req.authSession.adminExpiresAt > Date.now())) {
+            if (finalizedChanged && !(req.authSession && req.authSession.adminExpiresAt > Date.now())) {
                 return res.status(403).json({ success: false, error: 'Admin verification required for structural/finalize changes' });
             }
         }

@@ -1281,13 +1281,25 @@ window.SyncModule = {
             }
             if (res.status === 401) {
                 this.syncStatus = 'error';
-                this.showToast('Login session expire ho gaya. Cloud save nahi hua; dobara login karein.', '🔑');
+                if (manual) this.showToast('Login session expire ho gaya. Dobara login karein.', '🔑');
                 this._scheduleSyncRetry();
+                return false;
+            }
+            if (res.status === 403) {
+                this.syncStatus = 'error';
+                if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
+                this._syncRetryTimer = null;
+                this._syncRetryCount = 0;
+                if (manual) {
+                    let srv = 'Admin verification required for finalized bills.';
+                    try { const ej = await res.json(); if (ej && ej.error) srv = ej.error; } catch(e) {}
+                    this.showToast('Cloud save: ' + srv, '🔒');
+                }
                 return false;
             }
             if (res.status === 429) {
                 this.syncStatus = 'error';
-                this.showToast('Cloud sync FAIL: Too many saves — wait 1 min', '⏳');
+                if (manual) this.showToast('Cloud sync FAIL: Too many saves — wait 1 min', '⏳');
                 this._scheduleSyncRetry();
                 return false;
             }
@@ -1348,7 +1360,9 @@ window.SyncModule = {
             this.syncStatus = 'error';
             console.error('Cloud sync failed:', err);
             const m = String((err && err.message) || 'network/server error').slice(0, 150);
-            this.showToast('Cloud sync FAIL: ' + m + '. Cloud save nahi hua; retrying...', '⚠️');
+            if (manual) {
+                this.showToast('Cloud sync FAIL: ' + m + '. Cloud save nahi hua.', '⚠️');
+            }
             this._scheduleSyncRetry();
             return false;
         }
