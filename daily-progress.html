@@ -633,6 +633,26 @@
             <span>{{ toastType === 'success' ? '✅' : (toastType === 'error' ? '⚠️' : 'ℹ️') }}</span>
             <span>{{ toastMsg }}</span>
         </div>
+
+        <!-- Mobile Bottom Navigation (Shown only on screens < 900px) -->
+        <nav class="mobile-bottom-nav">
+            <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'">
+                <span class="mb-ico">⚡</span>
+                <span class="mb-lbl">Daily Entry</span>
+            </button>
+            <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'">
+                <span class="mb-ico">📦</span>
+                <span class="mb-lbl">Stock</span>
+            </button>
+            <button type="button" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'">
+                <span class="mb-ico">📋</span>
+                <span class="mb-lbl">History</span>
+            </button>
+            <button type="button" :class="{ active: currentTab === 'download' }" @click="currentTab = 'download'">
+                <span class="mb-ico">📥</span>
+                <span class="mb-lbl">Excel</span>
+            </button>
+        </nav>
     </div>
 
     <!-- Scripts (Standalone, Decoupled from Billing) -->

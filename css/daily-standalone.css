@@ -1272,40 +1272,252 @@ main {
     color: #f87171;
 }
 
-/* Mobile Responsiveness */
+/* ==========================================================================
+   Mobile Bottom Navigation
+   ========================================================================== */
+.mobile-bottom-nav {
+    display: none;
+}
+
+/* ==========================================================================
+   Complete Mobile Responsiveness (< 900px)
+   ========================================================================== */
 @media (max-width: 900px) {
     .sidebar {
-        display: none;
+        display: none !important;
     }
     .main {
-        margin-left: 0;
+        margin-left: 0 !important;
+        width: 100% !important;
     }
     main {
-        padding: 16px 14px 80px;
+        padding: 8px 10px 140px !important;
+        max-width: 100% !important;
     }
-    .context-panel {
-        grid-template-columns: 1fr;
-        gap: 12px;
+
+    /* Mobile Bottom Navigation Bar */
+    .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 52px;
+        background: #0f172a;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        z-index: 90;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
     }
-    .project-details {
-        border-left: 0;
-        padding-left: 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 10px;
-    }
-    .stat-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .entry-layout {
-        grid-template-columns: 1fr;
-    }
-    .save-bar {
+
+    .mobile-bottom-nav button {
+        flex: 1;
+        display: flex;
         flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
-    }
-    .btn-save-progress {
+        align-items: center;
         justify-content: center;
+        gap: 2px;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .mobile-bottom-nav button.active {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.08);
+    }
+
+    .mobile-bottom-nav .mb-ico {
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    /* Top Compact Header on Mobile */
+    .app-header-compact {
+        padding: 8px 10px !important;
+        height: auto !important;
+        min-height: auto !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .app-header-compact .header-left {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    .app-header-compact .header-right {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .contractor-select-compact {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+
+    .contractor-select-compact select {
+        max-width: none !important;
+        flex: 1 !important;
+        font-size: 13px !important;
+    }
+
+    .date-stepper-compact {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+
+    .date-stepper-compact input[type="date"] {
+        flex: 1 !important;
+        text-align: center !important;
+        font-size: 13px !important;
+    }
+
+    /* Status Strip */
+    .compact-strip {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+        gap: 6px !important;
+    }
+
+    .entry-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Table Toolbar */
+    .table-toolbar {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .table-toolbar .search-box,
+    .table-toolbar select {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* MATERIAL TABLE ON MOBILE - ZERO HORIZONTAL OVERFLOW */
+    .mat-table-head {
+        display: none !important; /* Hide column headers on mobile */
+    }
+
+    .mat-table-body {
+        max-height: none !important; /* Let the phone scroll naturally */
+        overflow-y: visible !important;
+        padding-bottom: 30px !important;
+    }
+
+    .mat-row {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        grid-template-areas:
+            "desc desc"
+            "issue qty" !important;
+        gap: 8px 10px !important;
+        padding: 12px 10px !important;
+        background: rgba(30, 41, 59, 0.5) !important;
+        border-radius: 8px !important;
+        margin-bottom: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .mat-row > div:nth-child(1) {
+        grid-area: desc !important;
+    }
+
+    .mat-row > div:nth-child(2) {
+        grid-area: issue !important;
+        text-align: left !important;
+    }
+
+    .mat-row > div:nth-child(3) {
+        grid-area: qty !important;
+        justify-self: end !important;
+    }
+
+    .mat-desc {
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        color: #ffffff !important;
+        word-break: break-word !important;
+    }
+
+    .net-issue-badge {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+
+    .qty-input-wrap {
+        width: 125px !important;
+        min-width: 115px !important;
+        box-sizing: border-box !important;
+    }
+
+    .qty-input-wrap input {
+        height: 38px !important;
+        font-size: 16px !important; /* prevents iOS / Android auto-zoom */
+        font-weight: 800 !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .panel-sub {
+        display: none !important; /* Hide long explanatory paragraph on mobile */
+    }
+
+    /* SLEEK COMPACT FLOATING SAVE BAR ON MOBILE */
+    .save-bar {
+        position: fixed !important;
+        bottom: 58px !important; /* sits cleanly above the mobile nav */
+        left: 10px !important;
+        right: 10px !important;
+        margin: 0 !important;
+        padding: 8px 14px !important;
+        border-radius: 8px !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        display: flex !important;
+        flex-direction: row !important; /* horizontal layout, NOT vertical column! */
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        z-index: 85 !important;
+    }
+
+    .save-status-info strong {
+        font-size: 11px !important;
+        display: block !important;
+    }
+
+    .save-status-info span {
+        display: none !important; /* Hide long contractor / date string on mobile */
+    }
+
+    .btn-save-progress {
+        padding: 8px 16px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        border-radius: 6px !important;
+        flex-shrink: 0 !important;
+        width: auto !important;
     }
 }
