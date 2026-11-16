@@ -537,6 +537,9 @@
                         <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
                             <span>📋</span><span>Share</span>
                         </button>
+                        <button type="button" class="btn btn-secondary" @click="syncDailyProgressCloudData(false)" title="Cloud se contractor ki latest entries sync karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
+                            <span>🔄</span><span>Sync</span>
+                        </button>
                     </template>
                     <span class="sp"></span>
                     <div class="ps-toolbar-actions" v-if="currentView === 'poleSchedule' || currentView === 'abstract'">

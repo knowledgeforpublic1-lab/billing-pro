@@ -218,6 +218,33 @@ window.DailyProgressModule = {
         return true;
     },
 
+    async syncDailyProgressCloudData(silent = false) {
+        try {
+            if (typeof fetch === 'function') {
+                const cRes = await fetch('/api/daily-progress/data?t=' + Date.now());
+                if (cRes.ok) {
+                    const cData = await cRes.json();
+                    if (cData && cData.success && cData.data) {
+                        this.dailyProgressData = this.mergeDailyProgressData(this.dailyProgressData, cData.data);
+                        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                            await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
+                        }
+                        this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                        if (!silent && typeof this.showToast === 'function') {
+                            this.showToast('Daily Progress data cloud se sync ho gaya! ✅', 'success');
+                        }
+                        return true;
+                    }
+                }
+            }
+        } catch (e) {
+            if (!silent && typeof this.showToast === 'function') {
+                this.showToast('Sync warning: ' + (e.message || 'Network issue'), 'warning');
+            }
+        }
+        return false;
+    },
+
     // ─── DAILY PROGRESS NAVIGATION & STATE ────────────────────────────────────
 
     onDailyProgressContractorChange(cid) {

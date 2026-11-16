@@ -372,6 +372,9 @@ window.UtilsModule = {
                         if (typeof this.syncWithBillingProActiveContractor === 'function') {
                             this.syncWithBillingProActiveContractor();
                         }
+                        if (typeof this.syncDailyProgressCloudData === 'function') {
+                            this.syncDailyProgressCloudData(true);
+                        }
                         // Mobile uses the Menu toggle; desktop keeps the left sidebar.
                         this.sidebarCollapsed = window.matchMedia('(max-width: 768px)').matches;
                     }
