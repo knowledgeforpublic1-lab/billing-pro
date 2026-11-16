@@ -1,14 +1,76 @@
 /**
- * Daily Progress Module Styles — Compact Zero-Waste Desktop & Native Mobile Layout
- * Compatible with SAP Light, Soft Comfort, and Billing Pro Dark Themes.
+ * Daily Progress Module Styles — Clean Enterprise Desktop & Native Mobile Layout
+ * Pixel-perfect alignment, modern typography, crisp contrast, and zero slashed zeros.
+ * Fully compatible with Light, Soft Comfort, and Billing Pro Dark Themes.
  */
 
+:root {
+    --dp-bg-base: #f8fafc;
+    --dp-card-bg: #ffffff;
+    --dp-surface-bg: #f8fafc;
+    --dp-input-bg: #ffffff;
+    --dp-border: #e2e8f0;
+    --dp-border-subtle: #edf2f7;
+    --dp-border-strong: #cbd5e1;
+    --dp-text-main: #0f172a;
+    --dp-text-muted: #475569;
+    --dp-text-dim: #64748b;
+    --dp-accent-blue: #2563eb;
+    --dp-accent-blue-light: #eff6ff;
+    --dp-accent-green: #16a34a;
+    --dp-accent-green-light: #f0fdf4;
+    --dp-accent-amber: #d97706;
+    --dp-accent-amber-light: #fffbeb;
+    --dp-accent-red: #dc2626;
+    --dp-accent-red-light: #fef2f2;
+    --dp-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --dp-shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+    --dp-shadow-bar: 0 -4px 20px rgba(15, 23, 42, 0.08);
+}
+
+/* Dark Theme Overrides */
+html[data-theme="dark"] .daily-progress-container,
+html.dark .daily-progress-container,
+body.dark-mode .daily-progress-container {
+    --dp-bg-base: #0b1329;
+    --dp-card-bg: #1e293b;
+    --dp-surface-bg: #0f172a;
+    --dp-input-bg: #0f172a;
+    --dp-border: rgba(255, 255, 255, 0.12);
+    --dp-border-subtle: rgba(255, 255, 255, 0.07);
+    --dp-border-strong: rgba(255, 255, 255, 0.2);
+    --dp-text-main: #f8fafc;
+    --dp-text-muted: #94a3b8;
+    --dp-text-dim: #64748b;
+    --dp-accent-blue: #38bdf8;
+    --dp-accent-blue-light: rgba(56, 189, 248, 0.15);
+    --dp-accent-green: #22c55e;
+    --dp-accent-green-light: rgba(34, 197, 94, 0.15);
+    --dp-accent-amber: #fbbf24;
+    --dp-accent-amber-light: rgba(245, 158, 11, 0.15);
+    --dp-accent-red: #f87171;
+    --dp-accent-red-light: rgba(239, 68, 68, 0.15);
+    --dp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --dp-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.4);
+    --dp-shadow-bar: 0 -4px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* Base Container & Zero Slashed Zero Rule */
 .daily-progress-container {
-    padding: 6px 10px 40px;
+    padding: 6px 12px 24px;
     max-width: 100%;
     margin: 0 auto;
     box-sizing: border-box;
-    color: var(--text-main, #0f172a);
+    color: var(--dp-text-main);
+    font-family: var(--font-main, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.daily-progress-container,
+.daily-progress-container * {
+    font-feature-settings: "zero" 0, "tnum" 1 !important;
+    font-variant-numeric: tabular-nums normal !important;
 }
 
 /* ==========================================================================
@@ -19,73 +81,58 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 5px 8px;
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-    border-radius: 6px;
-    margin-bottom: 6px;
+    padding: 6px 10px;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 8px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
+    box-shadow: var(--dp-shadow-sm);
 }
 
 .dp-bar-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
-}
-
-.dp-menu-toggle-btn {
-    background: var(--bg-surface, #0f172a);
-    color: var(--text-main, #ffffff);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
-    border-radius: 5px;
-    padding: 3px 8px;
-    font-size: 0.74rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    gap: 4px;
-    line-height: 1.3;
-    transition: background 0.15s, border-color 0.15s;
-}
-
-.dp-menu-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #3b82f6;
 }
 
 .dp-brand-chip {
     font-size: 0.82rem;
     font-weight: 800;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     white-space: nowrap;
 }
 
 .dp-bar-center {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
 .dp-contractor-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
-    padding: 2px 4px 2px 7px;
+    gap: 5px;
+    background: var(--dp-surface-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 3px 6px 3px 8px;
+    transition: border-color 0.15s ease;
+}
+
+.dp-contractor-pill:focus-within {
+    border-color: var(--dp-accent-blue);
 }
 
 .dp-pill-label {
     font-size: 0.65rem;
     font-weight: 800;
-    color: var(--text-muted, #94a3b8);
+    color: var(--dp-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -93,7 +140,7 @@
 .dp-contractor-pill select {
     background: transparent;
     border: none;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
     font-weight: 700;
     font-size: 0.78rem;
     cursor: pointer;
@@ -102,7 +149,7 @@
 }
 
 .dp-icon-add-btn {
-    background: var(--accent-primary, #2563eb);
+    background: var(--dp-accent-blue);
     color: #ffffff;
     border: none;
     border-radius: 4px;
@@ -111,124 +158,116 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: bold;
     cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.dp-icon-add-btn:hover {
+    opacity: 0.9;
 }
 
 .dp-date-pill {
     display: inline-flex;
     align-items: center;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
+    background: var(--dp-surface-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
     overflow: hidden;
 }
 
 .dp-date-pill button {
     background: transparent;
     border: none;
-    color: var(--text-muted, #94a3b8);
-    padding: 3px 7px;
+    color: var(--dp-text-muted);
+    padding: 4px 8px;
     cursor: pointer;
     font-size: 0.72rem;
     font-weight: 800;
+    transition: background 0.12s;
 }
 
 .dp-date-pill button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-main, #ffffff);
+    background: var(--dp-border-subtle);
+    color: var(--dp-text-main);
 }
 
 .dp-date-pill input {
     background: transparent;
     border: none;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
     font-size: 0.76rem;
     font-weight: 700;
-    padding: 3px 5px;
+    padding: 3px 6px;
     outline: none;
     cursor: pointer;
 }
 
-.dp-bar-right {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-}
-
 .dp-segmented-tabs {
     display: inline-flex;
-    background: var(--bg-surface, #0f172a);
-    padding: 2px;
+    background: var(--dp-surface-bg);
+    padding: 3px;
     border-radius: 6px;
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
-    gap: 2px;
+    border: 1px solid var(--dp-border);
+    gap: 3px;
 }
 
 .dp-segmented-tabs button {
     background: transparent;
     border: none;
-    color: var(--text-muted, #94a3b8);
+    color: var(--dp-text-muted);
     font-size: 0.72rem;
     font-weight: 700;
-    padding: 3px 9px;
+    padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s;
+    transition: all 0.15s ease;
 }
 
 .dp-segmented-tabs button:hover {
-    color: var(--text-main, #ffffff);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--dp-text-main);
+    background: rgba(0, 0, 0, 0.04);
 }
 
 .dp-segmented-tabs button.active {
-    background: var(--accent-primary, #2563eb);
+    background: var(--dp-accent-blue);
     color: #ffffff;
-    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
-}
-
-.dp-pill-badge {
-    background: rgba(255, 255, 255, 0.22);
-    padding: 0 5px;
-    border-radius: 8px;
-    font-size: 0.62rem;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
 }
 
 /* ==========================================================================
-   2. Ultra-Dense Status & Meta Strip (Single-line, ~24px)
+   2. Status Strip (Clean, Informative Single-Line)
    ========================================================================== */
 .dp-status-strip {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(0, 0, 0, 0.14);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
-    border-radius: 5px;
-    padding: 3px 8px;
-    font-size: 0.72rem;
-    margin-bottom: 6px;
-    color: var(--text-muted, #94a3b8);
+    background: var(--dp-surface-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.74rem;
+    margin-bottom: 8px;
+    color: var(--dp-text-muted);
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
 }
 
 .dp-status-items {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     flex-wrap: wrap;
 }
 
 .dp-status-items strong {
-    color: var(--text-main, #ffffff);
-    font-weight: 700;
+    color: var(--dp-text-main);
+    font-weight: 800;
 }
 
 .dp-save-badge {
@@ -236,603 +275,405 @@
     align-items: center;
     gap: 5px;
     font-weight: 700;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     white-space: nowrap;
 }
 
 /* ==========================================================================
-   3. Two-Column Entry Layout (Desktop High-Density)
+   3. Two-Column Entry Layout & Panels
    ========================================================================== */
 .dp-entry-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 10px;
     align-items: start;
+    padding-bottom: 90px; /* Essential: Prevents table rows from being hidden behind sticky bottom save bar! */
+}
+
+.dp-side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .dp-panel {
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-    border-radius: 7px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: var(--dp-shadow-sm);
+    box-sizing: border-box;
 }
 
 .dp-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--dp-border-subtle);
 }
 
 .dp-panel-header h2 {
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     font-weight: 800;
     margin: 0;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
     display: flex;
     align-items: center;
     gap: 6px;
+    letter-spacing: -0.2px;
 }
 
 .dp-panel-header h2 span {
-    background: var(--accent-primary, #2563eb);
+    background: var(--dp-accent-blue);
     color: #ffffff;
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.62rem;
+    font-size: 0.65rem;
+    font-weight: 800;
 }
 
 /* Filter / Search Bar */
 .dp-filter-bar {
     display: flex;
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .dp-search-input {
     flex: 1;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 0.74rem;
-    color: var(--text-main, #ffffff);
+    background: var(--dp-input-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.76rem;
+    color: var(--dp-text-main);
     outline: none;
+    transition: all 0.15s ease;
+}
+
+.dp-search-input:focus {
+    border-color: var(--dp-accent-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 .dp-filter-select {
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-main, #ffffff);
+    background: var(--dp-input-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--dp-text-main);
     outline: none;
     cursor: pointer;
+    transition: border-color 0.15s ease;
 }
 
-/* Material Table */
+.dp-filter-select:focus {
+    border-color: var(--dp-accent-blue);
+}
+
+/* ==========================================================================
+   4. Material Consumption Table (Crisp, High-Density, Balanced Spacing)
+   ========================================================================== */
 .dp-table-wrap {
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-    border-radius: 6px;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 7px;
     overflow-x: auto;
-    max-height: calc(100vh - 195px);
+    overflow-y: auto;
+    max-height: calc(100vh - 250px);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .dp-table {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 0.74rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.76rem;
 }
 
 .dp-table th {
-    background: var(--bg-card, #1e293b);
-    padding: 5px 8px;
-    font-size: 0.65rem;
+    background: var(--dp-surface-bg);
+    padding: 8px 12px;
+    font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
-    color: var(--text-muted, #94a3b8);
-    letter-spacing: 0.4px;
+    color: var(--dp-text-muted);
+    letter-spacing: 0.5px;
     position: sticky;
     top: 0;
     z-index: 5;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+    border-bottom: 1px solid var(--dp-border);
+    border-top: none;
 }
 
 .dp-table td {
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--dp-border-subtle);
     vertical-align: middle;
+    background: var(--dp-card-bg);
+    transition: background 0.12s ease;
 }
 
-.dp-table tr:hover {
-    background: rgba(255, 255, 255, 0.035);
+.dp-table tbody tr:nth-child(even) td {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+html[data-theme="dark"] .dp-table tbody tr:nth-child(even) td,
+html.dark .dp-table tbody tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dp-table tbody tr:hover td {
+    background: var(--dp-accent-blue-light) !important;
 }
 
 .dp-mat-desc {
     font-weight: 700;
-    color: var(--text-main, #ffffff);
-    font-size: 0.74rem;
-    line-height: 1.25;
+    color: var(--dp-text-main);
+    font-size: 0.82rem;
+    line-height: 1.35;
     display: block;
 }
 
 .dp-mat-sub {
-    font-size: 0.65rem;
-    color: var(--text-muted, #94a3b8);
-    margin-top: 1px;
+    font-size: 0.68rem;
+    color: var(--dp-text-muted);
+    margin-top: 2px;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
 }
 
+.dp-sap-badge {
+    font-weight: 700;
+    color: var(--dp-accent-blue) !important;
+    font-family: var(--font-mono, 'JetBrains Mono', Consolas, monospace);
+    letter-spacing: 0.3px;
+    font-feature-settings: "zero" 0, "tnum" 1 !important;
+}
+
+.dp-issue-val {
+    color: var(--dp-accent-blue);
+    font-weight: 700;
+}
+
+.dp-excel-tot-val {
+    color: var(--dp-accent-amber);
+    font-weight: 700;
+}
+
+/* Stock Badges */
 .dp-stock-badge {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: 0.68rem;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.72rem;
     font-weight: 700;
-    font-family: monospace;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
 }
 
-.dp-stock-badge.ok {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
+.dp-stock-badge.in_stock {
+    background: var(--dp-accent-blue-light);
+    color: var(--dp-accent-blue);
+    border: 1px solid rgba(37, 99, 235, 0.25);
 }
 
-.dp-stock-badge.danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
+.dp-stock-badge.awaiting_stock {
+    background: var(--dp-surface-bg);
+    color: var(--dp-text-dim);
+    border: 1px dashed var(--dp-border);
 }
 
-.dp-stock-badge.empty {
-    background: rgba(148, 163, 184, 0.15);
-    color: #94a3b8;
-}
-
+/* Sleek Horizontal Quantity Input Field with Attached Unit */
 .dp-qty-field {
-    width: 80px;
-    padding: 3px 6px;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.22));
-    border-radius: 4px;
-    color: #22c55e;
-    font-weight: 800;
-    font-size: 0.82rem;
-    text-align: right;
-    outline: none;
-    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    background: var(--dp-input-bg) !important;
+    border: 1px solid var(--dp-border-strong) !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    width: 105px !important;
+    box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
+    box-shadow: var(--dp-shadow-sm) !important;
 }
 
-.dp-qty-field:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+.dp-qty-field:focus-within {
+    border-color: var(--dp-accent-blue) !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
 }
 
-.dp-qty-unit {
-    font-size: 0.65rem;
-    color: var(--text-muted, #94a3b8);
-    font-weight: 700;
-    margin-left: 4px;
+.dp-qty-field input {
+    width: 100% !important;
+    min-width: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    text-align: right !important;
+    font-weight: 800 !important;
+    font-size: 0.88rem !important;
+    color: var(--dp-text-main) !important;
+    padding: 0 4px 0 0 !important;
+    outline: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
 }
 
-/* Manpower Panel */
+.dp-qty-field .dp-qty-unit {
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--dp-text-muted) !important;
+    flex-shrink: 0 !important;
+    margin-left: 3px !important;
+    text-transform: uppercase !important;
+}
+
+/* ==========================================================================
+   5. Manpower & Notes Panels (Modern Steppers & Alignment)
+   ========================================================================== */
 .dp-man-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 0;
+    padding: 4px 0;
     margin-bottom: 4px;
 }
 
 .dp-man-label {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
 }
 
+/* Modern Rounded Stepper Pill */
 .dp-stepper {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
-    border-radius: 5px;
+    border: 1px solid var(--dp-border-strong);
+    border-radius: 6px;
+    background: var(--dp-input-bg);
     overflow: hidden;
-    background: var(--bg-surface, #0f172a);
+    height: 30px;
+    box-shadow: var(--dp-shadow-sm);
 }
 
 .dp-stepper button {
     background: transparent;
     border: none;
-    color: var(--text-muted, #94a3b8);
-    width: 26px;
-    height: 26px;
+    color: var(--dp-text-muted);
+    width: 28px;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    transition: background 0.12s;
-}
-
-.dp-stepper button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-main, #ffffff);
-}
-
-.dp-stepper input {
-    width: 32px;
-    height: 26px;
-    border: none;
-    background: transparent;
-    text-align: center;
-    color: var(--text-main, #ffffff);
-    font-size: 0.76rem;
-    font-weight: 800;
-    outline: none;
-}
-
-.dp-man-total-pill {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(34, 197, 94, 0.12);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 5px;
-    padding: 4px 8px;
-    margin: 6px 0;
-    font-size: 0.72rem;
-}
-
-.dp-man-total-pill strong {
-    color: #4ade80;
-    font-size: 0.85rem;
-    font-weight: 800;
-}
-
-.dp-equipment-details {
-    margin: 6px 0;
-    font-size: 0.72rem;
-}
-
-.dp-equipment-details summary {
-    cursor: pointer;
-    color: var(--accent-primary, #3b82f6);
-    font-weight: 700;
-    outline: none;
+    transition: background 0.12s, color 0.12s;
     user-select: none;
 }
 
-.dp-equipment-details .dp-man-row {
-    margin-top: 4px;
+.dp-stepper button:hover {
+    background: var(--dp-border-subtle);
+    color: var(--dp-accent-blue);
+}
+
+.dp-stepper input {
+    width: 36px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    color: var(--dp-text-main);
+    font-size: 0.84rem;
+    font-weight: 800;
+    outline: none;
+    padding: 0;
 }
 
 .dp-notes-textarea {
     width: 100%;
-    height: 48px;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
-    padding: 5px 8px;
-    font-size: 0.72rem;
-    color: var(--text-main, #ffffff);
+    min-height: 72px;
+    background: var(--dp-input-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.76rem;
+    color: var(--dp-text-main);
     box-sizing: border-box;
     resize: vertical;
     outline: none;
+    line-height: 1.4;
+    transition: border-color 0.15s ease;
 }
 
-/* Sticky Save Bar */
+.dp-notes-textarea:focus {
+    border-color: var(--dp-accent-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* ==========================================================================
+   6. Sticky Bottom Save Bar (Crisp Elevation, Zero Overlap)
+   ========================================================================== */
 .dp-save-bar {
     position: sticky;
     bottom: 0;
-    z-index: 20;
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 6px;
-    padding: 6px 12px;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border-strong);
+    border-radius: 8px;
+    padding: 8px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-    margin-top: 8px;
+    box-shadow: var(--dp-shadow-bar);
+    backdrop-filter: blur(8px);
 }
 
 .dp-save-status {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .dp-save-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: #22c55e;
+    background: var(--dp-accent-green);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
 }
 
 .dp-save-dot.dirty {
-    background: #f59e0b;
-}
-
-.dp-mobile-nav {
-    display: none;
-}
-
-/* Modals */
-.dp-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 16px;
-}
-
-.dp-modal {
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 10px;
-    width: 440px;
-    max-width: 100%;
-    padding: 16px 20px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-}
-
-.dp-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
-}
-
-.dp-modal-header h3 {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--text-main, #ffffff);
-}
-
-.dp-modal label {
-    display: block;
-    margin-top: 8px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted, #94a3b8);
-}
-
-.dp-modal input, .dp-modal select {
-    display: block;
-    width: 100%;
-    background: var(--bg-surface, #0f172a);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-    border-radius: 5px;
-    padding: 6px 10px;
-    color: var(--text-main, #ffffff);
-    font-size: 0.78rem;
-    box-sizing: border-box;
-    margin-top: 3px;
+    background: var(--dp-accent-amber);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
 }
 
 /* ==========================================================================
-   4. Native Mobile Version (max-width: 768px)
-   Replicates the exact native mobile feel from Daily-Progress-Integration
-   ========================================================================== */
-@media (max-width: 768px) {
-    .dp-menu-toggle-btn {
-        display: inline-flex;
-    }
-
-    .daily-progress-container {
-        padding: 4px 6px 120px !important;
-    }
-
-    /* Hide desktop segmented tabs; mobile bottom nav handles it */
-    .dp-segmented-tabs {
-        display: none !important;
-    }
-
-    .dp-compact-bar {
-        padding: 6px 8px;
-        gap: 6px;
-    }
-
-    .dp-bar-left {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .dp-bar-center {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        gap: 6px;
-    }
-
-    .dp-contractor-pill {
-        flex: 1;
-    }
-
-    .dp-contractor-pill select {
-        max-width: 100%;
-        width: 100%;
-    }
-
-    .dp-date-pill {
-        flex: 0 0 auto;
-    }
-
-    .dp-status-strip {
-        font-size: 0.68rem;
-        padding: 4px 6px;
-    }
-
-    .dp-entry-layout {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    /* Mobile Material Cards */
-    .dp-table-wrap {
-        background: transparent;
-        border: none;
-        max-height: none;
-    }
-
-    .dp-table thead {
-        display: none;
-    }
-
-    .dp-table tbody {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .dp-table tbody tr {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--bg-card, #1e293b);
-        border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
-        border-radius: 8px;
-        padding: 8px 10px;
-        min-height: 52px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .dp-table tbody td {
-        border: none !important;
-        padding: 0 !important;
-    }
-
-    .dp-table tbody td:first-child {
-        flex: 1 1 auto;
-        padding-right: 8px !important;
-    }
-
-    .dp-table tbody td:nth-child(2) {
-        display: none !important; /* Inlined in first td on mobile */
-    }
-
-    .dp-mobile-balance-inline {
-        display: inline-block !important;
-        margin-top: 3px;
-    }
-
-    .dp-table tbody td:last-child {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-    }
-
-    .dp-qty-field {
-        width: 76px;
-        height: 36px;
-        font-size: 0.95rem;
-        padding: 4px 6px;
-    }
-
-    /* Mobile Steppers */
-    .dp-stepper button {
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
-    }
-
-    .dp-stepper input {
-        width: 40px;
-        height: 36px;
-        font-size: 0.95rem;
-    }
-
-    /* Sticky Save Bar on Mobile (Floating right above bottom nav) */
-    .dp-save-bar {
-        position: sticky;
-        bottom: 58px;
-        z-index: 99;
-        margin-top: 8px;
-        border-radius: 8px;
-        box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.25);
-        padding: 8px 12px;
-    }
-
-    /* Fixed Bottom Navigation Bar */
-    .dp-mobile-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 54px;
-        background: var(--bg-card, #1e293b);
-        border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-        z-index: 1000;
-        padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
-        box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.3);
-    }
-
-    .dp-mobile-nav button {
-        flex: 1;
-        height: 100%;
-        background: transparent;
-        border: none;
-        color: var(--text-muted, #94a3b8);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        font-size: 0.68rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: color 0.15s, background 0.15s;
-    }
-
-    .dp-mobile-nav button.active {
-        color: #22c55e;
-        background: rgba(34, 197, 94, 0.1);
-    }
-
-    .dp-mobile-nav button .dp-mn-ico {
-        font-size: 1.15rem;
-        line-height: 1;
-    }
-
-    .dp-mobile-nav button .dp-mn-text {
-        font-size: 0.65rem;
-    }
-}
-
-/* ==========================================================================
-   7. Live Excel Sheet Preview & Range Controls
+   7. Live Excel Sheet Preview & Monthly Matrix Register (Clean Spreadsheet)
    ========================================================================== */
 .dp-excel-preview-wrap {
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    margin-bottom: 24px;
+    box-shadow: var(--dp-shadow-sm);
 }
 
 .dp-excel-toolbar {
@@ -840,9 +681,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 14px;
-    background: var(--bg-surface, #0f172a);
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+    padding: 8px 14px;
+    background: var(--dp-surface-bg);
+    border-bottom: 1px solid var(--dp-border);
     flex-wrap: wrap;
 }
 
@@ -856,24 +697,24 @@
 .dp-excel-date-field {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: var(--bg-card, #1e293b);
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
-    border-radius: 5px;
+    gap: 5px;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
     padding: 3px 8px;
 }
 
 .dp-excel-date-field label {
     font-size: 0.65rem;
     font-weight: 800;
-    color: var(--text-muted, #94a3b8);
+    color: var(--dp-text-muted);
     text-transform: uppercase;
 }
 
 .dp-excel-date-field input[type="date"] {
     background: transparent;
     border: none;
-    color: var(--text-main, #ffffff);
+    color: var(--dp-text-main);
     font-size: 0.76rem;
     font-weight: 700;
     outline: none;
@@ -886,20 +727,21 @@
 }
 
 .dp-excel-quick-ranges button {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-muted, #94a3b8);
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    color: var(--dp-text-muted);
+    border-radius: 5px;
+    padding: 4px 9px;
+    font-size: 0.72rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
 }
 
 .dp-excel-quick-ranges button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-main, #ffffff);
+    background: var(--dp-accent-blue-light);
+    color: var(--dp-accent-blue);
+    border-color: var(--dp-accent-blue);
 }
 
 .dp-excel-meta-bar {
@@ -907,10 +749,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 14px;
-    background: rgba(56, 189, 248, 0.06);
-    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-    font-size: 0.74rem;
-    color: var(--text-main, #ffffff);
+    background: var(--dp-accent-blue-light);
+    border-bottom: 1px solid rgba(37, 99, 235, 0.18);
+    font-size: 0.76rem;
+    color: var(--dp-text-main);
     flex-wrap: wrap;
     gap: 8px;
 }
@@ -918,23 +760,24 @@
 .dp-excel-table-scroll {
     overflow-x: auto;
     max-width: 100%;
-    max-height: 65vh;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+    max-height: calc(100vh - 270px);
+    border-bottom: 1px solid var(--dp-border);
+    background: var(--dp-card-bg);
 }
 
 .dp-excel-sheet-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 0.72rem;
-    color: var(--text-main, #ffffff);
+    font-size: 0.74rem;
+    color: var(--dp-text-main);
 }
 
 .dp-excel-sheet-table th,
 .dp-excel-sheet-table td {
-    padding: 5px 7px;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 8px;
+    border-right: 1px solid var(--dp-border-subtle);
+    border-bottom: 1px solid var(--dp-border-subtle);
     white-space: nowrap;
     vertical-align: middle;
 }
@@ -943,103 +786,105 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
     font-weight: 800;
     font-size: 0.68rem;
-    color: #94a3b8;
+    color: var(--dp-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--dp-border);
 }
 
-/* Sticky frozen left columns */
+/* Sticky frozen left columns for Monthly Matrix */
 .dp-excel-sheet-table th.st-row,
 .dp-excel-sheet-table td.st-row {
     position: sticky;
     left: 0;
     z-index: 4;
-    width: 38px;
-    min-width: 38px;
-    max-width: 38px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
     text-align: center;
-    background: var(--bg-card, #1e293b);
+    background: var(--dp-card-bg);
 }
 
 .dp-excel-sheet-table thead th.st-row {
     z-index: 7;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-sheet-table th.st-code,
 .dp-excel-sheet-table td.st-code {
     position: sticky;
-    left: 38px;
+    left: 40px;
     z-index: 4;
-    width: 78px;
-    min-width: 78px;
-    max-width: 78px;
-    font-family: monospace;
-    font-size: 0.68rem;
-    color: #38bdf8;
-    background: var(--bg-card, #1e293b);
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--dp-accent-blue);
+    background: var(--dp-card-bg);
 }
 
 .dp-excel-sheet-table thead th.st-code {
     z-index: 7;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-sheet-table th.st-name,
 .dp-excel-sheet-table td.st-name {
     position: sticky;
-    left: 116px;
+    left: 125px;
     z-index: 4;
-    min-width: 220px;
-    max-width: 320px;
+    min-width: 230px;
+    max-width: 330px;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
     text-align: left;
-    background: var(--bg-card, #1e293b);
+    background: var(--dp-card-bg);
 }
 
 .dp-excel-sheet-table thead th.st-name {
     z-index: 7;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-sheet-table th.st-unit,
 .dp-excel-sheet-table td.st-unit {
     position: sticky;
-    left: 336px;
+    left: 355px;
     z-index: 4;
     width: 48px;
     min-width: 48px;
     text-align: center;
     font-weight: 700;
-    color: #94a3b8;
-    background: var(--bg-card, #1e293b);
+    color: var(--dp-text-muted);
+    background: var(--dp-card-bg);
 }
 
 .dp-excel-sheet-table thead th.st-unit {
     z-index: 7;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-sheet-table th.st-issue,
 .dp-excel-sheet-table td.st-issue {
     position: sticky;
-    left: 384px;
+    left: 403px;
     z-index: 4;
     min-width: 80px;
     text-align: right;
-    font-weight: 700;
-    background: var(--bg-card, #1e293b);
-    border-right: 2px solid rgba(56, 189, 248, 0.4);
+    font-weight: 800;
+    background: var(--dp-card-bg);
+    border-right: 2px solid var(--dp-accent-blue);
 }
 
 .dp-excel-sheet-table thead th.st-issue {
     z-index: 7;
-    background: var(--bg-surface, #0f172a);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-day-hdr {
@@ -1056,45 +901,231 @@
 
 .dp-excel-val {
     display: inline-block;
-    padding: 1px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    background: var(--dp-accent-blue-light);
+    color: var(--dp-accent-blue);
     font-weight: 700;
 }
 
 .dp-excel-val-zero {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--dp-text-dim);
+    opacity: 0.4;
     font-size: 0.68rem;
 }
 
 .dp-excel-mp-row {
-    background: rgba(245, 158, 11, 0.05);
+    background: var(--dp-accent-amber-light) !important;
 }
 
 .dp-excel-mp-row td {
     font-weight: 700;
-    color: #fbbf24;
+    color: var(--dp-accent-amber) !important;
 }
 
 .dp-excel-tot-col {
-    min-width: 78px;
+    min-width: 82px;
     text-align: right;
     font-weight: 800;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--dp-surface-bg);
 }
 
 .dp-excel-bal-col {
-    min-width: 78px;
+    min-width: 82px;
     text-align: right;
     font-weight: 800;
 }
 
 .dp-excel-bal-positive {
-    color: #4ade80;
+    color: var(--dp-accent-green);
 }
 
 .dp-excel-bal-negative {
-    color: #f87171;
+    color: var(--dp-accent-red);
 }
 
+/* Modals */
+.dp-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.dp-modal {
+    background: var(--dp-card-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 12px;
+    width: 440px;
+    max-width: 100%;
+    padding: 18px 22px;
+    box-shadow: var(--dp-shadow-md);
+}
+
+.dp-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--dp-border-subtle);
+}
+
+.dp-modal-header h3 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--dp-text-main);
+}
+
+.dp-modal label {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--dp-text-muted);
+}
+
+.dp-modal input, .dp-modal select {
+    display: block;
+    width: 100%;
+    background: var(--dp-input-bg);
+    border: 1px solid var(--dp-border);
+    border-radius: 6px;
+    padding: 7px 11px;
+    color: var(--dp-text-main);
+    font-size: 0.8rem;
+    box-sizing: border-box;
+    margin-top: 4px;
+    outline: none;
+}
+
+.dp-modal input:focus, .dp-modal select:focus {
+    border-color: var(--dp-accent-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* ==========================================================================
+   8. Mobile Navigation & Responsiveness
+   ========================================================================== */
+@media (max-width: 768px) {
+    .daily-progress-container {
+        padding: 4px 6px 120px !important;
+    }
+
+    .dp-segmented-tabs {
+        display: none !important;
+    }
+
+    .dp-entry-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .dp-table-wrap {
+        background: transparent;
+        border: none;
+        max-height: none;
+    }
+
+    .dp-table thead {
+        display: none;
+    }
+
+    .dp-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .dp-table tbody tr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--dp-card-bg);
+        border: 1px solid var(--dp-border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        min-height: 54px;
+        box-shadow: var(--dp-shadow-sm);
+    }
+
+    .dp-table tbody td {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    .dp-table tbody td:first-child {
+        flex: 1 1 auto;
+        padding-right: 10px !important;
+    }
+
+    .dp-table tbody td:nth-child(2) {
+        display: none !important;
+    }
+
+    .dp-mobile-balance-inline {
+        display: inline-block !important;
+        margin-top: 4px;
+    }
+
+    .dp-table tbody td:last-child {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+    }
+
+    .dp-save-bar {
+        position: sticky;
+        bottom: 58px;
+        z-index: 99;
+        margin-top: 8px;
+        border-radius: 8px;
+        padding: 10px 14px;
+    }
+
+    .dp-mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 54px;
+        background: var(--dp-card-bg);
+        border-top: 1px solid var(--dp-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        z-index: 1000;
+        padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+        box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .dp-mobile-nav button {
+        flex: 1;
+        height: 100%;
+        background: transparent;
+        border: none;
+        color: var(--dp-text-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .dp-mobile-nav button.active {
+        color: var(--dp-accent-green);
+        background: var(--dp-accent-green-light);
+    }
+}

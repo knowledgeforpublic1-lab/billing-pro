@@ -31,6 +31,7 @@
 
 * {
   box-sizing: border-box;
+  font-feature-settings: "zero" 0, "tnum" 1;
 }
 
 html,
@@ -41,6 +42,8 @@ body {
   overflow: hidden !important;
   background: #f9f9f9 !important;
   color: #111827 !important;
+  font-feature-settings: "zero" 0, "tnum" 1 !important;
+  font-variant-numeric: tabular-nums normal !important;
 }
 
 body,
@@ -52,6 +55,8 @@ body,
   flex-direction: column !important;
   height: 100vh !important;
   overflow: hidden !important;
+  font-feature-settings: "zero" 0, "tnum" 1 !important;
+  font-variant-numeric: tabular-nums normal !important;
 }
 
 a {
@@ -2118,11 +2123,25 @@ html.soft .statbar .r {
   }
 
   .apptoolbar>span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 1;
-    min-width: 24px;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .apptoolbar>span.truncate {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex-shrink: 1 !important;
+    min-width: 24px !important;
+  }
+
+  .apptoolbar .btn,
+  .apptoolbar button,
+  .apptoolbar .reco-math-tip,
+  .apptoolbar .dp-brand-chip,
+  .apptoolbar .dp-contractor-pill,
+  .apptoolbar .dp-date-pill,
+  .apptoolbar .ps-toolbar-actions {
+    flex-shrink: 0 !important;
   }
 
   .apptoolbar .u,

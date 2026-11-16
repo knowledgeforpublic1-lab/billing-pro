@@ -1935,8 +1935,8 @@
                                 <table class="dp-table">
                                     <thead>
                                         <tr>
-                                            <th>Item Description</th>
-                                            <th style="width: 140px; text-align: center;">Net Issue</th>
+                                            <th style="min-width: 220px;">Item Description</th>
+                                            <th style="width: 120px; text-align: center;">Net Issue</th>
                                             <th style="width: 120px; text-align: right;">Today Consumed</th>
                                         </tr>
                                     </thead>
@@ -1945,7 +1945,7 @@
                                             <td>
                                                 <span class="dp-mat-desc">{{ item.name }}</span>
                                                 <div class="dp-mat-sub">
-                                                    <span v-if="item.code" style="font-family: monospace; color: #60a5fa; font-weight: 700;">SAP: {{ item.code }}</span>
+                                                    <span v-if="item.code" class="dp-sap-badge">SAP: {{ item.code }}</span>
                                                     <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
                                                 </div>
                                                 <div class="dp-mobile-balance-inline" style="display: none;">
@@ -2073,10 +2073,10 @@
                         <div class="dp-save-status">
                             <span class="dp-save-dot" :class="{ dirty: dailyProgressDirty }"></span>
                             <div>
-                                <strong style="font-size: 0.85rem; color: var(--text-main, #fff);">
+                                <strong style="font-size: 0.85rem; color: var(--dp-text-main, #0f172a);">
                                     {{ dailyProgressDirty ? 'Changes ready to save' : (dailyProgressVersion ? 'Daily report saved' : 'Ready to record today\'s work') }}
                                 </strong>
-                                <div style="font-size: 0.72rem; color: var(--text-muted);">
+                                <div style="font-size: 0.72rem; color: var(--dp-text-muted, #64748b);">
                                     {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }} · {{ formatDisplayDate(dailyProgressDate) }}
                                 </div>
                             </div>
@@ -2374,7 +2374,7 @@
                                         <td class="st-name" :title="it.name">{{ it.name }}</td>
                                         <td class="st-unit">{{ it.unit }}</td>
                                         <td class="st-issue">
-                                            <span v-if="getDailyProgressItemStock(it).totalIssued > 0" style="color: #38bdf8; font-weight: 700;">
+                                            <span v-if="getDailyProgressItemStock(it).totalIssued > 0" class="dp-issue-val" style="font-weight: 700;">
                                                 {{ getDailyProgressItemStock(it).totalIssued }}
                                             </span>
                                             <span v-else style="color: var(--text-muted); opacity: 0.5;">0</span>
@@ -2386,7 +2386,7 @@
                                             <span v-else class="dp-excel-val-zero">-</span>
                                         </td>
                                         <td class="dp-excel-tot-col">
-                                            <span v-if="getDailyProgressExportItemTotal(it.id) > 0" style="color: #fbbf24;">
+                                            <span v-if="getDailyProgressExportItemTotal(it.id) > 0" class="dp-excel-tot-val" style="font-weight: 700;">
                                                 {{ getDailyProgressExportItemTotal(it.id) }}
                                             </span>
                                             <span v-else style="color: var(--text-muted); opacity: 0.4;">0</span>
