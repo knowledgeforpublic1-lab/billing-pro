@@ -2452,8 +2452,13 @@
                 }
             }, { passive: true });
 
-            // Keyboard Shortcuts for Undo (Ctrl+Z) and Redo (Ctrl+Y / Ctrl+Shift+Z)
+            // Keyboard Shortcuts for Undo (Ctrl+Z) and Redo (Ctrl+Y / Ctrl+Shift+Z) & Escape for modals
             window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (this.showAddSapWoModal) this.showAddSapWoModal = false;
+                    if (this.showAdminModal) this.closeAdminModal();
+                    if (this.dailyProgressModal) this.dailyProgressModal = '';
+                }
                 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
                 const isCmd = isMac ? e.metaKey : e.ctrlKey;
                 if (isCmd && !e.altKey) {
