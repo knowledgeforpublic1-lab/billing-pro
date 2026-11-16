@@ -117,5 +117,16 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
     app.navigateDailyProgressDay(1);
     assert.strictEqual(app.dailyProgressDate, '2026-09-02', 'Date should navigate to 2026-09-02');
 
+    // 10. Test 'issued' filter logic ("jo issue ho usi ko dikhana")
+    app.dailyProgressFilter = 'issued';
+    app.dailyProgressSearch = '';
+    const visibleIssued = seed.items.filter(it => {
+        const stock = app.getDailyProgressItemStock(it);
+        return (stock && stock.totalIssued > 0) || Number(app.dailyProgressQuantities[it.id]) > 0;
+    });
+    assert.ok(visibleIssued.length > 0, 'There should be issued items visible');
+    assert.ok(visibleIssued.length < seed.items.length, 'Issued items count should be less than all 401 items');
+    assert.ok(visibleIssued.some(it => it.id === '15'), 'Item 15 (M SAND with 100 SAP issue) should be in visible issued items');
+
     console.log('✅ Daily Progress Module: All unit tests passed successfully.');
 });

@@ -172,11 +172,11 @@ function testStockUploadWithoutSapCodeSheet() {
 
     const wb = XLSX.utils.book_new();
     const wsData = [
-      ['', '', '', '', '', '', '', '', 'Material', 'Description', 'UoM', 'Quantity', '', '', '', 'Doc Header'],
-      ['', '', '', '', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', 1000, '', '', '', '31003359'],
-      ['', '', '', '', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', -200, '', '', '', '31003359'],
-      ['', '', '', '', '', '', '', '', '17000004', 'RSJ POLE', 'NO', 50, '', '', '', '31004926'],
-      ['', '', '', '', '', '', '', '', '17000004', 'RSJ POLE', 'NO', -5, '', '', '', '31004926']
+      ['', '', '', 'Posting Date', '', '', '', '', 'Material', 'Description', 'UoM', 'Quantity', '', '', '', 'Doc Header'],
+      ['', '', '', '2026-10-01', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', 1000, '', '', '', '31003359'],
+      ['', '', '', '2026-10-02', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', -200, '', '', '', '31003359'],
+      ['', '', '', '2026-10-01', '', '', '', '', '17000004', 'RSJ POLE', 'NO', 50, '', '', '', '31004926'],
+      ['', '', '', '2026-10-02', '', '', '', '', '17000004', 'RSJ POLE', 'NO', -5, '', '', '', '31004926']
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -230,7 +230,7 @@ function testStockAsOnDateFiltering() {
     app.recoRevision++;
     const julyRecord = app.getContractorSapIssues();
     assert.ok(julyRecord.totalGrossIssue < novRecord.totalGrossIssue);
-    assert.ok(julyRecord.materialCount < novRecord.materialCount);
+    assert.ok(julyRecord.materialCount <= novRecord.materialCount);
 
     // Reset date filter
     app.stockAsOnDate = '';

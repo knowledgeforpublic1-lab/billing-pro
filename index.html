@@ -1908,7 +1908,7 @@
                 <!-- Single-Line Dense Status Strip (~24px high) -->
                 <div class="dp-status-strip no-print">
                     <div class="dp-status-items">
-                        <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> items consumed</span>
+                        <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> issued items entered</span>
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> people (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
                         <span v-if="dailyProgressActiveContractor">🏢 <strong>{{ dailyProgressActiveContractor.project || 'Gadchiroli (T-10)' }}</strong> <small>({{ dailyProgressActiveContractor.feeder || 'ANGARA' }})</small></span>
                     </div>
@@ -1927,15 +1927,15 @@
                         <div class="dp-panel">
                             <div class="dp-panel-header">
                                 <h2><span>01</span> Material Consumption</h2>
-                                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">{{ dailyProgressVisibleItems.length }} of {{ dailyProgressSeedItems.length }} items</span>
+                                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">{{ dailyProgressVisibleItems.length }} {{ dailyProgressFilter === 'issued' ? 'issued items' : 'items' }}</span>
                             </div>
 
                             <div class="dp-filter-bar no-print">
                                 <input type="text" class="dp-search-input" v-model="dailyProgressSearch" placeholder="🔍 Search material name or SAP code...">
                                 <select class="dp-filter-select" v-model="dailyProgressFilter">
-                                    <option value="all">All Materials ({{ dailyProgressSeedItems.length }})</option>
-                                    <option value="entered">Entered Today ({{ dailyProgressSelectedCount }})</option>
-                                    <option value="issued">In Stock / Issued</option>
+                                    <option value="issued">📦 Issued Stock Only ({{ dailyProgressIssuedCount }})</option>
+                                    <option value="all">🌐 All Materials ({{ dailyProgressSeedItems.length }})</option>
+                                    <option value="entered">⚡ Entered Today ({{ dailyProgressSelectedCount }})</option>
                                     <option value="overconsumed">⚠️ Overconsumed</option>
                                 </select>
                             </div>
@@ -1999,15 +1999,24 @@
                                             </td>
                                         </tr>
                                         <tr v-if="!dailyProgressVisibleItems.length">
-                                            <td colspan="3" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                                No matching materials found.
+                                            <td colspan="3" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
+                                                <div style="font-size: 0.82rem; font-weight: 700; margin-bottom: 4px;">
+                                                    {{ dailyProgressFilter === 'issued' ? '📦 Is contractor ko abhi koi material issue nahi mila hai' : 'No matching materials found.' }}
+                                                </div>
+                                                <div style="font-size: 0.72rem; margin-bottom: 10px;">
+                                                    {{ dailyProgressFilter === 'issued' ? 'Aap All Materials choose karke consumption record kar sakte hain ya Record Stock Issue dabayein:' : 'Try clearing search or switching filter' }}
+                                                </div>
+                                                <div v-if="dailyProgressFilter === 'issued'" style="display: flex; gap: 8px; justify-content: center;">
+                                                    <button type="button" class="btn btn-secondary" @click="dailyProgressFilter = 'all'" style="padding: 3px 10px; font-size: 0.72rem;">🌐 All 401 Materials Dekhein</button>
+                                                    <button type="button" class="btn btn-primary" @click="dailyProgressModal = 'issue'" style="padding: 3px 10px; font-size: 0.72rem;">➕ Record Stock Issue</button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between;">
-                                <span>Showing {{ Math.min(80, dailyProgressVisibleItems.length) }} of {{ dailyProgressVisibleItems.length }} items. Use search to filter any of 401 materials.</span>
+                                <span>Showing {{ Math.min(80, dailyProgressVisibleItems.length) }} of {{ dailyProgressVisibleItems.length }} {{ dailyProgressFilter === 'issued' ? 'issued materials' : 'materials' }}.</span>
                                 <span>¹ Stock balances calculated through {{ formatDisplayDate(dailyProgressDate) }}</span>
                             </div>
                         </div>

@@ -439,7 +439,7 @@
                 dailyProgressRemarks: '',
                 dailyProgressVersion: 0,
                 dailyProgressSearch: '',
-                dailyProgressFilter: 'all',
+                dailyProgressFilter: 'issued',
                 dailyProgressDirty: false,
                 dailyProgressBusy: false,
                 dailyProgressModal: '',
@@ -1221,7 +1221,7 @@
             dailyProgressVisibleItems() {
                 const items = this.dailyProgressSeedItems;
                 const q = String(this.dailyProgressSearch || '').trim().toLowerCase();
-                const filter = this.dailyProgressFilter || 'all';
+                const filter = this.dailyProgressFilter || 'issued';
                 const enteredMap = this.dailyProgressQuantities || {};
 
                 return items.filter(it => {
@@ -1235,7 +1235,7 @@
                     }
                     if (filter === 'issued') {
                         const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
-                        return stock && stock.totalIssued > 0;
+                        return (stock && stock.totalIssued > 0) || Number(enteredMap[it.id]) > 0;
                     }
                     if (filter === 'overconsumed') {
                         const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
@@ -1243,6 +1243,16 @@
                     }
                     return true;
                 });
+            },
+            dailyProgressIssuedCount() {
+                const items = this.dailyProgressSeedItems;
+                if (!items || !items.length) return 0;
+                let count = 0;
+                for (let i = 0; i < items.length; i++) {
+                    const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(items[i]) : null;
+                    if (stock && stock.totalIssued > 0) count++;
+                }
+                return count;
             },
             dailyProgressSelectedCount() {
                 const qMap = this.dailyProgressQuantities || {};
