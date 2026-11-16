@@ -1,0 +1,551 @@
+:root{
+  --bg-body:#f3f6fa;
+  --bg-surface:#fff;
+  --bg-card:#fff;
+  --bg-header:#ffffffed;
+  --bg-subtle:#f5f7fb;
+  --bg-input:#fff;
+  --border-subtle:#dbe3ee;
+  --border-strong:#bccada;
+  --text-main:#192b43;
+  --text-muted:#526780;
+  --text-dim:#72839a;
+  --primary:#205fbb;
+  --primary-light:#eaf1ff;
+  --accent-green:#107754;
+  --accent-red:#bd303a;
+  --accent-amber:#996000;
+  --font-main:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:Consolas,monospace;
+  color-scheme:light}
+  html[data-theme="dark"]{
+    --bg-body:#0c1420;
+    --bg-surface:#142135;
+    --bg-card:#142135;
+    --bg-header:#101b2ced;
+    --bg-subtle:#0f1b2d;
+    --bg-input:#0e1a2c;
+    --border-subtle:#2b3c53;
+    --border-strong:#48617e;
+    --text-main:#edf3fb;
+    --text-muted:#b1c1d5;
+    --text-dim:#8fa4bd;
+    --primary:#84b4ff;
+    --primary-light:#213859;
+    --accent-green:#7bd6ae;
+    --accent-red:#ff9a9f;
+    --accent-amber:#f3c575;
+    color-scheme:dark}
+    *{
+      box-sizing:border-box}
+      body{
+        margin:0;
+        font:15px/1.5 var(--font-main);
+        color:var(--text-main);
+        background:var(--bg-body);
+        -webkit-tap-highlight-color:transparent}
+        button,input,select{
+          font:inherit}
+          button,a,input,select{
+            touch-action:manipulation}
+            button,a{
+              cursor:pointer}
+              button:disabled,input:disabled{
+                opacity:.55;
+                cursor:default}
+                button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+                  outline:3px solid var(--primary);
+                  outline-offset:2px}
+                  [hidden]{
+                    display:none!important}
+                    header{
+                      position:sticky;
+                      top:0;
+                      z-index:30;
+                      display:flex;
+                      align-items:center;
+                      justify-content:space-between;
+                      gap:12px;
+                      padding:12px max(16px,env(safe-area-inset-left));
+                      background:var(--bg-header);
+                      border-bottom:1px solid var(--border-subtle);
+                      backdrop-filter:blur(14px)}
+                      .brand{
+                        font-size:20px;
+                        font-weight:800;
+                        letter-spacing:-.5px}
+                        .brand span{
+                          color:var(--primary)}
+                          .brand small{
+                            display:block;
+                            font-size:11px;
+                            letter-spacing:.1em;
+                            color:var(--text-muted);
+                            text-transform:uppercase;
+                            font-weight:600}
+                            .h-actions{
+                              display:flex;
+                              gap:8px;
+                              align-items:center}
+                              .theme-toggle-btn{
+                                border:1px solid var(--border-subtle);
+                                border-radius:10px;
+                                background:var(--bg-surface);
+                                color:var(--text-main);
+                                width:42px;
+                                height:42px}
+                                .sync-pill{
+                                  display:flex;
+                                  align-items:center;
+                                  gap:7px;
+                                  padding:7px 10px;
+                                  border:1px solid var(--border-subtle);
+                                  border-radius:20px;
+                                  font-size:12px;
+                                  font-weight:700}
+                                  .dot{
+                                    width:8px;
+                                    height:8px;
+                                    border-radius:50%;
+                                    background:var(--text-dim);
+                                    flex-shrink:0}
+                                    .dot.synced{
+                                      background:var(--accent-green)}
+                                      .dot.syncing{
+                                        background:var(--accent-amber)}
+                                        .dot.error{
+                                          background:var(--accent-red)}
+                                          .wrap{
+                                            max-width:720px;
+                                            margin:0 auto;
+                                            padding:16px 14px 190px}
+                                            .context-card,.control-card,.summary-panel,.settings-panel{
+                                              padding:18px;
+                                              border:1px solid var(--border-subtle);
+                                              border-radius:16px;
+                                              background:var(--bg-card);
+                                              margin-bottom:14px}
+                                              .eyebrow{
+                                                font-size:11px;
+                                                font-weight:800;
+                                                letter-spacing:.1em;
+                                                text-transform:uppercase;
+                                                color:var(--text-muted);
+                                                margin:0 0 5px}
+                                                .context-title{
+                                                  display:flex;
+                                                  align-items:start;
+                                                  justify-content:space-between;
+                                                  gap:10px}
+                                                  .context-title h1{
+                                                    margin:0;
+                                                    font-size:23px;
+                                                    line-height:1.25;
+                                                    overflow-wrap:anywhere}
+                                                    .status-badge{
+                                                      border-radius:6px;
+                                                      background:var(--primary-light);
+                                                      color:var(--primary);
+                                                      padding:4px 8px;
+                                                      font-size:11px;
+                                                      font-weight:800;
+                                                      white-space:nowrap}
+                                                      .context-project{
+                                                        font-size:13px;
+                                                        color:var(--text-muted);
+                                                        margin:8px 0 14px;
+                                                        overflow-wrap:anywhere}
+                                                        .bill-facts{
+                                                          display:grid;
+                                                          grid-template-columns:1fr 1fr;
+                                                          gap:10px;
+                                                          margin:0}
+                                                          .bill-facts>div{
+                                                            padding:10px 12px;
+                                                            background:var(--bg-subtle);
+                                                            border-radius:9px;
+                                                            min-width:0}
+                                                            .bill-facts dt{
+                                                              font-size:11px;
+                                                              color:var(--text-muted);
+                                                              margin-bottom:3px}
+                                                              .bill-facts dd{
+                                                                margin:0;
+                                                                font-size:14px;
+                                                                font-weight:700;
+                                                                overflow-wrap:anywhere}
+                                                                .page-tabs{
+                                                                  display:grid;
+                                                                  grid-template-columns:1fr 1fr 1fr;
+                                                                  background:var(--bg-surface);
+                                                                  border:1px solid var(--border-subtle);
+                                                                  border-radius:11px;
+                                                                  padding:4px;
+                                                                  gap:3px;
+                                                                  margin-bottom:16px}
+                                                                  .page-tabs button{
+                                                                    min-height:44px;
+                                                                    border:0;
+                                                                    border-radius:7px;
+                                                                    background:transparent;
+                                                                    color:var(--text-muted);
+                                                                    font-size:13px;
+                                                                    font-weight:700}
+                                                                    .page-tabs button[aria-selected="true"]{
+                                                                      background:var(--primary-light);
+                                                                      color:var(--primary)}
+                                                                      .field-group{
+                                                                        display:grid;
+                                                                        gap:6px;
+                                                                        margin-bottom:14px}
+                                                                        .field-group:last-child{
+                                                                          margin-bottom:0}
+                                                                          .field-label{
+                                                                            font-size:12px;
+                                                                            font-weight:700;
+                                                                            color:var(--text-muted)}
+                                                                            select,input[type="search"],input[type="password"]{
+                                                                              width:100%;
+                                                                              padding:12px;
+                                                                              border:1px solid var(--border-strong);
+                                                                              border-radius:9px;
+                                                                              background:var(--bg-input);
+                                                                              color:var(--text-main);
+                                                                              font-size:16px;
+                                                                              min-height:48px}
+                                                                              select{
+                                                                                padding-right:25px}
+                                                                                .section-line{
+                                                                                  display:flex;
+                                                                                  gap:12px;
+                                                                                  justify-content:space-between;
+                                                                                  align-items:start;
+                                                                                  margin:20px 2px 12px}
+                                                                                  .section-line h2,.summary-panel h2,.settings-panel h2{
+                                                                                    margin:0;
+                                                                                    font-size:18px}
+                                                                                    .section-line p,.help-copy{
+                                                                                      color:var(--text-muted);
+                                                                                      font-size:12px;
+                                                                                      margin:4px 0 0}
+                                                                                      .item-count{
+                                                                                        font-size:12px;
+                                                                                        color:var(--text-muted);
+                                                                                        white-space:nowrap;
+                                                                                        padding-top:3px}
+                                                                                        .card{
+                                                                                          margin-bottom:14px;
+                                                                                          border:1px solid var(--border-subtle);
+                                                                                          border-radius:14px;
+                                                                                          background:var(--bg-card);
+                                                                                          overflow:hidden}
+                                                                                          .card-top-pills{
+                                                                                            display:flex;
+                                                                                            gap:7px;
+                                                                                            align-items:center;
+                                                                                            flex-wrap:wrap;
+                                                                                            padding:16px 16px 8px}
+                                                                                            .item-no-pill,.sap-pill,.extra-badge{
+                                                                                              padding:3px 7px;
+                                                                                              border-radius:5px;
+                                                                                              font-size:11px;
+                                                                                              font-weight:700;
+                                                                                              line-height:1.5;
+                                                                                              background:var(--bg-subtle);
+                                                                                              color:var(--text-muted);
+                                                                                              overflow-wrap:anywhere}
+                                                                                              .item-no-pill{
+                                                                                                background:var(--primary-light);
+                                                                                                color:var(--primary)}
+                                                                                                .sap-pill{
+                                                                                                  font-family:var(--font-mono)}
+                                                                                                  .item-desc{
+                                                                                                    padding:0 16px;
+                                                                                                    font-size:17px;
+                                                                                                    font-weight:700;
+                                                                                                    line-height:1.5;
+                                                                                                    overflow-wrap:anywhere}
+                                                                                                    .item-meta-bar{
+                                                                                                      display:flex;
+                                                                                                      gap:14px;
+                                                                                                      flex-wrap:wrap;
+                                                                                                      padding:8px 16px 14px;
+                                                                                                      border-bottom:1px solid var(--border-subtle)}
+                                                                                                      .meta-tag{
+                                                                                                        font-size:12px;
+                                                                                                        color:var(--text-muted)}
+                                                                                                        .meta-tag b{
+                                                                                                          color:var(--text-main);
+                                                                                                          font-weight:600}
+                                                                                                          .loc-row{
+                                                                                                            display:grid;
+                                                                                                            grid-template-columns:1fr;
+                                                                                                            gap:9px;
+                                                                                                            padding:14px 16px;
+                                                                                                            border-bottom:1px solid var(--border-subtle)}
+                                                                                                            .loc-info{
+                                                                                                              display:flex;
+                                                                                                              align-items:baseline;
+                                                                                                              gap:6px;
+                                                                                                              font-size:13px;
+                                                                                                              color:var(--text-muted)}
+                                                                                                              .loc-name{
+                                                                                                                font-weight:600;
+                                                                                                                overflow-wrap:anywhere}
+                                                                                                                .stepper{
+                                                                                                                  display:grid;
+                                                                                                                  grid-template-columns:46px minmax(80px,1fr) 46px;
+                                                                                                                  gap:8px;
+                                                                                                                  width:100%}
+                                                                                                                  .step-btn{
+                                                                                                                    width:46px;
+                                                                                                                    min-height:48px;
+                                                                                                                    border:1px solid var(--border-strong);
+                                                                                                                    border-radius:9px;
+                                                                                                                    background:var(--bg-subtle);
+                                                                                                                    color:var(--primary);
+                                                                                                                    font-size:24px;
+                                                                                                                    font-weight:500}
+                                                                                                                    .qty-box{
+                                                                                                                      min-width:0;
+                                                                                                                      width:100%;
+                                                                                                                      min-height:48px;
+                                                                                                                      padding:10px;
+                                                                                                                      border:1px solid var(--border-strong);
+                                                                                                                      border-radius:9px;
+                                                                                                                      background:var(--bg-input);
+                                                                                                                      color:var(--text-main);
+                                                                                                                      font-size:19px;
+                                                                                                                      font-weight:700;
+                                                                                                                      text-align:center}
+                                                                                                                      .card-footer{
+                                                                                                                        display:flex;
+                                                                                                                        justify-content:space-between;
+                                                                                                                        gap:10px;
+                                                                                                                        padding:12px 16px;
+                                                                                                                        background:var(--bg-subtle);
+                                                                                                                        font-size:13px;
+                                                                                                                        color:var(--text-muted)}
+                                                                                                                        .card-footer b,.c-amt{
+                                                                                                                          color:var(--text-main);
+                                                                                                                          font-weight:800}
+                                                                                                                          .sec-head{
+                                                                                                                            font-size:16px;
+                                                                                                                            font-weight:800;
+                                                                                                                            margin:22px 0 12px}
+                                                                                                                            .empty{
+                                                                                                                              padding:28px 20px;
+                                                                                                                              text-align:center;
+                                                                                                                              color:var(--text-muted);
+                                                                                                                              border:1px dashed var(--border-strong);
+                                                                                                                              border-radius:12px;
+                                                                                                                              background:var(--bg-card)}
+                                                                                                                              .lock-bar,.session-notice{
+                                                                                                                                padding:13px 16px;
+                                                                                                                                border:1px solid var(--accent-amber);
+                                                                                                                                border-radius:11px;
+                                                                                                                                background:var(--bg-card);
+                                                                                                                                font-size:13px;
+                                                                                                                                color:var(--accent-amber);
+                                                                                                                                margin-bottom:14px}
+                                                                                                                                .session-notice a{
+                                                                                                                                  color:var(--primary);
+                                                                                                                                  font-weight:800}
+                                                                                                                                  .dock-container{
+                                                                                                                                    position:fixed;
+                                                                                                                                    bottom:0;
+                                                                                                                                    left:0;
+                                                                                                                                    right:0;
+                                                                                                                                    z-index:35;
+                                                                                                                                    border-top:1px solid var(--border-subtle);
+                                                                                                                                    background:var(--bg-header);
+                                                                                                                                    backdrop-filter:blur(14px);
+                                                                                                                                    padding:10px max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom))}
+                                                                                                                                    .dock-inner{
+                                                                                                                                      max-width:692px;
+                                                                                                                                      margin:auto}
+                                                                                                                                      .total-row{
+                                                                                                                                        display:grid;
+                                                                                                                                        grid-template-columns:1fr 1fr;
+                                                                                                                                        gap:10px;
+                                                                                                                                        align-items:start}
+                                                                                                                                        .t-group{
+                                                                                                                                          display:grid;
+                                                                                                                                          gap:2px}
+                                                                                                                                          .t-lbl{
+                                                                                                                                            font-size:10px;
+                                                                                                                                            color:var(--text-muted);
+                                                                                                                                            font-weight:700;
+                                                                                                                                            letter-spacing:.04em}
+                                                                                                                                            .t-val{
+                                                                                                                                              font-size:20px;
+                                                                                                                                              font-weight:800;
+                                                                                                                                              font-variant-numeric:tabular-nums}
+                                                                                                                                              .t-val:before{
+                                                                                                                                                content:'₹';
+                                                                                                                                                font-size:14px;
+                                                                                                                                                margin-right:3px;
+                                                                                                                                                color:var(--text-muted)}
+                                                                                                                                                .t-val.stage{
+                                                                                                                                                  color:var(--primary)}
+                                                                                                                                                  .t-qty-badge{
+                                                                                                                                                    grid-column:1/-1;
+                                                                                                                                                    font-size:11px;
+                                                                                                                                                    color:var(--text-muted);
+                                                                                                                                                    margin-top:-5px}
+                                                                                                                                                    .action-row{
+                                                                                                                                                      display:grid;
+                                                                                                                                                      grid-template-columns:1fr 48px;
+                                                                                                                                                      gap:10px;
+                                                                                                                                                      margin-top:9px}
+                                                                                                                                                      .abtn{
+                                                                                                                                                        min-height:48px;
+                                                                                                                                                        border-radius:10px;
+                                                                                                                                                        border:1px solid var(--border-strong);
+                                                                                                                                                        font-size:15px;
+                                                                                                                                                        font-weight:700}
+                                                                                                                                                        .abtn-save{
+                                                                                                                                                          background:#205fbb;
+                                                                                                                                                          border-color:#205fbb;
+                                                                                                                                                          color:#fff}
+                                                                                                                                                          .abtn-ghost{
+                                                                                                                                                            background:var(--bg-surface);
+                                                                                                                                                            color:var(--text-main);
+                                                                                                                                                            font-size:19px}
+                                                                                                                                                            .summary-grid{
+                                                                                                                                                              display:grid;
+                                                                                                                                                              grid-template-columns:1fr 1fr;
+                                                                                                                                                              gap:10px;
+                                                                                                                                                              margin:16px 0}
+                                                                                                                                                              .summary-grid>div{
+                                                                                                                                                                padding:14px;
+                                                                                                                                                                background:var(--bg-subtle);
+                                                                                                                                                                border-radius:10px}
+                                                                                                                                                                .summary-grid small{
+                                                                                                                                                                  display:block;
+                                                                                                                                                                  color:var(--text-muted);
+                                                                                                                                                                  font-size:11px}
+                                                                                                                                                                  .summary-grid strong{
+                                                                                                                                                                    display:block;
+                                                                                                                                                                    font-size:20px;
+                                                                                                                                                                    margin-top:4px}
+                                                                                                                                                                    .unit-total{
+                                                                                                                                                                      display:flex;
+                                                                                                                                                                      justify-content:space-between;
+                                                                                                                                                                      padding:12px 0;
+                                                                                                                                                                      border-bottom:1px solid var(--border-subtle);
+                                                                                                                                                                      font-size:14px}
+                                                                                                                                                                      .summary-panel h3{
+                                                                                                                                                                        font-size:14px;
+                                                                                                                                                                        margin:20px 0 5px}
+                                                                                                                                                                        .settings-panel{
+                                                                                                                                                                          display:grid;
+                                                                                                                                                                          gap:14px}
+                                                                                                                                                                          .settings-panel a{
+                                                                                                                                                                            color:var(--primary);
+                                                                                                                                                                            text-decoration:none;
+                                                                                                                                                                            font-size:14px;
+                                                                                                                                                                            padding:12px;
+                                                                                                                                                                            background:var(--bg-subtle);
+                                                                                                                                                                            border:1px solid var(--border-subtle);
+                                                                                                                                                                            border-radius:9px}
+                                                                                                                                                                            .settings{
+                                                                                                                                                                              border-top:1px solid var(--border-subtle);
+                                                                                                                                                                              padding-top:14px}
+                                                                                                                                                                              summary{
+                                                                                                                                                                                font-size:13px;
+                                                                                                                                                                                font-weight:700;
+                                                                                                                                                                                color:var(--text-muted);
+                                                                                                                                                                                cursor:pointer}
+                                                                                                                                                                                .s-body{
+                                                                                                                                                                                  display:grid;
+                                                                                                                                                                                  gap:10px;
+                                                                                                                                                                                  padding-top:14px}
+                                                                                                                                                                                  .s-row{
+                                                                                                                                                                                    display:grid;
+                                                                                                                                                                                    grid-template-columns:1fr auto auto;
+                                                                                                                                                                                    gap:6px}
+                                                                                                                                                                                    .s-row input{
+                                                                                                                                                                                      min-width:0}
+                                                                                                                                                                                      .s-btn,.retry-btn{
+                                                                                                                                                                                        border:1px solid var(--border-strong);
+                                                                                                                                                                                        border-radius:8px;
+                                                                                                                                                                                        padding:10px;
+                                                                                                                                                                                        color:var(--text-main);
+                                                                                                                                                                                        background:var(--bg-subtle);
+                                                                                                                                                                                        font-size:13px}
+                                                                                                                                                                                        .s-status{
+                                                                                                                                                                                          font-size:12px;
+                                                                                                                                                                                          color:var(--text-muted)}
+                                                                                                                                                                                          #toast{
+                                                                                                                                                                                            position:fixed;
+                                                                                                                                                                                            left:50%;
+                                                                                                                                                                                            bottom:185px;
+                                                                                                                                                                                            transform:translateX(-50%);
+                                                                                                                                                                                            z-index:100;
+                                                                                                                                                                                            display:none;
+                                                                                                                                                                                            padding:12px 16px;
+                                                                                                                                                                                            border-radius:10px;
+                                                                                                                                                                                            background:var(--text-main);
+                                                                                                                                                                                            color:var(--bg-body);
+                                                                                                                                                                                            box-shadow:0 4px 20px #0003;
+                                                                                                                                                                                            max-width:92%;
+                                                                                                                                                                                            width:max-content;
+                                                                                                                                                                                            font-size:13px;
+                                                                                                                                                                                            text-align:center}
+                                                                                                                                                                                            body[data-mobile-tab="entry"] .summary-view,body[data-mobile-tab="entry"] .settings-view,body[data-mobile-tab="summary"] .entry-view,body[data-mobile-tab="summary"] .settings-view,body[data-mobile-tab="settings"] .entry-view,body[data-mobile-tab="settings"] .summary-view{
+                                                                                                                                                                                              display:none}
+                                                                                                                                                                                              @media(min-width:600px){
+                                                                                                                                                                                                .loc-row{
+                                                                                                                                                                                                  grid-template-columns:minmax(0,1fr) 240px;
+                                                                                                                                                                                                  align-items:center}
+                                                                                                                                                                                                  .control-card{
+                                                                                                                                                                                                    display:grid;
+                                                                                                                                                                                                    grid-template-columns:1fr 1fr;
+                                                                                                                                                                                                    gap:14px}
+                                                                                                                                                                                                    .control-card .field-group{
+                                                                                                                                                                                                      margin:0}
+                                                                                                                                                                                                      .control-card .field-group:last-child{
+                                                                                                                                                                                                        grid-column:1/-1}
+                                                                                                                                                                                                      }
+                                                                                                                                                                                                      @media(prefers-reduced-motion:reduce){
+                                                                                                                                                                                                        *{
+                                                                                                                                                                                                          scroll-behavior:auto!important;
+                                                                                                                                                                                                          transition:none!important}
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        html{
+                                                                                                                                                                                                          scroll-padding-bottom:220px}
+                                                                                                                                                                                                          .wrap{
+                                                                                                                                                                                                            padding-bottom:calc(190px + env(safe-area-inset-bottom,0px))}
+                                                                                                                                                                                                            .t-val{
+                                                                                                                                                                                                              font-size:clamp(16px,4.4vw,20px);
+                                                                                                                                                                                                              overflow-wrap:anywhere;
+                                                                                                                                                                                                              line-height:1.3}
+                                                                                                                                                                                                              @media(max-width:380px){
+                                                                                                                                                                                                                header{
+                                                                                                                                                                                                                  padding:10px 12px;
+                                                                                                                                                                                                                  gap:8px}
+                                                                                                                                                                                                                  .brand{
+                                                                                                                                                                                                                    font-size:18px}
+                                                                                                                                                                                                                    .brand small{
+                                                                                                                                                                                                                      font-size:9px;
+                                                                                                                                                                                                                      letter-spacing:.05em}
+                                                                                                                                                                                                                      .h-actions{
+                                                                                                                                                                                                                        gap:5px}
+                                                                                                                                                                                                                        .sync-pill{
+                                                                                                                                                                                                                          font-size:11px;
+                                                                                                                                                                                                                          padding:6px 8px}
+                                                                                                                                                                                                                          .theme-toggle-btn{
+                                                                                                                                                                                                                            width:38px;
+                                                                                                                                                                                                                            height:40px}
+                                                                                                                                                                                                                            .context-title h1{
+                                                                                                                                                                                                                              font-size:21px}
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                            .card-amount{
+                                                                                                                                                                                                                              display:grid;
+                                                                                                                                                                                                                              gap:2px;
+                                                                                                                                                                                                                              text-align:right}
+                                                                                                                                                                                                                              .card-amount small{
+                                                                                                                                                                                                                                font-size:11px;
+                                                                                                                                                                                                                                font-weight:500;
+                                                                                                                                                                                                                                color:var(--text-muted)}

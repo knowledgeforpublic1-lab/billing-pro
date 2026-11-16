@@ -348,6 +348,10 @@ window.UtilsModule = {
                         }
                     });
                 },
+                openMobileEntry() {
+                    try { localStorage.removeItem('billing_pref_desktop'); } catch (e) {}
+                    window.location.href = '/mobile.html?billId=' + encodeURIComponent(this.activeBillId || 'latest');
+                },
                 switchView(viewName) {
                     if (viewName === 'taxInvoice') viewName = 'invoice';
                     if (viewName === 'mapping' && typeof this.checkAdminElevated === 'function' && !this.isAdminElevated) {

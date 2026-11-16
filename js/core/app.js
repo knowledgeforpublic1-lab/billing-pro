@@ -205,6 +205,7 @@
                         if (typeof window !== 'undefined' && window.location) {
                             const params = new URLSearchParams(window.location.search);
                             const qv = params.get('tab') || params.get('view');
+                            if (qv === 'dailyProgress') return 'dailyProgress';
                             if (qv === 'dashboard' || qv === 'summary' || qv === 'home') return 'dashboard';
                             if (qv === 'invoice' || qv === 'taxInvoice') return 'invoice';
                             if (qv === 'detail' || qv === 'activity') return 'detail';

@@ -7,7 +7,7 @@
     <script>
     /* Phone ko alag mobile page par bhejo — desktop view bilkul same rehta hai.
        Wapas aana ho to mobile page par "Desktop version" dabao (?view=desktop). */
-    try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('mobile.html');}})();}catch(e){}
+    try{(function(){var q=location.search||'';if(new URLSearchParams(q).get('tab')==='dailyProgress')return;if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('/mobile.html'+location.search);}})();}catch(e){}
     try{var savedThemeMode=localStorage.getItem('billing_theme_mode')||'';if(!savedThemeMode)savedThemeMode=(localStorage.getItem('billing_theme')==='light')?'light':'dark';document.documentElement.dataset.theme=(savedThemeMode==='dark')?'dark':'light';document.documentElement.classList.toggle('soft',savedThemeMode==='soft');document.documentElement.classList.toggle('dark',savedThemeMode==='dark');document.documentElement.classList.toggle('dark-mode',savedThemeMode==='dark');}catch(e){}
     </script>
     <style>
@@ -103,7 +103,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
-<link rel="stylesheet" href="css/sap-theme.css?v=20261116_auth_layout">
+<link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261116_mobile_menu">
 </head>
 
@@ -316,6 +316,7 @@
                 <a href="#" :class="{ 'on': currentView === 'detail' }" @click.prevent="switchView('detail')"><span class="ico">⚡</span><span>Activity Billing</span></a>
                 <a href="#" :class="{ 'on': currentView === 'poleSchedule' || currentView === 'abstract' }" @click.prevent="switchView('poleSchedule')"><span class="ico">📐</span><span>Pole Schedule</span></a>
                 <a href="#" :class="{ 'on': currentView === 'dailyProgress' }" @click.prevent="switchView('dailyProgress')"><span class="ico">📅</span><span>Daily Progress</span></a>
+                <a href="/mobile.html" class="sidebar-mobile-entry" @click.prevent="openMobileEntry"><span class="ico">📱</span><span>Mobile quantity entry</span></a>
                 <div class="sgroup">Reconciliation</div>
                 <a href="#" :class="{ 'on': currentView === 'reconciliation' }" @click.prevent="switchView('reconciliation')"><span class="ico">📑</span><span>Reconciliation Sheet</span></a>
                 <a href="#" :class="{ 'on': currentView === 'masterrecon' }" @click.prevent="switchView('masterrecon')"><span class="ico">🌐</span><span>Master Reconciliation</span></a>
@@ -4486,7 +4487,7 @@
     <script defer src="js/core/storage.js?v=20261114_safe_storage"></script>
 
     <!-- Utility Modules -->
-    <script defer src="js/utils.js?v=20261116_mobile_menu"></script>
+    <script defer src="js/utils.js?v=20261116_mobile_redesign"></script>
     <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
@@ -4509,7 +4510,7 @@
     <script defer src="js/daily-progress.js?v=20261116_access_v2"></script>
     <script defer src="js/daily-progress-access.js?v=20261116_access_v2"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261116_desktop_sidebar"></script>
+    <script defer src="js/core/app.js?v=20261116_mobile_redesign"></script>
 </body>
 
 </html>

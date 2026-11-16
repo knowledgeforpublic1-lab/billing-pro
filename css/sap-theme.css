@@ -3737,3 +3737,5 @@ table.pro-table-typo th div {
   max-height: calc(100dvh - 40px);
   overflow-y: auto !important;
 }
+
+@media (min-width: 769px) { .sidebar .sidebar-mobile-entry { display: none !important; } }
