@@ -7406,3 +7406,206 @@ html[data-theme="dark"] .activity-print-signoff .act-sign-sub {
         color: #475569 !important;
     }
 }
+
+
+/* ============================================================
+   EXCEL DOWNLOAD & PRINT PREVIEW MODAL STYLES
+   ============================================================ */
+.modal-content-excel-preview {
+    max-width: 1120px !important;
+    width: 95vw !important;
+    max-height: 92vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important;
+}
+
+.excel-preview-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 16px !important;
+    background: #1e293b !important;
+    border-bottom: 1.5px solid #334155 !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+}
+
+.excel-preview-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.excel-preview-body {
+    padding: 18px !important;
+    background: #334155 !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    flex: 1 !important;
+}
+
+.excel-paper-sheet {
+    background: #ffffff !important;
+    color: #000000 !important;
+    max-width: 1020px !important;
+    margin: 0 auto !important;
+    padding: 24px 20px !important;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4) !important;
+    border-radius: 2px !important;
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif !important;
+    font-size: 11px !important;
+}
+
+.ep-row {
+    border: 1px solid #888888 !important;
+    padding: 4px 8px !important;
+    line-height: 1.35 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+.ep-company-banner {
+    border: 1.5px solid #000000 !important;
+    text-align: center !important;
+    font-weight: 800 !important;
+    font-size: 12.5px !important;
+    padding: 6px 10px !important;
+    letter-spacing: 0.3px !important;
+    background: #f8fafc !important;
+}
+
+.ep-meta-row {
+    border-top: none !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+}
+
+.ep-act-title {
+    font-weight: 800 !important;
+    background: #f1f5f9 !important;
+}
+
+.ep-spacer {
+    height: 10px !important;
+}
+
+.ep-table-viewport {
+    width: 100% !important;
+    overflow-x: auto !important;
+    border: 1px solid #000000 !important;
+}
+
+.ep-excel-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10px !important;
+    font-family: inherit !important;
+    background: #ffffff !important;
+}
+
+.ep-excel-table th,
+.ep-excel-table td {
+    border: 1px solid #888888 !important;
+    padding: 3.5px 5px !important;
+    color: #000000 !important;
+}
+
+.ep-excel-table thead th {
+    background: #f1f5f9 !important;
+    font-weight: 800 !important;
+    border-top: 1.5px solid #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    text-align: center !important;
+}
+
+.ep-excel-table .ep-extra-banner-row td {
+    background: #e2e8f0 !important;
+    font-weight: 800 !important;
+    border-top: 1.5px solid #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    padding: 4px 8px !important;
+}
+
+.ep-total-row td {
+    border-top: 1.5px solid #000000 !important;
+    border-bottom: 3px double #000000 !important;
+    font-weight: 800 !important;
+    background: #f8fafc !important;
+}
+
+.ep-signoff-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    border: 1px solid #94a3b8 !important;
+    margin-top: 14px !important;
+    background: #ffffff !important;
+}
+
+.ep-signbox {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    padding: 40px 6px 8px 6px !important;
+    border-right: 1px solid #94a3b8 !important;
+    text-align: center !important;
+    min-height: 72px !important;
+    background: #ffffff !important;
+}
+
+.ep-signbox:last-child {
+    border-right: none !important;
+}
+
+.ep-sign-title {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #1e3a8a !important;
+    line-height: 1.2 !important;
+}
+
+.ep-sign-sub {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    margin-top: 2px !important;
+}
+
+@media print {
+    body.is-printing-excel-preview > #app > *:not(.modal-overlay),
+    body.is-printing-excel-preview .excel-preview-header,
+    body.is-printing-excel-preview .no-print {
+        display: none !important;
+    }
+    body.is-printing-excel-preview .modal-overlay {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        inset: auto !important;
+    }
+    body.is-printing-excel-preview .modal-content-excel-preview {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: none !important;
+        background: transparent !important;
+        display: block !important;
+    }
+    body.is-printing-excel-preview .excel-preview-body {
+        background: transparent !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+    body.is-printing-excel-preview .excel-paper-sheet {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+}

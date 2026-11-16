@@ -335,6 +335,7 @@
                 pctStage2: 10,
                 pctStage3: 5,
                 showAddMaterialModal: false,
+                showActivityExcelPreviewModal: false,
                 showContractorModal: false,
                 contractorModalMode: 'list', // 'list' or 'form'
                 contractorSearchQuery: '',

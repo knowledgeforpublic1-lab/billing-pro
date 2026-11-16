@@ -1724,24 +1724,32 @@ function jsonOut(obj) {
         ws.columns = widths;
     },
 
-    printCurrentActivity() {
+    openActivityExcelPreview() {
+        this.showActivityExcelPreviewModal = true;
+    },
+    closeActivityExcelPreview() {
+        this.showActivityExcelPreviewModal = false;
+    },
+    printFromPreview() {
         const cName = (typeof this.getContractorCleanFileName === 'function') ? this.getContractorCleanFileName() : 'Contractor';
         const ra = (typeof this.getRaCleanFileName === 'function') ? this.getRaCleanFileName() : 'RA';
         const actKey = this.selectedActivityKey || '';
         const oldTitle = document.title;
         document.title = `${cName}_${ra}_Activity_${actKey}_Measurement_Sheet`;
-        if (typeof this.showToast === 'function') {
-            this.showToast('Activity Sheet Print Preview khul raha hai... (Landscape A4)', '🖨️');
-        }
+        document.body.classList.add('is-printing-excel-preview');
         setTimeout(() => {
             try {
                 window.print();
             } finally {
                 setTimeout(() => {
+                    document.body.classList.remove('is-printing-excel-preview');
                     document.title = oldTitle;
                 }, 1000);
             }
-        }, 150);
+        }, 120);
+    },
+    printCurrentActivity() {
+        this.openActivityExcelPreview();
     },
 
     exportCurrentActivityStyledExcel() {
