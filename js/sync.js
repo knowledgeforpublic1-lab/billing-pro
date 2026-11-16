@@ -1523,51 +1523,63 @@ window.SyncModule = {
               this.activeBillId = targetBillId;
               try { localStorage.setItem('lk_billing_active_bill_id', targetBillId); } catch(e) {}
           }
-          try {
-              const res = await fetch('/api/billing?dataId=' + encodeURIComponent(targetBillId), {
-                  headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
-              });
-              if (!res.ok) {
-                  try { const ej = await res.clone().json().catch(() => null); if (ej && ej.error) setTimeout(() => { try { this.showToast('☁️ Cloud load fail: ' + String(ej.error).slice(0, 140), '⚠️'); } catch(e) {} }, 600); } catch(e) {}
-                  throw new Error('API Error: ' + res.status);
-              }
-              const json = await res.json();
-              if (opts && opts.preserveLocalBackup && (!json.data || json.dataId !== targetBillId)) throw new Error('Requested recovery bill was not returned');
-              if (json && json.success && json.data) {
-                  serverRaw = JSON.stringify(json.data);
-                  try { serverUpdatedAt = json.updatedAt ? new Date(json.updatedAt).getTime() : 0; } catch(e) { serverUpdatedAt = 0; }
-                  if (!serverUpdatedAt && json.data && json.data.savedAt) {
-                      serverUpdatedAt = Number(json.data.savedAt) || 0;
-                  }
-                  if (typeof json.rev === 'number') this._loadedRev = json.rev;
-                  if (json.dataId && json.dataId !== 'latest') {
-                      this.activeBillId = json.dataId;
-                      try { localStorage.setItem('lk_billing_active_bill_id', json.dataId); } catch(e) {}
-                  }
-              }
-          } catch (err) {
-              console.error('Failed to load from MongoDB API:', err);
-              if (opts && opts.preserveLocalBackup) {
-                  this._loadingContractorMapping = false;
-                  this.showToast('Recovery bill load nahi hua; data replace nahi kiya gaya. Internet check karke dobara kholein.', '⚠️');
-                  return false;
-              }
-          }
-          // Local copy padho.
-          // RULE: jo change abhi cloud me nahi gaya (unsynced local), wo reload par
-          // kabhi nahi harega — chahe server timestamp naya dikhe (wahi revert bug tha).
-          // Server tabhi jeetega jab us par dusre PC ka NAYA synced data ho.
-          let localRaw = null;
           const effectiveBillId = (this.activeBillId && this.activeBillId !== 'latest')
               ? this.activeBillId
               : (targetBillId !== 'latest' ? targetBillId : 'main-billing-state');
           const localKey = (effectiveBillId && effectiveBillId !== 'main-billing-state')
               ? ('lk_billing_state_' + effectiveBillId)
               : 'lk_billing_app_state_v10';
-          if (window.BillingStorage && typeof window.BillingStorage.getItemAsync === 'function') {
-              localRaw = await window.BillingStorage.getItemAsync(localKey);
-          } else {
-              try { localRaw = localStorage.getItem(localKey); } catch(e) {}
+
+          // Parallel fetch: Server API & local storage concurrent read (zero waterfall)
+          const readLocalPromise = (async () => {
+              if (window.BillingStorage && typeof window.BillingStorage.getItemAsync === 'function') {
+                  return await window.BillingStorage.getItemAsync(localKey);
+              } else {
+                  try { return localStorage.getItem(localKey); } catch(e) { return null; }
+              }
+          })();
+
+          const fetchServerPromise = (async () => {
+              try {
+                  const res = await fetch('/api/billing?dataId=' + encodeURIComponent(targetBillId), {
+                      headers: (() => { const h = {}; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })()
+                  });
+                  if (!res.ok) {
+                      try { const ej = await res.clone().json().catch(() => null); if (ej && ej.error) setTimeout(() => { try { this.showToast('☁️ Cloud load fail: ' + String(ej.error).slice(0, 140), '⚠️'); } catch(e) {} }, 600); } catch(e) {}
+                      throw new Error('API Error: ' + res.status);
+                  }
+                  return await res.json();
+              } catch (err) {
+                  console.error('Failed to load from MongoDB API:', err);
+                  return null;
+              }
+          })();
+
+          let json = null;
+          let localRaw = null;
+          try {
+              [json, localRaw] = await Promise.all([fetchServerPromise, readLocalPromise]);
+          } catch (e) {
+              // Graceful fallback
+          }
+
+          if (opts && opts.preserveLocalBackup && (!json || !json.data || json.dataId !== targetBillId)) {
+              this._loadingContractorMapping = false;
+              this.showToast('Recovery bill load nahi hua; data replace nahi kiya gaya. Internet check karke dobara kholein.', '⚠️');
+              return false;
+          }
+
+          if (json && json.success && json.data) {
+              serverRaw = JSON.stringify(json.data);
+              try { serverUpdatedAt = json.updatedAt ? new Date(json.updatedAt).getTime() : 0; } catch(e) { serverUpdatedAt = 0; }
+              if (!serverUpdatedAt && json.data && json.data.savedAt) {
+                  serverUpdatedAt = Number(json.data.savedAt) || 0;
+              }
+              if (typeof json.rev === 'number') this._loadedRev = json.rev;
+              if (json.dataId && json.dataId !== 'latest') {
+                  this.activeBillId = json.dataId;
+                  try { localStorage.setItem('lk_billing_active_bill_id', json.dataId); } catch(e) {}
+              }
           }
           let localSavedAt = 0;
           let localRev = 0;

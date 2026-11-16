@@ -10,6 +10,8 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     // Idle lock window: default 4 hours — chai/lunch break ke baad refresh par dobara login nahi.
     // AUTH_IDLE_MINUTES env se tune karo (5 minute security floor rakha hai).
     const IDLE_MS = Math.max(5, Number(env.AUTH_IDLE_MINUTES) || 240) * 60 * 1000;
+    const LOOKUP_CACHE_MS = env.AUTH_LOOKUP_CACHE_MS !== undefined ? Number(env.AUTH_LOOKUP_CACHE_MS) : 60 * 1000;
+    const lookupCache = new Map();
     const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT;
     const encryptionKey = secret && crypto.createHash('sha256').update('billing-auth-v1\0' + secret).digest();
     const encrypt = value => {
@@ -98,13 +100,26 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             session.tokens = encrypt(tokens);
             session.tokenExpiresAt = now() + Number(refreshed.expires_in) * 1000;
             await patchSession(session, { tokens: session.tokens, tokenExpiresAt: session.tokenExpiresAt });
+            lookupCache.delete(session.key);
         }
-        // Lookup detects password resets/account disabling; a reset invalidates
-        // existing sessions instead of accepting an old client-side unlock flag.
-        const lookup = await firebase('lookup', { idToken: tokens.idToken });
-        const user = lookup.users && lookup.users[0];
+        // Lookup detects password resets/account disabling; a short in-memory cache avoids
+        // 3-4 redundant Google Identity REST calls on every page load/refresh.
+        let user;
+        const cached = lookupCache.get(session.key);
+        if (cached && (now() - cached.cachedAt < LOOKUP_CACHE_MS)) {
+            user = cached.user;
+        } else {
+            const lookup = await firebase('lookup', { idToken: tokens.idToken });
+            user = lookup.users && lookup.users[0];
+            if (user && !user.disabled && Number(user.passwordUpdatedAt || 0) === session.passwordUpdatedAt) {
+                lookupCache.set(session.key, { user, cachedAt: now() });
+            }
+        }
         if (!user || user.disabled || String(user.email).toLowerCase() !== email || user.localId !== session.uid ||
-            Number(user.passwordUpdatedAt || 0) !== session.passwordUpdatedAt) throw error(401, 'Session expired. Login again.');
+            Number(user.passwordUpdatedAt || 0) !== session.passwordUpdatedAt) {
+            lookupCache.delete(session.key);
+            throw error(401, 'Session expired. Login again.');
+        }
         req.authSession = session;
         return session;
     }
@@ -142,6 +157,7 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             tokens: encrypt({ idToken: result.idToken, refreshToken: result.refreshToken })
         };
         await saveSession(session);
+        lookupCache.set(session.key, { user, cachedAt: now() });
         setCookie(req, res, token);
         res.json({ success: true, ...view(session) });
     }));
@@ -169,11 +185,15 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     }));
     router.post('/logout', handler(async (req, res) => {
         const token = cookieToken(req);
-        if (token) await db.saveDefaultConfig(sessionKey(token) + '_revoked', { revoked: true });
+        if (token) {
+            lookupCache.delete(sessionKey(token));
+            await db.saveDefaultConfig(sessionKey(token) + '_revoked', { revoked: true });
+        }
         setCookie(req, res, null, true);
         res.json({ success: true });
     }));
     router.post('/forgot-password', resetLimiter, handler(async (req, res) => {
+        lookupCache.clear();
         await firebase('sendOobCode', { requestType: 'PASSWORD_RESET', email: await ownerEmail() });
         res.json({ success: true, message: 'Password reset confirmation registered email par bhej diya gaya hai. Inbox/Spam check karein.' });
     }));

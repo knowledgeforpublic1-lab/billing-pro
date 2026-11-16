@@ -2023,45 +2023,45 @@
             if (!window.DefaultContractorOldReco && window.ContractorOldReco) {
                 window.DefaultContractorOldReco = window.ContractorOldReco;
             }
+            // ⚡ Concurrent load: Custom Old Reco & Custom SAP Stock from IndexedDB
             try {
-                if (typeof window.OldRecoImporterModule !== 'undefined') {
-                    const customOldReco = await window.OldRecoImporterModule.loadCustomOldRecoFromDb();
-                    if (customOldReco && customOldReco.byContractorNorm && Object.keys(customOldReco.byContractorNorm).length > 0) {
-                        window.ContractorOldReco = customOldReco;
-                        window.__customOldReco = customOldReco; // lazy default load ke baad yahi restore hoga
-                        this.hasCustomOldReco = true;
-                        console.log('[OldRecoImporter] Custom old reco loaded from IndexedDB:', customOldReco.meta);
-                    }
+                const [customOldReco, customStockJson] = await Promise.all([
+                    (typeof window.OldRecoImporterModule !== 'undefined' && typeof window.OldRecoImporterModule.loadCustomOldRecoFromDb === 'function')
+                        ? window.OldRecoImporterModule.loadCustomOldRecoFromDb().catch(e => { console.warn('[OldRecoImporter]', e); return null; })
+                        : Promise.resolve(null),
+                    (typeof BillingStorage !== 'undefined' && typeof BillingStorage.getItemAsync === 'function')
+                        ? BillingStorage.getItemAsync('billing_custom_sap_stock').catch(e => { console.warn('[StockImporter]', e); return null; })
+                        : Promise.resolve(null)
+                ]);
+
+                if (customOldReco && customOldReco.byContractorNorm && Object.keys(customOldReco.byContractorNorm).length > 0) {
+                    window.ContractorOldReco = customOldReco;
+                    window.__customOldReco = customOldReco; // lazy default load ke baad yahi restore hoga
+                    this.hasCustomOldReco = true;
+                    console.log('[OldRecoImporter] Custom old reco loaded from IndexedDB:', customOldReco.meta);
                 }
                 const editsJson = localStorage.getItem('billing_custom_old_reco_edits_v1');
                 if (editsJson) {
                     this.customOldRecoEdits = JSON.parse(editsJson);
                     this.hasCustomOldReco = true;
                 }
-            } catch (e) {
-                console.warn('[OldRecoImporter] Error loading custom old reco:', e);
-            }
-            // Preserve default built-in stock before loading custom stock
-            if (window.ContractorSapStock && !window.DefaultContractorSapStock) {
-                window.DefaultContractorSapStock = window.ContractorSapStock;
-            }
-            try {
-                if (typeof BillingStorage !== 'undefined') {
-                    const customStockJson = await BillingStorage.getItemAsync('billing_custom_sap_stock');
-                    if (customStockJson) {
-                        const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
-                        if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
-                            window.ContractorSapStock = customStock;
-                            window.__customSapStock = customStock;
-                            this.hasCustomStock = true;
-                            this.customStockMeta = customStock.meta;
-                            this.recoRevision = (this.recoRevision || 0) + 1;
-                            console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
-                        }
+
+                if (window.ContractorSapStock && !window.DefaultContractorSapStock) {
+                    window.DefaultContractorSapStock = window.ContractorSapStock;
+                }
+                if (customStockJson) {
+                    const customStock = typeof customStockJson === 'string' ? JSON.parse(customStockJson) : customStockJson;
+                    if (customStock && customStock.byContractorNorm && Object.keys(customStock.byContractorNorm).length > 0) {
+                        window.ContractorSapStock = customStock;
+                        window.__customSapStock = customStock;
+                        this.hasCustomStock = true;
+                        this.customStockMeta = customStock.meta;
+                        this.recoRevision = (this.recoRevision || 0) + 1;
+                        console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
                     }
                 }
             } catch (e) {
-                console.warn('[StockImporter] Error loading custom stock:', e);
+                console.warn('[Workspace] Concurrent custom data load failed:', e);
             }
             // ⚡ Heavy defaults (8.1MB SAP stock + 2.2MB old-reco) boot ke baad idle-time par load —
             // pehle 10.6MB parse-time blocking JS thi. Custom data ho to usi ko restore rakhte hain.
