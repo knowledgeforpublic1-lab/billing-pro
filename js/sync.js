@@ -1168,7 +1168,14 @@ window.SyncModule = {
             delete c.savedAt; delete c.baseRev;
             // Transport-only fields are absent from local snapshots.
             delete c.dataId; delete c.force;
-            const json = JSON.stringify(c);
+            // Object insertion order is not a change to bill contents.
+            const canonical = value => {
+                if (value && typeof value.toJSON === 'function') return canonical(value.toJSON());
+                if (Array.isArray(value)) return value.map(canonical);
+                if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));
+                return value;
+            };
+            const json = JSON.stringify(canonical(c));
             if (typeof window !== 'undefined' && typeof window.computeFullHash === 'function') {
                 return window.computeFullHash(json);
             }
@@ -1180,8 +1187,15 @@ window.SyncModule = {
             return json.length + ':' + (h >>> 0).toString(36);
         } catch(e) { return ''; }
     },
-    getSyncedHash() { try { return localStorage.getItem('lk_billing_synced_hash_v1') || ''; } catch(e) { return ''; } },
-    setSyncedHash(h) { try { if (h) localStorage.setItem('lk_billing_synced_hash_v1', h); } catch(e) {} },
+    getSyncedHash(billId) {
+        try {
+            const key = 'lk_billing_synced_hash_v2_' + (billId || this.activeBillId || 'main-billing-state');
+            return localStorage.getItem(key) || localStorage.getItem('lk_billing_synced_hash_v1') || '';
+        } catch(e) { return ''; }
+    },
+    setSyncedHash(h, billId) {
+        try { if (h) localStorage.setItem('lk_billing_synced_hash_v2_' + (billId || this.activeBillId || 'main-billing-state'), h); } catch(e) {}
+    },
     async backupConflictCopies() {
         const res = await fetch('/api/billing?dataId=' + encodeURIComponent(this.activeBillId || 'latest'));
         if (!res.ok) throw new Error('Cloud backup load nahi hua');
@@ -1217,7 +1231,15 @@ window.SyncModule = {
         this.cloudConflictDismissed = true;
     },
     syncToMongoNow(opts) { return this.syncToCloudNow(opts); },
-    async syncToCloudNow(opts) {
+    syncToCloudNow(opts) {
+        // Debounce, heartbeat and Save can all arrive while a POST is awaiting its revision.
+        if (this._cloudSyncPromise) return this._cloudSyncPromise.then(() => this.syncToCloudNow(opts));
+        const request = this.performCloudSync(opts);
+        this._cloudSyncPromise = request;
+        return request.finally(() => { if (this._cloudSyncPromise === request) this._cloudSyncPromise = null; });
+    },
+    async performCloudSync(opts) {
+        if (this._isLoading) return false;
         if (this.authReady === false || (this.authReady === true && !this.isPortalUnlocked)) return false;
         const manual = !!(opts && opts.manual);
         const force = !!(opts && opts.force);
@@ -1231,6 +1253,7 @@ window.SyncModule = {
         }
         try {
             const payload = this.buildSyncPayload(force ? { force: true } : {});
+            const billId = payload.dataId || this.activeBillId || 'main-billing-state';
             const json = JSON.stringify(payload);
             if (json.length > 4 * 1024 * 1024) {
                 this.syncStatus = 'error';
@@ -1239,7 +1262,7 @@ window.SyncModule = {
                 return false;
             }
             const hash = this.stableStateHash(payload);
-            if (hash === this.lastSentHash) {
+            if (!force && hash === this.lastSentHash) {
                 if (manual) this.showToast('Already synced — Refresh on other PC', '☁️');
                 return true;
             }
@@ -1247,7 +1270,8 @@ window.SyncModule = {
             const res = await fetch('/api/billing', {
                 method: 'POST',
                 headers: (() => { const h = { 'Content-Type': 'application/json' }; try { const k = localStorage.getItem('billing_api_key'); if (k) h['x-api-key'] = k; } catch(e){} return h; })(),
-                body: json
+                body: json,
+                ...(opts && opts.keepalive ? { keepalive: true } : {})
             });
             if (res.status === 423) {
                 this.syncStatus = 'local';
@@ -1267,26 +1291,36 @@ window.SyncModule = {
                 this._scheduleSyncRetry();
                 return false;
             }
+            let acknowledged = null;
             if (res.status === 409) {
                 let rj = null;
                 try { rj = await res.json(); } catch(e) {}
-                // Keep the revision this local snapshot was based on. Retrying
-                // with a newer revision would overwrite another device's work.
-                this.cloudConflict = true; this.cloudConflictDismissed = false;
-                this.syncStatus = 'error';
-                if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
-                this._syncRetryTimer = null;
-                this.showToast('Cloud par doosre changes hain. Automatic save roka gaya hai; local aur cloud copies compare karni hongi.', '⚠️');
-                return false;
+                // A response lost after a successful write can produce a stale revision
+                // on retry. Identical contents are already saved; no overwrite is needed.
+                if (rj && rj.conflict === true && rj.data && typeof rj.rev === 'number' && this.stableStateHash(rj.data) === hash) {
+                    acknowledged = { ...rj, success: true };
+                } else {
+                    if (this.activeBillId && this.activeBillId !== billId) return false;
+                    this.cloudConflict = true; this.cloudConflictDismissed = false;
+                    this.syncStatus = 'error';
+                    if (this._syncRetryTimer) clearTimeout(this._syncRetryTimer);
+                    this._syncRetryTimer = null;
+                    this.showToast('Cloud aur local copy alag hain. Automatic save roka gaya hai; pehle copies compare karein.', '⚠️');
+                    return false;
+                }
             }
-            if (!res.ok) {
+            if (!res.ok && !acknowledged) {
                 let srv = '';
                 try { const ej = await res.json(); if (ej && ej.error) srv = String(ej.error).slice(0, 140); } catch(e) {}
                 throw new Error('HTTP ' + res.status + (srv ? ' — ' + srv : ''));
             }
-            try { const okj = await res.json(); if (okj && typeof okj.rev === 'number') this.cloudRev = okj.rev; } catch(e) {}
+            const okj = acknowledged || await res.json();
+            if (!okj || okj.success === false || typeof okj.rev !== 'number') throw new Error('Cloud save confirmation missing');
+            this.setSyncedHash(hash, billId);
+            // A slow response for a previously opened bill must not change the new bill's revision.
+            if (this.activeBillId && this.activeBillId !== billId) return true;
+            this.cloudRev = okj.rev;
             this.lastSentHash = hash;
-            this.setSyncedHash(this.stableStateHash(payload));
             this.syncStatus = 'synced';
             this._syncRetryCount = 0;
             try {
@@ -1360,6 +1394,7 @@ window.SyncModule = {
         }
     },
     flushPendingSync() {
+        if (this._cloudSyncPromise || this._isLoading) return;
         try {
             if (this.cloudConflict) return;
             if (this._syncTimer) { clearTimeout(this._syncTimer); this._syncTimer = null; }
@@ -1385,14 +1420,13 @@ window.SyncModule = {
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
             if (json.length > 4 * 1024 * 1024) return;
-            let h = 0;
-            for (let i = 0; i < json.length; i += 97) { h = ((h * 31) + json.charCodeAt(i)) >>> 0; }
-            const hash = json.length + ':' + h;
+            const hash = this.stableStateHash(payload);
             if (hash === this.lastSentHash) return;
             try {
                 const headers = { 'Content-Type': 'application/json' };
                 try { const k = localStorage.getItem('billing_api_key'); if (k) headers['x-api-key'] = k; } catch(e) {}
-                fetch('/api/billing', { method: 'POST', headers, body: json, keepalive: true }).catch(() => {});
+                // Visibility change and unload share the same single-flight path as autosave.
+                this.syncToCloudNow({ keepalive: true }).catch(() => {});
             } catch(e) {}
         } catch(e) {}
     },
@@ -1503,6 +1537,7 @@ window.SyncModule = {
         }
     },
     async loadFromStorage(opts) {
+          this._loadedRev = undefined;
           if (typeof this.clearAllRecoColumnFilters === 'function') this.clearAllRecoColumnFilters();
           this._loadingContractorMapping = true;
           const forceServer = !!(opts && opts.forceServer);
@@ -1607,7 +1642,7 @@ window.SyncModule = {
               if (typeof this._loadedRev === 'number') { /* rev neeche har branch me adopt hoga */ }
           }
           let syncedHash = this.getSyncedHash();
-          if (serverHash && !syncedHash) { syncedHash = serverHash; this.setSyncedHash(serverHash); }
+          if (serverHash && !syncedHash && (!localRaw || localHash === serverHash)) { syncedHash = serverHash; this.setSyncedHash(serverHash); }
           const localDirty = !!(localRaw && localHash && serverHash && localHash !== serverHash && localHash !== syncedHash);
           const serverRevIsNewer = (typeof this._loadedRev === 'number' && typeof localRev === 'number' && this._loadedRev > localRev);
           if (serverRaw && !forceServer && localDirty) {
@@ -1615,10 +1650,11 @@ window.SyncModule = {
               raw = localRaw;
               fromMongo = false;
               if (typeof this._loadedRev === 'number') this.cloudRev = this._loadedRev;
-              if (serverRevIsNewer) {
+              if (serverRevIsNewer && (!syncedHash || serverHash !== syncedHash)) {
                   this.cloudConflict = true; this.cloudConflictDismissed = false;
                   try { this.showToast('Local quantities safe hain. Cloud par bhi changes hain — sync conflict resolve karna hoga.', '⚠️'); } catch(e) {}
               } else {
+                  this.cloudConflict = false; this.cloudConflictDismissed = false;
                   console.info('Unsynced local change mila — reload par local jeeta, cloud push retry hoga');
                   try { this.showToast('Unsaved changes found on this PC — saving to cloud...', '🔄'); } catch(e) {}
                   setTimeout(() => { try { this.syncToMongoNow({ manual: false }); } catch(e) {} }, 2000);
@@ -1649,9 +1685,7 @@ window.SyncModule = {
           this.syncStatus = this.cloudConflict ? 'error' : (fromMongo ? 'synced' : (serverRaw ? 'syncing' : 'local'));
           if (fromMongo && raw) {
               try {
-                  let h = 0;
-                  for (let i = 0; i < raw.length; i += 97) { h = ((h * 31) + raw.charCodeAt(i)) >>> 0; }
-                  this.lastSentHash = raw.length + ':' + h;
+                  this.lastSentHash = serverHash;
               } catch(e) {}
           }
           if (raw) {
