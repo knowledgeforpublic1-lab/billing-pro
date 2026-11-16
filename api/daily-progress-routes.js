@@ -7,6 +7,75 @@ const createService = require('./daily-progress-service');
 const createDrive = require('./daily-drive');
 const crypto = require('node:crypto');
 
+function normId(value) {
+    return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+}
+function loadScript(file, globalName) {
+    const sandbox = { window: {} };
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data', file), 'utf8'), sandbox);
+    return sandbox.window[globalName];
+}
+let publicContractorsCache = null;
+let stockCache = null;
+let mappingCache = null;
+function publicContractors() {
+    if (publicContractorsCache) return publicContractorsCache;
+    const raw = loadScript('default-contractors.js', 'defaultContractorsList') || loadScript('default-contractors.js', 'DefaultContractors') || [];
+    const seen = new Map();
+    for (const c of raw) {
+        const id = String((c && (c.id || c.name)) || '').trim();
+        const name = String((c && (c.name || c.firmName)) || '').trim();
+        if (!id || !name || seen.has(id)) continue;
+        seen.set(id, {
+            id,
+            name: name.slice(0, 200),
+            project: 'Gadchiroli (T-10)',
+            feeder: String((c && (c.feederName || c.feeder)) || '').slice(0, 200),
+            engineer: String((c && c.engineer) || '').slice(0, 200)
+        });
+    }
+    publicContractorsCache = [...seen.values()];
+    return publicContractorsCache;
+}
+function stockDatabase() {
+    if (stockCache) return stockCache;
+    stockCache = loadScript('contractor-sap-issues.js', 'ContractorSapStock') || { byContractorNorm: {} };
+    if (!stockCache.byContractorNorm) stockCache.byContractorNorm = {};
+    return stockCache;
+}
+function sapMapping() {
+    if (mappingCache) return mappingCache;
+    mappingCache = loadScript('default-sap-contractor-mapping.js', 'MasterSapCodeMapping') || loadScript('default-sap-contractor-mapping.js', 'DefaultSapContractorMapping') || { groups: {} };
+    return mappingCache;
+}
+function stockKeysForQuery(query) {
+    const byNorm = stockDatabase().byContractorNorm;
+    const mapping = sapMapping();
+    const q = normId(query);
+    if (!q) return [];
+    const keys = new Set();
+    if (byNorm[q]) keys.add(q);
+    const groups = (mapping && mapping.groups) || {};
+    for (const [gKey, group] of Object.entries(groups)) {
+        const names = [gKey, group && group.displayName, ...((group && group.rawNorms) || [])].map(normId).filter(Boolean);
+        if (!names.includes(q)) continue;
+        const wos = (group && group.wos) || [];
+        for (const [key, block] of Object.entries(byNorm)) {
+            if (names.includes(key) || (block && block.docHeader && wos.includes(block.docHeader))) keys.add(key);
+        }
+    }
+    for (const [key, block] of Object.entries(byNorm)) {
+        if (block && normId(block.contractorName) === q) keys.add(key);
+    }
+    if (!keys.size) {
+        for (const [key, block] of Object.entries(byNorm)) {
+            const name = normId(block && block.contractorName);
+            if (key.includes(q) || q.includes(key) || (name && (name.includes(q) || q.includes(name)))) keys.add(key);
+        }
+    }
+    return [...keys];
+}
+
 module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: providedSeed } = {}) {
     let seed = providedSeed;
     if (!seed) {
@@ -32,6 +101,27 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         next();
     }
     publicRouter.use(sameOrigin);
+
+    // Public, sanitized read-only data for the shareable /daily-progress.html page.
+    // No PAN, GSTIN, bank details or other contractor records are exposed.
+    publicRouter.get('/catalog', handle(async (req, res) => {
+        res.json({ success: true, contractors: publicContractors(), items });
+    }));
+    publicRouter.get('/stock/:contractorId', handle(async (req, res) => {
+        const query = String(req.params.contractorId || '').trim();
+        if (!query || query.length > 150 || !/^[\w .&(),'-]+$/.test(query)) {
+            return res.status(400).json({ success: false, error: 'Invalid contractor' });
+        }
+        const byNorm = stockDatabase().byContractorNorm;
+        const out = {};
+        for (const key of stockKeysForQuery(query)) {
+            const block = byNorm[key];
+            if (!block) continue;
+            out[key] = { contractorName: block.contractorName || '', materials: block.materials || {} };
+        }
+        res.json({ success: true, byContractorNorm: out });
+    }));
+
     publicRouter.use(async (req, res, next) => {
         try { req.dpContractor = await service.authorize(req.get('x-dp-link')); next(); }
         catch (e) { res.status(e.status || 503).json({ success: false, error: e.status ? e.message : 'Entry service unavailable' }); }

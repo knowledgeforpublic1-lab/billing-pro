@@ -219,3 +219,56 @@ test('Daily Progress Standalone Shared Link contractor matching with defaultCont
     const stock = mountedApp.getItemStock(item);
     assert.equal(stock.totalIssued, 10, 'Net Issue is 10 for Intally Dynamix');
 });
+
+test('Logged-out share link loads contractor name and net issue from the public sanitized API', async (t) => {
+    let mountedApp = null;
+    const sandbox = {
+        window: {
+            location: { search: '?contractor=saurabh_dehariya&date=2026-11-16', origin: 'https://billing-pro.local' }
+        },
+        document: { getElementById() { return {}; } },
+        localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
+        navigator: { clipboard: { writeText: async () => {} } },
+        fetch: async (url) => {
+            if (url.includes('/api/daily-entry/catalog')) {
+                return { ok: true, json: async () => ({
+                    success: true,
+                    contractors: [{ id: 'saurabh_dehariya', name: 'Saurabh Dehariya', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' }],
+                    items: [{ id: '1', code: '17000004', name: 'RSJ POLE 100X116 MM 9 MTR', unit: 'NO', row: 15 }]
+                }) };
+            }
+            if (url.includes('/api/daily-entry/stock/saurabh_dehariya')) {
+                return { ok: true, json: async () => ({
+                    success: true,
+                    byContractorNorm: {
+                        saurabhdehariya: {
+                            contractorName: 'Saurabh Dehariya',
+                            materials: { '17000004': { txns: [['2026-11-10', 100, 10], ['2026-11-20', 50, 0]] } }
+                        }
+                    }
+                }) };
+            }
+            return { ok: false, status: 401, json: async () => ({ success: false }) };
+        },
+        URLSearchParams: require('url').URLSearchParams,
+        Intl, Date, Math, Number, String, Array, Object, Map, Set, clearTimeout, setTimeout, console
+    };
+    sandbox.Vue = {
+        createApp(options) {
+            mountedApp = Object.assign({}, options.data(), options.methods, { $computed: options.computed });
+            for (const [k, fn] of Object.entries(options.computed)) {
+                Object.defineProperty(mountedApp, k, { get() { return fn.call(mountedApp); } });
+            }
+            return { mount() {} };
+        }
+    };
+    const js = fs.readFileSync(path.join(__dirname, '../js/daily-progress-standalone.js'), 'utf8');
+    vm.runInNewContext(js, sandbox);
+    await mountedApp.initData();
+
+    assert.equal(mountedApp.selectedContractorId, 'saurabh_dehariya');
+    assert.equal(mountedApp.activeContractor.name, 'Saurabh Dehariya', 'Contractor name loads without login');
+    assert.equal(mountedApp.items.length, 1, 'Materials load without login');
+    const stock = mountedApp.getItemStock(mountedApp.items[0]);
+    assert.equal(stock.totalIssued, 90, 'Net Issue loads without login and respects work date');
+});

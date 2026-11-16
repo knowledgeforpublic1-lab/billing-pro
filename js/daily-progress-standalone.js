@@ -45,6 +45,7 @@
                 selectedDate: queryDate || getTodayStr(),
                 selectedContractorId: queryContractor || defaultContractor.id,
                 items: seed.items || [],
+                sapStock: null,
                 contractors: [defaultContractor],
                 reports: [],
                 issues: [],
@@ -132,7 +133,7 @@
 
         watch: {
             selectedContractorId() {
-                this.loadReportForActiveDate();
+                this.ensureStock().then(() => this.loadReportForActiveDate());
             },
             selectedDate() {
                 this.loadReportForActiveDate();
@@ -190,8 +191,9 @@
                         }
                     }
 
-                    if (window.DefaultSapContractorMapping && window.DefaultSapContractorMapping.groups) {
-                        for (const [key, group] of Object.entries(window.DefaultSapContractorMapping.groups)) {
+                    const mappingGroups = (window.DefaultSapContractorMapping || window.MasterSapCodeMapping || {}).groups;
+                    if (mappingGroups) {
+                        for (const [key, group] of Object.entries(mappingGroups)) {
                             if (!contractorsMap.has(key) && group && group.displayName) {
                                 contractorsMap.set(key, {
                                     id: key,
@@ -201,6 +203,25 @@
                                     engineer: ''
                                 });
                             }
+                        }
+                    }
+
+                    // 1b. Public sanitized catalog (contractor names + materials) for logged-out share links.
+                    if (!this.items.length || this.contractors.length < 2) {
+                        try {
+                            const catRes = await fetch('/api/daily-entry/catalog', { cache: 'no-store' });
+                            if (catRes.ok) {
+                                const catalog = await catRes.json();
+                                if (catalog && catalog.success) {
+                                    if (Array.isArray(catalog.items) && catalog.items.length) this.items = catalog.items;
+                                    (catalog.contractors || []).forEach(c => {
+                                        const n = normId(c.id || c.name);
+                                        if (n && !contractorsMap.has(n)) contractorsMap.set(n, c);
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            console.info('[DailyProgressStandalone] Public catalog unavailable:', e.message);
                         }
                     }
 
@@ -277,11 +298,38 @@
                         }
                     }
 
+                    await this.ensureStock();
                     this.loadReportForActiveDate();
                 } catch (err) {
                     console.error('[DailyProgressStandalone] Init error:', err);
                 } finally {
                     this.busy = false;
+                }
+            },
+
+            async ensureStock() {
+                const actC = this.activeContractor || {};
+                const cid = actC.id || this.selectedContractorId || '';
+                if (!cid) return;
+                const cidNorm = normId(cid);
+                const cNameNorm = normId(actC.name || '');
+                const current = this.sapStock || window.ContractorSapStock;
+                const blocks = current && current.byContractorNorm ? current.byContractorNorm : null;
+                if (blocks && ((cidNorm && blocks[cidNorm]) || (cNameNorm && blocks[cNameNorm]))) return;
+                if (this._stockRequest === cidNorm) return;
+                this._stockRequest = cidNorm;
+                try {
+                    const res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
+                    if (!res.ok) return;
+                    const payload = await res.json();
+                    if (payload && payload.success && payload.byContractorNorm) {
+                        const existing = (this.sapStock || window.ContractorSapStock || {}).byContractorNorm || {};
+                        this.sapStock = { byContractorNorm: { ...existing, ...payload.byContractorNorm } };
+                    }
+                } catch (e) {
+                    console.info('[DailyProgressStandalone] Public stock unavailable:', e.message);
+                } finally {
+                    this._stockRequest = '';
                 }
             },
 
@@ -354,7 +402,7 @@
                 const code = String(item.code || '').trim();
 
                 let sapIssued = 0;
-                const sapStock = window.ContractorSapStock;
+                const sapStock = this.sapStock || window.ContractorSapStock;
                 if (sapStock && code) {
                     // Try to find contractor in stock
                     let contractorBlock = null;
@@ -365,7 +413,7 @@
                             contractorBlock = sapStock.byContractorNorm[cNameNorm];
                         } else {
                             // Check alias groups in DefaultSapContractorMapping
-                            const mapGroups = window.DefaultSapContractorMapping?.groups || {};
+                            const mapGroups = (window.DefaultSapContractorMapping || window.MasterSapCodeMapping || {}).groups || {};
                             for (const [gKey, group] of Object.entries(mapGroups)) {
                                 const gNorm = normId(gKey);
                                 const dNorm = normId(group.displayName || '');

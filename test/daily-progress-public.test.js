@@ -123,3 +123,36 @@ test('link revocation, validation and API boundary protect other contractors/adm
         assert.equal((await routes.service.authorize(replacement.token)).id, 'a');
     } finally { await new Promise(resolve => server.close(resolve)); }
 });
+test('public catalog and contractor stock are served without login and never expose confidential fields', async () => {
+    const f = fixture();
+    const routes = createRoutes({ db: f.db, drive: f.drive, seed: { items: f.items }, auth: { requireAdmin(req, res, next) { next(); } } });
+    const app = express();
+    app.use('/api/daily-entry', routes.publicRouter);
+    app.use('/api', (req, res) => res.status(401).json({ error: 'Login required' }));
+    const server = app.listen(0, '127.0.0.1');
+    await new Promise(resolve => server.once('listening', resolve));
+    const origin = 'http://127.0.0.1:' + server.address().port;
+    try {
+        const catalogRes = await fetch(origin + '/api/daily-entry/catalog');
+        assert.equal(catalogRes.status, 200);
+        const catalog = await catalogRes.json();
+        assert.equal(catalog.success, true);
+        assert.ok(catalog.items.length > 0, 'Materials are available without login');
+        const saurabh = catalog.contractors.find(c => c.id === 'saurabh_dehariya');
+        assert.ok(saurabh, 'Contractor name is available without login');
+        assert.deepEqual(Object.keys(saurabh).sort(), ['engineer', 'feeder', 'id', 'name', 'project']);
+        assert.ok(!/"pan"|"gstin"|"bankAccount|"bankIfsc"/i.test(JSON.stringify(catalog)), 'No confidential contractor fields');
+
+        const stockRes = await fetch(origin + '/api/daily-entry/stock/saurabh_dehariya');
+        assert.equal(stockRes.status, 200);
+        const stock = await stockRes.json();
+        const keys = Object.keys(stock.byContractorNorm);
+        assert.ok(keys.length > 0, 'Contractor stock block is available without login');
+        const block = stock.byContractorNorm[keys[0]];
+        assert.equal(block.contractorName, 'Saurabh Dehariya');
+        assert.ok(block.materials['17000004'], 'Material issue ledger present');
+        assert.equal(block.docHeader, undefined);
+        assert.equal(block.vendorCode, undefined);
+        assert.equal((await fetch(origin + '/api/daily-entry/stock/' + encodeURIComponent('<script>'))).status, 400);
+    } finally { await new Promise(resolve => server.close(resolve)); }
+});
