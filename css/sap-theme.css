@@ -3703,3 +3703,37 @@ table.pro-table-typo th div {
     transform: scale(1.04);
   }
 }
+
+/* Desktop navigation stays visible; sidebar controls belong to the mobile layout. */
+@media (min-width: 769px) {
+  .sidebar-toggle-btn,
+  .sidebar-hide-btn { display: none !important; }
+}
+@media (max-width: 768px) {
+  .sidebar:not(.collapsed) {
+    display: block !important;
+    position: fixed;
+    top: 3.75rem;
+    bottom: 0;
+    left: 0;
+    height: calc(100dvh - 3.75rem) !important;
+    z-index: 1200;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.2);
+  }
+}
+.sysbar .portal-logout-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 30px;
+  padding: 4px 10px !important;
+  font-size: 0.74rem !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.portal-lock-overlay .portal-auth-card {
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto !important;
+}

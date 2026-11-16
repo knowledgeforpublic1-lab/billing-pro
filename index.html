@@ -103,7 +103,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
-<link rel="stylesheet" href="css/sap-theme.css?v=20261111_typo_ramp_2">
+<link rel="stylesheet" href="css/sap-theme.css?v=20261116_auth_layout">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261116_mobile_menu">
 </head>
 
@@ -295,7 +295,7 @@
                     <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN {{ formatTimerDisplay(adminElevatedSecondsLeft) }}</span>
                 </span>
                 <button type="button" class="btn btn-secondary sidebar-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Show Sidebar Menu (☰)' : 'Hide Sidebar Menu (◀)'" style="padding: 4px 8px; font-size: 0.74rem; font-weight: 700; margin-right: 4px;">{{ sidebarCollapsed ? '☰ Menu' : '◀ Hide' }}</button>
-                <button v-if="isPortalUnlocked" type="button" class="btn btn-secondary" :disabled="authBusy" @click="logoutPortal" title="Save current work and log out" style="padding: 4px 8px; font-size: 0.74rem;">Logout</button>
+                <button v-if="isPortalUnlocked" type="button" class="btn btn-secondary portal-logout-btn" :disabled="authBusy" @click="logoutPortal" title="Save current work and log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h10"/></svg><span>{{ authBusy ? 'Please wait…' : 'Logout' }}</span></button>
             </div>
         </div>
 
@@ -308,7 +308,7 @@
             <aside class="sidebar no-print" :class="{ 'collapsed': sidebarCollapsed }" v-show="!sidebarCollapsed">
                 <div class="sidebar-collapse-bar" style="padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2);">
                     <span style="font-size: 0.65rem; font-weight: 800; color: #888; text-transform: uppercase;">NAVIGATION</span>
-                    <button type="button" @click="sidebarCollapsed = true" class="tbtn" title="Hide Left Menu (Full Screen Width)" style="padding: 2px 6px; font-size: 0.68rem; font-weight: 700;">◀ Hide</button>
+                    <button type="button" @click="sidebarCollapsed = true" class="tbtn sidebar-hide-btn" title="Hide Left Menu (Full Screen Width)" style="padding: 2px 6px; font-size: 0.68rem; font-weight: 700;">◀ Hide</button>
                 </div>
                 <div class="sgroup">Billing Workspace</div>
                 <a href="#" :class="{ 'on': currentView === 'dashboard' || currentView === 'summary' }" @click.prevent="switchView('dashboard')"><span class="ico">📊</span><span>Dashboard</span></a>
@@ -4509,7 +4509,7 @@
     <script defer src="js/daily-progress.js?v=20261116_access_v2"></script>
     <script defer src="js/daily-progress-access.js?v=20261116_access_v2"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261116_mobile_menu"></script>
+    <script defer src="js/core/app.js?v=20261116_desktop_sidebar"></script>
 </body>
 
 </html>

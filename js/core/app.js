@@ -2141,13 +2141,11 @@
 
         async mounted() {
             this.applyTheme();
-            if (this.currentView === 'dailyProgress') {
-                this.sidebarCollapsed = window.matchMedia('(max-width: 768px)').matches;
-            }
+            this.sidebarCollapsed = window.matchMedia('(max-width: 768px)').matches;
             try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
             try {
                 this._alvSchedule = () => {
-                    if (this.currentView === 'dailyProgress' && !window.matchMedia('(max-width: 768px)').matches) {
+                    if (!window.matchMedia('(max-width: 768px)').matches) {
                         this.sidebarCollapsed = false;
                     }
                     if (this._alvRaf) return;

@@ -1,2 +1,52 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Billing Pro · Login</title><link rel="stylesheet" href="/css/daily-entry.css?v=20261116"><script defer src="/js/portal-login.js?v=20261116"></script></head><body><main style="max-width:480px;padding-top:12vh"><section><p class="eyebrow">BILLING PRO</p><h1>Login required</h1><p>Billing aur saved records sirf authorized users ke liye hain.</p><form id="login"><label>Password<input type="password" id="password" autocomplete="current-password" required></label><button type="submit" style="margin-top:16px">Login</button></form><p id="status" role="status" aria-live="polite"></p><button id="reset" type="button">Forgot password</button></section></main></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Billing Pro · Login required</title>
+    <link rel="stylesheet" href="/css/style.css?v=20261116">
+    <link rel="stylesheet" href="/css/sap-theme.css?v=20261116_auth_layout">
+    <link rel="stylesheet" href="/css/portal-login.css?v=20261116">
+    <script defer src="/js/portal-login.js?v=20261116_layout"></script>
+</head>
+<body>
+    <main class="portal-lock-overlay">
+        <div class="portal-bg-canvas" aria-hidden="true">
+            <div class="portal-bg-grid"></div>
+            <div class="portal-orb portal-orb-1"></div>
+            <div class="portal-orb portal-orb-2"></div>
+            <div class="portal-orb portal-orb-3"></div>
+            <div class="portal-orb portal-orb-4"></div>
+            <div class="portal-particles"></div>
+        </div>
+        <section class="portal-auth-card" aria-labelledby="portal-title">
+            <div class="portal-login-logo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polygon points="12 2 2 8.5 2 15.5 12 22 22 15.5 22 8.5"/>
+                    <circle cx="12" cy="12" r="3" stroke="#fff"/>
+                    <path d="M12 2v7M12 15v7M2 8.5l6 3.5M16 12l6-3.5"/>
+                </svg>
+            </div>
+            <h1 id="portal-title" class="portal-login-title">Billing<span>Pro</span> <small>6.0</small></h1>
+            <p class="portal-login-project">RDSS T-10 GADCHIROLI</p>
+            <div class="portal-login-profile">
+                <span class="portal-login-avatar">RK</span>
+                <div><strong>Rakesh Kushawaha</strong><span>Billing Engineer · Portal Access</span></div>
+                <span aria-hidden="true">🔒</span>
+            </div>
+            <form id="login">
+                <label class="portal-login-label" for="password">Portal Password</label>
+                <div class="portal-login-password">
+                    <span aria-hidden="true">🔑</span>
+                    <input type="password" id="password" name="password" maxlength="256" autocomplete="current-password" autocapitalize="off" spellcheck="false" placeholder="Enter Password..." autofocus required>
+                    <button type="button" id="show-password" title="Show Password" aria-label="Show Password" aria-pressed="false">👁️</button>
+                </div>
+                <p id="status" class="portal-login-status" role="status" aria-live="polite" hidden></p>
+                <button id="login-submit" class="portal-login-submit" type="submit">🔓 Unlock Portal &amp; Begin Work</button>
+                <button id="reset" class="portal-login-reset" type="button">Forgot password?</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
