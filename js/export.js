@@ -291,7 +291,8 @@ window.ExportModule = {
         // Title Row
         ws.mergeCells(1, 1, 1, totalCols);
         const r1 = ws.getCell(1, 1);
-        const stockDateSuffix = this.stockUpdatedDate ? ` (STOCK AS ON: ${this.stockUpdatedDate})` : '';
+        const asOnDisplay = this.stockAsOnDate ? (typeof this.formatDisplayDate === 'function' ? this.formatDisplayDate(this.stockAsOnDate) : this.stockAsOnDate) : this.stockUpdatedDate;
+        const stockDateSuffix = asOnDisplay ? ` (STOCK AS ON: ${asOnDisplay})` : '';
         r1.value = `${this.getContractorDisplayName().toUpperCase()} MATERIAL RECONCILIATION SHEET${stockDateSuffix}`;
         r1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
         r1.alignment = { horizontal: 'center', vertical: 'middle' };

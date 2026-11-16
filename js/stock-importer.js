@@ -44,6 +44,28 @@ window.StockImporterModule = {
             .trim();
     },
 
+    parseDateToYmd(val) {
+        if (!val) return '';
+        if (typeof val === 'string') {
+            const s = val.trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+            if (m) {
+                return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+            }
+        }
+        const n = Number(val);
+        if (!isNaN(n) && n > 30000 && n < 70000) {
+            const ms = Math.round((n - 25569) * 86400 * 1000);
+            const d = new Date(ms);
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+        }
+        if (val instanceof Date && !isNaN(val.getTime())) {
+            return val.toISOString().slice(0, 10);
+        }
+        return '';
+    },
+
     /**
      * Parses an uploaded Excel ArrayBuffer into the standard ContractorSapStock object.
      * @param {ArrayBuffer} arrayBuffer
@@ -217,10 +239,12 @@ window.StockImporterModule = {
             const descCell = s1['J' + r];
             const uomCell = s1['K' + r];
             const qtyCell = s1['L' + r];
+            const dateCell = s1['D' + r] || s1['C' + r];
 
             const desc = descCell ? String(descCell.v).trim() : mat;
             const uom = uomCell ? String(uomCell.v).trim() : 'No';
             const qty = qtyCell ? Number(qtyCell.v) || 0 : 0;
+            const dt = this.parseDateToYmd(dateCell ? dateCell.v : null) || '2026-11-11';
 
             if (!groupMaterials[key]) groupMaterials[key] = {};
             if (!groupMaterials[key][mat]) {
@@ -230,7 +254,8 @@ window.StockImporterModule = {
                     uom,
                     grossIssue: 0,
                     mrnReturn: 0,
-                    issuedQty: 0
+                    issuedQty: 0,
+                    daily: {}
                 };
             }
 
@@ -240,6 +265,14 @@ window.StockImporterModule = {
                 groupMaterials[key][mat].mrnReturn += Math.abs(qty);
             }
             groupMaterials[key][mat].issuedQty += qty;
+
+            if (!groupMaterials[key][mat].daily) groupMaterials[key][mat].daily = {};
+            if (!groupMaterials[key][mat].daily[dt]) groupMaterials[key][mat].daily[dt] = [0, 0];
+            if (qty > 0) {
+                groupMaterials[key][mat].daily[dt][0] += qty;
+            } else if (qty < 0) {
+                groupMaterials[key][mat].daily[dt][1] += Math.abs(qty);
+            }
         }
 
         return this.buildOutputRecord(groups, dhToGroupKey, groupMaterials, matchedTxns, sapCodeSheetName ? 'Full SAP Dump (with SAP Code sheet)' : 'SAP Transaction Dump (Master SAP Code Mapping)');
@@ -449,6 +482,13 @@ window.StockImporterModule = {
                 const net = Math.round(item.issuedQty * 1000) / 1000;
 
                 if (gross !== 0 || mrn !== 0 || net !== 0) {
+                    const sortedDates = Object.keys(item.daily || {}).sort();
+                    const txns = sortedDates.map(d => [
+                        d,
+                        Math.round(item.daily[d][0] * 1000) / 1000,
+                        Math.round(item.daily[d][1] * 1000) / 1000
+                    ]);
+
                     cleanMats[code] = {
                         code: item.code,
                         desc: item.desc,
@@ -456,7 +496,8 @@ window.StockImporterModule = {
                         grossIssue: gross,
                         mrnReturn: mrn,
                         netIssue: net,
-                        issuedQty: net
+                        issuedQty: net,
+                        txns: txns
                     };
                     totalGross += gross;
                     totalMrn += mrn;
@@ -625,6 +666,35 @@ window.StockImporterModule = {
             this.showToast('Failed to process stock Excel: ' + (err.message || 'Unknown error'), 'Alert');
         } finally {
             this.stockUploading = false;
+        }
+    },
+
+    onStockAsOnDateChange() {
+        this.recoRevision = (this.recoRevision || 0) + 1;
+        if (this.stockAsOnDate) {
+            const disp = this.formatDisplayDate(this.stockAsOnDate);
+            this.showToast(`📅 Stock filtered as-on ${disp}`, 'Check');
+        }
+    },
+
+    formatDisplayDate(ymd) {
+        if (!ymd) return '';
+        const parts = String(ymd).split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return ymd;
+    },
+
+    async resetStockDateAndDefault() {
+        if (this.stockAsOnDate) {
+            this.stockAsOnDate = '';
+            this.recoRevision = (this.recoRevision || 0) + 1;
+            this.showToast('↺ Stock date filter reset — Showing latest stock data', 'Check');
+            return;
+        }
+        if (this.hasCustomStock) {
+            await this.resetToDefaultStock();
         }
     },
 

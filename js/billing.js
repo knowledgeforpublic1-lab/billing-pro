@@ -12,20 +12,77 @@ window.BillingModule = {
     getContractorSapIssues() {
         const _rev = this.recoRevision;
         const _cust = this.hasCustomStock;
+        const _asOn = this.stockAsOnDate;
         const stock = window.ContractorSapStock;
         if (!stock) return null;
 
-        const cacheKey = (this.selectedContractorId || '') + '__' + (this.selectedContractorName || '') + '__' + (_rev || 0) + '__' + (_cust ? '1' : '0');
+        const cacheKey = (this.selectedContractorId || '') + '__' + (this.selectedContractorName || '') + '__' + (_rev || 0) + '__' + (_cust ? '1' : '0') + '__' + (_asOn || '');
         if (this._memoContractorSap && this._memoContractorSapKey === cacheKey) {
             return this._memoContractorSap;
         }
 
-        let result = null;
+        const filterRecordByDate = (rec, asOnDate) => {
+            if (!rec || !asOnDate) return rec;
+            const filteredMats = {};
+            let totalGross = 0;
+            let totalMrn = 0;
+            let totalNet = 0;
+
+            for (const [code, mat] of Object.entries(rec.materials || {})) {
+                if (!mat.txns || mat.txns.length === 0) {
+                    filteredMats[code] = mat;
+                    totalGross += Number(mat.grossIssue || 0);
+                    totalMrn += Number(mat.mrnReturn || 0);
+                    totalNet += Number(mat.netIssue !== undefined ? mat.netIssue : (mat.issuedQty || 0));
+                    continue;
+                }
+
+                let mGross = 0;
+                let mMrn = 0;
+                for (const [dt, g, m] of mat.txns) {
+                    if (dt <= asOnDate) {
+                        mGross += Number(g || 0);
+                        mMrn += Number(m || 0);
+                    }
+                }
+                mGross = Math.round(mGross * 1000) / 1000;
+                mMrn = Math.round(mMrn * 1000) / 1000;
+                const netRound = Math.round((mGross - mMrn) * 1000) / 1000;
+
+                if (mGross !== 0 || mMrn !== 0 || netRound !== 0) {
+                    filteredMats[code] = {
+                        code: mat.code,
+                        desc: mat.desc,
+                        uom: mat.uom,
+                        grossIssue: mGross,
+                        mrnReturn: mMrn,
+                        netIssue: netRound,
+                        issuedQty: netRound,
+                        txns: mat.txns
+                    };
+                    totalGross += mGross;
+                    totalMrn += mMrn;
+                    totalNet += netRound;
+                }
+            }
+
+            return {
+                ...rec,
+                materialCount: Object.keys(filteredMats).length,
+                totalGrossIssue: Math.round(totalGross * 1000) / 1000,
+                totalMrnReturn: Math.round(totalMrn * 1000) / 1000,
+                totalNetIssue: Math.round(totalNet * 1000) / 1000,
+                materials: filteredMats,
+                isAsOnFiltered: true,
+                asOnDate: asOnDate
+            };
+        };
 
         const setMemo = (val) => {
+            const finalVal = filterRecordByDate(val, _asOn);
             this._memoContractorSapKey = cacheKey;
-            this._memoContractorSap = val;
-            return val;
+            this._memoContractorSap = finalVal;
+            return finalVal;
         };
 
         // 0. Direct match by selectedContractorId
@@ -77,7 +134,7 @@ window.BillingModule = {
             return setMemo(stock.byContractorNorm[norm]);
         }
         if (rawNorm && stock.byContractorNorm[rawNorm]) {
-            return stock.byContractorNorm[rawNorm];
+            return setMemo(stock.byContractorNorm[rawNorm]);
         }
 
         function normStem(s) {

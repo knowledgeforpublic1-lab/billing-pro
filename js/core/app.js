@@ -399,6 +399,7 @@
                 editingContractorId: null,
                 stockUploading: false,
                 hasCustomStock: false,
+                stockAsOnDate: '',
                 customStockMeta: null,
                 oldRecoUploading: false,
                 showOldRecoModal: false,
@@ -726,6 +727,7 @@
             },
             pivotReconciliationData() {
                 const _rev = this.recoRevision;
+                const _asOn = this.stockAsOnDate;
                 const sapMap = {}; // mapping by sap code
                 const allActivityKeys = new Set();
                 
@@ -1131,6 +1133,7 @@
                 const _rev = this.recoRevision;
                 const _cust = this.hasCustomStock;
                 const _meta = this.customStockMeta;
+                const _asOn = this.stockAsOnDate;
                 return (typeof this.getContractorSapIssues === 'function') ? this.getContractorSapIssues() : null;
             },
             currentContractorSapInfo() {
@@ -1143,6 +1146,13 @@
             currentContractorSapCount() {
                 const s = this.currentContractorSap;
                 return s && s.materials ? Object.keys(s.materials).length : 0;
+            },
+            todayDateStr() {
+                const d = new Date();
+                const yr = d.getFullYear();
+                const mo = String(d.getMonth() + 1).padStart(2, '0');
+                const da = String(d.getDate()).padStart(2, '0');
+                return `${yr}-${mo}-${da}`;
             },
             stockUpdatedDate() {
                 const _rev = this.recoRevision;

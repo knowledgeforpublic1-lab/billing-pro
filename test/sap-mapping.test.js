@@ -201,9 +201,52 @@ function testStockUploadWithoutSapCodeSheet() {
     console.log('Stock import without SAP Code sheet (using MasterSapCodeMapping) passed.');
 }
 
+function testStockAsOnDateFiltering() {
+    require('../js/data/contractor-sap-issues.js');
+    require('../js/billing.js');
+    const app = Object.assign({
+        recoRevision: 0,
+        hasCustomStock: false,
+        stockAsOnDate: '',
+        selectedContractorId: '31007012',
+        contractorsList: [{ id: '31007012', name: 'Parth Enterprises', workOrderNo: '31007012' }],
+        _memoContractorSap: null,
+        _memoContractorSapKey: null
+    }, window.BillingModule);
+
+    const fullRecord = app.getContractorSapIssues();
+    assert.ok(fullRecord, 'Must find contractor Parth Enterprises in stock');
+    assert.ok(fullRecord.totalGrossIssue > 100000, 'Must have full lifetime gross issue');
+
+    // Filter as-on 2026-11-01
+    app.stockAsOnDate = '2026-11-01';
+    app.recoRevision++;
+    const novRecord = app.getContractorSapIssues();
+    assert.equal(novRecord.isAsOnFiltered, true);
+    assert.ok(novRecord.totalGrossIssue <= fullRecord.totalGrossIssue);
+
+    // Filter earlier date 2026-07-01
+    app.stockAsOnDate = '2026-07-01';
+    app.recoRevision++;
+    const julyRecord = app.getContractorSapIssues();
+    assert.ok(julyRecord.totalGrossIssue < novRecord.totalGrossIssue);
+    assert.ok(julyRecord.materialCount < novRecord.materialCount);
+
+    // Reset date filter
+    app.stockAsOnDate = '';
+    app.recoRevision++;
+    const resetRecord = app.getContractorSapIssues();
+    assert.equal(resetRecord.totalGrossIssue, fullRecord.totalGrossIssue);
+    assert.equal(resetRecord.totalNetIssue, fullRecord.totalNetIssue);
+    assert.equal(resetRecord.materialCount, fullRecord.materialCount);
+
+    console.log('Stock As-On Date filtering and reset calculation passed.');
+}
+
 async function runAll() {
     await checkAllSchedules();
     testStockUploadWithoutSapCodeSheet();
+    testStockAsOnDateFiltering();
 }
 runAll().catch(err => { console.error(err); process.exitCode = 1; });
 

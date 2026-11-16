@@ -457,10 +457,27 @@
                                 <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock' }}</span>
                                 <span v-if="hasCustomStock" style="font-size: 0.62rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; margin-left: 2px;">CUSTOM</span>
                             </button>
-                            <span v-if="stockUpdatedDate" style="font-size: 0.68rem; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;" :title="'Stock database last updated: ' + stockUpdatedDate">
-                                📅 {{ stockUpdatedDate }}
-                            </span>
-                            <button v-if="hasCustomStock" type="button" @click="resetToDefaultStock" title="Reset to default built-in stock database" style="height: 26px; padding: 0 8px; font-size: 0.72rem; font-weight: 700; border: none; background: transparent; color: #dc2626; cursor: pointer;">
+                            <div class="stock-as-on-date-wrap" style="position: relative; display: inline-flex; align-items: center;" :title="stockAsOnDate ? ('Stock As-On: ' + formatDisplayDate(stockAsOnDate) + ' (Click to change date)') : 'Stock As-On Date chunein — is date tak ka stock calculate hoga (Click to change)'">
+                                <input type="date"
+                                       v-model="stockAsOnDate"
+                                       @change="onStockAsOnDateChange"
+                                       :max="todayDateStr"
+                                       style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
+                                       title="Date select karein: is date tak ka material issue calculate hoga">
+                                <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"
+                                      :style="stockAsOnDate ? 'background: #2563eb; color: #ffffff; border-color: #60a5fa;' : ''">
+                                    <span>📅</span>
+                                    <span>{{ stockAsOnDate ? formatDisplayDate(stockAsOnDate) : stockUpdatedDate }}</span>
+                                    <span v-if="stockAsOnDate" style="font-size: 0.58rem; background: #fbbf24; color: #000; padding: 0 4px; border-radius: 3px; font-weight: 900; letter-spacing: 0.3px;">AS-ON</span>
+                                </span>
+                            </div>
+                            <button v-if="stockAsOnDate || hasCustomStock"
+                                    type="button"
+                                    @click="resetStockDateAndDefault"
+                                    :title="stockAsOnDate ? 'Date filter reset karein — latest stock wapas dikhayein' : 'Reset to default built-in stock database'"
+                                    style="height: 26px; padding: 0 8px; font-size: 0.74rem; font-weight: 800; border: none; background: rgba(220, 38, 38, 0.12); border-radius: 4px; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                    onmouseover="this.style.background='rgba(220,38,38,0.25)'"
+                                    onmouseout="this.style.background='rgba(220,38,38,0.12)'">
                                 <span>↺</span>
                             </button>
                         </div>
@@ -1877,7 +1894,7 @@
                             <tr>
                                 <th :colspan="9 + (reconColCount || 0)" style="background: linear-gradient(90deg, #1e1b4b 0%, #1e293b 50%, #1e1b4b 100%); color: #ffffff; text-align: center; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.7px; padding: 9px 14px; border: none; text-transform: uppercase; border-bottom: 2px solid rgba(99, 102, 241, 0.4);">
                                     {{ getContractorDisplayName() }} MATERIAL RECONCILIATION SHEET
-                                    <span v-if="stockUpdatedDate" style="font-size: 0.74rem; font-weight: 600; color: #93c5fd; opacity: 0.9; margin-left: 10px; text-transform: none; letter-spacing: 0.3px;">(Stock As On: {{ stockUpdatedDate }})</span>
+                                    <span v-if="stockAsOnDate || stockUpdatedDate" style="font-size: 0.74rem; font-weight: 600; color: #93c5fd; opacity: 0.9; margin-left: 10px; text-transform: none; letter-spacing: 0.3px;">(Stock As On: {{ stockAsOnDate ? formatDisplayDate(stockAsOnDate) : stockUpdatedDate }})</span>
                                 </th>
                             </tr>
                             <tr>

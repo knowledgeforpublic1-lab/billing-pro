@@ -22,6 +22,28 @@ function normRawKey(n) {
     .trim();
 }
 
+function parseDateToYmd(val) {
+  if (!val) return '';
+  if (typeof val === 'string') {
+    const s = val.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    }
+  }
+  const n = Number(val);
+  if (!isNaN(n) && n > 30000 && n < 70000) {
+    const ms = Math.round((n - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  }
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return val.toISOString().slice(0, 10);
+  }
+  return '';
+}
+
 function findLatestStockFile() {
   const candidates = [
     path.join(__dirname, '..', 'stock.xlsx'),
@@ -185,6 +207,8 @@ async function buildStockIndex() {
       const desc = String(row.getCell(10).value || '').trim();
       const uom = String(row.getCell(11).value || '').trim();
       const qty = Number(row.getCell(12).value || 0);
+      const rawDt = row.getCell(4).value || row.getCell(3).value;
+      const dt = parseDateToYmd(rawDt) || '2026-11-11';
 
       if (!dh || !mat) continue;
 
@@ -205,7 +229,8 @@ async function buildStockIndex() {
           uom: uom,
           grossIssue: 0,
           mrnReturn: 0,
-          issuedQty: 0
+          issuedQty: 0,
+          daily: {}
         };
       }
 
@@ -215,6 +240,15 @@ async function buildStockIndex() {
         groupMaterials[key][mat].mrnReturn += Math.abs(qty);
       }
       groupMaterials[key][mat].issuedQty += qty;
+
+      if (!groupMaterials[key][mat].daily[dt]) {
+        groupMaterials[key][mat].daily[dt] = [0, 0];
+      }
+      if (qty > 0) {
+        groupMaterials[key][mat].daily[dt][0] += qty;
+      } else if (qty < 0) {
+        groupMaterials[key][mat].daily[dt][1] += Math.abs(qty);
+      }
     }
   }
 
@@ -245,6 +279,13 @@ async function buildStockIndex() {
       const net = Math.round(item.issuedQty * 1000) / 1000;
 
       if (gross !== 0 || mrn !== 0 || net !== 0) {
+        const sortedDates = Object.keys(item.daily || {}).sort();
+        const txns = sortedDates.map(d => [
+          d,
+          Math.round(item.daily[d][0] * 1000) / 1000,
+          Math.round(item.daily[d][1] * 1000) / 1000
+        ]);
+
         cleanMats[code] = {
           code: item.code,
           desc: item.desc,
@@ -252,7 +293,8 @@ async function buildStockIndex() {
           grossIssue: gross,
           mrnReturn: mrn,
           netIssue: net,
-          issuedQty: net
+          issuedQty: net,
+          txns: txns
         };
         totalGross += gross;
         totalMrn += mrn;
