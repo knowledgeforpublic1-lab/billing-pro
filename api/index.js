@@ -752,9 +752,37 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
     }
 });
 
-// Legacy whole-dataset writes lose concurrent users' changes. Use scoped report APIs.
-app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/dp-admin/data'));
-app.post('/api/daily-progress', (req, res) => res.status(409).json({ success: false, error: 'Whole-dataset saves disabled. Reload and use per-report save.' }));
+// Dedicated Daily Progress Data API — completely isolated from Billing state
+app.get('/api/daily-progress/data', async (req, res) => {
+    try {
+        const legacy = await db.getDefaultConfig('dailyProgressData');
+        res.json({ success: true, data: legacy?.data || legacy || null });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req, res) => {
+    try {
+        const payload = req.body && req.body.data !== undefined ? req.body.data : req.body;
+        if (!payload || typeof payload !== 'object') {
+            return res.status(400).json({ success: false, error: 'Invalid payload' });
+        }
+        await db.saveDefaultConfig('dailyProgressData', { data: payload, updatedAt: new Date().toISOString() });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));
+app.post('/api/daily-progress', express.json({ limit: '15mb' }), async (req, res) => {
+    try {
+        const payload = req.body && req.body.data !== undefined ? req.body.data : req.body;
+        await db.saveDefaultConfig('dailyProgressData', { data: payload, updatedAt: new Date().toISOString() });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 
 // POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {

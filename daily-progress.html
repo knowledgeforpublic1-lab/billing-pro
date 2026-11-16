@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Progress Register | Site Diary — RDSS T-10 GADCHIROLI</title>
+    <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/daily-standalone.css?v=20261116_v2">
+</head>
+
+<body>
+    <div id="app" class="shell" v-cloak>
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-icon">📅</span>
+                <div>
+                    Site<span class="brand-light">Diary</span>
+                    <small>Daily Progress Register</small>
+                </div>
+            </div>
+
+            <div class="workspace-chip">
+                <span>🏢</span>
+                <div>
+                    {{ activeContractor.project || 'Gadchiroli (T-10)' }}
+                    <small>Feeder: {{ activeContractor.feeder || 'ANGARA' }}</small>
+                </div>
+            </div>
+
+            <div class="nav-label">SECTIONS</div>
+            <nav>
+                <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'">
+                    <span>⚡</span><span>Daily Entry</span>
+                    <span v-if="currentTab === 'entry'" class="active-dot"></span>
+                </button>
+                <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'">
+                    <span>📦</span><span>Material &amp; Stock</span>
+                    <span v-if="currentTab === 'stock'" class="active-dot"></span>
+                </button>
+                <button type="button" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'">
+                    <span>📋</span><span>Report History</span>
+                    <span class="active-dot" style="background:#64748b;" v-if="contractorReports.length"></span>
+                </button>
+                <button type="button" :class="{ active: currentTab === 'download' }" @click="currentTab = 'download'">
+                    <span>📥</span><span>Download Excel</span>
+                    <span v-if="currentTab === 'download'" class="active-dot"></span>
+                </button>
+            </nav>
+
+            <div class="side-card">
+                <strong>🔗 Shareable Link</strong>
+                <p>Contractors ya field supervisors ko ye page bhejein — seedha browser me chalega.</p>
+                <button type="button" @click="copyShareLink">📋 Copy Share Link</button>
+            </div>
+
+            <div class="sidebar-foot">
+                <span>BillingPro 6.0</span>
+                <a href="index.html" target="_blank" style="color: #38bdf8; font-weight: 700;">Open Studio ↗</a>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <div class="main">
+            <header>
+                <div class="header-left">
+                    <span>📅 Site Operations</span>
+                    <span>/</span>
+                    <strong>{{ currentTab === 'entry' ? 'Daily Progress Entry' : (currentTab === 'stock' ? 'Material & Stock Register' : (currentTab === 'history' ? 'Saved Report History' : 'Excel Report Export')) }}</strong>
+                </div>
+
+                <div class="header-right">
+                    <span class="sync-badge" :class="{ unsaved: dirty }">
+                        <span style="font-size: 8px;">●</span>
+                        <span>{{ dirty ? 'Unsaved changes' : 'Cloud synchronized' }}</span>
+                    </span>
+                    <button type="button" class="btn-header-share" @click="copyShareLink" title="Contractor ko bhejne ke liye share link copy karein">
+                        <span>🔗</span><span>Share Link</span>
+                    </button>
+                </div>
+            </header>
+
+            <main>
+                <!-- Context Panel: Contractor & Date -->
+                <section class="context-panel">
+                    <div>
+                        <label class="field-label">CONTRACTOR / LABOUR TEAM</label>
+                        <div class="contractor-select-wrap">
+                            <span class="contractor-initials">
+                                {{ (activeContractor.name || 'MS').slice(0, 2).toUpperCase() }}
+                            </span>
+                            <select v-model="selectedContractorId">
+                                <option v-for="c in contractors" :key="c.id" :value="c.id">
+                                    {{ c.name }}
+                                </option>
+                            </select>
+                            <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" style="border:0; background: rgba(56,189,248,0.2); color:#38bdf8; width: 28px; height: 28px; border-radius: 6px; font-weight: 800; font-size: 13px; display: grid; place-items: center; flex-shrink:0;">➕</button>
+                        </div>
+                    </div>
+
+                    <div class="project-details">
+                        <label class="field-label">PROJECT &amp; FEEDER</label>
+                        <strong>{{ activeContractor.project || 'Gadchiroli (T-10)' }}</strong>
+                        <span style="display: block; font-size: 11px; margin-top: 3px;">Feeder: {{ activeContractor.feeder || 'ANGARA' }} · Eng: {{ activeContractor.engineer || 'AMIT GOMASE' }}</span>
+                    </div>
+
+                    <div>
+                        <label class="field-label">WORK DATE</label>
+                        <div class="date-stepper-wrap">
+                            <button type="button" @click="navigateDay(-1)" title="Previous Day">◀</button>
+                            <input type="date" v-model="selectedDate" title="Choose date">
+                            <button type="button" @click="navigateDay(1)" title="Next Day">▶</button>
+                            <button type="button" class="btn-today" @click="setToday" title="Jump to Today">Today</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 1: DAILY PROGRESS ENTRY -->
+                <div v-if="currentTab === 'entry'">
+                    <!-- Stat Grid -->
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon green">📦</div>
+                            <div class="stat-info">
+                                <small>Materials Consumed Today</small>
+                                <strong>{{ enteredCount }} <em>items entered</em></strong>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon amber">👷</div>
+                            <div class="stat-info">
+                                <small>Total Manpower on Site</small>
+                                <strong>{{ totalManpower }} <em>workers</em></strong>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon blue">📋</div>
+                            <div class="stat-info">
+                                <small>Report Status</small>
+                                <strong style="font-size: 18px;">
+                                    <span v-if="dirty" style="color: #fbbf24;">● Changes Pending</span>
+                                    <span v-else-if="version" style="color: #4ade80;">✓ Saved (v{{ version }})</span>
+                                    <span v-else style="color: #94a3b8;">New Entry</span>
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Two-column Entry Layout -->
+                    <div class="entry-layout">
+                        <!-- Left: Materials Consumption Table -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2><span>01</span> Material Consumption</h2>
+                                <span style="font-size: 11px; font-weight: 700; color: #38bdf8;">
+                                    {{ filteredItems.length }} {{ filterMode === 'issued' ? 'Issued Items' : 'Items' }}
+                                </span>
+                            </div>
+                            <p class="panel-sub">
+                                Aaj site par use hue material ki quantity bharein. Stock reference ke hisaab se Net Issue check karein.
+                            </p>
+
+                            <!-- Table Toolbar -->
+                            <div class="table-toolbar">
+                                <div class="search-box">
+                                    <input type="search" v-model="searchQuery" placeholder="Search material name or SAP code...">
+                                </div>
+                                <select v-model="filterMode" title="Filter items">
+                                    <option value="issued">📦 Issued Stock Only ({{ issuedItemsCount }})</option>
+                                    <option value="all">🌐 All Materials ({{ items.length }})</option>
+                                    <option value="entered">⚡ Entered Today ({{ enteredCount }})</option>
+                                </select>
+                            </div>
+
+                            <!-- Materials Table with NET ISSUE Focus -->
+                            <div class="material-table">
+                                <div class="mat-table-head">
+                                    <span>Item Description</span>
+                                    <span>Net Issue</span>
+                                    <span>Today Consumed</span>
+                                </div>
+
+                                <div class="mat-table-body">
+                                    <div v-for="item in filteredItems.slice(0, visibleLimit)" :key="item.id" class="mat-row">
+                                        <div>
+                                            <span class="mat-desc">{{ item.name }}</span>
+                                            <div class="mat-sub">
+                                                <span v-if="item.code" class="sap-code">SAP: {{ item.code }}</span>
+                                                <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div style="text-align: center;">
+                                            <span v-if="getItemStock(item).totalIssued > 0" class="net-issue-badge" :title="'SAP Net Issue + Manual Challans up to ' + selectedDate">
+                                                📦 {{ getItemStock(item).totalIssued }} {{ item.unit }}
+                                            </span>
+                                            <span v-else class="net-issue-badge zero" title="No stock issue recorded for this contractor">
+                                                0 {{ item.unit }}
+                                            </span>
+                                        </div>
+
+                                        <div class="qty-input-wrap">
+                                            <input type="number"
+                                                   min="0"
+                                                   step="any"
+                                                   inputmode="decimal"
+                                                   placeholder="0"
+                                                   :value="quantities[item.id] || ''"
+                                                   @input="onQuantityInput(item.id, $event.target.value)">
+                                            <span>{{ item.unit }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="!filteredItems.length" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                        Koi material match nahi hua. Search clear karein ya filter "All Materials" karein.
+                                    </div>
+                                </div>
+
+                                <div v-if="filteredItems.length > visibleLimit" style="padding: 10px 14px; background: rgba(255,255,255,0.03); text-align: center; border-top: 1px solid rgba(255,255,255,0.08);">
+                                    <button type="button" @click="visibleLimit += 80" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px; padding: 5px 14px; font-weight: 700; font-size: 11px;">
+                                        Show More ({{ visibleLimit }} of {{ filteredItems.length }})
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Manpower & Notes Sidebar -->
+                        <div class="entry-side">
+                            <!-- Manpower Section -->
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <h2><span>02</span> Manpower Details</h2>
+                                </div>
+                                <p class="panel-sub">Aaj site par kaam karne wali team ki sankhya.</p>
+
+                                <div class="man-stepper-row">
+                                    <label class="man-label">Team Leader</label>
+                                    <div class="stepper">
+                                        <button type="button" @click="manpower.leader = Math.max(0, (manpower.leader || 0) - 1); dirty = true;">−</button>
+                                        <input type="number" v-model.number="manpower.leader" @input="dirty = true">
+                                        <button type="button" @click="manpower.leader = (manpower.leader || 0) + 1; dirty = true;">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="man-stepper-row">
+                                    <label class="man-label">Skilled Labour</label>
+                                    <div class="stepper">
+                                        <button type="button" @click="manpower.skilled = Math.max(0, (manpower.skilled || 0) - 1); dirty = true;">−</button>
+                                        <input type="number" v-model.number="manpower.skilled" @input="dirty = true">
+                                        <button type="button" @click="manpower.skilled = (manpower.skilled || 0) + 1; dirty = true;">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="man-stepper-row">
+                                    <label class="man-label">Unskilled Labour</label>
+                                    <div class="stepper">
+                                        <button type="button" @click="manpower.unskilled = Math.max(0, (manpower.unskilled || 0) - 1); dirty = true;">−</button>
+                                        <input type="number" v-model.number="manpower.unskilled" @input="dirty = true">
+                                        <button type="button" @click="manpower.unskilled = (manpower.unskilled || 0) + 1; dirty = true;">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="man-total">
+                                    <span>Total Team Strength:</span>
+                                    <strong>{{ totalManpower }} people</strong>
+                                </div>
+
+                                <details style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+                                    <summary style="font-size: 11px; font-weight: 700; color: #94a3b8; cursor: pointer;">Equipment &amp; Daily Charges ⚙️</summary>
+                                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                                            <span>Tractor Charges (₹):</span>
+                                            <input type="number" v-model.number="manpower.tractor" @input="dirty = true" style="width: 80px; padding: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; text-align: right; color:#fff;">
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                                            <span>Augur Machine (₹):</span>
+                                            <input type="number" v-model.number="manpower.augur" @input="dirty = true" style="width: 80px; padding: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; text-align: right; color:#fff;">
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                                            <span>Room Charges (₹):</span>
+                                            <input type="number" v-model.number="manpower.room" @input="dirty = true" style="width: 80px; padding: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; text-align: right; color:#fff;">
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+
+                            <!-- Notes Section -->
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <h2><span>03</span> Site Notes &amp; Remarks</h2>
+                                </div>
+                                <textarea v-model="remarks"
+                                          @input="dirty = true"
+                                          rows="4"
+                                          placeholder="Work location, section, weather conditions, or any delays..."
+                                          style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px; color: #f8fafc; font-size: 12px; resize: vertical; line-height: 1.5;"></textarea>
+                                <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
+                                    Supervisor: <strong>{{ activeContractor.engineer || 'AMIT GOMASE' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Save Bar -->
+                    <div class="save-bar">
+                        <div class="save-status-info">
+                            <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready for Progress Entry') }}</strong>
+                            <span>{{ activeContractor.name }} · Work Date: {{ selectedDate }}</span>
+                        </div>
+                        <button type="button" class="btn-save-progress" :disabled="busy" @click="saveProgress">
+                            <span>💾</span>
+                            <span>{{ busy ? 'Saving...' : 'Save Daily Progress' }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: MATERIAL & STOCK -->
+                <div v-if="currentTab === 'stock'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #f8fafc;">📦 Contractor Stock Register</h2>
+                            <p style="margin: 4px 0 0; font-size: 12px; color: #94a3b8;">
+                                SAP Stock + Manual Challan issues vs. Daily consumption up to {{ selectedDate }}.
+                            </p>
+                        </div>
+                        <button type="button" class="btn-header-share" @click="showAddIssueModal = true">
+                            <span>➕</span><span>Record Material Issue</span>
+                        </button>
+                    </div>
+
+                    <div class="panel">
+                        <div class="table-toolbar">
+                            <div class="search-box">
+                                <input type="search" v-model="searchQuery" placeholder="Search material name or code...">
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                                <thead>
+                                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
+                                        <th style="padding: 10px 12px;">Material Description</th>
+                                        <th style="padding: 10px 12px;">Unit</th>
+                                        <th style="padding: 10px 12px; text-align: right;">SAP Issued</th>
+                                        <th style="padding: 10px 12px; text-align: right;">Manual Issued</th>
+                                        <th style="padding: 10px 12px; text-align: right; color: #38bdf8;">Net Issue</th>
+                                        <th style="padding: 10px 12px; text-align: right;">Total Consumed</th>
+                                        <th style="padding: 10px 12px; text-align: right;">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in items.filter(i => (!searchQuery || i.name.toLowerCase().includes(searchQuery.toLowerCase()) || String(i.code).includes(searchQuery)) && (getItemStock(i).totalIssued > 0 || getItemStock(i).totalConsumed > 0))" :key="item.id" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 12px;">
+                                            <strong style="color: #f8fafc; display: block;">{{ item.name }}</strong>
+                                            <small style="color: #60a5fa; font-family: monospace;">SAP: {{ item.code || 'Work Item' }} · Row {{ item.row }}</small>
+                                        </td>
+                                        <td style="padding: 12px; color: #94a3b8;">{{ item.unit }}</td>
+                                        <td style="padding: 12px; text-align: right; font-family: monospace;">{{ getItemStock(item).sapIssued || '—' }}</td>
+                                        <td style="padding: 12px; text-align: right; font-family: monospace;">{{ getItemStock(item).manualIssued || '—' }}</td>
+                                        <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800; color: #38bdf8;">{{ getItemStock(item).totalIssued }}</td>
+                                        <td style="padding: 12px; text-align: right; font-family: monospace;">{{ getItemStock(item).totalConsumed }}</td>
+                                        <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800;">
+                                            <span :style="{ color: getItemStock(item).balance < 0 ? '#ef4444' : '#4ade80' }">
+                                                {{ getItemStock(item).balance }} {{ item.unit }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: REPORT HISTORY -->
+                <div v-if="currentTab === 'history'">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2><span>01</span> Saved Daily Reports ({{ contractorReports.length }} Days)</h2>
+                        </div>
+                        <p class="panel-sub">{{ activeContractor.name }} ke saved reports ki list.</p>
+
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                                <thead>
+                                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
+                                        <th style="padding: 10px 12px;">Work Date</th>
+                                        <th style="padding: 10px 12px;">Items Consumed</th>
+                                        <th style="padding: 10px 12px;">Manpower</th>
+                                        <th style="padding: 10px 12px;">Site Notes</th>
+                                        <th style="padding: 10px 12px; text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="rep in [...contractorReports].reverse()" :key="rep.date" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 12px; font-weight: 800; color: #38bdf8; font-family: monospace;">{{ rep.date }}</td>
+                                        <td style="padding: 12px;">{{ Object.values(rep.quantities || {}).filter(q => q > 0).length }} items</td>
+                                        <td style="padding: 12px;">{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} workers</td>
+                                        <td style="padding: 12px; color: #94a3b8; max-width: 250px;">{{ rep.remarks || '—' }}</td>
+                                        <td style="padding: 12px; text-align: right;">
+                                            <button type="button" @click="openReport(rep.date)" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;">
+                                                Open ➔
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!contractorReports.length">
+                                        <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                            Is contractor ke liye abhi koi report save nahi hui hai.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: DOWNLOAD EXCEL REPORTS -->
+                <div v-if="currentTab === 'download'">
+                    <div class="panel" style="max-width: 600px; margin: 0 auto;">
+                        <div class="panel-header">
+                            <h2><span>📥</span> Export Multi-Sheet Excel Report</h2>
+                        </div>
+                        <p class="panel-sub">
+                            Company ke official format me date-wise progress report download karein (30 din per sheet).
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0;">
+                            <div>
+                                <label class="field-label">FROM DATE</label>
+                                <input type="date" v-model="exportFrom" style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; color: #fff; font-size: 12px;">
+                            </div>
+                            <div>
+                                <label class="field-label">TO DATE</label>
+                                <input type="date" v-model="exportTo" style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; color: #fff; font-size: 12px;">
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; font-size: 12px; color: #38bdf8;">
+                            ✓ Contractor: <strong>{{ activeContractor.name }}</strong><br>
+                            ✓ Template layout &amp; date-wise formulas preserved<br>
+                            ✓ Multi-sheet export for ranges over 30 days
+                        </div>
+
+                        <button type="button" class="btn-save-progress" :disabled="busy" @click="downloadExcelReport" style="width: 100%; justify-content: center;">
+                            <span>📥</span>
+                            <span>{{ busy ? 'Generating Excel...' : 'Download Excel (.xlsx) Report' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- MODAL: ADD CONTRACTOR -->
+        <div v-if="showAddContractorModal" class="modal-overlay" @click.self="showAddContractorModal = false">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>➕ Add Contractor / Labour Team</h3>
+                    <button type="button" @click="showAddContractorModal = false" style="background:none; border:none; color:#94a3b8; font-size:18px;">✕</button>
+                </div>
+                <form @submit.prevent="submitAddContractor" style="display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                        <label class="field-label">Team / Contractor Name *</label>
+                        <input type="text" v-model="newContractorForm.name" required placeholder="e.g. MAA KALI ENTERPRISES" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div>
+                        <label class="field-label">Project Name</label>
+                        <input type="text" v-model="newContractorForm.project" placeholder="Gadchiroli (T-10)" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div>
+                        <label class="field-label">Feeder Name</label>
+                        <input type="text" v-model="newContractorForm.feeder" placeholder="e.g. ANGARA" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div>
+                        <label class="field-label">Engineer / Supervisor</label>
+                        <input type="text" v-model="newContractorForm.engineer" placeholder="e.g. AMIT GOMASE" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                        <button type="button" @click="showAddContractorModal = false" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:#94a3b8; border-radius:6px; padding:6px 14px;">Cancel</button>
+                        <button type="submit" class="btn-save-progress" style="padding:6px 16px;">💾 Save Team</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL: ADD MANUAL STOCK ISSUE -->
+        <div v-if="showAddIssueModal" class="modal-overlay" @click.self="showAddIssueModal = false">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>📦 Record Material Issue (Challan)</h3>
+                    <button type="button" @click="showAddIssueModal = false" style="background:none; border:none; color:#94a3b8; font-size:18px;">✕</button>
+                </div>
+                <form @submit.prevent="submitAddIssue" style="display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                        <label class="field-label">Issue Date *</label>
+                        <input type="date" v-model="newIssueForm.date" required style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div>
+                        <label class="field-label">Material *</label>
+                        <select v-model="newIssueForm.itemId" required style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                            <option value="" disabled>-- Select Material --</option>
+                            <option v-for="it in items" :key="it.id" :value="it.id">
+                                {{ it.name }} ({{ it.unit }}) · Row {{ it.row }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Quantity Issued *</label>
+                        <input type="number" step="any" min="0.001" v-model.number="newIssueForm.quantity" required placeholder="Quantity" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div>
+                        <label class="field-label">Challan / Reference No</label>
+                        <input type="text" v-model="newIssueForm.reference" placeholder="e.g. CH-2026/102" style="width:100%; box-sizing:border-box; padding:8px 10px; background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff;">
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                        <button type="button" @click="showAddIssueModal = false" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:#94a3b8; border-radius:6px; padding:6px 14px;">Cancel</button>
+                        <button type="submit" class="btn-save-progress" style="padding:6px 16px;">💾 Save Issue</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div v-if="toastMsg" style="position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid rgba(56,189,248,0.4); color: #f8fafc; padding: 12px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; gap: 8px;">
+            <span>{{ toastType === 'success' ? '✅' : (toastType === 'error' ? '⚠️' : 'ℹ️') }}</span>
+            <span>{{ toastMsg }}</span>
+        </div>
+    </div>
+
+    <!-- Scripts (Standalone, Decoupled from Billing) -->
+    <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="js/data/default-daily-progress.js?v=20261116"></script>
+    <script src="js/data/default-contractors.js?v=20261116"></script>
+    <script src="js/data/default-sap-contractor-mapping.js?v=20261116"></script>
+    <script src="js/data/contractor-sap-issues.js?v=20261116"></script>
+    <script src="js/daily-progress-standalone.js?v=20261116_v2"></script>
+</body>
+
+</html>

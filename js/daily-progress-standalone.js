@@ -1,0 +1,589 @@
+/**
+ * @file Daily Progress Standalone Application
+ * @description Completely decoupled, shareable Daily Progress register.
+ * Provides contractor selection, net stock issue verification, daily consumption entry,
+ * manpower tracking, and multi-sheet Excel export.
+ * 
+ * STRICT RULE: Completely isolated from Billing Pro billing states and RA bills.
+ */
+
+(function () {
+    'use strict';
+
+    function getTodayStr() {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date());
+    }
+
+    function normId(str) {
+        if (!str) return '';
+        return String(str).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+    }
+
+    const app = Vue.createApp({
+        data() {
+            const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
+            const defaultContractor = seed.contractor || {
+                id: 'mangesh-sonwane',
+                name: 'MANGESH SONWANE',
+                project: 'Gadchiroli (T-10)',
+                feeder: 'ANGARA',
+                engineer: 'AMIT GOMASE'
+            };
+
+            // URL query parameters
+            const params = new URLSearchParams(window.location.search);
+            const queryContractor = params.get('contractor') || params.get('c') || '';
+            const queryDate = params.get('date') || params.get('d') || '';
+
+            return {
+                currentTab: 'entry', // 'entry' | 'stock' | 'history' | 'download'
+                selectedDate: queryDate || getTodayStr(),
+                selectedContractorId: queryContractor || defaultContractor.id,
+                items: seed.items || [],
+                contractors: [defaultContractor],
+                reports: [],
+                issues: [],
+                // Current entry state
+                quantities: {},
+                manpower: { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 },
+                remarks: '',
+                version: 0,
+                dirty: false,
+                filterMode: 'issued', // 'issued' (DEFAULT - Net Issue > 0) | 'all' | 'entered'
+                searchQuery: '',
+                visibleLimit: 80,
+                busy: false,
+                saveStatus: 'ready', // 'ready' | 'saving' | 'saved'
+                toastMsg: '',
+                toastType: 'info',
+                toastTimer: null,
+                showAddContractorModal: false,
+                showAddIssueModal: false,
+                newContractorForm: { name: '', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' },
+                newIssueForm: { date: getTodayStr(), itemId: '', quantity: '', reference: '' },
+                exportFrom: '2026-09-01',
+                exportTo: getTodayStr()
+            };
+        },
+
+        computed: {
+            activeContractor() {
+                const norm = normId(this.selectedContractorId);
+                const found = this.contractors.find(c => normId(c.id) === norm || normId(c.name) === norm);
+                return found || this.contractors[0] || { name: 'MANGESH SONWANE', project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
+            },
+
+            contractorReports() {
+                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
+                return (this.reports || []).filter(r => normId(r.contractorId) === cidNorm);
+            },
+
+            totalManpower() {
+                return (Number(this.manpower.leader) || 0) + (Number(this.manpower.skilled) || 0) + (Number(this.manpower.unskilled) || 0);
+            },
+
+            enteredCount() {
+                return Object.values(this.quantities).filter(q => Number(q) > 0).length;
+            },
+
+            issuedItemsCount() {
+                return this.items.filter(item => {
+                    const st = this.getItemStock(item);
+                    return st.totalIssued > 0;
+                }).length;
+            },
+
+            filteredItems() {
+                const q = (this.searchQuery || '').toLowerCase().trim();
+                return this.items.filter(item => {
+                    const matchSearch = !q || (item.name || '').toLowerCase().includes(q) || String(item.code || '').toLowerCase().includes(q);
+                    if (!matchSearch) return false;
+
+                    if (this.filterMode === 'entered') {
+                        return Number(this.quantities[item.id]) > 0;
+                    }
+                    if (this.filterMode === 'issued') {
+                        const st = this.getItemStock(item);
+                        return st.totalIssued > 0;
+                    }
+                    return true;
+                });
+            }
+        },
+
+        watch: {
+            selectedContractorId() {
+                this.loadReportForActiveDate();
+            },
+            selectedDate() {
+                this.loadReportForActiveDate();
+            }
+        },
+
+        async mounted() {
+            await this.initData();
+        },
+
+        methods: {
+            showToast(msg, type = 'info') {
+                this.toastMsg = msg;
+                this.toastType = type;
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                this.toastTimer = setTimeout(() => { this.toastMsg = ''; }, 4000);
+            },
+
+            async initData() {
+                this.busy = true;
+                try {
+                    // 1. Build initial contractors list from DefaultContractors + seed
+                    const contractorsMap = new Map();
+                    const seed = window.DailyProgressSeed || {};
+                    if (seed.contractor) {
+                        contractorsMap.set(normId(seed.contractor.id), { ...seed.contractor });
+                    }
+                    if (Array.isArray(window.DefaultContractors)) {
+                        window.DefaultContractors.forEach(c => {
+                            const n = normId(c.id || c.name);
+                            if (n && !contractorsMap.has(n)) {
+                                contractorsMap.set(n, {
+                                    id: c.id || n,
+                                    name: c.name || c.firmName,
+                                    project: 'Gadchiroli (T-10)',
+                                    feeder: c.feeder || '',
+                                    engineer: c.engineer || ''
+                                });
+                            }
+                        });
+                    }
+
+                    // 2. Fetch cloud data or localStorage
+                    let loaded = null;
+                    try {
+                        const res = await fetch('/api/daily-progress/data');
+                        if (res.ok) {
+                            const resJson = await res.json();
+                            if (resJson && resJson.success && resJson.data) {
+                                loaded = resJson.data;
+                            }
+                        }
+                    } catch (e) {
+                        console.info('[DailyProgressStandalone] Cloud load error, falling back to local:', e.message);
+                    }
+
+                    if (!loaded) {
+                        try {
+                            const localStr = localStorage.getItem('billing_daily_progress');
+                            if (localStr) loaded = JSON.parse(localStr);
+                        } catch (e) {}
+                    }
+
+                    // 3. Merge data
+                    if (loaded) {
+                        if (Array.isArray(loaded.contractors)) {
+                            loaded.contractors.forEach(c => contractorsMap.set(normId(c.id || c.name), c));
+                        }
+                        this.reports = Array.isArray(loaded.reports) ? loaded.reports : [];
+                        this.issues = Array.isArray(loaded.issues) ? loaded.issues : [];
+                    } else if (seed.records && seed.contractor) {
+                        // Seed default September 2026 reports
+                        this.reports = seed.records.map(r => ({
+                            contractorId: seed.contractor.id,
+                            date: r.date,
+                            quantities: { ...(r.quantities || {}) },
+                            manpower: { ...(r.manpower || {}) },
+                            remarks: r.remarks || '',
+                            version: 1
+                        }));
+                    }
+
+                    this.contractors = Array.from(contractorsMap.values());
+
+                    // If URL param matched a contractor, select it
+                    const params = new URLSearchParams(window.location.search);
+                    const qCid = params.get('contractor') || params.get('c');
+                    if (qCid) {
+                        const matched = this.contractors.find(c => normId(c.id) === normId(qCid) || normId(c.name) === normId(qCid));
+                        if (matched) this.selectedContractorId = matched.id;
+                    }
+
+                    this.loadReportForActiveDate();
+                } catch (err) {
+                    console.error('[DailyProgressStandalone] Init error:', err);
+                } finally {
+                    this.busy = false;
+                }
+            },
+
+            loadReportForActiveDate() {
+                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
+                const curDate = this.selectedDate;
+
+                const rep = (this.reports || []).find(r => normId(r.contractorId) === cidNorm && r.date === curDate);
+                if (rep) {
+                    this.quantities = { ...(rep.quantities || {}) };
+                    this.manpower = {
+                        leader: Number(rep.manpower && rep.manpower.leader) || 0,
+                        skilled: Number(rep.manpower && rep.manpower.skilled) || 0,
+                        unskilled: Number(rep.manpower && rep.manpower.unskilled) || 0,
+                        tractor: Number(rep.manpower && rep.manpower.tractor) || 0,
+                        augur: Number(rep.manpower && rep.manpower.augur) || 0,
+                        room: Number(rep.manpower && rep.manpower.room) || 0
+                    };
+                    this.remarks = rep.remarks || '';
+                    this.version = rep.version || 1;
+                    this.dirty = false;
+                } else {
+                    this.quantities = {};
+                    this.manpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
+                    this.remarks = '';
+                    this.version = 0;
+                    this.dirty = false;
+                }
+            },
+
+            onQuantityInput(itemId, val) {
+                const num = Number(val);
+                if (num > 0) {
+                    this.quantities = { ...this.quantities, [itemId]: num };
+                } else {
+                    const copy = { ...this.quantities };
+                    delete copy[itemId];
+                    this.quantities = copy;
+                }
+                this.dirty = true;
+            },
+
+            navigateDay(step) {
+                if (!this.selectedDate) this.selectedDate = getTodayStr();
+                const d = new Date(this.selectedDate + 'T00:00:00Z');
+                d.setUTCDate(d.getUTCDate() + step);
+                this.selectedDate = d.toISOString().slice(0, 10);
+            },
+
+            setToday() {
+                this.selectedDate = getTodayStr();
+            },
+
+            /**
+             * Calculates Net Issued and consumption for any material item.
+             * USER INSTRUCTION: "net balance na dikha kar net issue dikhao"
+             */
+            getItemStock(item) {
+                if (!item) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0 };
+
+                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
+                const curDate = this.selectedDate || getTodayStr();
+                const code = String(item.code || '').trim();
+
+                let sapIssued = 0;
+                const sapStock = window.ContractorSapStock;
+                if (sapStock && code) {
+                    // Try to find contractor in stock
+                    let contractorBlock = null;
+                    if (sapStock.byContractorNorm && sapStock.byContractorNorm[cidNorm]) {
+                        contractorBlock = sapStock.byContractorNorm[cidNorm];
+                    } else if (sapStock.byContractorNorm) {
+                        for (const [k, val] of Object.entries(sapStock.byContractorNorm)) {
+                            if (k.includes(cidNorm) || cidNorm.includes(k)) {
+                                contractorBlock = val;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (contractorBlock && contractorBlock.materials && contractorBlock.materials[code]) {
+                        const m = contractorBlock.materials[code];
+                        if (Array.isArray(m.txns) && m.txns.length > 0) {
+                            let mGross = 0, mMrn = 0;
+                            for (const [dt, g, mrn] of m.txns) {
+                                if (dt && dt <= curDate) {
+                                    mGross += Number(g || 0);
+                                    mMrn += Number(mrn || 0);
+                                }
+                            }
+                            sapIssued = Math.round((mGross - mMrn) * 1000) / 1000;
+                        } else if (m.daily && typeof m.daily === 'object') {
+                            let mGross = 0, mMrn = 0;
+                            for (const [dt, arr] of Object.entries(m.daily)) {
+                                if (dt && dt <= curDate) {
+                                    mGross += Number((arr && arr[0]) || 0);
+                                    mMrn += Number((arr && arr[1]) || 0);
+                                }
+                            }
+                            sapIssued = Math.round((mGross - mMrn) * 1000) / 1000;
+                        } else {
+                            sapIssued = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+                        }
+                    }
+                }
+
+                // 2. Manual Issues
+                const manualIssued = (this.issues || [])
+                    .filter(iss => normId(iss.contractorId) === cidNorm && String(iss.itemId) === String(item.id) && (!iss.date || iss.date <= curDate))
+                    .reduce((sum, iss) => sum + (Number(iss.quantity) || 0), 0);
+
+                const totalIssued = Math.round((sapIssued + manualIssued) * 1000) / 1000;
+
+                // 3. Total Consumed
+                const totalConsumed = (this.reports || [])
+                    .filter(r => normId(r.contractorId) === cidNorm && r.date <= curDate)
+                    .reduce((sum, r) => sum + (Number(r.quantities && r.quantities[item.id]) || 0), 0);
+
+                const balance = Math.round((totalIssued - totalConsumed) * 1000) / 1000;
+
+                return {
+                    sapIssued,
+                    manualIssued,
+                    totalIssued,
+                    totalConsumed,
+                    balance
+                };
+            },
+
+            async saveProgress() {
+                this.busy = true;
+                this.saveStatus = 'saving';
+                try {
+                    const cid = this.activeContractor.id;
+                    const curDate = this.selectedDate;
+
+                    const cleanQuantities = {};
+                    for (const [k, v] of Object.entries(this.quantities)) {
+                        const num = Number(v);
+                        if (num > 0) cleanQuantities[k] = num;
+                    }
+
+                    const reportObj = {
+                        contractorId: cid,
+                        date: curDate,
+                        quantities: cleanQuantities,
+                        manpower: { ...this.manpower },
+                        remarks: this.remarks || '',
+                        version: (this.version || 0) + 1,
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    const existingIdx = this.reports.findIndex(r => normId(r.contractorId) === normId(cid) && r.date === curDate);
+                    if (existingIdx >= 0) {
+                        this.reports[existingIdx] = reportObj;
+                    } else {
+                        this.reports.push(reportObj);
+                    }
+
+                    this.version = reportObj.version;
+                    this.dirty = false;
+
+                    const payload = {
+                        contractors: this.contractors,
+                        reports: this.reports,
+                        issues: this.issues,
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    // Save locally first
+                    try {
+                        localStorage.setItem('billing_daily_progress', JSON.stringify(payload));
+                    } catch (e) {}
+
+                    // Save to cloud API
+                    try {
+                        await fetch('/api/daily-progress/data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } catch (e) {
+                        console.warn('[DailyProgressStandalone] Cloud save network warning:', e);
+                    }
+
+                    this.saveStatus = 'saved';
+                    this.showToast(`Daily Progress successfully saved for ${this.selectedDate}! ✅`, 'success');
+                } catch (err) {
+                    this.showToast('Save failed: ' + err.message, 'error');
+                } finally {
+                    this.busy = false;
+                }
+            },
+
+            copyShareLink() {
+                const origin = window.location.origin || '';
+                const cid = this.activeContractor.id || '';
+                const dt = this.selectedDate || '';
+                const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        this.showToast('Daily Progress page link copied to clipboard! 📋', 'success');
+                    }).catch(() => {
+                        prompt('Copy this Daily Progress link:', url);
+                    });
+                } else {
+                    prompt('Copy this Daily Progress link:', url);
+                }
+            },
+
+            openReport(date) {
+                this.selectedDate = date;
+                this.currentTab = 'entry';
+            },
+
+            async submitAddContractor() {
+                const name = (this.newContractorForm.name || '').trim();
+                if (!name) return;
+                const id = normId(name);
+                const contractorObj = {
+                    id: id,
+                    name: name,
+                    project: this.newContractorForm.project || 'Gadchiroli (T-10)',
+                    feeder: this.newContractorForm.feeder || '',
+                    engineer: this.newContractorForm.engineer || ''
+                };
+                this.contractors.push(contractorObj);
+                this.selectedContractorId = id;
+                this.showAddContractorModal = false;
+                this.newContractorForm = { name: '', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' };
+                await this.saveProgress();
+                this.showToast(`Contractor team [${name}] added!`, 'success');
+            },
+
+            submitAddIssue() {
+                const qty = Number(this.newIssueForm.quantity);
+                if (!this.newIssueForm.itemId || !(qty > 0)) {
+                    alert('Material aur valid quantity zaroori hai!');
+                    return;
+                }
+                const issueObj = {
+                    id: 'iss_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    contractorId: this.activeContractor.id,
+                    date: this.newIssueForm.date || this.selectedDate,
+                    itemId: this.newIssueForm.itemId,
+                    quantity: qty,
+                    reference: (this.newIssueForm.reference || '').trim()
+                };
+                this.issues.push(issueObj);
+                this.showAddIssueModal = false;
+                this.newIssueForm = { date: getTodayStr(), itemId: '', quantity: '', reference: '' };
+                this.saveProgress();
+                this.showToast('Material issue record added! 📦', 'success');
+            },
+
+            async downloadExcelReport() {
+                if (!window.ExcelJS) {
+                    alert('ExcelJS library load ho rahi hai... Kripya 2 second baad dobara dabayein.');
+                    return;
+                }
+                this.busy = true;
+                try {
+                    const days = [];
+                    const startD = new Date(this.exportFrom + 'T00:00:00Z');
+                    const endD = new Date(this.exportTo + 'T00:00:00Z');
+                    for (let d = new Date(startD); d <= endD; d.setUTCDate(d.getUTCDate() + 1)) {
+                        days.push(d.toISOString().slice(0, 10));
+                    }
+                    if (!days.length || days.length > 366) {
+                        alert('1 se 366 dino ka date range chunein.');
+                        return;
+                    }
+
+                    let templateBuffer = null;
+                    try {
+                        const res = await fetch('/api/daily-progress/template');
+                        if (res.ok) templateBuffer = await res.arrayBuffer();
+                    } catch (e) {}
+
+                    const workbook = new window.ExcelJS.Workbook();
+                    if (templateBuffer) {
+                        await workbook.xlsx.load(templateBuffer);
+                    }
+
+                    const baseWorksheet = workbook.worksheets[0];
+                    const templateModel = baseWorksheet ? JSON.parse(JSON.stringify(baseWorksheet.model)) : null;
+                    const getColLetter = (i) => i < 26 ? String.fromCharCode(65 + i) : 'A' + String.fromCharCode(65 + i - 26);
+                    const contractor = this.activeContractor;
+
+                    for (let start = 0, sheetIdx = 1; start < days.length; start += 30, sheetIdx++) {
+                        const chunk = days.slice(start, start + 30);
+                        let ws;
+                        if (sheetIdx === 1 && baseWorksheet) {
+                            ws = baseWorksheet;
+                            ws.name = `Progress 1`;
+                        } else if (baseWorksheet) {
+                            ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
+                            ws.model = { ...JSON.parse(JSON.stringify(templateModel)), id: ws.id, name: `Progress ${sheetIdx}`, mergeCells: templateModel.merges };
+                        } else {
+                            ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
+                        }
+
+                        // Header info
+                        ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
+                        ws.getCell('A3').value = 'NAME OF FEEDER: ' + (contractor.feeder || '');
+                        ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
+                        ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
+
+                        // Clear sample values in chunk range
+                        for (let r = 6; r <= 420; r++) {
+                            if (r === 14) continue;
+                            for (let c = 5; c <= 35; c++) {
+                                const cell = ws.getCell(r, c);
+                                if (cell && cell.value !== undefined) cell.value = null;
+                            }
+                        }
+
+                        chunk.forEach((dt, i) => {
+                            const colLetter = getColLetter(i + 4);
+                            const rep = this.contractorReports.find(x => x.date === dt);
+                            const mp = rep?.manpower || {};
+
+                            ws.getCell(colLetter + '7').value = dt;
+                            ws.getCell(colLetter + '6').value = rep ? ((mp.leader || 0) + (mp.skilled || 0) + (mp.unskilled || 0)) : null;
+
+                            ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
+                                ws.getCell(colLetter + (8 + j)).value = rep ? (mp[k] || 0) : null;
+                            });
+
+                            this.items.forEach(it => {
+                                const q = rep?.quantities && rep.quantities[it.id];
+                                if (Number(q) > 0) {
+                                    ws.getCell(colLetter + it.row).value = Number(q);
+                                }
+                            });
+                        });
+
+                        // Sum formula on AI column
+                        this.items.forEach(it => {
+                            const total = chunk.reduce((sum, d) => {
+                                const rep = this.contractorReports.find(x => x.date === d);
+                                return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
+                            }, 0);
+                            const aiCell = ws.getCell('AI' + it.row);
+                            aiCell.value = total > 0 ? total : null;
+                        });
+                    }
+
+                    const outBuffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([outBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = `Daily_Progress_${contractor.name.replace(/[^a-z0-9]/gi, '_')}_${this.exportFrom}_to_${this.exportTo}.xlsx`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                    this.showToast('Excel report successfully downloaded! 📊', 'success');
+                } catch (err) {
+                    alert('Export error: ' + err.message);
+                } finally {
+                    this.busy = false;
+                }
+            }
+        }
+    });
+
+    app.mount('#app');
+})();

@@ -650,5 +650,25 @@ window.DailyProgressModule = {
         } finally {
             this.dailyProgressBusy = false;
         }
+    },
+
+    copyDailyProgressShareLink() {
+        const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+        const cid = this.dailyProgressContractorId || '';
+        const dt = this.dailyProgressDate || '';
+        const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                if (typeof this.showToast === 'function') {
+                    this.showToast('Daily Progress page link copied to clipboard! 📋', '✅');
+                } else {
+                    alert('Link copied to clipboard!\n' + url);
+                }
+            }).catch(() => {
+                prompt('Copy this Daily Progress link:', url);
+            });
+        } else {
+            prompt('Copy this Daily Progress link:', url);
+        }
     }
 };

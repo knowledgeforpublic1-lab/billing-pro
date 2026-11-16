@@ -1920,30 +1920,24 @@
                     </div>
                 </div>
 
-                <details class="dp-panel no-print">
-                    <summary style="cursor:pointer;font-weight:700">Public entry links &amp; admin controls</summary>
-                    <p>{{ dailyProgressDriveReady ? 'Google Drive configured. Check connection before sharing links.' : 'Google Drive folder/credentials setup pending — public saves are unavailable.' }}</p>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
-                        <button class="btn btn-secondary" @click="refreshDailyProgressAccess">Refresh status</button>
-                        <button class="btn btn-secondary" @click="checkDailyProgressDrive">Check Google Drive</button>
-                        <button class="btn btn-primary" @click="createDailyProgressLink">Create / replace selected contractor link</button>
-                        <button class="btn btn-secondary" @click="reopenDailyProgressEntry">Admin: Reopen selected date / release editor</button>
-                        <button class="btn btn-secondary" @click="showDailyProgressAudit">Show date activity</button>
-                        <button class="btn btn-secondary" @click="importDailyProgressHistory">Import historical reports to Drive</button>
+                <div class="dp-share-bar no-print" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 8px 14px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-main);">
+                        <span style="font-size: 1.1rem;">🔗</span>
+                        <span><strong>Shareable Daily Progress Page:</strong> Contractors/Supervisors ko seedha share karne ke liye dedicated page link available hai.</span>
                     </div>
-                    <label v-if="dailyProgressPublicLink" style="display:block">Copy and share this contractor link (shown only now):
-                        <input :value="dailyProgressPublicLink" readonly @focus="$event.target.select()" style="width:100%;padding:10px;margin-top:6px">
-                    </label>
-                    <p v-for="link in dailyProgressLinks" :key="link.id">{{ link.name }} — {{ link.disabled ? 'Disabled' : 'Active' }} <button class="btn btn-secondary" :disabled="link.disabled" @click="disableDailyProgressLink(link.id)">Disable link</button></p>
-                    <p v-for="(event, i) in dailyProgressAudit" :key="i">{{ new Date(event.at).toLocaleString() }} — {{ event.action }}</p>
-                </details>
-                <div class="dp-panel no-print" role="status">
-                    {{ dailyProgressAccessMessage || 'Entry status check karein.' }}
-                    <button class="btn btn-secondary" :disabled="dailyProgressBusy" @click="refreshDailyProgressStatus(true)">Start / resume entry</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" style="font-size: 0.76rem; padding: 4px 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>📋</span><span>Copy Share Link</span>
+                        </button>
+                        <a :href="'daily-progress.html?contractor=' + dailyProgressContractorId + '&date=' + dailyProgressDate" target="_blank" class="btn btn-secondary" style="font-size: 0.76rem; padding: 4px 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>↗</span><span>Open Page</span>
+                        </a>
+                    </div>
                 </div>
+
                 <!-- TAB 1: DAILY ENTRY -->
                 <div v-if="dailyProgressTab === 'entry'">
-                    <fieldset :disabled="dailyProgressLocked || dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
+                    <fieldset :disabled="dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
                     <!-- Two-column Entry Layout -->
                     <div class="dp-entry-layout">
                         <!-- Left: Material Consumption -->
@@ -1968,7 +1962,7 @@
                                     <thead>
                                         <tr>
                                             <th>Item Description</th>
-                                            <th style="width: 140px; text-align: center;">Stock Balance</th>
+                                            <th style="width: 140px; text-align: center;">Net Issue</th>
                                             <th style="width: 120px; text-align: right;">Today Consumed</th>
                                         </tr>
                                     </thead>
@@ -1981,32 +1975,20 @@
                                                     <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
                                                 </div>
                                                 <div class="dp-mobile-balance-inline" style="display: none;">
-                                                    <span v-if="getDailyProgressItemStock(item).status === 'in_stock'" class="dp-stock-badge ok" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed: ' + getDailyProgressItemStock(item).totalConsumed">
-                                                        ✓ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                                    <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock">
+                                                        📦 Net Issue: {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
                                                     </span>
-                                                    <span v-else-if="getDailyProgressItemStock(item).status === 'zero'" class="dp-stock-badge empty" title="All issued stock consumed">
-                                                        0 {{ item.unit }} Balance
-                                                    </span>
-                                                    <span v-else-if="getDailyProgressItemStock(item).status === 'overconsumed'" class="dp-stock-badge danger" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed: ' + getDailyProgressItemStock(item).totalConsumed">
-                                                        ⚠️ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
-                                                    </span>
-                                                    <span v-else class="dp-stock-badge empty" title="No stock issue recorded for this contractor">
-                                                        Awaiting Stock
+                                                    <span v-else class="dp-stock-badge awaiting_stock">
+                                                        Net Issue: 0 {{ item.unit }}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td style="text-align: center;">
-                                                <span v-if="getDailyProgressItemStock(item).status === 'in_stock'" class="dp-stock-badge in_stock" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed To-Date: ' + getDailyProgressItemStock(item).totalConsumed">
-                                                    ✓ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
-                                                </span>
-                                                <span v-else-if="getDailyProgressItemStock(item).status === 'zero'" class="dp-stock-badge zero" title="All issued stock consumed">
-                                                    0 {{ item.unit }} Balance
-                                                </span>
-                                                <span v-else-if="getDailyProgressItemStock(item).status === 'overconsumed'" class="dp-stock-badge overconsumed" :title="'Total Issued: ' + getDailyProgressItemStock(item).totalIssued + ' | Consumed: ' + getDailyProgressItemStock(item).totalConsumed">
-                                                    ⚠️ {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                                <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock" :title="'SAP + Manual Net Issue up to ' + formatDisplayDate(dailyProgressDate)">
+                                                    📦 {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
                                                 </span>
                                                 <span v-else class="dp-stock-badge awaiting_stock" title="No stock issue recorded for this contractor">
-                                                    Awaiting Stock
+                                                    0 {{ item.unit }}
                                                 </span>
                                             </td>
                                             <td style="text-align: right;">
