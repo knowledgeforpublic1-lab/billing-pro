@@ -3353,4 +3353,5 @@
     }
   }
 };
+    global.MasterSapCodeMapping.__original = JSON.parse(JSON.stringify(global.MasterSapCodeMapping));
 })(typeof window !== "undefined" ? window : global);

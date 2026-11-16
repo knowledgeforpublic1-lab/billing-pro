@@ -32,7 +32,8 @@
         window.ExportModule || {},
         window.StockImporterModule || {},
         window.OldRecoImporterModule || {},
-        window.PoleScheduleModule || {}
+        window.PoleScheduleModule || {},
+        window.SapWorkOrdersModule || {}
     );
 
     allMethods.updateAlvFiller = function() {
@@ -418,6 +419,12 @@
                 activeRecoCell: null,
                 activeRecoCellFormula: '',
                 focusedRecoInput: null,
+                sapWoSearchQuery: '',
+                sapWoEditingKey: null,
+                sapWoEditForm: { docHeader: '', contractorName: '', vendorCode: '' },
+                showAddSapWoModal: false,
+                newSapWoForm: { docHeader: '', contractorName: '', vendorCode: '' },
+                customSapWorkOrders: {},
                 customOldRecoEdits: {},
                 contractorsList: JSON.parse(JSON.stringify(defaultContractorsList)),
                 selectedContractorId: 'ranjeet_singh_lodhi',
@@ -1611,6 +1618,46 @@
             canRedo() {
                 return this.historyIndex < this.historyStack.length - 1;
             },
+            filteredSapWorkOrders() {
+                const query = (this.sapWoSearchQuery || '').toLowerCase().trim();
+                const master = (window.MasterSapCodeMapping && window.MasterSapCodeMapping.byDocHeader) ? window.MasterSapCodeMapping.byDocHeader : {};
+                const customs = this.customSapWorkOrders || {};
+
+                const map = {};
+                for (const [dh, item] of Object.entries(master)) {
+                    map[dh] = {
+                        docHeader: String(dh).trim(),
+                        contractorName: item.contractorName || '',
+                        vendorCode: item.vendorCode || '',
+                        groupKey: item.groupKey || '',
+                        isCustom: false
+                    };
+                }
+                for (const [dh, item] of Object.entries(customs)) {
+                    if (item && item.deleted) {
+                        delete map[dh];
+                        continue;
+                    }
+                    map[dh] = {
+                        docHeader: String(dh).trim(),
+                        contractorName: item.contractorName || '',
+                        vendorCode: item.vendorCode || '',
+                        groupKey: item.groupKey || (window.StockImporterModule ? window.StockImporterModule.normContractorName(item.contractorName) : ''),
+                        isCustom: true
+                    };
+                }
+
+                let list = Object.values(map);
+                if (query) {
+                    list = list.filter(it =>
+                        (it.docHeader && it.docHeader.toLowerCase().includes(query)) ||
+                        (it.contractorName && it.contractorName.toLowerCase().includes(query)) ||
+                        (it.vendorCode && it.vendorCode.toLowerCase().includes(query)) ||
+                        (it.groupKey && it.groupKey.toLowerCase().includes(query))
+                    );
+                }
+                return list.sort((a, b) => a.docHeader.localeCompare(b.docHeader, undefined, { numeric: true }));
+            },
             currentActivity() {
                 return this.activities[this.selectedActivityKey] || { title: 'Activity', materials: [] };
             },
@@ -2015,6 +2062,7 @@
             }
 
             try { if (typeof this.loadSavedBillsList === 'function') this.loadSavedBillsList(); } catch(e) {}
+            try { if (typeof this.loadCustomSapWorkOrders === 'function') this.loadCustomSapWorkOrders(); } catch(e) {}
             
             // Backup default stock & check for custom uploaded stock in IndexedDB
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {

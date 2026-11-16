@@ -312,6 +312,7 @@
                 <div class="sgroup">Reconciliation</div>
                 <a href="#" :class="{ 'on': currentView === 'reconciliation' }" @click.prevent="switchView('reconciliation')"><span class="ico">📑</span><span>Reconciliation Sheet</span></a>
                 <a href="#" :class="{ 'on': currentView === 'masterrecon' }" @click.prevent="switchView('masterrecon')"><span class="ico">🌐</span><span>Master Reconciliation</span></a>
+                <a href="#" :class="{ 'on': currentView === 'sapworkorders' }" @click.prevent="switchView('sapworkorders')"><span class="ico">🏷️</span><span>SAP Code / Work Order</span></a>
                 <div class="sgroup">System</div>
                 <a href="#" @click.prevent="openSavedBillsManager('database')"><span class="ico">📁</span><span>Saved RA Bills</span></a>
                 <a href="#" @click.prevent="openNewBillModal"><span class="ico">➕</span><span>New RA Bill</span></a>
@@ -400,6 +401,29 @@
                         <input type="text" :value="effectiveBillNo" @input="updateBillNo($event.target.value)" placeholder="Bill / Invoice No" :readonly="isFinalized" title="Invoice / Bill No" style="font-size: 0.75rem; width: 120px; padding: 3px 8px; font-weight: 700; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px;">
                         <input type="date" v-model="invoiceData.invoiceDate" @change="saveToStorage" :readonly="isFinalized" title="Invoice Date" style="font-size: 0.75rem; padding: 2px 6px; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px;">
                         <button v-if="activeBillId && activeBillId !== 'main-billing-state'" type="button" class="btn btn-danger ico-btn" @click="discardActiveBill" title="Bill DISCARD karo — database se delete + BLANK workspace" style="color: #dc2626;"><svg class="ic"><use href="#ic-trash"/></svg></button>
+                    </template>
+                    <template v-if="currentView === 'sapworkorders'">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.88rem; font-weight: 800; color: #1e1b4b; display: flex; align-items: center; gap: 6px;">
+                                <span>🏷️</span>
+                                <span>SAP Work Orders</span>
+                            </span>
+                            <span style="font-size: 0.74rem; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">
+                                {{ filteredSapWorkOrders.length }} WOs
+                            </span>
+                        </div>
+                        <input type="text" v-model="sapWoSearchQuery" placeholder="🔍 Search WO No, Contractor Name, Vendor Code..." style="font-size: 0.75rem; padding: 3px 8px; width: min(340px, 30vw); font-weight: 600; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px;" @keydown.esc="sapWoSearchQuery = ''">
+                        <button v-if="sapWoSearchQuery" class="tbtn ico-btn" @click="sapWoSearchQuery = ''" title="Search clear karein" style="color: #64748b;">✕</button>
+                        <div class="ps-toolbar-actions">
+                            <button type="button" class="btn btn-primary" @click="openAddSapWoModal" style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 0.78rem; padding: 3px 10px;">
+                                <span>➕</span>
+                                <span>New Work Order</span>
+                            </button>
+                            <button v-if="Object.keys(customSapWorkOrders || {}).length > 0" type="button" class="btn btn-secondary" @click="resetSapWorkOrdersToDefault" title="Master default mappings restore karein" style="font-size: 0.78rem; padding: 3px 8px;">
+                                <span>↺</span>
+                                <span>Reset to Default</span>
+                            </button>
+                        </div>
                     </template>
                     <template v-if="currentView === 'reconciliation'">
                         <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted, #6a6c71); text-transform: uppercase; letter-spacing: 0.5px;">👷 Contractor:</span>
@@ -1962,6 +1986,110 @@
                     <iframe :src="'Reconciliation master/index.html?theme=' + (isDarkMode ? 'dark' : 'light')" title="Master Reconciliation"
                         style="width: 100%; height: calc(100vh - 170px); min-height: 560px; border: 0; display: block; background: #fff;">
                     </iframe>
+                </div>
+            </div>
+
+            <!-- VIEW 7: SAP WORK ORDERS & CONTRACTOR MAPPING -->
+            <div v-if="currentView === 'sapworkorders'" class="animate-fade-in" style="padding: 8px 12px;">
+                <!-- Header Card with Stats and Quick Actions -->
+                <div class="card" style="margin-bottom: 12px; padding: 12px 16px; background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <span>🏷️</span>
+                                <span>SAP Code & Work Order Master Mapping</span>
+                            </div>
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+                                Yeh master mapping stock dump ke Document Header / Work Order (Col P) ko contractor se link karti hai. Yahan naya WO jodein ya existing update karein.
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="font-size: 0.76rem; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.25); padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                                Total WOs: {{ filteredSapWorkOrders.length }}
+                            </span>
+                            <span v-if="Object.keys(customSapWorkOrders || {}).length > 0" style="font-size: 0.76rem; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                                {{ Object.keys(customSapWorkOrders).length }} Custom Updated
+                            </span>
+                            <button type="button" class="btn btn-primary" @click="openAddSapWoModal" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.78rem;">
+                                <span>➕</span>
+                                <span>Add Work Order</span>
+                            </button>
+                            <button v-if="Object.keys(customSapWorkOrders || {}).length > 0" type="button" class="btn btn-secondary" @click="resetSapWorkOrdersToDefault" style="font-size: 0.78rem;">
+                                <span>↺</span>
+                                <span>Reset to Default</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Card -->
+                <div class="table-card" style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; overflow: hidden;">
+                    <div style="overflow-x: auto; max-height: calc(100vh - 240px);">
+                        <table class="billing-table pro-table-typo" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #1e293b; color: #ffffff;">
+                                    <th style="width: 45px; text-align: center; padding: 8px;">#</th>
+                                    <th style="width: 160px; text-align: left; padding: 8px;">Doc Header / WO No</th>
+                                    <th style="text-align: left; padding: 8px;">Contractor Name</th>
+                                    <th style="width: 140px; text-align: left; padding: 8px;">Vendor Code</th>
+                                    <th style="width: 180px; text-align: left; padding: 8px;">Normalized Key</th>
+                                    <th style="width: 95px; text-align: center; padding: 8px;">Status</th>
+                                    <th style="width: 110px; text-align: center; padding: 8px;" class="no-print">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, idx) in filteredSapWorkOrders" :key="item.docHeader" :style="{ background: sapWoEditingKey === item.docHeader ? 'rgba(99, 102, 241, 0.08)' : (idx % 2 === 0 ? 'var(--bg-row-alt, #f8fafc)' : 'var(--bg-card, #ffffff)') }">
+                                    <td style="text-align: center; font-size: 0.78rem; color: var(--text-muted);">{{ idx + 1 }}</td>
+
+                                    <!-- Doc Header / WO -->
+                                    <td style="font-family: monospace; font-weight: 700; color: #0284c7; font-size: 0.85rem;">
+                                        <input v-if="sapWoEditingKey === item.docHeader" type="text" v-model="sapWoEditForm.docHeader" style="width: 100%; font-family: monospace; font-weight: 700; font-size: 0.82rem; padding: 2px 6px; border: 1px solid #6366f1; border-radius: 4px;">
+                                        <span v-else>{{ item.docHeader }}</span>
+                                    </td>
+
+                                    <!-- Contractor Name -->
+                                    <td style="font-weight: 600; font-size: 0.84rem; color: var(--text-main);">
+                                        <input v-if="sapWoEditingKey === item.docHeader" type="text" v-model="sapWoEditForm.contractorName" style="width: 100%; font-weight: 600; font-size: 0.82rem; padding: 2px 6px; border: 1px solid #6366f1; border-radius: 4px;">
+                                        <span v-else>{{ item.contractorName }}</span>
+                                    </td>
+
+                                    <!-- Vendor Code -->
+                                    <td style="font-family: monospace; font-size: 0.82rem; color: var(--text-muted);">
+                                        <input v-if="sapWoEditingKey === item.docHeader" type="text" v-model="sapWoEditForm.vendorCode" style="width: 100%; font-family: monospace; font-size: 0.82rem; padding: 2px 6px; border: 1px solid #6366f1; border-radius: 4px;">
+                                        <span v-else>{{ item.vendorCode || '—' }}</span>
+                                    </td>
+
+                                    <!-- Group Key -->
+                                    <td style="font-size: 0.75rem; color: #64748b; font-family: monospace;">
+                                        {{ item.groupKey }}
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td style="text-align: center;">
+                                        <span v-if="item.isCustom" style="font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #059669; padding: 2px 6px; border-radius: 4px;">Updated</span>
+                                        <span v-else style="font-size: 0.7rem; color: #94a3b8; background: rgba(148, 163, 184, 0.12); padding: 2px 6px; border-radius: 4px;">Default</span>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: center; white-space: nowrap;" class="no-print">
+                                        <template v-if="sapWoEditingKey === item.docHeader">
+                                            <button type="button" class="btn btn-primary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="saveEditSapWorkOrder(item.docHeader)" title="Save changes">✓ Save</button>
+                                            <button type="button" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.72rem;" @click="cancelEditSapWorkOrder" title="Cancel edit">✕</button>
+                                        </template>
+                                        <template v-else>
+                                            <button type="button" class="tbtn" style="padding: 2px 6px; font-size: 0.75rem; color: #4f46e5; margin-right: 4px;" @click="startEditSapWorkOrder(item)" title="Edit this mapping">✏️</button>
+                                            <button type="button" class="tbtn" style="padding: 2px 6px; font-size: 0.75rem; color: #ef4444;" @click="deleteSapWorkOrder(item.docHeader)" title="Delete this mapping">🗑️</button>
+                                        </template>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredSapWorkOrders.length === 0">
+                                    <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.88rem;">
+                                        Koi Work Order mapping nahi mili. Search query change karein ya naya Work Order jodein.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -3780,6 +3908,45 @@
     <script defer src="js/stock-importer.js?v=20261111_realtime_mongo_sync"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
+        <!-- MODAL: ADD SAP WORK ORDER -->
+        <div v-if="showAddSapWoModal" class="modal-overlay" style="z-index: 100010;" @click.self="showAddSapWoModal = false">
+            <div class="modal-card" style="max-width: 480px; width: 90%; background: var(--bg-card, #ffffff); border-radius: 10px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 8px;">
+                    <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                        <span>➕</span>
+                        <span>Add New SAP Work Order</span>
+                    </div>
+                    <button type="button" @click="showAddSapWoModal = false" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted);">✕</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Document Header / Work Order No <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" v-model="newSapWoForm.docHeader" placeholder="e.g. 31007890" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; font-weight: 700; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Yeh number stock dump ke Column P (Doc Header) me aata hai</span>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Contractor / Sub-Contractor Name <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" v-model="newSapWoForm.contractorName" placeholder="e.g. Maa Kali Enterprises" class="form-input" style="width: 100%; font-size: 0.85rem; font-weight: 600; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">
+                            Vendor Code (Optional)
+                        </label>
+                        <input type="text" v-model="newSapWoForm.vendorCode" placeholder="e.g. 500306505" class="form-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 12px;">
+                    <button type="button" class="btn btn-secondary" @click="showAddSapWoModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="submitAddSapWorkOrder" style="font-weight: 700;">💾 Save Work Order</button>
+                </div>
+            </div>
+        </div>
+
+    <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <!-- Core Application (creates and mounts Vue app) -->
     <script defer src="js/core/app.js?v=20261114_conflict_review"></script>
 </body>
