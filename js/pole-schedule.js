@@ -2552,8 +2552,6 @@ window.PoleScheduleModule = {
                 cell.border = doubleBottomBorder;
             }
 
-            // ✍️ 5-Box Authorized Signatory Sign-off Block
-            (this.addStandardSignOffBlock || (window.ExportModule && window.ExportModule.addStandardSignOffBlock))(ws, curRow + 1, totalCols);
             // 📏 Set Generous & Exact Column Widths
             ws.getColumn(1).width = 10; // Item No
             ws.getColumn(2).width = 16; // SAP Code
@@ -2566,6 +2564,9 @@ window.PoleScheduleModule = {
             ws.getColumn(6 + locs.length).width = 15; // Unit Rate
             ws.getColumn(7 + locs.length).width = 18; // 100% Amount
             ws.getColumn(8 + locs.length).width = 18; // Stage 1 Amount
+
+            // ✍️ 5-Box Authorized Signatory Sign-off Block (with 5 lines gap above)
+            (this.addStandardSignOffBlock || (window.ExportModule && window.ExportModule.addStandardSignOffBlock))(ws, curRow + 1, totalCols);
 
             // Download file in browser
             const buffer = await workbook.xlsx.writeBuffer();

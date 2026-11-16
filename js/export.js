@@ -21,13 +21,15 @@ window.ExportModule = {
     addStandardSignOffBlock(ws, startRow, totalCols) {
         if (!ws || totalCols < 1) return startRow;
 
-        // 1 blank spacer row between table and sign-off block
-        const spacerRow = startRow;
-        ws.getRow(spacerRow).height = 14;
+        // ✍️ 5 lines gap above sign-off block so officials have ample space to sign above
+        const gapLines = 5;
+        for (let g = 0; g < gapLines; g++) {
+            ws.getRow(startRow + g).height = 18;
+        }
 
         // Official 5-Box Authorized Signatory Sign-off Block matching print preview exactly
-        const signRowIdx = spacerRow + 1;
-        ws.getRow(signRowIdx).height = 65;
+        const signRowIdx = startRow + gapLines;
+        ws.getRow(signRowIdx).height = 60;
 
         const signTitles = [
             { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
@@ -45,18 +47,61 @@ window.ExportModule = {
         };
 
         const numSignBoxes = 5;
-        let currentSignCol = 1;
-        for (let i = 0; i < numSignBoxes; i++) {
-            const remainingBoxes = numSignBoxes - i;
-            const remainingCols = totalCols - currentSignCol + 1;
-            const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
-            const endCol = (i === numSignBoxes - 1) ? totalCols : (currentSignCol + span - 1);
+        const colWidths = [];
+        for (let col = 1; col <= totalCols; col++) {
+            colWidths.push(ws.getColumn(col).width || 15);
+        }
 
-            if (endCol >= currentSignCol) {
-                if (endCol > currentSignCol) {
-                    ws.mergeCells(signRowIdx, currentSignCol, signRowIdx, endCol);
+        // Find balanced partition across totalCols so all 5 boxes have equal visual widths
+        let partitions = null;
+        let minVariance = Infinity;
+
+        function findPartitions(boxIdx, startCol, currentParts) {
+            if (boxIdx === numSignBoxes - 1) {
+                const endCol = totalCols;
+                const w = colWidths.slice(startCol - 1, endCol).reduce((a, b) => a + b, 0);
+                const all = currentParts.concat([{ start: startCol, end: endCol, w }]);
+                const widthsArr = all.map(p => p.w);
+                const mean = widthsArr.reduce((a, b) => a + b, 0) / numSignBoxes;
+                const penalty = widthsArr.some(width => width < 22) ? 10000 : 0;
+                const variance = widthsArr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) + penalty;
+                if (variance < minVariance) {
+                    minVariance = variance;
+                    partitions = all;
                 }
-                const cell = ws.getCell(signRowIdx, currentSignCol);
+                return;
+            }
+            for (let endCol = startCol; endCol <= totalCols - (numSignBoxes - boxIdx); endCol++) {
+                const w = colWidths.slice(startCol - 1, endCol).reduce((a, b) => a + b, 0);
+                findPartitions(boxIdx + 1, endCol + 1, currentParts.concat([{ start: startCol, end: endCol, w }]));
+            }
+        }
+
+        findPartitions(0, 1, []);
+
+        if (!partitions || partitions.length !== numSignBoxes) {
+            partitions = [];
+            let currentSignCol = 1;
+            for (let i = 0; i < numSignBoxes; i++) {
+                const remainingBoxes = numSignBoxes - i;
+                const remainingCols = totalCols - currentSignCol + 1;
+                const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
+                const endCol = (i === numSignBoxes - 1) ? totalCols : (currentSignCol + span - 1);
+                partitions.push({ start: currentSignCol, end: endCol });
+                currentSignCol = endCol + 1;
+            }
+        }
+
+        for (let i = 0; i < numSignBoxes; i++) {
+            const part = partitions[i];
+            const startCol = part.start;
+            const endCol = part.end;
+
+            if (endCol >= startCol) {
+                if (endCol > startCol) {
+                    ws.mergeCells(signRowIdx, startCol, signRowIdx, endCol);
+                }
+                const cell = ws.getCell(signRowIdx, startCol);
                 cell.value = {
                     richText: [
                         { text: signTitles[i].main + '\n', font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } } },
@@ -65,11 +110,10 @@ window.ExportModule = {
                 };
                 cell.alignment = { horizontal: 'center', vertical: 'bottom', wrapText: true };
 
-                for (let c = currentSignCol; c <= endCol; c++) {
-                    ws.getCell(signRowIdx, c).border = signBorder;
+                for (let col = startCol; col <= endCol; col++) {
+                    ws.getCell(signRowIdx, col).border = signBorder;
                 }
             }
-            currentSignCol = endCol + 1;
         }
 
         return signRowIdx;
@@ -1708,12 +1752,12 @@ function jsonOut(obj) {
             rowIdx++;
         }
 
-        (this.addStandardSignOffBlock || window.ExportModule.addStandardSignOffBlock)(ws, rowIdx, totalCols);
-
-        let widths = [{ width: 8 }, { width: 50 }, { width: 8 }];
-        this.getActLocations(actKey).forEach(() => widths.push({ width: 16 }));
-        widths.push({ width: 14 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 16 });
+        let widths = [{ width: 8 }, { width: 38 }, { width: 10 }];
+        this.getActLocations(actKey).forEach(() => widths.push({ width: 18 }));
+        widths.push({ width: 16 }, { width: 18 }, { width: 26 }, { width: 18 }, { width: 18 });
         ws.columns = widths;
+
+        (this.addStandardSignOffBlock || window.ExportModule.addStandardSignOffBlock)(ws, rowIdx, totalCols);
     },
 
     openActivityExcelPreview() {
