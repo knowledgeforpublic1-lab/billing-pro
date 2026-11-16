@@ -147,6 +147,8 @@
 <symbol id="ic-nut" viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7L12 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
 <symbol id="ic-brick" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 9.33h20M2 14.67h20M12 4v5.33M7 9.33v5.34M17 9.33v5.34M12 14.67V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
 <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M3 7v6h6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-redo" viewBox="0 0 24 24"><path d="M21 7v6h-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-printer" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="14" width="12" height="8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       </defs>
     </svg>
@@ -469,10 +471,16 @@
                         </button>
                         <span class="vsep"></span>
                     </div>
+                    <button class="tbtn ico-btn" @click="undo" :disabled="!canUndo || isFinalized" title="Undo (Ctrl+Z) — पिछला बदलाव वापस लें" :style="{ opacity: canUndo && !isFinalized ? 1 : 0.35, cursor: canUndo && !isFinalized ? 'pointer' : 'not-allowed', color: '#6366f1' }">
+                        <svg class="ic"><use href="#ic-undo"/></svg>
+                    </button>
+                    <button class="tbtn ico-btn" @click="redo" :disabled="!canRedo || isFinalized" title="Redo (Ctrl+Y) — बदलाव दोबारा लागू करें" :style="{ opacity: canRedo && !isFinalized ? 1 : 0.35, cursor: canRedo && !isFinalized ? 'pointer' : 'not-allowed', color: '#6366f1' }">
+                        <svg class="ic"><use href="#ic-redo"/></svg>
+                    </button>
+                    <span class="vsep"></span>
                     <button class="tbtn ico-btn" @click="openSavedBillsManager('database')" title="Open Saved Bills" style="color: #0a66c2;"><svg class="ic"><use href="#ic-folder"/></svg></button>
                     <button class="tbtn primary ico-btn" @click="openNewBillModal" title="New Bill (+ naya RA Bill khologe)" style="color: #ffffff;"><svg class="ic"><use href="#ic-plus"/></svg></button>
                     <button class="tbtn ico-btn" @click="hasDriveConnected ? manualSaveBillToDrive() : openGDriveModal()" :title="hasDriveConnected ? 'Drive Connected — click to save bill to Google Drive' : 'Google Drive connect karo'" style="color: #d97706;"><svg class="ic"><use href="#ic-cloud"/></svg></button>
-                    <button v-if="currentView === 'detail'" class="btn btn-secondary ico-btn" @click="printCurrentActivity" title="Print Preview — Activity Sheet ka print preview kholo (Ctrl+P)" style="color: #0284c7;"><svg class="ic"><use href="#ic-printer"/></svg></button>
                     <button v-if="currentView === 'detail'" class="btn btn-excel ico-btn" @click="exportCurrentActivityStyledExcel" title="Export Activity Excel — formulas ke saath download karo"><svg class="ic"><use href="#ic-export"/></svg></button>
                     <button v-if="currentView === 'invoice' || currentView === 'taxInvoice'" class="btn btn-excel ico-btn" @click="exportTaxInvoiceExcel" title="Export Invoice (.xlsx) — formatted tax invoice with formulas"><svg class="ic"><use href="#ic-export"/></svg></button>
                     <button v-if="currentView === 'reconciliation'" class="btn btn-excel ico-btn" @click="exportReconciliationExcel" title="Export Reconciliation Sheet — Excel (.xlsx)"><svg class="ic"><use href="#ic-export"/></svg></button>

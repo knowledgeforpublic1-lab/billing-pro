@@ -7149,7 +7149,7 @@ html[data-theme="light"] .excel-filter-popover {
 }
 
 .activity-print-signoff {
-    display: flex;
+    display: none !important; /* Hide on interactive web portal screen; only show in @media print */
     justify-content: space-between;
     align-items: flex-end;
     gap: 12px;
