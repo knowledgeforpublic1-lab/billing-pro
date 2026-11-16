@@ -31,6 +31,19 @@ window.DailyProgressModule = {
             console.warn('[DailyProgress] Storage load error:', e);
         }
 
+        // Fetch latest cloud data to merge any reports/contractors entered via standalone link
+        try {
+            if (typeof fetch === 'function') {
+                const cRes = await fetch('/api/daily-progress/data');
+                if (cRes.ok) {
+                    const cData = await cRes.json();
+                    if (cData && cData.success && cData.data) {
+                        stored = this.mergeDailyProgressData(stored, cData.data);
+                    }
+                }
+            }
+        } catch (_) { }
+
         // Initialize with default seed data if no saved reports exist
         const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
         if (!stored || !stored.reports || stored.reports.length === 0) {
@@ -144,6 +157,42 @@ window.DailyProgressModule = {
         }
     },
 
+    mergeDailyProgressData(local, cloud) {
+        if (!cloud) return local;
+        if (!local) return cloud;
+        const res = { ...local };
+        // Merge contractors
+        const cMap = new Map();
+        (local.contractors || []).forEach(c => cMap.set(this.normContractorId(c.id || c.name), c));
+        (cloud.contractors || []).forEach(c => {
+            const n = this.normContractorId(c.id || c.name);
+            if (n && !cMap.has(n)) cMap.set(n, c);
+        });
+        res.contractors = Array.from(cMap.values());
+
+        // Merge reports (prefer highest version or newest update)
+        const rMap = new Map();
+        (local.reports || []).forEach(r => rMap.set(r.contractorId + '|' + r.date, r));
+        (cloud.reports || []).forEach(r => {
+            const key = r.contractorId + '|' + r.date;
+            const existing = rMap.get(key);
+            if (!existing || (Number(r.version || 0) >= Number(existing.version || 0))) {
+                rMap.set(key, r);
+            }
+        });
+        res.reports = Array.from(rMap.values());
+
+        // Merge issues
+        const iMap = new Map();
+        (local.issues || []).forEach(i => iMap.set(i.id || (i.contractorId + '|' + i.itemId + '|' + i.date), i));
+        (cloud.issues || []).forEach(i => {
+            const key = i.id || (i.contractorId + '|' + i.itemId + '|' + i.date);
+            if (!iMap.has(key)) iMap.set(key, i);
+        });
+        res.issues = Array.from(iMap.values());
+        return res;
+    },
+
     async saveDailyProgressData() {
         if (!this.dailyProgressData) return false;
         if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
@@ -154,6 +203,18 @@ window.DailyProgressModule = {
         } else {
             throw new Error('Device storage unavailable');
         }
+
+        // Automatic background cloud sync so standalone shared links reflect latest changes
+        try {
+            if (typeof fetch === 'function') {
+                fetch('/api/daily-progress/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.dailyProgressData)
+                }).catch(e => console.info('[DailyProgress] Cloud auto-sync notice:', e.message));
+            }
+        } catch (_) { }
+
         return true;
     },
 
@@ -700,7 +761,7 @@ window.DailyProgressModule = {
         return items.filter(it => {
             if (q) {
                 const matches = String(it.name || '').toLowerCase().includes(q) ||
-                                String(it.code || '').toLowerCase().includes(q);
+                    String(it.code || '').toLowerCase().includes(q);
                 if (!matches) return false;
             }
             if (filter === 'all') return true;
@@ -751,9 +812,19 @@ window.DailyProgressModule = {
 
     copyDailyProgressShareLink() {
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-        const cid = this.dailyProgressContractorId || '';
+        const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
         const dt = this.dailyProgressDate || '';
         const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+
+        // Immediately trigger background cloud sync so recipient gets current data
+        if (this.dailyProgressData && typeof fetch === 'function') {
+            fetch('/api/daily-progress/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.dailyProgressData)
+            }).catch(() => { });
+        }
+
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(() => {
                 if (typeof this.showToast === 'function') {

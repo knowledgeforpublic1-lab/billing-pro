@@ -2294,6 +2294,7 @@ const defaultContractorsList = [
 
 if (typeof window !== "undefined") {
     window.defaultContractorsList = defaultContractorsList;
+    window.DefaultContractors = defaultContractorsList;
 }
 if (typeof module !== "undefined" && module.exports) {
     module.exports = defaultContractorsList;

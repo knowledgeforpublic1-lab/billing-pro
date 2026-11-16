@@ -75,14 +75,26 @@
 
         computed: {
             activeContractor() {
-                const norm = normId(this.selectedContractorId);
-                const found = this.contractors.find(c => normId(c.id) === norm || normId(c.name) === norm);
-                return found || this.contractors[0] || { name: 'MANGESH SONWANE', project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
+                const curId = this.selectedContractorId;
+                const norm = normId(curId);
+                const list = this.contractors || [];
+                const found = list.find(c => normId(c.id) === norm || normId(c.name) === norm || c.id === curId);
+                if (found) return found;
+                if (curId) {
+                    const niceName = String(curId).replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return { id: curId, name: niceName, project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
+                }
+                return list[0] || { id: 'mangesh-sonwane', name: 'MANGESH SONWANE', project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
             },
 
             contractorReports() {
-                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
-                return (this.reports || []).filter(r => normId(r.contractorId) === cidNorm);
+                const actC = this.activeContractor || {};
+                const cidNorm = normId(actC.id || '');
+                const cNameNorm = normId(actC.name || '');
+                return (this.reports || []).filter(r => {
+                    const rNorm = normId(r.contractorId);
+                    return rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id;
+                });
             },
 
             totalManpower() {
@@ -142,25 +154,54 @@
             async initData() {
                 this.busy = true;
                 try {
-                    // 1. Build initial contractors list from DefaultContractors + seed
+                    // 1. Build initial contractors list from defaultContractorsList + seed + SAP Stock
                     const contractorsMap = new Map();
                     const seed = window.DailyProgressSeed || {};
                     if (seed.contractor) {
                         contractorsMap.set(normId(seed.contractor.id), { ...seed.contractor });
                     }
-                    if (Array.isArray(window.DefaultContractors)) {
-                        window.DefaultContractors.forEach(c => {
+                    const srcList = (typeof window !== 'undefined' && (window.defaultContractorsList || window.DefaultContractors)) || [];
+                    if (Array.isArray(srcList)) {
+                        srcList.forEach(c => {
                             const n = normId(c.id || c.name);
                             if (n && !contractorsMap.has(n)) {
                                 contractorsMap.set(n, {
                                     id: c.id || n,
                                     name: c.name || c.firmName,
                                     project: 'Gadchiroli (T-10)',
-                                    feeder: c.feeder || '',
+                                    feeder: c.feederName || c.feeder || '',
                                     engineer: c.engineer || ''
                                 });
                             }
                         });
+                    }
+
+                    if (window.ContractorSapStock && window.ContractorSapStock.byContractorNorm) {
+                        for (const [key, block] of Object.entries(window.ContractorSapStock.byContractorNorm)) {
+                            if (!contractorsMap.has(key) && block && block.contractorName) {
+                                contractorsMap.set(key, {
+                                    id: key,
+                                    name: block.contractorName,
+                                    project: 'Gadchiroli (T-10)',
+                                    feeder: '',
+                                    engineer: ''
+                                });
+                            }
+                        }
+                    }
+
+                    if (window.DefaultSapContractorMapping && window.DefaultSapContractorMapping.groups) {
+                        for (const [key, group] of Object.entries(window.DefaultSapContractorMapping.groups)) {
+                            if (!contractorsMap.has(key) && group && group.displayName) {
+                                contractorsMap.set(key, {
+                                    id: key,
+                                    name: group.displayName,
+                                    project: 'Gadchiroli (T-10)',
+                                    feeder: '',
+                                    engineer: ''
+                                });
+                            }
+                        }
                     }
 
                     // 2. Fetch cloud data or localStorage
@@ -187,7 +228,10 @@
                     // 3. Merge data
                     if (loaded) {
                         if (Array.isArray(loaded.contractors)) {
-                            loaded.contractors.forEach(c => contractorsMap.set(normId(c.id || c.name), c));
+                            loaded.contractors.forEach(c => {
+                                const n = normId(c.id || c.name);
+                                if (n) contractorsMap.set(n, c);
+                            });
                         }
                         this.reports = Array.isArray(loaded.reports) ? loaded.reports : [];
                         this.issues = Array.isArray(loaded.issues) ? loaded.issues : [];
@@ -209,8 +253,28 @@
                     const params = new URLSearchParams(window.location.search);
                     const qCid = params.get('contractor') || params.get('c');
                     if (qCid) {
-                        const matched = this.contractors.find(c => normId(c.id) === normId(qCid) || normId(c.name) === normId(qCid));
-                        if (matched) this.selectedContractorId = matched.id;
+                        const qNorm = normId(qCid);
+                        let matched = this.contractors.find(c => normId(c.id) === qNorm || normId(c.name) === qNorm || c.id === qCid || c.name === qCid);
+                        if (!matched && qNorm) {
+                            matched = this.contractors.find(c => {
+                                const cn = normId(c.id || c.name);
+                                return cn.includes(qNorm) || qNorm.includes(cn);
+                            });
+                        }
+                        if (matched) {
+                            this.selectedContractorId = matched.id;
+                        } else {
+                            const niceName = qCid.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            const fallbackContractor = {
+                                id: qCid,
+                                name: niceName,
+                                project: 'Gadchiroli (T-10)',
+                                feeder: 'ANGARA',
+                                engineer: 'SUPERVISOR'
+                            };
+                            this.contractors.push(fallbackContractor);
+                            this.selectedContractorId = fallbackContractor.id;
+                        }
                     }
 
                     this.loadReportForActiveDate();
@@ -222,10 +286,15 @@
             },
 
             loadReportForActiveDate() {
-                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
+                const actC = this.activeContractor || {};
+                const cidNorm = normId(actC.id || '');
+                const cNameNorm = normId(actC.name || '');
                 const curDate = this.selectedDate;
 
-                const rep = (this.reports || []).find(r => normId(r.contractorId) === cidNorm && r.date === curDate);
+                const rep = (this.reports || []).find(r => {
+                    const rNorm = normId(r.contractorId);
+                    return (rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id) && r.date === curDate;
+                });
                 if (rep) {
                     this.quantities = { ...(rep.quantities || {}) };
                     this.manpower = {
@@ -278,7 +347,9 @@
             getItemStock(item) {
                 if (!item) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0 };
 
-                const cidNorm = normId(this.activeContractor.id || this.activeContractor.name);
+                const actC = this.activeContractor || {};
+                const cidNorm = normId(actC.id || '');
+                const cNameNorm = normId(actC.name || '');
                 const curDate = this.selectedDate || getTodayStr();
                 const code = String(item.code || '').trim();
 
@@ -287,13 +358,32 @@
                 if (sapStock && code) {
                     // Try to find contractor in stock
                     let contractorBlock = null;
-                    if (sapStock.byContractorNorm && sapStock.byContractorNorm[cidNorm]) {
-                        contractorBlock = sapStock.byContractorNorm[cidNorm];
-                    } else if (sapStock.byContractorNorm) {
-                        for (const [k, val] of Object.entries(sapStock.byContractorNorm)) {
-                            if (k.includes(cidNorm) || cidNorm.includes(k)) {
-                                contractorBlock = val;
-                                break;
+                    if (sapStock.byContractorNorm) {
+                        if (cidNorm && sapStock.byContractorNorm[cidNorm]) {
+                            contractorBlock = sapStock.byContractorNorm[cidNorm];
+                        } else if (cNameNorm && sapStock.byContractorNorm[cNameNorm]) {
+                            contractorBlock = sapStock.byContractorNorm[cNameNorm];
+                        } else {
+                            // Check alias groups in DefaultSapContractorMapping
+                            const mapGroups = window.DefaultSapContractorMapping?.groups || {};
+                            for (const [gKey, group] of Object.entries(mapGroups)) {
+                                const gNorm = normId(gKey);
+                                const dNorm = normId(group.displayName || '');
+                                if (gNorm === cidNorm || gNorm === cNameNorm || dNorm === cidNorm || dNorm === cNameNorm) {
+                                    if (sapStock.byContractorNorm[gKey]) {
+                                        contractorBlock = sapStock.byContractorNorm[gKey];
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!contractorBlock) {
+                                for (const [k, val] of Object.entries(sapStock.byContractorNorm)) {
+                                    if ((cidNorm && (k.includes(cidNorm) || cidNorm.includes(k))) ||
+                                        (cNameNorm && (k.includes(cNameNorm) || cNameNorm.includes(k)))) {
+                                        contractorBlock = val;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -326,14 +416,22 @@
 
                 // 2. Manual Issues
                 const manualIssued = (this.issues || [])
-                    .filter(iss => normId(iss.contractorId) === cidNorm && String(iss.itemId) === String(item.id) && (!iss.date || iss.date <= curDate))
+                    .filter(iss => {
+                        const issNorm = normId(iss.contractorId);
+                        const matchC = issNorm === cidNorm || issNorm === cNameNorm || iss.contractorId === actC.id;
+                        return matchC && String(iss.itemId) === String(item.id) && (!iss.date || iss.date <= curDate);
+                    })
                     .reduce((sum, iss) => sum + (Number(iss.quantity) || 0), 0);
 
                 const totalIssued = Math.round((sapIssued + manualIssued) * 1000) / 1000;
 
                 // 3. Total Consumed
                 const totalConsumed = (this.reports || [])
-                    .filter(r => normId(r.contractorId) === cidNorm && r.date <= curDate)
+                    .filter(r => {
+                        const rNorm = normId(r.contractorId);
+                        const matchC = rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id;
+                        return matchC && r.date <= curDate;
+                    })
                     .reduce((sum, r) => sum + (Number(r.quantities && r.quantities[item.id]) || 0), 0);
 
                 const balance = Math.round((totalIssued - totalConsumed) * 1000) / 1000;
@@ -351,7 +449,10 @@
                 this.busy = true;
                 this.saveStatus = 'saving';
                 try {
-                    const cid = this.activeContractor.id;
+                    const actC = this.activeContractor || {};
+                    const cid = actC.id || this.selectedContractorId;
+                    const cidNorm = normId(cid);
+                    const cNameNorm = normId(actC.name || '');
                     const curDate = this.selectedDate;
 
                     const cleanQuantities = {};
@@ -370,7 +471,10 @@
                         updatedAt: new Date().toISOString()
                     };
 
-                    const existingIdx = this.reports.findIndex(r => normId(r.contractorId) === normId(cid) && r.date === curDate);
+                    const existingIdx = this.reports.findIndex(r => {
+                        const rNorm = normId(r.contractorId);
+                        return (rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === cid) && r.date === curDate;
+                    });
                     if (existingIdx >= 0) {
                         this.reports[existingIdx] = reportObj;
                     } else {

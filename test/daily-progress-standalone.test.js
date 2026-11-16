@@ -158,3 +158,64 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     // Maa kali has no entries yet
     assert.equal(mountedApp.quantities['1'], undefined, 'Contractor change isolates report quantities');
 });
+
+test('Daily Progress Standalone Shared Link contractor matching with defaultContractorsList', async (t) => {
+    let mountedApp = null;
+    const mockStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
+    const sandbox = {
+        window: {
+            location: { search: '?contractor=intally_dynamix_private_limited&date=2026-11-16', origin: 'https://billing-pro.local' },
+            DailyProgressSeed: {
+                contractor: { id: 'mangesh-sonwane', name: 'MANGESH SONWANE', project: 'Gadchiroli (T-10)', feeder: 'ANGARA' },
+                items: [
+                    { id: '1', code: '17005037', name: 'RSJ POLE 100X116 MM 8 MTR', unit: 'NO', row: 18 }
+                ],
+                records: []
+            },
+            defaultContractorsList: [
+                { id: 'intally_dynamix_private_limited', name: 'Intally Dynamix Private Limited' },
+                { id: 'amruta_electrical_cont', name: 'Amruta Electrical & Cont.' }
+            ],
+            ContractorSapStock: {
+                byContractorNorm: {
+                    'intallydynamixprivatelimited': {
+                        contractorName: 'Intally Dynamix Private Limited',
+                        materials: {
+                            '17005037': {
+                                txns: [['2026-11-15', 10, 0]]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        document: { getElementById() { return {}; } },
+        localStorage: mockStorage,
+        navigator: { clipboard: { writeText: async () => {} } },
+        fetch: async (url, opts) => ({ ok: true, json: async () => ({ success: true, data: null }) }),
+        URLSearchParams: require('url').URLSearchParams,
+        Intl, Date, Math, Number, String, Array, Object, Map, Set, clearTimeout, setTimeout, console
+    };
+
+    sandbox.Vue = {
+        createApp(options) {
+            mountedApp = Object.assign({}, options.data(), options.methods, { $computed: options.computed });
+            for (const [k, fn] of Object.entries(options.computed)) {
+                Object.defineProperty(mountedApp, k, { get() { return fn.call(mountedApp); } });
+            }
+            return { mount() {} };
+        }
+    };
+
+    const js = fs.readFileSync(path.join(__dirname, '../js/daily-progress-standalone.js'), 'utf8');
+    vm.runInNewContext(js, sandbox);
+    await mountedApp.initData();
+
+    assert.equal(mountedApp.selectedContractorId, 'intally_dynamix_private_limited');
+    assert.equal(mountedApp.activeContractor.name, 'Intally Dynamix Private Limited');
+    assert.ok(mountedApp.contractors.some(c => c.id === 'intally_dynamix_private_limited'));
+
+    const item = mountedApp.items[0];
+    const stock = mountedApp.getItemStock(item);
+    assert.equal(stock.totalIssued, 10, 'Net Issue is 10 for Intally Dynamix');
+});
