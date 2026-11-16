@@ -112,6 +112,21 @@
             this.isAdminElevated = false;
             this.isAdminUnlocked = false;
             this.showAdminModal = false;
+            this.showAddSapWoModal = false;
+            this.showNewBillModal = false;
+            this.showSavedBillsModal = false;
+            this.showContractorModal = false;
+            this.showAddMaterialModal = false;
+            this.showPsAddMaterialModal = false;
+            this.showSapItemManagerModal = false;
+            this.showNutBoltModal = false;
+            this.showConcretingModal = false;
+            this.showGDriveModal = false;
+            this.showSapMasterModal = false;
+            this.showRecoColumnModal = false;
+            this.showOldRecoModal = false;
+            this.showActivityExcelPreviewModal = false;
+            this.dailyProgressModal = '';
             this.adminPendingCallback = null;
             this.adminPasswordInput = '';
             this.portalPasswordInput = '';
@@ -134,6 +149,8 @@
             this.showToast('Portal locked. Kaam local storage mein rakha gaya hai.', 'info');
         },
         openAdminModal(callback) {
+            this.showAddSapWoModal = false;
+            this.dailyProgressModal = '';
             this.adminPendingCallback = typeof callback === 'function' ? callback : null;
             this.adminPasswordInput = '';
             this.adminPasswordError = '';

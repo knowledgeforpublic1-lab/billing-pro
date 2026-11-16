@@ -74,6 +74,14 @@ async function main() {
     await app.forgotPortalPassword();
     assert.match(requests.at(-1).url, /forgot-password$/);
     assert.equal(requests.at(-1).init.body, '{}', 'Client cannot choose a different reset destination');
+    app.showAddSapWoModal = true;
+    app.dailyProgressModal = 'issue';
+    app.openAdminModal();
+    assert.equal(app.showAddSapWoModal, false, 'openAdminModal clears any overlapping SAP WO modal');
+    assert.equal(app.dailyProgressModal, '', 'openAdminModal clears any overlapping daily progress modal');
+    app.showAddSapWoModal = true;
+    app.lockPortalLocally();
+    assert.equal(app.showAddSapWoModal, false, 'lockPortalLocally clears any floating modal');
     console.log('Client auth: server-only unlock, expired session handling, countdown, local data preservation and reset request passed.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

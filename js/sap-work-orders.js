@@ -10,6 +10,7 @@
 
 window.SapWorkOrdersModule = {
     openAddSapWoModal() {
+        if (!this.isPortalUnlocked) return;
         this.newSapWoForm = { docHeader: '', contractorName: '', vendorCode: '' };
         this.showAddSapWoModal = true;
     },
