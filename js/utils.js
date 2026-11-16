@@ -368,6 +368,8 @@ window.UtilsModule = {
                         if (typeof this.syncWithBillingProActiveContractor === 'function') {
                             this.syncWithBillingProActiveContractor();
                         }
+                        // Auto collapse left sidebar so Daily Progress gets 100% full screen width
+                        this.sidebarCollapsed = true;
                     }
                     if (viewName === 'invoice') {
                         // Ensure contractor name is populated only when a firm is actually selected

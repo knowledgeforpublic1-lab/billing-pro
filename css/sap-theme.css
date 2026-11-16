@@ -358,6 +358,17 @@ html:not([data-theme="dark"]) table th strong {
   flex-shrink: 0 !important;
   overflow-y: auto !important;
   height: 100% !important;
+  transition: width 0.2s ease, opacity 0.2s ease;
+}
+
+.sidebar.collapsed {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none !important;
+  }
 }
 
 .sidebar a {

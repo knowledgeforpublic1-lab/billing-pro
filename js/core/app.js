@@ -191,6 +191,7 @@
                     } catch(e) { return 'dark'; }
                 })(),
                 isFinalized: false,
+                sidebarCollapsed: false,
                 // 🛡️ Section-level Error Isolation: agar kisi tab me error ho to sirf wahi isolate ho
                 sectionErrors: {
                     reconciliation: null,
