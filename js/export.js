@@ -21,66 +21,58 @@ window.ExportModule = {
     addStandardSignOffBlock(ws, startRow, totalCols) {
         if (!ws || totalCols < 1) return startRow;
 
-        const thinSide = { style: 'thin', color: { argb: 'FF94A3B8' } };
+        // 1 blank spacer row between table and sign-off block
+        const spacerRow = startRow;
+        ws.getRow(spacerRow).height = 14;
 
-        // Horizontal format: title ek row me (left + right), "(Authorized Signatory)" uske niche apni row me.
-        // Signing space har pair ke upar — pehli pair se pehle 5 khali lines, baaki pairs se pehle 3.
-        const gapBeforePair = [5, 3, 3];
-        const pairs = [
-            ['Sub -Contractor', 'Billing Engineer'],
-            ['Site Engineer/ Supervisor', 'Division Incharge'],
-            ['Division Incharge', 'Project Manager']
+        // Official 5-Box Authorized Signatory Sign-off Block matching print preview exactly
+        const signRowIdx = spacerRow + 1;
+        ws.getRow(signRowIdx).height = 65;
+
+        const signTitles = [
+            { main: 'Sub -Contractor', sub: '(Authorized Signatory)' },
+            { main: 'Billing Engineer', sub: '(Authorized Signatory)' },
+            { main: 'Site Engineer/ Supervisor', sub: '(Authorized Signatory)' },
+            { main: 'Division Incharge', sub: '(Authorized Signatory)' },
+            { main: 'Project Manager', sub: '(Authorized Signatory)' }
         ];
 
-        const leftEnd = Math.max(1, Math.floor(totalCols / 2));
-        const rightStart = leftEnd + 1;
-        const rightEnd = totalCols;
+        const signBorder = {
+            top: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            left: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            bottom: { style: 'thin', color: { argb: 'FF94A3B8' } },
+            right: { style: 'thin', color: { argb: 'FF94A3B8' } }
+        };
 
-        let signRow = startRow;
-        for (let p = 0; p < pairs.length; p++) {
-            for (let g = 0; g < gapBeforePair[p]; g++) {
-                ws.getRow(signRow + g).height = 18;
+        const numSignBoxes = 5;
+        let currentSignCol = 1;
+        for (let i = 0; i < numSignBoxes; i++) {
+            const remainingBoxes = numSignBoxes - i;
+            const remainingCols = totalCols - currentSignCol + 1;
+            const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
+            const endCol = (i === numSignBoxes - 1) ? totalCols : (currentSignCol + span - 1);
+
+            if (endCol >= currentSignCol) {
+                if (endCol > currentSignCol) {
+                    ws.mergeCells(signRowIdx, currentSignCol, signRowIdx, endCol);
+                }
+                const cell = ws.getCell(signRowIdx, currentSignCol);
+                cell.value = {
+                    richText: [
+                        { text: signTitles[i].main + '\n', font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } } },
+                        { text: signTitles[i].sub, font: { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF475569' } } }
+                    ]
+                };
+                cell.alignment = { horizontal: 'center', vertical: 'bottom', wrapText: true };
+
+                for (let c = currentSignCol; c <= endCol; c++) {
+                    ws.getCell(signRowIdx, c).border = signBorder;
+                }
             }
-            const titleRow = signRow + gapBeforePair[p];
-            const subRow = titleRow + 1;
-            ws.getRow(titleRow).height = 18;
-            ws.getRow(subRow).height = 16;
-
-            const renderBox = (startCol, endCol, title) => {
-                if (!endCol || endCol < startCol) return;
-                if (endCol > startCol) {
-                    ws.mergeCells(titleRow, startCol, titleRow, endCol);
-                    ws.mergeCells(subRow, startCol, subRow, endCol);
-                }
-                const align = (startCol === 1) ? 'left' : 'right';
-                const tCell = ws.getCell(titleRow, startCol);
-                tCell.value = title;
-                tCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-                tCell.alignment = { horizontal: align, vertical: 'bottom' };
-                const sCell = ws.getCell(subRow, startCol);
-                sCell.value = '(Authorized Signatory)';
-                sCell.font = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF1E3A8A' } };
-                sCell.alignment = { horizontal: align, vertical: 'top' };
-                // 2-row box ka perimeter border
-                for (let c = startCol; c <= endCol; c++) {
-                    ws.getCell(titleRow, c).border = {
-                        top: thinSide,
-                        left: (c === startCol) ? thinSide : undefined,
-                        right: (c === endCol) ? thinSide : undefined
-                    };
-                    ws.getCell(subRow, c).border = {
-                        bottom: thinSide,
-                        left: (c === startCol) ? thinSide : undefined,
-                        right: (c === endCol) ? thinSide : undefined
-                    };
-                }
-            };
-            renderBox(1, leftEnd, pairs[p][0]);
-            renderBox(rightStart, rightEnd, pairs[p][1]);
-
-            signRow = subRow + 1;
+            currentSignCol = endCol + 1;
         }
-        return signRow - 1;
+
+        return signRowIdx;
     },
     async exportMaterialMappingExcel() {
         const workbook = new ExcelJS.Workbook();

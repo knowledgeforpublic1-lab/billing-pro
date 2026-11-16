@@ -2553,49 +2553,7 @@ window.PoleScheduleModule = {
             }
 
             // ✍️ 5-Box Authorized Signatory Sign-off Block
-            const signSpacerRow = curRow + 2;
-            ws.getRow(signSpacerRow).height = 14;
-            const signRowIdx = signSpacerRow + 1;
-            ws.getRow(signRowIdx).height = 55;
-
-            const signTitles = [
-                { main: "Sub -Contractor", sub: "(Authorized Signatory)" },
-                { main: "Billing Engineer", sub: "(Authorized Signatory)" },
-                { main: "Site Engineer/ Supervisor", sub: "(Authorized Signatory)" },
-                { main: "Division Incharge", sub: "(Authorized Signatory)" },
-                { main: "Project Manager", sub: "(Authorized Signatory)" }
-            ];
-
-            const signBorder = {
-                top: { style: "thin", color: { argb: "FF94A3B8" } },
-                left: { style: "thin", color: { argb: "FF94A3B8" } },
-                bottom: { style: "thin", color: { argb: "FF94A3B8" } },
-                right: { style: "thin", color: { argb: "FF94A3B8" } }
-            };
-
-            const numSignBoxes = 5;
-            let currentSignCol = 1;
-            for (let i = 0; i < numSignBoxes; i++) {
-                const remainingBoxes = numSignBoxes - i;
-                const remainingCols = totalCols - currentSignCol + 1;
-                const span = Math.max(1, Math.round(remainingCols / remainingBoxes));
-                const endCol = (i === numSignBoxes - 1) ? totalCols : (currentSignCol + span - 1);
-
-                if (endCol >= currentSignCol) {
-                    if (endCol > currentSignCol) {
-                        ws.mergeCells(signRowIdx, currentSignCol, signRowIdx, endCol);
-                    }
-                    const cell = ws.getCell(signRowIdx, currentSignCol);
-                    cell.value = signTitles[i].main + "\n" + signTitles[i].sub;
-                    cell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF1E3A8A" } };
-                    cell.alignment = { horizontal: "center", vertical: "bottom", wrapText: true };
-
-                    for (let c = currentSignCol; c <= endCol; c++) {
-                        ws.getCell(signRowIdx, c).border = signBorder;
-                    }
-                }
-                currentSignCol = endCol + 1;
-            }
+            (this.addStandardSignOffBlock || (window.ExportModule && window.ExportModule.addStandardSignOffBlock))(ws, curRow + 1, totalCols);
             // 📏 Set Generous & Exact Column Widths
             ws.getColumn(1).width = 10; // Item No
             ws.getColumn(2).width = 16; // SAP Code
