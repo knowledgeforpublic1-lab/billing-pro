@@ -164,4 +164,46 @@ async function checkAllSchedules() {
     }
     console.log(`All ${Object.keys(schedules).length} Pole Schedules: mapping, stock status, save and cloud reload passed.`);
 }
-checkAllSchedules().catch(err => { console.error(err); process.exitCode = 1; });
+
+function testStockUploadWithoutSapCodeSheet() {
+    global.XLSX = require('xlsx');
+    require('../js/data/default-sap-contractor-mapping.js');
+    require('../js/stock-importer.js');
+
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ['', '', '', '', '', '', '', '', 'Material', 'Description', 'UoM', 'Quantity', '', '', '', 'Doc Header'],
+      ['', '', '', '', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', 1000, '', '', '', '31003359'],
+      ['', '', '', '', '', '', '', '', '11000123', 'M SAND 0-6 MM', 'KG', -200, '', '', '', '31003359'],
+      ['', '', '', '', '', '', '', '', '17000004', 'RSJ POLE', 'NO', 50, '', '', '', '31004926'],
+      ['', '', '', '', '', '', '', '', '17000004', 'RSJ POLE', 'NO', -5, '', '', '', '31004926']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+    const res = window.StockImporterModule.parseStockExcel(buf);
+    assert.equal(res.meta.source, 'SAP Transaction Dump (Master SAP Code Mapping)');
+    const dusk = res.byDocHeader['31003359'] || res.byContractorNorm['dusklineinfrastructure'];
+    assert.ok(dusk, 'Duskline must be identified without SAP Code sheet');
+    assert.equal(dusk.contractorName, 'DUSKLINE INFRASTRUCTURE');
+    assert.equal(dusk.materials['11000123'].grossIssue, 1000);
+    assert.equal(dusk.materials['11000123'].mrnReturn, 200);
+    assert.equal(dusk.materials['11000123'].netIssue, 800);
+
+    const pratima = res.byDocHeader['31004926'] || res.byContractorNorm['pratimaenterprises'];
+    assert.ok(pratima, 'Pratima must be identified without SAP Code sheet');
+    assert.equal(pratima.contractorName, 'pratima Enterprises');
+    assert.equal(pratima.materials['17000004'].grossIssue, 50);
+    assert.equal(pratima.materials['17000004'].mrnReturn, 5);
+    assert.equal(pratima.materials['17000004'].netIssue, 45);
+
+    console.log('Stock import without SAP Code sheet (using MasterSapCodeMapping) passed.');
+}
+
+async function runAll() {
+    await checkAllSchedules();
+    testStockUploadWithoutSapCodeSheet();
+}
+runAll().catch(err => { console.error(err); process.exitCode = 1; });
+

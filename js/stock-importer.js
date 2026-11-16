@@ -68,12 +68,23 @@ window.StockImporterModule = {
         }
 
         const sapCodeSheetName = sheetNames.find(s => s.toLowerCase().replace(/[^a-z0-9]/g, '').includes('sapcode'));
-        const txnSheetName = sheetNames.find(s => {
+        let txnSheetName = sheetNames.find(s => {
             const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');
             return clean.includes('sheet1') || clean.includes('stock') || clean.includes('issue') || clean.includes('transaction');
         });
 
-        if (sapCodeSheetName && txnSheetName) {
+        const hasMasterMapping = !!((typeof window !== 'undefined' && window.MasterSapCodeMapping) || (typeof global !== 'undefined' && global.MasterSapCodeMapping));
+
+        // Auto-detect SAP transaction layout: if txnSheetName not found by name, check if first sheet has Doc Header (Col P) & Material (Col I)
+        if (!txnSheetName && sheetNames.length > 0) {
+            const firstWs = wb.Sheets[sheetNames[0]];
+            if (firstWs && (firstWs['P2'] || firstWs['P3'] || firstWs['P4']) && (firstWs['I2'] || firstWs['I3'] || firstWs['I4'])) {
+                txnSheetName = sheetNames[0];
+            }
+        }
+
+        // If we have a transaction sheet AND (we have an embedded SAP Code sheet OR preloaded MasterSapCodeMapping)
+        if (txnSheetName && (sapCodeSheetName || hasMasterMapping)) {
             return this.parseFullSapDump(wb, sapCodeSheetName, txnSheetName);
         } else {
             return this.parseGenericStockSheet(wb, sheetNames[0], opts);
@@ -84,69 +95,87 @@ window.StockImporterModule = {
      * Format 1: Full SAP Dump with "SAP Code" (contractor mappings) and "Sheet1" (transactions)
      */
     parseFullSapDump(wb, sapCodeSheetName, txnSheetName) {
-        const sapWs = wb.Sheets[sapCodeSheetName];
-        if (!sapWs) throw new Error(`Sheet "${sapCodeSheetName}" could not be opened.`);
-
         const groups = {};
         const dhToGroupKey = {};
         const woToGroupKey = {};
 
-        let sapRangeEnd = 500;
-        if (sapWs['!ref']) {
-            const range = XLSX.utils.decode_range(sapWs['!ref']);
-            sapRangeEnd = Math.min(range.e.r + 1, 3000);
-        }
-
-        for (let r = 4; r <= sapRangeEnd; r++) {
-            const vendorCell = sapWs['B' + r];
-            const dhCell = sapWs['C' + r];
-            const nameCell = sapWs['D' + r];
-
-            const vendor = vendorCell ? String(vendorCell.v).trim() : '';
-            const dh = dhCell ? String(dhCell.v).trim() : '';
-            const name = nameCell ? String(nameCell.v).trim() : '';
-
-            if (!dh && !name) continue;
-
-            let key = this.normContractorName(name);
-            if (!key && dh) {
-                const m = dh.match(/\b\d{8}\b/);
-                if (m && woToGroupKey[m[0]]) key = woToGroupKey[m[0]];
-            }
-            if (!key) continue;
-
-            if (!groups[key]) {
-                groups[key] = {
-                    key,
-                    displayName: (name || dh).replace(/\n+/g, ' ').trim(),
-                    vendorCode: vendor,
-                    wos: new Set(),
-                    dhs: new Set(),
-                    rawNorms: new Set()
+        // 1. Pre-seed mapping from permanent MasterSapCodeMapping (extracted from SAP Code sheet)
+        const master = (typeof window !== 'undefined' && window.MasterSapCodeMapping) || (typeof global !== 'undefined' && global.MasterSapCodeMapping);
+        if (master && master.groups && master.dhToGroupKey) {
+            Object.assign(dhToGroupKey, master.dhToGroupKey);
+            if (master.woToGroupKey) Object.assign(woToGroupKey, master.woToGroupKey);
+            for (const [k, g] of Object.entries(master.groups)) {
+                groups[k] = {
+                    key: g.key,
+                    displayName: g.displayName,
+                    vendorCode: g.vendorCode || '',
+                    wos: new Set(g.wos || []),
+                    dhs: new Set(g.dhs || []),
+                    rawNorms: new Set(g.rawNorms || [])
                 };
             }
+        }
 
-            if (name) {
-                const cleanName = name.replace(/\n+/g, ' ').trim();
-                groups[key].rawNorms.add(this.normRawKey(cleanName));
-                groups[key].rawNorms.add(this.normContractorName(cleanName));
-                if (!groups[key].displayName || (groups[key].displayName.includes('(') && !cleanName.includes('('))) {
-                    groups[key].displayName = cleanName;
+        // 2. If uploaded file also includes "SAP Code" sheet, read and augment/override mappings
+        if (sapCodeSheetName && wb.Sheets && wb.Sheets[sapCodeSheetName]) {
+            const sapWs = wb.Sheets[sapCodeSheetName];
+            let sapRangeEnd = 500;
+            if (sapWs['!ref']) {
+                const range = XLSX.utils.decode_range(sapWs['!ref']);
+                sapRangeEnd = Math.min(range.e.r + 1, 3000);
+            }
+
+            for (let r = 4; r <= sapRangeEnd; r++) {
+                const vendorCell = sapWs['B' + r];
+                const dhCell = sapWs['C' + r];
+                const nameCell = sapWs['D' + r];
+
+                const vendor = vendorCell ? String(vendorCell.v).trim() : '';
+                const dh = dhCell ? String(dhCell.v).trim() : '';
+                const name = nameCell ? String(nameCell.v).trim() : '';
+
+                if (!dh && !name) continue;
+
+                let key = this.normContractorName(name);
+                if (!key && dh) {
+                    const m = dh.match(/\b\d{8}\b/);
+                    if (m && woToGroupKey[m[0]]) key = woToGroupKey[m[0]];
                 }
-            }
+                if (!key) continue;
 
-            if (vendor && !groups[key].vendorCode) {
-                groups[key].vendorCode = vendor;
-            }
+                if (!groups[key]) {
+                    groups[key] = {
+                        key,
+                        displayName: (name || dh).replace(/\n+/g, ' ').trim(),
+                        vendorCode: vendor,
+                        wos: new Set(),
+                        dhs: new Set(),
+                        rawNorms: new Set()
+                    };
+                }
 
-            if (dh) {
-                groups[key].dhs.add(dh);
-                dhToGroupKey[dh] = key;
-                const m = dh.match(/^\s*(\d{8})\s*$/);
-                if (m) {
-                    groups[key].wos.add(m[1]);
-                    woToGroupKey[m[1]] = key;
-                    dhToGroupKey[m[1]] = key;
+                if (name) {
+                    const cleanName = name.replace(/\n+/g, ' ').trim();
+                    groups[key].rawNorms.add(this.normRawKey(cleanName));
+                    groups[key].rawNorms.add(this.normContractorName(cleanName));
+                    if (!groups[key].displayName || (groups[key].displayName.includes('(') && !cleanName.includes('('))) {
+                        groups[key].displayName = cleanName;
+                    }
+                }
+
+                if (vendor && !groups[key].vendorCode) {
+                    groups[key].vendorCode = vendor;
+                }
+
+                if (dh) {
+                    groups[key].dhs.add(dh);
+                    dhToGroupKey[dh] = key;
+                    const m = dh.match(/^\s*(\d{8})\s*$/);
+                    if (m) {
+                        groups[key].wos.add(m[1]);
+                        woToGroupKey[m[1]] = key;
+                        dhToGroupKey[m[1]] = key;
+                    }
                 }
             }
         }
@@ -208,7 +237,7 @@ window.StockImporterModule = {
             groupMaterials[key][mat].issuedQty += qty;
         }
 
-        return this.buildOutputRecord(groups, dhToGroupKey, groupMaterials, matchedTxns, 'Full SAP Dump');
+        return this.buildOutputRecord(groups, dhToGroupKey, groupMaterials, matchedTxns, sapCodeSheetName ? 'Full SAP Dump (with SAP Code sheet)' : 'SAP Transaction Dump (Master SAP Code Mapping)');
     },
 
     /**

@@ -76,6 +76,34 @@ async function buildStockIndex() {
   const dhToGroupKey = {};
   const woToGroupKey = {};
 
+  // Pre-seed from permanent default-sap-contractor-mapping.js
+  const masterMappingPath = path.join(__dirname, '..', 'js', 'data', 'default-sap-contractor-mapping.js');
+  if (fs.existsSync(masterMappingPath)) {
+    try {
+      const code = fs.readFileSync(masterMappingPath, 'utf8');
+      const ctx = {};
+      new Function('window', 'global', code)(ctx, ctx);
+      const master = ctx.MasterSapCodeMapping;
+      if (master && master.groups && master.dhToGroupKey) {
+        Object.assign(dhToGroupKey, master.dhToGroupKey);
+        if (master.woToGroupKey) Object.assign(woToGroupKey, master.woToGroupKey);
+        for (const [k, g] of Object.entries(master.groups)) {
+          groups[k] = {
+            key: g.key,
+            displayName: g.displayName,
+            vendorCode: g.vendorCode || '',
+            wos: new Set(g.wos || []),
+            dhs: new Set(g.dhs || []),
+            rawNorms: new Set(g.rawNorms || [])
+          };
+        }
+        console.log(`Pre-seeded ${Object.keys(dhToGroupKey).length} WOs and ${Object.keys(groups).length} contractors from default-sap-contractor-mapping.js`);
+      }
+    } catch (e) {
+      console.warn('Could not pre-seed from default-sap-contractor-mapping.js:', e.message);
+    }
+  }
+
   for await (const ws of reader1) {
     if (ws.name !== 'SAP Code') continue;
     let r = 0;
