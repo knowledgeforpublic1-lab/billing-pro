@@ -42,7 +42,7 @@
         </div>
     </div>
     <script>
-        // Fast boot splash — app ready hote hi turant fade-out
+        // Billing Pro boot splash — app ready hote hi smoothly fade-out
         (function () {
             let timer;
             window.dismissBillingSplash = function () {
@@ -50,10 +50,10 @@
                 const splash = document.getElementById('bootSplash');
                 if (!splash) return;
                 splash.classList.add('hide');
-                timer = setTimeout(function () { splash.remove(); }, 300);
+                timer = setTimeout(function () { splash.remove(); }, 450);
             };
-            // Safety timeout: release splash if network/startup takes longer
-            setTimeout(window.dismissBillingSplash, 1200);
+            // Safety fallback: only if startup crashes or hangs abnormally (8s)
+            setTimeout(window.dismissBillingSplash, 8000);
         })();
     </script>
 
@@ -89,7 +89,7 @@
         <!-- ============================================================
              PORTAL GATEWAY LOGIN SCREEN (Level 1 Portal Protection)
              ============================================================ -->
-        <div v-if="authReady && (!isPortalUnlocked || !workspaceReady)" class="portal-lock-overlay">
+        <div v-if="authReady && (!isPortalUnlocked || (authBusy && !workspaceReady))" class="portal-lock-overlay">
             <!-- Animated Ambient Tech Canvas -->
             <div class="portal-bg-canvas">
                 <div class="portal-bg-grid"></div>
