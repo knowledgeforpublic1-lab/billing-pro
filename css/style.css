@@ -350,12 +350,12 @@ header {
 
 /* ⚡ Boot Splash — refresh par Billing Pro brand animation (app ready hote hi hide ho jata hai) */
 #bootSplash {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     background: #0b1220;
     transition: opacity 0.45s ease;
 }

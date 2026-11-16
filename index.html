@@ -10,6 +10,80 @@
     try{(function(){var q=location.search||'';if(q.indexOf('view=desktop')>-1){try{localStorage.setItem('billing_pref_desktop','1');}catch(e){}return;}var p='';try{p=localStorage.getItem('billing_pref_desktop')||'';}catch(e){}if(p==='1')return;var ua=navigator.userAgent||'';if(/Android|iPhone|iPad|iPod|Mobile/i.test(ua)){location.replace('mobile.html');}})();}catch(e){}
     try{var savedThemeMode=localStorage.getItem('billing_theme_mode')||'';if(!savedThemeMode)savedThemeMode=(localStorage.getItem('billing_theme')==='light')?'light':'dark';document.documentElement.dataset.theme=(savedThemeMode==='dark')?'dark':'light';document.documentElement.classList.toggle('soft',savedThemeMode==='soft');document.documentElement.classList.toggle('dark',savedThemeMode==='dark');document.documentElement.classList.toggle('dark-mode',savedThemeMode==='dark');}catch(e){}
     </script>
+    <style>
+        [v-cloak] { display: none !important; }
+        #bootSplash {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 2147483647 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #eef1f6 !important;
+            transition: opacity 0.45s ease !important;
+        }
+        html[data-theme="dark"] #bootSplash {
+            background: #0b1220 !important;
+        }
+        #bootSplash.hide {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        .boot-splash-inner {
+            text-align: center !important;
+        }
+        .boot-logo {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            font-size: 2.4rem !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.5px !important;
+            color: #0b1220 !important;
+        }
+        html[data-theme="dark"] .boot-logo {
+            color: #ffffff !important;
+        }
+        .boot-name strong {
+            color: #35a3ff !important;
+        }
+        .boot-sub {
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 1.5px !important;
+            text-transform: uppercase !important;
+            color: #64748b !important;
+            margin-top: 6px !important;
+        }
+        html[data-theme="dark"] .boot-sub {
+            color: #94a3b8 !important;
+        }
+        .boot-bar {
+            width: 180px !important;
+            height: 4px !important;
+            background: rgba(148, 163, 184, 0.25) !important;
+            border-radius: 999px !important;
+            margin: 22px auto 0 !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+        .boot-bar span {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100% !important;
+            width: 40% !important;
+            background: linear-gradient(90deg, #38bdf8, #2563eb) !important;
+            border-radius: 999px !important;
+            animation: bootBarSlide 1.3s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+        }
+        @keyframes bootBarSlide {
+            0% { left: -40%; width: 40%; }
+            50% { left: 40%; width: 60%; }
+            100% { left: 100%; width: 30%; }
+        }
+    </style>
     <title>Billing Pro 6.0 | RDSS T-10 GADCHIROLI — Billing, Reconciliation & Tax Invoice Studio</title>
     <meta name="theme-color" content="#354a5f">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a6ed1'/%3E%3Cpath d='M13 2 4.5 13.2h5.2L9.2 22l9-11.8h-5.5L13 2z' fill='%23ffd766' transform='translate(1.5 1)'/%3E%3C/svg%3E">
@@ -89,7 +163,7 @@
         <!-- ============================================================
              PORTAL GATEWAY LOGIN SCREEN (Level 1 Portal Protection)
              ============================================================ -->
-        <div v-if="authReady && (!isPortalUnlocked || (authBusy && !workspaceReady))" class="portal-lock-overlay">
+        <div v-if="authReady && !isPortalUnlocked" class="portal-lock-overlay">
             <!-- Animated Ambient Tech Canvas -->
             <div class="portal-bg-canvas">
                 <div class="portal-bg-grid"></div>

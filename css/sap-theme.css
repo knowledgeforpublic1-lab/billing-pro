@@ -3473,7 +3473,7 @@ table.pro-table-typo th div {
 .portal-lock-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 9999999 !important;
+  z-index: 99999 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
