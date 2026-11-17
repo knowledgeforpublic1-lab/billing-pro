@@ -1249,7 +1249,10 @@ window.SyncModule = {
             return false;
         }
         if (manual && typeof this.persistContractorMapping === 'function' && this.contractorMappingId()) {
-            await this.persistContractorMapping(false);
+            if (await this.persistContractorMapping(false) === false) {
+                this.syncStatus = 'error';
+                return false;
+            }
         }
         try {
             const payload = this.buildSyncPayload(force ? { force: true } : {});
@@ -1385,7 +1388,12 @@ window.SyncModule = {
             console.info('Browser online — pending cloud sync retry ho raha hai');
             this._syncRetryCount = 0;
             if (this.cloudConflict) return;
-            setTimeout(() => { try { this.syncToMongoNow(); } catch(e) {} }, 500);
+            setTimeout(() => {
+                try {
+                    if (typeof this.persistContractorMapping === 'function') this.persistContractorMapping(true);
+                    this.syncToMongoNow();
+                } catch(e) {}
+            }, 500);
         });
     },
     async refreshFromCloud() {

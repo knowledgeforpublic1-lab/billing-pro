@@ -599,6 +599,7 @@
                                 </button>
                             </div>
                         </details>
+                        <button v-if="mappingCloudStatus === 'error' || mappingCloudStatus === 'pending'" type="button" class="btn btn-secondary" @click="persistContractorMapping(false)" :title="mappingCloudError || 'Mapping cloud save retry karein'" style="color: #b45309; font-size: 0.72rem;">⚠ Mapping cloud pending · Retry</button>
                         <button class="btn ico-btn" :class="poleScheduleSubTab === 'abstract' ? 'btn-primary' : 'btn-secondary'" @click="poleScheduleSubTab = (poleScheduleSubTab === 'abstract' ? 'schedule' : 'abstract')" :title="poleScheduleSubTab === 'abstract' ? 'Schedule — wapas measurement grid pe jao' : 'Abstract — Master Activity-Wise Billing Abstract (all 11 activities)'">
                             <svg class="ic"><use :href="poleScheduleSubTab === 'abstract' ? '#ic-table' : '#ic-chart'"/></svg>
                         </button>
@@ -1791,6 +1792,7 @@
                             <button class="btn btn-secondary" @click="openSapMasterModal()" title="SAP Material Master list (dropdown ke codes) — cloud copy add/edit karo" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;">
                                 📚 SAP Master ({{ sapMaterialsMaster.length }})
                             </button>
+                            <button v-if="mappingCloudStatus === 'error' || mappingCloudStatus === 'pending'" type="button" class="btn btn-secondary" @click="persistContractorMapping(false)" :title="mappingCloudError || 'Mapping cloud save retry karein'" style="color: #b45309; font-size: 0.72rem;">⚠ Mapping cloud pending · Retry</button>
                             <button class="btn btn-excel" @click="exportMaterialMappingExcel" title="Export SAP Material Mapping Master Excel" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; white-space: nowrap;">
                                 📗 Export (.xlsx)
                             </button>
@@ -4756,10 +4758,10 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261117_entry_performance"></script>
+    <script defer src="js/sync.js?v=20261117_sap_cloud_upload"></script>
     <script defer src="js/billing.js?v=20261117_entry_performance"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
-    <script defer src="js/contractor-mapping.js?v=20261117_mapping_transfer"></script>
+    <script defer src="js/contractor-mapping.js?v=20261117_sap_cloud_upload"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_header"></script>
     <script defer src="js/reco-filters.js?v=20261114_reco_filter_fix"></script>
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
@@ -4774,7 +4776,7 @@
     <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
     <script defer src="js/daily-progress-access.js?v=20261117_share_sync"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_entry_performance"></script>
+    <script defer src="js/core/app.js?v=20261117_sap_cloud_upload"></script>
 </body>
 
 </html>

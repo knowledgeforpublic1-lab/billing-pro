@@ -233,6 +233,8 @@
                 poleScheduleQuantities: {},
                 poleScheduleTransferWarnings: {},
                 poleScheduleLinkEditorIndex: -1,
+                mappingCloudStatus: 'idle',
+                mappingCloudError: '',
                 poleScheduleSearchQuery: '',
                 poleScheduleFilterQty: 'ALL',
                 poleScheduleFilterSap: 'ALL',

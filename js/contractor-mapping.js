@@ -47,7 +47,17 @@
                 };
             }
             this._activeMappingContractorId = this.contractorMappingId();
+            const id = this._activeMappingContractorId;
+            const saved = id && this.contractorMappingState.profiles[id];
+            if (saved) {
+                const cached = this.cachedContractorMapping(id, saved);
+                // Reconcile a confirmed acknowledgement without applying another
+                // bill's mappings over the catalogue currently being restored.
+                if (cached.updatedAt === saved.updatedAt && JSON.stringify(cached.rows) === JSON.stringify(saved.rows)) this.contractorMappingState.profiles[id] = cached;
+            }
             this.captureContractorMapping();
+            this.mappingCloudStatus = id && this.contractorMappingState.profiles[id]?.dirty ? 'pending' : 'idle';
+            this.mappingCloudError = '';
         },
         captureContractorMapping(force = false) {
             const state = this.contractorMappingState;
@@ -72,6 +82,14 @@
         },
         cacheContractorMapping(id, profile) {
             try { localStorage.setItem('billing_contractor_mapping_v1_' + id, JSON.stringify(profile)); } catch (e) {}
+        },
+        cachedContractorMapping(id, profile) {
+            try {
+                const cached = JSON.parse(localStorage.getItem('billing_contractor_mapping_v1_' + id));
+                if (cached && (!profile || cached.updatedAt > profile.updatedAt ||
+                    (cached.updatedAt === profile.updatedAt && cached.dirty === false && JSON.stringify(cached.rows) === JSON.stringify(profile.rows)))) return cached;
+            } catch (e) {}
+            return profile;
         },
         applyContractorMapping(profile) {
             const state = this.contractorMappingState;
@@ -107,14 +125,12 @@
             this.showSapItemManagerModal = false;
             this.activeSapManagerItem = null;
             this._activeMappingContractorId = id;
-            let profile = this.contractorMappingState.profiles[id];
-            try {
-                const cached = JSON.parse(localStorage.getItem('billing_contractor_mapping_v1_' + id));
-                if (cached && (!profile || cached.updatedAt > profile.updatedAt)) profile = cached;
-            } catch (e) {}
+            const profile = this.cachedContractorMapping(id, this.contractorMappingState.profiles[id]);
             if (id && profile) this.contractorMappingState.profiles[id] = profile;
             this.applyContractorMapping(profile);
             this.captureContractorMapping();
+            this.mappingCloudStatus = id && this.contractorMappingState.profiles[id]?.dirty ? 'pending' : 'idle';
+            this.mappingCloudError = '';
             if (id) this.loadContractorMapping(id);
         },
         async loadContractorMapping(id) {
@@ -144,6 +160,8 @@
             if (!this.contractorMappingState) this.initializeContractorMappings();
             const id = contractorId || this._activeMappingContractorId;
             if (!id) {
+                this.mappingCloudStatus = 'pending';
+                this.mappingCloudError = 'Named contractor select karein.';
                 if (!silent) this.showToast('Mapping save karne ke liye named contractor select karein', '⚠️');
                 return false;
             }
@@ -151,37 +169,57 @@
             const profile = this.contractorMappingState.profiles[id];
             if (!profile) return false;
             if (!profile.dirty) {
+                if (id === this._activeMappingContractorId) { this.mappingCloudStatus = 'synced'; this.mappingCloudError = ''; }
                 if (!silent) this.showToast('Is contractor ki mapping pehle se saved hai', '✅');
                 return true;
             }
-            const payload = clone(profile);
             if (!this._contractorProfileWrites) this._contractorProfileWrites = {};
+            if (!this._contractorProfileVersions) this._contractorProfileVersions = {};
+            if (this._contractorProfileWrites[id] && this._contractorProfileVersions[id] === profile.updatedAt) return this._contractorProfileWrites[id];
+            const payload = clone(profile);
             const previous = this._contractorProfileWrites[id] || Promise.resolve();
             const pending = previous.catch(() => {}).then(() => this.sendContractorMapping(id, payload, silent));
             this._contractorProfileWrites[id] = pending;
-            return pending;
+            this._contractorProfileVersions[id] = profile.updatedAt;
+            try { return await pending; }
+            finally {
+                if (this._contractorProfileWrites[id] === pending) {
+                    delete this._contractorProfileWrites[id]; delete this._contractorProfileVersions[id];
+                }
+            }
         },
         async sendContractorMapping(id, profile, silent) {
             const sentAt = profile.updatedAt;
+            if (id === this._activeMappingContractorId) { this.mappingCloudStatus = 'saving'; this.mappingCloudError = ''; }
             try {
                 const headers = { 'Content-Type': 'application/json' };
                 const apiKey = localStorage.getItem('billing_api_key');
                 if (apiKey) headers['x-api-key'] = apiKey;
                 const response = await fetch('/api/contractor-mapping', {
                     method: 'POST', headers,
-                    body: JSON.stringify({ contractorId: id, profile }), keepalive: true
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ contractorId: id, profile }),
+                    ...(typeof AbortSignal !== 'undefined' ? { signal: AbortSignal.timeout(30000) } : {})
                 });
-                const result = response.ok && await response.json();
-                if (!result || !result.success) throw new Error('Contractor mapping save failed');
+                const result = await response.json().catch(() => null);
+                if (!response.ok || !result || result.success !== true) {
+                    const reason = response.status === 401 ? 'Login session expire hai. Dobara login karein.' : (result && result.error || 'Server ne save confirm nahi kiya.');
+                    throw new Error('HTTP ' + response.status + ': ' + reason);
+                }
                 const current = this.contractorMappingState.profiles[id];
                 if (current && current.updatedAt === sentAt) {
                     current.dirty = false;
                     this.cacheContractorMapping(id, current);
                 }
+                if (id === this._activeMappingContractorId) {
+                    this.mappingCloudStatus = current && current.dirty ? 'pending' : 'synced'; this.mappingCloudError = '';
+                }
                 if (!silent) this.showToast('Is contractor ki SAP mapping save ho gayi', '✅');
                 return true;
             } catch (e) {
-                if (!silent) this.showToast('Mapping local mein saved hai; cloud save pending hai', '⚠️');
+                const reason = e.name === 'TimeoutError' || e.name === 'AbortError' ? 'Server timeout — dobara save karein.' : String(e.message || 'Network unavailable').slice(0, 180);
+                if (id === this._activeMappingContractorId) { this.mappingCloudStatus = 'error'; this.mappingCloudError = reason; }
+                if (!silent) this.showToast('Mapping local saved; cloud pending: ' + reason, '⚠️');
                 return false;
             }
         }
