@@ -44,6 +44,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         const lookup = await read('token_' + hash(token));
         const c = lookup && await contractor(lookup.contractorId);
         if (!c || c.disabled || c.tokenHash !== hash(token)) fail(401, 'Entry link disabled ya invalid hai.');
+        if (c.expiresAt && c.expiresAt <= now()) fail(401, 'Entry link expire ho chuka hai. Admin se naya link lein.');
         return c;
     }
     async function access(cid, date, editor, mode = 'read') {
@@ -86,6 +87,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             const r = clone(old || initial(cid, date));
             if (r.lastRequestId === body.requestId && r.lastOwner === who && r.lastDigest === digest) return { result: { already: true, version: r.version, state: r.state } };
             if (r.state === 'final') fail(423, 'Entry save ho chuki hai. Admin se reopen karwayein.');
+            if (r.version >= 500) fail(400, 'Max revision limit reached for this daily report. Admin se contact karein.');
             if (r.owner !== who || r.leaseUntil <= now() || r.epoch !== body.epoch) fail(409, 'Editing reservation expire ya change ho gayi. Draft copy safe rakhein aur reload karein.');
             if (r.version !== body.version) fail(409, 'Newer draft available hai. Reload karein.');
             if (r.operation?.until > now()) fail(409, 'Save chal raha hai. Thodi der baad retry karein.');
@@ -122,13 +124,16 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             if (!/^[\w -]{1,150}$/.test(cid) || !String(data.name || '').trim()) fail(400, 'Contractor ID and name required');
             const token = crypto.randomBytes(32).toString('hex');
             const tokenHash = hash(token);
+            const ttlDays = Number(data.ttlDays) > 0 ? Number(data.ttlDays) : 90;
+            const expiresAt = now() + (ttlDays * 24 * 60 * 60 * 1000);
             await db.atomicDailyRecord('token_' + tokenHash, () => ({ value: { contractorId: cid }, result: null }));
             await db.atomicDailyRecord(linkKey(cid), old => ({ value: {
                 id: cid, name: String(data.name).trim().slice(0, 200), project: String(data.project || '').slice(0, 200),
                 feeder: String(data.feeder || '').slice(0, 200), tokenHash, disabled: false, createdAt: now(),
+                expiresAt,
                 linkVersion: (old?.linkVersion || 0) + 1
             }, result: null }));
-            return { token };
+            return { token, expiresAt };
         },
         async disable(cid) {
             return db.atomicDailyRecord(linkKey(cid), old => {

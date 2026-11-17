@@ -72,12 +72,12 @@ async function servePortalPage(req, res) {
     }
 }
 app.get(['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation master/index.html', '/Reconciliation%20master/index.html'], servePortalPage);
-app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, no-store'); next(); });
+app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, max-age=3600, must-revalidate'); next(); });
 app.use('/api/auth', auth.router);
 app.use(['/api', '/js/data'], (req, res, next) => req.path === '/health' ? next() : auth.middleware(req, res, next));
 app.use('/api/dp-admin', dailyProgress.adminRouter);
 app.get('/js/data/:file', (req, res) => {
-    res.set('Cache-Control', 'private, no-store');
+    res.set('Cache-Control', 'private, max-age=3600, must-revalidate');
     if (!/^[a-zA-Z0-9_-]+\.js$/.test(req.params.file)) return res.status(404).end();
     res.sendFile(require('path').join(__dirname, '../js/data', req.params.file));
 });
@@ -799,22 +799,50 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         if (!payload || typeof payload !== 'object') {
             return res.status(400).json({ success: false, error: 'Invalid payload' });
         }
-        await db.saveDefaultConfig('dailyProgressData', { data: payload, updatedAt: new Date().toISOString() });
-        res.json({ success: true });
+
+        // Server-side smart merge — prevents whole-dataset overwrite across multiple site devices
+        const existingRec = await db.getDefaultConfig('dailyProgressData');
+        const existingData = existingRec?.data || existingRec || { contractors: [], reports: [], issues: [] };
+
+        const cMap = new Map();
+        (existingData.contractors || []).forEach(c => cMap.set(String(c.id || c.name).toLowerCase(), c));
+        (payload.contractors || []).forEach(c => {
+            const key = String(c.id || c.name).toLowerCase();
+            if (key) cMap.set(key, c);
+        });
+
+        const rMap = new Map();
+        (existingData.reports || []).forEach(r => rMap.set(String(r.contractorId).toLowerCase() + '|' + r.date, r));
+        (payload.reports || []).forEach(r => {
+            const key = String(r.contractorId).toLowerCase() + '|' + r.date;
+            const prev = rMap.get(key);
+            if (!prev || (Number(r.version || 0) >= Number(prev.version || 0))) {
+                rMap.set(key, r);
+            }
+        });
+
+        const iMap = new Map();
+        (existingData.issues || []).forEach(i => iMap.set(i.id || (i.contractorId + '|' + i.itemId + '|' + i.date), i));
+        (payload.issues || []).forEach(i => {
+            const key = i.id || (i.contractorId + '|' + i.itemId + '|' + i.date);
+            iMap.set(key, i);
+        });
+
+        const merged = {
+            contractors: Array.from(cMap.values()),
+            reports: Array.from(rMap.values()),
+            issues: Array.from(iMap.values()),
+            updatedAt: new Date().toISOString()
+        };
+
+        await db.saveDefaultConfig('dailyProgressData', { data: merged, updatedAt: new Date().toISOString() });
+        res.json({ success: true, count: merged.reports.length });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
 });
 app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));
-app.post('/api/daily-progress', express.json({ limit: '15mb' }), async (req, res) => {
-    try {
-        const payload = req.body && req.body.data !== undefined ? req.body.data : req.body;
-        await db.saveDefaultConfig('dailyProgressData', { data: payload, updatedAt: new Date().toISOString() });
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
+app.post('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));
 
 // POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {

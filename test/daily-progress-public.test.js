@@ -118,6 +118,11 @@ test('link revocation, validation and API boundary protect other contractors/adm
         assert.equal((await request('/api/daily-entry/report/2026-02-30/claim', {}, h)).status, 400);
         await routes.service.disable('a');
         assert.equal((await request('/api/daily-entry/bootstrap', undefined, h)).status, 401);
+        const expLink = await routes.service.createLink({ id: 'exp-c', name: 'Expired Co', ttlDays: -1 });
+        // Manually expire for test
+        await f.db.atomicDailyRecord('contractor_' + require('node:crypto').createHash('sha256').update('exp-c').digest('hex'), old => ({ value: { ...old, expiresAt: 1 }, result: null }));
+        const expH = { 'x-dp-link': expLink.token, 'x-dp-editor': editor(1) };
+        assert.equal((await request('/api/daily-entry/bootstrap', undefined, expH)).status, 401);
         const replacement = await routes.service.createLink({ id: 'a', name: 'A' });
         await assert.rejects(routes.service.authorize(link.token), { status: 401 });
         assert.equal((await routes.service.authorize(replacement.token)).id, 'a');

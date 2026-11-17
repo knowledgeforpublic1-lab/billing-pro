@@ -1,3 +1,13 @@
+
+function sanitizeCsvValue(val) {
+    if (val === null || val === undefined) return '""';
+    let str = String(val).trim();
+    if (/^[=+\-@\t\r]/.test(str)) {
+        str = "'" + str;
+    }
+    return '"' + str.replace(/"/g, '""') + '"';
+}
+
 let rawData = null;
 let currentTab = 'overview';
 let topConsChart = null;
@@ -1451,10 +1461,10 @@ function exportMissingRates() {
 
     missingItems.forEach(item => {
         const row = [
-            `"${item['Item Code'] || ''}"`,
-            `"${item['Item Description'] || ''}"`,
-            `"${item['UOM'] || ''}"`,
-            `"${item['Found In Contractor'] || ''}"`
+            sanitizeCsvValue(item['Item Code']),
+            sanitizeCsvValue(item['Item Description']),
+            sanitizeCsvValue(item['UOM']),
+            sanitizeCsvValue(item['Found In Contractor'])
         ];
         csvContent += row.join(',') + '\n';
     });
@@ -2579,13 +2589,13 @@ function downloadModalCSV() {
     items.forEach(item => {
         let desc = (item.ItemDescription || "").replace(/"/g, '""');
         let row = [
-            item.ItemCode,
-            `"${desc}"`,
-            item.UOM,
-            item.NetIssue,
-            item.Consumption,
-            item.BalanceQty,
-            item.BalanceCost
+            sanitizeCsvValue(item.ItemCode),
+            sanitizeCsvValue(desc),
+            sanitizeCsvValue(item.UOM),
+            Number(item.NetIssue) || 0,
+            Number(item.Consumption) || 0,
+            Number(item.BalanceQty) || 0,
+            Number(item.BalanceCost) || 0
         ].join(",");
         csvContent += row + "\n";
     });
