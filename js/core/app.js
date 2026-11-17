@@ -452,6 +452,8 @@
                 dailyProgressDirty: false,
                 dailyProgressBusy: false,
                 dailyProgressModal: '',
+                dailyProgressContractorDropdownOpen: false,
+                dailyProgressContractorSearch: '',
                 dailyProgressExportFrom: '2026-09-01',
                 dailyProgressExportTo: '2026-09-30',
                 dailyProgressExportFilter: 'active',
@@ -1216,6 +1218,17 @@
             },
             dailyProgressContractors() {
                 return (this.dailyProgressData && this.dailyProgressData.contractors) || [];
+            },
+            dailyProgressFilteredContractors() {
+                const list = this.dailyProgressContractors || [];
+                const q = String(this.dailyProgressContractorSearch || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(c => {
+                    return (c.name && c.name.toLowerCase().includes(q)) ||
+                           (c.id && c.id.toLowerCase().includes(q)) ||
+                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
+                           (c.project && c.project.toLowerCase().includes(q));
+                });
             },
             dailyProgressReports() {
                 const data = this.dailyProgressData;

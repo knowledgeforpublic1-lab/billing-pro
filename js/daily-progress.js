@@ -247,6 +247,27 @@ window.DailyProgressModule = {
 
     // ─── DAILY PROGRESS NAVIGATION & STATE ────────────────────────────────────
 
+    toggleDailyProgressContractorDropdown() {
+        this.dailyProgressContractorDropdownOpen = !this.dailyProgressContractorDropdownOpen;
+        if (this.dailyProgressContractorDropdownOpen) {
+            this.dailyProgressContractorSearch = '';
+            this.$nextTick(() => {
+                if (this.$refs.dpContractorSearchInput) {
+                    this.$refs.dpContractorSearchInput.focus();
+                }
+            });
+        }
+    },
+
+    closeDailyProgressContractorDropdown() {
+        this.dailyProgressContractorDropdownOpen = false;
+    },
+
+    selectDailyProgressContractor(cid) {
+        this.closeDailyProgressContractorDropdown();
+        this.onDailyProgressContractorChange(cid);
+    },
+
     onDailyProgressContractorChange(cid) {
         if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosra contractor select karein?')) {

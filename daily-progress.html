@@ -70,9 +70,54 @@
                     
                     <div class="contractor-select-compact" title="CONTRACTOR / LABOUR TEAM">
                         <span class="compact-label">CONTRACTOR / LABOUR TEAM:</span>
-                        <select v-model="selectedContractorId" title="Choose contractor team">
-                            <option v-for="c in contractors" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
+                        <div class="dp-contractor-picker-wrap" style="position: relative;">
+                            <button type="button"
+                                    class="dp-contractor-trigger-btn"
+                                    :class="{ open: contractorDropdownOpen }"
+                                    @click="toggleContractorDropdown"
+                                    title="Contractor chunein ya search karein">
+                                <span class="dp-trigger-name">{{ activeContractor ? activeContractor.name : 'Select Contractor' }}</span>
+                                <span class="dp-trigger-arrow" :class="{ open: contractorDropdownOpen }">▾</span>
+                            </button>
+
+                            <!-- Dropdown Search Panel -->
+                            <div v-if="contractorDropdownOpen" class="dp-contractor-search-panel" @click.stop>
+                                <div class="dp-search-input-wrap">
+                                    <span class="dp-search-icon">🔍</span>
+                                    <input type="text"
+                                           v-model="contractorSearchText"
+                                           ref="contractorSearchRef"
+                                           placeholder="Search contractor name / feeder..."
+                                           @keydown.esc="closeContractorDropdown"
+                                           @keydown.enter.prevent="filteredContractors.length && selectContractor(filteredContractors[0].id)"
+                                           autocomplete="off">
+                                    <button v-if="contractorSearchText"
+                                            type="button"
+                                            class="dp-clear-search"
+                                            @click="contractorSearchText = ''"
+                                            title="Clear search">✕</button>
+                                </div>
+                                <div class="dp-contractor-list-count" v-if="contractorSearchText">
+                                    <span>{{ filteredContractors.length }} matching contractors</span>
+                                </div>
+                                <div class="dp-contractor-results-list">
+                                    <div v-for="c in filteredContractors"
+                                         :key="c.id"
+                                         class="dp-contractor-item"
+                                         :class="{ active: c.id === selectedContractorId }"
+                                         @click="selectContractor(c.id)">
+                                        <div class="dp-c-title">{{ c.name }}</div>
+                                        <div v-if="c.feeder || c.project" class="dp-c-sub">
+                                            <span v-if="c.feeder">⚡ {{ c.feeder }}</span>
+                                            <span v-if="c.project">📁 {{ c.project }}</span>
+                                        </div>
+                                    </div>
+                                    <div v-if="!filteredContractors.length" class="dp-no-contractors">
+                                        Koi contractor match nahi hua
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
                     </div>
 

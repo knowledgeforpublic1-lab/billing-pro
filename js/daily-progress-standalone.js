@@ -70,11 +70,26 @@
                 exportFrom: '2026-09-01',
                 exportTo: getTodayStr(),
                 exportFilter: 'active',
-                exportSearch: ''
+                exportSearch: '',
+                contractorDropdownOpen: false,
+                contractorSearchText: ''
             };
         },
 
         computed: {
+            filteredContractors() {
+                const list = this.contractors || [];
+                const q = String(this.contractorSearchText || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(c => {
+                    return (c.name && c.name.toLowerCase().includes(q)) ||
+                           (c.id && c.id.toLowerCase().includes(q)) ||
+                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
+                           (c.engineer && c.engineer.toLowerCase().includes(q)) ||
+                           (c.project && c.project.toLowerCase().includes(q));
+                });
+            },
+
             activeContractor() {
                 const curId = this.selectedContractorId;
                 const norm = normId(curId);
@@ -142,9 +157,38 @@
 
         async mounted() {
             await this.initData();
+            if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+                document.addEventListener('click', (e) => {
+                    if (this.contractorDropdownOpen && e.target && typeof e.target.closest === 'function' && !e.target.closest('.dp-contractor-picker-wrap')) {
+                        this.contractorDropdownOpen = false;
+                    }
+                });
+            }
         },
 
         methods: {
+            toggleContractorDropdown() {
+                this.contractorDropdownOpen = !this.contractorDropdownOpen;
+                if (this.contractorDropdownOpen) {
+                    this.contractorSearchText = '';
+                    this.$nextTick(() => {
+                        if (this.$refs.contractorSearchRef) {
+                            this.$refs.contractorSearchRef.focus();
+                        }
+                    });
+                }
+            },
+
+            closeContractorDropdown() {
+                this.contractorDropdownOpen = false;
+            },
+
+            selectContractor(cid) {
+                this.selectedContractorId = cid;
+                this.contractorDropdownOpen = false;
+                this.contractorSearchText = '';
+            },
+
             showToast(msg, type = 'info') {
                 this.toastMsg = msg;
                 this.toastType = type;
