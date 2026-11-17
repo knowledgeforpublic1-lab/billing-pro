@@ -131,17 +131,21 @@ app.get('/api/health', async (req, res) => {
     try {
         let provider = db.getProvider();
         let connected = false;
+        let dbError = null;
         try {
             const resConn = await db.connect();
             provider = resConn.provider || provider;
             connected = true;
         } catch (e) {
             connected = false;
+            dbError = e ? e.message : 'Unknown connect error';
         }
         res.json({
             ok: connected,
-            provider,
+            provider: provider || 'none',
             readyState: connected ? 'connected' : 'disconnected',
+            hasFirebaseEnv: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_PROJECT_ID),
+            error: dbError || undefined,
             timestamp: new Date().toISOString()
         });
     } catch (err) {

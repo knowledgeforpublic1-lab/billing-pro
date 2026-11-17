@@ -76,11 +76,24 @@ function tryInitFirebase() {
     // 1. Check raw JSON or file path in FIREBASE_SERVICE_ACCOUNT
     if (saEnv) {
         try {
-            if (saEnv.startsWith('{')) {
-                const saJson = JSON.parse(saEnv);
-                credential = cert(saJson);
+            let parsed = null;
+            let str = saEnv;
+            if (str.startsWith('"') && str.endsWith('"')) {
+                try { str = JSON.parse(str); } catch (e) { }
+            }
+            if (typeof str === 'string' && str.startsWith('{')) {
+                parsed = JSON.parse(str);
+            } else if (typeof str === 'object' && str !== null) {
+                parsed = str;
+            }
+
+            if (parsed && parsed.project_id && (parsed.private_key || parsed.client_email)) {
+                if (parsed.private_key && parsed.private_key.includes('\\n')) {
+                    parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+                }
+                credential = cert(parsed);
                 log.info('DB-INIT', 'Firebase credential loaded from FIREBASE_SERVICE_ACCOUNT JSON env');
-            } else {
+            } else if (!parsed) {
                 const p = path.isAbsolute(saEnv) ? saEnv : path.join(__dirname, '..', saEnv);
                 if (fs.existsSync(p)) {
                     const saJson = JSON.parse(fs.readFileSync(p, 'utf8'));
