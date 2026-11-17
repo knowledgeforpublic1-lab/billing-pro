@@ -145,6 +145,7 @@ app.get('/api/health', async (req, res) => {
             provider: provider || 'none',
             readyState: connected ? 'connected' : 'disconnected',
             hasFirebaseEnv: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_PROJECT_ID),
+            firebaseDebug: typeof db.getFirebaseDebug === 'function' ? db.getFirebaseDebug() : undefined,
             error: dbError || undefined,
             timestamp: new Date().toISOString()
         });

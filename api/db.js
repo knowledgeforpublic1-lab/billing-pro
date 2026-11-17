@@ -24,6 +24,7 @@ const log = {
 let firestoreDb = null;
 let mongoDb = null;
 let activeProvider = null; // 'firebase' | 'mongodb' | null
+let lastFirebaseError = null;
 
 // Mongoose Schemas (for fallback / migration)
 const billingStateSchema = new mongoose.Schema({
@@ -78,6 +79,15 @@ function tryInitFirebase() {
         try {
             let parsed = null;
             let str = saEnv;
+            // Handle if base64 encoded
+            if (!str.startsWith('{') && !str.startsWith('"') && /^[A-Za-z0-9+/=]+$/.test(str.replace(/\s+/g, ''))) {
+                try {
+                    const decoded = Buffer.from(str, 'base64').toString('utf8');
+                    if (decoded.trim().startsWith('{')) {
+                        str = decoded.trim();
+                    }
+                } catch (e) { }
+            }
             if (str.startsWith('"') && str.endsWith('"')) {
                 try { str = JSON.parse(str); } catch (e) { }
             }
@@ -87,11 +97,15 @@ function tryInitFirebase() {
                 parsed = str;
             }
 
-            if (parsed && parsed.project_id && (parsed.private_key || parsed.client_email)) {
-                if (parsed.private_key && parsed.private_key.includes('\\n')) {
-                    parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
-                }
-                credential = cert(parsed);
+            if (parsed && (parsed.project_id || parsed.projectId)) {
+                const pid = parsed.project_id || parsed.projectId;
+                const pkey = parsed.private_key || parsed.privateKey;
+                const email = parsed.client_email || parsed.clientEmail;
+                credential = cert({
+                    projectId: pid,
+                    clientEmail: email,
+                    privateKey: pkey ? (pkey.includes('\\n') ? pkey.replace(/\\n/g, '\n') : pkey) : undefined
+                });
                 log.info('DB-INIT', 'Firebase credential loaded from FIREBASE_SERVICE_ACCOUNT JSON env');
             } else if (!parsed) {
                 const p = path.isAbsolute(saEnv) ? saEnv : path.join(__dirname, '..', saEnv);
@@ -100,8 +114,11 @@ function tryInitFirebase() {
                     credential = cert(saJson);
                     log.info('DB-INIT', `Firebase credential loaded from file: ${saEnv}`);
                 }
+            } else {
+                lastFirebaseError = `FIREBASE_SERVICE_ACCOUNT JSON missing project_id or credentials. Keys found: ${Object.keys(parsed).join(', ')}`;
             }
         } catch (err) {
+            lastFirebaseError = `Error parsing FIREBASE_SERVICE_ACCOUNT: ${err.message}`;
             log.error('DB-INIT', 'Error parsing FIREBASE_SERVICE_ACCOUNT', err);
         }
     }
@@ -159,6 +176,9 @@ function tryInitFirebase() {
     }
 
     if (!credential) {
+        if (!lastFirebaseError) {
+            lastFirebaseError = 'No valid Firebase credential generated from environment or files.';
+        }
         return null;
     }
 
@@ -173,9 +193,11 @@ function tryInitFirebase() {
         } catch (e) { }
         firestoreDb = db;
         activeProvider = 'firebase';
+        lastFirebaseError = null;
         log.info('DB-INIT', '✅ Connected to Google Firebase Firestore successfully');
         return firestoreDb;
     } catch (err) {
+        lastFirebaseError = `Failed initializing Firestore: ${err.message}`;
         log.error('DB-INIT', 'Failed initializing Firebase Firestore', err);
         return null;
     }
@@ -738,5 +760,14 @@ module.exports = {
     saveDefaultConfig,
     // Direct instances (if needed for migration)
     getFirestoreInstance: () => firestoreDb,
-    getMongoModels: () => ({ MongoBillingState, MongoReconciliationState, MongoDefaultConfig })
+    getMongoModels: () => ({ MongoBillingState, MongoReconciliationState, MongoDefaultConfig }),
+    getFirebaseDebug: () => {
+        const raw = (process.env.FIREBASE_SERVICE_ACCOUNT || '').trim();
+        return {
+            hasEnv: Boolean(raw),
+            len: raw.length,
+            prefix: raw ? raw.substring(0, 15) : '',
+            lastError: lastFirebaseError
+        };
+    }
 };
