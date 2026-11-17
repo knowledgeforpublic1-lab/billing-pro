@@ -263,6 +263,7 @@ window.DailyProgressModule = {
 
     closeDailyProgressContractorDropdown() {
         this.dailyProgressContractorDropdownOpen = false;
+        this.dailyProgressContractorSearch = '';
     },
 
     selectDailyProgressContractor(cid) {
@@ -273,7 +274,8 @@ window.DailyProgressModule = {
 
     onDailyProgressContractorChange(cid) {
         if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
-        if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosra contractor select karein?')) {
+        const hasConfirm = typeof confirm === 'function' ? confirm : (typeof window !== 'undefined' && typeof window.confirm === 'function' ? window.confirm : null);
+        if (this.dailyProgressDirty && hasConfirm && !hasConfirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosra contractor select karein?')) {
             return;
         }
         this.dailyProgressContractorId = cid;

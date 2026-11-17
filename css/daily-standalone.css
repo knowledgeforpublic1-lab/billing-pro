@@ -927,6 +927,29 @@ main {
     align-items: center;
 }
 
+.dp-search-combo-box {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid #38bdf8;
+    border-radius: 6px;
+    padding: 2px 8px;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.dp-search-combo-box:hover,
+.dp-search-combo-box:focus-within {
+    border-color: #7dd3fc;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+.dp-search-combo-box input::placeholder {
+    color: #e2e8f0;
+    opacity: 0.92;
+    font-weight: 700;
+}
+
 .dp-contractor-trigger-btn {
     display: inline-flex;
     align-items: center;

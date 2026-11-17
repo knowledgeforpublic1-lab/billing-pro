@@ -157,6 +157,31 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     assert.equal(mountedApp.activeContractor.name, 'MAA KALI ENTERPRISES');
     // Maa kali has no entries yet
     assert.equal(mountedApp.quantities['1'], undefined, 'Contractor change isolates report quantities');
+
+    // 11. Contractor Search Combo Box verification
+    assert.ok(html.includes('dp-search-combo-box'), 'HTML contains dp-search-combo-box');
+    assert.ok(html.includes('contractorSearchText'), 'HTML binds contractorSearchText');
+    mountedApp.contractorDropdownOpen = false;
+    mountedApp.toggleContractorDropdown();
+    assert.equal(mountedApp.contractorDropdownOpen, true, 'Dropdown opens on toggle');
+
+    // Search for a specific contractor
+    mountedApp.contractorSearchText = 'maa';
+    assert.ok(mountedApp.filteredContractors.some(c => c.name.toLowerCase().includes('maa')), 'Filters list by search text');
+
+    // Select contractor via search
+    const firstMatch = mountedApp.filteredContractors[0];
+    mountedApp.selectContractor(firstMatch.id);
+    assert.equal(mountedApp.selectedContractorId, firstMatch.id, 'selectContractor updates selectedContractorId');
+    assert.equal(mountedApp.contractorDropdownOpen, false, 'selectContractor closes dropdown');
+    assert.equal(mountedApp.contractorSearchText, '', 'selectContractor clears search text');
+
+    // Test closeContractorDropdown resets search text
+    mountedApp.contractorDropdownOpen = true;
+    mountedApp.contractorSearchText = 'dummy query';
+    mountedApp.closeContractorDropdown();
+    assert.equal(mountedApp.contractorDropdownOpen, false, 'closeContractorDropdown closes dropdown');
+    assert.equal(mountedApp.contractorSearchText, '', 'closeContractorDropdown clears search text');
 });
 
 test('Daily Progress Standalone Shared Link contractor matching with defaultContractorsList', async (t) => {

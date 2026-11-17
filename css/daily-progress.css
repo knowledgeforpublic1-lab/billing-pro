@@ -148,6 +148,12 @@ body.dark-mode .daily-progress-container {
     max-width: 280px;
 }
 
+.dp-search-combo-box input::placeholder {
+    color: var(--dp-text-main, #1e293b);
+    opacity: 0.9;
+    font-weight: 700;
+}
+
 .dp-icon-add-btn {
     background: var(--dp-accent-blue);
     color: #ffffff;

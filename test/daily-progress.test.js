@@ -182,5 +182,28 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
     assert.strictEqual(app.dailyProgressVersion, oldVersion, 'Version must not increment when storage fails');
     assert.ok(app.lastToast.includes('Failed to save'), 'Error toast must be shown on storage failure');
 
+    // 15. Test Contractor Search Combo Box in Daily Progress Module
+    const indexHtml = fs.readFileSync('index.html', 'utf8');
+    assert.ok(indexHtml.includes('dp-search-combo-box'), 'index.html contains dp-search-combo-box');
+    assert.ok(indexHtml.includes('dailyProgressContractorSearch'), 'index.html binds dailyProgressContractorSearch');
+
+    app.dailyProgressContractorDropdownOpen = false;
+    app.dailyProgressContractorSearch = '';
+    app.dailyProgressDirty = false;
+    app.toggleDailyProgressContractorDropdown();
+    assert.strictEqual(app.dailyProgressContractorDropdownOpen, true, 'Dropdown opens on toggle');
+
+    app.dailyProgressContractorSearch = 'mangesh';
+    app.selectDailyProgressContractor('contractor-b');
+    assert.strictEqual(app.dailyProgressContractorId, 'contractor-b', 'selectDailyProgressContractor updates ID');
+    assert.strictEqual(app.dailyProgressContractorDropdownOpen, false, 'selectDailyProgressContractor closes dropdown');
+    assert.strictEqual(app.dailyProgressContractorSearch, '', 'selectDailyProgressContractor clears search');
+
+    app.dailyProgressContractorDropdownOpen = true;
+    app.dailyProgressContractorSearch = 'temp';
+    app.closeDailyProgressContractorDropdown();
+    assert.strictEqual(app.dailyProgressContractorDropdownOpen, false, 'closeDailyProgressContractorDropdown closes');
+    assert.strictEqual(app.dailyProgressContractorSearch, '', 'closeDailyProgressContractorDropdown clears search');
+
     console.log('✅ Daily Progress Module: All unit tests passed successfully.');
 });

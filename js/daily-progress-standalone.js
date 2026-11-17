@@ -115,6 +115,7 @@
                 if (!q) return list;
                 return list.filter(c => {
                     return (c.name && c.name.toLowerCase().includes(q)) ||
+                           (c.firmName && c.firmName.toLowerCase().includes(q)) ||
                            (c.id && c.id.toLowerCase().includes(q)) ||
                            (c.feeder && c.feeder.toLowerCase().includes(q)) ||
                            (c.engineer && c.engineer.toLowerCase().includes(q)) ||
@@ -215,6 +216,7 @@
 
             closeContractorDropdown() {
                 this.contractorDropdownOpen = false;
+                this.contractorSearchText = '';
             },
 
             selectContractor(cid) {
