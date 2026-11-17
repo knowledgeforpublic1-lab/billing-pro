@@ -24,6 +24,16 @@
         return String(str).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
     }
 
+    function normDate(d) {
+        if (!d) return '';
+        const str = String(d).trim();
+        const m = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+        if (m) {
+            return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+        }
+        return str;
+    }
+
     const STOCK_STOP_PATTERNS = [
         'enterprise', 'enterprises', 'eterprise', 'enterpeises', 'enterises',
         'electrical', 'electricals', 'electric',
@@ -57,6 +67,7 @@
     function normStem(v) {
         if (!v) return '';
         return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
+            .replace(/eterprise/g, 'enterprise').replace(/enterpeise/g, 'enterprise').replace(/enterises/g, 'enterprise')
             .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
             .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
             .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
@@ -113,7 +124,7 @@
             // URL query parameters
             const params = new URLSearchParams(window.location.search);
             const queryContractor = params.get('contractor') || params.get('c') || '';
-            const queryDate = params.get('date') || params.get('d') || '';
+            const queryDate = normDate(params.get('date') || params.get('d') || '');
 
             return {
                 currentTab: 'entry', // 'entry' | 'stock' | 'history' | 'download'
@@ -399,7 +410,7 @@
                     // 2. Fetch cloud data or localStorage
                     let loaded = null;
                     try {
-                        const res = await fetch('/api/daily-progress/data');
+                        const res = await fetch('/api/daily-progress/data?t=' + Date.now());
                         if (res.ok) {
                             const resJson = await res.json();
                             if (resJson && resJson.success && resJson.data) {
@@ -585,11 +596,23 @@
 
             loadReportForActiveDate() {
                 const actC = this.activeContractor || {};
-                const curDate = this.selectedDate;
+                const curDate = normDate(this.selectedDate);
 
-                const rep = (this.reports || []).find(r => {
-                    return matchesContractor(r.contractorId, actC) && r.date === curDate;
+                const matchingReps = (this.reports || []).filter(r => {
+                    return matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate;
                 });
+
+                // Pick the report with highest entered quantities, highest version, and freshest update
+                matchingReps.sort((a, b) => {
+                    const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
+                    const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
+                    if (qB !== qA) return qB - qA;
+                    const verDiff = Number(b.version || 0) - Number(a.version || 0);
+                    if (verDiff !== 0) return verDiff;
+                    return (new Date(b.updatedAt || 0)) - (new Date(a.updatedAt || 0));
+                });
+
+                const rep = matchingReps[0];
                 if (rep) {
                     this.quantities = { ...(rep.quantities || {}) };
                     this.manpower = {
@@ -609,6 +632,51 @@
                     this.remarks = '';
                     this.version = 0;
                     this.dirty = false;
+
+                    // Silently check if server has fresh draft/save from portal
+                    if (!this._fetchingLatestReport && typeof fetch === 'function') {
+                        this.fetchLatestReportsSilently();
+                    }
+                }
+            },
+
+            async fetchLatestReportsSilently() {
+                if (this._fetchingLatestReport) return;
+                this._fetchingLatestReport = true;
+                try {
+                    const res = await fetch('/api/daily-progress/data?t=' + Date.now());
+                    if (res.ok) {
+                        const resJson = await res.json();
+                        if (resJson && resJson.success && resJson.data && Array.isArray(resJson.data.reports)) {
+                            this.reports = resJson.data.reports;
+                            const actC = this.activeContractor || {};
+                            const curDate = normDate(this.selectedDate);
+                            const matching = (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate);
+                            matching.sort((a, b) => {
+                                const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
+                                const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
+                                if (qB !== qA) return qB - qA;
+                                return Number(b.version || 0) - Number(a.version || 0);
+                            });
+                            const freshRep = matching[0];
+                            if (freshRep && !this.dirty) {
+                                this.quantities = { ...(freshRep.quantities || {}) };
+                                this.manpower = {
+                                    leader: Number(freshRep.manpower && freshRep.manpower.leader) || 0,
+                                    skilled: Number(freshRep.manpower && freshRep.manpower.skilled) || 0,
+                                    unskilled: Number(freshRep.manpower && freshRep.manpower.unskilled) || 0,
+                                    tractor: Number(freshRep.manpower && freshRep.manpower.tractor) || 0,
+                                    augur: Number(freshRep.manpower && freshRep.manpower.augur) || 0,
+                                    room: Number(freshRep.manpower && freshRep.manpower.room) || 0
+                                };
+                                this.remarks = freshRep.remarks || '';
+                                this.version = freshRep.version || 1;
+                            }
+                        }
+                    }
+                } catch (_) {}
+                finally {
+                    this._fetchingLatestReport = false;
                 }
             },
 

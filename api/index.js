@@ -868,11 +868,18 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         });
 
         const rMap = new Map();
-        (existingData.reports || []).forEach(r => rMap.set(String(r.contractorId).toLowerCase() + '|' + r.date, r));
+        function normReportKey(r) {
+            const cNorm = String(r.contractorId || '').toLowerCase().replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+            const dNorm = String(r.date || '').trim();
+            return cNorm + '|' + dNorm;
+        }
+        (existingData.reports || []).forEach(r => rMap.set(normReportKey(r), r));
         (payload.reports || []).forEach(r => {
-            const key = String(r.contractorId).toLowerCase() + '|' + r.date;
+            const key = normReportKey(r);
             const prev = rMap.get(key);
-            if (!prev || (Number(r.version || 0) >= Number(prev.version || 0))) {
+            const prevQCount = prev && prev.quantities ? Object.values(prev.quantities).filter(q => Number(q) > 0).length : 0;
+            const newQCount = r && r.quantities ? Object.values(r.quantities).filter(q => Number(q) > 0).length : 0;
+            if (!prev || (Number(r.version || 0) >= Number(prev.version || 0)) || (newQCount > 0 && prevQCount === 0)) {
                 rMap.set(key, r);
             }
         });

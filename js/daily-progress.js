@@ -218,11 +218,12 @@ window.DailyProgressModule = {
         // Automatic background cloud sync so standalone shared links reflect latest changes
         try {
             if (typeof fetch === 'function') {
-                fetch('/api/daily-progress/data', {
+                const cloudSync = fetch('/api/daily-progress/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.dailyProgressData)
                 }).catch(e => console.info('[DailyProgress] Cloud auto-sync notice:', e.message));
+                await cloudSync;
             }
         } catch (_) { }
 
@@ -324,10 +325,102 @@ window.DailyProgressModule = {
         this.loadDailyProgressReportForDate(ymd);
     },
 
+    normalizeDailyProgressDate(d) {
+        if (!d) return '';
+        const str = String(d).trim();
+        const m = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+        if (m) {
+            return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+        }
+        return str;
+    },
+
+    syncCurrentDailyProgressDraft() {
+        if (!this.dailyProgressData) this.dailyProgressData = { contractors: [], reports: [], issues: [] };
+        if (!Array.isArray(this.dailyProgressData.reports)) this.dailyProgressData.reports = [];
+
+        const cid = this.dailyProgressContractorId;
+        const dt = this.normalizeDailyProgressDate(this.dailyProgressDate);
+        if (!cid || !dt) return null;
+
+        const cleanQ = {};
+        for (const [k, v] of Object.entries(this.dailyProgressQuantities || {})) {
+            const num = Number(v);
+            if (num > 0) {
+                cleanQ[k] = Math.round(num * 1000) / 1000;
+            }
+        }
+
+        const cleanMan = {
+            leader: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.leader || 0))),
+            skilled: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.skilled || 0))),
+            unskilled: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.unskilled || 0))),
+            tractor: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.tractor || 0) * 100) / 100),
+            augur: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.augur || 0) * 100) / 100),
+            room: Math.max(0, Math.round(Number(this.dailyProgressManpower && this.dailyProgressManpower.room || 0) * 100) / 100)
+        };
+
+        const reports = this.dailyProgressData.reports;
+        const normC = this.normContractorId(cid);
+
+        const existingIdx = reports.findIndex(r => {
+            const rNormC = this.normContractorId(r.contractorId);
+            const rNormD = this.normalizeDailyProgressDate(r.date);
+            return (r.contractorId === cid || rNormC === normC) && (r.date === dt || rNormD === dt);
+        });
+
+        const currentVer = Math.max(1, Number(this.dailyProgressVersion || 0));
+        const reportPayload = {
+            contractorId: cid,
+            date: dt,
+            quantities: cleanQ,
+            manpower: cleanMan,
+            remarks: String(this.dailyProgressRemarks || '').trim(),
+            version: existingIdx >= 0 ? Math.max(currentVer, Number(reports[existingIdx].version || 0) + 1) : currentVer,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (existingIdx >= 0) {
+            reports[existingIdx] = reportPayload;
+        } else {
+            reports.push(reportPayload);
+        }
+        this.dailyProgressVersion = reportPayload.version;
+        return reportPayload;
+    },
+
+    debouncedSaveDailyProgressData() {
+        if (typeof setTimeout !== 'function') return;
+        if (this._dpSaveTimer) clearTimeout(this._dpSaveTimer);
+        this._dpSaveTimer = setTimeout(async () => {
+            try {
+                this.syncCurrentDailyProgressDraft();
+                await this.saveDailyProgressData();
+            } catch (e) {
+                console.info('[DailyProgress] Debounced auto-save notice:', e.message);
+            }
+        }, 500);
+    },
+
     loadDailyProgressReportForDate(date) {
         const cid = this.dailyProgressContractorId;
+        const normD = this.normalizeDailyProgressDate(date);
+        const normC = this.normContractorId(cid);
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
-        const r = reports.find(rep => rep.contractorId === cid && rep.date === date);
+        const matchingReps = reports.filter(rep => {
+            const repNormC = this.normContractorId(rep.contractorId);
+            const repNormD = this.normalizeDailyProgressDate(rep.date);
+            return (rep.contractorId === cid || repNormC === normC) && (rep.date === date || repNormD === normD);
+        });
+
+        matchingReps.sort((a, b) => {
+            const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
+            const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
+            if (qB !== qA) return qB - qA;
+            return Number(b.version || 0) - Number(a.version || 0);
+        });
+
+        const r = matchingReps[0];
 
         if (r) {
             this.dailyProgressQuantities = { ...(r.quantities || {}) };
@@ -362,9 +455,15 @@ window.DailyProgressModule = {
         if (isNaN(num) || num < 0) return;
         // Vue 3 compatible reactive assignment (avoids non-existent this.$set)
         const qMap = { ...(this.dailyProgressQuantities || {}) };
-        qMap[itemId] = num;
+        if (num > 0) {
+            qMap[itemId] = num;
+        } else {
+            delete qMap[itemId];
+        }
         this.dailyProgressQuantities = qMap;
         this.dailyProgressDirty = true;
+        this.syncCurrentDailyProgressDraft();
+        this.debouncedSaveDailyProgressData();
     },
 
     onDailyProgressManpowerChange(key, val) {
@@ -374,6 +473,8 @@ window.DailyProgressModule = {
         mMap[key] = num;
         this.dailyProgressManpower = mMap;
         this.dailyProgressDirty = true;
+        this.syncCurrentDailyProgressDraft();
+        this.debouncedSaveDailyProgressData();
     },
 
     async saveDailyProgressReport() {
@@ -388,46 +489,11 @@ window.DailyProgressModule = {
 
         this.dailyProgressBusy = true;
         try {
-            const cid = this.dailyProgressContractorId;
-            const dt = this.dailyProgressDate;
-            const reports = this.dailyProgressData.reports;
-
-            const existingIdx = reports.findIndex(r => r.contractorId === cid && r.date === dt);
-            const cleanQ = {};
-            for (const [k, v] of Object.entries(this.dailyProgressQuantities || {})) {
-                if (Number(v) > 0) {
-                    cleanQ[k] = Math.round(Number(v) * 1000) / 1000;
-                }
-            }
-
-            const cleanMan = {
-                leader: Math.max(0, Math.round(Number(this.dailyProgressManpower.leader || 0))),
-                skilled: Math.max(0, Math.round(Number(this.dailyProgressManpower.skilled || 0))),
-                unskilled: Math.max(0, Math.round(Number(this.dailyProgressManpower.unskilled || 0))),
-                tractor: Math.max(0, Math.round(Number(this.dailyProgressManpower.tractor || 0) * 100) / 100),
-                augur: Math.max(0, Math.round(Number(this.dailyProgressManpower.augur || 0) * 100) / 100),
-                room: Math.max(0, Math.round(Number(this.dailyProgressManpower.room || 0) * 100) / 100)
-            };
-
-            const reportPayload = {
-                contractorId: cid,
-                date: dt,
-                quantities: cleanQ,
-                manpower: cleanMan,
-                remarks: String(this.dailyProgressRemarks || '').trim(),
-                version: (this.dailyProgressVersion || 0) + 1,
-                updatedAt: new Date().toISOString()
-            };
-
-            if (existingIdx >= 0) {
-                reports[existingIdx] = reportPayload;
-            } else {
-                reports.push(reportPayload);
-            }
-
+            const dt = this.normalizeDailyProgressDate(this.dailyProgressDate);
+            const reportPayload = this.syncCurrentDailyProgressDraft();
             await this.saveDailyProgressData();
             this.dailyProgressDirty = false;
-            this.dailyProgressVersion = reportPayload.version;
+            if (reportPayload) this.dailyProgressVersion = reportPayload.version;
             this.showToast(`Daily Progress Saved! (${this.formatDisplayDate(dt)})`, 'Check');
         } catch (e) {
             console.error('[DailyProgress] Save failed:', e);
@@ -907,17 +973,21 @@ window.DailyProgressModule = {
     },
 
     getDailyProgressContractorShareUrl(cid, dt) {
+        this.syncCurrentDailyProgressDraft();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-        return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt || this.dailyProgressDate || '')}`;
+        const normD = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(dt || this.dailyProgressDate)) || dt || this.dailyProgressDate || '';
+        return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(normD)}`;
     },
 
     getDailyProgressContractorWhatsappUrl(c, dt) {
         const url = this.getDailyProgressContractorShareUrl(c.id, dt);
-        const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${dt || this.dailyProgressDate || ''}\nLink: ${url}`;
+        const normD = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(dt || this.dailyProgressDate)) || dt || this.dailyProgressDate || '';
+        const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${normD}\nLink: ${url}`;
         return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     },
 
     openDailyProgressShareModal() {
+        this.syncCurrentDailyProgressDraft();
         this.dailyProgressShareSelectedContractor = this.dailyProgressActiveContractor;
         this.dailyProgressShareSearch = '';
         this.dailyProgressShareDate = this.dailyProgressDate || (new Date().toISOString().slice(0, 10));
@@ -932,10 +1002,11 @@ window.DailyProgressModule = {
     },
 
     copyDailyProgressShareLink() {
+        this.syncCurrentDailyProgressDraft();
         this.openDailyProgressShareModal();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
-        const dt = this.dailyProgressDate || '';
+        const dt = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(this.dailyProgressDate)) || this.dailyProgressDate || '';
         const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
 
         // Immediately trigger background cloud sync so recipient gets current data

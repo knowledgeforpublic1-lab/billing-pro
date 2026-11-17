@@ -107,6 +107,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
     function normStem(v) {
         if (!v) return '';
         return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
+            .replace(/eterprise/g, 'enterprise').replace(/enterpeise/g, 'enterprise').replace(/enterises/g, 'enterprise')
             .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
             .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
             .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
