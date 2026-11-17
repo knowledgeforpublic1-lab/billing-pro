@@ -74,7 +74,12 @@ async function servePortalPage(req, res) {
 app.get(['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation master/index.html', '/Reconciliation%20master/index.html'], servePortalPage);
 app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, max-age=3600, must-revalidate'); next(); });
 app.use('/api/auth', auth.router);
-app.use(['/api', '/js/data'], (req, res, next) => req.path === '/health' ? next() : auth.middleware(req, res, next));
+app.use(['/api', '/js/data'], (req, res, next) => {
+    if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress') {
+        return next();
+    }
+    return auth.middleware(req, res, next);
+});
 app.use('/api/dp-admin', dailyProgress.adminRouter);
 app.get('/js/data/:file', (req, res) => {
     res.set('Cache-Control', 'private, max-age=3600, must-revalidate');

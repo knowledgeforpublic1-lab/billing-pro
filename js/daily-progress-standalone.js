@@ -625,18 +625,30 @@
                     } catch (e) { }
 
                     // Save to cloud API
+                    let cloudSaved = false;
                     try {
-                        await fetch('/api/daily-progress/data', {
+                        const res = await fetch('/api/daily-progress/data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
+                        if (res.ok) {
+                            const resJson = await res.json().catch(() => null);
+                            if (!resJson || resJson.success !== false) {
+                                cloudSaved = true;
+                            }
+                        }
                     } catch (e) {
-                        console.warn('[DailyProgressStandalone] Cloud save network warning:', e);
+                        console.warn('[DailyProgressStandalone] Cloud save network error:', e);
                     }
 
-                    this.saveStatus = 'saved';
-                    this.showToast(`Daily Progress successfully saved for ${this.selectedDate}! ✅`, 'success');
+                    if (cloudSaved) {
+                        this.saveStatus = 'saved';
+                        this.showToast(`Daily Progress saved & synced to cloud! ✅ (${this.selectedDate})`, 'success');
+                    } else {
+                        this.saveStatus = 'offline';
+                        this.showToast(`Device par save hua, cloud sync fail hua. Internet check karein. ⚠️`, 'warning');
+                    }
                 } catch (err) {
                     this.showToast('Save failed: ' + err.message, 'error');
                 } finally {

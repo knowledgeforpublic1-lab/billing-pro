@@ -91,7 +91,19 @@ window.DailyProgressModule = {
         // Load report for active date
         this.loadDailyProgressReportForDate(this.dailyProgressDate);
 
-
+        // Auto-poll cloud data every 15s in background when viewing Daily Progress (picks up mobile entries in real time)
+        const timerFn = typeof setInterval === 'function' ? setInterval : (typeof window !== 'undefined' && typeof window.setInterval === 'function' ? window.setInterval : null);
+        if (timerFn && typeof window !== 'undefined' && !window._dpAutoSyncTimer) {
+            window._dpAutoSyncTimer = timerFn(() => {
+                try {
+                    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                        if (this.currentView === 'dailyProgress' && !this.dailyProgressDirty && !this.dailyProgressBusy) {
+                            this.syncDailyProgressCloudData(true);
+                        }
+                    }
+                } catch (_) { }
+            }, 15000);
+        }
     },
 
     syncDailyProgressContractorsList() {
