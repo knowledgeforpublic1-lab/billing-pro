@@ -4,6 +4,32 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ExcelJS = require('exceljs');
 
+test('Daily Progress text and action colors have readable contrast in light, dark and soft themes', () => {
+    const css = fs.readFileSync('css/daily-progress.css', 'utf8');
+    const tokens = selector => {
+        const start = css.indexOf(selector);
+        assert.ok(start >= 0, selector);
+        const block = css.slice(start, css.indexOf('}', start));
+        return Object.fromEntries([...block.matchAll(/(--dp-[\w-]+):\s*(#[0-9a-f]{6})/gi)].map(match => [match[1], match[2]]));
+    };
+    const base = tokens(':root {');
+    const luminance = hex => {
+        const rgb = hex.slice(1).match(/../g).map(v => parseInt(v, 16) / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    };
+    const contrast = (fg, bg) => (Math.max(luminance(fg), luminance(bg)) + 0.05) / (Math.min(luminance(fg), luminance(bg)) + 0.05);
+    for (const [theme, overrides] of [['light', {}], ['dark', tokens('body.dark-mode {')], ['soft', tokens('html[data-theme="soft"], html.soft {')]]) {
+        const palette = { ...base, ...overrides };
+        for (const fg of ['--dp-text-main', '--dp-text-muted', '--dp-text-dim', '--dp-accent-blue', '--dp-accent-green', '--dp-accent-amber', '--dp-accent-red']) {
+            for (const bg of ['--dp-card-bg', '--dp-surface-bg', '--dp-input-bg']) {
+                const ratio = contrast(palette[fg], palette[bg]);
+                assert.ok(ratio >= 4.5, `${theme}: ${fg} on ${bg} has contrast ${ratio.toFixed(2)}`);
+            }
+        }
+        assert.ok(contrast(palette['--dp-action-text'], palette['--dp-action-bg']) >= 4.5, theme + ' action label');
+    }
+});
+
 test('failed device storage stays a failure, Vue 3 entry works without $set', async () => {
     const context = { window: {}, console, BillingStorage: { async setItem() { return { saved: false }; } } };
     vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);

@@ -104,7 +104,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261116_mobile_menu">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261117_admin_mobile_theme_v9">
 </head>
 
 <body>
@@ -1959,8 +1959,8 @@
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
                     </div>
                     <div class="dp-save-badge">
-                        <span v-if="dailyProgressDirty" style="color: #f59e0b;">● Unsaved Changes</span>
-                        <span v-else-if="dailyProgressVersion" style="color: #22c55e;">✓ Saved (v{{ dailyProgressVersion }})</span>
+                        <span v-if="dailyProgressDirty" style="color: var(--dp-accent-amber);">● Unsaved Changes</span>
+                        <span v-else-if="dailyProgressVersion" style="color: var(--dp-accent-green);">✓ Saved (v{{ dailyProgressVersion }})</span>
                         <span v-else style="color: var(--text-muted);">Ready for {{ formatDisplayDate(dailyProgressDate) }}</span>
                     </div>
                 </div>
@@ -2165,11 +2165,11 @@
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle, rgba(255,255,255,0.1));">
                                     <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Total Team Strength</span>
-                                    <span style="font-size: 1.15rem; font-weight: 800; color: #22c55e;">{{ dailyProgressTotalManpower }} people</span>
+                                    <span style="font-size: 1.15rem; font-weight: 800; color: var(--dp-accent-green);">{{ dailyProgressTotalManpower }} people</span>
                                 </div>
 
                                 <details style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.08));">
-                                    <summary style="font-size: 0.74rem; font-weight: 700; color: #60a5fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                                    <summary style="font-size: 0.74rem; font-weight: 700; color: var(--dp-accent-blue); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                                         <span>Equipment &amp; Daily Charges</span>
                                         <span>▾</span>
                                     </summary>
@@ -2222,15 +2222,15 @@
                 </div>
 
                 <!-- TAB 2: USER LOGINS & WORKING AUDIT LOGS -->
-                <div v-if="dailyProgressTab === 'logins'">
+                <div v-if="dailyProgressTab === 'logins'" class="dp-admin-logins">
                     <!-- Top Action Bar -->
                     <div class="dp-panel" style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; flex-wrap: wrap; gap: 8px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <strong style="font-size: 0.92rem; color: #3b82f6;">👥 Registered Worker Logins &amp; Working Log</strong>
+                        <div class="dp-logins-toolbar">
+                            <div class="dp-logins-intro">
+                                <strong style="font-size: 0.92rem; color: var(--dp-accent-blue);">👥 Registered Worker Logins &amp; Working Log</strong>
                                 <span style="font-size: 0.72rem; color: var(--text-muted);">Site ladkon ke login accounts aur unki daily entry history</span>
                             </div>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="dp-logins-actions">
                                 <button type="button" class="btn btn-secondary" @click="runDailyProgressAdmin(loadDailyProgressLoginsAndHistory)" style="font-size: 0.74rem; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;">
                                     <span>🔄</span><span>Refresh Logins &amp; Logs</span>
                                 </button>
@@ -2248,7 +2248,7 @@
                             <span style="font-size: 0.72rem; color: var(--text-muted);">Jo log share link se entry kar sakte hain</span>
                         </div>
                         <div class="dp-table-wrap">
-                            <table class="dp-table">
+                            <table class="dp-table dp-record-table dp-worker-table">
                                 <thead>
                                     <tr>
                                         <th>Pura Naam</th>
@@ -2262,25 +2262,25 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="user in dailyProgressWorkers" :key="user.id">
-                                        <td><strong style="color: #60a5fa;">{{ user.name }}</strong></td>
-                                        <td>{{ user.email || '—' }}</td>
-                                        <td><span style="font-family: monospace; font-weight: 600;">{{ user.mobile || '—' }}</span></td>
-                                        <td><code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem;">{{ user.username }}</code></td>
-                                        <td>
-                                            <span v-if="(user.contractorIds || []).some(id => id === '*' || id === 'all')" style="color: #10b981; font-weight: 600;">Sabhi Contractors (All)</span>
+                                        <td data-label="Name"><strong style="color: var(--dp-accent-blue);">{{ user.name }}</strong></td>
+                                        <td data-label="Email">{{ user.email || '—' }}</td>
+                                        <td data-label="Mobile"><span style="font-family: monospace; font-weight: 600;">{{ user.mobile || '—' }}</span></td>
+                                        <td data-label="Username"><code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem;">{{ user.username }}</code></td>
+                                        <td data-label="Contractors">
+                                            <span v-if="(user.contractorIds || []).some(id => id === '*' || id === 'all')" style="color: var(--dp-accent-green); font-weight: 600;">Sabhi Contractors (All)</span>
                                             <span v-else-if="!user.contractorIds || !user.contractorIds.length">No contractors assigned</span>
                                             <span v-else>{{ user.contractorIds.map(id => (dailyProgressWorkerContractors.find(c => c.id === id) || dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') }}</span>
                                         </td>
-                                        <td>
+                                        <td data-label="Status">
                                             <span :style="{ color: user.disabled ? '#ef4444' : '#10b981', fontWeight: 700 }">
                                                 {{ user.disabled ? '🔴 Disabled' : '🟢 Active' }}
                                             </span>
                                         </td>
-                                        <td style="text-align: right; white-space: nowrap;">
+                                        <td data-label="Actions" style="text-align: right; white-space: nowrap;">
                                             <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="assignDailyProgressWorker(user)">Assign Contractors</button>
                                             <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="resetDailyProgressWorker(user)">Reset Password</button>
                                             <button v-if="!user.disabled" type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="disableDailyProgressWorker(user)">Disable</button>
-                                            <button type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
+                                            <button type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem; color: var(--dp-accent-red); border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
                                         </td>
                                     </tr>
                                     <tr v-if="!dailyProgressWorkers.length">
@@ -2300,7 +2300,7 @@
                             <span style="font-size: 0.72rem; color: var(--text-muted);">Contractor: {{ (dailyProgressContractors.find(c => c.id === dailyProgressContractorId) || {}).name || dailyProgressContractorId }}</span>
                         </div>
                         <div class="dp-table-wrap">
-                            <table class="dp-table">
+                            <table class="dp-table dp-record-table dp-audit-table">
                                 <thead>
                                     <tr>
                                         <th>Kisne Entry Ki</th>
@@ -2314,25 +2314,25 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="event in dailyProgressEntryHistory" :key="event.source + event.date + event.version + event.savedAt">
-                                        <td>
-                                            <strong style="color: #60a5fa;">{{ event.savedBy ? event.savedBy.name : 'Direct Entry' }}</strong>
+                                        <td data-label="Saved by">
+                                            <strong style="color: var(--dp-accent-blue);">{{ event.savedBy ? event.savedBy.name : 'Direct Entry' }}</strong>
                                         </td>
-                                        <td>
+                                        <td data-label="Contact">
                                             <small style="color: var(--text-muted);">{{ [event.savedBy?.mobile, event.savedBy?.email].filter(Boolean).join(' • ') || '—' }}</small>
                                         </td>
-                                        <td>
+                                        <td data-label="Saved at (IST)">
                                             <span style="font-weight: 600;">{{ dailyProgressEntryTime(event.savedAt) }}</span>
                                         </td>
-                                        <td><span style="font-family: monospace; font-weight: 700; color: #38bdf8;">{{ event.date }}</span></td>
-                                        <td>
+                                        <td data-label="Work date"><span style="font-family: monospace; font-weight: 700; color: var(--dp-accent-blue);">{{ event.date }}</span></td>
+                                        <td data-label="Consumption">
                                             <div v-for="(value, id) in event.quantities" :key="id" style="font-size: 0.78rem; line-height: 1.4;">
                                                 {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).name || ('Item ' + id) }}:
-                                                <strong style="color: #10b981;">{{ value }}</strong> {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).unit || '' }}
+                                                <strong style="color: var(--dp-accent-green);">{{ value }}</strong> {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).unit || '' }}
                                             </div>
                                             <span v-if="!Object.keys(event.quantities || {}).length" style="color: var(--text-muted); font-style: italic;">No materials</span>
                                         </td>
-                                        <td style="max-width: 250px; font-size: 0.8rem;">{{ event.remarks || '—' }}</td>
-                                        <td style="text-align: right; font-family: monospace; font-weight: 700;">v{{ event.version }}</td>
+                                        <td data-label="Remarks" style="max-width: 250px; font-size: 0.8rem;">{{ event.remarks || '—' }}</td>
+                                        <td data-label="Version" style="text-align: right; font-family: monospace; font-weight: 700;">v{{ event.version }}</td>
                                     </tr>
                                     <tr v-if="!dailyProgressEntryHistory.length">
                                         <td colspan="7" style="text-align: center; padding: 35px; color: var(--text-muted);">
@@ -2353,7 +2353,7 @@
                             <span style="font-size: 0.72rem; color: var(--text-muted);">{{ dailyProgressReports.length }} saved days</span>
                         </div>
                         <div class="dp-table-wrap">
-                            <table class="dp-table">
+                            <table class="dp-table dp-record-table dp-history-table">
                                 <thead>
                                     <tr>
                                         <th>Work Date</th>
@@ -2365,11 +2365,11 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="rep in [...dailyProgressReports].reverse()" :key="rep.date">
-                                        <td style="font-weight: 800; color: #60a5fa;">{{ formatDisplayDate(rep.date) }}</td>
-                                        <td>{{ Object.keys(rep.quantities || {}).length }} items</td>
-                                        <td>{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} people</td>
-                                        <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ rep.remarks || '—' }}</td>
-                                        <td style="text-align: right;">
+                                        <td data-label="Work date" style="font-weight: 800; color: var(--dp-accent-blue);">{{ formatDisplayDate(rep.date) }}</td>
+                                        <td data-label="Items consumed">{{ Object.keys(rep.quantities || {}).length }} items</td>
+                                        <td data-label="Team manpower">{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} people</td>
+                                        <td data-label="Site notes" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ rep.remarks || '—' }}</td>
+                                        <td data-label="Actions" style="text-align: right;">
                                             <button type="button" class="tbtn primary" style="padding: 3px 10px; font-size: 0.72rem;" @click="dailyProgressDate = rep.date; loadDailyProgressReportForDate(rep.date); dailyProgressTab = 'entry'">
                                                 Open ➔
                                             </button>
@@ -2408,8 +2408,8 @@
                                 </div>
                             </div>
 
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <div style="display: inline-flex; align-items: center; gap: 6px;">
+                            <div class="dp-excel-tools">
+                                <div class="dp-excel-filters">
                                     <input type="search"
                                            v-model="dailyProgressExportSearch"
                                            placeholder="Search material in sheet..."
@@ -2439,13 +2439,14 @@
                                 <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.feeder) || 'ANGARA' }} · Team: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }}</span>
                             </div>
                             <div>
-                                <span style="color: #38bdf8; font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
+                                <span style="color: var(--dp-accent-blue); font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
                                 <span style="opacity: 0.6; margin-left: 6px;">({{ formatDisplayDate(dailyProgressExportFrom) }} — {{ formatDisplayDate(dailyProgressExportTo) }})</span>
                             </div>
                         </div>
 
                         <!-- Scrollable Excel Sheet Table -->
-                        <div class="dp-excel-table-scroll">
+                        <p class="dp-excel-scroll-hint">Swipe left or right for dates and totals. Material names stay visible.</p>
+                        <div class="dp-excel-table-scroll" tabindex="0" role="region" aria-label="Daily progress sheet; scroll for dates and totals">
                             <table class="dp-excel-sheet-table">
                                 <thead>
                                     <tr>
@@ -2534,7 +2535,7 @@
                                     <tr v-for="it in getDailyProgressExportPreviewItems()" :key="it.id">
                                         <td class="st-row">{{ it.row }}</td>
                                         <td class="st-code">{{ it.code || 'ITEM' }}</td>
-                                        <td class="st-name" :title="it.name">{{ it.name }}</td>
+                                        <td class="st-name" :title="it.name">{{ it.name }}<small class="dp-excel-mobile-code">{{ it.code || 'ITEM' }} · {{ it.unit }} · Row {{ it.row }}</small></td>
                                         <td class="st-unit">{{ it.unit }}</td>
                                         <td class="st-issue">
                                             <span v-if="getDailyProgressItemStock(it).totalIssued > 0" class="dp-issue-val" style="font-weight: 700;">
@@ -2739,7 +2740,7 @@
                                 </button>
                                 <a :href="dailyProgressWhatsappShareUrl"
                                    target="_blank"
-                                   style="background: #16a34a; color: #fff; text-decoration: none; border-radius: 4px; padding: 5px 10px; font-weight: 700; font-size: 0.74rem; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                   style="background: #15803d; color: #fff; text-decoration: none; border-radius: 4px; padding: 5px 10px; font-weight: 700; font-size: 0.74rem; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                                     <span>📲</span><span>WhatsApp</span>
                                 </a>
                             </div>

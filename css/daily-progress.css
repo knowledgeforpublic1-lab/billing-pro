@@ -17,21 +17,24 @@
     --dp-text-dim: #64748b;
     --dp-accent-blue: #2563eb;
     --dp-accent-blue-light: #eff6ff;
-    --dp-accent-green: #16a34a;
+    --dp-accent-green: #15803d;
     --dp-accent-green-light: #f0fdf4;
-    --dp-accent-amber: #d97706;
+    --dp-accent-amber: #92400e;
     --dp-accent-amber-light: #fffbeb;
     --dp-accent-red: #dc2626;
     --dp-accent-red-light: #fef2f2;
     --dp-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
     --dp-shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
     --dp-shadow-bar: 0 -4px 20px rgba(15, 23, 42, 0.08);
+    --dp-action-bg: #1d4ed8;
+    --dp-action-text: #ffffff;
+    --dp-color-scheme: light;
 }
 
 /* Dark Theme Overrides */
-html[data-theme="dark"] .daily-progress-container,
-html.dark .daily-progress-container,
-body.dark-mode .daily-progress-container {
+html[data-theme="dark"],
+html.dark,
+body.dark-mode {
     --dp-bg-base: #0b1329;
     --dp-card-bg: #1e293b;
     --dp-surface-bg: #0f172a;
@@ -40,8 +43,8 @@ body.dark-mode .daily-progress-container {
     --dp-border-subtle: rgba(255, 255, 255, 0.07);
     --dp-border-strong: rgba(255, 255, 255, 0.2);
     --dp-text-main: #f8fafc;
-    --dp-text-muted: #94a3b8;
-    --dp-text-dim: #64748b;
+    --dp-text-muted: #cbd5e1;
+    --dp-text-dim: #94a3b8;
     --dp-accent-blue: #38bdf8;
     --dp-accent-blue-light: rgba(56, 189, 248, 0.15);
     --dp-accent-green: #22c55e;
@@ -53,6 +56,26 @@ body.dark-mode .daily-progress-container {
     --dp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --dp-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.4);
     --dp-shadow-bar: 0 -4px 20px rgba(0, 0, 0, 0.45);
+    --dp-color-scheme: dark;
+}
+
+html[data-theme="soft"], html.soft {
+    --dp-bg-base: #f5f0e6;
+    --dp-card-bg: #fdfaf2;
+    --dp-surface-bg: #f4eee0;
+    --dp-input-bg: #fffdf7;
+    --dp-border: #d3c8ad;
+    --dp-border-subtle: #e0d7c1;
+    --dp-border-strong: #b3a78b;
+    --dp-text-main: #3f382c;
+    --dp-text-muted: #645644;
+    --dp-text-dim: #6b5e49;
+    --dp-accent-blue: #6b4f2a;
+    --dp-accent-green: #166534;
+    --dp-accent-red: #b91c1c;
+    --dp-accent-blue-light: #eee5d2;
+    --dp-action-bg: #6b4f2a;
+    --dp-color-scheme: light;
 }
 
 /* Base Container & Zero Slashed Zero Rule */
@@ -155,7 +178,7 @@ body.dark-mode .daily-progress-container {
 }
 
 .dp-icon-add-btn {
-    background: var(--dp-accent-blue);
+    background: var(--dp-action-bg);
     color: #ffffff;
     border: none;
     border-radius: 4px;
@@ -241,7 +264,7 @@ body.dark-mode .daily-progress-container {
 }
 
 .dp-segmented-tabs button.active {
-    background: var(--dp-accent-blue);
+    background: var(--dp-action-bg);
     color: #ffffff;
     box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
 }
@@ -959,7 +982,7 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1200;
     padding: 16px;
 }
 
@@ -971,6 +994,11 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     max-width: 100%;
     padding: 18px 22px;
     box-shadow: var(--dp-shadow-md);
+    color: var(--dp-text-main);
+    color-scheme: var(--dp-color-scheme);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    min-width: 0;
 }
 
 .dp-modal-header {
@@ -1017,6 +1045,67 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     border-color: var(--dp-accent-blue);
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
+
+/* Keep module colors consistent despite the global SAP table/button overrides. */
+.daily-progress-container,
+.dp-modal { color-scheme: var(--dp-color-scheme); }
+
+html .daily-progress-container :is(.dp-table, .dp-excel-sheet-table) :is(td, th) {
+    color: var(--dp-text-main) !important;
+    background: var(--dp-card-bg) !important;
+    border-color: var(--dp-border) !important;
+}
+
+html .daily-progress-container :is(.dp-table, .dp-excel-sheet-table) th {
+    background: var(--dp-surface-bg) !important;
+    color: var(--dp-text-muted) !important;
+}
+
+html .daily-progress-container :is(.dp-table, .dp-excel-sheet-table) :is(td, th) :is(span, div, strong, small, code) {
+    color: inherit !important;
+    background: transparent !important;
+}
+
+html .daily-progress-container :is(.dp-table, .dp-excel-sheet-table) td :is(.dp-sap-badge, .dp-issue-val, .dp-excel-val) {
+    color: var(--dp-accent-blue) !important;
+}
+
+html .daily-progress-container .dp-excel-sheet-table td.dp-excel-bal-positive { color: var(--dp-accent-green) !important; }
+html .daily-progress-container .dp-excel-sheet-table td.dp-excel-bal-negative { color: var(--dp-accent-red) !important; }
+html .daily-progress-container .dp-excel-sheet-table .dp-excel-mp-row td { color: var(--dp-accent-amber) !important; }
+
+html[data-theme] .daily-progress-container button:is(.btn-primary, .tbtn.primary, .dp-icon-add-btn),
+html[data-theme] .daily-progress-container .dp-segmented-tabs button.active {
+    background: var(--dp-action-bg) !important;
+    border-color: var(--dp-action-bg) !important;
+    color: var(--dp-action-text) !important;
+}
+
+html .daily-progress-container button :is(span, strong) { color: inherit !important; background: transparent !important; }
+html .daily-progress-container .dp-panel-header h2 > span { background: var(--dp-action-bg); color: var(--dp-action-text); }
+html[data-theme] .daily-progress-container button.tbtn.danger { color: var(--dp-accent-red) !important; }
+html[data-theme] .apptoolbar .dp-segmented-tabs button.active {
+    background: var(--dp-action-bg) !important;
+    color: var(--dp-action-text) !important;
+}
+html .dp-segmented-tabs button.active span { color: inherit !important; }
+.dp-contractor-pill .dp-pill-label { color: var(--dp-accent-blue) !important; }
+
+.dp-modal :is(input, select, textarea) { color: var(--dp-text-main); background-color: var(--dp-input-bg); }
+.dp-modal :is(input, textarea)::placeholder { color: var(--dp-text-muted); opacity: 1; }
+.dp-modal input[type="checkbox"] { accent-color: var(--dp-action-bg); }
+.dp-modal label { overflow-wrap: anywhere; }
+.dp-modal :is(small, p) { color: var(--dp-text-muted); overflow-wrap: anywhere; }
+
+.dp-logins-toolbar,
+.dp-logins-intro,
+.dp-logins-actions,
+.dp-excel-tools,
+.dp-excel-filters { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dp-logins-toolbar { justify-content: space-between; padding: 8px; flex-wrap: wrap; }
+.dp-logins-intro, .dp-logins-actions, .dp-excel-tools { flex-wrap: wrap; }
+.dp-record-table td { overflow-wrap: anywhere; }
+.dp-excel-mobile-code, .dp-excel-scroll-hint { display: none; }
 
 /* ==========================================================================
    8. Mobile Navigation & Responsiveness
@@ -1091,7 +1180,7 @@ html.dark .dp-table tbody tr:nth-child(even) td {
 
     .dp-save-bar {
         position: sticky;
-        bottom: 58px;
+        bottom: calc(66px + env(safe-area-inset-bottom, 0px));
         z-index: 99;
         margin-top: 8px;
         border-radius: 8px;
@@ -1103,14 +1192,14 @@ html.dark .dp-table tbody tr:nth-child(even) td {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 54px;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
         background: var(--dp-card-bg);
         border-top: 1px solid var(--dp-border);
         display: flex;
         align-items: center;
         justify-content: space-around;
         z-index: 1000;
-        padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.12);
     }
 
@@ -1134,4 +1223,120 @@ html.dark .dp-table tbody tr:nth-child(even) td {
         color: var(--dp-accent-green);
         background: var(--dp-accent-green-light);
     }
+
+    .daily-progress-container {
+        min-width: 0;
+        padding-bottom: calc(190px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .dp-panel, .dp-panel-header { min-width: 0; }
+    .dp-panel-header { flex-wrap: wrap; gap: 8px; }
+    .dp-panel-header h2 { min-width: 0; overflow-wrap: anywhere; }
+    .dp-logins-toolbar, .dp-logins-intro, .dp-logins-actions { width: 100%; }
+    .dp-logins-intro { align-items: flex-start; flex-direction: column; }
+    .dp-contractor-pill { width: 100%; min-width: 0; box-sizing: border-box; }
+    .dp-contractor-pill .searchable-dropdown {
+        flex: 1;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+    .dp-contractor-pill .dp-search-combo-box input {
+        width: 100% !important;
+        min-width: 0;
+        font-size: 16px !important;
+    }
+    .dp-contractor-pill .searchable-dropdown-panel {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .dp-contractor-pill button, .dp-date-pill button { min-height: 44px; min-width: 32px; flex-shrink: 0; }
+    .dp-date-pill { max-width: 100%; }
+    .dp-date-pill input { min-width: 0; min-height: 44px; font-size: 16px !important; }
+    .dp-logins-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .daily-progress-container button, .dp-modal button { min-height: 44px; }
+    .daily-progress-container :is(input, select, textarea), .dp-modal :is(input, select, textarea) {
+        font-size: 16px !important;
+        max-width: 100%;
+    }
+    .dp-modal input:not([type="checkbox"]):not([type="radio"]), .dp-modal select { min-height: 44px; }
+    .dp-modal { padding: 16px; }
+    .dp-modal form > div:last-child { flex-wrap: wrap; }
+    .dp-modal form > div:last-child > button { flex: 1 1 120px; }
+
+    /* User lists, audit logs and history need every field, including contact details. */
+    .dp-record-table, .dp-record-table tbody { display: block; width: 100%; }
+    .dp-record-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
+        min-width: 0;
+    }
+    .daily-progress-container .dp-record-table tbody td,
+    .daily-progress-container .dp-record-table tbody td:nth-child(2),
+    .daily-progress-container .dp-record-table tbody td:last-child {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        width: 100%;
+        min-width: 0;
+        max-width: none !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+    .dp-record-table td[data-label]::before {
+        content: attr(data-label);
+        color: var(--dp-text-muted);
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .dp-record-table tbody td[data-label="Actions"] {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .dp-record-table td[data-label="Actions"]::before { grid-column: 1 / -1; }
+    .dp-record-table td[data-label="Actions"] button {
+        width: 100%;
+        margin: 0 !important;
+        padding: 8px !important;
+        white-space: normal;
+    }
+    .dp-save-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .dp-save-status { min-width: 0; overflow-wrap: anywhere; }
+    .dp-save-bar > button { width: 100%; justify-content: center; white-space: normal; }
+
+    .dp-excel-toolbar, .dp-excel-tools, .dp-excel-filters {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+        min-width: 0;
+    }
+    .dp-excel-range-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+    .dp-excel-date-field { min-width: 0; flex-direction: column; align-items: stretch; }
+    .dp-excel-date-field input { min-width: 0; width: 100%; min-height: 44px; }
+    .dp-excel-quick-ranges { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dp-excel-filters :is(input, select) { width: 100% !important; min-width: 0; min-height: 44px; }
+    .dp-excel-meta-bar { overflow-wrap: anywhere; }
+    .dp-excel-scroll-hint { display: block; margin: 0; padding: 10px; font-size: 12px; color: var(--dp-text-muted); }
+    .dp-excel-table-scroll { max-height: 60vh; max-height: min(60dvh, 32rem); overflow: auto; }
+    .dp-excel-sheet-table { --mobile-material-width: clamp(112px, 36vw, 176px); width: max-content; min-width: 100%; }
+    .dp-excel-sheet-table th.st-row, .dp-excel-sheet-table td.st-row,
+    .dp-excel-sheet-table th.st-code, .dp-excel-sheet-table td.st-code { display: none; }
+    .dp-excel-sheet-table th.st-name, .dp-excel-sheet-table td.st-name {
+        left: 0;
+        width: var(--mobile-material-width);
+        min-width: var(--mobile-material-width);
+        max-width: var(--mobile-material-width);
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .dp-excel-sheet-table th.st-unit, .dp-excel-sheet-table td.st-unit,
+    .dp-excel-sheet-table th.st-issue, .dp-excel-sheet-table td.st-issue { position: static; left: auto; }
+    .dp-excel-sheet-table thead th.st-unit, .dp-excel-sheet-table thead th.st-issue { position: sticky; left: auto; z-index: 5; }
+    .dp-excel-mobile-code { display: block; margin-top: 4px; font-size: 11px; color: var(--dp-text-muted); }
 }
