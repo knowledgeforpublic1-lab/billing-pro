@@ -8,6 +8,25 @@
  */
 
 window.BillingModule = {
+    // Reconciliation and schedule warnings must use the same issue baseline.
+    getReconciliationIssueStock() {
+        const stock = typeof this.getContractorSapIssues === 'function' ? this.getContractorSapIssues() : this.currentContractorSap;
+        const old = typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
+        if (!stock && !old) return null;
+        const materials = { ...(stock && stock.materials || {}) };
+        Object.entries(old && old.materials || {}).forEach(([code, item]) => {
+            // An explicit SAP zero, including a posting-date cutoff, wins.
+            if (Object.prototype.hasOwnProperty.call(materials, code)) return;
+            const net = this.stockAsOnDate ? 0 : Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
+            materials[code] = {
+                ...item, uom: item.uom || item.unit || 'No',
+                netIssue: net, issuedQty: net,
+                grossIssue: this.stockAsOnDate ? 0 : Number(item.grossIssue !== undefined ? item.grossIssue : net),
+                mrnReturn: this.stockAsOnDate ? 0 : Number(item.mrnReturn || 0)
+            };
+        });
+        return { ...(old || {}), ...(stock || {}), materials };
+    },
     // ─── SAP STOCK MATERIAL ISSUES AUTO-SYNC ────
     getContractorSapIssues() {
         const _rev = this.recoRevision;

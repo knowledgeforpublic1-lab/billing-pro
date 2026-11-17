@@ -774,7 +774,7 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
             schedule && typeof schedule === 'object' && !Array.isArray(schedule) && Object.values(schedule).every(row =>
                 row && typeof row === 'object' && !Array.isArray(row) &&
                 (row.sapItems === undefined || (Array.isArray(row.sapItems) && row.sapItems.every(item => item && typeof item === 'object'))) &&
-                ['itemCode', 'sapDescription', 'sapUom', 'docHeader'].every(field => row[field] === undefined || typeof row[field] === 'string')
+                ['itemCode', 'sapDescription', 'sapUom', 'docHeader', 'activityMaterialNo'].every(field => row[field] === undefined || typeof row[field] === 'string')
             )
         )
     );

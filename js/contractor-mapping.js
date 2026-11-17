@@ -2,7 +2,7 @@
 (function () {
     const clone = value => JSON.parse(JSON.stringify(value));
     const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj || {}, key);
-    const fields = ['itemCode', 'sapDescription', 'sapUom', 'docHeader', 'sapItems'];
+    const fields = ['itemCode', 'sapDescription', 'sapUom', 'docHeader', 'sapItems', 'activityMaterialNo'];
     function rowsFor(groups, visit) {
         Object.entries(groups || {}).forEach(([schedule, group]) => {
             const seen = {};
@@ -85,12 +85,16 @@
                     // not inherit the previous contractor's SAP codes.
                     fields.forEach(field => {
                         if (value && own(value, field)) row[field] = clone(value[field]);
+                        else if (field === 'activityMaterialNo') delete row[field];
                         else if (field === 'sapItems') row[field] = [];
                         else row[field] = '';
                     });
                 });
             });
             this.recoRevision = (this.recoRevision || 0) + 1;
+            if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
+                Object.keys(this.poleScheduleQuantities || {}).forEach(key => this.syncPoleScheduleToBillingAndReconciliation(key));
+            }
         },
         switchContractorMapping() {
             if (this._isLoading || this._loadingContractorMapping || this.isPerformingHistoryAction) return;

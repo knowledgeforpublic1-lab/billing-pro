@@ -231,6 +231,7 @@
                 })(),
                 poleScheduleLocations: {},
                 poleScheduleQuantities: {},
+                poleScheduleTransferWarnings: {},
                 poleScheduleSearchQuery: '',
                 poleScheduleFilterQty: 'ALL',
                 poleScheduleFilterSap: 'ALL',
@@ -784,7 +785,8 @@
                 }
 
                 // ⚡ Auto-sync SAP Stock Issues for active contractor / work order
-                const contractorSap = typeof this.getContractorSapIssues === 'function' ? this.getContractorSapIssues() : null;
+                const sharedIssueStock = typeof this.getReconciliationIssueStock === 'function';
+                const contractorSap = sharedIssueStock ? this.getReconciliationIssueStock() : (typeof this.getContractorSapIssues === 'function' ? this.getContractorSapIssues() : null);
                 const sapIssuesMap = (contractorSap && contractorSap.materials) || {};
 
                 // Pre-populate / inject all issued materials from SAP stock for this contractor
@@ -816,7 +818,7 @@
                 });
 
                 // 📋 Auto-sync Contractor Old Reconciliation (Purana Reco baseline / custom upload)
-                const contractorOldReco = typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
+                const contractorOldReco = !sharedIssueStock && typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
                 const oldRecoMats = (contractorOldReco && contractorOldReco.materials) || {};
 
                 Object.keys(oldRecoMats).forEach(matCode => {
@@ -855,11 +857,17 @@
                     ...Object.keys(this.poleSchedules || {}),
                     ...Object.keys(this.poleScheduleQuantities || {})
                 ]);
+                const hasScheduleQty = key => Object.values(this.poleScheduleQuantities && this.poleScheduleQuantities[key] || {}).some(row =>
+                    Object.values(row || {}).some(raw => Number(typeof this.evalGridFormula === 'function' ? this.evalGridFormula(String(raw)) : raw) > 0));
 
                 candidateActKeys.forEach(actKey => {
                     // 🛡️ Departmental Bill is strictly unlinked from Contractor Reconciliation:
                     // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
                     if (String(actKey).startsWith('dept_')) return;
+                    const columnKey = typeof this.getPoleScheduleActivityKey === 'function' ? this.getPoleScheduleActivityKey(actKey) : actKey;
+                    // Alias schedules are reconciled directly below. Do not add
+                    // their combined activity quantities a second time.
+                    if (!hasScheduleQty(actKey) && [...candidateActKeys].some(other => other !== actKey && other.toLowerCase() === actKey.toLowerCase() && hasScheduleQty(other))) return;
 
                     // Check if this activity has Pole Schedule entries
                     const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[actKey];
@@ -920,7 +928,7 @@
 
                                 sItems.forEach(s => {
                                     if (!s.code || s.code === 'N/A' || s.code === '—') return;
-                                    allActivityKeys.add(actKey);
+                                    allActivityKeys.add(columnKey);
 
                                     if (!sapMap[s.code]) {
                                         const sStockItem = sapIssuesMap[s.code] || {};
@@ -971,16 +979,16 @@
                                     finalQty = typeof this.roundRecoQuantity === 'function' ? this.roundRecoQuantity(finalQty, sapMap[s.code].uom) : Math.round(finalQty * 100) / 100;
                                     sapMap[s.code].totalQty += finalQty;
 
-                                    if (!sapMap[s.code].activities[actKey]) {
-                                        sapMap[s.code].activities[actKey] = 0;
+                                    if (!sapMap[s.code].activities[columnKey]) {
+                                        sapMap[s.code].activities[columnKey] = 0;
                                     }
-                                    sapMap[s.code].activities[actKey] += finalQty;
+                                    sapMap[s.code].activities[columnKey] += finalQty;
                                 });
                             });
                         }
                     } else {
                         // Standard Activity Billing path
-                        const act = this.activities && this.activities[actKey];
+                        const act = this.activities && this.activities[columnKey];
                         if (act && act.materials) {
                             act.materials.forEach((m, mIdx) => {
                                 let activitySheetQty = 0;
@@ -1007,7 +1015,7 @@
                                 if (actSapItems.length > 0) {
                                     actSapItems.forEach(s => {
                                         if (!s.code) return;
-                                        allActivityKeys.add(actKey);
+                                        allActivityKeys.add(columnKey);
 
                                         if (!sapMap[s.code]) {
                                             const sStockItem = sapIssuesMap[s.code] || {};
@@ -1058,10 +1066,10 @@
                                         finalQty = typeof this.roundRecoQuantity === 'function' ? this.roundRecoQuantity(finalQty, sapMap[s.code].uom) : Math.round(finalQty * 100) / 100;
                                         sapMap[s.code].totalQty += finalQty;
 
-                                        if (!sapMap[s.code].activities[actKey]) {
-                                            sapMap[s.code].activities[actKey] = 0;
+                                        if (!sapMap[s.code].activities[columnKey]) {
+                                            sapMap[s.code].activities[columnKey] = 0;
                                         }
-                                        sapMap[s.code].activities[actKey] += finalQty;
+                                        sapMap[s.code].activities[columnKey] += finalQty;
                                     });
                                 }
                             });

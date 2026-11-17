@@ -8,8 +8,77 @@
  */
 
 window.PoleScheduleModule = {
+    getPoleScheduleActivityKey(key) {
+        const raw = String(key || this.selectedPoleScheduleKey || '907');
+        const defaults = window.defaultActivities || (typeof defaultActivities !== 'undefined' ? defaultActivities : {});
+        return Object.keys(defaults).find(k => k.toLowerCase() === raw.toLowerCase()) ||
+            Object.keys(this.activities || {}).find(k => k.toLowerCase() === raw.toLowerCase() && this.activities[k]?.materials?.length) || raw;
+    },
+
+    getPoleScheduleActivityMaterials(key) {
+        const k = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, key);
+        return (this.activities && this.activities[k] && this.activities[k].materials) || [];
+    },
+
+    getPoleScheduleActivityLink(item, key) {
+        if (item.activityMaterialNo !== undefined && item.activityMaterialNo !== null) return String(item.activityMaterialNo);
+        // Only unambiguous component links are supplied here. Shared clamps need
+        // an explicit choice instead of being copied to several assemblies.
+        if (window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, key) !== '907') return '';
+        const links = {
+            'Side Clamp for 11 KV V-Cross Arm (Extension)': '5',
+            'Side Clamp for Guarding Channel': '3',
+            'Side Clamp for Top Clit (Extension)': '6',
+            'Sleve Joints': '12'
+        };
+        const target = links[item.desc];
+        const expected = { '3': /guarding/i, '5': /cross\s*arm/i, '6': /top\s*(fitting|cleat)/i, '12': /sleeve\s*joints/i };
+        const row = window.PoleScheduleModule.getPoleScheduleActivityMaterials.call(this, key).find(m => String(m.no) === target);
+        return row && expected[target].test(row.desc || '') ? target : '';
+    },
+
+    setPoleScheduleActivityLink(index, value) {
+        if (this.isFinalized) return;
+        const k = this.selectedPoleScheduleKey || '907';
+        const item = this.poleSchedules?.[k]?.materials?.[index];
+        if (!item || item.isSection || item.isSpan) return;
+        if (value && !this.getPoleScheduleActivityMaterials(k).some(m => String(m.no) === String(value))) return;
+        if (value) item.activityMaterialNo = String(value);
+        else delete item.activityMaterialNo;
+        this.poleSchedules = { ...this.poleSchedules };
+        this.syncPoleScheduleToBillingAndReconciliation(k);
+        if (typeof this.captureContractorMapping === 'function') this.captureContractorMapping();
+        this.saveToStorage();
+        if (typeof this.persistContractorMapping === 'function') this.persistContractorMapping(true);
+    },
+
+    getPoleScheduleTransferData(key, schedule, locations) {
+        const sourceKeys = new Set([key, ...Object.keys(this.poleScheduleQuantities || {}).filter(k => k.toLowerCase() === key.toLowerCase())]);
+        if (sourceKeys.size === 1) return { schedule, locations, quantities: this.poleScheduleQuantities?.[key] };
+        const materials = [], locs = [], matrix = {};
+        for (const source of sourceKeys) {
+            const sched = source === key ? schedule : this.poleSchedules?.[source];
+            const quantities = this.poleScheduleQuantities?.[source];
+            if (!sched || !Array.isArray(sched.materials) || !quantities) continue;
+            const offset = materials.length;
+            materials.push(...sched.materials);
+            const sourceLocations = (source === key ? locations : this.poleScheduleLocations?.[source]) || [];
+            const indexes = new Set([...sourceLocations.keys(), ...Object.keys(quantities)]);
+            for (const index of indexes) {
+                const values = quantities[index];
+                const loc = sourceLocations[index] || { name: 'Location ' + (Number(index) + 1) };
+                let dest = locs.findIndex(l => l.name === loc.name);
+                if (dest < 0) { dest = locs.length; locs.push({ ...loc }); matrix[dest] = {}; }
+                for (const [row, value] of Object.entries(values || {})) matrix[dest][offset + Number(row)] = value;
+            }
+        }
+        if (!materials.length) return { schedule, locations, quantities: this.poleScheduleQuantities?.[key] };
+        return { schedule: { ...schedule, materials }, locations: locs, quantities: matrix };
+    },
+
     getPoleScheduleRateLink(item, scheduleKey) {
-        const key = String(scheduleKey || this.selectedPoleScheduleKey || '907').replace(/^PS\s*/i, '').trim();
+        const sourceKey = String(scheduleKey || this.selectedPoleScheduleKey || '907').replace(/^PS\s*/i, '').trim();
+        const key = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, sourceKey);
         if (!item || item.isSection || item.isSpan) return { status: 'not-applicable', rate: null, activityKey: key, code: '' };
         const cleanCode = code => String(code || '').trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
         const codesFor = material => {
@@ -43,8 +112,8 @@ window.PoleScheduleModule = {
         const value = Number(typeof this.evalFormula === 'function' ? this.evalFormula(source.rate) : source.rate);
         if (!Number.isFinite(value) || value < 0) return { status: 'invalid-rate', rate: null, activityKey: key, code: [...scheduleCodes].join(', '), source };
         const sourceCodes = codesFor(source);
-        const schedule = (this.poleSchedules && this.poleSchedules[key]) ||
-            (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[key]);
+        const schedule = (this.poleSchedules && this.poleSchedules[sourceKey]) ||
+            (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[sourceKey]);
         const scheduleRows = (schedule && Array.isArray(schedule.materials) ? schedule.materials : []).filter(row => {
             if (!row || row.isSection || row.isSpan) return false;
             const rowCodes = codesFor(row);
@@ -838,7 +907,7 @@ window.PoleScheduleModule = {
 
     syncPoleScheduleToBillingAndReconciliation(key) {
         const k = key || this.selectedPoleScheduleKey || '907';
-        const sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
+        let sched = (this.poleSchedules && this.poleSchedules[k]) || (typeof defaultPoleSchedules !== 'undefined' && defaultPoleSchedules[k]);
 
         // 🛡️ Departmental Bill is strictly unlinked as requested by user:
         // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
@@ -846,43 +915,49 @@ window.PoleScheduleModule = {
             return;
         }
 
-        // 1. Ensure locations synchronization across both Pole Schedule & Activity Billing
-        const locs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : [{ name: 'Location 1' }]);
-        if (!this.activityLocations) this.activityLocations = {};
-        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
-        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
-        this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(locs));
-
+        const activityKey = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, k);
+        const sourceLocs = (this.poleScheduleLocations && this.poleScheduleLocations[k]) || (typeof this.getPoleScheduleLocations === 'function' ? this.getPoleScheduleLocations(k) : [{ name: 'Location 1' }]);
         if (!sched || !Array.isArray(sched.materials)) return;
+        const transfer = window.PoleScheduleModule.getPoleScheduleTransferData.call(this, k, sched, sourceLocs);
+        sched = transfer.schedule;
+        const locs = transfer.locations;
+        if (!this.activityLocations) this.activityLocations = {};
+        this.activityLocations[activityKey] = JSON.parse(JSON.stringify(locs));
+        if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
+        this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(sourceLocs));
 
-        // Ensure this.activities[k] exists
+        // Ensure this.activities[activityKey] exists
         if (!this.activities) this.activities = {};
-        if (!this.activities[k]) {
-            if (typeof defaultActivities !== 'undefined' && defaultActivities[k]) {
-                this.activities[k] = JSON.parse(JSON.stringify(defaultActivities[k]));
+        if (!this.activities[activityKey]) {
+            if (typeof defaultActivities !== 'undefined' && defaultActivities[activityKey]) {
+                this.activities[activityKey] = JSON.parse(JSON.stringify(defaultActivities[activityKey]));
             } else {
-                this.activities[k] = { title: sched.title || ('Activity ' + k), materials: [] };
+                this.activities[activityKey] = { title: sched.title || ('Activity ' + k), materials: [] };
             }
         }
-        const act = this.activities[k];
+        const act = this.activities[activityKey];
         if (!Array.isArray(act.materials)) act.materials = [];
 
         // 🛡️ Preserve all user materials and user-added rows in act.materials
 
-        // 2. Synchronize quantities into this.activityQuantities[k]
+        // 2. Synchronize quantities into this.activityQuantities[activityKey]
         if (!this.activityQuantities) this.activityQuantities = {};
-        if (!this.activityQuantities[k] || !Array.isArray(this.activityQuantities[k])) {
-            this.activityQuantities[k] = Array.from({ length: locs.length }, () => new Array(act.materials.length).fill(''));
+        if (!this.activityQuantities[activityKey] || !Array.isArray(this.activityQuantities[activityKey])) {
+            this.activityQuantities[activityKey] = Array.from({ length: locs.length }, () => new Array(act.materials.length).fill(''));
         }
-        while (this.activityQuantities[k].length < locs.length) {
-            this.activityQuantities[k].push(new Array(act.materials.length).fill(''));
+        while (this.activityQuantities[activityKey].length < locs.length) {
+            this.activityQuantities[activityKey].push(new Array(act.materials.length).fill(''));
         }
         // Pad all rows
-        this.activityQuantities[k].forEach(row => {
+        this.activityQuantities[activityKey].forEach(row => {
             while (row.length < act.materials.length) row.push('');
         });
 
-        const qMatrix = this.poleScheduleQuantities && this.poleScheduleQuantities[k];
+        const qMatrix = transfer.quantities;
+        const transferred = this._poleScheduleTransferredRows || (this._poleScheduleTransferredRows = {});
+        const previousRows = transferred[activityKey] || [];
+        const nextRows = [];
+        const matchedMaterials = new Set();
         if (qMatrix) {
             const expandSapCodes = value => String(value || '').split(/[,|]/).map(code => {
                 let clean = code.trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
@@ -955,6 +1030,7 @@ window.PoleScheduleModule = {
 
             // Loop per activity material to accumulate and SUM ALL repeating/matching pole schedule items
             act.materials.forEach((am, actMatIdx) => {
+                const rowIdentity = JSON.stringify([am.no, am.desc]);
                 const amCodes = new Set([
                     ...expandSapCodes(am.itemCode),
                     ...(Array.isArray(am.sapItems) ? am.sapItems.map(sap => sap && sap.code) : [])
@@ -974,12 +1050,13 @@ window.PoleScheduleModule = {
                     const smIsNutBolt = checkSmNutBolt(sm);
 
                     let isMatch = false;
-                    const hasExplicitActivityLink = sm.activityMaterialNo !== undefined && sm.activityMaterialNo !== null && String(sm.activityMaterialNo).trim() !== '';
+                    const activityLink = window.PoleScheduleModule.getPoleScheduleActivityLink.call(this, sm, k);
+                    const hasExplicitActivityLink = activityLink.trim() !== '';
                     if (hasExplicitActivityLink) {
                         // The explicit mapping is authoritative. A multi-SAP Activity
                         // material can therefore collect quantities from each linked
                         // Pole Schedule component, even when its primary code differs.
-                        isMatch = String(sm.activityMaterialNo) === String(am.no);
+                        isMatch = activityLink === String(am.no);
                     } else if (amIsNutBolt) {
                         // 🔩 NUT-BOLT SPECIAL ACCUMULATION:
                         // Activity sheet me Nut-Bolt (unit Kg) Pole Schedule ke SAARE Nut-Bolt rows (Nos) ko
@@ -1039,7 +1116,14 @@ window.PoleScheduleModule = {
                     }
                 });
 
-                if (matchingSmList.length === 0) return;
+                if (matchingSmList.length === 0) {
+                    // Clear quantities previously supplied by a link that changed;
+                    // leave manually entered, unrelated activity rows untouched.
+                    if (previousRows.includes(rowIdentity)) this.activityQuantities[activityKey].forEach(row => { row[actMatIdx] = ''; });
+                    return;
+                }
+                nextRows.push(rowIdentity);
+                matchingSmList.forEach(({ sm }) => matchedMaterials.add(sm));
 
                 // For each location, SUM all matching pole schedule rows
                 locs.forEach((_, lIdx) => {
@@ -1058,21 +1142,30 @@ window.PoleScheduleModule = {
                         }
                     });
 
-                    if (this.activityQuantities[k] && this.activityQuantities[k][lIdx]) {
+                    if (this.activityQuantities[activityKey] && this.activityQuantities[activityKey][lIdx]) {
                         if (hasAnyNum) {
-                            this.activityQuantities[k][lIdx][actMatIdx] = Math.round(totalSum * 1000) / 1000;
+                            this.activityQuantities[activityKey][lIdx][actMatIdx] = Math.round(totalSum * 1000) / 1000;
                         } else {
-                            this.activityQuantities[k][lIdx][actMatIdx] = '';
+                            this.activityQuantities[activityKey][lIdx][actMatIdx] = '';
                         }
                     }
                 });
             });
+            transferred[activityKey] = nextRows;
+            const warnings = { ...(this.poleScheduleTransferWarnings || {}) };
+            for (const source of Object.keys(this.poleSchedules || {}).filter(source => source.toLowerCase() === k.toLowerCase())) {
+                warnings[source] = (this.poleSchedules[source].materials || []).flatMap((item, index) => {
+                    if (item.isSection || item.isSpan || matchedMaterials.has(item)) return [];
+                    return [index];
+                });
+            }
+            this.poleScheduleTransferWarnings = warnings;
         }
 
         // Vue 3 reactivity trigger
         this.activityLocations = { ...this.activityLocations };
         this.poleScheduleLocations = { ...this.poleScheduleLocations };
-        this.activityQuantities[k] = this.activityQuantities[k].map(row => [...row]);
+        this.activityQuantities[activityKey] = this.activityQuantities[activityKey].map(row => [...row]);
         this.activityQuantities = { ...this.activityQuantities };
         this.activities = { ...this.activities };
 
@@ -2663,6 +2756,8 @@ window.PoleScheduleModule = {
 
     // ─── CONTRACTOR SAP STOCK VERIFICATION & RED ALERT (User Requested) ───
     getActiveContractorSapStock() {
+        const shared = this.getReconciliationIssueStock || (window.BillingModule && window.BillingModule.getReconciliationIssueStock);
+        if (typeof shared === 'function') return shared.call(this);
         if (typeof this.getContractorSapIssues === 'function') {
             return this.getContractorSapIssues();
         }
