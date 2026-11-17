@@ -100,16 +100,88 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         return publicUser(user);
     }
 
+    function normId(value) {
+        return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+    }
+
+    function normStem(v) {
+        if (!v) return '';
+        return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
+            .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
+            .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
+            .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
+    }
+
+    const STOP_PATTERNS = [
+        'enterprise', 'enterprises', 'eterprise', 'enterpeises', 'enterises',
+        'electrical', 'electricals', 'electric', 'contractor', 'contractors',
+        'infra', 'infrastructure', 'projects', 'project', 'construction', 'constructions',
+        'corporation', 'corp', 'company', 'engineering', 'engg', 'service', 'services',
+        'thekedar', 'thekdar', 'works', 'pvt', 'ltd'
+    ];
+
+    function getDistinctiveTokens(name) {
+        return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ')
+            .split(/\s+/).map(normId).filter(w => w.length >= 3 && !STOP_PATTERNS.some(p => w === p || w.startsWith(p)));
+    }
+
+    function hasContractorPermission(actor, cid) {
+        if (!actor) return false;
+        if (actor.role === 'admin') return true;
+        const list = actor.contractorIds || [];
+        if (list.includes('*') || list.includes('all') || list.length === 0) return true;
+        const cidNorm = normId(cid);
+        const cidStem = normStem(cid);
+        for (const allowedId of list) {
+            if (allowedId === '*' || allowedId === 'all') return true;
+            if (allowedId === cid) return true;
+            const aNorm = normId(allowedId);
+            if (aNorm === cidNorm) return true;
+            const aStem = normStem(allowedId);
+            if (aStem && cidStem && (aStem === cidStem || (aStem.length >= 5 && (aStem.includes(cidStem) || cidStem.includes(aStem))))) {
+                return true;
+            }
+            const aTok = getDistinctiveTokens(allowedId);
+            const cTok = getDistinctiveTokens(cid);
+            if (aTok.length > 0 && cTok.length > 0 && aTok.some(t => cTok.includes(t))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function assertContractor(actor, cid) {
-        if (!actor || (actor.role !== 'admin' && !actor.contractorIds.includes(cid))) {
+        if (!hasContractorPermission(actor, cid)) {
             fail(403, 'Is contractor ki entry aapke login mein allowed nahi hai.');
+        }
+    }
+
+    function defaultContractors() {
+        try {
+            const vm = require('node:vm');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const sandbox = { window: {} };
+            vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data/default-contractors.js'), 'utf8'), sandbox);
+            const raw = sandbox.window.defaultContractorsList || sandbox.window.DefaultContractors || [];
+            return raw.map(c => ({ id: c.id, name: c.name || c.firmName }));
+        } catch {
+            return [];
         }
     }
 
     // Public available contractor list for signup
     router.get('/contractors', handler(async (req, res) => {
         const raw = await db.getDefaultConfig('dailyProgressData');
-        const contractors = (raw && raw.data && raw.data.contractors || []).map(c => ({ id: c.id, name: c.name }));
+        const dbList = (raw && raw.data && raw.data.contractors || []).map(c => ({ id: c.id, name: c.name }));
+        const seen = new Set();
+        const contractors = [];
+        for (const c of [...defaultContractors(), ...dbList]) {
+            if (c.id && !seen.has(c.id)) {
+                seen.add(c.id);
+                contractors.push(c);
+            }
+        }
         res.json({ success: true, contractors });
     }));
 
@@ -216,9 +288,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
 
         let contractorIds = Array.isArray(body.contractorIds) ? [...new Set(body.contractorIds)].filter(id => typeof id === 'string' && id && id.length <= 150) : [];
         if (!contractorIds.length) {
-            const raw = await db.getDefaultConfig('dailyProgressData');
-            const list = (raw && raw.data && raw.data.contractors || []).map(c => c.id);
-            contractorIds = list.length ? list : ['default'];
+            contractorIds = ['*'];
         }
 
         // Check duplicate email
@@ -315,6 +385,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         router,
         principal,
         assertContractor,
+        hasContractorPermission,
         saveUser,
         disableUser,
         deleteUser,

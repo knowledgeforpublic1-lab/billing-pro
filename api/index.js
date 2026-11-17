@@ -804,7 +804,7 @@ app.get('/api/daily-progress/data', async (req, res) => {
         const actor = await workers.principal(req);
         const data = await dailyProgress.readData();
         if (actor.role !== 'admin') {
-            const allowed = cid => actor.contractorIds.includes(cid);
+            const allowed = cid => workers.hasContractorPermission(actor, cid);
             data.contractors = data.contractors.filter(row => allowed(row.id)).map(({ id, name, project, feeder, engineer }) => ({ id, name, project, feeder, engineer }));
             data.reports = data.reports.filter(row => allowed(row.contractorId));
             data.issues = data.issues.filter(row => allowed(row.contractorId));

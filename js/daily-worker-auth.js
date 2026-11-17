@@ -179,6 +179,20 @@
                 contractorSelect.appendChild(opt);
             }
         }
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryCid = urlParams.get('contractor') || urlParams.get('c') || '';
+        if (queryCid) {
+            const qClean = queryCid.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (let i = 0; i < contractorSelect.options.length; i++) {
+                const opt = contractorSelect.options[i];
+                const optClean = (opt.value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const optTxtClean = (opt.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (optClean === qClean || (qClean.length >= 4 && (optTxtClean.includes(qClean) || qClean.includes(optClean)))) {
+                    contractorSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
     }
     loadContractors();
 
@@ -250,7 +264,7 @@
         btn.disabled = true;
         try {
             const selectedCid = signupForm.elements.contractorId.value;
-            const contractorIds = selectedCid ? [selectedCid] : [];
+            const contractorIds = selectedCid ? [selectedCid] : ['*'];
             const result = await request('signup', {
                 name: signupForm.elements.name.value.trim(),
                 email: signupForm.elements.email.value.trim(),

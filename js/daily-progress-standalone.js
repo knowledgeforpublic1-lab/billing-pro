@@ -62,6 +62,43 @@
             .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
     }
 
+    function matchesContractor(reportCid, actC) {
+        if (!reportCid || !actC) return false;
+        if (typeof actC === 'string') actC = { id: actC, name: actC };
+        if (reportCid === actC.id || reportCid === actC.name) return true;
+        const rNorm = normId(reportCid);
+        const cIdNorm = normId(actC.id);
+        const cNameNorm = normId(actC.name);
+        if (rNorm && (rNorm === cIdNorm || rNorm === cNameNorm)) return true;
+
+        // Check stem match
+        const rStem = normStem(reportCid);
+        const idStem = normStem(actC.id);
+        const nameStem = normStem(actC.name);
+        if ((rStem && (rStem === idStem || rStem === nameStem)) ||
+            (rStem.length >= 5 && (idStem.includes(rStem) || rStem.includes(idStem) || nameStem.includes(rStem) || rStem.includes(nameStem)))) {
+            return true;
+        }
+
+        // Check mapping groups
+        const mapGroups = (window.DefaultSapContractorMapping || window.MasterSapCodeMapping || {}).groups || {};
+        for (const [gKey, group] of Object.entries(mapGroups)) {
+            const names = [gKey, group && group.displayName, ...((group && group.rawNorms) || [])].map(normId).filter(Boolean);
+            const matchesActC = names.includes(cIdNorm) || names.includes(cNameNorm);
+            const matchesReport = names.includes(rNorm);
+            if (matchesActC && matchesReport) return true;
+        }
+
+        // Check distinctive tokens
+        const rTokens = getDistinctiveTokens(reportCid);
+        const cTokens = [...getDistinctiveTokens(actC.id), ...getDistinctiveTokens(actC.name)];
+        if (rTokens.length > 0 && cTokens.length > 0) {
+            if (rTokens.some(t => cTokens.includes(t))) return true;
+        }
+
+        return false;
+    }
+
     const app = Vue.createApp({
         data() {
             const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
@@ -188,12 +225,7 @@
 
             contractorReports() {
                 const actC = this.activeContractor || {};
-                const cidNorm = normId(actC.id || '');
-                const cNameNorm = normId(actC.name || '');
-                return (this.reports || []).filter(r => {
-                    const rNorm = normId(r.contractorId);
-                    return rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id;
-                });
+                return (this.reports || []).filter(r => matchesContractor(r.contractorId, actC));
             },
 
             totalManpower() {
@@ -410,9 +442,14 @@
                     this.contractors = Array.from(contractorsMap.values());
                     const login = window.DailyWorkerAuth && window.DailyWorkerAuth.user;
                     if (login && login.role !== 'admin') {
-                        this.contractors = this.contractors.filter(c => login.contractorIds.includes(c.id));
-                        this.reports = this.reports.filter(row => login.contractorIds.includes(row.contractorId));
-                        this.issues = this.issues.filter(row => login.contractorIds.includes(row.contractorId));
+                        const hasPerm = cid => {
+                            const list = login.contractorIds || [];
+                            if (list.includes('*') || list.includes('all') || !list.length) return true;
+                            return list.some(allowedId => matchesContractor(allowedId, { id: cid, name: cid }));
+                        };
+                        this.contractors = this.contractors.filter(c => hasPerm(c.id));
+                        this.reports = this.reports.filter(row => hasPerm(row.contractorId));
+                        this.issues = this.issues.filter(row => hasPerm(row.contractorId));
                         if (!this.contractors.length) throw new Error('Aapke login ke liye contractor available nahi hai. Admin se contact karein.');
                         if (!this.contractors.some(c => c.id === this.selectedContractorId)) this.selectedContractorId = this.contractors[0].id;
                     }
@@ -421,14 +458,7 @@
                     const params = new URLSearchParams(window.location.search);
                     const qCid = params.get('contractor') || params.get('c');
                     if (qCid) {
-                        const qNorm = normId(qCid);
-                        let matched = this.contractors.find(c => normId(c.id) === qNorm || normId(c.name) === qNorm || c.id === qCid || c.name === qCid);
-                        if (!matched && qNorm) {
-                            matched = this.contractors.find(c => {
-                                const cn = normId(c.id || c.name);
-                                return cn.includes(qNorm) || qNorm.includes(cn);
-                            });
-                        }
+                        let matched = this.contractors.find(c => matchesContractor(qCid, c));
                         if (matched) {
                             this.selectedContractorId = matched.id;
                         } else {
@@ -555,13 +585,10 @@
 
             loadReportForActiveDate() {
                 const actC = this.activeContractor || {};
-                const cidNorm = normId(actC.id || '');
-                const cNameNorm = normId(actC.name || '');
                 const curDate = this.selectedDate;
 
                 const rep = (this.reports || []).find(r => {
-                    const rNorm = normId(r.contractorId);
-                    return (rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id) && r.date === curDate;
+                    return matchesContractor(r.contractorId, actC) && r.date === curDate;
                 });
                 if (rep) {
                     this.quantities = { ...(rep.quantities || {}) };
@@ -652,22 +679,14 @@
 
                 // 2. Manual Issues
                 const manualIssued = (this.issues || [])
-                    .filter(iss => {
-                        const issNorm = normId(iss.contractorId);
-                        const matchC = issNorm === cidNorm || issNorm === cNameNorm || iss.contractorId === actC.id;
-                        return matchC && String(iss.itemId) === String(item.id) && (!iss.date || iss.date <= curDate);
-                    })
+                    .filter(iss => matchesContractor(iss.contractorId, actC) && String(iss.itemId) === String(item.id) && (!iss.date || iss.date <= curDate))
                     .reduce((sum, iss) => sum + (Number(iss.quantity) || 0), 0);
 
                 const totalIssued = Math.round((sapIssued + manualIssued) * 1000) / 1000;
 
                 // 3. Total Consumed
                 const totalConsumed = (this.reports || [])
-                    .filter(r => {
-                        const rNorm = normId(r.contractorId);
-                        const matchC = rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === actC.id;
-                        return matchC && r.date <= curDate;
-                    })
+                    .filter(r => matchesContractor(r.contractorId, actC) && r.date <= curDate)
                     .reduce((sum, r) => sum + (Number(r.quantities && r.quantities[item.id]) || 0), 0);
 
                 const balance = Math.round((totalIssued - totalConsumed) * 1000) / 1000;
@@ -708,8 +727,7 @@
                     };
 
                     const existingIdx = this.reports.findIndex(r => {
-                        const rNorm = normId(r.contractorId);
-                        return (rNorm === cidNorm || rNorm === cNameNorm || r.contractorId === cid) && r.date === curDate;
+                        return matchesContractor(r.contractorId, actC) && r.date === curDate;
                     });
                     if (existingIdx >= 0) {
                         this.reports[existingIdx] = reportObj;
