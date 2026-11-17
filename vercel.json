@@ -61,8 +61,12 @@
       "dest": "api/index.js"
     },
     {
-      "src": "/(daily-progress(\\.html)?|daily-entry(\\.html)?)",
+      "src": "/daily-progress(\\.html)?",
       "dest": "/daily-progress.html"
+    },
+    {
+      "src": "/daily-entry(\\.html)?",
+      "dest": "/daily-entry.html"
     },
     {
       "src": "/(index\\.html)?",

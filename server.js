@@ -48,7 +48,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get(['/daily-progress', '/daily-progress.html', '/daily-entry', '/daily-entry.html'], (req, res) => res.sendFile(path.join(__dirname, 'daily-progress.html')));
+app.get(['/daily-progress', '/daily-progress.html'], (req, res) => res.sendFile(path.join(__dirname, 'daily-progress.html')));
+app.get(['/daily-entry', '/daily-entry.html'], (req, res) => res.sendFile(path.join(__dirname, 'daily-entry.html')));
 // Static frontend — poora folder serve MAT karo (xlsx/json/pdf/env leak hote hain).
 // Sirf index.html serve karo; sensitive extensions/data files hard-block.
 app.get(/^\/(?!api\/).*\.(xlsx|xls|json|pdf|txt|bat|env)$/i, (req, res) => res.status(403).send('Forbidden'));

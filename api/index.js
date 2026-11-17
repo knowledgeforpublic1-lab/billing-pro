@@ -7,6 +7,7 @@ const db = require('./db');
 const auth = require('./auth')({ db, config: require('./auth-settings') });
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Structured logging helper
 const log = {
@@ -20,7 +21,7 @@ app.use(helmet());
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '15mb' }));
 
 // Rate limiting — brute-force / spam POST se bachao (serverless per-instance memory store)
 const apiLimiter = rateLimit({
@@ -140,7 +141,7 @@ app.get('/api/health', async (req, res) => {
         });
     } catch (err) {
         log.error('HEALTH', 'Health check failed', err);
-        res.status(500).json({ ok: false, provider: db.getProvider(), readyState: 'error', error: err.message, timestamp: new Date().toISOString() });
+        res.status(500).json({ ok: false, readyState: 'error', timestamp: new Date().toISOString() });
     }
 });
 
@@ -230,15 +231,25 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             const latestDoc = await db.getLatestBillingState();
             dataId = (latestDoc && latestDoc.dataId) ? latestDoc.dataId : 'main-billing-state';
         }
+        if (dataId && !/^[\w -]{1,150}$/.test(dataId)) {
+            log.warn('POST', `Invalid dataId format: ${dataId}`);
+            return res.status(400).json({ success: false, error: 'Invalid dataId format' });
+        }
 
         const dataToSave = pickAllowedKeys(req.body || {});
+
+        // Boolean normalization helper — strings like "false" or "0" must never coerce to true
+        if (dataToSave.isFinalized !== undefined) {
+            const fv = dataToSave.isFinalized;
+            dataToSave.isFinalized = (fv === true || fv === 1 || fv === 'true' || fv === '1');
+        }
 
         // Finalize lock — locked bill par koi bhi overwrite block.
         // Unlock ka ek hi rasta: explicit isFinalized:false bhejo (UI se Unlock dabane par).
         const existing = await db.getBillingState(dataId);
         if (existing && existing.stateData) {
             const previous = existing.stateData;
-            const finalizedChanged = dataToSave.isFinalized !== undefined && !!dataToSave.isFinalized !== !!previous.isFinalized;
+            const finalizedChanged = dataToSave.isFinalized !== undefined && Boolean(dataToSave.isFinalized) !== Boolean(previous.isFinalized);
             if (finalizedChanged && !(req.authSession && req.authSession.adminExpiresAt > Date.now())) {
                 return res.status(403).json({ success: false, error: 'Admin verification required for structural/finalize changes' });
             }
@@ -253,8 +264,8 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
         // Doc maujood hai aur baseRev missing/galat hai to 409 — koi silent overwrite nahi.
         // (Sirf pehla save — jab koi doc hi nahi hai — bina baseRev ke allowed hai.)
         const isForce = !!(req.body && req.body.force === true);
-        const baseRev = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null)
-            ? Number(req.body.baseRev) : null;
+        const baseRevRaw = (req.body && req.body.baseRev !== undefined && req.body.baseRev !== null) ? Number(req.body.baseRev) : null;
+        const baseRev = (baseRevRaw !== null && Number.isInteger(baseRevRaw) && baseRevRaw >= 0) ? baseRevRaw : (baseRevRaw !== null ? Math.floor(baseRevRaw) : null);
         const curRev = (existing && typeof existing.rev === 'number') ? existing.rev : 0;
 
         // Khali-state overwrite block — cloud me bhara data hai aur ye push khali aaya
@@ -309,6 +320,16 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
                 updatedAt: existing.updatedAt,
                 rev: curRev
             });
+        }
+
+        // Structural force-sync safeguard: Never let a mapping force-save overwrite newer entered quantities
+        if (existing && isForce && (curRev > 0 && baseRev !== null && baseRev !== curRev)) {
+            if (existing.stateData && existing.stateData.activityQuantities) {
+                dataToSave.activityQuantities = existing.stateData.activityQuantities;
+            }
+            if (existing.stateData && existing.stateData.invoiceData) {
+                dataToSave.invoiceData = { ...existing.stateData.invoiceData, ...(dataToSave.invoiceData || {}) };
+            }
         }
 
         const pm = dataToSave.projectMeta || {};
@@ -380,11 +401,22 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             stateData: dataToSave,
             rev: nextRev,
             updatedAt: new Date().toISOString()
-        });
+        }, isForce ? null : baseRev);
 
         log.info('POST', `Data saved successfully for ${dataId} (rev: ${nextRev}, payload: ${rawLen} bytes, provider: ${db.getProvider()})`);
         res.json({ success: true, message: 'Data saved successfully', dataId, rev: nextRev, provider: db.getProvider() });
     } catch (err) {
+        if (err && err.conflict) {
+            log.warn('POST', `CAS Conflict on write: ${err.message}`);
+            return res.status(409).json({
+                success: false,
+                conflict: true,
+                error: 'Conflict: dusre PC/tab ne is beech naya save kiya hai. Pehle Refresh karo, phir apna change dobara karo.',
+                data: err.currentData?.stateData || err.currentData,
+                updatedAt: err.currentData?.updatedAt,
+                rev: err.currentData?.rev
+            });
+        }
         log.error('POST', 'Error saving billing data', err);
         res.status(500).json({ success: false, error: db.getErrorHint(err) });
     }
@@ -798,8 +830,11 @@ app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, e
 
         const content = '/**\n * @file Default Pole Schedules Master Data\n * @description Standard bill-of-materials pole schedules for 11 KV RSJ/PSC line activities.\n * Hard-coded Master Defaults (Auto-updated from UI Mapping).\n */\n\nconst defaultPoleSchedules = ' + JSON.stringify(poleSchedules, null, 2) + ';\n\nif (typeof window !== \'undefined\') {\n    window.defaultPoleSchedules = defaultPoleSchedules;\n}\nif (typeof module !== \'undefined\' && module.exports) {\n    module.exports = defaultPoleSchedules;\n}\n';
 
+        let diskSaved = false;
+        let cloudSaved = false;
         try {
             fsMod.writeFileSync(targetPath, content, 'utf8');
+            diskSaved = true;
             log.info(ctx, `Successfully written ${Object.keys(poleSchedules).length} pole schedules to default-pole-schedules.js on disk`);
         } catch (fsErr) {
             log.warn(ctx, `Disk file write failed (e.g. read-only serverless environment): ${fsErr.message}`);
@@ -808,14 +843,21 @@ app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, e
         // Also persist to Cloud Database for cross-PC synchronization
         try {
             await db.saveDefaultConfig('poleSchedulesMaster', poleSchedules);
+            cloudSaved = true;
             log.info(ctx, `Successfully synced pole schedules to Cloud Database (${db.getProvider()}) for cross-PC persistence`);
         } catch (dbErr) {
             log.warn(ctx, `Cloud backup skipped/failed: ${dbErr.message}`);
         }
 
+        if (!diskSaved && !cloudSaved) {
+            return res.status(500).json({ success: false, error: 'Disk aur Cloud dono jagah save fail ho gaya. Data update nahi hua.' });
+        }
+
         return res.json({
             success: true,
-            message: 'Hard-coded default-pole-schedules.js updated on disk & cloud successfully!',
+            diskSaved,
+            cloudSaved,
+            message: 'Hard-coded default-pole-schedules.js updated successfully!',
             count: Object.keys(poleSchedules).length
         });
     } catch (err) {
@@ -901,6 +943,10 @@ app.post('/api/save-default-activities', requireApiKey, auth.requireAdmin, expre
             log.info(ctx, `Successfully synced activities mapping to Cloud Database (${db.getProvider()})`);
         } catch (dbErr) {
             log.warn(ctx, `Cloud backup skipped/failed: ${dbErr.message}`);
+        }
+
+        if (wroteFiles.length === 0 && !cloudSaved) {
+            return res.status(500).json({ success: false, error: 'Disk aur Cloud dono jagah mapping save fail ho gayi.' });
         }
 
         return res.json({

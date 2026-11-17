@@ -52,7 +52,7 @@ function stockKeysForQuery(query) {
     const byNorm = stockDatabase().byContractorNorm;
     const mapping = sapMapping();
     const q = normId(query);
-    if (!q) return [];
+    if (!q || q.length < 3) return [];
     const keys = new Set();
     if (byNorm[q]) keys.add(q);
     const groups = (mapping && mapping.groups) || {};
@@ -67,10 +67,14 @@ function stockKeysForQuery(query) {
     for (const [key, block] of Object.entries(byNorm)) {
         if (block && normId(block.contractorName) === q) keys.add(key);
     }
-    if (!keys.size) {
+    // Only if exact matches not found, allow strict prefix matching with minimum 4 characters and max 3 keys
+    if (!keys.size && q.length >= 4) {
         for (const [key, block] of Object.entries(byNorm)) {
             const name = normId(block && block.contractorName);
-            if (key.includes(q) || q.includes(key) || (name && (name.includes(q) || q.includes(name)))) keys.add(key);
+            if ((key.length >= 6 && key.startsWith(q)) || (name && name.length >= 6 && name.startsWith(q))) {
+                keys.add(key);
+                if (keys.size >= 3) break;
+            }
         }
     }
     return [...keys];
@@ -151,10 +155,10 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     adminRouter.post('/links/disable', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, disabled: await service.disable(req.body.contractorId) })));
     adminRouter.post('/reopen', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, reopened: await service.reopen(req.body.contractorId, req.body.date) })));
     adminRouter.get('/audit', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await service.audit(req.query.contractorId, req.query.date) })));
-    adminRouter.get('/report', handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor')) })));
-    adminRouter.post('/claim', handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim') })));
-    adminRouter.post('/report', handle(async (req, res) => res.json({ success: true, ...await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body) })));
-    adminRouter.post('/heartbeat', handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat') })));
+    adminRouter.get('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor')) })));
+    adminRouter.post('/claim', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim') })));
+    adminRouter.post('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body) })));
+    adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat') })));
     adminRouter.post('/import', auth.requireAdmin, handle(async (req, res) => {
         const report = req.body.report;
         if (!report || typeof report.contractorId !== 'string') throw Object.assign(new Error('Historical report required'), { status: 400 });

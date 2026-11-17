@@ -7,11 +7,23 @@ const MAX_MS = 24 * 60 * 60 * 1000;
 
 module.exports = function createAuth({ db, config, env = process.env, fetchImpl = global.fetch, now = Date.now }) {
     const router = express.Router();
-    // Idle lock window: default 5 minutes inactivity auto-save & auto-lock.
-    // AUTH_IDLE_MINUTES env se tune karo (5 minute security floor rakha hai).
-    const IDLE_MS = Math.max(5, Number(env.AUTH_IDLE_MINUTES) || 5) * 60 * 1000;
+    // Idle lock window: default 240 minutes (4 hours). Minimum 5 minutes floor.
+    // Configurable via AUTH_IDLE_MINUTES env variable.
+    const idleParsed = env.AUTH_IDLE_MINUTES !== undefined ? Number(env.AUTH_IDLE_MINUTES) : 240;
+    const IDLE_MS = Math.max(5, isNaN(idleParsed) ? 240 : idleParsed) * 60 * 1000;
     const LOOKUP_CACHE_MS = env.AUTH_LOOKUP_CACHE_MS !== undefined ? Number(env.AUTH_LOOKUP_CACHE_MS) : 60 * 1000;
     const lookupCache = new Map();
+    function setLookupCache(key, val) {
+        if (lookupCache.size >= 500) {
+            const cur = now();
+            for (const [k, v] of lookupCache.entries()) {
+                if (cur - (v.cachedAt || 0) > LOOKUP_CACHE_MS || lookupCache.size >= 500) {
+                    lookupCache.delete(k);
+                }
+            }
+        }
+        lookupCache.set(key, val);
+    }
     const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT;
     const encryptionKey = secret && crypto.createHash('sha256').update('billing-auth-v1\0' + secret).digest();
     const encrypt = value => {
@@ -112,7 +124,7 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             const lookup = await firebase('lookup', { idToken: tokens.idToken });
             user = lookup.users && lookup.users[0];
             if (user && !user.disabled && Number(user.passwordUpdatedAt || 0) === session.passwordUpdatedAt) {
-                lookupCache.set(session.key, { user, cachedAt: now() });
+                setLookupCache(session.key, { user, cachedAt: now() });
             }
         }
         if (!user || user.disabled || String(user.email).toLowerCase() !== email || user.localId !== session.uid ||
@@ -157,7 +169,7 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             tokens: encrypt({ idToken: result.idToken, refreshToken: result.refreshToken })
         };
         await saveSession(session);
-        lookupCache.set(session.key, { user, cachedAt: now() });
+        setLookupCache(session.key, { user, cachedAt: now() });
         setCookie(req, res, token);
         res.json({ success: true, ...view(session) });
     }));

@@ -234,12 +234,13 @@ function getErrorHint(err) {
     return 'Database error — logs me pura error dekho';
 }
 
-// Threshold below Firestore 1MB document limit (safety margin for metadata)
-const FIRESTORE_MAX_DOC_SIZE = 750000;
+// Threshold below Firestore 1MB document limit (safety margin for metadata & UTF-8)
+const FIRESTORE_MAX_DOC_BYTES = 700000;
 
 async function writeFirestoreWithChunking(docRef, docData) {
     const serialized = JSON.stringify(docData);
-    if (serialized.length <= FIRESTORE_MAX_DOC_SIZE) {
+    const byteLength = Buffer.byteLength(serialized, 'utf8');
+    if (byteLength <= FIRESTORE_MAX_DOC_BYTES) {
         const toSave = { ...docData };
         if (toSave.updatedAt instanceof Date) toSave.updatedAt = toSave.updatedAt.toISOString();
         if (toSave.createdAt instanceof Date) toSave.createdAt = toSave.createdAt.toISOString();
@@ -248,13 +249,24 @@ async function writeFirestoreWithChunking(docRef, docData) {
         return;
     }
 
-    log.info('DB-CHUNK', `Document ${docRef.path} size (${serialized.length} chars) exceeds 750KB, writing in chunks...`);
-    const totalChunks = Math.ceil(serialized.length / FIRESTORE_MAX_DOC_SIZE);
+    log.info('DB-CHUNK', `Document ${docRef.path} size (${byteLength} bytes) exceeds 700KB, writing in versioned chunks...`);
+    const buf = Buffer.from(serialized, 'utf8');
+    const totalChunks = Math.ceil(buf.length / FIRESTORE_MAX_DOC_BYTES);
+    const chunkVersion = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const chunksColl = docRef.collection('chunks');
     const writePromises = [];
+
     for (let i = 0; i < totalChunks; i++) {
-        const slice = serialized.substring(i * FIRESTORE_MAX_DOC_SIZE, (i + 1) * FIRESTORE_MAX_DOC_SIZE);
-        writePromises.push(chunksColl.doc(String(i)).set({ chunk: slice }));
+        const start = i * FIRESTORE_MAX_DOC_BYTES;
+        const end = Math.min(start + FIRESTORE_MAX_DOC_BYTES, buf.length);
+        const slice = buf.subarray(start, end).toString('utf8');
+        writePromises.push(chunksColl.doc(`${chunkVersion}_${i}`).set({
+            chunk: slice,
+            v: chunkVersion,
+            i,
+            total: totalChunks,
+            createdAt: new Date().toISOString()
+        }));
     }
     await Promise.all(writePromises);
 
@@ -263,11 +275,13 @@ async function writeFirestoreWithChunking(docRef, docData) {
     delete stub.stateData;
     delete stub.data;
     stub._isChunked = true;
+    stub.chunkVersion = chunkVersion;
     stub.totalChunks = totalChunks;
+    stub.byteLength = byteLength;
     if (stub.updatedAt instanceof Date) stub.updatedAt = stub.updatedAt.toISOString();
     if (stub.createdAt instanceof Date) stub.createdAt = stub.createdAt.toISOString();
     await docRef.set(stub, { merge: true });
-    log.info('DB-CHUNK', `✓ Successfully saved ${docRef.path} across ${totalChunks} chunks`);
+    log.info('DB-CHUNK', `✓ Successfully saved ${docRef.path} across ${totalChunks} versioned chunks (v: ${chunkVersion})`);
 }
 
 async function readFirestoreWithChunking(docSnap) {
@@ -276,23 +290,31 @@ async function readFirestoreWithChunking(docSnap) {
     if (!data || !data._isChunked) return data;
 
     const totalChunks = data.totalChunks || 0;
+    const chunkVersion = data.chunkVersion;
     const chunksColl = docSnap.ref.collection('chunks');
     const readPromises = [];
+
     for (let i = 0; i < totalChunks; i++) {
-        readPromises.push(chunksColl.doc(String(i)).get());
+        const docId = chunkVersion ? `${chunkVersion}_${i}` : String(i);
+        readPromises.push(chunksColl.doc(docId).get());
     }
     const chunkSnaps = await Promise.all(readPromises);
     let fullJson = '';
-    for (const snap of chunkSnaps) {
-        if (snap.exists) {
-            fullJson += (snap.data().chunk || '');
+    for (let i = 0; i < chunkSnaps.length; i++) {
+        const snap = chunkSnaps[i];
+        if (!snap.exists) {
+            log.error('DB-CHUNK', `Missing chunk ${i}/${totalChunks} for ${docSnap.ref.path}`);
+            return data;
         }
+        fullJson += (snap.data().chunk || '');
     }
     try {
         const parsed = JSON.parse(fullJson);
         const merged = { ...data, ...parsed };
         delete merged._isChunked;
         delete merged.totalChunks;
+        delete merged.chunkVersion;
+        delete merged.byteLength;
         return merged;
     } catch (e) {
         log.error('DB-CHUNK', `Error parsing chunked document ${docSnap.ref.path}`, e);
@@ -468,17 +490,50 @@ async function deleteBillingState(dataId) {
     }
 }
 
-async function saveBillingState(dataId, updateDoc) {
+async function saveBillingState(dataId, updateDoc, expectedRev = null) {
     await connect();
     if (activeProvider === 'firebase') {
         const docRef = firestoreDb.collection('billing_states').doc(dataId);
+        if (expectedRev !== null && expectedRev > 0) {
+            const snap = await docRef.get();
+            if (snap.exists) {
+                const curRev = (snap.data() && snap.data().rev) || 0;
+                if (curRev > 0 && curRev !== expectedRev) {
+                    const err = new Error(`Conflict: expected revision ${expectedRev} but found ${curRev}`);
+                    err.conflict = true;
+                    err.status = 409;
+                    err.currentData = await readFirestoreWithChunking(snap);
+                    throw err;
+                }
+            }
+        }
         await writeFirestoreWithChunking(docRef, updateDoc);
     } else {
-        await MongoBillingState.findOneAndUpdate(
-            { dataId },
-            updateDoc,
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        if (expectedRev !== null && expectedRev > 0) {
+            const res = await MongoBillingState.findOneAndUpdate(
+                { dataId, rev: expectedRev },
+                updateDoc,
+                { new: true }
+            );
+            if (!res) {
+                const currentDoc = await MongoBillingState.findOne({ dataId }).lean();
+                if (currentDoc && currentDoc.rev !== expectedRev) {
+                    const err = new Error(`Conflict: expected revision ${expectedRev} but found ${currentDoc.rev}`);
+                    err.conflict = true;
+                    err.status = 409;
+                    err.currentData = currentDoc;
+                    throw err;
+                }
+                // If doc did not exist yet, create it
+                await MongoBillingState.create(updateDoc);
+            }
+        } else {
+            await MongoBillingState.findOneAndUpdate(
+                { dataId },
+                updateDoc,
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+        }
     }
 }
 
