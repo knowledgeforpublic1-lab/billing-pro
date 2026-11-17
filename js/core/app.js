@@ -455,6 +455,9 @@
                 dailyProgressManpower: { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 },
                 dailyProgressRemarks: '',
                 dailyProgressVersion: 0,
+                dailyProgressEnteredFilterMode: 'today',
+                dailyProgressEnteredCustomFrom: '',
+                dailyProgressEnteredCustomTo: '',
                 dailyProgressSearch: '',
                 dailyProgressFilter: 'issued',
                 dailyProgressDirty: false,
@@ -1291,6 +1294,63 @@
                 const cid = this.dailyProgressContractorId;
                 if (!data || !data.reports) return [];
                 return data.reports.filter(r => r.contractorId === cid);
+            },
+            dailyProgressEnteredEffectiveFrom() {
+                const mode = this.dailyProgressEnteredFilterMode || 'today';
+                if (mode === 'today') return this.dailyProgressDate || '';
+                if (mode === 'this_month') {
+                    const dt = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+                    return dt.slice(0, 7) + '-01';
+                }
+                if (mode === 'custom') return this.dailyProgressEnteredCustomFrom || '';
+                return ''; // total (all time)
+            },
+            dailyProgressEnteredEffectiveTo() {
+                const mode = this.dailyProgressEnteredFilterMode || 'today';
+                if (mode === 'today') return this.dailyProgressDate || '';
+                if (mode === 'this_month') {
+                    const dt = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+                    const year = parseInt(dt.slice(0, 4), 10);
+                    const month = parseInt(dt.slice(5, 7), 10);
+                    const lastDay = new Date(year, month, 0).getDate();
+                    return dt.slice(0, 7) + '-' + String(lastDay).padStart(2, '0');
+                }
+                if (mode === 'custom') return this.dailyProgressEnteredCustomTo || '';
+                return ''; // total (all time)
+            },
+            dailyProgressEnteredContractors() {
+                const data = this.dailyProgressData;
+                if (!data || !Array.isArray(data.reports) || !data.reports.length) return [];
+                const from = this.dailyProgressEnteredEffectiveFrom;
+                const to = this.dailyProgressEnteredEffectiveTo;
+                const cMap = new Map();
+                (this.dailyProgressContractors || []).forEach(c => cMap.set(c.id, c));
+
+                const grouped = new Map();
+                for (const r of data.reports) {
+                    if (!r.contractorId || !r.date) continue;
+                    if (from && r.date < from) continue;
+                    if (to && r.date > to) continue;
+                    const hasQty = r.quantities && Object.values(r.quantities).some(v => Number(v) > 0);
+                    const hasManpower = r.manpower && Object.values(r.manpower).some(v => Number(v) > 0);
+                    const hasRemarks = !!(r.remarks && r.remarks.trim());
+                    if (!hasQty && !hasManpower && !hasRemarks) continue;
+
+                    if (!grouped.has(r.contractorId)) {
+                        grouped.set(r.contractorId, {
+                            contractorId: r.contractorId,
+                            contractor: cMap.get(r.contractorId) || { id: r.contractorId, name: r.contractorId },
+                            count: 0,
+                            latestDate: r.date,
+                            reports: []
+                        });
+                    }
+                    const entry = grouped.get(r.contractorId);
+                    entry.count++;
+                    if (r.date > entry.latestDate) entry.latestDate = r.date;
+                    entry.reports.push(r);
+                }
+                return Array.from(grouped.values()).sort((a, b) => b.latestDate.localeCompare(a.latestDate));
             },
             dailyProgressIssues() {
                 const data = this.dailyProgressData;

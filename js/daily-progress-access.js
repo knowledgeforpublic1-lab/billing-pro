@@ -64,6 +64,36 @@
                 await this.loadDailyProgressLoginsAndHistory();
             });
         },
+        deleteDailyProgressWorker(user) {
+            return this.runDailyProgressAdmin(async () => {
+                if (!confirm(`Kya aap ${user.name} (${user.username}) ka login permanently DELETE karna chahte hain?\nIs user ka account poori tarah delete ho jayega.`)) return;
+                await this.dailyProgressRequest('workers/delete', { username: user.username });
+                await this.loadDailyProgressLoginsAndHistory();
+            });
+        },
+        setDailyProgressEnteredFilter(mode) {
+            this.dailyProgressEnteredFilterMode = mode;
+            if (mode === 'custom' && !this.dailyProgressEnteredCustomFrom) {
+                this.dailyProgressEnteredCustomFrom = this.dailyProgressDate || '';
+                this.dailyProgressEnteredCustomTo = this.dailyProgressDate || '';
+            }
+        },
+        openContractorMonthlySheet(contractorId, targetDate) {
+            this.dailyProgressContractorId = contractorId;
+            const dt = targetDate || this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+            this.dailyProgressDate = dt;
+            if (typeof this.loadDailyProgressReportForDate === 'function') {
+                this.loadDailyProgressReportForDate(dt);
+            }
+            // Set export range for that target date's month
+            const year = parseInt(dt.slice(0, 4), 10);
+            const month = parseInt(dt.slice(5, 7), 10);
+            const lastDay = new Date(year, month, 0).getDate();
+            this.dailyProgressExportFrom = dt.slice(0, 7) + '-01';
+            this.dailyProgressExportTo = dt.slice(0, 7) + '-' + String(lastDay).padStart(2, '0');
+            // Switch to download / export sheet view
+            this.dailyProgressTab = 'download';
+        },
         async loadDailyProgressEntryHistory() {
             try {
                 const result = await this.dailyProgressRequest('entry-history?contractorId=' + encodeURIComponent(this.dailyProgressContractorId));

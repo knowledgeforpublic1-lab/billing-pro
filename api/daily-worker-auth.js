@@ -72,11 +72,11 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         }
         // 3. Direct username lookup
         const direct = await read(userKey(raw.toLowerCase()));
-        if (direct) return direct;
+        if (direct && !direct.deleted) return direct;
         // 4. Fallback check as email or mobile without strict formatting
         if (raw.includes('@')) {
             const directEmailUser = await read(userKey(raw.toLowerCase()));
-            if (directEmailUser) return directEmailUser;
+            if (directEmailUser && !directEmailUser.deleted) return directEmailUser;
         }
         return null;
     }
@@ -96,7 +96,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         const session = await read('dp_worker_session_' + hash(token));
         if (!session || session.expiresAt <= now()) fail(401, 'Entry login expire ho gaya. Dobara login karein.');
         const user = await read(userKey(session.username));
-        if (!user || user.disabled || session.revision !== user.revision) fail(401, 'Entry login disabled ya password badal gaya hai.');
+        if (!user || user.disabled || user.deleted || session.revision !== user.revision) fail(401, 'Entry login disabled ya password badal gaya hai.');
         return publicUser(user);
     }
 
@@ -279,6 +279,22 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         });
     }
 
+    async function deleteUser(username) {
+        if (typeof username !== 'string' || !/^[a-z0-9._-]{3,40}$/.test(username)) fail(400, 'Valid username required');
+        const user = await read(userKey(username));
+        if (!user) fail(404, 'Login nahi mila.');
+        if (user.email) {
+            await db.atomicDailyRecord(emailIndexKey(user.email), () => ({ value: null, result: null }));
+        }
+        if (user.mobile) {
+            await db.atomicDailyRecord(mobileIndexKey(user.mobile), () => ({ value: null, result: null }));
+        }
+        await db.atomicDailyRecord(userKey(username), old => {
+            if (!old) return { result: null };
+            return { value: { ...old, deleted: true, disabled: true, revision: (old.revision || 0) + 1 }, result: null };
+        });
+    }
+
     async function recordHistory({ contractorId, date, version, savedAt, savedBy, report, source }) {
         const stamp = Date.parse(savedAt);
         const key = 'entry_event_' + hash(contractorId) + '_' + String(9999999999999 - stamp).padStart(13, '0') + '_' + hash(source + '|' + date + '|' + version);
@@ -301,11 +317,14 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         assertContractor,
         saveUser,
         disableUser,
+        deleteUser,
         recordHistory,
         sharedReports,
         history,
         async listUsers() {
-            return (await db.listDailyRecords('dp_worker_user_')).map(row => publicUser(row.value));
+            return (await db.listDailyRecords('dp_worker_user_'))
+                .filter(row => row.value && row.value.id && !row.value.deleted)
+                .map(row => publicUser(row.value));
         },
         async saveShared(actor, incoming, previous) {
             assertContractor(actor, incoming.contractorId);

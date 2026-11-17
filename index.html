@@ -1968,6 +1968,83 @@
                 <!-- TAB 1: DAILY ENTRY -->
                 <div v-if="dailyProgressTab === 'entry'">
                     <fieldset :disabled="dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
+
+                    <!-- JIN CONTRACTOR KA DAILY PROGRESS ENTRY HUA HAI UNKA OVERVIEW -->
+                    <div class="dp-panel no-print" style="margin-bottom: 12px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.12)); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-subtle, rgba(0,0,0,0.06)); background: rgba(59,130,246,0.03);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <strong style="font-size: 0.86rem; color: #1d4ed8; display: inline-flex; align-items: center; gap: 5px;">
+                                    <span>📋</span> Jin Teams Ki Entry Aayi Hai ({{ dailyProgressEnteredContractors.length }})
+                                </strong>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">
+                                    Kisi bhi contractor par click karein to unki us month ki Export Sheet khul jayegi:
+                                </span>
+                            </div>
+                            <!-- Date Range Filter Buttons -->
+                            <div style="display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.04); padding: 2px 4px; border-radius: 5px; font-size: 0.72rem;">
+                                <button type="button" class="btn" :class="dailyProgressEnteredFilterMode === 'today' ? 'btn-primary' : 'btn-secondary'" @click="setDailyProgressEnteredFilter('today')" style="padding: 2px 8px; font-size: 0.7rem; font-weight: 700;">
+                                    Aaj ({{ formatDisplayDate(dailyProgressDate) }})
+                                </button>
+                                <button type="button" class="btn" :class="dailyProgressEnteredFilterMode === 'this_month' ? 'btn-primary' : 'btn-secondary'" @click="setDailyProgressEnteredFilter('this_month')" style="padding: 2px 8px; font-size: 0.7rem; font-weight: 700;">
+                                    Is Month
+                                </button>
+                                <button type="button" class="btn" :class="dailyProgressEnteredFilterMode === 'total' ? 'btn-primary' : 'btn-secondary'" @click="setDailyProgressEnteredFilter('total')" style="padding: 2px 8px; font-size: 0.7rem; font-weight: 700;">
+                                    Total (All Time)
+                                </button>
+                                <button type="button" class="btn" :class="dailyProgressEnteredFilterMode === 'custom' ? 'btn-primary' : 'btn-secondary'" @click="setDailyProgressEnteredFilter('custom')" style="padding: 2px 8px; font-size: 0.7rem; font-weight: 700;">
+                                    Custom Range
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Range Picker (shown when custom is selected) -->
+                        <div v-if="dailyProgressEnteredFilterMode === 'custom'" style="display: flex; gap: 12px; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.02); border-bottom: 1px dashed var(--border-subtle, rgba(0,0,0,0.08));">
+                            <label style="font-size: 0.72rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                From: <input type="date" v-model="dailyProgressEnteredCustomFrom" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            </label>
+                            <label style="font-size: 0.72rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                To: <input type="date" v-model="dailyProgressEnteredCustomTo" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            </label>
+                        </div>
+
+                        <!-- Contractor Cards List -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 10px; max-height: 180px; overflow-y: auto;">
+                            <div v-for="item in dailyProgressEnteredContractors" :key="item.contractorId"
+                                 @click="openContractorMonthlySheet(item.contractorId, item.latestDate)"
+                                 :style="{
+                                     display: 'inline-flex',
+                                     alignItems: 'center',
+                                     gap: '8px',
+                                     padding: '5px 12px',
+                                     borderRadius: '6px',
+                                     cursor: 'pointer',
+                                     border: '1.5px solid ' + (dailyProgressContractorId === item.contractorId ? '#2563eb' : 'var(--border-subtle, rgba(0,0,0,0.15))'),
+                                     background: (dailyProgressContractorId === item.contractorId ? 'rgba(37,99,235,0.08)' : 'var(--bg-card, #f8fafc)'),
+                                     transition: 'all .15s'
+                                 }"
+                                 title="Click karein: is contractor ki us month ki Export Sheet khul jayegi">
+                                <span style="font-size: 1rem;">📄</span>
+                                <div>
+                                    <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main, #1e293b);">
+                                        {{ item.contractor.name }}
+                                    </div>
+                                    <div style="font-size: 0.67rem; color: var(--text-muted); display: flex; gap: 6px;">
+                                        <span v-if="item.contractor.feeder">⚡ {{ item.contractor.feeder }}</span>
+                                        <span style="color: #059669; font-weight: 700;">✓ {{ item.count }} दिन एंट्री</span>
+                                        <span>(Latest: {{ formatDisplayDate(item.latestDate) }})</span>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.7rem; color: #2563eb; font-weight: 700; margin-left: 4px; text-decoration: underline;">
+                                    Sheet ➔
+                                </span>
+                            </div>
+
+                            <div v-if="!dailyProgressEnteredContractors.length" style="padding: 10px 14px; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                                Is date range me kisi bhi contractor ki daily progress entry nahi mili.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Two-column Entry Layout -->
                     <div class="dp-entry-layout">
                         <!-- Left: Material Consumption -->
@@ -2198,9 +2275,10 @@
                                                 {{ user.disabled ? '🔴 Disabled' : '🟢 Active' }}
                                             </span>
                                         </td>
-                                        <td style="text-align: right;">
+                                        <td style="text-align: right; white-space: nowrap;">
                                             <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="resetDailyProgressWorker(user)">Reset Password</button>
-                                            <button v-if="!user.disabled" type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem;" @click="disableDailyProgressWorker(user)">Disable</button>
+                                            <button v-if="!user.disabled" type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="disableDailyProgressWorker(user)">Disable</button>
+                                            <button type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
                                         </td>
                                     </tr>
                                     <tr v-if="!dailyProgressWorkers.length">
@@ -4837,9 +4915,9 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_logins_tab"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_entered_contractors_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_1220_concreting"></script>
+    <script defer src="js/core/app.js?v=20261117_entered_contractors_v1"></script>
 </body>
 
 </html>

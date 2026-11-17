@@ -143,5 +143,21 @@ test('public worker signup with name, email, and mobile supports login via email
             password: 'WrongPassword'
         });
         assert.equal(badPwRes.status, 401);
+
+        // Delete user via admin endpoint
+        const delRes = await f.request('/api/dp-admin/workers/delete', { username: data1.user.username }, f.ownerCookie);
+        assert.equal(delRes.status, 200);
+
+        // User should not appear in worker list
+        const listRes = await f.request('/api/dp-admin/workers', undefined, f.ownerCookie);
+        const listData = await listRes.json();
+        assert.ok(!listData.users.some(u => u.username === data1.user.username));
+
+        // Deleted user cannot log in anymore
+        const reLoginRes = await f.request('/api/dp-worker/login', {
+            identifier: 'samrat@example.com',
+            password: 'SecurePassword123'
+        });
+        assert.equal(reLoginRes.status, 401);
     } finally { await f.close(); }
 });

@@ -161,6 +161,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     adminRouter.get('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, users: await workers.listUsers() })));
     adminRouter.post('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, user: await workers.saveUser(req.body) })));
     adminRouter.post('/workers/disable', auth.requireAdmin, handle(async (req, res) => { await workers.disableUser(req.body.username); res.json({ success: true }); }));
+    adminRouter.post('/workers/delete', auth.requireAdmin, handle(async (req, res) => { await workers.deleteUser(req.body.username); res.json({ success: true }); }));
     adminRouter.get('/entry-history', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await workers.history(req.query.contractorId) })));
     adminRouter.post('/storage-check', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await drive.check() })));
     adminRouter.post('/links', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.createLink(req.body.contractor || {}) })));
