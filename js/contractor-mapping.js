@@ -17,7 +17,11 @@
     }
     function mapping(row) {
         const out = {};
-        fields.forEach(field => { if (row[field] !== undefined) out[field] = clone(row[field]); });
+        fields.forEach(field => {
+            if (row[field] !== undefined) out[field] = clone(row[field]);
+            else if (field === 'sapItems') out[field] = [];
+            else if (field !== 'activityMaterialNo') out[field] = '';
+        });
         // Fixed reconciliation quantities belong to the bill, not a reusable SAP mapping.
         if (out.sapItems) out.sapItems.forEach(s => { delete s.manualQty; delete s.isManual; });
         return out;
@@ -49,20 +53,22 @@
             this._activeMappingContractorId = this.contractorMappingId();
             const id = this._activeMappingContractorId;
             const saved = id && this.contractorMappingState.profiles[id];
-            if (saved) {
-                const cached = this.cachedContractorMapping(id, saved);
-                // Reconcile a confirmed acknowledgement without applying another
-                // bill's mappings over the catalogue currently being restored.
-                if (cached.updatedAt === saved.updatedAt && JSON.stringify(cached.rows) === JSON.stringify(saved.rows)) this.contractorMappingState.profiles[id] = cached;
+            const cached = id && this.cachedContractorMapping(id, saved);
+            if (!this.isFinalized && cached) {
+                this.contractorMappingState.profiles[id] = cached;
+                // Restore a newer standalone profile before capture can mistake
+                // an older bill/default catalogue for a fresh mapping edit.
+                if (!saved || cached.updatedAt > saved.updatedAt) this.applyContractorMapping(cached);
             }
             this.captureContractorMapping();
             this.mappingCloudStatus = id && this.contractorMappingState.profiles[id]?.dirty ? 'pending' : 'idle';
             this.mappingCloudError = '';
+            if (!this.isFinalized && this.mappingCloudStatus === 'pending' && typeof this.scheduleMappingSync === 'function') this.scheduleMappingSync();
         },
         captureContractorMapping(force = false) {
             const state = this.contractorMappingState;
             const id = this._activeMappingContractorId;
-            if (!state || !id) return;
+            if (!state || !id || this.isFinalized) return;
             const rows = { activities: {}, poleSchedules: {} };
             ['activities', 'poleSchedules'].forEach(kind => {
                 rowsFor(this[kind], (schedule, key, row) => {
@@ -86,7 +92,7 @@
         cachedContractorMapping(id, profile) {
             try {
                 const cached = JSON.parse(localStorage.getItem('billing_contractor_mapping_v1_' + id));
-                if (cached && (!profile || cached.updatedAt > profile.updatedAt ||
+                if (cached && cached.version === 1 && cached.rows && typeof cached.rows === 'object' && (!profile || cached.updatedAt > profile.updatedAt ||
                     (cached.updatedAt === profile.updatedAt && cached.dirty === false && JSON.stringify(cached.rows) === JSON.stringify(profile.rows)))) return cached;
             } catch (e) {}
             return profile;

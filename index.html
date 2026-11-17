@@ -1202,11 +1202,10 @@
                                             <td>
                                                 <div style="font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                                     <span :style="isPoleScheduleItemUnissued(item) ? { color: '#ef4444' } : {}">{{ item.desc }}</span>
-                                                    <label v-if="getPoleScheduleActivityMaterials(selectedPoleScheduleKey).length && !String(selectedPoleScheduleKey).startsWith('dept_')" class="no-print" style="display: flex; align-items: center; gap: 4px; max-width: 100%; font-size: 0.72rem;">
-                                                        Activity link:
-                                                        <button v-if="poleScheduleLinkEditorIndex !== item.origIndex" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: inherit;" @click="poleScheduleLinkEditorIndex = item.origIndex" :disabled="isFinalized">{{ getPoleScheduleActivityLink(item, selectedPoleScheduleKey) || 'Auto' }} · Edit</button>
-                                                        <select v-else :value="getPoleScheduleActivityLink(item, selectedPoleScheduleKey)" @change="setPoleScheduleActivityLink(item.origIndex, $event.target.value); poleScheduleLinkEditorIndex = -1" :disabled="isFinalized" style="max-width: 220px; min-width: 0; font-size: inherit;" aria-label="Activity material link">
-                                                            <option value="">Auto (SAP / description)</option>
+                                                    <label v-if="getPoleScheduleActivityMaterials(selectedPoleScheduleKey).length && !String(selectedPoleScheduleKey).startsWith('dept_') && !isPoleScheduleConcreteBreakdownItem(item)" class="no-print" style="display: flex; align-items: center; gap: 4px; max-width: 100%; font-size: 0.72rem;">
+                                                        <button v-if="poleScheduleLinkEditorIndex !== item.origIndex" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: inherit;" @click="poleScheduleLinkEditorIndex = item.origIndex" :disabled="isFinalized">{{ item.activityMaterialNo ? 'Activity item: ' + item.activityMaterialNo : 'Map activity item' }}</button>
+                                                        <select v-else :value="item.activityMaterialNo || ''" @change="setPoleScheduleActivityLink(item.origIndex, $event.target.value); poleScheduleLinkEditorIndex = -1" :disabled="isFinalized" style="max-width: 220px; min-width: 0; font-size: inherit;" aria-label="Manually map activity item">
+                                                            <option value="" disabled>Select activity item</option>
                                                             <option v-for="target in getPoleScheduleActivityMaterials(selectedPoleScheduleKey)" :key="target.no" :value="String(target.no)">{{ target.no }} — {{ target.desc }}</option>
                                                         </select>
                                                     </label>
@@ -1277,6 +1276,7 @@
                                                     </span>
                                                     <div style="font-size:0.68rem; color:var(--text-muted); white-space:nowrap;">Dept Rate</div>
                                                 </template>
+                                                <span v-else-if="isPoleScheduleConcreteBreakdownItem(item)" style="font-size:0.68rem; color:var(--text-muted);">Included in concreting total</span>
                                                 <span v-else :title="'Pole Schedule SAP code: ' + (getPoleScheduleCachedRateLink(item).code || 'not mapped') + ' ⬢ Activity ' + selectedPoleScheduleKey + ' mein exact SAP mapping match nahi mila.'" style="font-size:0.68rem; color:var(--accent-amber); white-space:nowrap;">
                                                     {{ getPoleScheduleCachedRateLink(item).status === 'ambiguous' ? 'Multiple matches' : (getPoleScheduleCachedRateLink(item).status === 'unmapped' ? 'Map SAP code' : (getPoleScheduleCachedRateLink(item).status === 'activity-missing' ? 'Activity missing' : 'No rate match')) }}
                                                 </span>
@@ -4753,7 +4753,7 @@
     <script defer src="js/core/storage.js?v=20261114_safe_storage"></script>
 
     <!-- Utility Modules -->
-    <script defer src="js/utils.js?v=20261116_mobile_redesign"></script>
+    <script defer src="js/utils.js?v=20261117_error_notifications"></script>
     <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
@@ -4761,13 +4761,13 @@
     <script defer src="js/sync.js?v=20261117_sap_cloud_upload"></script>
     <script defer src="js/billing.js?v=20261117_entry_performance"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
-    <script defer src="js/contractor-mapping.js?v=20261117_sap_cloud_upload"></script>
+    <script defer src="js/contractor-mapping.js?v=20261117_refresh_mapping_restore"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_header"></script>
     <script defer src="js/reco-filters.js?v=20261114_reco_filter_fix"></script>
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
     <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
-    <script defer src="js/pole-schedule.js?v=20261117_entry_performance"></script>
+    <script defer src="js/pole-schedule.js?v=20261117_1220_concreting"></script>
     <script defer src="js/stock-importer.js?v=20261116_posting_date"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
@@ -4776,7 +4776,7 @@
     <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
     <script defer src="js/daily-progress-access.js?v=20261117_share_sync"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_sap_cloud_upload"></script>
+    <script defer src="js/core/app.js?v=20261117_1220_concreting"></script>
 </body>
 
 </html>

@@ -239,6 +239,10 @@ window.UtilsModule = {
                     return numberToWordsIndian(val);
                 },
                 showToast(msg, icon = '✅') {
+                    const severity = String(icon).toLowerCase();
+                    const warning = /^(error|alert|warning|warn|danger|x)$/.test(severity) || /[⚠❌⛔🚫]/u.test(severity);
+                    const failure = /\b(error|fail(?:ed|ure)?|invalid|unable|unavailable|missing|denied|conflict|expired|blocked|pending|http\s*[45]\d\d)\b|nahi\s+(?:hua|hai|mila|mili)|not\s+(?:saved|confirmed|found)|(?:unlock|retry|select|required).*(?:first|pehle|karein)|read.only/i.test(String(msg));
+                    if (!warning && !failure) return;
                     if (!this.toasts || !Array.isArray(this.toasts)) this.toasts = [];
                     const toast = { msg, icon };
                     this.toasts.push(toast);

@@ -200,7 +200,7 @@
         saveLocal(); conflict = false; syncRetryCount = 0;
         if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
         setSync(dirty ? 'local' : 'synced', dirty ? 'New entries pending' : 'Saved online');
-        if (manual) toast(dirty ? 'Saved. Latest changes pending hain.' : 'Online save ho gaya.');
+        if (manual && dirty) toast('Saved. Latest changes pending hain.');
         return true;
       } catch (e) { setSync('error', 'Online save not confirmed — phone copy retained'); if (manual) toast('Online save confirm nahi hua. Phone copy retained hai.'); scheduleSyncRetry(); return false; }
     })();
@@ -573,7 +573,6 @@
       else localStorage.removeItem(API_LS);
     } catch (e) {}
     renderKeyStatus('');
-    toast(v ? '🔑 Key save ho gayi' : '🔑 Key hata di');
     loadState();
   });
   $('btnKeyTest').addEventListener('click', function () {

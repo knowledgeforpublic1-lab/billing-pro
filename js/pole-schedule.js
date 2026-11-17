@@ -30,9 +30,14 @@ window.PoleScheduleModule = {
     getPoleScheduleActivityLink(item, key) {
         if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, key)) return '';
         if (item.activityMaterialNo !== undefined && item.activityMaterialNo !== null) return String(item.activityMaterialNo);
+        const activityKey = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, key);
+        if (activityKey === '1220' && window.PoleScheduleModule.isPoleScheduleConcreteItem.call(this, item)) {
+            const targets = window.PoleScheduleModule.getPoleScheduleActivityMaterials.call(this, key).filter(row => window.PoleScheduleModule.isPoleScheduleConcreteItem.call(this, row));
+            if (targets.length === 1) return String(targets[0].no);
+        }
         // Only unambiguous component links are supplied here. Shared clamps need
         // an explicit choice instead of being copied to several assemblies.
-        if (window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, key) !== '907') return '';
+        if (activityKey !== '907') return '';
         const links = {
             'Side Clamp for 11 KV V-Cross Arm (Extension)': '5',
             'Side Clamp for Guarding Channel': '3',
@@ -90,6 +95,7 @@ window.PoleScheduleModule = {
         if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, sourceKey)) return { status: 'departmental', rate: null, activityKey: '', code: '' };
         const key = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, sourceKey);
         if (!item || item.isSection || item.isSpan) return { status: 'not-applicable', rate: null, activityKey: key, code: '' };
+        if (window.PoleScheduleModule.isPoleScheduleConcreteBreakdownItem.call(this, item)) return { status: 'breakdown', rate: null, activityKey: key, code: '' };
         const cleanCode = code => String(code || '').trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
         const codesFor = material => {
             const codes = new Set();
@@ -1073,7 +1079,7 @@ window.PoleScheduleModule = {
             const scheduleMetadata = sched.materials.map((sm, smIdx) => ({
                 sm, smIdx, codes: codesFor(sm), desc: String(sm.desc || '').trim().toLowerCase(),
                 nutBolt: checkSmNutBolt(sm), link: window.PoleScheduleModule.getPoleScheduleActivityLink.call(this, sm, k)
-            })).filter(({ sm }) => !sm.isSection && !sm.isSpan);
+            })).filter(({ sm }) => !sm.isSection && !sm.isSpan && !window.PoleScheduleModule.isPoleScheduleConcreteBreakdownItem.call(this, sm));
 
             act.materials.forEach((am, actMatIdx) => {
                 const rowIdentity = JSON.stringify([am.no, am.desc]);
@@ -1180,7 +1186,7 @@ window.PoleScheduleModule = {
             const warnings = { ...(this.poleScheduleTransferWarnings || {}) };
             for (const source of Object.keys(this.poleSchedules || {}).filter(source => source.toLowerCase() === k.toLowerCase())) {
                 warnings[source] = (this.poleSchedules[source].materials || []).flatMap((item, index) => {
-                    if (item.isSection || item.isSpan || matchedMaterials.has(item)) return [];
+                    if (item.isSection || item.isSpan || matchedMaterials.has(item) || window.PoleScheduleModule.isPoleScheduleConcreteBreakdownItem.call(this, item)) return [];
                     return [index];
                 });
             }
@@ -1433,8 +1439,19 @@ window.PoleScheduleModule = {
         return 1.83;
     },
 
+    isPoleScheduleVolumeItem(item) {
+        return /^(?:cmt|cum|m3|m³|cubicmet(?:er|re)s?)$/i.test(String(item && (item.unit || item.uom) || '').replace(/[.\s]/g, ''));
+    },
+
+    isPoleScheduleConcreteBreakdownItem(item) {
+        if (!item || item.isSection || item.isSpan || !window.PoleScheduleModule.isPoleScheduleVolumeItem(item)) return false;
+        const physical = { ...item, unit: 'No' };
+        return window.PoleScheduleModule.isPoleSchedulePoleItem.call(this, physical) || window.PoleScheduleModule.isPoleScheduleStayItem.call(this, physical);
+    },
+
     isPoleSchedulePoleItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
+        if (window.PoleScheduleModule.isPoleScheduleVolumeItem(item)) return false;
         const d = String(item.desc || '').toLowerCase();
         // A reference to a pole in an accessory name is not a foundation.
         if (/\b(?:clamps?|cl|earthing|earth|top|brackets?|caps?|cross\s*arms?|guarding|painting|hardware|support|numbering|switch(?:es)?|transformer|mounted|erection|dismantling|transport|labou?r|testing|stringing|insulators?|stay|wire|muffing|concreting|foundation|bolts?|plates?|fittings?)\b/i.test(d)) return false;
@@ -1452,6 +1469,7 @@ window.PoleScheduleModule = {
 
     isPoleScheduleStayItem(item) {
         if (!item || item.isSection || item.isSpan) return false;
+        if (window.PoleScheduleModule.isPoleScheduleVolumeItem(item)) return false;
         const d = String(item.desc || '').toLowerCase();
         // Only the HT stay assembly needs stay concreting. Exclude accessories
         // before matching: "HT Stay Set clamp" must never pass as a Stay Set.
@@ -1727,6 +1745,18 @@ window.PoleScheduleModule = {
         };
     },
 
+    updatePoleScheduleConcreteBreakdown(key, lIdx, result) {
+        const schedule = this.poleSchedules && this.poleSchedules[key];
+        const values = this.poleScheduleQuantities && this.poleScheduleQuantities[key] && this.poleScheduleQuantities[key][lIdx];
+        if (!schedule || !values) return;
+        (schedule.materials || []).forEach((row, index) => {
+            if (!window.PoleScheduleModule.isPoleScheduleConcreteBreakdownItem.call(this, row)) return;
+            const pole = window.PoleScheduleModule.isPoleSchedulePoleItem.call(this, { ...row, unit: 'No' });
+            const value = pole ? result.poleVol : result.stayVol;
+            values[index] = value > 0 ? value : '';
+        });
+    },
+
     recalculatePoleScheduleLocationConcreting(key, lIdx) {
         const wantPole = this.psAutoPole !== false;
         const wantStay = this.psAutoStay !== false;
@@ -1743,6 +1773,7 @@ window.PoleScheduleModule = {
 
         this.ensurePoleScheduleQuantities(k);
         const res = this.calculateLocationConcreting(k, lIdx);
+        window.PoleScheduleModule.updatePoleScheduleConcreteBreakdown.call(this, k, lIdx, res);
 
         if (concreteIdx !== -1) {
             const shouldFillConcrete = (wantPole || wantStay || (wantMuff && muffIdx === -1));
@@ -1785,6 +1816,7 @@ window.PoleScheduleModule = {
 
         locs.forEach((_, lIdx) => {
             const res = this.calculateLocationConcreting(k, lIdx);
+            window.PoleScheduleModule.updatePoleScheduleConcreteBreakdown.call(this, k, lIdx, res);
             if (concreteIdx !== -1) {
                 if (shouldFillConcrete) {
                     this.poleScheduleQuantities[k][lIdx][concreteIdx] = res.totalVol > 0 ? res.totalVol : '';

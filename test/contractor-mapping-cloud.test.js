@@ -62,3 +62,37 @@ test('manual Cloud Save cannot claim success when SAP mapping was rejected', asy
     assert.equal(saved, false); assert.equal(app.syncStatus, 'error');
     assert.match(app.mappingCloudError, /Login session expire/);
 });
+
+test('refresh restores newer cached SAP mappings before capturing an older bill catalogue', () => {
+    const { context, cache } = fixture(async () => { throw new Error('Offline'); });
+    const defaults = { '1220': { materials: [{ no: '4', desc: 'AB Switch support channel', itemCode: 'BASE', sapItems: [{ code: 'BASE', qty: 1 }] }] } };
+    context.window.defaultActivities = structuredClone(defaults); context.window.defaultPoleSchedules = {};
+    const methods = context.window.ContractorMappingModule;
+    const create = extra => Object.assign({}, methods, { selectedContractorId: 'team', activities: structuredClone(defaults), poleSchedules: {}, showToast() {} }, extra);
+    const original = create(); original.initializeContractorMappings();
+    const olderBill = { activities: structuredClone(original.activities), contractorMappingState: structuredClone(original.contractorMappingState) };
+    original.activities['1220'].materials[0].sapItems = [{ code: 'USER-A', qty: 1 }, { code: 'USER-B', qty: 0.5 }];
+    original.activities['1220'].materials[0].itemCode = 'USER-A, USER-B';
+    original.captureContractorMapping();
+    const cachedBeforeReload = cache.get('billing_contractor_mapping_v1_team');
+    for (const state of [olderBill, {}]) {
+        cache.set('billing_contractor_mapping_v1_team', cachedBeforeReload);
+        const refreshed = create(structuredClone(state)); refreshed.initializeContractorMappings();
+        assert.equal(refreshed.activities['1220'].materials[0].itemCode, 'USER-A, USER-B');
+        assert.equal(refreshed.activities['1220'].materials[0].sapItems[1].qty, 0.5);
+        assert.equal(cache.get('billing_contractor_mapping_v1_team'), cachedBeforeReload, 'Boot must not replace the newer recovery copy');
+    }
+});
+
+test('opening a finalized historical bill cannot overwrite a newer contractor mapping cache', () => {
+    const { app, profile, cache, context } = fixture(async () => {});
+    const confirmed = { ...profile, updatedAt: 999, dirty: false };
+    const raw = JSON.stringify(confirmed);
+    cache.set('billing_contractor_mapping_v1_team', raw);
+    app.isFinalized = true;
+    app.contractorMappingState.base = { activities: {}, poleSchedules: {} };
+    // Use the real capture implementation rather than this fixture's save stub.
+    app.captureContractorMapping = context.window.ContractorMappingModule.captureContractorMapping;
+    app.initializeContractorMappings(); app.captureContractorMapping();
+    assert.equal(cache.get('billing_contractor_mapping_v1_team'), raw);
+});

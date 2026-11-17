@@ -226,6 +226,7 @@
             },
 
             showToast(msg, type = 'info') {
+                if (type !== 'error' && type !== 'warning') return;
                 this.toastMsg = msg;
                 this.toastType = type;
                 if (this.toastTimer) clearTimeout(this.toastTimer);

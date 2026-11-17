@@ -249,3 +249,37 @@ test('one mapping selection saves and schedules once; closing unchanged mapping 
     a.syncActiveSapManagerItem();
     assert.equal(saves, 1); assert.equal(schedules, 1);
 });
+
+test('1220 pole and HT stay entries fill concrete breakdown, activity and reconciliation exactly once', () => {
+    const a = app('1220');
+    Object.assign(a, { selectedAugerSize: 22, stayConcretingUnitVol: 0.125, psAutoPole: true, psAutoStay: true, psAutoMuffing: true, debouncedSave() {}, showToast() {} });
+    a.poleScheduleLocations['1220'] = [{ name: 'DTC Site' }];
+    const rows = a.poleSchedules['1220'].materials;
+    const poleIndex = rows.findIndex(row => row.desc === 'RSJ 116x100, 11 m long');
+    const stayIndex = rows.findIndex(row => row.desc === 'H.T.Stay Set');
+    const totalIndex = rows.findIndex(row => a.isPoleScheduleConcreteItem(row));
+    const poleVolumeIndex = rows.findIndex(row => row.desc === '11M RSJ Pole');
+    const stayVolumeIndex = rows.findIndex(row => row.desc === 'HT Stay Set');
+    a.setPoleScheduleCellQty(0, poleIndex, 2);
+    a.setPoleScheduleCellQty(0, stayIndex, 3);
+    const values = a.poleScheduleQuantities['1220'][0];
+    const result = a.calculateLocationConcreting('1220', 0);
+    assert.equal(result.totalPoles, 2); assert.equal(result.totalStays, 3);
+    assert.equal(values[poleVolumeIndex], result.poleVol);
+    assert.equal(values[stayVolumeIndex], result.stayVol);
+    assert.equal(qty(a, '1220', '17'), result.totalVol);
+    assert.equal(qty(a, '1220', '9'), 3, 'Concrete volume must not be added to the stay assembly count');
+    assert.ok(!a.poleScheduleTransferWarnings['1220'].includes(poleVolumeIndex));
+    rows[poleVolumeIndex].itemCode = '11000336';
+    rows[poleVolumeIndex].sapItems = [{ code: '11000336', qty: 1 }];
+    assert.equal(a.getPoleScheduleRateValue(rows[poleVolumeIndex], '1220'), 0, 'Breakdown is included in the summary, not billed again');
+    let pivot = options.computed.pivotReconciliationData.call(a);
+    assert.equal(pivot.rows.find(row => row.code === '11000336').totalQty, Math.round(result.totalVol * 100) / 100);
+    a.recalculatePoleScheduleConcreting('1220');
+    assert.equal(values[totalIndex], result.totalVol, 'Repeated recalculation cannot feed output volumes back as source counts');
+    a.setPoleScheduleCellQty(0, poleIndex, 0);
+    a.setPoleScheduleCellQty(0, stayIndex, 0);
+    const cleared = a.poleScheduleQuantities['1220'][0];
+    assert.equal(cleared[poleVolumeIndex], ''); assert.equal(cleared[stayVolumeIndex], '');
+    assert.equal(cleared[totalIndex], ''); assert.equal(qty(a, '1220', '17'), '');
+});

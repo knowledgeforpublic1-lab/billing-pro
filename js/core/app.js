@@ -720,6 +720,7 @@
                         if (sched && Array.isArray(sched.materials)) {
                             sched.materials.forEach((m, mIdx) => {
                                 if (m.isSection || m.isSpan) return;
+                                if (typeof this.isPoleScheduleConcreteBreakdownItem === 'function' && this.isPoleScheduleConcreteBreakdownItem(m)) return;
                                 if (!m.sapItems || m.sapItems.length === 0) {
                                     m.sapItems = [{
                                         code: m.itemCode || '',
@@ -904,6 +905,7 @@
                             sched.materials.forEach((m, mIdx) => {
                                 if (m.isSection || m.isSpan) return;
                                 let itemTotalQty = 0;
+                                if (typeof this.isPoleScheduleConcreteBreakdownItem === 'function' && this.isPoleScheduleConcreteBreakdownItem(m)) return;
                                 for (const lIdx in qMatrix) {
                                     const raw = qMatrix[lIdx] && qMatrix[lIdx][mIdx];
                                     if (raw !== '' && raw !== null && raw !== undefined) {
@@ -931,6 +933,13 @@
                                         uom: mSapUom,
                                         qty: 1
                                     }];
+                                }
+                                // Generated concrete totals without a SAP code use
+                                // their linked activity's concrete component once.
+                                if (!m.itemCode && !sItems.some(s => s && s.code) && typeof this.isPoleScheduleConcreteItem === 'function' && this.isPoleScheduleConcreteItem(m) && typeof this.getPoleScheduleActivityLink === 'function') {
+                                    const targetNo = this.getPoleScheduleActivityLink(m, actKey);
+                                    const target = (typeof this.getPoleScheduleActivityMaterials === 'function' ? this.getPoleScheduleActivityMaterials(actKey) : []).find(row => String(row.no) === targetNo);
+                                    if (target) sItems = target.sapItems && target.sapItems.length ? target.sapItems : (target.itemCode ? [{ code: target.itemCode, desc: target.sapDescription || target.desc, uom: target.sapUom || target.unit, qty: 1 }] : []);
                                 }
 
                                 sItems.forEach(s => {
