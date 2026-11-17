@@ -1738,6 +1738,35 @@ window.SyncModule = {
                 if (parsed.selectedCompanyId) this.selectedCompanyId = parsed.selectedCompanyId;
                 if (parsed.contractorsList && Array.isArray(parsed.contractorsList) && parsed.contractorsList.length > 0) {
                     this.contractorsList = parsed.contractorsList;
+                } else if (typeof defaultContractorsList !== 'undefined') {
+                    this.contractorsList = JSON.parse(JSON.stringify(defaultContractorsList));
+                }
+
+                // Auto-hydrate missing/blank fields (PAN, GSTIN, Bank, WO) from defaultContractorsList master
+                if (typeof defaultContractorsList !== 'undefined' && Array.isArray(defaultContractorsList)) {
+                    const defMap = new Map();
+                    defaultContractorsList.forEach(def => {
+                        if (def && def.id) defMap.set(def.id, def);
+                        if (def && def.name) {
+                            defMap.set(def.name.toLowerCase().trim(), def);
+                            const clean = def.name.toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+                            if (clean) defMap.set(clean, def);
+                        }
+                    });
+                    this.contractorsList.forEach(c => {
+                        const cleanName = String(c.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+                        const def = (c.id && defMap.get(c.id)) || (c.name && defMap.get(c.name.toLowerCase().trim())) || defMap.get(cleanName);
+                        if (def) {
+                            if (!c.pan && def.pan) c.pan = def.pan;
+                            if (!c.gstin && def.gstin) c.gstin = def.gstin;
+                            if (!c.bankName && def.bankName) c.bankName = def.bankName;
+                            if (!c.bankAccountNo && def.bankAccountNo) c.bankAccountNo = def.bankAccountNo;
+                            if (!c.bankIfsc && def.bankIfsc) c.bankIfsc = def.bankIfsc;
+                            if (!c.bankAccountName && def.bankAccountName) c.bankAccountName = def.bankAccountName;
+                            if (!c.workOrderNo && def.workOrderNo) c.workOrderNo = def.workOrderNo;
+                            if (!c.workOrderDate && def.workOrderDate) c.workOrderDate = def.workOrderDate;
+                        }
+                    });
                 }
                 if (parsed.selectedContractorId) this.selectedContractorId = parsed.selectedContractorId;
                 if (parsed.pctStage1 !== undefined) this.pctStage1 = parsed.pctStage1;
@@ -1812,6 +1841,18 @@ window.SyncModule = {
                         this.invoiceData.contractorName = firm.name.startsWith('M/s') ? firm.name : `M/s ${firm.name}`;
                     } else if (this.projectMeta && this.projectMeta.contractorName) {
                         this.invoiceData.contractorName = this.projectMeta.contractorName;
+                    }
+                }
+                if (this.selectedContractorId && this.selectedContractorId !== 'custom') {
+                    const activeFirm = (this.contractorsList || []).find(c => c.id === this.selectedContractorId || (c.id && c.id.startsWith(this.selectedContractorId)));
+                    if (activeFirm && this.invoiceData) {
+                        if (!this.invoiceData.contractorPan && activeFirm.pan) this.invoiceData.contractorPan = activeFirm.pan;
+                        if (!this.invoiceData.contractorGstin && activeFirm.gstin) this.invoiceData.contractorGstin = activeFirm.gstin;
+                        if (!this.invoiceData.bankName && activeFirm.bankName) this.invoiceData.bankName = activeFirm.bankName;
+                        if (!this.invoiceData.bankAccountNo && activeFirm.bankAccountNo) this.invoiceData.bankAccountNo = activeFirm.bankAccountNo;
+                        if (!this.invoiceData.bankIfsc && activeFirm.bankIfsc) this.invoiceData.bankIfsc = activeFirm.bankIfsc;
+                        if (!this.invoiceData.bankAccountName && activeFirm.bankAccountName) this.invoiceData.bankAccountName = activeFirm.bankAccountName;
+                        if (!this.invoiceData.workOrderNo && activeFirm.workOrderNo) this.invoiceData.workOrderNo = String(activeFirm.workOrderNo);
                     }
                 }
                 // Normalize existing invoice item descriptions to "Activity [k] : ..."
