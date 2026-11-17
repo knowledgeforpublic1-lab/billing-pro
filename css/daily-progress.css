@@ -1106,11 +1106,62 @@ html .dp-segmented-tabs button.active span { color: inherit !important; }
 .dp-logins-intro, .dp-logins-actions, .dp-excel-tools { flex-wrap: wrap; }
 .dp-record-table td { overflow-wrap: anywhere; }
 .dp-excel-mobile-code, .dp-excel-scroll-hint { display: none; }
+.dp-worker-mobile-list, .sidebar-mobile-scrim { display: none; }
 
 /* ==========================================================================
    8. Mobile Navigation & Responsiveness
    ========================================================================== */
 @media (max-width: 768px) {
+    html #app .sidebar-mobile-scrim {
+        display: block;
+        position: fixed;
+        inset: 3.75rem 0 0;
+        z-index: 1100;
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 0 !important;
+        border-radius: 0;
+        padding: 0;
+    }
+    .dp-worker-desktop-list { display: none; }
+    .dp-worker-mobile-list { display: block; min-width: 0; }
+    .dp-worker-search { display: grid; gap: 6px; margin-bottom: 12px; }
+    .dp-worker-search label { font-size: 13px; font-weight: 700; color: var(--dp-text-main); }
+    .dp-worker-search small, .dp-worker-empty { color: var(--dp-text-muted); }
+    .dp-worker-search-row { display: flex; gap: 8px; min-width: 0; }
+    .dp-worker-search input { flex: 1; width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--dp-border-strong); border-radius: 8px; background: var(--dp-input-bg); color: var(--dp-text-main); }
+    .dp-worker-card { border: 1px solid var(--dp-border-strong); border-radius: 10px; background: var(--dp-card-bg); margin-bottom: 10px; overflow: hidden; }
+    html[data-theme] .daily-progress-container .dp-worker-card button.dp-worker-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 52px;
+        padding: 12px;
+        border: 0 !important;
+        border-radius: 0;
+        background: var(--dp-card-bg) !important;
+        color: var(--dp-text-main) !important;
+        text-align: left;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .dp-worker-summary > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+    .dp-worker-summary:focus-visible { outline: 2px solid var(--dp-accent-blue); outline-offset: -3px; }
+    .dp-worker-chevron { flex-shrink: 0; transition: transform 220ms ease; }
+    .dp-worker-chevron.is-open { transform: rotate(180deg); }
+    .dp-worker-expansion { display: grid; grid-template-rows: 1fr; opacity: 1; }
+    .dp-worker-expand-inner { min-height: 0; overflow: hidden; }
+    .dp-worker-detail-content { padding: 0 12px 14px; }
+    .dp-worker-fields { margin: 0; }
+    .dp-worker-fields > div { padding: 8px 0; border-top: 1px solid var(--dp-border-subtle); }
+    .dp-worker-fields dt { color: var(--dp-text-muted); font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .dp-worker-fields dd { margin: 0; color: var(--dp-text-main); font-size: 14px; overflow-wrap: anywhere; }
+    .dp-worker-card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .dp-worker-card-actions button { min-width: 0; padding: 8px; white-space: normal; }
+    .dp-worker-expand-enter-active, .dp-worker-expand-leave-active { transition: grid-template-rows 220ms ease, opacity 180ms ease; }
+    .dp-worker-expand-enter-from, .dp-worker-expand-leave-to { grid-template-rows: 0fr; opacity: 0; }
     .daily-progress-container {
         padding: 4px 6px 120px !important;
     }
@@ -1339,4 +1390,8 @@ html .dp-segmented-tabs button.active span { color: inherit !important; }
     .dp-excel-sheet-table th.st-issue, .dp-excel-sheet-table td.st-issue { position: static; left: auto; }
     .dp-excel-sheet-table thead th.st-unit, .dp-excel-sheet-table thead th.st-issue { position: sticky; left: auto; z-index: 5; }
     .dp-excel-mobile-code { display: block; margin-top: 4px; font-size: 11px; color: var(--dp-text-muted); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dp-worker-expand-enter-active, .dp-worker-expand-leave-active, .dp-worker-chevron { transition: none; }
 }

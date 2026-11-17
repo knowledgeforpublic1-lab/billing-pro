@@ -104,7 +104,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261117_admin_mobile_theme_v9">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261117_mobile_users_v10">
 </head>
 
 <body>
@@ -294,7 +294,7 @@
                     <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin Elevated (5 Min)' : 'Portal Active'"></span>
                     <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN {{ formatTimerDisplay(adminElevatedSecondsLeft) }}</span>
                 </span>
-                <button type="button" class="btn btn-secondary sidebar-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Show Sidebar Menu (☰)' : 'Hide Sidebar Menu (◀)'" style="padding: 4px 8px; font-size: 0.74rem; font-weight: 700; margin-right: 4px;">{{ sidebarCollapsed ? '☰ Menu' : '◀ Hide' }}</button>
+                <button type="button" class="btn btn-secondary sidebar-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" aria-controls="main-sidebar" :title="sidebarCollapsed ? 'Show Sidebar Menu (☰)' : 'Hide Sidebar Menu (◀)'" style="padding: 4px 8px; font-size: 0.74rem; font-weight: 700; margin-right: 4px;">{{ sidebarCollapsed ? '☰ Menu' : '◀ Hide' }}</button>
                 <button v-if="isPortalUnlocked" type="button" class="btn btn-secondary portal-logout-btn" :disabled="authBusy" @click="logoutPortal" title="Save current work and log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h10"/></svg><span>{{ authBusy ? 'Please wait…' : 'Logout' }}</span></button>
             </div>
         </div>
@@ -305,7 +305,8 @@
         <div class="frame">
 
             <!-- SAP Left Sidebar -->
-            <aside class="sidebar no-print" :class="{ 'collapsed': sidebarCollapsed }" v-show="!sidebarCollapsed">
+            <button v-if="!sidebarCollapsed" type="button" class="sidebar-mobile-scrim no-print" aria-label="Close navigation menu" @click="sidebarCollapsed = true"></button>
+            <aside id="main-sidebar" class="sidebar no-print" :class="{ 'collapsed': sidebarCollapsed }" v-show="!sidebarCollapsed" @click="closeMobileSidebar($event)" @keydown.esc="sidebarCollapsed = true">
                 <div class="sidebar-collapse-bar" style="padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2);">
                     <span style="font-size: 0.65rem; font-weight: 800; color: #888; text-transform: uppercase;">NAVIGATION</span>
                     <button type="button" @click="sidebarCollapsed = true" class="tbtn sidebar-hide-btn" title="Hide Left Menu (Full Screen Width)" style="padding: 2px 6px; font-size: 0.68rem; font-weight: 700;">◀ Hide</button>
@@ -2247,7 +2248,45 @@
                             <h2><span>01</span> Registered Site Logins ({{ dailyProgressWorkers.length }})</h2>
                             <span style="font-size: 0.72rem; color: var(--text-muted);">Jo log share link se entry kar sakte hain</span>
                         </div>
-                        <div class="dp-table-wrap">
+                        <div class="dp-worker-mobile-list">
+                            <div class="dp-worker-search">
+                                <label for="dp-user-search">Search users</label>
+                                <div class="dp-worker-search-row">
+                                    <input id="dp-user-search" type="search" v-model="dailyProgressUserSearch" placeholder="Name, mobile, email or username...">
+                                    <button v-if="dailyProgressUserSearch" type="button" class="btn btn-secondary" @click="dailyProgressUserSearch = ''">Clear</button>
+                                </div>
+                                <small role="status">{{ dailyProgressVisibleWorkers.length }} of {{ dailyProgressWorkers.length }} users</small>
+                            </div>
+                            <article v-for="user in dailyProgressVisibleWorkers" :key="user.id || user.username" class="dp-worker-card">
+                                <button type="button" class="dp-worker-summary" :id="'dp-worker-toggle-' + (user.id || user.username)" :aria-expanded="isDailyProgressWorkerExpanded(user)" :aria-controls="'dp-worker-details-' + (user.id || user.username)" @click="toggleDailyProgressWorker(user)">
+                                    <span>{{ user.name || user.username }}</span>
+                                    <span class="dp-worker-chevron" :class="{ 'is-open': isDailyProgressWorkerExpanded(user) }" aria-hidden="true">⌄</span>
+                                </button>
+                                <transition name="dp-worker-expand">
+                                    <div v-if="isDailyProgressWorkerExpanded(user)" class="dp-worker-expansion" :id="'dp-worker-details-' + (user.id || user.username)">
+                                        <div class="dp-worker-expand-inner">
+                                            <div class="dp-worker-detail-content">
+                                                <dl class="dp-worker-fields">
+                                                    <div><dt>Email</dt><dd>{{ user.email || '—' }}</dd></div>
+                                                    <div><dt>Mobile</dt><dd>{{ user.mobile || '—' }}</dd></div>
+                                                    <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
+                                                    <div><dt>Contractors</dt><dd>{{ (user.contractorIds || []).some(id => id === '*' || id === 'all') ? 'All contractors' : ((user.contractorIds || []).map(id => (dailyProgressWorkerContractors.find(c => c.id === id) || dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') || 'No contractors assigned') }}</dd></div>
+                                                    <div><dt>Status</dt><dd>{{ user.disabled ? 'Disabled' : 'Active' }}</dd></div>
+                                                </dl>
+                                                <div class="dp-worker-card-actions">
+                                                    <button type="button" class="btn btn-primary" @click="assignDailyProgressWorker(user)">Assign Contractors</button>
+                                                    <button type="button" class="btn btn-secondary" @click="resetDailyProgressWorker(user)">Reset Password</button>
+                                                    <button v-if="!user.disabled" type="button" class="btn btn-secondary" @click="disableDailyProgressWorker(user)">Disable</button>
+                                                    <button type="button" class="tbtn danger" @click="deleteDailyProgressWorker(user)">Delete User</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </article>
+                            <p v-if="!dailyProgressVisibleWorkers.length" class="dp-worker-empty">{{ dailyProgressWorkers.length ? 'No users match your search.' : 'No site users yet. Add a worker login to get started.' }}</p>
+                        </div>
+                        <div class="dp-table-wrap dp-worker-desktop-list">
                             <table class="dp-table dp-record-table dp-worker-table">
                                 <thead>
                                     <tr>
@@ -4910,7 +4949,7 @@
     <script defer src="js/core/storage.js?v=20261114_safe_storage"></script>
 
     <!-- Utility Modules -->
-    <script defer src="js/utils.js?v=20261117_error_notifications"></script>
+    <script defer src="js/utils.js?v=20261117_mobile_users_v10"></script>
     <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
@@ -4931,9 +4970,9 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/daily-progress.js?v=20261117_share_sync_v7"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_multi_contractors_v8"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_mobile_users_v10"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_multi_contractors_v8"></script>
+    <script defer src="js/core/app.js?v=20261117_mobile_users_v10"></script>
 </body>
 
 </html>

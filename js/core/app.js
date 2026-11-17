@@ -445,6 +445,8 @@
                 dailyProgressAudit: [],
                 dailyProgressWorkerPanel: false,
                 dailyProgressWorkers: [],
+                dailyProgressUserSearch: '',
+                dailyProgressWorkerExpanded: {},
                 dailyProgressWorkerContractors: [],
                 dailyProgressWorkerSearch: '',
                 dailyProgressWorkerForm: { name: '', username: '', password: '', contractorIds: [], reset: false },
@@ -1293,6 +1295,9 @@
                 const q = String(this.dailyProgressWorkerSearch || '').trim().toLowerCase();
                 const list = this.dailyProgressWorkerContractors.length ? this.dailyProgressWorkerContractors : this.dailyProgressContractors;
                 return list.filter(c => !q || (c.name + ' ' + c.id).toLowerCase().includes(q));
+            },
+            dailyProgressVisibleWorkers() {
+                return this.filterDailyProgressWorkers(this.dailyProgressWorkers, this.dailyProgressUserSearch);
             },
             dailyProgressCurrentShareUrl() {
                 const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
@@ -2273,7 +2278,7 @@
             pctStage2() { this.debouncedSave(); },
             pctStage3() { this.debouncedSave(); },
             isFinalized() { this.saveToStorage(); },
-            currentView: { flush: 'sync', handler(v) { try { localStorage.setItem('billing_current_view', v); } catch(e) {} this.closeRecoColumnFilter(); this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); } },
+            currentView: { flush: 'sync', handler(v) { try { localStorage.setItem('billing_current_view', v); } catch(e) {} if (typeof this.closeMobileSidebar === 'function') this.closeMobileSidebar(); this.closeRecoColumnFilter(); this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } }); } },
             poleScheduleSubTab(v) {
                 try { localStorage.setItem('billing_pole_schedule_subtab', v || 'schedule'); } catch(e) {}
                 this.$nextTick(() => { try { this.updateAlvFiller(); } catch (e) { } });
@@ -2299,10 +2304,15 @@
         async mounted() {
             this.applyTheme();
             this.sidebarCollapsed = window.matchMedia('(max-width: 768px)').matches;
+            this._sidebarWasMobile = this.sidebarCollapsed;
             try { localStorage.removeItem('lk_billing_reverse_entry'); } catch(e) {}
             try {
                 this._alvSchedule = () => {
-                    if (!window.matchMedia('(max-width: 768px)').matches) {
+                    const mobile = window.matchMedia('(max-width: 768px)').matches;
+                    if (mobile !== this._sidebarWasMobile) {
+                        this.sidebarCollapsed = mobile;
+                        this._sidebarWasMobile = mobile;
+                    } else if (!mobile) {
                         this.sidebarCollapsed = false;
                     }
                     if (this._alvRaf) return;

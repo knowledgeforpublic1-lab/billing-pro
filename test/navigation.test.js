@@ -18,3 +18,17 @@ assert.equal(vm.runInNewContext(init, context),'907','Reload restores the select
 saved.set('billing_selected_activity_key','CUSTOM');
 assert.equal(vm.runInNewContext(init, context),'CUSTOM','Saved custom sheets survive before cloud activities load');
 console.log('Navigation: immediate view/activity/pole selection persistence and refresh restore passed.');
+
+const mobileContext = { window: { matchMedia: () => ({ matches: true }) } };
+vm.runInNewContext(fs.readFileSync('js/utils.js', 'utf8'), mobileContext);
+const closeMenu = mobileContext.window.UtilsModule.closeMobileSidebar;
+const mobileApp = { sidebarCollapsed: false };
+closeMenu.call(mobileApp, { target: { closest: () => ({ tagName: 'A' }) } });
+assert.equal(mobileApp.sidebarCollapsed, true, 'Selecting any navigation item closes the mobile drawer');
+mobileApp.sidebarCollapsed = false;
+closeMenu.call(mobileApp, { target: { closest: () => null } });
+assert.equal(mobileApp.sidebarCollapsed, false, 'Clicks inside non-navigation drawer content do not close it');
+mobileContext.window.matchMedia = () => ({ matches: false });
+closeMenu.call(mobileApp);
+assert.equal(mobileApp.sidebarCollapsed, false, 'Desktop navigation stays visible');
+console.log('Mobile drawer: navigation closes it without changing desktop behavior.');

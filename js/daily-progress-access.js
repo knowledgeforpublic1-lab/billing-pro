@@ -16,6 +16,33 @@
             if (!value || isNaN(Date.parse(value))) return '—';
             return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) + ' IST';
         },
+        filterDailyProgressWorkers(workers, search) {
+            const query = String(search || '').trim().toLowerCase();
+            return (workers || []).filter(user => !query || [user.name, user.username, user.email, user.mobile].some(value => String(value || '').toLowerCase().includes(query)));
+        },
+        isDailyProgressWorkerExpanded(user) {
+            const key = user.id || user.username;
+            const expanded = this.dailyProgressWorkerExpanded || {};
+            if (Object.prototype.hasOwnProperty.call(expanded, key)) return expanded[key];
+            return (this.dailyProgressWorkers || []).length <= 3;
+        },
+        toggleDailyProgressWorker(user) {
+            const key = user.id || user.username;
+            const next = !this.isDailyProgressWorkerExpanded(user);
+            const expanded = (this.dailyProgressWorkers || []).length > 3 ? {} : this.dailyProgressWorkerExpanded || {};
+            this.dailyProgressWorkerExpanded = { ...expanded, [key]: next };
+        },
+        collapseDailyProgressWorker(username) {
+            const user = (this.dailyProgressWorkers || []).find(row => row.username === username);
+            const key = user && (user.id || user.username) || username;
+            if (!key) return;
+            this.dailyProgressWorkerExpanded = { ...(this.dailyProgressWorkerExpanded || {}), [key]: false };
+            if (typeof this.$nextTick === 'function') this.$nextTick(() => {
+                if (typeof document === 'undefined') return;
+                const trigger = document.getElementById('dp-worker-toggle-' + key);
+                if (trigger && trigger.offsetParent !== null) trigger.focus({ preventScroll: true });
+            });
+        },
         openDailyProgressLoginsTab() {
             this.dailyProgressTab = 'logins';
             return this.runDailyProgressAdmin(async () => {
@@ -53,6 +80,7 @@
                 this.dailyProgressModal = '';
                 this.dailyProgressWorkerForm = { name: '', email: '', mobile: '', username: '', password: '', contractorIds: [this.dailyProgressContractorId], reset: false };
                 await this.loadDailyProgressLoginsAndHistory();
+                this.collapseDailyProgressWorker(form.username);
                 this.showToast(form.permissionsOnly ? 'Contractors updated. User Refresh Contractors dabakar nayi list dekh sakta hai.' : 'Worker login saved.', 'Check');
             });
         },
@@ -83,6 +111,7 @@
                 if (!confirm(user.name + ' ka login disable karein?')) return;
                 await this.dailyProgressRequest('workers/disable', { username: user.username });
                 await this.loadDailyProgressLoginsAndHistory();
+                this.collapseDailyProgressWorker(user.username);
             });
         },
         deleteDailyProgressWorker(user) {

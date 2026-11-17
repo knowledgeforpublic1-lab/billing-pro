@@ -305,3 +305,37 @@ test('admin assignment form sends only username and contractor IDs, without pass
     assert.deepEqual(Object.keys(calls[0].body).sort(), ['contractorIds', 'username']);
     assert.equal(calls[0].body.contractorIds.length, 6);
 });
+
+test('mobile user cards expand small lists, keep large lists compact and close only after a confirmed save', async () => {
+    const context = { window: { DailyProgressModule: {} } };
+    vm.runInNewContext(fs.readFileSync('js/daily-progress-access.js', 'utf8'), context);
+    const users = Array.from({ length: 50 }, (_, i) => ({ id: 'user-' + i, username: 'worker_' + i, name: i === 37 ? 'Rakesh Site Supervisor' : 'Site User ' + i, email: 'user' + i + '@example.com', mobile: '987654' + String(i).padStart(4, '0'), contractorIds: ['a'] }));
+    let fail = false;
+    const admin = { ...context.window.DailyProgressModule, dailyProgressWorkers: users.slice(0, 2), dailyProgressWorkerExpanded: {},
+        runDailyProgressAdmin: fn => fn(), showToast() {}, async loadDailyProgressLoginsAndHistory() {},
+        async dailyProgressRequest() { if (fail) throw new Error('Save unavailable'); }
+    };
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[0]), true);
+    admin.toggleDailyProgressWorker(users[0]);
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[0]), false);
+    admin.dailyProgressWorkers = users;
+    admin.dailyProgressWorkerExpanded = {};
+    assert.equal(users.some(user => admin.isDailyProgressWorkerExpanded(user)), false);
+    assert.equal(admin.filterDailyProgressWorkers(users, '  RAKESH  ')[0].id, 'user-37');
+    assert.equal(admin.filterDailyProgressWorkers(users, 'user49@example.com')[0].id, 'user-49');
+    assert.equal(admin.filterDailyProgressWorkers(users, 'not a user').length, 0);
+    assert.equal(admin.filterDailyProgressWorkers(users, '').length, 50);
+    admin.toggleDailyProgressWorker(users[37]);
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[37]), true);
+    admin.toggleDailyProgressWorker(users[49]);
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[37]), false, 'Large lists show one expanded user at a time');
+    admin.assignDailyProgressWorker(users[49]);
+    fail = true;
+    await assert.rejects(admin.saveDailyProgressWorker(), /Save unavailable/);
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[49]), true, 'Failed save keeps the user details open');
+    assert.equal(admin.dailyProgressModal, 'worker');
+    fail = false;
+    await admin.saveDailyProgressWorker();
+    assert.equal(admin.isDailyProgressWorkerExpanded(users[49]), false);
+    assert.equal(admin.dailyProgressModal, '');
+});

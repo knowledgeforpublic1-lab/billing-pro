@@ -356,7 +356,12 @@ window.UtilsModule = {
                     try { localStorage.removeItem('billing_pref_desktop'); } catch (e) {}
                     window.location.href = '/mobile.html?billId=' + encodeURIComponent(this.activeBillId || 'latest');
                 },
+                closeMobileSidebar(event) {
+                    if (event && !event.target?.closest?.('a')) return;
+                    if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches) this.sidebarCollapsed = true;
+                },
                 switchView(viewName) {
+                    this.closeMobileSidebar();
                     if (viewName === 'taxInvoice') viewName = 'invoice';
                     if (viewName === 'mapping' && typeof this.checkAdminElevated === 'function' && !this.isAdminElevated) {
                         this.checkAdminElevated(() => this.switchView('mapping'));
