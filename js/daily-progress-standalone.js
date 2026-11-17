@@ -106,8 +106,19 @@
                 showAddIssueModal: false,
                 newContractorForm: { name: '', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' },
                 newIssueForm: { date: getTodayStr(), itemId: '', quantity: '', reference: '' },
-                exportFrom: '2026-09-01',
-                exportTo: getTodayStr(),
+                exportFrom: (function() {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    return `${y}-${m}-01`;
+                })(),
+                exportTo: (function() {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+                    return `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+                })(),
                 exportFilter: 'active',
                 exportSearch: '',
                 contractorDropdownOpen: false,
@@ -219,6 +230,13 @@
         },
 
         watch: {
+            currentTab(newTab) {
+                if (newTab === 'download') {
+                    if (!this.exportFrom || this.exportFrom.startsWith('2026-09')) {
+                        this.setExportRange('current_month');
+                    }
+                }
+            },
             selectedContractorId() {
                 this.ensureStock().then(() => this.loadReportForActiveDate());
             },
@@ -899,17 +917,29 @@
                 });
             },
 
+            openExportTab() {
+                this.setExportRange('current_month');
+                this.currentTab = 'download';
+            },
+
             setExportRange(rangeType) {
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
-                if (rangeType === 'sep2026') {
-                    this.exportFrom = '2026-09-01';
-                    this.exportTo = '2026-09-30';
-                } else if (rangeType === 'current_month') {
+                if (rangeType === 'current_month' || rangeType === 'this_month') {
                     const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
                     this.exportFrom = `${year}-${month}-01`;
                     this.exportTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+                } else if (rangeType === 'prev_month') {
+                    const prev = new Date(year, now.getMonth() - 1, 1);
+                    const pYear = prev.getFullYear();
+                    const pMonth = String(prev.getMonth() + 1).padStart(2, '0');
+                    const pLastDay = new Date(pYear, prev.getMonth() + 1, 0).getDate();
+                    this.exportFrom = `${pYear}-${pMonth}-01`;
+                    this.exportTo = `${pYear}-${pMonth}-${String(pLastDay).padStart(2, '0')}`;
+                } else if (rangeType === 'sep2026') {
+                    this.exportFrom = '2026-09-01';
+                    this.exportTo = '2026-09-30';
                 } else if (rangeType === 'last30') {
                     const d30 = new Date();
                     d30.setDate(d30.getDate() - 29);

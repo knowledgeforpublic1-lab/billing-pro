@@ -44,7 +44,7 @@
                     <span>📋</span><span>Report History</span>
                     <span class="active-dot" style="background:#64748b;" v-if="contractorReports.length"></span>
                 </button>
-                <button type="button" :class="{ active: currentTab === 'download' }" @click="currentTab = 'download'">
+                <button type="button" :class="{ active: currentTab === 'download' }" @click="openExportTab()">
                     <span>📥</span><span>Download Excel</span>
                     <span v-if="currentTab === 'download'" class="active-dot"></span>
                 </button>
@@ -437,9 +437,10 @@
                                     <input type="date" v-model="exportTo" title="End Date">
                                 </div>
                                 <div class="dp-excel-quick-ranges">
-                                    <button type="button" @click="setExportRange('sep2026')" title="September 2026">Sep 2026</button>
                                     <button type="button" @click="setExportRange('current_month')" title="Current Month">This Month</button>
+                                    <button type="button" @click="setExportRange('prev_month')" title="Previous Month">Prev Month</button>
                                     <button type="button" @click="setExportRange('last30')" title="Last 30 Days">Last 30 Days</button>
+                                    <button type="button" @click="setExportRange('sep2026')" title="September 2026">Sep 2026</button>
                                 </div>
                             </div>
 
@@ -811,7 +812,7 @@
                 <span class="mb-ico">📋</span>
                 <span class="mb-lbl">History</span>
             </button>
-            <button type="button" :class="{ active: currentTab === 'download' }" @click="currentTab = 'download'">
+            <button type="button" :class="{ active: currentTab === 'download' }" @click="openExportTab()">
                 <span class="mb-ico">📥</span>
                 <span class="mb-lbl">Excel</span>
             </button>
@@ -826,7 +827,7 @@
     <script src="js/data/default-sap-contractor-mapping.js?v=20261116"></script>
     <script src="js/data/contractor-sap-issues.js?v=20261116"></script>
     <script src="js/daily-worker-auth.js?v=20261117_worker_signup_v1"></script>
-    <script src="js/daily-progress-standalone.js?v=20261117_stock_matching_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261117_export_current_month_v1"></script>
 </body>
 
 </html>

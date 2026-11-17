@@ -468,8 +468,19 @@
                 dailyProgressShareSearch: '',
                 dailyProgressShareSelectedContractor: null,
                 dailyProgressShareDate: '',
-                dailyProgressExportFrom: '2026-09-01',
-                dailyProgressExportTo: '2026-09-30',
+                dailyProgressExportFrom: (function() {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    return `${y}-${m}-01`;
+                })(),
+                dailyProgressExportTo: (function() {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+                    return `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+                })(),
                 dailyProgressExportFilter: 'active',
                 dailyProgressExportSearch: '',
                 dailyProgressNewIssue: { date: '', itemId: '15', quantity: '', reference: '' },
@@ -2201,6 +2212,13 @@
         },
 
         watch: {
+            dailyProgressTab(newTab) {
+                if (newTab === 'download' && typeof this.setDailyProgressExportRange === 'function') {
+                    if (!this.dailyProgressExportFrom || this.dailyProgressExportFrom.startsWith('2026-09')) {
+                        this.setDailyProgressExportRange('current_month');
+                    }
+                }
+            },
             selectedContractorId: {
                 flush: 'sync',
                 handler() {

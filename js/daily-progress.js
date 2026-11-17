@@ -14,9 +14,8 @@ window.DailyProgressModule = {
         if (!this.dailyProgressDate) {
             this.dailyProgressDate = this.todayDateStr || new Date().toISOString().slice(0, 10);
         }
-        if (!this.dailyProgressExportFrom) {
-            this.dailyProgressExportFrom = '2026-09-01';
-            this.dailyProgressExportTo = '2026-09-30';
+        if (!this.dailyProgressExportFrom || this.dailyProgressExportFrom.startsWith('2026-09')) {
+            this.setDailyProgressExportRange('current_month');
         }
 
         let stored = null;
@@ -840,17 +839,29 @@ window.DailyProgressModule = {
         });
     },
 
+    openDailyProgressExportTab() {
+        this.setDailyProgressExportRange('current_month');
+        this.dailyProgressTab = 'download';
+    },
+
     setDailyProgressExportRange(rangeType) {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
-        if (rangeType === 'sep2026') {
-            this.dailyProgressExportFrom = '2026-09-01';
-            this.dailyProgressExportTo = '2026-09-30';
-        } else if (rangeType === 'current_month') {
+        if (rangeType === 'current_month' || rangeType === 'this_month') {
             const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
             this.dailyProgressExportFrom = `${year}-${month}-01`;
             this.dailyProgressExportTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+        } else if (rangeType === 'prev_month') {
+            const prev = new Date(year, now.getMonth() - 1, 1);
+            const pYear = prev.getFullYear();
+            const pMonth = String(prev.getMonth() + 1).padStart(2, '0');
+            const pLastDay = new Date(pYear, prev.getMonth() + 1, 0).getDate();
+            this.dailyProgressExportFrom = `${pYear}-${pMonth}-01`;
+            this.dailyProgressExportTo = `${pYear}-${pMonth}-${String(pLastDay).padStart(2, '0')}`;
+        } else if (rangeType === 'sep2026') {
+            this.dailyProgressExportFrom = '2026-09-01';
+            this.dailyProgressExportTo = '2026-09-30';
         } else if (rangeType === 'last7') {
             const d7 = new Date();
             d7.setDate(d7.getDate() - 6);

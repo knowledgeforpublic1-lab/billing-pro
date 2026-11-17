@@ -80,17 +80,20 @@
         },
         openContractorMonthlySheet(contractorId, targetDate) {
             this.dailyProgressContractorId = contractorId;
-            const dt = targetDate || this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const curLastDay = new Date(curYear, now.getMonth() + 1, 0).getDate();
+
+            // Always open current month sheet as requested
+            this.dailyProgressExportFrom = `${curYear}-${curMonth}-01`;
+            this.dailyProgressExportTo = `${curYear}-${curMonth}-${String(curLastDay).padStart(2, '0')}`;
+
+            const dt = targetDate || this.dailyProgressDate || `${curYear}-${curMonth}-${String(now.getDate()).padStart(2, '0')}`;
             this.dailyProgressDate = dt;
             if (typeof this.loadDailyProgressReportForDate === 'function') {
                 this.loadDailyProgressReportForDate(dt);
             }
-            // Set export range for that target date's month
-            const year = parseInt(dt.slice(0, 4), 10);
-            const month = parseInt(dt.slice(5, 7), 10);
-            const lastDay = new Date(year, month, 0).getDate();
-            this.dailyProgressExportFrom = dt.slice(0, 7) + '-01';
-            this.dailyProgressExportTo = dt.slice(0, 7) + '-' + String(lastDay).padStart(2, '0');
             // Switch to download / export sheet view
             this.dailyProgressTab = 'download';
         },

@@ -570,7 +570,7 @@
                                 <span>📋</span><span>History</span>
                                 <span v-if="dailyProgressReports.length" class="dp-pill-badge" style="font-size: 0.62rem; margin-left: 2px;">{{ dailyProgressReports.length }}</span>
                             </button>
-                            <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="dailyProgressTab = 'download'" title="Download Excel Reports" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                            <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="openDailyProgressExportTab()" title="Download Excel Reports" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
                                 <span>📥</span><span>Export</span>
                             </button>
                         </div>
@@ -2399,9 +2399,10 @@
                                     <input type="date" v-model="dailyProgressExportTo" title="End Date">
                                 </div>
                                 <div class="dp-excel-quick-ranges">
-                                    <button type="button" @click="setDailyProgressExportRange('sep2026')" title="September 2026">Sep 2026</button>
                                     <button type="button" @click="setDailyProgressExportRange('current_month')" title="Current Month">This Month</button>
+                                    <button type="button" @click="setDailyProgressExportRange('prev_month')" title="Previous Month">Prev Month</button>
                                     <button type="button" @click="setDailyProgressExportRange('last30')" title="Last 30 Days">Last 30 Days</button>
+                                    <button type="button" @click="setDailyProgressExportRange('sep2026')" title="September 2026">Sep 2026</button>
                                 </div>
                             </div>
 
@@ -2786,7 +2787,7 @@
                         <span class="dp-mn-ico">📋</span>
                         <span class="dp-mn-text">History</span>
                     </button>
-                    <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="dailyProgressTab = 'download'">
+                    <button type="button" :class="{ active: dailyProgressTab === 'download' }" @click="openDailyProgressExportTab()">
                         <span class="dp-mn-ico">📥</span>
                         <span class="dp-mn-text">Download</span>
                     </button>
@@ -4914,10 +4915,10 @@
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
-    <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_entered_contractors_v1"></script>
+    <script defer src="js/daily-progress.js?v=20261117_export_current_month_v1"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_export_current_month_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_entered_contractors_v1"></script>
+    <script defer src="js/core/app.js?v=20261117_export_current_month_v1"></script>
 </body>
 
 </html>
