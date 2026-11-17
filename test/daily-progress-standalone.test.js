@@ -312,3 +312,80 @@ test('Logged-out share link loads contractor name and net issue from the public 
     const stock = mountedApp.getItemStock(mountedApp.items[0]);
     assert.equal(stock.totalIssued, 90, 'Net Issue loads without login and respects work date');
 });
+
+test('Contractor work order chooses the correct stock block and exact ids isolate reports', async () => {
+    let mountedApp = null;
+    const sandbox = {
+        window: {
+            location: { search: '?contractor=intally_dynamix_private_limited&date=2026-11-16', origin: 'https://billing-pro.local' },
+            DailyProgressSeed: {
+                contractor: { id: 'intally_dynamix_private_limited', name: 'Intally Dynamix Private Limited' },
+                items: [{ id: '1', code: '17005037', name: 'RSJ POLE', unit: 'NO', row: 18 }],
+                records: []
+            },
+            DefaultContractors: [
+                { id: 'intally_dynamix_private_limited', name: 'Intally Dynamix Private Limited', workOrderNo: '31006105' },
+                { id: 'anjali_electrical', name: 'ANJALI ELECTRICAL' },
+                { id: 'anjali_electricals', name: 'ANJALI ELECTRICALS' }
+            ],
+            DefaultSapContractorMapping: {
+                groups: {
+                    intallydynamix: { displayName: 'INTALLY DYNAMIX', wos: ['31006105'], rawNorms: ['intallydynamix'] },
+                    intallydynamixprivatelimited: { displayName: 'Intally Dynamix Private Limited', wos: ['31007558'], rawNorms: ['intallydynamixprivatelimited'] }
+                }
+            },
+            ContractorSapStock: {
+                byContractorNorm: {
+                    intallydynamixprivatelimited: {
+                        contractorName: 'Intally Dynamix Private Limited',
+                        docHeader: '31007558',
+                        allWorkOrders: ['31007558'],
+                        materials: { '17005037': { txns: [['2026-11-15', 999, 0]] } }
+                    },
+                    intallydynamix: {
+                        contractorName: 'INTALLY DYNAMOX',
+                        docHeader: '31006105',
+                        allWorkOrders: ['31006105'],
+                        materials: { '17005037': { txns: [['2026-11-15', 100, 10]] } }
+                    }
+                }
+            }
+        },
+        document: { getElementById() { return {}; } },
+        localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
+        navigator: { clipboard: { writeText: async () => {} } },
+        fetch: async () => ({ ok: true, json: async () => ({ success: true, data: null }) }),
+        URLSearchParams: require('url').URLSearchParams,
+        Intl, Date, Math, Number, String, Array, Object, Map, Set, clearTimeout, setTimeout, console
+    };
+
+    sandbox.Vue = {
+        createApp(options) {
+            mountedApp = Object.assign({}, options.data(), options.methods, { $computed: options.computed });
+            for (const [k, fn] of Object.entries(options.computed)) {
+                Object.defineProperty(mountedApp, k, { get() { return fn.call(mountedApp); } });
+            }
+            return { mount() {} };
+        }
+    };
+
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/daily-progress-standalone.js'), 'utf8'), sandbox);
+    await mountedApp.initData();
+
+    const stock = mountedApp.getItemStock(mountedApp.items[0]);
+    assert.equal(stock.totalIssued, 90, 'Master work order 31006105 wins over same-name block 31007558');
+    assert.equal(mountedApp.findContractorStockBlocks(mountedApp.activeContractor).length, 1, 'Only one work-order block is selected');
+
+    mountedApp.reports = [
+        { contractorId: 'anjali_electricals', date: '2026-11-16', quantities: { 1: 77 }, version: 1 },
+        { contractorId: 'anjali_electrical', date: '2026-11-16', quantities: { 1: 5 }, version: 1 }
+    ];
+    mountedApp.selectedContractorId = 'anjali_electrical';
+    mountedApp.loadReportForActiveDate();
+    assert.equal(mountedApp.quantities['1'], 5, 'Similar contractor name does not load another contractor report');
+
+    mountedApp.onQuantityInput('1', 6);
+    await mountedApp.saveProgress();
+    assert.equal(mountedApp.reports.find(r => r.contractorId === 'anjali_electricals').quantities['1'], 77, 'Other contractor report remains untouched');
+    assert.equal(mountedApp.reports.find(r => r.contractorId === 'anjali_electrical').quantities['1'], 6, 'Exact contractor report is updated');
+});

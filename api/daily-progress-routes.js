@@ -17,6 +17,7 @@ function loadScript(file, globalName) {
     return sandbox.window[globalName];
 }
 let publicContractorsCache = null;
+let contractorDirectoryCache = null;
 let stockCache = null;
 let mappingCache = null;
 function publicContractors() {
@@ -50,42 +51,30 @@ function sapMapping() {
     return mappingCache;
 }
 
-const STOCK_STOP_PATTERNS = [
-    'enterprise', 'enterprises', 'eterprise', 'enterpeises', 'enterises',
-    'electrical', 'electricals', 'electric',
-    'contractor', 'contractors', 'cont',
-    'infra', 'infrastructure', 'infrastucture',
-    'project', 'projects',
-    'construction', 'constructions', 'const',
-    'corporation', 'corp', 'co', 'company',
-    'engineering', 'engg', 'engineer', 'engineers',
-    'service', 'services', 'multiservice', 'multiservices',
-    'solution', 'solutions',
-    'agency', 'agencies',
-    'associates', 'associate',
-    'private', 'limited', 'pvt', 'ltd',
-    'thekedar', 'thekdar',
-    'workshop', 'works', 'work',
-    'and', 'm/s', 'ms'
-];
-
-function isStockStopWord(w) {
-    const c = normId(w);
-    if (!c || c.length < 3) return true;
-    return STOCK_STOP_PATTERNS.some(p => c === p || c.startsWith(p) || p.startsWith(c));
+function splitWorkOrders(value) {
+    const raw = Array.isArray(value) ? value : [value];
+    return [...new Set(raw.flatMap(v => String(v || '').split(/[,/|;]+/))
+        .map(v => v.trim())
+        .filter(Boolean))];
 }
 
-function getDistinctiveTokens(name) {
-    return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ')
-        .split(/\s+/).map(normId).filter(w => !isStockStopWord(w) && w.length >= 3);
+function stockBlockWorkOrders(block) {
+    if (!block) return [];
+    return splitWorkOrders([block.allWorkOrders, block.workOrders, block.docHeader]);
 }
 
-function normStem(v) {
-    if (!v) return '';
-    return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
-        .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
-        .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
-        .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
+function contractorDirectory() {
+    if (contractorDirectoryCache) return contractorDirectoryCache;
+    const raw = loadScript('default-contractors.js', 'defaultContractorsList') || loadScript('default-contractors.js', 'DefaultContractors') || [];
+    contractorDirectoryCache = raw.map(c => ({
+        id: String((c && (c.id || c.name)) || '').trim(),
+        name: String((c && (c.name || c.firmName)) || '').trim(),
+        workOrderNo: (c && c.workOrderNo) || '',
+        workOrderNumbers: (c && c.workOrderNumbers) || '',
+        workOrders: (c && c.workOrders) || '',
+        allWorkOrders: (c && c.allWorkOrders) || ''
+    })).filter(c => c.id || c.name);
+    return contractorDirectoryCache;
 }
 
 function stockKeysForQuery(query) {
@@ -103,64 +92,40 @@ function stockKeysForQuery(query) {
     }
     const qNorms = [...new Set(candidateNames.map(normId).filter(n => n.length >= 2))];
 
+    const directoryMatch = contractorDirectory().find(item => qNorms.includes(normId(item.id)) || qNorms.includes(normId(item.name)));
+    const desiredWos = splitWorkOrders(directoryMatch ? [
+        directoryMatch.workOrderNo,
+        directoryMatch.workOrderNumbers,
+        directoryMatch.workOrders,
+        directoryMatch.allWorkOrders
+    ] : []);
+    const matchesDesiredWorkOrder = block => {
+        if (!desiredWos.length) return true;
+        const blockWos = stockBlockWorkOrders(block);
+        if (!blockWos.length) return true;
+        return blockWos.some(wo => desiredWos.includes(wo));
+    };
+
     const keys = new Set();
     for (const q of qNorms) {
-        if (byNorm[q]) keys.add(q);
+        if (byNorm[q] && matchesDesiredWorkOrder(byNorm[q])) keys.add(q);
     }
 
     const groups = (mapping && mapping.groups) || {};
     for (const [gKey, group] of Object.entries(groups)) {
         const names = [gKey, group && group.displayName, ...((group && group.rawNorms) || [])].map(normId).filter(Boolean);
-        if (names.some(n => qNorms.includes(n))) {
-            const wos = (group && group.wos) || [];
-            for (const [key, block] of Object.entries(byNorm)) {
-                if (names.includes(key) || (block && block.docHeader && wos.includes(block.docHeader))) keys.add(key);
-            }
+        const groupWos = splitWorkOrders((group && group.wos) || []);
+        const matchesGroup = names.some(n => qNorms.includes(n)) || groupWos.some(wo => desiredWos.includes(wo));
+        if (!matchesGroup) continue;
+        for (const [key, block] of Object.entries(byNorm)) {
+            const blockWos = stockBlockWorkOrders(block);
+            if ((names.includes(key) || blockWos.some(wo => groupWos.includes(wo))) && matchesDesiredWorkOrder(block)) keys.add(key);
         }
     }
 
     for (const [key, block] of Object.entries(byNorm)) {
         const cName = normId(block && block.contractorName);
-        if (qNorms.some(q => q === cName || (q.length >= 5 && (key.includes(q) || q.includes(key) || cName.includes(q) || q.includes(cName))))) {
-            keys.add(key);
-        }
-    }
-
-    if (!keys.size) {
-        const stems = candidateNames.map(normStem).filter(Boolean);
-        for (const [key, block] of Object.entries(byNorm)) {
-            const ks = normStem(key);
-            const ns = normStem(block && block.contractorName);
-            if (stems.some(s => s && (ks === s || ns === s || (s.length >= 5 && (ks.includes(s) || s.includes(ks) || ns.includes(s) || s.includes(ns)))))) {
-                keys.add(key);
-                if (keys.size >= 3) break;
-            }
-        }
-    }
-
-    if (!keys.size) {
-        const tokens = candidateNames.flatMap(getDistinctiveTokens);
-        const uniqueTokens = [...new Set(tokens)];
-        if (uniqueTokens.length > 0) {
-            let bestKey = null, maxScore = 0;
-            for (const [key, block] of Object.entries(byNorm)) {
-                const stockStr = (key + ' ' + (block.contractorName || '')).toLowerCase();
-                let score = 0;
-                for (const tok of uniqueTokens) {
-                    if (stockStr.includes(tok)) score++;
-                    else {
-                        const tokStem = normStem(tok);
-                        const stockStem = normStem(stockStr);
-                        if (stockStem.includes(tokStem)) score += 0.8;
-                    }
-                }
-                if (score > maxScore && score >= 0.8) {
-                    maxScore = score;
-                    bestKey = key;
-                }
-            }
-            if (bestKey) keys.add(bestKey);
-        }
+        if (qNorms.includes(cName) && matchesDesiredWorkOrder(block)) keys.add(key);
     }
 
     return [...keys];
@@ -207,7 +172,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         for (const key of stockKeysForQuery(query)) {
             const block = byNorm[key];
             if (!block) continue;
-            out[key] = { contractorName: block.contractorName || '', materials: block.materials || {} };
+            out[key] = {
+                contractorName: block.contractorName || '',
+                workOrders: stockBlockWorkOrders(block),
+                materials: block.materials || {}
+            };
         }
         res.json({ success: true, byContractorNorm: out });
     }));

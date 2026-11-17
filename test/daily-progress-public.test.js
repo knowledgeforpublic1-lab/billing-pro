@@ -163,6 +163,13 @@ test('public catalog and contractor stock are served without login and never exp
         assert.ok(block.materials['17000004'], 'Material issue ledger present');
         assert.equal(block.docHeader, undefined);
         assert.equal(block.vendorCode, undefined);
+        assert.ok(Array.isArray(block.workOrders), 'Sanitized stock includes work-order metadata');
+
+        const intallyRes = await fetch(origin + '/api/daily-entry/stock/intally_dynamix_private_limited');
+        const intally = await intallyRes.json();
+        const intallyKeys = Object.keys(intally.byContractorNorm);
+        assert.deepEqual(intallyKeys, ['intallydynamix'], 'Only the master work-order block is returned');
+        assert.deepEqual(intally.byContractorNorm.intallydynamix.workOrders, ['31006105']);
         assert.equal((await fetch(origin + '/api/daily-entry/stock/' + encodeURIComponent('<script>'))).status, 400);
     } finally { await new Promise(resolve => server.close(resolve)); }
 });

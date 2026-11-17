@@ -74,6 +74,16 @@ test('token links also require login and contractor permission, and record the s
     } finally { await f.close(); }
 });
 
+test('contractor permission uses exact ids, not similar-name fuzzy matching', async () => {
+    const f = await setup();
+    try {
+        await f.create('rahul', ['anjali_electrical']);
+        const cookie = await f.login();
+        const report = { contractorId: 'anjali_electricals', date: '2026-11-17', version: 1, quantities: { 15: 7 }, manpower: {}, remarks: 'Wrong contractor' };
+        assert.equal((await f.request('/api/daily-progress/data', { reports: [report] }, cookie)).status, 403);
+    } finally { await f.close(); }
+});
+
 test('public worker signup with name, email, and mobile supports login via email or mobile number', async () => {
     const f = await setup();
     try {
