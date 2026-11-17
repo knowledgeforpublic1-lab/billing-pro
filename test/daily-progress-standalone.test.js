@@ -4,6 +4,108 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+function sharePage(fetcher) {
+    let app;
+    const storage = new Map();
+    const options = {};
+    const context = {
+        window: { location: { search: '?contractor=intally_dynamix_private_limited&date=2026-11-17' } },
+        document: { getElementById() { return {}; } },
+        URLSearchParams, console, setTimeout() {}, clearTimeout() {},
+        localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
+        fetch: (...args) => fetcher(...args),
+        Vue: { createApp(config) {
+            Object.assign(options, config);
+            app = Object.assign(config.data(), config.methods);
+            for (const [key, fn] of Object.entries(config.computed)) Object.defineProperty(app, key, { get: () => fn.call(app) });
+            return { mount() {} };
+        } }
+    };
+    vm.runInNewContext(fs.readFileSync('js/daily-progress-standalone.js', 'utf8'), context);
+    return { app, storage, options };
+}
+
+test('share page resolves API SAP aliases without protected seed scripts', async () => {
+    const { app } = sharePage(async url => {
+        if (url.includes('/catalog')) return { ok: true, json: async () => ({ success: true,
+            contractors: [{ id: 'intally_dynamix_private_limited', name: 'Intally Dynamix Private Limited' }],
+            items: [{ id: '15', code: '100' }] }) };
+        if (url.includes('/stock/')) return { ok: true, json: async () => ({ success: true, byContractorNorm: {
+            intallydynamix: { contractorName: 'INTALLY DYNAMIX', workOrders: ['31006105'], materials: { 100: { txns: [['2026-11-16', 12, 2]] } } }
+        } }) };
+        return { ok: true, json: async () => ({ success: true, data: { contractors: [], reports: [], issues: [] } }) };
+    });
+    await app.initData();
+    assert.equal(app.activeContractor.name, 'Intally Dynamix Private Limited');
+    assert.equal(app.getItemStock(app.items[0]).totalIssued, 10);
+});
+
+test('failed share save preserves base version, exact server error and only retries the selected date', async () => {
+    let fail = true;
+    const bodies = [];
+    const { app, storage } = sharePage(async (url, init) => {
+        bodies.push(JSON.parse(init.body));
+        return { ok: !fail, status: fail ? 409 : 200, json: async () => fail ? { success: false, error: 'Entry reserved by another editor' } : { success: true } };
+    });
+    app.contractors = [{ id: app.selectedContractorId, name: 'Intally' }];
+    app.reports = [{ contractorId: app.selectedContractorId, date: '2026-11-16', version: 1, quantities: { 15: 3 } }];
+    app.version = 2;
+    app.quantities = { 15: 9 };
+    await app.saveProgress();
+    assert.equal(app.version, 2);
+    assert.equal(app.dirty, true);
+    assert.match(app.toastMsg, /Entry reserved by another editor/);
+    assert.equal(bodies[0].reports.length, 1);
+    assert.equal(bodies[0].reports[0].version, 3);
+    const draft = JSON.parse(storage.get('billing_daily_progress')).reports.find(r => r.date === app.selectedDate);
+    assert.equal(draft.pending, true);
+    assert.equal(draft.version, 2);
+    fail = false;
+    await app.saveProgress();
+    assert.equal(bodies[1].reports[0].version, 3);
+    assert.equal(app.version, 3);
+    assert.equal(app.dirty, false);
+});
+
+test('share refresh picks corrected reports, clears removed entries and protects edits during a request', async () => {
+    let finish;
+    const { app } = sharePage(() => new Promise(resolve => { finish = resolve; }));
+    const row = { contractorId: app.selectedContractorId, date: app.selectedDate };
+    app.reports = [{ ...row, version: 1, quantities: { 15: 10, 16: 5 } }, { ...row, version: 2, quantities: { 15: 2 } }];
+    app.loadReportForActiveDate();
+    assert.equal(app.quantities[15], 2);
+    assert.equal(app.quantities[16], undefined);
+    let pending = app.fetchLatestReportsSilently();
+    app.onQuantityInput('15', 99);
+    finish({ ok: true, json: async () => ({ success: true, data: { reports: [{ ...row, version: 3, quantities: { 15: 3 } }] } }) });
+    await pending;
+    assert.equal(app.quantities[15], 99);
+    assert.equal(app.reports.length, 2);
+    app.dirty = false;
+    pending = app.fetchLatestReportsSilently();
+    finish({ ok: true, json: async () => ({ success: true, data: { reports: [] } }) });
+    await pending;
+    assert.equal(Object.keys(app.quantities).length, 0);
+    assert.equal(app.version, 0);
+});
+
+test('first unsent device draft survives reload with version zero and blocks background overwrite', async () => {
+    const { app, storage } = sharePage(async url => {
+        if (url.includes('/catalog')) return { ok: true, json: async () => ({ success: true,
+            contractors: [{ id: 'intally_dynamix_private_limited', name: 'Intally Dynamix Private Limited' }], items: [] }) };
+        if (url.includes('/stock/')) return { ok: true, json: async () => ({ success: true, byContractorNorm: {} }) };
+        return { ok: true, json: async () => ({ success: true, data: { contractors: [], reports: [], issues: [] } }) };
+    });
+    storage.set('billing_daily_progress', JSON.stringify({ reports: [{ contractorId: app.selectedContractorId, date: app.selectedDate,
+        version: 0, pending: true, quantities: { 15: 7 }, manpower: {}, remarks: 'Unsent draft' }] }));
+    await app.initData();
+    assert.equal(app.quantities[15], 7);
+    assert.equal(app.version, 0);
+    assert.equal(app.dirty, true);
+    await app.fetchLatestReportsSilently();
+    assert.equal(app.quantities[15], 7);
+});
+
 test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     // 1. Verify daily-progress.html exists and references standalone assets
     const html = fs.readFileSync(path.join(__dirname, '../daily-progress.html'), 'utf8');

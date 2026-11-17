@@ -20,4 +20,12 @@ function publicItemIds() {
     }
     return ids;
 }
-module.exports = { readDailyProgressData, publicItemIds };
+function newerReport(previous, incoming) {
+    if (!previous) return incoming;
+    if (!incoming) return previous;
+    const version = Number(incoming.version || 0) - Number(previous.version || 0);
+    if (version) return version > 0 ? incoming : previous;
+    const stamp = row => Date.parse(row.savedAt || row.updatedAt || '') || 0;
+    return stamp(incoming) >= stamp(previous) ? incoming : previous;
+}
+module.exports = { readDailyProgressData, publicItemIds, newerReport };

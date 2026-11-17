@@ -204,7 +204,7 @@ window.DailyProgressModule = {
         return res;
     },
 
-    async saveDailyProgressData() {
+    async saveDailyProgressData(syncCloud = true) {
         if (!this.dailyProgressData) return false;
         if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
             const result = await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData);
@@ -217,7 +217,7 @@ window.DailyProgressModule = {
 
         // Automatic background cloud sync so standalone shared links reflect latest changes
         try {
-            if (typeof fetch === 'function') {
+            if (syncCloud && typeof fetch === 'function') {
                 const cloudSync = fetch('/api/daily-progress/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -414,10 +414,8 @@ window.DailyProgressModule = {
         });
 
         matchingReps.sort((a, b) => {
-            const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
-            const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
-            if (qB !== qA) return qB - qA;
-            return Number(b.version || 0) - Number(a.version || 0);
+            return Number(b.version || 0) - Number(a.version || 0) ||
+                (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0);
         });
 
         const r = matchingReps[0];
@@ -487,6 +485,12 @@ window.DailyProgressModule = {
             return;
         }
 
+        if (this._dpSaveTimer) {
+            clearTimeout(this._dpSaveTimer);
+            this._dpSaveTimer = null;
+        }
+        const previousVersion = this.dailyProgressVersion;
+        const previousReports = [...(this.dailyProgressData && this.dailyProgressData.reports || [])];
         this.dailyProgressBusy = true;
         try {
             const dt = this.normalizeDailyProgressDate(this.dailyProgressDate);
@@ -496,6 +500,9 @@ window.DailyProgressModule = {
             if (reportPayload) this.dailyProgressVersion = reportPayload.version;
             this.showToast(`Daily Progress Saved! (${this.formatDisplayDate(dt)})`, 'Check');
         } catch (e) {
+            this.dailyProgressVersion = previousVersion;
+            this.dailyProgressData.reports = previousReports;
+            this.dailyProgressDirty = true;
             console.error('[DailyProgress] Save failed:', e);
             this.showToast('Failed to save daily progress: ' + (e.message || e), 'Alert');
         } finally {
@@ -1008,15 +1015,6 @@ window.DailyProgressModule = {
         const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
         const dt = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(this.dailyProgressDate)) || this.dailyProgressDate || '';
         const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
-
-        // Immediately trigger background cloud sync so recipient gets current data
-        if (this.dailyProgressData && typeof fetch === 'function') {
-            fetch('/api/daily-progress/data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.dailyProgressData)
-            }).catch(() => { });
-        }
 
         this.copyDailyProgressShareUrl(url);
     }

@@ -1295,6 +1295,37 @@ main {
     flex-wrap: wrap;
 }
 
+.dp-excel-tools,
+.dp-excel-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dp-excel-tools { flex-wrap: wrap; }
+.dp-excel-mobile-code,
+.dp-excel-scroll-hint { display: none; }
+
+.dp-toast {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 16px;
+    max-width: min(420px, calc(100vw - 32px));
+    background: #1e293b;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #f8fafc;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    overflow-wrap: anywhere;
+}
+
 .dp-excel-date-field {
     display: inline-flex;
     align-items: center;
@@ -1561,7 +1592,7 @@ main {
     }
 
     main {
-        padding: 8px 10px 140px !important;
+        padding: 8px 10px calc(140px + env(safe-area-inset-bottom, 0px)) !important;
         max-width: 100% !important;
     }
 
@@ -1572,7 +1603,7 @@ main {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 52px;
+        height: calc(52px + env(safe-area-inset-bottom, 0px));
         background: #0f172a;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         z-index: 90;
@@ -1839,7 +1870,7 @@ main {
     /* SLEEK COMPACT FLOATING SAVE BAR ON MOBILE */
     .save-bar {
         position: fixed !important;
-        bottom: 58px !important;
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
         /* sits cleanly above the mobile nav */
         left: 10px !important;
         right: 10px !important;
@@ -1876,5 +1907,139 @@ main {
         border-radius: 6px !important;
         flex-shrink: 0 !important;
         width: auto !important;
+    }
+
+    /* Keep focus zoom predictable while still allowing pinch zoom. */
+    input, select, textarea,
+    .dp-combo-input,
+    .date-stepper-compact input[type="date"] {
+        font-size: 16px !important;
+    }
+
+    .dp-toast {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        padding: 12px;
+    }
+
+    .dp-excel-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 12px;
+    }
+
+    .dp-excel-range-inputs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        min-width: 0;
+    }
+
+    .dp-excel-date-field {
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dp-excel-date-field input {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+    }
+
+    .dp-excel-quick-ranges {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dp-excel-quick-ranges button,
+    .dp-excel-tools button {
+        min-height: 44px;
+    }
+
+    .dp-excel-tools,
+    .dp-excel-filters {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+        min-width: 0;
+    }
+
+    .dp-excel-filters input,
+    .dp-excel-filters select {
+        width: 100% !important;
+        min-width: 0;
+        min-height: 44px;
+    }
+
+    .dp-excel-meta-bar {
+        padding: 10px 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .dp-excel-scroll-hint {
+        display: block;
+        margin: 0;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: #cbd5e1;
+        background: #0f172a;
+    }
+
+    .dp-excel-table-scroll {
+        max-height: 60vh;
+        max-height: min(60dvh, 32rem);
+        overflow: auto;
+    }
+
+    .dp-excel-sheet-table {
+        --mobile-material-width: clamp(112px, 36vw, 176px);
+        width: max-content;
+        min-width: 100%;
+        font-size: 12px;
+    }
+
+    /* Freeze one compact column; the remaining data scrolls behind it. */
+    .dp-excel-sheet-table th.st-row,
+    .dp-excel-sheet-table td.st-row,
+    .dp-excel-sheet-table th.st-code,
+    .dp-excel-sheet-table td.st-code {
+        display: none;
+    }
+
+    .dp-excel-sheet-table th.st-name,
+    .dp-excel-sheet-table td.st-name {
+        left: 0;
+        width: var(--mobile-material-width);
+        min-width: var(--mobile-material-width);
+        max-width: var(--mobile-material-width);
+        white-space: normal;
+        overflow-wrap: anywhere;
+        border-right: 2px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .dp-excel-sheet-table th.st-unit,
+    .dp-excel-sheet-table td.st-unit,
+    .dp-excel-sheet-table th.st-issue,
+    .dp-excel-sheet-table td.st-issue {
+        position: static;
+        left: auto;
+    }
+
+    .dp-excel-sheet-table thead th.st-unit,
+    .dp-excel-sheet-table thead th.st-issue {
+        position: sticky;
+        left: auto;
+        z-index: 5;
+    }
+
+    .dp-excel-mobile-code {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        font-weight: 500;
+        color: #94a3b8;
     }
 }

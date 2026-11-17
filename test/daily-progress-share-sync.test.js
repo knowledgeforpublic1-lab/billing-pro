@@ -68,3 +68,79 @@ test('token-link status refresh updates both form and report history', async () 
     assert.equal(a.dailyProgressData.reports[0].quantities[15], 18);
     assert.equal(a.dailyProgressData.reports[0].version, 2);
 });
+
+test('admin typing and sharing never publish inflated draft versions through the legacy dataset API', async () => {
+    const uploads = [], calls = [];
+    const context = { window: { location: { origin: 'https://billing.test' } }, console, AbortSignal,
+        crypto: require('node:crypto').webcrypto, setTimeout: () => 1, clearTimeout() {},
+        BillingStorage: { async setItem() { return { saved: true }; } },
+        fetch: async (...args) => { uploads.push(args); return { ok: true, json: async () => ({ success: true }) }; } };
+    vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
+    vm.runInNewContext(fs.readFileSync('js/daily-progress-access.js', 'utf8'), context);
+    const a = Object.assign({}, context.window.DailyProgressModule, {
+        dailyProgressData: { contractors: [contractor], reports: [report(1)], issues: [] },
+        dailyProgressContractorId: contractor.id, dailyProgressDate: '2026-11-17',
+        dailyProgressQuantities: {15: 1}, dailyProgressManpower: {}, dailyProgressVersion: 1,
+        dailyProgressActiveContractor: contractor, dailyProgressLocked: false, _dpEditVersion: 1,
+        showToast() {}, copyDailyProgressShareUrl() {},
+        async dailyProgressRequest(route, body) {
+            calls.push({ route, body });
+            return route === 'claim' ? { editable: true, version: 1, epoch: 1 } : { version: 2, state: 'final' };
+        }
+    });
+    a.onDailyProgressQuantityChange('15', 2);
+    a.onDailyProgressQuantityChange('15', 3);
+    await a.saveDailyProgressData();
+    a.copyDailyProgressShareLink();
+    assert.equal(uploads.length, 0, 'Neither a draft nor copying a share link uploads the dataset');
+    await a.saveDailyProgressReport();
+    assert.deepEqual(calls.map(c => c.route), ['claim', 'report']);
+    assert.equal(calls[1].body.version, 1, 'Final save uses the confirmed server version');
+    assert.equal(calls[1].body.report.quantities[15], 3);
+    assert.equal(a.dailyProgressVersion, 2);
+    assert.equal(uploads.length, 0, 'Confirmed Drive save only updates the device cache');
+});
+
+test('share entries seed admin editing; newer legacy reports survive old Drive copies, dates and locks stay isolated', async () => {
+    const f = fixture();
+    f.configs.set('dailyProgressData', { data: { contractors: [contractor], reports: [report(20)], issues: [] } });
+    const server = f.app.listen(0, '127.0.0.1');
+    await new Promise(resolve => server.once('listening', resolve));
+    const origin = 'http://127.0.0.1:' + server.address().port;
+    const editor = 'share_sync_editor_'.padEnd(40, 'x');
+    const request = async (route, body, cookie = f.ownerCookie) => {
+        const response = await fetch(origin + route, { headers: { cookie, 'Content-Type': 'application/json', 'x-dp-editor': editor },
+            ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }) });
+        return { status: response.status, data: await response.json() };
+    };
+    try {
+        await request('/api/dp-admin/workers', { username: 'siteworker', name: 'Site Worker', password: 'test-password-123', contractorIds: [contractor.id] });
+        const login = await fetch(origin + '/api/dp-worker/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'siteworker', password: 'test-password-123' }) });
+        const cookie = login.headers.get('set-cookie').split(';')[0];
+        const shared = await request('/api/daily-progress/data', { reports: [{ ...report(25), version: 2 }] }, cookie);
+        assert.equal(shared.status, 200);
+        const claim = (await request('/api/dp-admin/claim', { contractorId: contractor.id, date: '2026-11-17' })).data;
+        assert.equal(claim.report.quantities[15], 25);
+        assert.equal(claim.version, 2);
+        const saved = await request('/api/dp-admin/report', { contractorId: contractor.id, date: '2026-11-17', version: claim.version, epoch: claim.epoch,
+            requestId: 'admin-round-trip-request', final: true, report: { quantities: { 15: 30 }, manpower: {}, remarks: '' } });
+        assert.equal(saved.status, 200);
+        let data = (await request('/api/daily-progress/data', undefined, cookie)).data.data;
+        assert.equal(data.reports[0].quantities[15], 30);
+        assert.equal(data.reports[0].version, 3);
+        const locked = await request('/api/daily-progress/data', { reports: [{ ...report(99), version: 4 }] }, cookie);
+        assert.equal(locked.status, 423);
+        const nextDate = await request('/api/daily-progress/data', { reports: [{ ...report(8), date: '2026-11-18' }] }, cookie);
+        assert.equal(nextDate.status, 200);
+        // Historical admin/cache data can be newer than an older Drive record.
+        await request('/api/daily-progress/data', { reports: [{ ...report(40), version: 4 }] });
+        data = (await request('/api/dp-admin/data')).data.data;
+        assert.equal(data.reports.find(r => r.date === '2026-11-17').quantities[15], 40);
+        assert.equal(data.reports.find(r => r.date === '2026-11-18').quantities[15], 8);
+        const status = (await request('/api/dp-admin/report?contractorId=shared-team&date=2026-11-17')).data;
+        assert.equal(status.report.quantities[15], 40);
+        assert.equal(status.state, 'final');
+        const catalog = (await request('/api/daily-entry/catalog', undefined, '')).data;
+        assert.equal(catalog.contractors.find(c => c.id === contractor.id).name, contractor.name);
+    } finally { await new Promise(resolve => server.close(resolve)); }
+});

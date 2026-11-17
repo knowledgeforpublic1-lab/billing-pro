@@ -1,4 +1,5 @@
 const crypto = require('node:crypto');
+const { readDailyProgressData, newerReport } = require('./daily-progress-data');
 const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -51,8 +52,22 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         assertDate(date);
         const who = editorHash(editor);
         const key = recordKey(cid, date);
+        const legacy = readDailyProgressData(db.getDefaultConfig ? await db.getDefaultConfig('dailyProgressData') : null);
+        const shared = await read('shared_report_' + hash(cid + '|' + date));
+        let inherited = null;
+        for (const row of legacy.reports) {
+            if (row.contractorId === cid && row.date === date) inherited = newerReport(inherited, row);
+        }
+        inherited = newerReport(inherited, shared && shared.report);
         const state = await db.atomicDailyRecord(key, old => {
             const r = clone(old || initial(cid, date));
+            // Start admin/token editing from the same report shown on the share page.
+            if (inherited && (!r.owner || r.leaseUntil <= now()) &&
+                (Number(inherited.version || 0) > r.version || (!r.fileId && Number(inherited.version || 0) >= r.version))) {
+                r.version = Number(inherited.version || 0);
+                r.baseReport = inherited;
+                delete r.fileId;
+            }
             if (mode === 'claim' && r.state !== 'final' && !(r.operation?.until > now()) && (!r.owner || r.leaseUntil <= now() || r.owner === who)) {
                 if (r.owner !== who) { r.epoch++; audit(r, 'reserved'); }
                 r.owner = who;
@@ -65,7 +80,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             }
             return { result: r };
         });
-        const report = state.fileId ? await drive.read(state.fileId) : null;
+        const report = state.fileId ? await drive.read(state.fileId) : state.baseReport || null;
         return {
             date, version: state.version, epoch: state.epoch, state: state.state,
             editable: state.state === 'open' && state.owner === who && state.leaseUntil > now(),

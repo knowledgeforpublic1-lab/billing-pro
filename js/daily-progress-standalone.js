@@ -64,7 +64,7 @@
     const app = Vue.createApp({
         data() {
             const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
-            const defaultContractor = seed.contractor || {
+            const defaultContractor = (seed.contractor && seed.contractor.id ? seed.contractor : null) || {
                 id: 'mangesh-sonwane',
                 name: 'MANGESH SONWANE',
                 project: 'Gadchiroli (T-10)',
@@ -83,6 +83,7 @@
                 selectedContractorId: queryContractor || defaultContractor.id,
                 items: seed.items || [],
                 sapStock: null,
+                stockKeysByContractor: {},
                 contractors: [defaultContractor],
                 entryLoginUser: null,
                 reports: [],
@@ -242,6 +243,11 @@
         async mounted() {
             if (window.DailyWorkerAuth) this.entryLoginUser = await window.DailyWorkerAuth.ready;
             await this.initData();
+            if (typeof setInterval === 'function') {
+                this._refreshTimer = setInterval(() => {
+                    if (!document.hidden && !this.busy && !this.dirty) this.fetchLatestReportsSilently();
+                }, 15000);
+            }
             if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
                 document.addEventListener('click', (e) => {
                     if (this.contractorDropdownOpen && e.target && typeof e.target.closest === 'function' && !e.target.closest('.dp-contractor-picker-wrap')) {
@@ -249,6 +255,10 @@
                     }
                 });
             }
+        },
+
+        beforeUnmount() {
+            if (this._refreshTimer) clearInterval(this._refreshTimer);
         },
 
         methods: {
@@ -278,7 +288,6 @@
             },
 
             showToast(msg, type = 'info') {
-                if (type !== 'error' && type !== 'warning') return;
                 this.toastMsg = msg;
                 this.toastType = type;
                 if (this.toastTimer) clearTimeout(this.toastTimer);
@@ -390,6 +399,16 @@
                             const localStr = localStorage.getItem('billing_daily_progress');
                             if (localStr) loaded = JSON.parse(localStr);
                         } catch (e) { }
+                    } else {
+                        // A confirmed cloud read must not discard an unsent device draft.
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('billing_daily_progress') || 'null');
+                            const reports = new Map((loaded.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
+                            for (const r of cached && cached.reports || []) {
+                                if (r.pending) reports.set(r.contractorId + '|' + r.date, r);
+                            }
+                            loaded.reports = [...reports.values()];
+                        } catch (e) { }
                     }
 
                     // 3. Merge data
@@ -397,7 +416,7 @@
                         if (Array.isArray(loaded.contractors)) {
                             loaded.contractors.forEach(c => {
                                 const n = normId(c.id || c.name);
-                                if (n) contractorsMap.set(n, c);
+                                if (n) contractorsMap.set(n, { ...contractorsMap.get(n), ...c });
                             });
                         }
                         this.reports = Array.isArray(loaded.reports) ? loaded.reports : [];
@@ -455,6 +474,7 @@
                     this.loadReportForActiveDate();
                 } catch (err) {
                     console.error('[DailyProgressStandalone] Init error:', err);
+                    this.showToast(err.message || 'Contractor data load nahi hua. Dobara try karein.', 'error');
                 } finally {
                     this.busy = false;
                 }
@@ -497,6 +517,10 @@
                 };
 
                 // 1. Exact contractor id/name keys. Never let a wrong work order win over master data.
+                // The public API already resolves SAP aliases and work orders for this contractor.
+                for (const key of this.stockKeysByContractor[normId(actC.id)] || []) {
+                    if (matchesDesiredWorkOrder(byNorm[key])) add(key, byNorm[key]);
+                }
                 for (const q of qNorms) {
                     const block = byNorm[q];
                     if (block && matchesDesiredWorkOrder(block)) add(q, block);
@@ -549,6 +573,7 @@
                         if (res.ok) payload = await res.json();
                     }
                     if (payload && payload.success && payload.byContractorNorm) {
+                        this.stockKeysByContractor = { ...this.stockKeysByContractor, [normId(cid)]: Object.keys(payload.byContractorNorm) };
                         const existing = (this.sapStock || window.ContractorSapStock || {}).byContractorNorm || {};
                         this.sapStock = { byContractorNorm: { ...existing, ...payload.byContractorNorm } };
                     }
@@ -567,14 +592,11 @@
                     return matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate;
                 });
 
-                // Pick the report with highest entered quantities, highest version, and freshest update
+                // A correction removing quantities must supersede an older, fuller report.
                 matchingReps.sort((a, b) => {
-                    const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
-                    const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
-                    if (qB !== qA) return qB - qA;
                     const verDiff = Number(b.version || 0) - Number(a.version || 0);
                     if (verDiff !== 0) return verDiff;
-                    return (new Date(b.updatedAt || 0)) - (new Date(a.updatedAt || 0));
+                    return (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0);
                 });
 
                 const rep = matchingReps[0];
@@ -589,8 +611,8 @@
                         room: Number(rep.manpower && rep.manpower.room) || 0
                     };
                     this.remarks = rep.remarks || '';
-                    this.version = rep.version || 1;
-                    this.dirty = false;
+                    this.version = rep.pending ? Number(rep.version || 0) : Number(rep.version || 1);
+                    this.dirty = !!rep.pending;
                 } else {
                     this.quantities = {};
                     this.manpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
@@ -606,25 +628,35 @@
             },
 
             async fetchLatestReportsSilently() {
-                if (this._fetchingLatestReport) return;
+                if (this._fetchingLatestReport || this.busy || this.dirty) return;
                 this._fetchingLatestReport = true;
+                const cid = this.selectedContractorId, date = this.selectedDate;
                 try {
                     const res = await fetch('/api/daily-progress/data?t=' + Date.now());
                     if (res.ok) {
                         const resJson = await res.json();
+                        if (this.dirty || this.busy || cid !== this.selectedContractorId || date !== this.selectedDate) return;
                         if (resJson && resJson.success && resJson.data && Array.isArray(resJson.data.reports)) {
-                            this.reports = resJson.data.reports;
+                            const reports = new Map(resJson.data.reports.map(r => [r.contractorId + '|' + r.date, r]));
+                            for (const r of this.reports) {
+                                if (r.pending) reports.set(r.contractorId + '|' + r.date, r);
+                            }
+                            this.reports = [...reports.values()];
+                            if (Array.isArray(resJson.data.issues)) this.issues = resJson.data.issues;
                             const actC = this.activeContractor || {};
                             const curDate = normDate(this.selectedDate);
                             const matching = (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate);
                             matching.sort((a, b) => {
-                                const qA = Object.values(a.quantities || {}).filter(q => Number(q) > 0).length;
-                                const qB = Object.values(b.quantities || {}).filter(q => Number(q) > 0).length;
-                                if (qB !== qA) return qB - qA;
-                                return Number(b.version || 0) - Number(a.version || 0);
+                                return Number(b.version || 0) - Number(a.version || 0) ||
+                                    (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0);
                             });
                             const freshRep = matching[0];
-                            if (freshRep && !this.dirty) {
+                            if (!freshRep) {
+                                this.quantities = {};
+                                this.manpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
+                                this.remarks = '';
+                                this.version = 0;
+                            } else if (!this.dirty) {
                                 this.quantities = { ...(freshRep.quantities || {}) };
                                 this.manpower = {
                                     leader: Number(freshRep.manpower && freshRep.manpower.leader) || 0,
@@ -735,6 +767,7 @@
             },
 
             async saveProgress() {
+                if (this.busy) return;
                 this.busy = true;
                 this.saveStatus = 'saving';
                 try {
@@ -769,9 +802,6 @@
                         this.reports.push(reportObj);
                     }
 
-                    this.version = reportObj.version;
-                    this.dirty = false;
-
                     const payload = {
                         contractors: this.contractors,
                         reports: this.reports,
@@ -780,22 +810,31 @@
                     };
 
                     // Save locally first
+                    let localSaved = false;
                     try {
-                        localStorage.setItem('billing_daily_progress', JSON.stringify(payload));
+                        const drafts = payload.reports.map(row => row.contractorId === cid && row.date === curDate ? { ...row, version: this.version, pending: true } : row);
+                        localStorage.setItem('billing_daily_progress', JSON.stringify({ ...payload, reports: drafts }));
+                        localSaved = true;
                     } catch (e) { }
 
                     // Save to cloud API
                     let cloudSaved = false;
+                    let cloudError = '';
                     try {
                         const res = await fetch('/api/daily-progress/data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
+                            // Submit only the edited date. Old cached dates must never block this save.
+                            body: JSON.stringify({ ...payload, reports: [reportObj] })
                         });
-                        if (res.ok) {
-                            const resJson = await res.json().catch(() => null);
+                        const resJson = await res.json().catch(() => null);
+                        if (!res.ok || !resJson || resJson.success !== true) {
+                            cloudError = resJson && resJson.error || 'Server par save confirm nahi hua. Dobara try karein.';
+                            if (res.status === 401 && window.DailyWorkerAuth) window.DailyWorkerAuth.expired();
+                        } else {
                             if (resJson && resJson.success === true) {
                                 cloudSaved = true;
+                                this.version = reportObj.version;
                                 for (const report of resJson.reports || []) {
                                     const index = this.reports.findIndex(row => row.contractorId === report.contractorId && row.date === report.date);
                                     if (index >= 0) this.reports[index] = report;
@@ -805,16 +844,20 @@
                             }
                         }
                     } catch (e) {
+                        cloudError = e.message;
                         console.warn('[DailyProgressStandalone] Cloud save network error:', e);
                     }
 
                     if (cloudSaved) {
+                        this.dirty = false;
                         this.saveStatus = 'saved';
                         this.showToast(`Daily Progress saved & synced to cloud! ✅ (${this.selectedDate})`, 'success');
                     } else {
+                        const index = this.reports.findIndex(row => row.contractorId === cid && row.date === curDate);
+                        if (index >= 0) this.reports[index] = { ...reportObj, version: this.version, pending: true };
                         this.dirty = true;
                         this.saveStatus = 'offline';
-                        this.showToast(`Device par save hua, cloud sync fail hua. Internet check karein. ⚠️`, 'warning');
+                        this.showToast((localSaved ? 'Draft device par safe hai. ' : 'Device par bhi save nahi hua; page khula rakhein aur entries copy karein. ') + cloudError, 'warning');
                     }
                 } catch (err) {
                     this.showToast('Save failed: ' + err.message, 'error');

@@ -22,10 +22,11 @@ test('Daily Progress Module: Seed, Contractor Linking, Stock Balances & Persiste
             setItem(k, v) { this._s[k] = String(v); },
             removeItem(k) { delete this._s[k]; }
         },
-        console: { log() {}, warn() {}, error() {} },
+        console: { log() {}, warn() {}, error() {}, info() {} },
         Blob: class { constructor(parts) { this.parts = parts; } },
         URL: { createObjectURL() { return 'blob://dummy'; }, revokeObjectURL() {} },
         setTimeout: (fn) => setTimeout(fn, 0),
+        clearTimeout,
         newIntl: Intl
     };
     context.window.window = context.window;

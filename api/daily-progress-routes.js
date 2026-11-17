@@ -6,7 +6,7 @@ const path = require('node:path');
 const createService = require('./daily-progress-service');
 const createDrive = require('./daily-drive');
 const crypto = require('node:crypto');
-const { readDailyProgressData } = require('./daily-progress-data');
+const { readDailyProgressData, newerReport } = require('./daily-progress-data');
 
 function normId(value) {
     return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
@@ -160,7 +160,14 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     // Public, sanitized read-only data for the shareable /daily-progress.html page.
     // No PAN, GSTIN, bank details or other contractor records are exposed.
     publicRouter.get('/catalog', handle(async (req, res) => {
-        res.json({ success: true, contractors: publicContractors(), items });
+        const contractors = new Map(publicContractors().map(c => [c.id, c]));
+        // Saved teams may not exist in the shipped contractor directory.
+        const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
+        for (const c of [...saved.contractors, ...await service.list()]) {
+            if (!c.id || !c.name) continue;
+            contractors.set(c.id, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' });
+        }
+        res.json({ success: true, contractors: [...contractors.values()], items });
     }));
     publicRouter.get('/stock/:contractorId', handle(async (req, res) => {
         const query = String(req.params.contractorId || '').trim();
@@ -247,8 +254,10 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const legacy = await db.getDefaultConfig('dailyProgressData');
         const base = readDailyProgressData(legacy);
         const reports = new Map((base.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
-        for (const r of await workers.sharedReports()) reports.set(r.contractorId + '|' + r.date, r);
-        for (const r of await service.reports()) reports.set(r.contractorId + '|' + r.date, r);
+        for (const r of [...await workers.sharedReports(), ...await service.reports()]) {
+            const key = r.contractorId + '|' + r.date;
+            reports.set(key, newerReport(reports.get(key), r));
+        }
         const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
         for (const c of await service.list()) contractors.set(c.id, c);
         const aux = { contractors: [], issues: [] };

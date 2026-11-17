@@ -5,7 +5,13 @@
     const originalLoad = module.loadDailyProgressReportForDate;
     const originalQuantity = module.onDailyProgressQuantityChange;
     const originalManpower = module.onDailyProgressManpowerChange;
+    const originalSaveData = module.saveDailyProgressData;
     Object.assign(module, {
+        // This workspace persists confirmed reports through the versioned report API.
+        // Debounced drafts and sharing a URL must only update the device cache.
+        saveDailyProgressData() {
+            return originalSaveData.call(this, false);
+        },
         dailyProgressEntryTime(value) {
             if (!value || isNaN(Date.parse(value))) return '—';
             return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) + ' IST';
@@ -226,6 +232,10 @@
             if (this.dailyProgressBusy) return;
             const cid = this.dailyProgressContractorId, date = this.dailyProgressDate;
             if (!cid || !date) return this.showToast('Contractor aur date select karein.', 'Alert');
+            if (this._dpSaveTimer) {
+                clearTimeout(this._dpSaveTimer);
+                this._dpSaveTimer = null;
+            }
             this.dailyProgressBusy = true;
             try {
                 if (!this._dpPendingSave) {
