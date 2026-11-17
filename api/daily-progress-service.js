@@ -1,5 +1,5 @@
 const crypto = require('node:crypto');
-const { readDailyProgressData, newerReport } = require('./daily-progress-data');
+const { readDailyProgressData, newerReport, locationId: normalizeLocation, reportKey, controlKey } = require('./daily-progress-data');
 const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -8,7 +8,8 @@ const dateValid = date => /^\d{4}-\d{2}-\d{2}$/.test(date || '') && !isNaN(Date.
 module.exports = function createService({ db, drive, now = Date.now, items = [] }) {
     const LEASE = 5 * 60 * 1000;
     const itemIds = new Set(items.map(item => String(item.id)));
-    const recordKey = (cid, date) => 'report_' + hash(cid) + '_' + date;
+    const recordKey = controlKey;
+    const locations = require('./daily-progress-locations')({ db });
     const linkKey = cid => 'contractor_' + hash(cid);
     const read = key => db.atomicDailyRecord(key, value => ({ result: value }));
     function initial(cid, date) { return { contractorId: cid, date, state: 'open', version: 0, epoch: 0, audit: [] }; }
@@ -48,21 +49,23 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         if (c.expiresAt && c.expiresAt <= now()) fail(401, 'Entry link expire ho chuka hai. Admin se naya link lein.');
         return c;
     }
-    async function access(cid, date, editor, mode = 'read') {
+    async function access(cid, date, editor, mode = 'read', locationId = '') {
         assertDate(date);
+        locationId = normalizeLocation(locationId);
+        const location = locationId ? await locations.get(cid, locationId) : null;
         const who = editorHash(editor);
-        const key = recordKey(cid, date);
+        const key = recordKey(cid, date, locationId);
         const legacy = readDailyProgressData(db.getDefaultConfig ? await db.getDefaultConfig('dailyProgressData') : null);
-        const shared = await read('shared_report_' + hash(cid + '|' + date));
+        const shared = await read('shared_report_' + hash(reportKey({ contractorId: cid, date, locationId })));
         let inherited = null;
         for (const row of legacy.reports) {
-            if (row.contractorId === cid && row.date === date) inherited = newerReport(inherited, row);
+            if (row.contractorId === cid && row.date === date && normalizeLocation(row.locationId) === locationId) inherited = newerReport(inherited, row);
         }
         inherited = newerReport(inherited, shared && shared.report);
         const state = await db.atomicDailyRecord(key, old => {
             const r = clone(old || initial(cid, date));
             // Start admin/token editing from the same report shown on the share page.
-            if (inherited && (!r.owner || r.leaseUntil <= now()) &&
+            if (inherited && !r.deleted && !r.managed && (!r.owner || r.leaseUntil <= now()) &&
                 (Number(inherited.version || 0) > r.version || (!r.fileId && Number(inherited.version || 0) >= r.version))) {
                 r.version = Number(inherited.version || 0);
                 r.baseReport = inherited;
@@ -82,21 +85,23 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         });
         const report = state.fileId ? await drive.read(state.fileId) : state.baseReport || null;
         return {
-            date, version: state.version, epoch: state.epoch, state: state.state,
+            date, locationId, locationName: location?.name || 'Legacy / Unassigned', deleted: !!state.deleted, version: state.version, epoch: state.epoch, state: state.state,
             editable: state.state === 'open' && state.owner === who && state.leaseUntil > now(),
             occupied: state.state !== 'final' && !!state.owner && state.leaseUntil > now() && state.owner !== who,
             processing: !!(state.operation?.until > now()), leaseUntil: state.leaseUntil || 0,
-            report: report && { quantities: report.quantities, manpower: report.manpower, remarks: report.remarks, savedBy: report.savedBy, savedAt: report.savedAt }
+            report: !state.deleted && report ? { ...report, locationId, locationName: location?.name || 'Legacy / Unassigned' } : null
         };
     }
     async function save(cid, date, editor, body, actor = null) {
         assertDate(date);
+        const locationId = normalizeLocation(body.locationId || body.report?.locationId);
+        const location = locationId ? await locations.get(cid, locationId) : null;
         const who = editorHash(editor);
         if (!/^[\w-]{16,100}$/.test(body.requestId || '')) fail(400, 'Save request ID required');
         if (!Number.isInteger(body.version) || !Number.isInteger(body.epoch)) fail(400, 'Report version required');
-        const payload = cleanReport(body.report);
+        const payload = { ...cleanReport(body.report), locationId, locationName: location?.name || 'Legacy / Unassigned' };
         const digest = hash(JSON.stringify({ payload, final: !!body.final, epoch: body.epoch }));
-        const key = recordKey(cid, date);
+        const key = recordKey(cid, date, locationId);
         const operationId = crypto.randomUUID();
         const reserved = await db.atomicDailyRecord(key, old => {
             const r = clone(old || initial(cid, date));
@@ -115,7 +120,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         const savedBy = actor ? { id: actor.id, name: actor.name, username: actor.username, role: actor.role } : null;
         let fileId;
         try {
-            fileId = await drive.write(key, { ...payload, contractorId: cid, date, version: reserved.version, final: !!body.final, savedAt, savedBy });
+            fileId = await drive.write(key, { ...payload, contractorId: cid, date, locationId, locationName: location?.name || 'Legacy / Unassigned', version: reserved.version, final: !!body.final, savedAt, savedBy });
         } catch (error) {
             await db.atomicDailyRecord(key, old => {
                 if (old?.operation?.id !== operationId) return { result: null };
@@ -127,6 +132,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             if (old?.operation?.id !== operationId || old.epoch !== body.epoch) fail(409, 'Reservation changed; save not confirmed. Draft retained.');
             const r = clone(old);
             r.fileId = fileId; r.version = reserved.version; r.state = body.final ? 'final' : 'open';
+            r.locationId = locationId; r.locationName = location?.name || 'Legacy / Unassigned'; r.deleted = false; r.managed = false;
             r.lastRequestId = body.requestId; r.lastOwner = who; r.lastDigest = digest;
             r.savedAt = savedAt; r.savedBy = savedBy;
             delete r.operation;
@@ -136,7 +142,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         });
     }
     return {
-        authorize, contractor, access, save,
+        authorize, contractor, access, save, locations,
         async createLink(data) {
             const cid = String(data.id || '');
             if (!/^[\w -]{1,150}$/.test(cid) || !String(data.name || '').trim()) fail(400, 'Contractor ID and name required');
@@ -161,9 +167,11 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
                 return { value: { ...old, disabled: true }, result: true };
             });
         },
-        async reopen(cid, date, action = 'reopen') {
+        async reopen(cid, date, action = 'reopen', locationId = '') {
             assertDate(date);
-            return db.atomicDailyRecord(recordKey(cid, date), old => {
+            locationId = normalizeLocation(locationId);
+            if (locationId) await locations.get(cid, locationId);
+            return db.atomicDailyRecord(recordKey(cid, date, locationId), old => {
                 const r = clone(old || initial(cid, date));
                 if (r.operation?.until > now()) fail(409, 'Save in progress. Retry after completion.');
                 r.state = 'open'; r.epoch++; delete r.owner; delete r.operation; r.leaseUntil = 0;
@@ -178,11 +186,29 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         },
         async reports() {
             const rows = await db.listDailyRecords('report_');
-            return Promise.all(rows.filter(row => row.value.fileId).map(async ({ value: r }) => {
-                const data = await drive.read(r.fileId);
-                return { ...data, state: r.state, version: r.version };
+            return Promise.all(rows.filter(row => row.value.fileId || row.value.baseReport || row.value.deleted).map(async ({ value: r }) => {
+                const data = r.fileId ? await drive.read(r.fileId) : r.baseReport || r;
+                return { ...data, state: r.state, version: r.version, deleted: !!r.deleted, managed: !!r.managed };
             }));
         },
-        async audit(cid, date) { assertDate(date); const r = await read(recordKey(cid, date)); return r?.audit || []; }
+        async audit(cid, date, locationId = '') { assertDate(date); const r = await read(recordKey(cid, date, normalizeLocation(locationId))); return r?.audit || []; },
+        async manage(cid, date, locationId, action, previous) {
+            assertDate(date);
+            locationId = normalizeLocation(locationId);
+            const location = locationId ? await locations.get(cid, locationId) : null;
+            if (!['delete', 'reset'].includes(action)) fail(400, 'Invalid report action.');
+            return db.atomicDailyRecord(recordKey(cid, date, locationId), old => {
+                const r = clone(old || initial(cid, date));
+                if (r.operation?.until > now()) fail(409, 'Save chal raha hai. Thodi der baad retry karein.');
+                r.version = Math.max(r.version || 0, previous?.version || 0) + 1;
+                r.epoch++; r.leaseUntil = 0; r.state = 'open'; r.deleted = action === 'delete';
+                r.managed = true;
+                r.locationId = locationId; r.locationName = location?.name || 'Legacy / Unassigned';
+                delete r.fileId; delete r.owner; delete r.operation; delete r.lastRequestId; delete r.sharedDigest;
+                r.baseReport = { contractorId: cid, date, locationId, locationName: r.locationName, quantities: {}, manpower: {}, remarks: '', version: r.version, updatedAt: new Date(now()).toISOString() };
+                audit(r, action);
+                return { value: r, result: { date, version: r.version, deleted: r.deleted } };
+            });
+        }
     };
 };

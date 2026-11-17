@@ -104,7 +104,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261117_mobile_users_v10">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261117_locations_v11">
 </head>
 
 <body>
@@ -555,9 +555,9 @@
                         </div>
 
                         <div class="dp-date-pill" style="display: inline-flex; align-items: center; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; overflow: hidden;">
-                            <button type="button" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
-                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
-                            <button type="button" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
+                            <button type="button" :disabled="!dailyProgressLocationId || dailyProgressBusy" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
+                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" :disabled="!dailyProgressLocationId || dailyProgressBusy" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
+                            <button type="button" :disabled="!dailyProgressLocationId || dailyProgressBusy" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
                         </div>
 
                         <div class="dp-segmented-tabs" style="display: inline-flex; background: var(--bg-surface, #e2e8f0); padding: 2px; border-radius: 5px; gap: 2px;">
@@ -1952,7 +1952,32 @@
 
         <!-- VIEW: DAILY PROGRESS REGISTER -->
         <div class="view-section animate-fade-in" v-if="currentView === 'dailyProgress'">
-            <div class="daily-progress-container">
+            <div class="daily-progress-container" :inert="dailyProgressBusy">
+                <section class="dp-location-bar" aria-label="Location and work date">
+                    <div class="dp-location-choice">
+                        <label for="dp-location">1. Select location</label>
+                        <select id="dp-location" :value="dailyProgressLocationId" :disabled="dailyProgressBusy" @change="changeDailyProgressLocation($event.target.value); $event.target.value = dailyProgressLocationId">
+                            <option value="">Choose a location first…</option>
+                            <option v-for="location in dailyProgressLocations" :key="location.id" :value="location.id">{{ location.name }}</option>
+                            <option value="legacy">Legacy / Unassigned (old entries)</option>
+                        </select>
+                    </div>
+                    <div class="dp-location-choice">
+                        <label for="dp-new-location">Add a site / village / work location</label>
+                        <div class="dp-location-add"><input id="dp-new-location" v-model="dailyProgressNewLocation" maxlength="120" placeholder="e.g. Angara Village – Site A" @keydown.enter.prevent="addDailyProgressLocation"><button type="button" class="btn btn-secondary" @click="addDailyProgressLocation">Add Location</button></div>
+                    </div>
+                    <div class="dp-location-choice">
+                        <label for="dp-location-date">2. Work date</label>
+                        <input id="dp-location-date" type="date" :value="dailyProgressDate" :disabled="!dailyProgressLocationId || dailyProgressBusy" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate">
+                    </div>
+                    <div v-if="dailyProgressLocationId" class="dp-location-actions">
+                        <button type="button" class="btn btn-primary" @click="startDailyProgressLocationEntry">Start / Edit selected date</button>
+                        <button type="button" class="btn btn-secondary" @click="manageDailyProgressLocation('reset')">Reset day</button>
+                        <button type="button" class="tbtn danger" @click="manageDailyProgressLocation('delete')">Delete day</button>
+                        <button type="button" class="tbtn danger" @click="manageDailyProgressLocation('delete', true)">Clear location’s entire progress</button>
+                    </div>
+                    <p class="dp-location-note">{{ dailyProgressLocationId ? 'Location: ' + dailyProgressLocationName() + ' · Stock balance includes consumption at all locations.' : 'Add or select a location, choose its work date, then start entry. Old reports remain under Legacy / Unassigned.' }}</p>
+                </section>
                 <!-- Single-Line Dense Status Strip (~24px high) -->
                 <div class="dp-status-strip no-print">
                     <div class="dp-status-items">
@@ -1968,7 +1993,7 @@
 
                 <!-- TAB 1: DAILY ENTRY -->
                 <div v-if="dailyProgressTab === 'entry'">
-                    <fieldset :disabled="dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
+                    <fieldset :disabled="dailyProgressBusy || !dailyProgressLocationId || dailyProgressLocked" style="border:0;padding:0;margin:0;min-width:0">
 
                     <!-- JIN CONTRACTOR KA DAILY PROGRESS ENTRY HUA HAI UNKA OVERVIEW -->
                     <div class="dp-panel no-print" style="margin-bottom: 12px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.12)); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
@@ -2215,7 +2240,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressContractorId || (dailyProgressLocked && !dailyProgressDirty)" @click="saveDailyProgressReport" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn btn-primary" :disabled="dailyProgressBusy || !dailyProgressContractorId || !dailyProgressLocationId || (dailyProgressLocked && !dailyProgressDirty)" @click="saveDailyProgressReport" style="padding: 10px 24px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;">
                             <span>💾</span>
                             <span>{{ dailyProgressBusy ? 'Saving...' : 'Save & Lock Daily Progress' }}</span>
                         </button>
@@ -2463,7 +2488,7 @@
 
                                 <button type="button"
                                         class="btn btn-primary"
-                                        :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
+                                        :disabled="dailyProgressBusy || !dailyProgressLocationId || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
                                         @click="downloadDailyProgressExcel"
                                         style="font-size: 0.76rem; padding: 5px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                                     <span>{{ dailyProgressBusy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
@@ -4969,10 +4994,10 @@
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
-    <script defer src="js/daily-progress.js?v=20261117_share_sync_v7"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_mobile_users_v10"></script>
+    <script defer src="js/daily-progress.js?v=20261117_locations_v11"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_locations_v11"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_mobile_users_v10"></script>
+    <script defer src="js/core/app.js?v=20261117_locations_v11"></script>
 </body>
 
 </html>

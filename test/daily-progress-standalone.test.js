@@ -25,6 +25,69 @@ function sharePage(fetcher) {
     return { app, storage, options };
 }
 
+test('location is required for entry; same-day site quantities and legacy reports stay separate', async () => {
+    let submitted;
+    const { app } = sharePage(async (url, init) => {
+        if (init?.method === 'POST') { submitted = JSON.parse(init.body); return { ok: true, json: async () => ({ success: true, reports: submitted.reports }) }; }
+        return { ok: true, json: async () => ({ success: true, data: { reports: [] } }) };
+    });
+    app.contractors = [{ id: app.selectedContractorId, name: 'Contractor' }];
+    const a = 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', b = 'loc_bbbbbbbbbbbbbbbbbbbbbbbb';
+    app.locations = [{ id: a, name: 'Site A' }, { id: b, name: 'Site B' }];
+    app.reports = [
+        { contractorId: app.selectedContractorId, date: app.selectedDate, locationId: a, quantities: { 15: 5 }, version: 1 },
+        { contractorId: app.selectedContractorId, date: app.selectedDate, locationId: b, quantities: { 15: 9 }, version: 1 },
+        { contractorId: app.selectedContractorId, date: app.selectedDate, quantities: { 15: 11 }, version: 1 }
+    ];
+    await app.saveProgress();
+    assert.equal(submitted, undefined, 'No save without selecting a location');
+    app.selectedLocationId = a; app.loadReportForActiveDate();
+    assert.equal(app.quantities[15], 5);
+    app.selectedLocationId = b; app.loadReportForActiveDate();
+    assert.equal(app.quantities[15], 9);
+    app.selectedLocationId = 'legacy'; app.loadReportForActiveDate();
+    assert.equal(app.quantities[15], 11);
+    assert.equal(app.canEnterLocation, false);
+    app.selectedLocationId = a; app.loadReportForActiveDate(); app.onQuantityInput('15', 6);
+    await app.saveProgress();
+    assert.equal(submitted.reports[0].locationId, a);
+    assert.equal(app.reports.find(row => row.locationId === b).quantities[15], 9);
+    assert.equal(app.reports.find(row => !row.locationId).quantities[15], 11);
+    assert.ok(app.getContractorShareUrl(app.selectedContractorId, app.selectedDate).includes('location=' + a));
+});
+
+test('deleted-location date uses server revision when starting a fresh entry', async () => {
+    let submitted;
+    const { app } = sharePage(async (url, init) => {
+        if (init?.method === 'POST') { submitted = JSON.parse(init.body); return { ok: true, json: async () => ({ success: true }) }; }
+        return { ok: true, json: async () => ({ success: true, data: { reports: [] } }) };
+    });
+    const locationId = 'loc_aaaaaaaaaaaaaaaaaaaaaaaa';
+    app.locations = [{ id: locationId, name: 'Site A' }]; app.selectedLocationId = locationId;
+    app.reportStates = [{ contractorId: app.selectedContractorId, locationId, date: app.selectedDate, deleted: true, version: 6 }];
+    app.loadReportForActiveDate(); assert.equal(app.version, 6);
+    app.onQuantityInput('15', 2); await app.saveProgress();
+    assert.equal(submitted.reports[0].version, 7);
+});
+
+test('a poll started before a save cannot overwrite the confirmed location entry afterward', async () => {
+    let finish;
+    const { app } = sharePage(async (url, init) => {
+        if (init?.method === 'POST') return { ok: true, json: async () => ({ success: true }) };
+        return new Promise(resolve => { finish = resolve; });
+    });
+    app.locations = [{ id: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', name: 'Site A' }]; app.selectedLocationId = app.locations[0].id;
+    const row = { contractorId: app.selectedContractorId, locationId: app.selectedLocationId, date: app.selectedDate, version: 1, quantities: { 15: 2 } };
+    app.reports = [row]; app.version = 1;
+    const poll = app.fetchLatestReportsSilently();
+    app.onQuantityInput('15', 9);
+    await app.saveProgress();
+    finish({ ok: true, json: async () => ({ success: true, data: { reports: [row] } }) });
+    await poll;
+    assert.equal(app.quantities[15], 9);
+    assert.equal(app.reports[0].version, 2);
+});
+
 test('share page resolves API SAP aliases without protected seed scripts', async () => {
     const { app } = sharePage(async url => {
         if (url.includes('/catalog')) return { ok: true, json: async () => ({ success: true,
@@ -48,6 +111,8 @@ test('failed share save preserves base version, exact server error and only retr
         return { ok: !fail, status: fail ? 409 : 200, json: async () => fail ? { success: false, error: 'Entry reserved by another editor' } : { success: true } };
     });
     app.contractors = [{ id: app.selectedContractorId, name: 'Intally' }];
+    app.locations = [{ id: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', name: 'Site A' }];
+    app.selectedLocationId = app.locations[0].id;
     app.reports = [{ contractorId: app.selectedContractorId, date: '2026-11-16', version: 1, quantities: { 15: 3 } }];
     app.version = 2;
     app.quantities = { 15: 9 };
@@ -214,6 +279,8 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
 
     assert.ok(mountedApp, 'App mounted successfully');
     await mountedApp.initData();
+    mountedApp.locations = [{ id: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', name: 'Site A' }];
+    mountedApp.selectedLocationId = mountedApp.locations[0].id;
 
     // 4. Contractor selection and date initialization from URL
     assert.equal(mountedApp.selectedContractorId, 'mangesh-sonwane', 'Contractor auto-selected from URL');
@@ -486,6 +553,9 @@ test('Contractor work order chooses the correct stock block and exact ids isolat
     mountedApp.loadReportForActiveDate();
     assert.equal(mountedApp.quantities['1'], 5, 'Similar contractor name does not load another contractor report');
 
+    mountedApp.locations = [{ id: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', name: 'Site A' }];
+    mountedApp.selectedLocationId = mountedApp.locations[0].id;
+    mountedApp.reports.forEach(report => { report.locationId = mountedApp.selectedLocationId; });
     mountedApp.onQuantityInput('1', 6);
     await mountedApp.saveProgress();
     assert.equal(mountedApp.reports.find(r => r.contractorId === 'anjali_electricals').quantities['1'], 77, 'Other contractor report remains untouched');

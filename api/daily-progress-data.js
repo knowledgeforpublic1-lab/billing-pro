@@ -28,4 +28,10 @@ function newerReport(previous, incoming) {
     const stamp = row => Date.parse(row.savedAt || row.updatedAt || '') || 0;
     return stamp(incoming) >= stamp(previous) ? incoming : previous;
 }
-module.exports = { readDailyProgressData, publicItemIds, newerReport };
+function locationId(value) { return value === 'legacy' ? '' : String(value || ''); }
+function reportKey(row) { const id = locationId(row.locationId); return row.contractorId + '|' + row.date + (id ? '|' + id : ''); }
+function controlKey(cid, date, lid) {
+    const hash = value => require('node:crypto').createHash('sha256').update(String(value)).digest('hex');
+    return 'report_' + hash(cid) + '_' + date + (locationId(lid) ? '_' + hash(locationId(lid)) : '');
+}
+module.exports = { readDailyProgressData, publicItemIds, newerReport, locationId, reportKey, controlKey };

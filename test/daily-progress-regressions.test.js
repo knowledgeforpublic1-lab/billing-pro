@@ -63,9 +63,11 @@ test('31-day Excel export clears old data and preserves labels, merges and style
     vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
     const app = { ...context.window.DailyProgressModule,
         dailyProgressExportFrom: '2026-11-01', dailyProgressExportTo: '2026-12-01', dailyProgressContractorId: 'a',
+        dailyProgressLocationId: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', dailyProgressLocations: [{ id: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', name: 'Site A' }],
         dailyProgressData: { contractors: [{ id: 'a', name: 'Test' }], reports: [
-            { contractorId: 'a', date: '2026-11-01', quantities: { 15: 4 }, manpower: { leader: 1 } },
-            { contractorId: 'a', date: '2026-12-01', quantities: { 15: 8 }, manpower: { leader: 2 } }
+            { contractorId: 'a', locationId: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', date: '2026-11-01', quantities: { 15: 4 }, manpower: { leader: 1 } },
+            { contractorId: 'a', locationId: 'loc_aaaaaaaaaaaaaaaaaaaaaaaa', date: '2026-12-01', quantities: { 15: 8 }, manpower: { leader: 2 } },
+            { contractorId: 'a', locationId: 'loc_bbbbbbbbbbbbbbbbbbbbbbbb', date: '2026-11-01', quantities: { 15: 999 }, manpower: { leader: 99 } }
         ] }, showToast(message) { this.toast = message; } };
     await app.downloadDailyProgressExcel();
     assert.ok(output, app.toast);
@@ -73,6 +75,7 @@ test('31-day Excel export clears old data and preserves labels, merges and style
     assert.equal(book.worksheets.length, 2);
     const [first, second] = book.worksheets;
     assert.equal(first.getCell('E15').value, 4); assert.equal(second.getCell('E15').value, 8);
+    assert.match(first.getCell('A3').value, /LOCATION: Site A/);
     assert.equal(second.getCell('F15').value, null); assert.equal(second.getCell('F7').value, null);
     assert.equal(second.getCell('C15').value, first.getCell('C15').value);
     assert.deepEqual(second.model.merges, first.model.merges);

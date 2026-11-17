@@ -7,7 +7,7 @@
     <title>Daily Progress Register | Site Diary — RDSS T-10 GADCHIROLI</title>
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/daily-standalone.css?v=20261117_mobile_layout_v2">
+    <link rel="stylesheet" href="css/daily-standalone.css?v=20261117_locations_v11">
     <style>
         [v-cloak] { display: none !important; }
     </style>
@@ -128,10 +128,10 @@
                     </div>
 
                     <div class="date-stepper-compact">
-                        <button type="button" @click="navigateDay(-1)" title="Previous Day">◀</button>
-                        <input type="date" v-model="selectedDate" title="Choose date">
-                        <button type="button" @click="navigateDay(1)" title="Next Day">▶</button>
-                        <button type="button" class="btn-today-compact" @click="setToday" title="Jump to Today">Today</button>
+                        <button type="button" :disabled="!selectedLocationId" @click="navigateDay(-1)" title="Previous Day">◀</button>
+                        <input type="date" v-model="selectedDate" :disabled="!selectedLocationId" title="Choose date">
+                        <button type="button" :disabled="!selectedLocationId" @click="navigateDay(1)" title="Next Day">▶</button>
+                        <button type="button" class="btn-today-compact" :disabled="!selectedLocationId" @click="setToday" title="Jump to Today">Today</button>
                     </div>
                 </div>
 
@@ -147,6 +147,25 @@
             </header>
 
             <main>
+                <section class="dp-location-bar" aria-label="Select work location">
+                    <div class="dp-location-choice">
+                        <label for="work-location">1. Select location</label>
+                        <select id="work-location" :value="selectedLocationId" @change="changeLocation($event.target.value); $event.target.value = selectedLocationId">
+                            <option value="">Choose a location first…</option>
+                            <option v-for="location in locations" :key="location.id" :value="location.id">{{ location.name }}</option>
+                            <option value="legacy">Legacy / Unassigned (view old entries)</option>
+                        </select>
+                    </div>
+                    <div class="dp-location-choice">
+                        <label for="new-work-location">Add site / village / work location</label>
+                        <div class="dp-location-add"><input id="new-work-location" v-model="newLocationName" maxlength="120" placeholder="e.g. Angara Village – Site A" @keydown.enter.prevent="addLocation"><button type="button" @click="addLocation">Add Location</button></div>
+                    </div>
+                    <div class="dp-location-choice">
+                        <label for="location-work-date">2. Work date</label>
+                        <input id="location-work-date" type="date" v-model="selectedDate" :disabled="!selectedLocationId">
+                    </div>
+                    <p class="dp-location-note" role="status">{{ locationError || (selectedLocationId ? 'Location: ' + activeLocationName + ' · Stock is shared across this contractor’s locations.' : 'Add or choose a location before entering daily progress.') }}</p>
+                </section>
                 <!-- TAB 1: DAILY PROGRESS ENTRY -->
                 <div v-if="currentTab === 'entry'">
                     <!-- Single-line Compact Status Banner -->
@@ -159,6 +178,7 @@
                     </div>
 
                     <!-- Two-column Entry Layout -->
+                    <fieldset class="dp-entry-fields" :disabled="!canEnterLocation || busy">
                     <div class="entry-layout">
                         <!-- Left: Materials Consumption Table -->
                         <div class="panel">
@@ -314,12 +334,13 @@
                     </div>
 
                     <!-- Sticky Save Bar -->
+                    </fieldset>
                     <div class="save-bar">
                         <div class="save-status-info">
                             <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready for Progress Entry') }}</strong>
                             <span>{{ activeContractor.name }} · Work Date: {{ selectedDate }}</span>
                         </div>
-                        <button type="button" class="btn-save-progress" :disabled="busy" @click="saveProgress">
+                        <button type="button" class="btn-save-progress" :disabled="busy || !canEnterLocation" @click="saveProgress">
                             <span>💾</span>
                             <span>{{ busy ? 'Saving...' : 'Save Daily Progress' }}</span>
                         </button>
@@ -463,7 +484,7 @@
 
                                 <button type="button"
                                         class="btn-header-share"
-                                        :disabled="busy || !exportFrom || !exportTo || exportFrom > exportTo"
+                                        :disabled="busy || !selectedLocationId || !exportFrom || !exportTo || exportFrom > exportTo"
                                         @click="downloadExcelReport"
                                         style="font-size: 12px; padding: 6px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                                     <span>{{ busy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
@@ -830,7 +851,7 @@
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="js/daily-worker-auth.js?v=20261117_multi_contractors_v8"></script>
-    <script src="js/daily-progress-standalone.js?v=20261117_share_sync_v7"></script>
+    <script src="js/daily-progress-standalone.js?v=20261117_locations_v11"></script>
 </body>
 
 </html>

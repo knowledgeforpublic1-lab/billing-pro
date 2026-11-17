@@ -23,6 +23,8 @@
         if (!str) return '';
         return String(str).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
     }
+    function locationKey(value) { return value === 'legacy' ? '' : String(value || ''); }
+    function reportKey(row) { return row.contractorId + '|' + row.date + '|' + locationKey(row.locationId); }
 
     function normDate(d) {
         if (!d) return '';
@@ -81,12 +83,17 @@
                 currentTab: 'entry', // 'entry' | 'stock' | 'history' | 'download'
                 selectedDate: queryDate || getTodayStr(),
                 selectedContractorId: queryContractor || defaultContractor.id,
+                selectedLocationId: params.get('location') || '',
+                locations: [],
+                newLocationName: '',
+                locationError: '',
                 items: seed.items || [],
                 sapStock: null,
                 stockKeysByContractor: {},
                 contractors: [defaultContractor],
                 entryLoginUser: null,
                 reports: [],
+                reportStates: [],
                 issues: [],
                 // Current entry state
                 quantities: {},
@@ -131,6 +138,8 @@
         },
 
         computed: {
+            activeLocationName() { return this.selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (this.locations.find(row => row.id === this.selectedLocationId) || {}).name || ''; },
+            canEnterLocation() { return !!this.selectedLocationId && this.selectedLocationId !== 'legacy' && this.locations.some(row => row.id === this.selectedLocationId); },
             shareFilteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.shareContractorSearch || '').trim().toLowerCase();
@@ -149,7 +158,7 @@
                 const c = this.shareSelectedContractor || this.activeContractor || {};
                 const cid = c.id || '';
                 const dt = this.shareLinkDate || this.selectedDate || '';
-                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}${cid === this.selectedContractorId && this.selectedLocationId ? "&location=" + encodeURIComponent(this.selectedLocationId) : ""}`;
             },
 
             whatsappShareUrl() {
@@ -188,7 +197,7 @@
 
             contractorReports() {
                 const actC = this.activeContractor || {};
-                return (this.reports || []).filter(r => matchesContractor(r.contractorId, actC));
+                return (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && locationKey(r.locationId) === locationKey(this.selectedLocationId));
             },
 
             totalManpower() {
@@ -232,9 +241,13 @@
                     }
                 }
             },
-            selectedContractorId() {
-                this.ensureStock().then(() => this.loadReportForActiveDate());
+            async selectedContractorId(cid) {
+                await this.ensureStock();
+                if (cid !== this.selectedContractorId) return;
+                await this.loadLocations();
+                if (cid === this.selectedContractorId && !this.dirty) this.loadReportForActiveDate();
             },
+            selectedLocationId() { this.loadReportForActiveDate(); },
             selectedDate() {
                 this.loadReportForActiveDate();
             }
@@ -262,6 +275,41 @@
         },
 
         methods: {
+            async loadLocations() {
+                const cid = this.selectedContractorId;
+                if (this._locationContractor && this._locationContractor !== cid) this.selectedLocationId = '';
+                this._locationContractor = cid;
+                try {
+                    const response = await fetch('/api/dp-worker/locations?contractorId=' + encodeURIComponent(cid), { cache: 'no-store' });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.error || 'Locations load nahi hui.');
+                    if (cid !== this.selectedContractorId) return;
+                    this.locations = data.locations || [];
+                    if (this.selectedLocationId && this.selectedLocationId !== 'legacy' && !this.locations.some(row => row.id === this.selectedLocationId)) this.selectedLocationId = '';
+                    this.locationError = '';
+                } catch (error) { this.locationError = error.message; }
+            },
+            changeLocation(id) {
+                if (this.busy) return;
+                if (this.dirty && !confirm('Unsaved changes chhodkar location badlein?')) return;
+                this.selectedLocationId = id;
+            },
+            async addLocation() {
+                if (this.busy) return;
+                if (this.dirty) return this.showToast('Location badalne se pehle pending entry save karein.', 'warning');
+                const name = String(this.newLocationName || '').trim();
+                if (!name) return this.showToast('Location name likhein.', 'warning');
+                this.busy = true;
+                try {
+                    const response = await fetch('/api/dp-worker/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contractorId: this.selectedContractorId, name }) });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.error || 'Location save nahi hui.');
+                    await this.loadLocations();
+                    this.selectedLocationId = data.location.id; this.newLocationName = '';
+                    this.loadReportForActiveDate();
+                } catch (error) { this.showToast(error.message, 'error'); }
+                finally { this.busy = false; }
+            },
             toggleContractorDropdown() {
                 this.contractorDropdownOpen = !this.contractorDropdownOpen;
                 if (this.contractorDropdownOpen) {
@@ -282,6 +330,9 @@
             },
 
             selectContractor(cid) {
+                if (this.busy) return;
+                if (this.dirty && !confirm('Unsaved changes chhodkar contractor badlein?')) return;
+                if (cid !== this.selectedContractorId) { this.selectedLocationId = ''; this.locations = []; this.dirty = false; }
                 this.selectedContractorId = cid;
                 this.contractorDropdownOpen = false;
                 this.contractorSearchText = '';
@@ -403,9 +454,9 @@
                         // A confirmed cloud read must not discard an unsent device draft.
                         try {
                             const cached = JSON.parse(localStorage.getItem('billing_daily_progress') || 'null');
-                            const reports = new Map((loaded.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
+                            const reports = new Map((loaded.reports || []).map(r => [reportKey(r), r]));
                             for (const r of cached && cached.reports || []) {
-                                if (r.pending) reports.set(r.contractorId + '|' + r.date, r);
+                                if (r.pending) reports.set(reportKey(r), r);
                             }
                             loaded.reports = [...reports.values()];
                         } catch (e) { }
@@ -420,6 +471,7 @@
                             });
                         }
                         this.reports = Array.isArray(loaded.reports) ? loaded.reports : [];
+                        this.reportStates = Array.isArray(loaded.reportStates) ? loaded.reportStates : [];
                         this.issues = Array.isArray(loaded.issues) ? loaded.issues : [];
                     } else if (seed.records && seed.contractor) {
                         // Seed default September 2026 reports
@@ -471,6 +523,7 @@
                     }
 
                     await this.ensureStock();
+                    await this.loadLocations();
                     this.loadReportForActiveDate();
                 } catch (err) {
                     console.error('[DailyProgressStandalone] Init error:', err);
@@ -589,7 +642,7 @@
                 const curDate = normDate(this.selectedDate);
 
                 const matchingReps = (this.reports || []).filter(r => {
-                    return matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate;
+                    return matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate && locationKey(r.locationId) === locationKey(this.selectedLocationId);
                 });
 
                 // A correction removing quantities must supersede an older, fuller report.
@@ -617,7 +670,7 @@
                     this.quantities = {};
                     this.manpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
                     this.remarks = '';
-                    this.version = 0;
+                    this.version = (this.reportStates.find(row => matchesContractor(row.contractorId, actC) && row.date === curDate && locationKey(row.locationId) === locationKey(this.selectedLocationId)) || {}).version || 0;
                     this.dirty = false;
 
                     // Silently check if server has fresh draft/save from portal
@@ -630,22 +683,24 @@
             async fetchLatestReportsSilently() {
                 if (this._fetchingLatestReport || this.busy || this.dirty) return;
                 this._fetchingLatestReport = true;
-                const cid = this.selectedContractorId, date = this.selectedDate;
+                const cid = this.selectedContractorId, date = this.selectedDate, location = this.selectedLocationId;
+                const epoch = this._dataEpoch || 0;
                 try {
                     const res = await fetch('/api/daily-progress/data?t=' + Date.now());
                     if (res.ok) {
                         const resJson = await res.json();
-                        if (this.dirty || this.busy || cid !== this.selectedContractorId || date !== this.selectedDate) return;
+                        if (this.dirty || this.busy || cid !== this.selectedContractorId || date !== this.selectedDate || location !== this.selectedLocationId || epoch !== (this._dataEpoch || 0)) return;
                         if (resJson && resJson.success && resJson.data && Array.isArray(resJson.data.reports)) {
-                            const reports = new Map(resJson.data.reports.map(r => [r.contractorId + '|' + r.date, r]));
+                            const reports = new Map(resJson.data.reports.map(r => [reportKey(r), r]));
                             for (const r of this.reports) {
-                                if (r.pending) reports.set(r.contractorId + '|' + r.date, r);
+                                if (r.pending) reports.set(reportKey(r), r);
                             }
                             this.reports = [...reports.values()];
+                            this.reportStates = resJson.data.reportStates || [];
                             if (Array.isArray(resJson.data.issues)) this.issues = resJson.data.issues;
                             const actC = this.activeContractor || {};
                             const curDate = normDate(this.selectedDate);
-                            const matching = (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate);
+                            const matching = (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate && locationKey(r.locationId) === locationKey(this.selectedLocationId));
                             matching.sort((a, b) => {
                                 return Number(b.version || 0) - Number(a.version || 0) ||
                                     (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0);
@@ -655,7 +710,7 @@
                                 this.quantities = {};
                                 this.manpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
                                 this.remarks = '';
-                                this.version = 0;
+                                this.version = (this.reportStates.find(row => matchesContractor(row.contractorId, actC) && row.date === curDate && locationKey(row.locationId) === locationKey(this.selectedLocationId)) || {}).version || 0;
                             } else if (!this.dirty) {
                                 this.quantities = { ...(freshRep.quantities || {}) };
                                 this.manpower = {
@@ -768,6 +823,8 @@
 
             async saveProgress() {
                 if (this.busy) return;
+                if (!this.canEnterLocation) return this.showToast('Pehle location add ya select karein. Legacy entries admin hi change kar sakta hai.', 'warning');
+                this._dataEpoch = (this._dataEpoch || 0) + 1;
                 this.busy = true;
                 this.saveStatus = 'saving';
                 try {
@@ -786,6 +843,8 @@
                     const reportObj = {
                         contractorId: cid,
                         date: curDate,
+                        locationId: this.selectedLocationId,
+                        locationName: this.activeLocationName,
                         quantities: cleanQuantities,
                         manpower: { ...this.manpower },
                         remarks: this.remarks || '',
@@ -794,7 +853,7 @@
                     };
 
                     const existingIdx = this.reports.findIndex(r => {
-                        return matchesContractor(r.contractorId, actC) && r.date === curDate;
+                        return matchesContractor(r.contractorId, actC) && r.date === curDate && locationKey(r.locationId) === locationKey(this.selectedLocationId);
                     });
                     if (existingIdx >= 0) {
                         this.reports[existingIdx] = reportObj;
@@ -805,6 +864,7 @@
                     const payload = {
                         contractors: this.contractors,
                         reports: this.reports,
+                        reportStates: this.reportStates,
                         issues: this.issues,
                         updatedAt: new Date().toISOString()
                     };
@@ -812,7 +872,7 @@
                     // Save locally first
                     let localSaved = false;
                     try {
-                        const drafts = payload.reports.map(row => row.contractorId === cid && row.date === curDate ? { ...row, version: this.version, pending: true } : row);
+                        const drafts = payload.reports.map(row => reportKey(row) === reportKey(reportObj) ? { ...row, version: this.version, pending: true } : row);
                         localStorage.setItem('billing_daily_progress', JSON.stringify({ ...payload, reports: drafts }));
                         localSaved = true;
                     } catch (e) { }
@@ -836,7 +896,7 @@
                                 cloudSaved = true;
                                 this.version = reportObj.version;
                                 for (const report of resJson.reports || []) {
-                                    const index = this.reports.findIndex(row => row.contractorId === report.contractorId && row.date === report.date);
+                                    const index = this.reports.findIndex(row => reportKey(row) === reportKey(report));
                                     if (index >= 0) this.reports[index] = report;
                                     if (report.contractorId === cid && report.date === curDate) this.version = report.version;
                                 }
@@ -853,7 +913,7 @@
                         this.saveStatus = 'saved';
                         this.showToast(`Daily Progress saved & synced to cloud! ✅ (${this.selectedDate})`, 'success');
                     } else {
-                        const index = this.reports.findIndex(row => row.contractorId === cid && row.date === curDate);
+                        const index = this.reports.findIndex(row => reportKey(row) === reportKey(reportObj));
                         if (index >= 0) this.reports[index] = { ...reportObj, version: this.version, pending: true };
                         this.dirty = true;
                         this.saveStatus = 'offline';
@@ -868,7 +928,7 @@
 
             getContractorShareUrl(cid, dt) {
                 const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt || this.selectedDate || '')}`;
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt || this.selectedDate || '')}${cid === this.selectedContractorId && this.selectedLocationId ? "&location=" + encodeURIComponent(this.selectedLocationId) : ""}`;
             },
 
             getContractorWhatsappUrl(c, dt) {
@@ -1103,7 +1163,7 @@
 
                         // Header info
                         ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
-                        ws.getCell('A3').value = 'NAME OF FEEDER: ' + (contractor.feeder || '');
+                        ws.getCell('A3').value = 'FEEDER: ' + (contractor.feeder || '') + ' | LOCATION: ' + (this.activeLocationName || 'Legacy / Unassigned');
                         ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                         ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
 
@@ -1152,7 +1212,7 @@
                     const blobUrl = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = blobUrl;
-                    link.download = `Daily_Progress_${contractor.name.replace(/[^a-z0-9]/gi, '_')}_${this.exportFrom}_to_${this.exportTo}.xlsx`;
+                    link.download = `Daily_Progress_${contractor.name.replace(/[^a-z0-9]/gi, '_')}_${(this.activeLocationName || 'Legacy').replace(/[^a-z0-9]/gi, '_')}_${this.exportFrom}_to_${this.exportTo}.xlsx`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);

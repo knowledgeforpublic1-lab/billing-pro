@@ -445,6 +445,9 @@
                 dailyProgressAudit: [],
                 dailyProgressWorkerPanel: false,
                 dailyProgressWorkers: [],
+                dailyProgressLocationId: '',
+                dailyProgressLocations: [],
+                dailyProgressNewLocation: '',
                 dailyProgressUserSearch: '',
                 dailyProgressWorkerExpanded: {},
                 dailyProgressWorkerContractors: [],
@@ -1304,7 +1307,7 @@
                 const c = this.dailyProgressShareSelectedContractor || this.dailyProgressActiveContractor || {};
                 const cid = c.id || '';
                 const dt = this.dailyProgressShareDate || this.dailyProgressDate || '';
-                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}${this.dailyProgressLocationQuery(cid)}`;
             },
             dailyProgressWhatsappShareUrl() {
                 const c = this.dailyProgressShareSelectedContractor || this.dailyProgressActiveContractor || {};
@@ -1316,7 +1319,7 @@
                 const data = this.dailyProgressData;
                 const cid = this.dailyProgressContractorId;
                 if (!data || !data.reports) return [];
-                return data.reports.filter(r => r.contractorId === cid);
+                return data.reports.filter(r => r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
             },
             dailyProgressEnteredEffectiveFrom() {
                 const mode = this.dailyProgressEnteredFilterMode || 'today';

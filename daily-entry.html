@@ -4,12 +4,16 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Daily Progress Entry</title>
-  <link rel="stylesheet" href="/css/daily-entry.css?v=20261116">
+  <link rel="stylesheet" href="/css/daily-entry.css?v=20261117_locations_v11">
   <script defer src="/js/daily-worker-auth.js?v=20261117_multi_contractors_v8"></script>
-  <script defer src="/js/public-daily-entry.js?v=20261117_worker_login_v2"></script>
+  <script defer src="/js/public-daily-entry.js?v=20261117_locations_v11"></script>
 </head>
 <body>
   <main>
+    <section class="location-gate">
+      <label>1. Work location<select id="location"><option value="">Add or choose a location first…</option></select></label>
+      <label>Add a site / village<input id="location-name" maxlength="120" placeholder="Location name"></label><button id="location-add" type="button">Add Location</button>
+    </section>
     <header><div><p class="eyebrow">SITE REGISTER</p><h1>Daily Progress</h1><p id="contractor">Opening your entry link…</p></div><label>Work date<input id="date" type="date" disabled></label></header>
     <div id="message" role="status" aria-live="polite">Connecting…</div>
     <div class="actions"><button id="take" hidden>Start / resume entry</button><button id="retry" hidden>Retry pending save</button><button id="recover" hidden>Restore this device’s pending draft</button><button id="copy" hidden>Download pending draft</button></div>

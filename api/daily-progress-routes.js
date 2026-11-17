@@ -6,7 +6,7 @@ const path = require('node:path');
 const createService = require('./daily-progress-service');
 const createDrive = require('./daily-drive');
 const crypto = require('node:crypto');
-const { readDailyProgressData, newerReport } = require('./daily-progress-data');
+const { readDailyProgressData, newerReport, reportKey, locationId: normalizeLocation } = require('./daily-progress-data');
 
 function normId(value) {
     return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
@@ -140,6 +140,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }
     const items = (seed.items || []).map(({ id, name, code, unit, row }) => ({ id, name, code, unit, row }));
     const service = createService({ db, drive, items });
+    const locationFor = req => normalizeLocation(req.query.locationId || req.body?.locationId || req.body?.report?.locationId);
     const publicRouter = express.Router();
     const adminRouter = express.Router();
     const handle = fn => async (req, res) => {
@@ -206,18 +207,20 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const c = req.dpContractor;
         res.json({ success: true, contractor: { id: c.id, name: c.name, project: c.project, feeder: c.feeder }, items,
             today: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
-            storageReady: drive.configured() });
+            storageReady: drive.configured(), locations: await service.locations.list(c.id) });
     }));
+    publicRouter.get('/locations', handle(async (req, res) => res.json({ success: true, locations: await service.locations.list(req.dpContractor.id) })));
+    publicRouter.post('/locations', handle(async (req, res) => res.json({ success: true, location: await service.locations.create(req.dpContractor.id, req.body.name, req.dpWorker) })));
     publicRouter.get('/report/:date', handle(async (req, res) => {
-        res.json({ success: true, ...await service.access(req.dpContractor.id, req.params.date, req.get('x-dp-editor')) });
+        res.json({ success: true, ...await service.access(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), 'read', locationFor(req)) });
     }));
     for (const action of ['claim', 'heartbeat']) {
         publicRouter.post('/report/:date/' + action, handle(async (req, res) => {
-            res.json({ success: true, ...await service.access(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), action) });
+            res.json({ success: true, ...await service.access(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), action, locationFor(req)) });
         }));
     }
     publicRouter.post('/report/:date/save', handle(async (req, res) => {
-        const saved = await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), req.body, req.dpWorker);
+        const saved = await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), { ...req.body, locationId: locationFor(req) }, req.dpWorker);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.dpContractor.id, date: req.params.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
         res.json({ success: true, ...saved });
     }));
@@ -230,40 +233,59 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     adminRouter.post('/workers/contractors', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, user: await workers.assignContractors(req.body) })));
     adminRouter.post('/workers/disable', auth.requireAdmin, handle(async (req, res) => { await workers.disableUser(req.body.username); res.json({ success: true }); }));
     adminRouter.post('/workers/delete', auth.requireAdmin, handle(async (req, res) => { await workers.deleteUser(req.body.username); res.json({ success: true }); }));
-    adminRouter.get('/entry-history', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await workers.history(req.query.contractorId) })));
+    adminRouter.get('/entry-history', auth.requireAdmin, handle(async (req, res) => {
+        let events = await workers.history(req.query.contractorId);
+        if (req.query.locationId !== undefined) events = events.filter(row => normalizeLocation(row.locationId) === locationFor(req));
+        res.json({ success: true, events });
+    }));
+    adminRouter.get('/locations', handle(async (req, res) => res.json({ success: true, locations: await service.locations.list(String(req.query.contractorId || '')) })));
+    adminRouter.post('/locations', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, location: await service.locations.create(req.body.contractorId, req.body.name, { id: 'admin' }) })));
     adminRouter.post('/storage-check', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await drive.check() })));
     adminRouter.post('/links', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.createLink(req.body.contractor || {}) })));
     adminRouter.post('/links/disable', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, disabled: await service.disable(req.body.contractorId) })));
-    adminRouter.post('/reopen', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, reopened: await service.reopen(req.body.contractorId, req.body.date) })));
-    adminRouter.get('/audit', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await service.audit(req.query.contractorId, req.query.date) })));
-    adminRouter.get('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor')) })));
-    adminRouter.post('/claim', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim') })));
+    adminRouter.post('/reopen', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, reopened: await service.reopen(req.body.contractorId, req.body.date, 'reopen', locationFor(req)) })));
+    adminRouter.get('/audit', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await service.audit(req.query.contractorId, req.query.date, locationFor(req)) })));
+    adminRouter.get('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor'), 'read', locationFor(req)) })));
+    adminRouter.post('/claim', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim', locationFor(req)) })));
     adminRouter.post('/report', auth.requireAdmin, handle(async (req, res) => {
         const actor = { id: 'owner:' + (req.authSession && req.authSession.uid || 'admin'), name: 'Admin', username: 'admin', role: 'admin' };
         const saved = await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body, actor);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.body.contractorId, date: req.body.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
         res.json({ success: true, ...saved });
     }));
-    adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat') })));
+    adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat', locationFor(req)) })));
+    adminRouter.post('/manage-reports', auth.requireAdmin, handle(async (req, res) => {
+        const { contractorId, date, action, allDates } = req.body;
+        if (!contractorId || !['delete', 'reset'].includes(action)) throw Object.assign(new Error('Contractor, location and action required.'), { status: 400 });
+        const locationId = locationFor(req);
+        if (locationId) await service.locations.get(contractorId, locationId);
+        const rows = (await readData()).reports.filter(row => row.contractorId === contractorId && normalizeLocation(row.locationId) === locationId && (allDates === true || row.date === date));
+        if (!rows.length && allDates !== true) rows.push({ contractorId, date, locationId, version: 0 });
+        const results = [];
+        try { for (const row of rows) results.push(await service.manage(contractorId, row.date, locationId, action, row)); }
+        catch (error) { return res.status(error.status || 503).json({ success: false, error: `${results.length} dates updated. ` + error.message, results }); }
+        res.json({ success: true, count: results.length, results });
+    }));
     adminRouter.post('/import', auth.requireAdmin, handle(async (req, res) => {
         const report = req.body.report;
         if (!report || typeof report.contractorId !== 'string') throw Object.assign(new Error('Historical report required'), { status: 400 });
         const editor = req.get('x-dp-editor');
-        const status = await service.access(report.contractorId, report.date, editor, 'claim');
+        const status = await service.access(report.contractorId, report.date, editor, 'claim', normalizeLocation(report.locationId));
         if (status.version || status.state === 'final') return res.json({ success: true, skipped: true });
         if (!status.editable) throw Object.assign(new Error('Another editor is active. Historical import stopped.'), { status: 409 });
         const saved = await service.save(report.contractorId, report.date, editor, {
-            report, final: true, version: status.version, epoch: status.epoch, requestId: req.body.requestId
+            report, locationId: normalizeLocation(report.locationId), final: true, version: status.version, epoch: status.epoch, requestId: req.body.requestId
         });
         res.json({ success: true, ...saved });
     }));
     async function readData() {
         const legacy = await db.getDefaultConfig('dailyProgressData');
         const base = readDailyProgressData(legacy);
-        const reports = new Map((base.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
-        for (const r of [...await workers.sharedReports(), ...await service.reports()]) {
-            const key = r.contractorId + '|' + r.date;
-            reports.set(key, newerReport(reports.get(key), r));
+        const reports = new Map((base.reports || []).map(r => [reportKey(r), r]));
+        const controlledReports = await service.reports();
+        for (const r of [...await workers.sharedReports(), ...controlledReports]) {
+            const key = reportKey(r);
+            reports.set(key, r.deleted || r.managed ? r : newerReport(reports.get(key), r));
         }
         const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
         for (const c of await service.list()) contractors.set(c.id, c);
@@ -279,7 +301,8 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
         const issues = new Map((base.issues || []).map(i => [i.id, i]));
         for (const issue of aux.issues) issues.set(issue.id, issue);
-        return { contractors: [...contractors.values()], reports: [...reports.values()], issues: [...issues.values()] };
+        const reportStates = controlledReports.map(({ contractorId, date, locationId, version, state, deleted }) => ({ contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted }));
+        return { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
     }
     adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
     adminRouter.post('/auxiliary', auth.requireAdmin, handle(async (req, res) => {

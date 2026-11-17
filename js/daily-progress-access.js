@@ -6,11 +6,106 @@
     const originalQuantity = module.onDailyProgressQuantityChange;
     const originalManpower = module.onDailyProgressManpowerChange;
     const originalSaveData = module.saveDailyProgressData;
+    const originalContractorChange = module.onDailyProgressContractorChange;
     Object.assign(module, {
         // This workspace persists confirmed reports through the versioned report API.
         // Debounced drafts and sharing a URL must only update the device cache.
         saveDailyProgressData() {
             return originalSaveData.call(this, false);
+        },
+        invalidateDailyProgressReads() {
+            this._dpDataEpoch = (this._dpDataEpoch || 0) + 1;
+            this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
+        },
+        async loadDailyProgressLocations() {
+            const cid = this.dailyProgressContractorId;
+            if (!cid) return;
+            this._dpLocationsContractor = cid;
+            try {
+                const result = await this.dailyProgressRequest('locations?contractorId=' + encodeURIComponent(cid));
+                if (cid !== this.dailyProgressContractorId) return;
+                this.dailyProgressLocations = result.locations || [];
+                if (this.dailyProgressLocationId && this.dailyProgressLocationId !== 'legacy' && !this.dailyProgressLocations.some(row => row.id === this.dailyProgressLocationId)) this.dailyProgressLocationId = '';
+            } catch (error) { this.showToast('Locations load nahi hui: ' + error.message, 'Alert'); }
+        },
+        async onDailyProgressContractorChange(cid) {
+            if (this.dailyProgressBusy) return;
+            const previous = this.dailyProgressContractorId;
+            originalContractorChange.call(this, cid);
+            if (previous !== this.dailyProgressContractorId) {
+                const wanted = this.dailyProgressContractorId;
+                this.dailyProgressLocationId = ''; this.dailyProgressLocations = [];
+                await this.loadDailyProgressLocations();
+                if (wanted === this.dailyProgressContractorId && !this.dailyProgressDirty) this.loadDailyProgressReportForDate(this.dailyProgressDate);
+            }
+        },
+        changeDailyProgressLocation(id) {
+            if (this.dailyProgressBusy || this._dpPendingSave) return;
+            if (this.dailyProgressDirty && !confirm('Unsaved changes chhodkar location badlein?')) return;
+            this.dailyProgressLocationId = id;
+            this.loadDailyProgressReportForDate(this.dailyProgressDate);
+            this.loadDailyProgressEntryHistory();
+        },
+        addDailyProgressLocation() {
+            return this.runDailyProgressAdmin(async () => {
+                const name = String(this.dailyProgressNewLocation || '').trim();
+                if (!name || !this.dailyProgressContractorId) throw new Error('Contractor aur location name chahiye.');
+                if (this.dailyProgressDirty || this._dpPendingSave) throw new Error('Pending entry pehle save karein.');
+                const response = await this.dailyProgressRequest('locations', { contractorId: this.dailyProgressContractorId, name });
+                await this.loadDailyProgressLocations();
+                this.dailyProgressNewLocation = '';
+                this.changeDailyProgressLocation(response.location.id);
+            });
+        },
+        manageDailyProgressLocation(action, allDates = false) {
+            return this.runDailyProgressAdmin(async () => {
+                if (!this.dailyProgressLocationId) throw new Error('Pehle location select karein.');
+                if (this.dailyProgressBusy || this._dpPendingSave) throw new Error('Pending save pehle complete karein.');
+                const label = this.dailyProgressLocationName();
+                const cid = this.dailyProgressContractorId, locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+                const count = (this.dailyProgressData.reports || []).filter(r => r.contractorId === this.dailyProgressContractorId && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId)).length;
+                const scope = allDates ? `ALL ${count} saved dates` : this.dailyProgressDate;
+                if (!confirm(`${label} — ${scope}: ${action === 'reset' ? 'quantities, manpower aur remarks reset' : 'saved progress delete'} karein? Unsaved changes bhi hat jayengi.`)) return;
+                this.invalidateDailyProgressReads();
+                this.dailyProgressBusy = true;
+                let failure;
+                const apply = (results, complete = false) => {
+                    const dates = new Set(results.map(row => row.date));
+                    this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(row => !(row.contractorId === cid && this.dailyProgressLocationKey(row.locationId) === locationId && ((allDates && complete) || dates.has(row.date))));
+                    if (action === 'reset') for (const result of results) this.dailyProgressData.reports.push({ contractorId: cid, locationId, locationName: label, date: result.date, version: result.version, quantities: {}, manpower: {}, remarks: '' });
+                    this.dailyProgressDirty = false; this._dpEditVersion = null;
+                };
+                try {
+                    const result = await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: this.dailyProgressDate, action, allDates });
+                    apply(result.results || [], true);
+                } catch (error) {
+                    if (!error.results?.length) throw error;
+                    apply(error.results); failure = error;
+                } finally { this.dailyProgressBusy = false; }
+                this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                await this.syncDailyProgressCloudData(true);
+                await this.refreshDailyProgressStatus(false);
+                if (failure) throw failure;
+                this.showToast('Selected location ka progress ' + (action === 'reset' ? 'reset' : 'delete') + ' ho gaya.', 'Check');
+            });
+        },
+        startDailyProgressLocationEntry() {
+            return this.runDailyProgressAdmin(async () => {
+                if (!this.dailyProgressLocationId) throw new Error('Pehle location select karein.');
+                if (this.dailyProgressBusy || this._dpPendingSave) throw new Error('Pending save pehle complete karein.');
+                const cid = this.dailyProgressContractorId, date = this.dailyProgressDate, locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+                this.invalidateDailyProgressReads();
+                this.dailyProgressBusy = true;
+                try {
+                    const status = await this.dailyProgressRequest('report?contractorId=' + encodeURIComponent(cid) + '&date=' + encodeURIComponent(date));
+                    if (cid !== this.dailyProgressContractorId || date !== this.dailyProgressDate || locationId !== this.dailyProgressLocationKey(this.dailyProgressLocationId)) return;
+                    if (status.state === 'final') {
+                        if (!confirm(`${this.dailyProgressLocationName()} — ${date}: saved entry reopen karke edit karein?`)) return;
+                        await this.dailyProgressRequest('reopen', { contractorId: cid, date, locationId });
+                    }
+                } finally { this.dailyProgressBusy = false; }
+                await this.refreshDailyProgressStatus(true);
+            });
         },
         dailyProgressEntryTime(value) {
             if (!value || isNaN(Date.parse(value))) return '—';
@@ -160,28 +255,34 @@
             return this._dpEditor;
         },
         async dailyProgressRequest(route, body) {
+            if (/^(report(?:\?|$)|claim$|heartbeat$|reopen$|audit\?|entry-history\?|import$|manage-reports$)/.test(route)) {
+                const locationId = this.dailyProgressLocationKey(body?.locationId ?? body?.report?.locationId ?? this.dailyProgressLocationId);
+                if (body === undefined) route += (route.includes('?') ? '&' : '?') + 'locationId=' + encodeURIComponent(locationId);
+                else body = { ...body, locationId };
+            }
             const response = await fetch('/api/dp-admin/' + route, {
                 credentials: 'same-origin', cache: 'no-store',
                 headers: { 'Content-Type': 'application/json', 'x-dp-editor': this.dailyProgressEditor() },
                 ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }), signal: AbortSignal.timeout(45000)
             });
             const result = await response.json();
-            if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Daily Progress service unavailable'), { status: response.status });
+            if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Daily Progress service unavailable'), { status: response.status, results: result.results });
             return result;
         },
         async syncDailyProgressCloudData(silent = false) {
             if (this.dailyProgressDirty || this.dailyProgressBusy || this._dpPendingSave || this._dpCloudRefreshing) return false;
             this._dpCloudRefreshing = true;
+            const epoch = this._dpDataEpoch || 0;
             try {
                 const response = await this.dailyProgressRequest('data');
                 // An edit may have started while the network request was running.
-                if (this.dailyProgressDirty || this.dailyProgressBusy || this._dpPendingSave || !response.data) return false;
+                if (this.dailyProgressDirty || this.dailyProgressBusy || this._dpPendingSave || !response.data || epoch !== (this._dpDataEpoch || 0)) return false;
                 const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
                 const merged = this.mergeDailyProgressData(local, response.data);
                 // The aggregate endpoint includes both share-page and Drive reports.
                 // Its confirmed copy takes precedence over a clean device cache.
-                const reports = new Map((local.reports || []).map(row => [row.contractorId + '|' + row.date, row]));
-                for (const row of response.data.reports || []) reports.set(row.contractorId + '|' + row.date, row);
+                const reports = new Map();
+                for (const row of response.data.reports || []) reports.set(this.dailyProgressReportKey(row), row);
                 merged.reports = [...reports.values()];
                 this.dailyProgressData = merged;
                 this.syncDailyProgressContractorsList();
@@ -205,8 +306,8 @@
                 if (response.data) {
                     const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
                     for (const kind of ['contractors', 'reports', 'issues']) {
-                        const key = row => kind === 'reports' ? row.contractorId + '|' + row.date : row.id;
-                        const records = new Map((local[kind] || []).map(row => [key(row), row]));
+                        const key = row => kind === 'reports' ? this.dailyProgressReportKey(row) : row.id;
+                        const records = new Map((kind === 'reports' ? [] : local[kind] || []).map(row => [key(row), row]));
                         for (const row of response.data[kind] || []) records.set(key(row), row);
                         local[kind] = [...records.values()];
                     }
@@ -215,6 +316,7 @@
                     if (!this.dailyProgressDirty) this.loadDailyProgressReportForDate(this.dailyProgressDate);
                 }
                 await this.refreshDailyProgressAccess();
+                await this.loadDailyProgressLocations();
             } catch (e) { this.dailyProgressAccessMessage = e.message; }
             if (!this._dpStatusTimer) this._dpStatusTimer = setInterval(() => {
                 if (this.currentView === 'dailyProgress' && !this.dailyProgressBusy) {
@@ -226,6 +328,11 @@
             }, 20000);
         },
         loadDailyProgressReportForDate(date) {
+            this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
+            if (this.dailyProgressLocationId !== undefined && this._dpLocationsContractor !== this.dailyProgressContractorId) {
+                this.dailyProgressLocationId = ''; this.dailyProgressLocations = [];
+                this.loadDailyProgressLocations();
+            }
             originalLoad.call(this, date);
             this.dailyProgressServerState = null;
             this._dpEditVersion = null;
@@ -238,12 +345,15 @@
         },
         async refreshDailyProgressStatus(claim = false) {
             const cid = this.dailyProgressContractorId, date = this.dailyProgressDate;
+            const locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+            if (this.dailyProgressLocationId !== undefined && !this.dailyProgressLocationId) return;
             if (!cid || !date || this.dailyProgressBusy) return;
+            const requestSeq = this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
             try {
                 const result = claim
                     ? await this.dailyProgressRequest('claim', { contractorId: cid, date })
                     : await this.dailyProgressRequest('report?contractorId=' + encodeURIComponent(cid) + '&date=' + encodeURIComponent(date));
-                if (cid !== this.dailyProgressContractorId || date !== this.dailyProgressDate || this.dailyProgressBusy) return;
+                if (cid !== this.dailyProgressContractorId || date !== this.dailyProgressDate || locationId !== this.dailyProgressLocationKey(this.dailyProgressLocationId) || this.dailyProgressBusy || requestSeq !== this._dpStatusSeq) return;
                 this.dailyProgressServerState = result;
                 if (!this.dailyProgressDirty) this._dpEditVersion = result.version;
                 this.dailyProgressLocked = !result.editable;
@@ -251,8 +361,8 @@
                 if (!this.dailyProgressDirty && result.report) {
                     const reports = this.dailyProgressData && this.dailyProgressData.reports;
                     if (Array.isArray(reports)) {
-                        const report = { ...result.report, contractorId: cid, date, version: result.version, state: result.state };
-                        const index = reports.findIndex(row => row.contractorId === cid && row.date === date);
+                        const report = { ...result.report, contractorId: cid, date, locationId, version: result.version, state: result.state };
+                        const index = reports.findIndex(row => row.contractorId === cid && row.date === date && this.dailyProgressLocationKey(row.locationId) === locationId);
                         if (index < 0) reports.push(report); else reports[index] = report;
                     }
                     this.dailyProgressQuantities = { ...(result.report.quantities || {}) };
@@ -274,12 +384,14 @@
         },
         async saveDailyProgressReport() {
             if (this.dailyProgressBusy) return;
+            if (this.dailyProgressLocationId !== undefined && !this.dailyProgressLocationId) return this.showToast('Pehle location add ya select karein.', 'Alert');
             const cid = this.dailyProgressContractorId, date = this.dailyProgressDate;
             if (!cid || !date) return this.showToast('Contractor aur date select karein.', 'Alert');
             if (this._dpSaveTimer) {
                 clearTimeout(this._dpSaveTimer);
                 this._dpSaveTimer = null;
             }
+            this.invalidateDailyProgressReads();
             this.dailyProgressBusy = true;
             try {
                 if (!this._dpPendingSave) {
@@ -287,16 +399,16 @@
                     if (!status.editable) throw new Error(status.state === 'final' ? 'Entry locked hai. Admin se reopen karwayein.' : 'Koi aur entry kar raha hai.');
                     if (this._dpEditVersion !== null && this._dpEditVersion !== undefined && status.version !== this._dpEditVersion) throw new Error('Newer draft mil gaya hai. Apni entries copy karke report reload karein; overwrite nahi kiya gaya.');
                     this._dpPendingSave = {
-                        contractorId: cid, date, version: status.version, epoch: status.epoch, requestId: crypto.randomUUID(), final: true,
+                        contractorId: cid, date, locationId: this.dailyProgressLocationKey(this.dailyProgressLocationId), version: status.version, epoch: status.epoch, requestId: crypto.randomUUID(), final: true,
                         report: { quantities: { ...this.dailyProgressQuantities }, manpower: { ...this.dailyProgressManpower }, remarks: this.dailyProgressRemarks || '' }
                     };
                 }
                 const pending = this._dpPendingSave;
-                if (pending.contractorId !== cid || pending.date !== date) throw new Error('Pehle pending report save retry karein.');
+                if (pending.contractorId !== cid || pending.date !== date || this.dailyProgressLocationKey(pending.locationId) !== this.dailyProgressLocationKey(this.dailyProgressLocationId)) throw new Error('Pehle pending report save retry karein.');
                 const saved = await this.dailyProgressRequest('report', pending);
-                const report = { ...pending.report, contractorId: cid, date, version: saved.version, state: saved.state };
+                const report = { ...pending.report, contractorId: cid, date, locationId: pending.locationId, locationName: this.dailyProgressLocationName(), version: saved.version, state: saved.state };
                 const rows = this.dailyProgressData.reports;
-                const idx = rows.findIndex(r => r.contractorId === cid && r.date === date);
+                const idx = rows.findIndex(r => r.contractorId === cid && r.date === date && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(pending.locationId));
                 if (idx < 0) rows.push(report); else rows[idx] = report;
                 this._dpPendingSave = null;
                 this.dailyProgressDirty = false; this.dailyProgressVersion = saved.version; this.dailyProgressLocked = true;

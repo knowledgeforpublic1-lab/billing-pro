@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 const { promisify } = require('node:util');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { readDailyProgressData } = require('./daily-progress-data');
+const { readDailyProgressData, newerReport, reportKey, controlKey, locationId: normalizeLocation } = require('./daily-progress-data');
 const scrypt = promisify(crypto.scrypt);
 const hash = text => crypto.createHash('sha256').update(String(text)).digest('hex');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
@@ -10,6 +10,7 @@ const COOKIE = 'dp_worker_session';
 
 module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) {
     const router = express.Router();
+    const locations = require('./daily-progress-locations')({ db });
     const read = key => db.atomicDailyRecord(key, value => ({ result: value }));
     const userKey = username => 'dp_worker_user_' + hash(String(username).toLowerCase());
     const emailIndexKey = email => 'dp_worker_idx_email_' + hash(String(email).trim().toLowerCase());
@@ -226,6 +227,16 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
     }));
 
     router.get('/session', handler(async (req, res) => res.json({ success: true, user: await principal(req) })));
+    router.get('/locations', handler(async (req, res) => {
+        const actor = await principal(req), cid = String(req.query.contractorId || '');
+        assertContractor(actor, cid);
+        res.json({ success: true, locations: await locations.list(cid) });
+    }));
+    router.post('/locations', handler(async (req, res) => {
+        const actor = await principal(req), cid = req.body.contractorId;
+        assertContractor(actor, cid);
+        res.json({ success: true, location: await locations.create(cid, req.body.name, actor) });
+    }));
 
     router.post('/logout', handler(async (req, res) => {
         const part = String(req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith(COOKIE + '='));
@@ -368,8 +379,8 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
 
     async function recordHistory({ contractorId, date, version, savedAt, savedBy, report, source }) {
         const stamp = Date.parse(savedAt);
-        const key = 'entry_event_' + hash(contractorId) + '_' + String(9999999999999 - stamp).padStart(13, '0') + '_' + hash(source + '|' + date + '|' + version);
-        const value = { contractorId, date, version, savedAt, savedBy, source, quantities: report.quantities || {}, manpower: report.manpower || {}, remarks: report.remarks || '' };
+        const key = 'entry_event_' + hash(contractorId) + '_' + String(9999999999999 - stamp).padStart(13, '0') + '_' + hash(source + '|' + date + '|' + normalizeLocation(report.locationId) + '|' + version);
+        const value = { contractorId, date, locationId: normalizeLocation(report.locationId), locationName: report.locationName || 'Legacy / Unassigned', version, savedAt, savedBy, source, quantities: report.quantities || {}, manpower: report.manpower || {}, remarks: report.remarks || '' };
         await db.atomicDailyRecord(key, old => old ? { result: null } : { value, result: null });
     }
 
@@ -403,25 +414,27 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         async saveShared(actor, incoming, previous) {
             assertContractor(actor, incoming.contractorId);
             const cid = incoming.contractorId, date = incoming.date;
-            const controlled = await read('report_' + hash(cid) + '_' + date);
-            if (controlled && (controlled.state === 'final' || controlled.fileId || controlled.leaseUntil > now())) {
-                fail(controlled.state === 'final' ? 423 : 409, 'Is date ki entry reserved/locked hai. Admin se reopen ya sahi entry link lein.');
-            }
+            const locationId = normalizeLocation(incoming.locationId);
+            const location = locationId ? await locations.get(cid, locationId) : null;
+            const legacy = await read('shared_report_' + hash(reportKey({ contractorId: cid, date, locationId })));
             const digest = hash(JSON.stringify({ quantities: incoming.quantities || {}, manpower: incoming.manpower || {}, remarks: incoming.remarks || '' }));
-            const report = await db.atomicDailyRecord('shared_report_' + hash(cid + '|' + date), old => {
-                if (old && old.digest === digest) return { result: old.report };
-                const base = old && old.report || previous;
+            const report = await db.atomicDailyRecord(controlKey(cid, date, locationId), old => {
+                if (old && (old.state === 'final' || old.fileId || old.leaseUntil > now() || old.operation?.until > now())) fail(old.state === 'final' ? 423 : 409, 'Is location/date ki entry reserved/locked hai. Admin se reopen karwayein.');
+                if (old?.sharedDigest === digest && old.baseReport && !old.deleted) return { result: old.baseReport };
+                let base = newerReport(previous, legacy?.report);
+                if (old?.version > Number(base?.version || 0)) base = { version: old.version };
                 if (Number(incoming.version) !== Number(base && base.version || 0) + 1) {
                     fail(409, 'Nayi entry pehle se saved hai. Apna draft safe rakhein aur latest report load karein.');
                 }
                 const next = {
                     ...incoming,
+                    locationId, locationName: location?.name || 'Legacy / Unassigned',
                     version: Number(base && base.version || 0) + 1,
                     updatedAt: new Date(now()).toISOString(),
                     savedAt: new Date(now()).toISOString(),
                     savedBy: { id: actor.id, name: actor.name, username: actor.username, email: actor.email || '', mobile: actor.mobile || '', role: actor.role }
                 };
-                return { value: { digest, report: next }, result: next };
+                return { value: { ...(old || {}), contractorId: cid, date, locationId, state: 'open', version: next.version, epoch: old?.epoch || 0, baseReport: next, sharedDigest: digest, deleted: false, managed: false }, result: next };
             });
             await recordHistory({ contractorId: cid, date, version: report.version, savedAt: report.savedAt, savedBy: report.savedBy, report, source: 'share' });
             return report;

@@ -7,14 +7,16 @@
     try { editor = sessionStorage.getItem('dp-editor'); if (!editor) { editor = crypto.randomUUID() + crypto.randomUUID(); sessionStorage.setItem('dp-editor', editor); } }
     catch { editor = crypto.randomUUID() + crypto.randomUUID(); }
     let state, items = [], contractor, date = '', draft = blank(), dirty = false, edits = 0, timer, running, pending, limit = 80;
+    let locationId = '', today = '';
     let lastError = '';
     let lastActivity = Date.now(), loading = false, storageReady = false, active = false, stagedRecovery;
     const formInputs = () => document.querySelectorAll('#materials input,#manpower input,#charges input,#remarks');
     function blank() { return { quantities: {}, manpower: {}, remarks: '' }; }
     function message(text, error = false) { $('message').textContent = text; $('message').className = error ? 'error' : ''; }
     async function request(path, body) {
+        if (path.startsWith('/report/') && locationId) path += (path.includes('?') ? '&' : '?') + 'locationId=' + encodeURIComponent(locationId);
         const response = await fetch('/api/daily-entry' + path, {
-            method: body === undefined ? 'GET' : 'POST', credentials: 'omit', cache: 'no-store',
+            method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store',
             headers: { 'Content-Type': 'application/json', 'x-dp-link': token, 'x-dp-editor': editor },
             ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(45000)
         });
@@ -23,7 +25,7 @@
         if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Connection failed. Retry karein.'), { status: response.status });
         return result;
     }
-    const pendingKey = () => 'daily-entry-pending:' + contractor.id + ':' + date + ':' + editor + (window.DailyWorkerAuth && window.DailyWorkerAuth.user ? ':' + window.DailyWorkerAuth.user.id : '');
+    const pendingKey = () => 'daily-entry-pending:' + contractor.id + ':' + date + ':' + editor + (locationId ? ':' + locationId : '') + (window.DailyWorkerAuth && window.DailyWorkerAuth.user ? ':' + window.DailyWorkerAuth.user.id : '');
     function retain() {
         try { localStorage.setItem(pendingKey(), JSON.stringify({ draft, pending, edits })); }
         catch { message('Device backup unavailable. Page band na karein; save retry karein.', true); }
@@ -136,9 +138,10 @@
     async function poll(heartbeat = false) {
         if (!date || loading || running || !active) return;
         const wantedDate = date;
+        const wantedLocation = locationId;
         try {
             const next = await request('/report/' + date + (heartbeat ? '/heartbeat' : ''), heartbeat ? {} : undefined);
-            if (date !== wantedDate || loading || running) return;
+            if (date !== wantedDate || locationId !== wantedLocation || loading || running) return;
             const changed = next.version !== state.version;
             state = next;
             if (!dirty && !pending && changed) { draft = next.report || blank(); render(); }
@@ -148,13 +151,47 @@
     async function start() {
         try {
             const data = await request('/bootstrap'); contractor = data.contractor; items = data.items; storageReady = data.storageReady;
+            today = data.today;
             $('contractor').textContent = contractor.name + (contractor.feeder ? ' · ' + contractor.feeder : '');
-            $('workspace').hidden = false; $('date').disabled = false;
-            active = true; await open(data.today);
+            active = true;
+            if ($('location')) {
+                renderLocations(data.locations || []);
+                $('workspace').hidden = true; $('date').disabled = true; controls();
+                $('date').value = today;
+                message('Pehle work location add ya select karein, phir date ki entry karein.');
+            } else { $('workspace').hidden = false; $('date').disabled = false; await open(data.today); }
             setInterval(() => poll(false), 7000);
             setInterval(() => { if (Date.now() - lastActivity < 30000) poll(true); }, 30000);
             setInterval(() => { if (dirty && state?.editable && !running) save(false).catch(() => {}); }, 15000);
         } catch (e) { message(e.message, true); }
+    }
+    function renderLocations(locations) {
+        $('location').replaceChildren();
+        const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'Choose work location…'; $('location').append(empty);
+        for (const location of locations) {
+            const option = document.createElement('option'); option.value = location.id; option.textContent = location.name; $('location').append(option);
+        }
+        $('location').value = locationId;
+    }
+    async function selectLocation(id) {
+        if (dirty || pending || running || loading) { $('location').value = locationId; return message('Pending entry pehle save ya download karein.', true); }
+        const wantedDate = $('date').value || today;
+        locationId = id; date = ''; state = null; draft = blank();
+        $('date').disabled = !id; $('workspace').hidden = !id;
+        if (id) await open(wantedDate);
+        else message('Work location select karein.');
+    }
+    if ($('location')) {
+        $('location').addEventListener('change', event => selectLocation(event.target.value));
+        $('location-add').onclick = async () => {
+            try {
+                if (dirty || pending || running || loading) throw new Error('Pending entry pehle save karein.');
+                const saved = await request('/locations', { name: $('location-name').value });
+                const list = await request('/locations');
+                renderLocations(list.locations); $('location').value = saved.location.id; $('location-name').value = '';
+                await selectLocation(saved.location.id);
+            } catch (error) { message(error.message, true); }
+        };
     }
     $('date').addEventListener('change', event => { if (event.target.value) open(event.target.value); });
     $('remarks').addEventListener('input', () => change(() => { draft.remarks = $('remarks').value; }));
@@ -183,7 +220,7 @@
         retain(); render(); save(false).catch(() => {});
     };
     $('copy').onclick = () => {
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ contractorId: contractor.id, date, ...(stagedRecovery?.draft || draft) }, null, 2)], { type: 'application/json' }));
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ contractorId: contractor.id, date, locationId, ...(stagedRecovery?.draft || draft) }, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a'); a.href = url; a.download = 'pending-daily-progress-' + date + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
     window.addEventListener('beforeunload', event => { if (dirty || pending) { event.preventDefault(); event.returnValue = ''; } });

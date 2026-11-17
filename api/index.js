@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const db = require('./db');
-const { readDailyProgressData } = require('./daily-progress-data');
+const { readDailyProgressData, reportKey, locationId: normalizeLocation } = require('./daily-progress-data');
 const auth = require('./auth')({ db, config: require('./auth-settings') });
 const workers = require('./daily-worker-auth')({ db, auth });
 
@@ -807,6 +807,7 @@ app.get('/api/daily-progress/data', async (req, res) => {
             const allowed = cid => workers.hasContractorPermission(actor, cid);
             data.contractors = data.contractors.filter(row => allowed(row.id)).map(({ id, name, project, feeder, engineer }) => ({ id, name, project, feeder, engineer }));
             data.reports = data.reports.filter(row => allowed(row.contractorId));
+            data.reportStates = (data.reportStates || []).filter(row => allowed(row.contractorId));
             data.issues = data.issues.filter(row => allowed(row.contractorId));
         }
         res.json({ success: true, data });
@@ -829,7 +830,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         // Server-side smart merge — prevents whole-dataset overwrite across multiple site devices
         const existingRec = await db.getDefaultConfig('dailyProgressData');
         const existingData = readDailyProgressData(existingRec);
-        if (actor.role !== 'admin') {
+        if (actor.role !== 'admin' || (payload.reports || []).some(report => normalizeLocation(report.locationId))) {
             if (!Array.isArray(payload.reports) || payload.reports.length > 1000) return res.status(400).json({ success: false, error: 'Valid report list required' });
             const itemIds = new Set((require('./daily-progress-data').publicItemIds)());
             const clean = payload.reports.map(report => {
@@ -847,13 +848,13 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
                     if (!Number.isFinite(value) || value < 0 || value > 1e9 || (['leader', 'skilled', 'unskilled'].includes(key) && !Number.isInteger(value))) throw Object.assign(new Error('Invalid manpower'), { status: 400 });
                     manpower[key] = value;
                 }
-                return { contractorId: report.contractorId, date: report.date, quantities, manpower, remarks: String(report.remarks || '').slice(0, 5000), version: Number(report.version || 0) };
+                return { contractorId: report.contractorId, date: report.date, locationId: normalizeLocation(report.locationId), quantities, manpower, remarks: String(report.remarks || '').slice(0, 5000), version: Number(report.version || 0) };
             });
             const loaded = await dailyProgress.readData();
-            const prior = new Map(loaded.reports.map(row => [row.contractorId + '|' + row.date, row]));
+            const prior = new Map(loaded.reports.map(row => [reportKey(row), row]));
             const saved = [];
             for (const report of clean) {
-                const previous = prior.get(report.contractorId + '|' + report.date);
+                const previous = prior.get(reportKey(report));
                 if (previous && Number(report.version) <= Number(previous.version) && JSON.stringify(report.quantities) === JSON.stringify(previous.quantities || {}) && report.remarks === (previous.remarks || '') && Object.keys(report.manpower).every(key => Number(report.manpower[key]) === Number(previous.manpower && previous.manpower[key] || 0))) continue;
                 saved.push(await workers.saveShared(actor, report, previous));
             }
@@ -871,7 +872,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         function normReportKey(r) {
             const cNorm = String(r.contractorId || '').toLowerCase().replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
             const dNorm = String(r.date || '').trim();
-            return cNorm + '|' + dNorm;
+            return cNorm + '|' + dNorm + '|' + normalizeLocation(r.locationId);
         }
         (existingData.reports || []).forEach(r => rMap.set(normReportKey(r), r));
         (payload.reports || []).forEach(r => {

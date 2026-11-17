@@ -30,8 +30,8 @@ test('share POST persists a direct dataset; GET and admin recover nested histori
     } finally { await new Promise(resolve => server.close(resolve)); }
 });
 
-function adminApp() {
-    const context = { window: {}, console, AbortSignal, crypto: require('node:crypto').webcrypto };
+function adminApp(extra = {}) {
+    const context = { window: {}, console, AbortSignal, crypto: require('node:crypto').webcrypto, ...extra };
     vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
     vm.runInNewContext(fs.readFileSync('js/daily-progress-access.js', 'utf8'), context);
     return Object.assign({}, context.window.DailyProgressModule, {
@@ -60,6 +60,45 @@ test('background refresh does not overwrite edits begun before or during a reque
     assert.equal(await pending, false); assert.equal(a.dailyProgressData.reports.length, 0);
 });
 
+test('late reads cannot restore data after an admin mutation or replace a newer status response', async () => {
+    const a = adminApp(); let finish;
+    a.dailyProgressRequest = async () => new Promise(resolve => { finish = resolve; });
+    const oldRead = a.syncDailyProgressCloudData(true);
+    a.invalidateDailyProgressReads();
+    finish({ data: { contractors: [], reports: [report(99)], issues: [] } });
+    assert.equal(await oldRead, false);
+    assert.equal(a.dailyProgressData.reports.length, 0);
+    let first = true;
+    a.dailyProgressRequest = async () => {
+        if (first) { first = false; return new Promise(resolve => { finish = resolve; }); }
+        return { state: 'open', editable: true, version: 2, report: report(20) };
+    };
+    const oldStatus = a.refreshDailyProgressStatus(false);
+    await a.refreshDailyProgressStatus(false);
+    finish({ state: 'open', editable: true, version: 1, report: report(5) });
+    await oldStatus;
+    assert.equal(a.dailyProgressQuantities[15], 20);
+});
+
+test('clearing an entire location immediately removes cached dates even if another cloud refresh is pending', async () => {
+    const a = adminApp({ confirm: () => true });
+    a.runDailyProgressAdmin = fn => fn();
+    a.dailyProgressLocationId = 'loc_aaaaaaaaaaaaaaaaaaaaaaaa';
+    a.dailyProgressLocations = [{ id: a.dailyProgressLocationId, name: 'Site A' }];
+    a.dailyProgressData.reports = [
+        { ...report(5), locationId: a.dailyProgressLocationId },
+        { ...report(3), locationId: a.dailyProgressLocationId, date: '2026-11-18' },
+        { ...report(2), locationId: a.dailyProgressLocationId, date: '2026-11-19' },
+        { ...report(9), locationId: 'loc_bbbbbbbbbbbbbbbbbbbbbbbb' }
+    ];
+    a.dailyProgressRequest = async () => ({ results: [{ date: '2026-11-17', version: 2 }, { date: '2026-11-18', version: 2 }] });
+    a.syncDailyProgressCloudData = async () => false;
+    a.refreshDailyProgressStatus = async () => {};
+    await a.manageDailyProgressLocation('delete', true);
+    assert.equal(a.dailyProgressData.reports.length, 1);
+    assert.equal(a.dailyProgressData.reports[0].quantities[15], 9);
+});
+
 test('token-link status refresh updates both form and report history', async () => {
     const a = adminApp();
     a.dailyProgressRequest = async () => ({ state: 'final', editable: false, version: 2, report: report(18) });
@@ -67,6 +106,28 @@ test('token-link status refresh updates both form and report history', async () 
     assert.equal(a.dailyProgressQuantities[15], 18);
     assert.equal(a.dailyProgressData.reports[0].quantities[15], 18);
     assert.equal(a.dailyProgressData.reports[0].version, 2);
+});
+
+test('admin location edit reads the server lock before reopening and claiming the selected date', async () => {
+    const a = adminApp({ confirm: () => true });
+    a.dailyProgressLocationId = 'loc_aaaaaaaaaaaaaaaaaaaaaaaa';
+    a.dailyProgressLocations = [{ id: a.dailyProgressLocationId, name: 'Site A' }];
+    a.runDailyProgressAdmin = fn => fn();
+    a.dailyProgressServerState = null;
+    const calls = [];
+    a.dailyProgressRequest = async (route, body) => {
+        calls.push({ route, body });
+        if (route.startsWith('report?')) return { state: 'final', version: 3 };
+        if (route === 'reopen') return { reopened: true };
+        return { state: 'open', editable: true, version: 3, epoch: 2, report: { quantities: { 15: 5 }, manpower: {}, remarks: 'Site A' } };
+    };
+    await a.startDailyProgressLocationEntry();
+    assert.equal(calls[1].route, 'reopen');
+    assert.equal(calls[1].body.locationId, a.dailyProgressLocationId);
+    assert.equal(calls[2].route, 'claim');
+    assert.equal(a.dailyProgressQuantities[15], 5);
+    assert.equal(a.dailyProgressLocked, false);
+    assert.equal(a.dailyProgressBusy, false);
 });
 
 test('admin typing and sharing never publish inflated draft versions through the legacy dataset API', async () => {

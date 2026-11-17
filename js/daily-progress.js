@@ -8,6 +8,13 @@
  */
 
 window.DailyProgressModule = {
+    dailyProgressLocationKey(value) { return value === 'legacy' ? '' : String(value || ''); },
+    dailyProgressReportKey(row) { return row.contractorId + '|' + row.date + '|' + this.dailyProgressLocationKey(row.locationId); },
+    dailyProgressLocationName() {
+        const id = this.dailyProgressLocationId;
+        return id === 'legacy' || !id ? 'Legacy / Unassigned' : ((this.dailyProgressLocations || []).find(row => row.id === id) || {}).name || 'Location';
+    },
+    dailyProgressLocationQuery(cid) { return cid === this.dailyProgressContractorId && this.dailyProgressLocationId ? '&location=' + encodeURIComponent(this.dailyProgressLocationId) : ''; },
     // ─── INITIALIZATION & PERSISTENCE ──────────────────────────────────────────
 
     async initDailyProgress() {
@@ -19,6 +26,7 @@ window.DailyProgressModule = {
         }
 
         let stored = null;
+        let cloudLoaded = false;
         try {
             if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.getItemAsync === 'function') {
                 stored = await BillingStorage.getItemAsync('billing_daily_progress');
@@ -37,7 +45,9 @@ window.DailyProgressModule = {
                 if (cRes.ok) {
                     const cData = await cRes.json();
                     if (cData && cData.success && cData.data) {
+                        cloudLoaded = true;
                         stored = this.mergeDailyProgressData(stored, cData.data);
+                        stored.reports = cData.data.reports || [];
                     }
                 }
             }
@@ -45,7 +55,7 @@ window.DailyProgressModule = {
 
         // Initialize with default seed data if no saved reports exist
         const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
-        if (!stored || !stored.reports || stored.reports.length === 0) {
+        if (!cloudLoaded && (!stored || !stored.reports || stored.reports.length === 0)) {
             const seedContractor = seed.contractor || {
                 id: 'mangesh-sonwane',
                 name: 'MANGESH SONWANE',
@@ -183,9 +193,9 @@ window.DailyProgressModule = {
 
         // Merge reports (prefer highest version or newest update)
         const rMap = new Map();
-        (local.reports || []).forEach(r => rMap.set(r.contractorId + '|' + r.date, r));
+        (local.reports || []).forEach(r => rMap.set(this.dailyProgressReportKey(r), r));
         (cloud.reports || []).forEach(r => {
-            const key = r.contractorId + '|' + r.date;
+            const key = this.dailyProgressReportKey(r);
             const existing = rMap.get(key);
             if (!existing || (Number(r.version || 0) >= Number(existing.version || 0))) {
                 rMap.set(key, r);
@@ -336,6 +346,7 @@ window.DailyProgressModule = {
     },
 
     syncCurrentDailyProgressDraft() {
+        if (this.dailyProgressLocationId !== undefined && !this.dailyProgressLocationId) return null;
         if (!this.dailyProgressData) this.dailyProgressData = { contractors: [], reports: [], issues: [] };
         if (!Array.isArray(this.dailyProgressData.reports)) this.dailyProgressData.reports = [];
 
@@ -366,13 +377,15 @@ window.DailyProgressModule = {
         const existingIdx = reports.findIndex(r => {
             const rNormC = this.normContractorId(r.contractorId);
             const rNormD = this.normalizeDailyProgressDate(r.date);
-            return (r.contractorId === cid || rNormC === normC) && (r.date === dt || rNormD === dt);
+            return (r.contractorId === cid || rNormC === normC) && (r.date === dt || rNormD === dt) && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
         });
 
         const currentVer = Math.max(1, Number(this.dailyProgressVersion || 0));
         const reportPayload = {
             contractorId: cid,
             date: dt,
+            locationId: this.dailyProgressLocationKey(this.dailyProgressLocationId),
+            locationName: this.dailyProgressLocationName(),
             quantities: cleanQ,
             manpower: cleanMan,
             remarks: String(this.dailyProgressRemarks || '').trim(),
@@ -410,7 +423,7 @@ window.DailyProgressModule = {
         const matchingReps = reports.filter(rep => {
             const repNormC = this.normContractorId(rep.contractorId);
             const repNormD = this.normalizeDailyProgressDate(rep.date);
-            return (rep.contractorId === cid || repNormC === normC) && (rep.date === date || repNormD === normD);
+            return (rep.contractorId === cid || repNormC === normC) && (rep.date === date || repNormD === normD) && this.dailyProgressLocationKey(rep.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
         });
 
         matchingReps.sort((a, b) => {
@@ -706,7 +719,7 @@ window.DailyProgressModule = {
                 engineer: 'SUPERVISOR'
             };
 
-            const reports = (this.dailyProgressData && this.dailyProgressData.reports || []).filter(r => r.contractorId === cid);
+            const reports = (this.dailyProgressData && this.dailyProgressData.reports || []).filter(r => r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
             const seedItems = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
 
             // Calculate date range list
@@ -762,7 +775,7 @@ window.DailyProgressModule = {
 
                 // Header metadata
                 ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
-                ws.getCell('A3').value = 'NAME OF FEEDER: ' + (contractor.feeder || 'ANGARA');
+                ws.getCell('A3').value = 'FEEDER: ' + (contractor.feeder || 'ANGARA') + ' | LOCATION: ' + this.dailyProgressLocationName();
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
 
@@ -835,7 +848,7 @@ window.DailyProgressModule = {
             const a = document.createElement('a');
             const safeCont = (contractor.name || 'Contractor').replace(/[^a-z0-9 -]/gi, '_');
             a.href = url;
-            a.download = `${safeCont}_Daily_Progress_${from}_to_${to}.xlsx`;
+            a.download = `${safeCont}_${this.dailyProgressLocationName().replace(/[^a-z0-9]/gi, '_')}_Daily_Progress_${from}_to_${to}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -868,7 +881,7 @@ window.DailyProgressModule = {
     getDailyProgressDayReport(date) {
         const cid = this.dailyProgressContractorId;
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
-        return reports.find(r => r.contractorId === cid && r.date === date);
+        return reports.find(r => r.contractorId === cid && r.date === date && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
     },
 
     getDailyProgressExportQty(itemId, date) {
@@ -983,7 +996,7 @@ window.DailyProgressModule = {
         this.syncCurrentDailyProgressDraft();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const normD = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(dt || this.dailyProgressDate)) || dt || this.dailyProgressDate || '';
-        return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(normD)}`;
+        return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(normD)}${this.dailyProgressLocationQuery(cid)}`;
     },
 
     getDailyProgressContractorWhatsappUrl(c, dt) {
@@ -1014,7 +1027,7 @@ window.DailyProgressModule = {
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
         const dt = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(this.dailyProgressDate)) || this.dailyProgressDate || '';
-        const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+        const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}${this.dailyProgressLocationQuery(cid)}`;
 
         this.copyDailyProgressShareUrl(url);
     }

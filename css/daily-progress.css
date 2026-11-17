@@ -1107,11 +1107,24 @@ html .dp-segmented-tabs button.active span { color: inherit !important; }
 .dp-record-table td { overflow-wrap: anywhere; }
 .dp-excel-mobile-code, .dp-excel-scroll-hint { display: none; }
 .dp-worker-mobile-list, .sidebar-mobile-scrim { display: none; }
+.dp-location-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(140px, 0.8fr); gap: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--dp-border-strong); border-radius: 10px; background: var(--dp-card-bg); }
+.dp-location-choice { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.dp-location-choice label { color: var(--dp-text-muted); font-size: 12px; font-weight: 700; }
+.dp-location-choice :is(input, select) { min-width: 0; width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--dp-border-strong); border-radius: 6px; background: var(--dp-input-bg); color: var(--dp-text-main); }
+.dp-location-add { display: flex; gap: 8px; min-width: 0; }
+.dp-location-add button { flex-shrink: 0; }
+.dp-location-actions { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+.dp-location-note { margin: 0; grid-column: 1 / -1; font-size: 12px; color: var(--dp-text-muted); overflow-wrap: anywhere; }
 
 /* ==========================================================================
    8. Mobile Navigation & Responsiveness
    ========================================================================== */
 @media (max-width: 768px) {
+    .dp-location-bar { grid-template-columns: minmax(0, 1fr); }
+    .dp-location-add { flex-wrap: wrap; }
+    .dp-location-add button { width: 100%; }
+    .dp-location-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dp-location-actions button { min-width: 0; padding: 8px; white-space: normal; }
     html #app .sidebar-mobile-scrim {
         display: block;
         position: fixed;
