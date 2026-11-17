@@ -266,6 +266,7 @@ window.DailyProgressModule = {
     },
 
     selectDailyProgressContractor(cid) {
+        this.dailyProgressContractorSearch = '';
         this.closeDailyProgressContractorDropdown();
         this.onDailyProgressContractorChange(cid);
     },

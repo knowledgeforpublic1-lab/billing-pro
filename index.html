@@ -503,28 +503,50 @@
                     <template v-if="currentView === 'dailyProgress'">
                         <span class="dp-brand-chip" style="font-size: 0.82rem; font-weight: 800; color: var(--text-main, #111); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">📅 Daily Progress</span>
 
-                        <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; padding: 2px 4px 2px 7px;">
-                            <span class="dp-pill-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted, #64748b); text-transform: uppercase;">TEAM:</span>
-                            <div class="searchable-dropdown" v-click-outside="closeDailyProgressContractorDropdown" title="Contractor / Labour Team — searchable list" style="min-width: 180px; max-width: 280px; position: relative;">
-                                <div class="searchable-dropdown-trigger" :class="{ open: dailyProgressContractorDropdownOpen }" @click.stop="toggleDailyProgressContractorDropdown" style="height: 26px; padding: 2px 6px; font-size: 0.78rem; border: none; background: transparent;">
-                                    <span class="trigger-text" style="font-weight: 700;">{{ dailyProgressActiveContractor ? dailyProgressActiveContractor.name : 'Select Contractor' }}</span>
-                                    <span class="trigger-arrow">▾</span>
+                        <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1.5px solid #0284c7; border-radius: 5px; padding: 2px 6px;">
+                            <span class="dp-pill-label" style="font-size: 0.65rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">TEAM:</span>
+                            <div class="searchable-dropdown" v-click-outside="closeDailyProgressContractorDropdown" title="Contractor / Labour Team — searchable list" style="min-width: 210px; max-width: 320px; position: relative;">
+                                <div class="dp-search-combo-box"
+                                     style="display: inline-flex; align-items: center; background: transparent; gap: 5px; width: 100%;">
+                                    <span style="font-size: 11px; color: #0284c7;">🔍</span>
+                                    <input type="text"
+                                           v-model="dailyProgressContractorSearch"
+                                           ref="dpContractorSearchInput"
+                                           @focus="dailyProgressContractorDropdownOpen = true"
+                                           @click.stop="dailyProgressContractorDropdownOpen = true"
+                                           @input="dailyProgressContractorDropdownOpen = true"
+                                           :placeholder="dailyProgressActiveContractor ? dailyProgressActiveContractor.name : 'Search contractor...'"
+                                           style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.78rem; font-weight: 700; width: 180px; outline: none; text-overflow: ellipsis;"
+                                           @keydown.esc="closeDailyProgressContractorDropdown"
+                                           @keydown.enter.prevent="dailyProgressFilteredContractors.length && selectDailyProgressContractor(dailyProgressFilteredContractors[0].id)">
+                                    <button v-if="dailyProgressContractorSearch"
+                                            type="button"
+                                            @click.stop="dailyProgressContractorSearch = ''; dailyProgressContractorDropdownOpen = true; $refs.dpContractorSearchInput && $refs.dpContractorSearchInput.focus()"
+                                            style="background: none; border: none; color: #64748b; cursor: pointer; padding: 0 3px; font-size: 11px; font-weight: 800;"
+                                            title="Clear search">✕</button>
+                                    <button type="button"
+                                            @click.stop="toggleDailyProgressContractorDropdown"
+                                            style="background: none; border: none; color: #0284c7; cursor: pointer; padding: 0 2px; font-size: 10px; font-weight: 800;"
+                                            title="Toggle list">▾</button>
                                 </div>
-                                <div class="searchable-dropdown-panel" v-if="dailyProgressContractorDropdownOpen" style="width: 320px; max-width: 90vw; z-index: 1050;" @click.stop>
-                                    <div class="searchable-dropdown-search">
-                                        <input type="text" v-model="dailyProgressContractorSearch" placeholder="Search contractor name / feeder..." ref="dpContractorSearchInput" @keydown.esc="closeDailyProgressContractorDropdown" @keydown.enter.prevent="dailyProgressFilteredContractors.length && selectDailyProgressContractor(dailyProgressFilteredContractors[0].id)">
+                                <div class="searchable-dropdown-panel" v-if="dailyProgressContractorDropdownOpen" style="width: 340px; max-width: 90vw; z-index: 1050; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card, #ffffff); border: 1.5px solid #0284c7; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.25);" @click.stop>
+                                    <div style="padding: 6px 10px; background: rgba(2, 132, 199, 0.08); border-bottom: 1px solid rgba(0,0,0,0.08); font-size: 0.68rem; font-weight: 800; color: #0284c7; display: flex; justify-content: space-between;">
+                                        <span>🔍 SEARCH CONTRACTOR ({{ dailyProgressFilteredContractors.length }} MATCHES)</span>
+                                        <span v-if="dailyProgressContractorSearch" style="cursor: pointer; color: #ef4444;" @click="dailyProgressContractorSearch = ''">Clear ✕</span>
                                     </div>
                                     <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
                                         <template v-if="dailyProgressFilteredContractors.length">
-                                            <div v-for="c in dailyProgressFilteredContractors" :key="c.id" class="searchable-dropdown-item" :class="{ selected: dailyProgressContractorId === c.id }" @click="selectDailyProgressContractor(c.id)" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 10px;">
+                                            <div v-for="c in dailyProgressFilteredContractors" :key="c.id" class="searchable-dropdown-item" :class="{ selected: dailyProgressContractorId === c.id }" @click="selectDailyProgressContractor(c.id)" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.04);">
                                                 <div style="font-weight: 700; font-size: 0.82rem;">{{ c.name }}</div>
                                                 <div v-if="c.feeder || c.project" style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
-                                                    <span v-if="c.feeder" style="color: #60a5fa;">⚡ {{ c.feeder }}</span>
+                                                    <span v-if="c.feeder" style="color: #0284c7;">⚡ {{ c.feeder }}</span>
                                                     <span v-if="c.project">📁 {{ c.project }}</span>
                                                 </div>
                                             </div>
                                         </template>
-                                        <div v-else class="searchable-dropdown-empty">No contractor found</div>
+                                        <div v-else class="searchable-dropdown-empty" style="padding: 12px; text-align: center; color: #64748b; font-size: 0.78rem;">
+                                            Koi contractor match nahi hua
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4739,7 +4761,7 @@
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
-    <script defer src="js/daily-progress.js?v=20261116_access_v2"></script>
+    <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
     <script defer src="js/daily-progress-access.js?v=20261116_access_v2"></script>
     <!-- Core Application (creates and mounts Vue app) -->
     <script defer src="js/core/app.js?v=20261116_mobile_redesign"></script>

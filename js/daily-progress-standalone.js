@@ -931,5 +931,25 @@
         }
     });
 
+    if (typeof app.directive === 'function') {
+        app.directive('click-outside', {
+            beforeMount(el, binding) {
+                el._clickOutsideHandler = (event) => {
+                    if (!(el === event.target || el.contains(event.target))) {
+                        binding.value(event);
+                    }
+                };
+                if (typeof document !== 'undefined') {
+                    document.addEventListener('click', el._clickOutsideHandler);
+                }
+            },
+            unmounted(el) {
+                if (typeof document !== 'undefined' && el._clickOutsideHandler) {
+                    document.removeEventListener('click', el._clickOutsideHandler);
+                }
+            }
+        });
+    }
+
     app.mount('#app');
 })();
