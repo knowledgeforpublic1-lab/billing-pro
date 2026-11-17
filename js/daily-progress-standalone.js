@@ -634,7 +634,7 @@
                         });
                         if (res.ok) {
                             const resJson = await res.json().catch(() => null);
-                            if (!resJson || resJson.success !== false) {
+                            if (resJson && resJson.success === true) {
                                 cloudSaved = true;
                             }
                         }
@@ -646,6 +646,7 @@
                         this.saveStatus = 'saved';
                         this.showToast(`Daily Progress saved & synced to cloud! ✅ (${this.selectedDate})`, 'success');
                     } else {
+                        this.dirty = true;
                         this.saveStatus = 'offline';
                         this.showToast(`Device par save hua, cloud sync fail hua. Internet check karein. ⚠️`, 'warning');
                     }

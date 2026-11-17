@@ -775,11 +775,6 @@ window.ViewsModule = {
             items[0].desc = s.desc;
             items[0].uom = s.uom || 'No';
             items[0].docHeader = s.docHeader || '0031006347';
-        } else if (items.length === 1 && this.activeSapManagerContextType === 'poleSchedule') {
-            items[0].code = s.code;
-            items[0].desc = s.desc;
-            items[0].uom = s.uom || 'No';
-            items[0].docHeader = s.docHeader || '0031006347';
         } else {
             if (!items.some(x => x.code === s.code)) {
                 items.push({

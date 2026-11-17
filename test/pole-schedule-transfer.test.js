@@ -181,3 +181,26 @@ test('1220 activity row adds second and third SAP components and preserves them 
     a.removeSapItemFromManager(1);
     assert.deepEqual(a.activities['1220'].materials[index].sapItems.map(s => s.code), [first, '17005069']);
 });
+
+test('every activity and pole schedule can add multiple SAP codes starting with one code', () => {
+    const a = Object.assign(app(), ViewsModule, {
+        $refs: {}, $nextTick(fn) { fn(); }, showToast() {}, scheduleMappingSync() {},
+        syncToMongoNow() {}, persistPoleSchedulesToMasterFile() {}, syncPoleScheduleToBillingAndReconciliation() {}
+    });
+    for (const [kind, context] of [['activities', 'activity'], ['poleSchedules', 'poleSchedule']]) {
+        for (const [key, group] of Object.entries(a[kind])) {
+            const index = group.materials.findIndex(row => !row.isSection && !row.isSpan);
+            const row = group.materials[index];
+            row.sapItems = [{ code: 'FIRST', desc: 'Existing', qty: 0.25 }];
+            row.itemCode = 'FIRST';
+            a.openSapItemManager({ ...row, origIndex: index }, index, context, key);
+            for (const code of ['SECOND', 'THIRD', 'SECOND']) a.selectSapItemForManager({ code, desc: code, uom: 'NO' });
+            assert.deepEqual(row.sapItems.map(s => s.code), ['FIRST', 'SECOND', 'THIRD'], context + ' ' + key);
+            assert.equal(row.sapItems[0].qty, 0.25);
+            a.closeSapItemManager();
+            a.openSapItemManager({ ...row, origIndex: index }, index, context, key);
+            assert.equal(a.activeSapManagerItem.sapItems.length, 3);
+            a.closeSapItemManager();
+        }
+    }
+});

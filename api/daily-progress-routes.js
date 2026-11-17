@@ -6,6 +6,7 @@ const path = require('node:path');
 const createService = require('./daily-progress-service');
 const createDrive = require('./daily-drive');
 const crypto = require('node:crypto');
+const { readDailyProgressData } = require('./daily-progress-data');
 
 function normId(value) {
     return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
@@ -173,7 +174,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
     adminRouter.get('/data', handle(async (req, res) => {
         const legacy = await db.getDefaultConfig('dailyProgressData');
-        const base = legacy?.data || { contractors: [], reports: [], issues: [] };
+        const base = readDailyProgressData(legacy);
         const reports = new Map((base.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
         for (const r of await service.reports()) reports.set(r.contractorId + '|' + r.date, r);
         const contractors = new Map((base.contractors || []).map(c => [c.id, c]));

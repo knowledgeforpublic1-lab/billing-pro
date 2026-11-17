@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const db = require('./db');
+const { readDailyProgressData } = require('./daily-progress-data');
 const auth = require('./auth')({ db, config: require('./auth-settings') });
 
 const app = express();
@@ -796,9 +797,10 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
 
 // Dedicated Daily Progress Data API — completely isolated from Billing state
 app.get('/api/daily-progress/data', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
     try {
         const legacy = await db.getDefaultConfig('dailyProgressData');
-        res.json({ success: true, data: legacy?.data || legacy || null });
+        res.json({ success: true, data: legacy ? readDailyProgressData(legacy) : null });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
@@ -812,7 +814,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
 
         // Server-side smart merge — prevents whole-dataset overwrite across multiple site devices
         const existingRec = await db.getDefaultConfig('dailyProgressData');
-        const existingData = existingRec?.data || existingRec || { contractors: [], reports: [], issues: [] };
+        const existingData = readDailyProgressData(existingRec);
 
         const cMap = new Map();
         (existingData.contractors || []).forEach(c => cMap.set(String(c.id || c.name).toLowerCase(), c));
@@ -845,7 +847,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
             updatedAt: new Date().toISOString()
         };
 
-        await db.saveDefaultConfig('dailyProgressData', { data: merged, updatedAt: new Date().toISOString() });
+        await db.saveDefaultConfig('dailyProgressData', merged);
         res.json({ success: true, count: merged.reports.length });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });

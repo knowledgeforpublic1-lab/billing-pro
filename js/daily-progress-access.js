@@ -20,6 +20,34 @@
             if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Daily Progress service unavailable'), { status: response.status });
             return result;
         },
+        async syncDailyProgressCloudData(silent = false) {
+            if (this.dailyProgressDirty || this.dailyProgressBusy || this._dpPendingSave || this._dpCloudRefreshing) return false;
+            this._dpCloudRefreshing = true;
+            try {
+                const response = await this.dailyProgressRequest('data');
+                // An edit may have started while the network request was running.
+                if (this.dailyProgressDirty || this.dailyProgressBusy || this._dpPendingSave || !response.data) return false;
+                const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
+                const merged = this.mergeDailyProgressData(local, response.data);
+                // The aggregate endpoint includes both share-page and Drive reports.
+                // Its confirmed copy takes precedence over a clean device cache.
+                const reports = new Map((local.reports || []).map(row => [row.contractorId + '|' + row.date, row]));
+                for (const row of response.data.reports || []) reports.set(row.contractorId + '|' + row.date, row);
+                merged.reports = [...reports.values()];
+                this.dailyProgressData = merged;
+                this.syncDailyProgressContractorsList();
+                this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                    await BillingStorage.setItem('billing_daily_progress', merged);
+                }
+                if (!silent) this.showToast('Share link ki latest entries sync ho gayi.', 'success');
+                return true;
+            } catch (e) {
+                this.dailyProgressAccessMessage = e.message;
+                if (!silent) this.showToast('Sync failed: ' + e.message, 'Alert');
+                return false;
+            } finally { this._dpCloudRefreshing = false; }
+        },
         async initDailyProgress() {
             try { await originalInit.call(this); }
             catch (e) { this.showToast(e.message, 'Alert'); }
@@ -72,6 +100,12 @@
                 this.dailyProgressLocked = !result.editable;
                 this.dailyProgressAccessMessage = result.state === 'final' ? 'Saved entry locked hai. Admin Reopen se edit kholein.' : result.occupied ? 'Koi aur is contractor/date ki entry kar raha hai. Entry read-only hai.' : result.editable ? 'Entry reserved for this session. Final Save ke baad lock lagega.' : 'Start entry dabakar reservation lein.';
                 if (!this.dailyProgressDirty && result.report) {
+                    const reports = this.dailyProgressData && this.dailyProgressData.reports;
+                    if (Array.isArray(reports)) {
+                        const report = { ...result.report, contractorId: cid, date, version: result.version, state: result.state };
+                        const index = reports.findIndex(row => row.contractorId === cid && row.date === date);
+                        if (index < 0) reports.push(report); else reports[index] = report;
+                    }
                     this.dailyProgressQuantities = { ...(result.report.quantities || {}) };
                     this.dailyProgressManpower = { ...(result.report.manpower || {}) };
                     this.dailyProgressRemarks = result.report.remarks || '';

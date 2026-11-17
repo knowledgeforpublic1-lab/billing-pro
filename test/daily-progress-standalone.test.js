@@ -146,6 +146,21 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     assert.equal(sandbox._savedCloudPayload.reports[0].quantities['1'], 5);
     assert.equal(mockLocalStorage['billing_daily_progress'] !== undefined, true, 'Saved to localStorage');
 
+    const workingFetch = sandbox.fetch;
+    for (const failedResponse of [
+        { ok: false, status: 503, json: async () => ({ success: false }) },
+        { ok: true, status: 200, json: async () => { throw new Error('Invalid JSON'); } }
+    ]) {
+        sandbox.fetch = async () => failedResponse;
+        await mountedApp.saveProgress();
+        assert.equal(mountedApp.saveStatus, 'offline', 'Unconfirmed cloud responses must not claim a save');
+        assert.equal(mountedApp.dirty, true, 'Unsynced entry remains pending for retry');
+    }
+    sandbox.fetch = workingFetch;
+    await mountedApp.saveProgress();
+    assert.equal(mountedApp.saveStatus, 'saved');
+    assert.equal(mountedApp.dirty, false);
+
     // 9. Share link generation
     mountedApp.copyShareLink();
     assert.ok(sandbox._copiedUrl, 'Share link copied');
