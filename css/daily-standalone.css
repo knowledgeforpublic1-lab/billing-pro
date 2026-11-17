@@ -5,6 +5,10 @@
     font-feature-settings: "zero" 0, "tnum" 1;
 }
 
+[v-cloak] {
+    display: none !important;
+}
+
 body {
     margin: 0;
     background: #0b1120;

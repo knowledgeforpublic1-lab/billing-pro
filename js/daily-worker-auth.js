@@ -7,8 +7,8 @@
     const root = document.createElement('div');
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
-    root.setAttribute('aria-label', 'Entry login & signup');
-    root.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;color:#0f172a;font:14px system-ui,-apple-system,sans-serif;box-sizing:border-box;overflow-y:auto;';
+    root.setAttribute('aria-label', 'Sign In or Create Account');
+    root.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);display:none;place-items:center;padding:16px;color:#0f172a;font:14px system-ui,-apple-system,sans-serif;box-sizing:border-box;overflow-y:auto;';
 
     root.innerHTML = `
     <div style="width:min(100%,430px);box-sizing:border-box;padding:26px;background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 20px 45px rgba(15,23,42,0.18);">
@@ -16,68 +16,66 @@
             <div style="font-size:26px;">📋</div>
             <div>
                 <h1 style="font-size:20px;font-weight:700;margin:0;color:#0f172a;">Daily Progress Portal</h1>
-                <p style="font-size:12px;margin:2px 0 0;color:#64748b;">Site Work Entry &amp; Consumption Diary</p>
+                <p style="font-size:12px;margin:2px 0 0;color:#64748b;">Site Work Entry &amp; Material Diary</p>
             </div>
         </div>
 
         <!-- Mode Tabs -->
         <div style="display:grid;grid-template-columns:1fr 1fr;background:#f1f5f9;padding:4px;border-radius:8px;margin-bottom:16px;">
-            <button type="button" data-tab="login" style="padding:8px;border:0;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;background:#ffffff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;">Login</button>
-            <button type="button" data-tab="signup" style="padding:8px;border:0;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;background:transparent;color:#64748b;transition:all .15s;">Naya Signup</button>
+            <button type="button" data-tab="login" style="padding:8px;border:0;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;background:#ffffff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all .15s;">Sign In</button>
+            <button type="button" data-tab="signup" style="padding:8px;border:0;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;background:transparent;color:#64748b;transition:all .15s;">Create Account</button>
         </div>
 
-        <p data-desc style="line-height:1.45;color:#475569;font-size:13px;margin:0 0 16px;">Apne Email / Mobile number aur password se login karein.</p>
+        <p data-desc style="line-height:1.45;color:#475569;font-size:13px;margin:0 0 16px;">Sign in with your Email, Mobile Number, or Username.</p>
 
         <!-- Login Form -->
         <form data-form="login" style="display:block;">
             <label style="display:block;margin-bottom:14px;font-weight:500;font-size:13px;color:#334155;">
-                Email ya Mobile Number
-                <input name="identifier" autocomplete="username" required maxlength="80" autocapitalize="none" placeholder="e.g. 9876543210 ya name@example.com" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:5px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
+                Email or Mobile Number
+                <input name="identifier" autocomplete="username" required maxlength="80" autocapitalize="none" placeholder="e.g. 9876543210 or user@example.com" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:5px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <label style="display:block;margin-bottom:14px;font-weight:500;font-size:13px;color:#334155;">
                 Password
-                <input name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Apna password daalein" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:5px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
+                <input name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Enter your password" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:5px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <p data-error role="alert" style="color:#dc2626;font-size:13px;line-height:1.4;margin:10px 0 14px;empty-cells:hide;display:none;"></p>
-            <button type="submit" style="width:100%;padding:12px;background:#2563eb;color:#ffffff;border:0;border-radius:7px;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(37,99,235,0.25);">Login &amp; Enter Progress</button>
+            <button type="submit" style="width:100%;padding:12px;background:#2563eb;color:#ffffff;border:0;border-radius:7px;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(37,99,235,0.25);">Sign In &amp; Continue</button>
             <p style="text-align:center;font-size:13px;color:#64748b;margin:14px 0 0;">
-                Naya account banana hai? <a href="#" data-switch="signup" style="color:#2563eb;text-decoration:none;font-weight:600;">Signup karein</a>
+                Don't have an account? <a href="#" data-switch="signup" style="color:#2563eb;text-decoration:none;font-weight:600;">Create an account</a>
             </p>
         </form>
 
         <!-- Signup Form -->
         <form data-form="signup" style="display:none;">
             <label style="display:block;margin-bottom:12px;font-weight:500;font-size:13px;color:#334155;">
-                Pura Naam (Full Name) <span style="color:#dc2626;">*</span>
+                Full Name <span style="color:#dc2626;">*</span>
                 <input name="name" required maxlength="80" placeholder="e.g. Ramesh Kumar" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <label style="display:block;margin-bottom:12px;font-weight:500;font-size:13px;color:#334155;">
-                Email ID <span style="color:#dc2626;">*</span>
-                <input name="email" type="email" required maxlength="80" autocapitalize="none" placeholder="e.g. ramesh@example.com" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
+                Email Address <span style="color:#dc2626;">*</span>
+                <input name="email" type="email" required maxlength="80" autocapitalize="none" placeholder="e.g. user@example.com" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <label style="display:block;margin-bottom:12px;font-weight:500;font-size:13px;color:#334155;">
-                Mobile Number (10 Digit) <span style="color:#dc2626;">*</span>
+                Mobile Number (10 Digits) <span style="color:#dc2626;">*</span>
                 <input name="mobile" type="tel" required maxlength="10" pattern="[6-9][0-9]{9}" placeholder="e.g. 9876543210" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <label style="display:block;margin-bottom:12px;font-weight:500;font-size:13px;color:#334155;">
                 Password (min 6 characters) <span style="color:#dc2626;">*</span>
-                <input name="password" type="password" required minlength="6" maxlength="128" placeholder="Kam se kam 6 character" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
+                <input name="password" type="password" required minlength="6" maxlength="128" placeholder="Minimum 6 characters" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
             <label style="display:block;margin-bottom:14px;font-weight:500;font-size:13px;color:#334155;">
-                Contractor / Agency
+                Assigned Contractor / Agency
                 <select name="contractorId" style="display:block;width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;background:#ffffff;color:#0f172a;outline:none;">
-                    <option value="">-- All / Auto Select --</option>
+                    <option value="">-- All Contractors / Auto Select --</option>
                 </select>
             </label>
             <p data-error role="alert" style="color:#dc2626;font-size:13px;line-height:1.4;margin:10px 0 14px;empty-cells:hide;display:none;"></p>
-            <button type="submit" style="width:100%;padding:12px;background:#059669;color:#ffffff;border:0;border-radius:7px;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(5,150,105,0.25);">Account Banayein &amp; Shuru Karein</button>
+            <button type="submit" style="width:100%;padding:12px;background:#059669;color:#ffffff;border:0;border-radius:7px;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(5,150,105,0.25);">Register &amp; Get Started</button>
             <p style="text-align:center;font-size:13px;color:#64748b;margin:14px 0 0;">
-                Pehle se account hai? <a href="#" data-switch="login" style="color:#2563eb;text-decoration:none;font-weight:600;">Login karein</a>
+                Already have an account? <a href="#" data-switch="login" style="color:#2563eb;text-decoration:none;font-weight:600;">Sign in</a>
             </p>
         </form>
     </div>`;
-
-    document.body.appendChild(root);
 
     const loginTab = root.querySelector('[data-tab="login"]');
     const signupTab = root.querySelector('[data-tab="signup"]');
@@ -97,7 +95,7 @@
             loginTab.style.boxShadow = 'none';
             signupForm.style.display = 'block';
             loginForm.style.display = 'none';
-            desc.textContent = 'Apna Naam, Email aur Mobile number daal kar naya account banayein.';
+            desc.textContent = 'Register your account with your Full Name, Email, and Mobile number.';
             signupForm.elements.name.focus();
         } else {
             loginTab.style.background = '#ffffff';
@@ -108,7 +106,7 @@
             signupTab.style.boxShadow = 'none';
             loginForm.style.display = 'block';
             signupForm.style.display = 'none';
-            desc.textContent = 'Apne Email / Mobile number aur password se login karein.';
+            desc.textContent = 'Sign in with your Email, Mobile Number, or Username.';
             loginForm.elements.identifier.focus();
         }
     }
@@ -133,8 +131,24 @@
         });
     }
 
-    const workspace = document.getElementById('app') || document.querySelector('main');
-    if (workspace) workspace.inert = true;
+    const getWorkspace = () => document.getElementById('app') || document.querySelector('main');
+
+    function showAuthModal() {
+        if (!document.body.contains(root)) {
+            document.body.appendChild(root);
+        }
+        root.style.display = 'grid';
+        const ws = getWorkspace();
+        if (ws) ws.inert = true;
+        setTab('login');
+    }
+
+    function hideAuthModal() {
+        root.style.display = 'none';
+        if (root.parentNode) root.remove();
+        const ws = getWorkspace();
+        if (ws) ws.inert = false;
+    }
 
     async function request(path, body) {
         const response = await fetch('/api/dp-worker/' + path, {
@@ -149,7 +163,7 @@
         });
         const data = await response.json();
         if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Entry service unavailable. Retry karein.');
+            throw new Error(data.error || 'Service temporarily unavailable. Please retry.');
         }
         return data;
     }
@@ -169,7 +183,7 @@
 
     function populateContractorOptions(list) {
         const existing = new Set();
-        contractorSelect.innerHTML = '<option value="">-- Sabhi / Auto Select --</option>';
+        contractorSelect.innerHTML = '<option value="">-- All Contractors / Auto Select --</option>';
         for (const c of list) {
             if (c.id && !existing.has(c.id)) {
                 existing.add(c.id);
@@ -197,45 +211,41 @@
     loadContractors();
 
     function enter(user) {
-        if (state.user) {
-            location.reload();
-            return;
-        }
         state.user = user;
-        root.remove();
-        if (workspace) workspace.inert = false;
+        hideAuthModal();
 
-        const bar = document.createElement('div');
-        bar.style.cssText = 'position:sticky;top:0;z-index:100;background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#166534;padding:7px 14px;font:13px system-ui,sans-serif;display:flex;justify-content:space-between;gap:10px;align-items:center;';
-        const label = document.createElement('span');
-        const details = [user.name, user.mobile || user.email].filter(Boolean).join(' • ');
-        label.innerHTML = '<strong>👤 Logged in:</strong> ' + details;
-        bar.appendChild(label);
+        if (!document.getElementById('dp-worker-user-bar')) {
+            const bar = document.createElement('div');
+            bar.id = 'dp-worker-user-bar';
+            bar.style.cssText = 'position:sticky;top:0;z-index:100;background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#166534;padding:7px 14px;font:13px system-ui,sans-serif;display:flex;justify-content:space-between;gap:10px;align-items:center;';
+            const label = document.createElement('span');
+            const details = [user.name, user.mobile || user.email].filter(Boolean).join(' • ');
+            label.innerHTML = '<strong>👤 Signed In:</strong> ' + details;
+            bar.appendChild(label);
 
-        if (user.role !== 'admin') {
-            const logout = document.createElement('button');
-            logout.type = 'button';
-            logout.textContent = 'Logout';
-            logout.style.cssText = 'padding:4px 10px;border:1px solid #86efac;border-radius:5px;background:#ffffff;color:#15803d;font-weight:600;cursor:pointer;font-size:12px;';
-            logout.onclick = async () => {
-                try {
-                    await request('logout', {});
-                    location.reload();
-                } catch (e) {
-                    alert(e.message);
-                }
-            };
-            bar.appendChild(logout);
+            if (user.role !== 'admin') {
+                const logout = document.createElement('button');
+                logout.type = 'button';
+                logout.textContent = 'Sign Out';
+                logout.style.cssText = 'padding:4px 12px;border:1px solid #86efac;border-radius:5px;background:#ffffff;color:#15803d;font-weight:600;cursor:pointer;font-size:12px;';
+                logout.onclick = async () => {
+                    try {
+                        await request('logout', {});
+                        location.reload();
+                    } catch (e) {
+                        alert(e.message);
+                    }
+                };
+                bar.appendChild(logout);
+            }
+            document.body.prepend(bar);
         }
-        document.body.prepend(bar);
         resolveReady(user);
     }
 
     state.expired = () => {
-        showError(loginForm, 'Login expire ho gaya. Kripya dobara login karein.');
-        if (workspace) workspace.inert = true;
-        document.body.appendChild(root);
-        setTab('login');
+        showAuthModal();
+        showError(loginForm, 'Your session has expired. Please sign in again.');
     };
 
     loginForm.onsubmit = async event => {
@@ -281,9 +291,10 @@
         }
     };
 
+    // Check existing session without flashing the dialog
     request('session')
         .then(result => enter(result.user))
         .catch(() => {
-            loginForm.elements.identifier.focus();
+            showAuthModal();
         });
 })();

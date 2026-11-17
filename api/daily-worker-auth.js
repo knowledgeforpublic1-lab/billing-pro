@@ -152,7 +152,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
 
     function assertContractor(actor, cid) {
         if (!hasContractorPermission(actor, cid)) {
-            fail(403, 'Is contractor ki entry aapke login mein allowed nahi hai.');
+            fail(403, 'You do not have permission to access this contractor.');
         }
     }
 
@@ -191,19 +191,19 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         max: 20,
         standardHeaders: true,
         legacyHeaders: false,
-        message: { success: false, error: 'Bahut login attempts hue. 10 minute baad retry karein.' }
+        message: { success: false, error: 'Too many login attempts. Please try again after 10 minutes.' }
     }), handler(async (req, res) => {
         const identifier = String(req.body.identifier || req.body.username || req.body.email || req.body.mobile || '').trim();
         const password = req.body.password;
         if (!identifier || typeof password !== 'string' || password.length > 256) {
-            fail(401, 'Email / Mobile number ya password galat hai.');
+            fail(401, 'Incorrect email/mobile number or password.');
         }
         const user = await resolveUser(identifier);
         const salt = user && user.salt || 'unknown-entry-account';
         const derived = await scrypt(password, salt, 64);
         const expected = Buffer.from(user && user.passwordHash || '00'.repeat(64), 'hex');
         if (!user || user.disabled || expected.length !== derived.length || !crypto.timingSafeEqual(derived, expected)) {
-            fail(401, 'Email / Mobile number ya password galat hai.');
+            fail(401, 'Incorrect email/mobile number or password.');
         }
         const token = crypto.randomBytes(32).toString('hex');
         await db.atomicDailyRecord('dp_worker_session_' + hash(token), () => ({
@@ -220,7 +220,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         max: 20,
         standardHeaders: true,
         legacyHeaders: false,
-        message: { success: false, error: 'Bahut signup attempts hue. Thoda ruk kar retry karein.' }
+        message: { success: false, error: 'Too many signup attempts. Please wait a moment and retry.' }
     }), handler(async (req, res) => {
         const body = req.body || {};
         const saved = await saveUser(body, { isPublicSignup: true });
@@ -254,36 +254,36 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         let username = String(body.username || '').trim().toLowerCase();
 
         if (!name || name.length < 2 || name.length > 80) {
-            fail(400, 'Kripya apna pura naam (2 se 80 character) daalein.');
+            fail(400, 'Please enter your full name (2 to 80 characters).');
         }
 
         if (options.isPublicSignup) {
             if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(rawEmail)) {
-                fail(400, 'Kripya sahi email address daalein (e.g. name@example.com).');
+                fail(400, 'Please enter a valid email address (e.g. name@example.com).');
             }
             if (!/^[6-9]\d{9}$/.test(mobile)) {
-                fail(400, 'Kripya sahi 10-digit mobile number daalein.');
+                fail(400, 'Please enter a valid 10-digit mobile number.');
             }
         } else {
             // Admin creation can provide username directly or email/mobile
             if (rawEmail && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(rawEmail)) {
-                fail(400, 'Kripya valid email address daalein.');
+                fail(400, 'Please enter a valid email address.');
             }
             if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
-                fail(400, 'Kripya valid 10-digit mobile number daalein.');
+                fail(400, 'Please enter a valid 10-digit mobile number.');
             }
         }
 
         if (!username) {
             if (mobile) username = 'm_' + mobile;
             else if (rawEmail) username = 'u_' + hash(rawEmail).slice(0, 14);
-            else fail(400, 'Username, email ya mobile number zaroori hai.');
+            else fail(400, 'Username, email, or mobile number is required.');
         } else if (!/^[a-z0-9._-]{3,40}$/.test(username)) {
-            fail(400, 'Username 3–40 characters ka hona chahiye (a-z, 0-9, ., _, -).');
+            fail(400, 'Username must be 3-40 characters (a-z, 0-9, ., _, -).');
         }
 
         if (typeof body.password !== 'string' || body.password.length < 6 || body.password.length > 128) {
-            fail(400, 'Password kam se kam 6 character ka hona chahiye.');
+            fail(400, 'Password must be at least 6 characters.');
         }
 
         let contractorIds = Array.isArray(body.contractorIds) ? [...new Set(body.contractorIds)].filter(id => typeof id === 'string' && id && id.length <= 150) : [];
@@ -295,7 +295,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         if (rawEmail) {
             const existingEmail = await read(emailIndexKey(rawEmail));
             if (existingEmail && existingEmail.username !== username && !body.reset) {
-                fail(409, 'Is email se account pehle se registered hai. Login karein.');
+                fail(409, 'An account with this email address already exists. Please sign in.');
             }
         }
 
@@ -303,7 +303,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         if (mobile) {
             const existingMobile = await read(mobileIndexKey(mobile));
             if (existingMobile && existingMobile.username !== username && !body.reset) {
-                fail(409, 'Is mobile number se account pehle se registered hai. Login karein.');
+                fail(409, 'An account with this mobile number already exists. Please sign in.');
             }
         }
 
@@ -311,8 +311,8 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         const passwordHash = (await scrypt(body.password, salt, 64)).toString('hex');
 
         const savedResult = await db.atomicDailyRecord(userKey(username), old => {
-            if (old && !body.reset) fail(409, 'Account pehle se bana hai. Login karein ya reset option use karein.');
-            if (!old && body.reset) fail(404, 'Login nahi mila. Pehle naya login banayein.');
+            if (old && !body.reset) fail(409, 'An account already exists. Please sign in.');
+            if (!old && body.reset) fail(404, 'Account not found. Please create an account first.');
             const user = {
                 id: old && old.id || crypto.randomUUID(),
                 name,
