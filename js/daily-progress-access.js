@@ -10,34 +10,67 @@
             if (!value || isNaN(Date.parse(value))) return '—';
             return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) + ' IST';
         },
-        openDailyProgressWorkers() {
+        openDailyProgressLoginsTab() {
+            this.dailyProgressTab = 'logins';
             return this.runDailyProgressAdmin(async () => {
-                this.dailyProgressWorkerPanel = true;
-                if (!this.dailyProgressWorkerForm.contractorIds.length) this.dailyProgressWorkerForm.contractorIds = [this.dailyProgressContractorId];
-                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
-                await this.loadDailyProgressEntryHistory();
+                await this.loadDailyProgressLoginsAndHistory();
             });
+        },
+        async loadDailyProgressLoginsAndHistory() {
+            try {
+                const res = await this.dailyProgressRequest('workers');
+                this.dailyProgressWorkers = res.users || [];
+            } catch (e) {
+                console.warn('Failed to load workers:', e);
+            }
+            await this.loadDailyProgressEntryHistory();
+        },
+        openAddWorkerModal() {
+            this.dailyProgressWorkerForm = {
+                name: '',
+                email: '',
+                mobile: '',
+                username: '',
+                password: '',
+                contractorIds: [this.dailyProgressContractorId],
+                reset: false
+            };
+            this.dailyProgressModal = 'worker';
         },
         saveDailyProgressWorker() {
             return this.runDailyProgressAdmin(async () => {
                 await this.dailyProgressRequest('workers', this.dailyProgressWorkerForm);
-                this.dailyProgressWorkerForm = { name: '', username: '', password: '', contractorIds: [this.dailyProgressContractorId], reset: false };
-                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
+                this.dailyProgressModal = '';
+                this.dailyProgressWorkerForm = { name: '', email: '', mobile: '', username: '', password: '', contractorIds: [this.dailyProgressContractorId], reset: false };
+                await this.loadDailyProgressLoginsAndHistory();
             });
         },
         resetDailyProgressWorker(user) {
-            this.dailyProgressWorkerForm = { name: user.name, username: user.username, password: '', contractorIds: [...user.contractorIds], reset: true };
+            this.dailyProgressWorkerForm = {
+                name: user.name,
+                email: user.email || '',
+                mobile: user.mobile || '',
+                username: user.username,
+                password: '',
+                contractorIds: [...(user.contractorIds || [])],
+                reset: true
+            };
+            this.dailyProgressModal = 'worker';
         },
         disableDailyProgressWorker(user) {
             return this.runDailyProgressAdmin(async () => {
-                if (!confirm(user.name + ' ka entry login band karein?')) return;
+                if (!confirm(user.name + ' ka login disable karein?')) return;
                 await this.dailyProgressRequest('workers/disable', { username: user.username });
-                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
+                await this.loadDailyProgressLoginsAndHistory();
             });
         },
         async loadDailyProgressEntryHistory() {
-            const result = await this.dailyProgressRequest('entry-history?contractorId=' + encodeURIComponent(this.dailyProgressContractorId));
-            this.dailyProgressEntryHistory = result.events;
+            try {
+                const result = await this.dailyProgressRequest('entry-history?contractorId=' + encodeURIComponent(this.dailyProgressContractorId));
+                this.dailyProgressEntryHistory = result.events || [];
+            } catch (e) {
+                console.warn('Failed to load entry history:', e);
+            }
         },
         dailyProgressEditor() {
             if (!this._dpEditor) this._dpEditor = crypto.randomUUID() + crypto.randomUUID();

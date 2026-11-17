@@ -563,8 +563,8 @@
                             <button type="button" :class="{ active: dailyProgressTab === 'entry' }" @click="dailyProgressTab = 'entry'" title="Daily Material & Manpower Entry" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
                                 <span>⚡</span><span>Entry</span>
                             </button>
-                            <button type="button" :class="{ active: dailyProgressTab === 'stock' }" @click="dailyProgressTab = 'stock'" title="Material & Stock Balances" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
-                                <span>📦</span><span>Stock</span>
+                            <button type="button" :class="{ active: dailyProgressTab === 'logins' }" @click="openDailyProgressLoginsTab()" title="Worker Logins & Working Log" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
+                                <span>👥</span><span>Logins &amp; Logs</span>
                             </button>
                             <button type="button" :class="{ active: dailyProgressTab === 'history' }" @click="dailyProgressTab = 'history'" title="Past Saved Reports" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
                                 <span>📋</span><span>History</span>
@@ -2144,58 +2144,68 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: MATERIAL & STOCK REGISTER -->
-                <div v-if="dailyProgressTab === 'stock'">
-                    <div class="dp-panel" style="margin-bottom: 6px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; flex-wrap: wrap; gap: 6px;">
+                <!-- TAB 2: USER LOGINS & WORKING AUDIT LOGS -->
+                <div v-if="dailyProgressTab === 'logins'">
+                    <!-- Top Action Bar -->
+                    <div class="dp-panel" style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <strong style="font-size: 0.85rem; color: #60a5fa;">📦 Contractor Stock Register</strong>
-                                <span style="font-size: 0.7rem; color: var(--text-muted);">SAP issues + manual challans vs. Daily consumption balance up to {{ formatDisplayDate(dailyProgressDate) }}</span>
+                                <strong style="font-size: 0.92rem; color: #3b82f6;">👥 Registered Worker Logins &amp; Working Log</strong>
+                                <span style="font-size: 0.72rem; color: var(--text-muted);">Site ladkon ke login accounts aur unki daily entry history</span>
                             </div>
-                            <button type="button" class="btn btn-primary" @click="dailyProgressModal = 'issue'" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: 0.74rem;">
-                                <span>➕</span><span>Record Stock Issue</span>
-                            </button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button" class="btn btn-secondary" @click="runDailyProgressAdmin(loadDailyProgressLoginsAndHistory)" style="font-size: 0.74rem; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span>🔄</span><span>Refresh Logins &amp; Logs</span>
+                                </button>
+                                <button type="button" class="btn btn-primary" @click="openAddWorkerModal" style="font-size: 0.74rem; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span>➕</span><span>Naya Worker Login Banayein</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="dp-panel">
+                    <!-- Panel 1: Registered Logins -->
+                    <div class="dp-panel" style="margin-bottom: 12px;">
                         <div class="dp-panel-header">
-                            <h2><span>01</span> Material Balances</h2>
-                            <span style="font-size: 0.72rem; color: var(--text-muted);">As-on {{ formatDisplayDate(dailyProgressDate) }}</span>
+                            <h2><span>01</span> Registered Site Logins ({{ dailyProgressWorkers.length }})</h2>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Jo log share link se entry kar sakte hain</span>
                         </div>
-                        <div class="dp-table-wrap" style="max-height: 480px;">
+                        <div class="dp-table-wrap">
                             <table class="dp-table">
                                 <thead>
                                     <tr>
-                                        <th>Material Description</th>
-                                        <th>Unit</th>
-                                        <th style="text-align: right;">SAP Issued</th>
-                                        <th style="text-align: right;">Manual Issued</th>
-                                        <th style="text-align: right;">Total Issued</th>
-                                        <th style="text-align: right;">Consumed To-Date</th>
-                                        <th style="text-align: right;">Stock Balance</th>
+                                        <th>Pura Naam</th>
+                                        <th>Email ID</th>
+                                        <th>Mobile Number</th>
+                                        <th>Username</th>
+                                        <th>Allowed Contractors</th>
+                                        <th>Status</th>
+                                        <th style="text-align: right;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="item in dailyProgressActiveStockItems" :key="'stk_' + item.id">
+                                    <tr v-for="user in dailyProgressWorkers" :key="user.id">
+                                        <td><strong style="color: #60a5fa;">{{ user.name }}</strong></td>
+                                        <td>{{ user.email || '—' }}</td>
+                                        <td><span style="font-family: monospace; font-weight: 600;">{{ user.mobile || '—' }}</span></td>
+                                        <td><code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem;">{{ user.username }}</code></td>
                                         <td>
-                                            <span class="dp-mat-desc">{{ item.name }}</span>
-                                            <small style="color: #60a5fa; font-family: monospace;">SAP: {{ item.code || 'Work Item' }} · Row {{ item.row }}</small>
+                                            <span v-if="!user.contractorIds || !user.contractorIds.length || user.contractorIds.includes('all')" style="color: #10b981; font-weight: 600;">Sabhi Contractors (All)</span>
+                                            <span v-else>{{ user.contractorIds.map(id => (dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') }}</span>
                                         </td>
-                                        <td>{{ item.unit }}</td>
-                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).sapIssued || '—' }}</td>
-                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).manualIssued || '—' }}</td>
-                                        <td style="text-align: right; font-weight: 700; font-family: monospace;">{{ getDailyProgressItemStock(item).totalIssued }}</td>
-                                        <td style="text-align: right; font-family: monospace;">{{ getDailyProgressItemStock(item).totalConsumed }}</td>
-                                        <td style="text-align: right; font-weight: 800; font-family: monospace;">
-                                            <span :style="{ color: getDailyProgressItemStock(item).balance < 0 ? '#ef4444' : '#22c55e' }">
-                                                {{ getDailyProgressItemStock(item).balance }} {{ item.unit }}
+                                        <td>
+                                            <span :style="{ color: user.disabled ? '#ef4444' : '#10b981', fontWeight: 700 }">
+                                                {{ user.disabled ? '🔴 Disabled' : '🟢 Active' }}
                                             </span>
                                         </td>
+                                        <td style="text-align: right;">
+                                            <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="resetDailyProgressWorker(user)">Reset Password</button>
+                                            <button v-if="!user.disabled" type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem;" @click="disableDailyProgressWorker(user)">Disable</button>
+                                        </td>
                                     </tr>
-                                    <tr v-if="!dailyProgressActiveStockItems.length">
-                                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                            No materials issued or consumed yet for this contractor.
+                                    <tr v-if="!dailyProgressWorkers.length">
+                                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                            Abhi koi worker login nahi hai. Worker share link se seedhe Name/Email/Mobile se signup kar sakte hain ya aap upar "Naya Worker Login Banayein" se add kar sakte hain.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -2203,34 +2213,50 @@
                         </div>
                     </div>
 
-                    <!-- Manual Issues List -->
+                    <!-- Panel 2: Working / Audit Log -->
                     <div class="dp-panel">
-                        <div class="dp-panel-header">
-                            <h2><span>02</span> Manual Issue Transactions</h2>
-                            <span style="font-size: 0.72rem; color: var(--text-muted);">{{ dailyProgressIssues.length }} recorded entries</span>
+                        <div class="dp-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2><span>02</span> Working Log (Kisne Kab Kya Entry Ki)</h2>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Contractor: {{ (dailyProgressContractors.find(c => c.id === dailyProgressContractorId) || {}).name || dailyProgressContractorId }}</span>
                         </div>
                         <div class="dp-table-wrap">
                             <table class="dp-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Material</th>
-                                        <th style="text-align: right;">Quantity</th>
-                                        <th>Challan / Reference</th>
+                                        <th>Kisne Entry Ki</th>
+                                        <th>Contact (Mobile/Email)</th>
+                                        <th>Save Time (IST)</th>
+                                        <th>Work Date</th>
+                                        <th>Material Consumption</th>
+                                        <th>Site Location / Remarks</th>
+                                        <th style="text-align: right;">Version</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="iss in dailyProgressIssues" :key="iss.id">
-                                        <td>{{ formatDisplayDate(iss.date) }}</td>
+                                    <tr v-for="event in dailyProgressEntryHistory" :key="event.source + event.date + event.version + event.savedAt">
                                         <td>
-                                            <span>{{ (dailyProgressSeedItems.find(x => x.id === iss.itemId) || {}).name || ('Item ' + iss.itemId) }}</span>
+                                            <strong style="color: #60a5fa;">{{ event.savedBy ? event.savedBy.name : 'Direct Entry' }}</strong>
                                         </td>
-                                        <td style="text-align: right; font-weight: 700; font-family: monospace;">{{ iss.quantity }}</td>
-                                        <td>{{ iss.reference || '—' }}</td>
+                                        <td>
+                                            <small style="color: var(--text-muted);">{{ [event.savedBy?.mobile, event.savedBy?.email].filter(Boolean).join(' • ') || '—' }}</small>
+                                        </td>
+                                        <td>
+                                            <span style="font-weight: 600;">{{ dailyProgressEntryTime(event.savedAt) }}</span>
+                                        </td>
+                                        <td><span style="font-family: monospace; font-weight: 700; color: #38bdf8;">{{ event.date }}</span></td>
+                                        <td>
+                                            <div v-for="(value, id) in event.quantities" :key="id" style="font-size: 0.78rem; line-height: 1.4;">
+                                                {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).name || ('Item ' + id) }}:
+                                                <strong style="color: #10b981;">{{ value }}</strong> {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).unit || '' }}
+                                            </div>
+                                            <span v-if="!Object.keys(event.quantities || {}).length" style="color: var(--text-muted); font-style: italic;">No materials</span>
+                                        </td>
+                                        <td style="max-width: 250px; font-size: 0.8rem;">{{ event.remarks || '—' }}</td>
+                                        <td style="text-align: right; font-family: monospace; font-weight: 700;">v{{ event.version }}</td>
                                     </tr>
-                                    <tr v-if="!dailyProgressIssues.length">
-                                        <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                            No manual challans recorded. SAP Stock is auto-linked from stock register.
+                                    <tr v-if="!dailyProgressEntryHistory.length">
+                                        <td colspan="7" style="text-align: center; padding: 35px; color: var(--text-muted);">
+                                            Is contractor ke liye abhi koi entry log recorded nahi hai. Jab ladke entry save karenge, unka time aur naam yahan update hoga.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -2523,6 +2549,43 @@
                     </div>
                 </div>
 
+                <!-- MODAL: ADD / RESET WORKER LOGIN -->
+                <div v-if="dailyProgressModal === 'worker'" class="dp-modal-backdrop" @click.self="dailyProgressModal = ''">
+                    <div class="dp-modal animate-scale-in" style="max-width: 480px;">
+                        <div class="dp-modal-header">
+                            <h3>{{ dailyProgressWorkerForm.reset ? 'Reset Worker Password / Access' : 'Naya Worker Login Banayein' }}</h3>
+                            <button type="button" class="tbtn" @click="dailyProgressModal = ''" style="border: none; font-size: 1.1rem; cursor: pointer;">✕</button>
+                        </div>
+                        <form @submit.prevent="saveDailyProgressWorker">
+                            <label>Pura Naam (Full Name) *</label>
+                            <input type="text" required maxlength="80" placeholder="e.g. Ramesh Kumar" v-model="dailyProgressWorkerForm.name">
+
+                            <label>Email ID</label>
+                            <input type="email" maxlength="80" placeholder="e.g. ramesh@example.com" v-model="dailyProgressWorkerForm.email">
+
+                            <label>Mobile Number (10 Digit)</label>
+                            <input type="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="e.g. 9876543210" v-model="dailyProgressWorkerForm.mobile">
+
+                            <label>Username (Login ID) *</label>
+                            <input type="text" required pattern="[a-zA-Z0-9._-]{3,40}" placeholder="e.g. ramesh_site" v-model="dailyProgressWorkerForm.username" :disabled="dailyProgressWorkerForm.reset">
+
+                            <label>{{ dailyProgressWorkerForm.reset ? 'Naya Password *' : 'Password (min 6 chars) *' }}</label>
+                            <input type="password" required minlength="6" maxlength="128" placeholder="Kam se kam 6 character" v-model="dailyProgressWorkerForm.password">
+
+                            <label>Allowed Contractors / Agency</label>
+                            <select v-model="dailyProgressWorkerForm.contractorIds" multiple size="4" style="height: auto;">
+                                <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                            <small style="color: var(--text-muted); display: block; margin-top: 2px;">(Ctrl daba kar ek se zyada contractor select kar sakte hain)</small>
+
+                            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" @click="dailyProgressModal = ''">Cancel</button>
+                                <button type="submit" class="btn btn-primary">{{ dailyProgressWorkerForm.reset ? 'Update Password' : 'Save Worker Login' }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- MODAL: SHARE DAILY PROGRESS LINK WITH CONTRACTOR SEARCH -->
                 <div v-if="dailyProgressModal === 'share'" class="dp-modal-backdrop" @click.self="dailyProgressModal = ''">
                     <div class="dp-modal animate-scale-in" style="width: 580px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
@@ -2637,9 +2700,9 @@
                         <span class="dp-mn-ico">⚡</span>
                         <span class="dp-mn-text">Progress</span>
                     </button>
-                    <button type="button" :class="{ active: dailyProgressTab === 'stock' }" @click="dailyProgressTab = 'stock'">
-                        <span class="dp-mn-ico">📦</span>
-                        <span class="dp-mn-text">Stock</span>
+                    <button type="button" :class="{ active: dailyProgressTab === 'logins' }" @click="openDailyProgressLoginsTab()">
+                        <span class="dp-mn-ico">👥</span>
+                        <span class="dp-mn-text">Logins</span>
                     </button>
                     <button type="button" :class="{ active: dailyProgressTab === 'history' }" @click="dailyProgressTab = 'history'">
                         <span class="dp-mn-ico">📋</span>
@@ -4774,7 +4837,7 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_share_sync"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_logins_tab"></script>
     <!-- Core Application (creates and mounts Vue app) -->
     <script defer src="js/core/app.js?v=20261117_1220_concreting"></script>
 </body>
