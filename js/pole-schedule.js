@@ -154,8 +154,17 @@ window.PoleScheduleModule = {
         };
     },
 
+    getPoleScheduleCachedRateLink(item, scheduleKey) {
+        const key = scheduleKey || this.selectedPoleScheduleKey || '907';
+        if (key === (this.selectedPoleScheduleKey || '907') && Array.isArray(this.currentPoleScheduleRateLinks)) {
+            const index = Number.isInteger(item && item.origIndex) ? item.origIndex : this.getCurrentPoleSchedule().materials.indexOf(item);
+            if (index >= 0 && this.currentPoleScheduleRateLinks[index]) return this.currentPoleScheduleRateLinks[index];
+        }
+        return this.getPoleScheduleRateLink(item, key);
+    },
+
     getPoleScheduleRateValue(item, scheduleKey) {
-        const link = this.getPoleScheduleRateLink(item, scheduleKey);
+        const link = window.PoleScheduleModule.getPoleScheduleCachedRateLink.call(this, item, scheduleKey);
         if (link.status === 'linked') return link.rate;
         // Fixed departmental rates must never become a normal activity's rate.
         if (link.status !== 'departmental') return 0;
@@ -1052,29 +1061,28 @@ window.PoleScheduleModule = {
                 return 1;
             };
 
-            // Loop per activity material to accumulate and SUM ALL repeating/matching pole schedule items
+            // Parse material metadata once per input, rather than once for every
+            // Activity x Schedule pair and again for duplicate-code detection.
+            const codesFor = material => new Set([
+                ...expandSapCodes(material.itemCode),
+                ...(Array.isArray(material.sapItems) ? material.sapItems.map(s => s && s.code) : [])
+            ].flatMap(expandSapCodes));
+            const activityCodes = act.materials.map(codesFor);
+            const codeCounts = new Map();
+            activityCodes.forEach(codes => codes.forEach(code => codeCounts.set(code, (codeCounts.get(code) || 0) + 1)));
+            const scheduleMetadata = sched.materials.map((sm, smIdx) => ({
+                sm, smIdx, codes: codesFor(sm), desc: String(sm.desc || '').trim().toLowerCase(),
+                nutBolt: checkSmNutBolt(sm), link: window.PoleScheduleModule.getPoleScheduleActivityLink.call(this, sm, k)
+            })).filter(({ sm }) => !sm.isSection && !sm.isSpan);
+
             act.materials.forEach((am, actMatIdx) => {
                 const rowIdentity = JSON.stringify([am.no, am.desc]);
-                const amCodes = new Set([
-                    ...expandSapCodes(am.itemCode),
-                    ...(Array.isArray(am.sapItems) ? am.sapItems.map(sap => sap && sap.code) : [])
-                ].flatMap(expandSapCodes));
+                const amCodes = activityCodes[actMatIdx];
                 const amDesc = String(am.desc || '').trim().toLowerCase();
                 const amIsNutBolt = checkAmNutBolt(am);
-
-                // Find all matching pole schedule materials for this am
                 const matchingSmList = [];
-                sched.materials.forEach((sm, smIdx) => {
-                    if (sm.isSection || sm.isSpan) return;
-                    const smCodes = new Set([
-                        ...expandSapCodes(sm.itemCode),
-                        ...(Array.isArray(sm.sapItems) ? sm.sapItems.map(sap => sap && sap.code) : [])
-                    ].flatMap(expandSapCodes));
-                    const smDesc = String(sm.desc || '').trim().toLowerCase();
-                    const smIsNutBolt = checkSmNutBolt(sm);
-
+                scheduleMetadata.forEach(({ sm, smIdx, codes: smCodes, desc: smDesc, nutBolt: smIsNutBolt, link: activityLink }) => {
                     let isMatch = false;
-                    const activityLink = window.PoleScheduleModule.getPoleScheduleActivityLink.call(this, sm, k);
                     const hasExplicitActivityLink = activityLink.trim() !== '';
                     if (hasExplicitActivityLink) {
                         // The explicit mapping is authoritative. A multi-SAP Activity
@@ -1101,14 +1109,7 @@ window.PoleScheduleModule = {
                         } else {
                             // If multiple am in act.materials share this exact matching code, use description to disambiguate
                             const smMatchingCodes = [...smCodes].filter(code => amCodes.has(code));
-                            const duplicateAmCode = act.materials.some((oAm, oIdx) => {
-                                if (oIdx === actMatIdx) return false;
-                                const oCodes = new Set([
-                                    ...expandSapCodes(oAm.itemCode),
-                                    ...(Array.isArray(oAm.sapItems) ? oAm.sapItems.map(s => s && s.code) : [])
-                                ].flatMap(expandSapCodes));
-                                return smMatchingCodes.some(code => oCodes.has(code));
-                            });
+                            const duplicateAmCode = smMatchingCodes.some(code => codeCounts.get(code) > 1);
                             if (duplicateAmCode) {
                                 const isTopCleatSynonym = /\btop\s*(?:cleat|fitting)\b/i.test(amDesc) && /\btop\s*(?:cleat|fitting)\b/i.test(smDesc);
                                 const isCutPointSynonym = /\b(cut\s*point|spcp)\b/i.test(amDesc) && /\b(cut\s*point|spcp)\b/i.test(smDesc);
@@ -1191,7 +1192,8 @@ window.PoleScheduleModule = {
         this.poleScheduleLocations = { ...this.poleScheduleLocations };
         this.activityQuantities[activityKey] = this.activityQuantities[activityKey].map(row => [...row]);
         this.activityQuantities = { ...this.activityQuantities };
-        this.activities = { ...this.activities };
+        // Vue 3 tracks nested quantities. Replacing the materials catalogue here
+        // invalidates every cached rate and mapping on each keystroke.
 
         // 3. Update Master Abstract if present
         try {

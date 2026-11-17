@@ -736,6 +736,7 @@ window.ViewsModule = {
         }
         
         this.activeSapManagerItem = item;
+        this._sapManagerLastSnapshot = null;
         this.sapManagerSearchQuery = '';
         this.sapManagerSuggestions = [];
         this.showSapItemManagerModal = true;
@@ -833,6 +834,9 @@ window.ViewsModule = {
     },
     syncActiveSapManagerItem() {
         if (!this.activeSapManagerItem) return;
+        const snapshot = JSON.stringify([this.activeSapManagerContextType, this.activeSapManagerContextKey,
+            this.activeSapManagerOrigIndex, this.activeSapManagerItem.sapItems, this.activeSapManagerItem.desc, this.activeSapManagerItem.unit]);
+        if (snapshot === this._sapManagerLastSnapshot) return;
         const items = this.activeSapManagerItem.sapItems || [];
         
         if (items.length === 0) {
@@ -874,9 +878,7 @@ window.ViewsModule = {
             if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
                 this.syncPoleScheduleToBillingAndReconciliation(k);
             }
-            // Persist the workspace before starting requests that may sync it.
-            this.saveToStorage();
-            if (typeof this.persistPoleSchedulesToMasterFile === "function") {
+            if (typeof this.scheduleMappingSync !== 'function' && typeof this.persistPoleSchedulesToMasterFile === "function") {
                 this.persistPoleSchedulesToMasterFile(true);
             }
         } else {
@@ -895,14 +897,11 @@ window.ViewsModule = {
                 }
             }
             this.activities = { ...this.activities };
-            if (typeof this.persistActivitiesToMasterFile === "function") {
+            if (typeof this.scheduleMappingSync !== 'function' && typeof this.persistActivitiesToMasterFile === "function") {
                 this.persistActivitiesToMasterFile(true);
             }
             if (typeof this.syncPoleScheduleToBillingAndReconciliation === 'function') {
                 this.syncPoleScheduleToBillingAndReconciliation(k);
-            }
-            if (typeof this.scheduleMappingSync === 'function') {
-                this.scheduleMappingSync();
             }
         }
         
@@ -910,6 +909,7 @@ window.ViewsModule = {
         if (typeof this.scheduleMappingSync === 'function') {
             this.scheduleMappingSync();
         }
+        this._sapManagerLastSnapshot = snapshot;
     },
     closeSapItemManager() {
         this.syncActiveSapManagerItem();

@@ -1096,7 +1096,7 @@ window.SyncModule = {
         if (this._saveTimer) clearTimeout(this._saveTimer);
         this._saveTimer = setTimeout(() => {
             this.saveToStorage();
-        }, 120);
+        }, 350);
     },
     buildSyncPayload(extra = {}) {
         if (typeof this.captureContractorMapping === 'function') this.captureContractorMapping();

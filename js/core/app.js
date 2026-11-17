@@ -232,6 +232,7 @@
                 poleScheduleLocations: {},
                 poleScheduleQuantities: {},
                 poleScheduleTransferWarnings: {},
+                poleScheduleLinkEditorIndex: -1,
                 poleScheduleSearchQuery: '',
                 poleScheduleFilterQty: 'ALL',
                 poleScheduleFilterSap: 'ALL',
@@ -592,6 +593,10 @@
             },
             currentPoleScheduleMaterials() {
                 return typeof this.getFilteredPoleScheduleMaterials === 'function' ? this.getFilteredPoleScheduleMaterials() : [];
+            },
+            currentPoleScheduleRateLinks() {
+                const schedule = this.getCurrentPoleSchedule();
+                return (schedule.materials || []).map(item => this.getPoleScheduleRateLink(item, this.selectedPoleScheduleKey));
             },
             poleScheduleTotals() {
                 return typeof this.getPoleScheduleTotals === 'function' ? this.getPoleScheduleTotals() : { totalQty: 0, totalAmt100: 0, totalAmtStage1: 0 };

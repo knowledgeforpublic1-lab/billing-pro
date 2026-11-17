@@ -204,3 +204,48 @@ test('every activity and pole schedule can add multiple SAP codes starting with 
         }
     }
 });
+
+test('typing quantities keeps material catalogues stable and parses links once per schedule row', () => {
+    const a = app('1220');
+    const catalog = a.activities;
+    const original = methods.getPoleScheduleActivityLink;
+    let lookups = 0;
+    methods.getPoleScheduleActivityLink = function(...args) { lookups++; return original.apply(this, args); };
+    try {
+        enter(a, '1220', 'Dist. Transformer 100 KVA, 11/0.43 kv', 3);
+        assert.equal(qty(a, '1220', '1'), 3);
+        assert.equal(a.activities, catalog, 'Quantity edits must not invalidate the materials catalogue');
+        assert.ok(lookups <= a.poleSchedules['1220'].materials.length, 'No repeated link lookup per activity/material pair');
+    } finally { methods.getPoleScheduleActivityLink = original; }
+});
+
+test('stock merges are reused across rows and invalidated after stock or contractor changes', () => {
+    const a = app();
+    const stock = { materials: { A: { netIssue: 1 } } };
+    const old = { materials: { B: { netIssue: 2 } } };
+    a.getContractorSapIssues = () => stock;
+    a.getContractorOldReco = () => old;
+    const first = a.getReconciliationIssueStock();
+    for (let i = 0; i < 100; i++) assert.equal(a.getReconciliationIssueStock(), first);
+    old.materials.B.netIssue = 9;
+    a.recoRevision = (a.recoRevision || 0) + 1;
+    const next = a.getReconciliationIssueStock();
+    assert.notEqual(next, first); assert.equal(next.materials.B.netIssue, 9);
+    a.selectedContractorId = 'other';
+    assert.notEqual(a.getReconciliationIssueStock(), next);
+});
+
+test('one mapping selection saves and schedules once; closing unchanged mapping does not repeat it', () => {
+    let saves = 0, schedules = 0, masterWrites = 0;
+    const a = Object.assign(app('1220'), ViewsModule, {
+        $refs: {}, $nextTick(fn) { fn(); }, showToast() {},
+        saveToStorage() { saves++; }, scheduleMappingSync() { schedules++; },
+        persistActivitiesToMasterFile() { masterWrites++; }, syncToMongoNow() {}
+    });
+    const row = a.activities['1220'].materials[3];
+    a.openSapItemManager({ ...row, origIndex: 3 }, 3, 'activity', '1220');
+    a.selectSapItemForManager({ code: 'ADDITIONAL', desc: 'New component', uom: 'NO' });
+    assert.equal(saves, 1); assert.equal(schedules, 1); assert.equal(masterWrites, 0);
+    a.syncActiveSapManagerItem();
+    assert.equal(saves, 1); assert.equal(schedules, 1);
+});

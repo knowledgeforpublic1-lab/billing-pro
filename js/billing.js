@@ -7,12 +7,16 @@
  * @since v2.0
  */
 
+const reconciliationIssueCache = new WeakMap();
 window.BillingModule = {
     // Reconciliation and schedule warnings must use the same issue baseline.
     getReconciliationIssueStock() {
         const stock = typeof this.getContractorSapIssues === 'function' ? this.getContractorSapIssues() : this.currentContractorSap;
         const old = typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
         if (!stock && !old) return null;
+        const cached = reconciliationIssueCache.get(this);
+        if (cached && cached.stock === stock && cached.old === old && cached.revision === this.recoRevision &&
+            cached.date === this.stockAsOnDate && cached.contractor === this.selectedContractorId && cached.name === this.selectedContractorName) return cached.value;
         const materials = { ...(stock && stock.materials || {}) };
         Object.entries(old && old.materials || {}).forEach(([code, item]) => {
             // An explicit SAP zero, including a posting-date cutoff, wins.
@@ -25,7 +29,9 @@ window.BillingModule = {
                 mrnReturn: this.stockAsOnDate ? 0 : Number(item.mrnReturn || 0)
             };
         });
-        return { ...(old || {}), ...(stock || {}), materials };
+        const value = { ...(old || {}), ...(stock || {}), materials };
+        reconciliationIssueCache.set(this, { stock, old, revision: this.recoRevision, date: this.stockAsOnDate, contractor: this.selectedContractorId, name: this.selectedContractorName, value });
+        return value;
     },
     // ─── SAP STOCK MATERIAL ISSUES AUTO-SYNC ────
     getContractorSapIssues() {

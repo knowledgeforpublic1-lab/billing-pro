@@ -933,7 +933,7 @@
                                             @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
                                             @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
                                             @paste="handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="saveToStorage()"
+                                            @input="debouncedSave()"
                                             @change="onQtyCellChange($event, item.origIndex, locIdx)"
                                             @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
                                         <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
@@ -1019,7 +1019,7 @@
                                             @keydown.right.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'right')"
                                             @keydown.left.prevent="handleGridKeyNav($event, item.origIndex, locIdx, 'left')"
                                             @paste="handleGridPaste($event, item.origIndex, locIdx)"
-                                            @input="saveToStorage()"
+                                            @input="debouncedSave()"
                                             @change="onQtyCellChange($event, item.origIndex, locIdx)"
                                             @blur="onQtyCellBlur($event, item.origIndex, locIdx)">
                                         <input type="text" inputmode="decimal" v-else class="qty-input" placeholder="0"
@@ -1203,7 +1203,8 @@
                                                     <span :style="isPoleScheduleItemUnissued(item) ? { color: '#ef4444' } : {}">{{ item.desc }}</span>
                                                     <label v-if="getPoleScheduleActivityMaterials(selectedPoleScheduleKey).length && !String(selectedPoleScheduleKey).startsWith('dept_')" class="no-print" style="display: flex; align-items: center; gap: 4px; max-width: 100%; font-size: 0.72rem;">
                                                         Activity link:
-                                                        <select :value="getPoleScheduleActivityLink(item, selectedPoleScheduleKey)" @change="setPoleScheduleActivityLink(item.origIndex, $event.target.value)" :disabled="isFinalized" style="max-width: 220px; min-width: 0; font-size: inherit;" aria-label="Activity material link">
+                                                        <button v-if="poleScheduleLinkEditorIndex !== item.origIndex" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: inherit;" @click="poleScheduleLinkEditorIndex = item.origIndex" :disabled="isFinalized">{{ getPoleScheduleActivityLink(item, selectedPoleScheduleKey) || 'Auto' }} · Edit</button>
+                                                        <select v-else :value="getPoleScheduleActivityLink(item, selectedPoleScheduleKey)" @change="setPoleScheduleActivityLink(item.origIndex, $event.target.value); poleScheduleLinkEditorIndex = -1" :disabled="isFinalized" style="max-width: 220px; min-width: 0; font-size: inherit;" aria-label="Activity material link">
                                                             <option value="">Auto (SAP / description)</option>
                                                             <option v-for="target in getPoleScheduleActivityMaterials(selectedPoleScheduleKey)" :key="target.no" :value="String(target.no)">{{ target.no }} — {{ target.desc }}</option>
                                                         </select>
@@ -1263,11 +1264,11 @@
 
                                             <!-- Rate -->
                                             <td class="text-right font-mono text-muted">
-                                                <template v-if="getPoleScheduleRateLink(item).status === 'linked'">
-                                                    <span :title="'Activity ' + selectedPoleScheduleKey + ' rate ₹' + formatCurrency(getPoleScheduleRateLink(item).sourceRate) + (getPoleScheduleRateLink(item).isSplit ? ' ko ' + getPoleScheduleRateLink(item).scheduleMatchCount + ' Pole Schedule rows mein barabar baanta gaya' : '') + '. Source: ' + getPoleScheduleRateLink(item).source.desc + ' (' + getPoleScheduleRateLink(item).code + ')'">
+                                                <template v-if="getPoleScheduleCachedRateLink(item).status === 'linked'">
+                                                    <span :title="'Activity ' + selectedPoleScheduleKey + ' rate ₹' + formatCurrency(getPoleScheduleCachedRateLink(item).sourceRate) + (getPoleScheduleCachedRateLink(item).isSplit ? ' ko ' + getPoleScheduleCachedRateLink(item).scheduleMatchCount + ' Pole Schedule rows mein barabar baanta gaya' : '') + '. Source: ' + getPoleScheduleCachedRateLink(item).source.desc + ' (' + getPoleScheduleCachedRateLink(item).code + ')'">
                                                         {{ formatCurrency(getPoleScheduleRateValue(item)) }}
                                                     </span>
-                                                    <div style="font-size:0.72rem; color:var(--accent-green); white-space:nowrap;">↳ Activity {{ selectedPoleScheduleKey }}<span v-if="getPoleScheduleRateLink(item).isSplit"> · {{ formatCurrency(getPoleScheduleRateLink(item).sourceRate) }} ÷ {{ getPoleScheduleRateLink(item).scheduleMatchCount }} rows</span></div>
+                                                    <div style="font-size:0.72rem; color:var(--accent-green); white-space:nowrap;">↳ Activity {{ selectedPoleScheduleKey }}<span v-if="getPoleScheduleCachedRateLink(item).isSplit"> · {{ formatCurrency(getPoleScheduleCachedRateLink(item).sourceRate) }} ÷ {{ getPoleScheduleCachedRateLink(item).scheduleMatchCount }} rows</span></div>
                                                 </template>
                                                 <template v-else-if="isDepartmentalPoleSchedule(selectedPoleScheduleKey)">
                                                     <span :title="'Departmental / Fixed Rate: ₹' + formatCurrency(getPoleScheduleRateValue(item))">
@@ -1275,8 +1276,8 @@
                                                     </span>
                                                     <div style="font-size:0.68rem; color:var(--text-muted); white-space:nowrap;">Dept Rate</div>
                                                 </template>
-                                                <span v-else :title="'Pole Schedule SAP code: ' + (getPoleScheduleRateLink(item).code || 'not mapped') + ' ⬢ Activity ' + selectedPoleScheduleKey + ' mein exact SAP mapping match nahi mila.'" style="font-size:0.68rem; color:var(--accent-amber); white-space:nowrap;">
-                                                    {{ getPoleScheduleRateLink(item).status === 'ambiguous' ? 'Multiple matches' : (getPoleScheduleRateLink(item).status === 'unmapped' ? 'Map SAP code' : (getPoleScheduleRateLink(item).status === 'activity-missing' ? 'Activity missing' : 'No rate match')) }}
+                                                <span v-else :title="'Pole Schedule SAP code: ' + (getPoleScheduleCachedRateLink(item).code || 'not mapped') + ' ⬢ Activity ' + selectedPoleScheduleKey + ' mein exact SAP mapping match nahi mila.'" style="font-size:0.68rem; color:var(--accent-amber); white-space:nowrap;">
+                                                    {{ getPoleScheduleCachedRateLink(item).status === 'ambiguous' ? 'Multiple matches' : (getPoleScheduleCachedRateLink(item).status === 'unmapped' ? 'Map SAP code' : (getPoleScheduleCachedRateLink(item).status === 'activity-missing' ? 'Activity missing' : 'No rate match')) }}
                                                 </span>
                                             </td>
 
@@ -4755,16 +4756,16 @@
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
-    <script defer src="js/sync.js?v=20261116_sync_conflict_fix"></script>
-    <script defer src="js/billing.js?v=20261117_mapping_transfer"></script>
+    <script defer src="js/sync.js?v=20261117_entry_performance"></script>
+    <script defer src="js/billing.js?v=20261117_entry_performance"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261117_mapping_transfer"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_header"></script>
     <script defer src="js/reco-filters.js?v=20261114_reco_filter_fix"></script>
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
-    <script defer src="js/views.js?v=20261117_multi_sap_all"></script>
+    <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
-    <script defer src="js/pole-schedule.js?v=20261117_department_isolation"></script>
+    <script defer src="js/pole-schedule.js?v=20261117_entry_performance"></script>
     <script defer src="js/stock-importer.js?v=20261116_posting_date"></script>
     <script defer src="js/old-reco-importer.js?v=20261111_realtime_mongo_sync"></script>
 
@@ -4773,7 +4774,7 @@
     <script defer src="js/daily-progress.js?v=20261117_search_final"></script>
     <script defer src="js/daily-progress-access.js?v=20261117_share_sync"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_department_isolation"></script>
+    <script defer src="js/core/app.js?v=20261117_entry_performance"></script>
 </body>
 
 </html>
