@@ -2,12 +2,13 @@ const crypto = require('node:crypto');
 const { promisify } = require('node:util');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { readDailyProgressData } = require('./daily-progress-data');
 const scrypt = promisify(crypto.scrypt);
 const hash = text => crypto.createHash('sha256').update(String(text)).digest('hex');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const COOKIE = 'dp_worker_session';
 
-module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
+module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) {
     const router = express.Router();
     const read = key => db.atomicDailyRecord(key, value => ({ result: value }));
     const userKey = username => 'dp_worker_user_' + hash(String(username).toLowerCase());
@@ -132,27 +133,48 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
             const path = require('node:path');
             const sandbox = { window: {} };
             vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data/default-contractors.js'), 'utf8'), sandbox);
+            vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data/default-daily-progress.js'), 'utf8'), sandbox);
             const raw = sandbox.window.defaultContractorsList || sandbox.window.DefaultContractors || [];
-            return raw.map(c => ({ id: c.id, name: c.name || c.firmName }));
+            return [...raw, sandbox.window.DailyProgressSeed.contractor].map(c => ({ id: c.id, name: c.name || c.firmName }));
         } catch {
             return [];
         }
     }
 
-    // Public available contractor list for signup
-    router.get('/contractors', handler(async (req, res) => {
-        const raw = await db.getDefaultConfig('dailyProgressData');
-        const dbList = (raw && raw.data && raw.data.contractors || []).map(c => ({ id: c.id, name: c.name }));
-        const seen = new Set();
-        const contractors = [];
-        for (const c of [...defaultContractors(), ...dbList]) {
-            if (c.id && !seen.has(c.id)) {
-                seen.add(c.id);
-                contractors.push(c);
+    async function listContractors() {
+        const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
+        const links = await db.listDailyRecords('contractor_');
+        const auxiliary = await db.listDailyRecords('aux_contractor_');
+        const extra = [];
+        for (const { value } of auxiliary) {
+            if (value?.contractor) extra.push(value.contractor);
+            else if (value?.fileId) {
+                const stored = await (drive || require('./daily-drive')()).read(value.fileId);
+                if (stored?.kind === 'contractor' && stored.value) extra.push(stored.value);
             }
         }
-        res.json({ success: true, contractors });
-    }));
+        const contractors = new Map();
+        for (const c of [...defaultContractors(), ...saved.contractors, ...links.map(row => row.value), ...extra]) {
+            if (c?.id && c.name) contractors.set(c.id, { id: c.id, name: c.name });
+        }
+        return [...contractors.values()];
+    }
+
+    async function validateContractors(values, { allowAll = false, allowEmpty = false } = {}) {
+        if (!Array.isArray(values) || values.length > 500 || values.some(id => typeof id !== 'string' || !id.trim() || id.length > 150)) fail(400, 'Valid contractor selections required.');
+        const ids = [...new Set(values.map(id => id.trim()))];
+        if (ids.includes('*') || ids.includes('all')) {
+            if (!allowAll) fail(400, 'Select individual contractors for signup.');
+            return ['*'];
+        }
+        if (!ids.length && !allowEmpty) fail(400, 'Select at least one contractor. You can select five or more.');
+        const known = new Set((await listContractors()).map(c => c.id));
+        if (ids.some(id => !known.has(id))) fail(400, 'A selected contractor is unavailable. Refresh the contractor list.');
+        return ids;
+    }
+
+    // Public sanitized names for the searchable signup checklist.
+    router.get('/contractors', handler(async (req, res) => res.json({ success: true, contractors: await listContractors() })));
 
     // Public login (Email, Mobile, or Username)
     router.post('/login', rateLimit({
@@ -216,6 +238,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
     }));
 
     async function saveUser(body, options = {}) {
+        if (options.isPublicSignup && body.reset) fail(400, 'Signup cannot reset an existing account. Contact admin.');
         const name = String(body.name || '').trim();
         const rawEmail = String(body.email || '').trim().toLowerCase();
         const digits = String(body.mobile || '').replace(/[\s\-+]/g, '');
@@ -255,10 +278,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
             fail(400, 'Password must be at least 6 characters.');
         }
 
-        let contractorIds = Array.isArray(body.contractorIds) ? [...new Set(body.contractorIds)].filter(id => typeof id === 'string' && id && id.length <= 150) : [];
-        if (!contractorIds.length) {
-            contractorIds = ['*'];
-        }
+        const contractorIds = await validateContractors(body.contractorIds, { allowAll: !options.isPublicSignup });
 
         // Check duplicate email
         if (rawEmail) {
@@ -318,6 +338,18 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         });
     }
 
+    async function assignContractors(body) {
+        const username = body.username;
+        if (typeof username !== 'string' || !/^[a-z0-9._-]{3,40}$/.test(username)) fail(400, 'Valid username required');
+        const contractorIds = await validateContractors(body.contractorIds, { allowAll: true, allowEmpty: true });
+        return db.atomicDailyRecord(userKey(username), old => {
+            if (!old || old.deleted) fail(404, 'Worker login not found.');
+            // Sessions read these permissions on every request; credentials and sessions stay intact.
+            const user = { ...old, contractorIds, permissionsUpdatedAt: new Date(now()).toISOString() };
+            return { value: user, result: publicUser(user) };
+        });
+    }
+
     async function deleteUser(username) {
         if (typeof username !== 'string' || !/^[a-z0-9._-]{3,40}$/.test(username)) fail(400, 'Valid username required');
         const user = await read(userKey(username));
@@ -356,6 +388,8 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now }) {
         assertContractor,
         hasContractorPermission,
         saveUser,
+        assignContractors,
+        listContractors,
         disableUser,
         deleteUser,
         recordHistory,

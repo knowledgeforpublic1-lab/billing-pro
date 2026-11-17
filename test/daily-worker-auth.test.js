@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fixture = require('./helpers/daily-entry-fixture');
+const fs = require('node:fs');
+const vm = require('node:vm');
 
 async function setup() {
     const f = fixture();
@@ -118,7 +120,8 @@ test('public worker signup with name, email, and mobile supports login via email
             name: 'Samrat Duplicate',
             email: 'samrat@example.com',
             mobile: '9876543210',
-            password: 'SecurePassword123'
+            password: 'SecurePassword123',
+            contractorIds: ['a']
         });
         assert.equal(dupRes.status, 409);
 
@@ -170,4 +173,135 @@ test('public worker signup with name, email, and mobile supports login via email
         });
         assert.equal(reLoginRes.status, 401);
     } finally { await f.close(); }
+});
+
+test('signup accepts five or more contractors; admin changes assignments without resetting passwords or sessions', async () => {
+    const f = await setup();
+    const contractors = ['a', 'b', 'c', 'd', 'e', 'f'].map(id => ({ id, name: 'Team ' + id.toUpperCase() }));
+    f.configs.set('dailyProgressData', { data: { contractors, reports: [], issues: [] } });
+    try {
+        const signup = await f.request('/api/dp-worker/signup', {
+            name: 'Multi Site User', email: 'multisite@example.com', mobile: '9876543222', password: 'Multi-site-password',
+            contractorIds: ['a', 'b', 'c', 'd', 'e']
+        });
+        assert.equal(signup.status, 200);
+        const user = (await signup.json()).user;
+        assert.equal(user.contractorIds.length, 5);
+        const cookie = signup.headers.get('set-cookie').split(';')[0];
+        const recordKey = [...f.records.keys()].find(key => key.startsWith('dp_worker_user_'));
+        const original = structuredClone(f.records.get(recordKey));
+        const save = id => f.request('/api/daily-progress/data', { reports: [{ contractorId: id, date: '2026-11-17', version: 1, quantities: { 15: 7 }, manpower: {}, remarks: '' }] }, cookie);
+        assert.equal((await save('a')).status, 200);
+        assert.equal((await save('f')).status, 403);
+        const assign = (ids, auth = f.ownerCookie) => f.request('/api/dp-admin/workers/contractors', { username: user.username, contractorIds: ids, role: 'admin', disabled: false }, auth);
+        assert.equal((await assign(['a', 'f'], '')).status, 401);
+        assert.equal((await assign(['a', 'f'], cookie)).status, 401);
+        assert.equal((await assign(['a', 'b', 'c', 'd', 'e', 'f'])).status, 200);
+        let session = await (await f.request('/api/dp-worker/session', undefined, cookie)).json();
+        assert.equal(session.user.contractorIds.length, 6, 'Existing session sees added contractor immediately');
+        assert.equal((await save('f')).status, 200);
+        assert.equal((await assign(['f'])).status, 200);
+        assert.equal((await save('a')).status, 403, 'Removed contractor is blocked immediately');
+        const record = f.records.get(recordKey);
+        for (const field of ['passwordHash', 'salt', 'revision', 'role', 'id']) assert.equal(record[field], original[field], field + ' is unchanged');
+        const adminData = (await (await f.request('/api/dp-admin/data', undefined, f.ownerCookie)).json()).data;
+        assert.equal(adminData.reports.find(r => r.contractorId === 'a').quantities[15], 7, 'Removing access retains reports');
+        assert.equal((await assign([])).status, 200, 'Admin can revoke every assignment');
+        session = await (await f.request('/api/dp-worker/session', undefined, cookie)).json();
+        assert.deepEqual(session.user.contractorIds, []);
+        assert.equal((await save('f')).status, 403);
+        const login = await f.request('/api/dp-worker/login', { identifier: 'multisite@example.com', password: 'Multi-site-password' });
+        assert.equal(login.status, 200, 'Original password still works');
+    } finally { await f.close(); }
+});
+
+test('signup requires explicit known contractors and never grants wildcard access; new teams are assignable', async () => {
+    const f = await setup();
+    try {
+        const body = { name: 'Selection User', email: 'selection@example.com', mobile: '9876543233', password: 'Selection-password' };
+        assert.equal((await f.request('/api/dp-worker/signup', { ...body, contractorIds: ['a'], reset: true })).status, 400);
+        for (const ids of [undefined, [], ['*'], ['all'], ['missing-contractor'], [null], 'a']) {
+            const result = await f.request('/api/dp-worker/signup', { ...body, contractorIds: ids });
+            assert.equal(result.status, 400, JSON.stringify(ids));
+        }
+        const added = await f.request('/api/dp-admin/auxiliary', { kind: 'contractor', value: { id: 'new-team', name: 'New Site Team' } }, f.ownerCookie);
+        assert.equal(added.status, 200);
+        const directory = (await (await f.request('/api/dp-worker/contractors')).json()).contractors;
+        assert.deepEqual(directory.find(c => c.id === 'new-team'), { id: 'new-team', name: 'New Site Team' });
+        const signup = await f.request('/api/dp-worker/signup', { ...body, contractorIds: ['a', 'new-team', 'a'] });
+        assert.equal(signup.status, 200);
+        assert.deepEqual((await signup.json()).user.contractorIds, ['a', 'new-team']);
+        const bad = await f.request('/api/dp-admin/workers/contractors', { username: 'm_9876543233', contractorIds: ['unavailable'] }, f.ownerCookie);
+        assert.equal(bad.status, 400);
+    } finally { await f.close(); }
+});
+
+test('signup checkbox selections survive search and submit six contractors without a wildcard', async () => {
+    class Element {
+        constructor() { this.children = []; this.style = {}; this.value = ''; this.textContent = ''; this.nodes = new Map(); }
+        setAttribute() {}
+        focus() {}
+        append(...nodes) { nodes.forEach(node => this.appendChild(node)); }
+        appendChild(node) { this.children.push(node); node.parentNode = this; }
+        prepend(node) { this.children.unshift(node); node.parentNode = this; }
+        replaceChildren() { this.children = []; }
+        contains(node) { return this.children.includes(node); }
+        remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(node => node !== this); this.parentNode = null; }
+        get childElementCount() { return this.children.length; }
+        querySelector(selector) { if (!this.nodes.has(selector)) this.nodes.set(selector, new Element()); return this.nodes.get(selector); }
+        querySelectorAll() { return []; }
+    }
+    const root = new Element(), body = new Element();
+    const signup = root.querySelector('[data-form="signup"]');
+    const login = root.querySelector('[data-form="login"]');
+    signup.elements = Object.fromEntries(['name', 'email', 'mobile', 'password'].map(key => [key, new Element()]));
+    login.elements = Object.fromEntries(['identifier', 'password'].map(key => [key, new Element()]));
+    const directory = ['a', 'b', 'c', 'd', 'e', 'f'].map(id => ({ id, name: 'Team ' + id.toUpperCase() }));
+    let submitted;
+    let first = true;
+    const context = { window: { location: { search: '?contractor=' } }, URLSearchParams, AbortSignal, location: { reload() {} }, alert() {},
+        document: { createElement() { if (first) { first = false; return root; } return new Element(); }, body, getElementById: () => null, querySelector: () => null },
+        fetch: async (url, init) => {
+            if (url.endsWith('/contractors')) return { ok: true, json: async () => ({ success: true, contractors: directory }) };
+            if (url.endsWith('/session')) return { ok: false, json: async () => ({ success: false, error: 'Login required' }) };
+            submitted = JSON.parse(init.body);
+            return { ok: true, json: async () => ({ success: true, user: { name: submitted.name, role: 'worker', contractorIds: submitted.contractorIds } }) };
+        } };
+    vm.runInNewContext(fs.readFileSync('js/daily-worker-auth.js', 'utf8'), context);
+    for (let n = 0; n < 10; n++) await new Promise(resolve => setImmediate(resolve));
+    const list = root.querySelector('[data-contractor-list]');
+    const search = root.querySelector('[data-contractor-search]');
+    const count = root.querySelector('[data-contractor-count]');
+    assert.equal(count.textContent, '0 selected', 'Empty share-link contractor does not select the first company');
+    for (const row of list.children.slice(0, 5)) { row.children[0].checked = true; row.children[0].onchange(); }
+    assert.equal(count.textContent, '5 selected');
+    search.value = 'Team F'; search.oninput();
+    assert.equal(list.children.length, 1);
+    list.children[0].children[0].checked = true; list.children[0].children[0].onchange();
+    search.value = ''; search.oninput();
+    assert.equal(list.children.filter(row => row.children[0].checked).length, 6);
+    Object.assign(signup.elements.name, { value: 'Preview User' });
+    Object.assign(signup.elements.email, { value: 'preview@example.com' });
+    Object.assign(signup.elements.mobile, { value: '9876543244' });
+    Object.assign(signup.elements.password, { value: 'Preview-password' });
+    await signup.onsubmit({ preventDefault() {} });
+    assert.deepEqual(submitted.contractorIds, ['a', 'b', 'c', 'd', 'e', 'f']);
+    assert.equal(signup.elements.password.value, '');
+});
+
+test('admin assignment form sends only username and contractor IDs, without password reset', async () => {
+    const context = { window: { DailyProgressModule: {} } };
+    vm.runInNewContext(fs.readFileSync('js/daily-progress-access.js', 'utf8'), context);
+    const calls = [];
+    const admin = { ...context.window.DailyProgressModule,
+        runDailyProgressAdmin: fn => fn(), showToast() {}, async loadDailyProgressLoginsAndHistory() {},
+        async dailyProgressRequest(route, body) { calls.push({ route, body }); }
+    };
+    admin.assignDailyProgressWorker({ username: 'site_user', name: 'Site User', contractorIds: ['a'] });
+    assert.equal(admin.dailyProgressWorkerForm.permissionsOnly, true);
+    admin.dailyProgressWorkerForm.contractorIds.push('b', 'c', 'd', 'e', 'f');
+    await admin.saveDailyProgressWorker();
+    assert.equal(calls[0].route, 'workers/contractors');
+    assert.deepEqual(Object.keys(calls[0].body).sort(), ['contractorIds', 'username']);
+    assert.equal(calls[0].body.contractorIds.length, 6);
 });

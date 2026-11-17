@@ -2267,8 +2267,9 @@
                                         <td><span style="font-family: monospace; font-weight: 600;">{{ user.mobile || '—' }}</span></td>
                                         <td><code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem;">{{ user.username }}</code></td>
                                         <td>
-                                            <span v-if="!user.contractorIds || !user.contractorIds.length || user.contractorIds.includes('all')" style="color: #10b981; font-weight: 600;">Sabhi Contractors (All)</span>
-                                            <span v-else>{{ user.contractorIds.map(id => (dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') }}</span>
+                                            <span v-if="(user.contractorIds || []).some(id => id === '*' || id === 'all')" style="color: #10b981; font-weight: 600;">Sabhi Contractors (All)</span>
+                                            <span v-else-if="!user.contractorIds || !user.contractorIds.length">No contractors assigned</span>
+                                            <span v-else>{{ user.contractorIds.map(id => (dailyProgressWorkerContractors.find(c => c.id === id) || dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') }}</span>
                                         </td>
                                         <td>
                                             <span :style="{ color: user.disabled ? '#ef4444' : '#10b981', fontWeight: 700 }">
@@ -2276,6 +2277,7 @@
                                             </span>
                                         </td>
                                         <td style="text-align: right; white-space: nowrap;">
+                                            <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="assignDailyProgressWorker(user)">Assign Contractors</button>
                                             <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="resetDailyProgressWorker(user)">Reset Password</button>
                                             <button v-if="!user.disabled" type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="disableDailyProgressWorker(user)">Disable</button>
                                             <button type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
@@ -2630,12 +2632,13 @@
 
                 <!-- MODAL: ADD / RESET WORKER LOGIN -->
                 <div v-if="dailyProgressModal === 'worker'" class="dp-modal-backdrop" @click.self="dailyProgressModal = ''">
-                    <div class="dp-modal animate-scale-in" style="max-width: 480px;">
+                    <div class="dp-modal animate-scale-in" style="max-width:480px;max-height:calc(100dvh - 32px);overflow-y:auto;">
                         <div class="dp-modal-header">
-                            <h3>{{ dailyProgressWorkerForm.reset ? 'Reset Worker Password / Access' : 'Naya Worker Login Banayein' }}</h3>
+                            <h3>{{ dailyProgressWorkerForm.permissionsOnly ? 'Assign Contractors — ' + dailyProgressWorkerForm.name : (dailyProgressWorkerForm.reset ? 'Reset Worker Password / Access' : 'Naya Worker Login Banayein') }}</h3>
                             <button type="button" class="tbtn" @click="dailyProgressModal = ''" style="border: none; font-size: 1.1rem; cursor: pointer;">✕</button>
                         </div>
                         <form @submit.prevent="saveDailyProgressWorker">
+                            <template v-if="!dailyProgressWorkerForm.permissionsOnly">
                             <label>Pura Naam (Full Name) *</label>
                             <input type="text" required maxlength="80" placeholder="e.g. Ramesh Kumar" v-model="dailyProgressWorkerForm.name">
 
@@ -2650,16 +2653,27 @@
 
                             <label>{{ dailyProgressWorkerForm.reset ? 'Naya Password *' : 'Password (min 6 chars) *' }}</label>
                             <input type="password" required minlength="6" maxlength="128" placeholder="Kam se kam 6 character" v-model="dailyProgressWorkerForm.password">
+                            </template>
 
                             <label>Allowed Contractors / Agency</label>
-                            <select v-model="dailyProgressWorkerForm.contractorIds" multiple size="4" style="height: auto;">
-                                <option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option>
-                            </select>
-                            <small style="color: var(--text-muted); display: block; margin-top: 2px;">(Ctrl daba kar ek se zyada contractor select kar sakte hain)</small>
+                            <input type="search" v-model="dailyProgressWorkerSearch" placeholder="Search contractor name..." aria-label="Search contractors to assign">
+                            <label style="display:flex;align-items:center;gap:8px;min-height:44px;">
+                                <input type="checkbox" style="width:18px;height:18px;padding:0;margin:0;flex-shrink:0;" :checked="dailyProgressWorkerForm.contractorIds.some(id => id === '*' || id === 'all')" @change="dailyProgressWorkerForm.contractorIds = $event.target.checked ? ['*'] : []">
+                                All contractors (current and future)
+                            </label>
+                            <div style="max-height:240px;overflow-y:auto;border:1px solid var(--dp-border);border-radius:6px;">
+                                <label v-for="c in dailyProgressWorkerFilteredContractors" :key="c.id" style="display:flex;align-items:center;gap:8px;min-height:44px;padding:8px;margin:0;">
+                                    <input type="checkbox" style="width:18px;height:18px;padding:0;margin:0;flex-shrink:0;" :value="c.id" v-model="dailyProgressWorkerForm.contractorIds" :disabled="dailyProgressWorkerForm.contractorIds.some(id => id === '*' || id === 'all')">
+                                    {{ c.name }}
+                                </label>
+                                <p v-if="!dailyProgressWorkerFilteredContractors.length" style="padding:8px;">No contractors match your search.</p>
+                            </div>
+                            <small style="display:block;margin-top:6px;" aria-live="polite">{{ dailyProgressWorkerForm.contractorIds.some(id => id === '*' || id === 'all') ? 'All contractors selected' : dailyProgressWorkerForm.contractorIds.length + ' contractors selected' }}. Tick multiple names; 5 or more are allowed.</small>
+                            <small v-if="dailyProgressWorkerForm.permissionsOnly" style="display:block;margin-top:6px;">Password aur saved reports nahi badlenge. Sab untick karne se contractor access hat jayega.</small>
 
                             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                                 <button type="button" class="btn btn-secondary" @click="dailyProgressModal = ''">Cancel</button>
-                                <button type="submit" class="btn btn-primary">{{ dailyProgressWorkerForm.reset ? 'Update Password' : 'Save Worker Login' }}</button>
+                                <button type="submit" class="btn btn-primary">{{ dailyProgressWorkerForm.permissionsOnly ? 'Save Assignments' : (dailyProgressWorkerForm.reset ? 'Update Password' : 'Save Worker Login') }}</button>
                             </div>
                         </form>
                     </div>
@@ -4916,9 +4930,9 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/daily-progress.js?v=20261117_share_sync_v7"></script>
-    <script defer src="js/daily-progress-access.js?v=20261117_share_sync_v7"></script>
+    <script defer src="js/daily-progress-access.js?v=20261117_multi_contractors_v8"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261117_export_current_month_v1"></script>
+    <script defer src="js/core/app.js?v=20261117_multi_contractors_v8"></script>
 </body>
 
 </html>

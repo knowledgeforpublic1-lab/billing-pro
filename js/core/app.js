@@ -445,6 +445,8 @@
                 dailyProgressAudit: [],
                 dailyProgressWorkerPanel: false,
                 dailyProgressWorkers: [],
+                dailyProgressWorkerContractors: [],
+                dailyProgressWorkerSearch: '',
                 dailyProgressWorkerForm: { name: '', username: '', password: '', contractorIds: [], reset: false },
                 dailyProgressEntryHistory: [],
                 dailyProgressVisibleLimit: 80,
@@ -1286,6 +1288,11 @@
                            (c.feeder && c.feeder.toLowerCase().includes(q)) ||
                            (c.project && c.project.toLowerCase().includes(q));
                 });
+            },
+            dailyProgressWorkerFilteredContractors() {
+                const q = String(this.dailyProgressWorkerSearch || '').trim().toLowerCase();
+                const list = this.dailyProgressWorkerContractors.length ? this.dailyProgressWorkerContractors : this.dailyProgressContractors;
+                return list.filter(c => !q || (c.name + ' ' + c.id).toLowerCase().includes(q));
             },
             dailyProgressCurrentShareUrl() {
                 const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';

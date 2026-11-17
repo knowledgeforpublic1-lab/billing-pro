@@ -167,6 +167,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             if (!c.id || !c.name) continue;
             contractors.set(c.id, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' });
         }
+        if (workers.listContractors) {
+            for (const c of await workers.listContractors()) {
+                contractors.set(c.id, { project: '', feeder: '', engineer: '', ...contractors.get(c.id), ...c });
+            }
+        }
         res.json({ success: true, contractors: [...contractors.values()], items });
     }));
     publicRouter.get('/stock/:contractorId', handle(async (req, res) => {
@@ -220,7 +225,9 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     // Mounted after the normal session middleware. Management also needs admin elevation.
     adminRouter.get('/status', handle(async (req, res) => res.json({ success: true, configured: drive.configured(), links: await service.list() })));
     adminRouter.get('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, users: await workers.listUsers() })));
+    adminRouter.get('/worker-contractors', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, contractors: await workers.listContractors() })));
     adminRouter.post('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, user: await workers.saveUser(req.body) })));
+    adminRouter.post('/workers/contractors', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, user: await workers.assignContractors(req.body) })));
     adminRouter.post('/workers/disable', auth.requireAdmin, handle(async (req, res) => { await workers.disableUser(req.body.username); res.json({ success: true }); }));
     adminRouter.post('/workers/delete', auth.requireAdmin, handle(async (req, res) => { await workers.deleteUser(req.body.username); res.json({ success: true }); }));
     adminRouter.get('/entry-history', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await workers.history(req.query.contractorId) })));
@@ -296,7 +303,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             const fileId = await drive.write(key, { kind: body.kind, value: clean, version: 1 });
             await db.atomicDailyRecord(key, old => {
                 if (old && old.digest !== digest) throw Object.assign(new Error('Record ID already exists'), { status: 409 });
-                return old ? { result: null } : { value: { fileId, digest }, result: null };
+                return old ? { result: null } : { value: { fileId, digest, ...(body.kind === 'contractor' ? { contractor: clean } : {}) }, result: null };
             });
         }
         res.json({ success: true });

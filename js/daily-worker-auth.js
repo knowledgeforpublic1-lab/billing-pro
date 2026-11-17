@@ -11,7 +11,7 @@
     root.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);display:none;place-items:center;padding:16px;color:#0f172a;font:14px system-ui,-apple-system,sans-serif;box-sizing:border-box;overflow-y:auto;';
 
     root.innerHTML = `
-    <div style="width:min(100%,430px);box-sizing:border-box;padding:26px;background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 20px 45px rgba(15,23,42,0.18);">
+    <div style="width:min(100%,430px);max-height:calc(100dvh - 32px);overflow-y:auto;box-sizing:border-box;padding:26px;background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 20px 45px rgba(15,23,42,0.18);">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <div style="font-size:26px;">📋</div>
             <div>
@@ -63,12 +63,13 @@
                 Password (min 6 characters) <span style="color:#dc2626;">*</span>
                 <input name="password" type="password" required minlength="6" maxlength="128" placeholder="Minimum 6 characters" style="display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;color:#0f172a;outline:none;">
             </label>
-            <label style="display:block;margin-bottom:14px;font-weight:500;font-size:13px;color:#334155;">
-                Assigned Contractor / Agency
-                <select name="contractorId" style="display:block;width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;background:#ffffff;color:#0f172a;outline:none;">
-                    <option value="">-- All Contractors / Auto Select --</option>
-                </select>
-            </label>
+            <fieldset style="margin:0 0 14px;padding:0;border:0;min-width:0;color:#334155;">
+                <legend style="font-weight:600;font-size:13px;margin-bottom:5px;">Choose Contractors / Agencies *</legend>
+                <p style="font-size:12px;line-height:1.4;margin:0 0 8px;">Select one or more contractors. You can choose 5 or more. Admin can update your assignments later.</p>
+                <input type="search" data-contractor-search aria-label="Search contractors" placeholder="Search contractor name..." style="width:100%;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid #cbd5e1;border-radius:6px;">
+                <div data-contractor-list style="max-height:190px;overflow-y:auto;margin-top:6px;border:1px solid #cbd5e1;border-radius:6px;">Loading contractors...</div>
+                <p data-contractor-count aria-live="polite" style="font-size:12px;margin:6px 0 0;">0 selected</p>
+            </fieldset>
             <p data-error role="alert" style="color:#dc2626;font-size:13px;line-height:1.4;margin:10px 0 14px;empty-cells:hide;display:none;"></p>
             <button type="submit" style="width:100%;padding:12px;background:#059669;color:#ffffff;border:0;border-radius:7px;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(5,150,105,0.25);">Register &amp; Get Started</button>
             <p style="text-align:center;font-size:13px;color:#64748b;margin:14px 0 0;">
@@ -82,7 +83,13 @@
     const loginForm = root.querySelector('[data-form="login"]');
     const signupForm = root.querySelector('[data-form="signup"]');
     const desc = root.querySelector('[data-desc]');
-    const contractorSelect = root.querySelector('select[name="contractorId"]');
+    const contractorList = root.querySelector('[data-contractor-list]');
+    const contractorSearch = root.querySelector('[data-contractor-search]');
+    const contractorCount = root.querySelector('[data-contractor-count]');
+    const selectedContractors = new Set();
+    let signupContractors = [];
+    const queryContractor = new URLSearchParams(window.location.search).get('contractor') || new URLSearchParams(window.location.search).get('c') || '';
+    let queryContractorApplied = false;
 
     function setTab(mode) {
         clearError();
@@ -178,36 +185,52 @@
             if (res.contractors && res.contractors.length) {
                 populateContractorOptions(res.contractors);
             }
-        } catch {}
+        } catch {
+            if (!signupContractors.length) contractorList.textContent = 'Contractors could not load. Refresh the page and retry.';
+        }
     }
 
     function populateContractorOptions(list) {
         const existing = new Set();
-        contractorSelect.innerHTML = '<option value="">-- All Contractors / Auto Select --</option>';
+        signupContractors = [];
         for (const c of list) {
             if (c.id && !existing.has(c.id)) {
                 existing.add(c.id);
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name || c.id;
-                contractorSelect.appendChild(opt);
+                signupContractors.push({ id: c.id, name: c.name || c.id });
             }
         }
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryCid = urlParams.get('contractor') || urlParams.get('c') || '';
-        if (queryCid) {
-            const qClean = queryCid.toLowerCase().replace(/[^a-z0-9]/g, '');
-            for (let i = 0; i < contractorSelect.options.length; i++) {
-                const opt = contractorSelect.options[i];
-                const optClean = (opt.value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                const optTxtClean = (opt.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (optClean === qClean || (qClean.length >= 4 && (optTxtClean.includes(qClean) || qClean.includes(optClean)))) {
-                    contractorSelect.selectedIndex = i;
-                    break;
-                }
-            }
+        if (queryContractor && !queryContractorApplied) {
+            const norm = value => String(value).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+            const match = signupContractors.find(c => norm(c.id) === norm(queryContractor));
+            if (match) { selectedContractors.add(match.id); queryContractorApplied = true; }
         }
+        renderContractors();
     }
+
+    function renderContractors() {
+        const q = contractorSearch.value.trim().toLowerCase();
+        contractorList.replaceChildren();
+        for (const c of signupContractors.filter(c => !q || (c.name + ' ' + c.id).toLowerCase().includes(q))) {
+            const row = document.createElement('label');
+            row.style.cssText = 'display:flex;align-items:center;gap:9px;padding:10px;min-height:44px;border-bottom:1px solid #e2e8f0;font-size:13px;cursor:pointer;';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'contractorIds';
+            checkbox.value = c.id;
+            checkbox.checked = selectedContractors.has(c.id);
+            checkbox.onchange = () => {
+                if (checkbox.checked) selectedContractors.add(c.id); else selectedContractors.delete(c.id);
+                contractorCount.textContent = selectedContractors.size + ' selected';
+            };
+            const label = document.createElement('span');
+            label.textContent = c.name;
+            row.append(checkbox, label);
+            contractorList.appendChild(row);
+        }
+        if (!contractorList.childElementCount) contractorList.textContent = 'No contractors match your search.';
+        contractorCount.textContent = selectedContractors.size + ' selected';
+    }
+    contractorSearch.oninput = renderContractors;
     loadContractors();
 
     function enter(user) {
@@ -217,13 +240,21 @@
         if (!document.getElementById('dp-worker-user-bar')) {
             const bar = document.createElement('div');
             bar.id = 'dp-worker-user-bar';
-            bar.style.cssText = 'position:sticky;top:0;z-index:100;background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#166534;padding:7px 14px;font:13px system-ui,sans-serif;display:flex;justify-content:space-between;gap:10px;align-items:center;';
+            bar.style.cssText = 'position:sticky;top:0;z-index:100;background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#166534;padding:7px 14px;font:13px system-ui,sans-serif;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center;';
             const label = document.createElement('span');
             const details = [user.name, user.mobile || user.email].filter(Boolean).join(' • ');
-            label.innerHTML = '<strong>👤 Signed In:</strong> ' + details;
+            const ids = user.contractorIds || [];
+            const scope = user.role === 'admin' || ids.some(id => id === '*' || id === 'all') ? 'All contractors' : ids.length + ' contractors assigned';
+            label.textContent = '👤 Signed In: ' + details + ' · ' + scope;
             bar.appendChild(label);
 
             if (user.role !== 'admin') {
+                const refresh = document.createElement('button');
+                refresh.type = 'button';
+                refresh.textContent = 'Refresh Contractors';
+                refresh.style.cssText = 'padding:4px 12px;border:1px solid #86efac;border-radius:5px;background:#ffffff;color:#15803d;font-weight:600;cursor:pointer;font-size:12px;';
+                refresh.onclick = () => location.reload();
+                bar.appendChild(refresh);
                 const logout = document.createElement('button');
                 logout.type = 'button';
                 logout.textContent = 'Sign Out';
@@ -273,8 +304,8 @@
         const btn = signupForm.querySelector('button[type="submit"]');
         btn.disabled = true;
         try {
-            const selectedCid = signupForm.elements.contractorId.value;
-            const contractorIds = selectedCid ? [selectedCid] : ['*'];
+            const contractorIds = [...selectedContractors];
+            if (!contractorIds.length) throw new Error('Select at least one contractor. You can choose five or more.');
             const result = await request('signup', {
                 name: signupForm.elements.name.value.trim(),
                 email: signupForm.elements.email.value.trim(),

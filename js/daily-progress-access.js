@@ -24,14 +24,16 @@
         },
         async loadDailyProgressLoginsAndHistory() {
             try {
-                const res = await this.dailyProgressRequest('workers');
+                const [res, directory] = await Promise.all([this.dailyProgressRequest('workers'), this.dailyProgressRequest('worker-contractors')]);
                 this.dailyProgressWorkers = res.users || [];
+                this.dailyProgressWorkerContractors = directory.contractors || [];
             } catch (e) {
                 console.warn('Failed to load workers:', e);
             }
             await this.loadDailyProgressEntryHistory();
         },
         openAddWorkerModal() {
+            this.dailyProgressWorkerSearch = '';
             this.dailyProgressWorkerForm = {
                 name: '',
                 email: '',
@@ -45,13 +47,17 @@
         },
         saveDailyProgressWorker() {
             return this.runDailyProgressAdmin(async () => {
-                await this.dailyProgressRequest('workers', this.dailyProgressWorkerForm);
+                const form = this.dailyProgressWorkerForm;
+                if (form.permissionsOnly) await this.dailyProgressRequest('workers/contractors', { username: form.username, contractorIds: form.contractorIds });
+                else await this.dailyProgressRequest('workers', form);
                 this.dailyProgressModal = '';
                 this.dailyProgressWorkerForm = { name: '', email: '', mobile: '', username: '', password: '', contractorIds: [this.dailyProgressContractorId], reset: false };
                 await this.loadDailyProgressLoginsAndHistory();
+                this.showToast(form.permissionsOnly ? 'Contractors updated. User Refresh Contractors dabakar nayi list dekh sakta hai.' : 'Worker login saved.', 'Check');
             });
         },
         resetDailyProgressWorker(user) {
+            this.dailyProgressWorkerSearch = '';
             this.dailyProgressWorkerForm = {
                 name: user.name,
                 email: user.email || '',
@@ -60,6 +66,15 @@
                 password: '',
                 contractorIds: [...(user.contractorIds || [])],
                 reset: true
+            };
+            this.dailyProgressModal = 'worker';
+        },
+        assignDailyProgressWorker(user) {
+            this.dailyProgressWorkerSearch = '';
+            this.dailyProgressWorkerForm = {
+                username: user.username, name: user.name,
+                contractorIds: (user.contractorIds || []).some(id => id === '*' || id === 'all') ? ['*'] : [...(user.contractorIds || [])],
+                permissionsOnly: true, reset: false
             };
             this.dailyProgressModal = 'worker';
         },

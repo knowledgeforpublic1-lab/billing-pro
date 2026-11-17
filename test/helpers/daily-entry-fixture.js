@@ -31,6 +31,7 @@ module.exports = function fixture() {
         require(name) {
             if (name === './db') return db;
             if (name === './auth') return () => auth;
+            if (name === './daily-worker-auth') return args => apiRequire(name)({ ...args, drive });
             if (name === 'dotenv') return { config() {} };
             if (name === './daily-progress-routes') return args => apiRequire(name)({ ...args, drive, seed: { items: [{ id: '15', name: 'Sand', code: '100', unit: 'KG', row: 15 }] } });
             return apiRequire(name);
