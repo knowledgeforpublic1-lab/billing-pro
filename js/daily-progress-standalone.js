@@ -41,9 +41,15 @@
             .filter(Boolean))];
     }
 
+    const stockBlockWorkOrderCache = new WeakMap();
+
     function stockBlockWorkOrders(block) {
         if (!block) return [];
-        return splitWorkOrders([block.allWorkOrders, block.workOrders, block.docHeader]);
+        const cached = stockBlockWorkOrderCache.get(block);
+        if (cached) return cached;
+        const workOrders = splitWorkOrders([block.allWorkOrders, block.workOrders, block.docHeader]);
+        stockBlockWorkOrderCache.set(block, workOrders);
+        return workOrders;
     }
 
     function matchesContractor(reportCid, actC) {
@@ -468,11 +474,15 @@
                     actC.workOrders,
                     actC.allWorkOrders
                 ]);
+                const cacheKey = qNorms.join('|') + '#' + desiredWos.join(',');
+                if (this._stockBlocksCache && this._stockBlocksCacheKey === cacheKey && this._stockBlocksCacheRef === byNorm) {
+                    return this._stockBlocksCache;
+                }
 
                 const candidates = new Map();
                 const add = (key, block) => {
                     if (!block) return;
-                    const blockWos = stockBlockWorkOrders(block).sort();
+                    const blockWos = stockBlockWorkOrders(block).slice().sort();
                     const identity = blockWos.length ? 'wo:' + blockWos.join(',') : 'key:' + key;
                     const previous = candidates.get(identity);
                     const size = Object.keys(block.materials || {}).length;
@@ -512,7 +522,11 @@
                     if (qNorms.includes(cName) && matchesDesiredWorkOrder(block)) add(key, block);
                 }
 
-                return [...candidates.values()].map(entry => entry.block);
+                const result = [...candidates.values()].map(entry => entry.block);
+                this._stockBlocksCache = result;
+                this._stockBlocksCacheKey = cacheKey;
+                this._stockBlocksCacheRef = byNorm;
+                return result;
             },
 
             findContractorStockBlock(actC) {
