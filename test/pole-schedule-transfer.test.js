@@ -8,6 +8,7 @@ global.defaultPoleSchedules = require('../js/data/default-pole-schedules.js');
 const methods = require('../js/pole-schedule.js');
 require('../js/billing.js');
 require('../js/contractor-mapping.js');
+require('../js/views.js');
 global.localStorage = { getItem() { return null; }, setItem() {} };
 let options;
 vm.runInNewContext(fs.readFileSync('js/core/app.js', 'utf8'), {
@@ -105,4 +106,78 @@ test('activity links survive contractor profile reload without leaking to anothe
     a.applyContractorMapping(profile);
     assert.equal(a.poleSchedules['907'].materials[index].activityMaterialNo, '5');
     assert.equal(qty(a, '907', '5'), 10);
+});
+
+test('normal 1220 uses only Activity 1220; departmental rates and quantities stay independent', () => {
+    const a = app('1220');
+    const index = enter(a, '1220', 'Dist. Transformer 100 KVA, 11/0.43 kv', 2);
+    const row = a.poleSchedules['1220'].materials[index];
+    const activityIndex = a.activities['1220'].materials.findIndex(m => String(m.no) === '1');
+    a.activities['1220'].materials[activityIndex].rate = 321;
+    assert.equal(qty(a, '1220', '1'), 2);
+    assert.equal(a.getPoleScheduleRateValue(row, '1220'), 321);
+    const before = JSON.stringify([a.activityQuantities, a.activityLocations]);
+    const dept = a.poleSchedules.dept_1220A.materials.find(m => !m.isSection && !m.isSpan);
+    dept.rate = 99999;
+    dept.activityMaterialNo = '1';
+    a.poleScheduleQuantities.dept_1220A = { 0: { 0: 100 } };
+    a.syncPoleScheduleToBillingAndReconciliation('dept_1220A');
+    assert.equal(JSON.stringify([a.activityQuantities, a.activityLocations]), before);
+    assert.equal(a.getPoleScheduleRateLink(dept, 'dept_1220A').status, 'departmental');
+    assert.equal(a.getPoleScheduleRateValue(dept, 'dept_1220A'), 99999);
+    assert.equal(a.getPoleScheduleActivityLink(dept, 'dept_1220A'), '');
+    assert.deepEqual(a.getPoleScheduleActivityMaterials('dept_1220A'), []);
+    assert.equal(a.getPoleScheduleRateValue({ itemCode: 'MISSING', rate: 99999 }, '1220'), 0);
+    const pivot = options.computed.pivotReconciliationData.call(a);
+    assert.ok(!Array.from(pivot.columns).some(k => /^dept_/i.test(k)));
+    assert.equal(pivot.rows.find(r => r.code === row.itemCode).totalQty, 2);
+});
+
+test('departmental locations and flag-based schedules never inherit or update activity data', () => {
+    const a = app('dept_1220A');
+    const before = JSON.stringify([a.activities, a.activityQuantities, a.activityLocations]);
+    a.locations = [{ name: 'Normal billing location' }];
+    a.psAutoPole = a.psAutoStay = a.psAutoMuffing = false;
+    a.showToast = () => {};
+    assert.deepEqual(a.getPoleScheduleLocations('dept_1220A'), [{ name: 'Location 1' }]);
+    const oldPrompt = global.prompt, oldConfirm = global.confirm;
+    try {
+        global.prompt = () => 'Department location'; global.confirm = () => true;
+        a.addPoleScheduleLocation();
+        a.renamePoleScheduleLocation(0);
+        a.removePoleScheduleLocation(1);
+    } finally { global.prompt = oldPrompt; global.confirm = oldConfirm; }
+    assert.equal(JSON.stringify([a.activities, a.activityQuantities, a.activityLocations]), before);
+    a.poleSchedules['1220'].isDepartmental = true;
+    a.selectedPoleScheduleKey = '1220';
+    assert.deepEqual(a.getPoleScheduleActivityMaterials('1220'), []);
+    const index = a.poleSchedules['1220'].materials.findIndex(m => !m.isSection && !m.isSpan);
+    a.setPoleScheduleActivityLink(index, '1');
+    assert.equal(a.poleSchedules['1220'].materials[index].activityMaterialNo, undefined);
+});
+
+test('1220 activity row adds second and third SAP components and preserves them on save/reopen', () => {
+    const a = Object.assign(app('1220'), ViewsModule, {
+        selectedActivityKey: '1220', currentView: 'detail', $refs: {},
+        $nextTick(fn) { fn(); }, showToast() {}, scheduleMappingSync() {},
+        syncToMongoNow() {}, saveToStorage() { this.savedActivity = structuredClone(this.activities['1220']); }
+    });
+    const index = a.activities['1220'].materials.findIndex(m => String(m.no) === '4');
+    const source = a.activities['1220'].materials[index];
+    assert.match(source.desc, /AB Switch, HG Fuse, LTDB Channel/);
+    const first = source.sapItems[0].code;
+    source.sapItems[0].qty = 0.5;
+    a.openSapItemManager({ ...source, origIndex: index }, index, 'activity', '1220');
+    a.selectSapItemForManager({ code: '17005063', desc: 'Support channel', uom: 'NO' });
+    a.selectSapItemForManager({ code: '17005069', desc: 'Support angle', uom: 'NO' });
+    a.selectSapItemForManager({ code: '17005063', desc: 'Support channel', uom: 'NO' });
+    assert.deepEqual(source.sapItems.map(s => s.code), [first, '17005063', '17005069']);
+    assert.equal(source.sapItems[0].qty, 0.5);
+    a.closeSapItemManager();
+    a.activities['1220'] = structuredClone(a.savedActivity);
+    a.openSapItemManager({ ...a.activities['1220'].materials[index], origIndex: index }, index, 'activity', '1220');
+    assert.equal(a.activeSapManagerItem.sapItems.length, 3);
+    assert.equal(a.activeSapManagerItem.itemCode, [first, '17005063', '17005069'].join(', '));
+    a.removeSapItemFromManager(1);
+    assert.deepEqual(a.activities['1220'].materials[index].sapItems.map(s => s.code), [first, '17005069']);
 });

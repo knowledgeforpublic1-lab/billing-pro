@@ -8,8 +8,14 @@
  */
 
 window.PoleScheduleModule = {
+    isDepartmentalPoleSchedule(key) {
+        const k = String(key || this.selectedPoleScheduleKey || '907');
+        const schedule = this.poleSchedules?.[k] || window.defaultPoleSchedules?.[k];
+        return /^dept_/i.test(k) || !!schedule?.isDepartmental;
+    },
     getPoleScheduleActivityKey(key) {
         const raw = String(key || this.selectedPoleScheduleKey || '907');
+        if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, raw)) return '';
         const defaults = window.defaultActivities || (typeof defaultActivities !== 'undefined' ? defaultActivities : {});
         return Object.keys(defaults).find(k => k.toLowerCase() === raw.toLowerCase()) ||
             Object.keys(this.activities || {}).find(k => k.toLowerCase() === raw.toLowerCase() && this.activities[k]?.materials?.length) || raw;
@@ -17,10 +23,12 @@ window.PoleScheduleModule = {
 
     getPoleScheduleActivityMaterials(key) {
         const k = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, key);
+        if (!k) return [];
         return (this.activities && this.activities[k] && this.activities[k].materials) || [];
     },
 
     getPoleScheduleActivityLink(item, key) {
+        if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, key)) return '';
         if (item.activityMaterialNo !== undefined && item.activityMaterialNo !== null) return String(item.activityMaterialNo);
         // Only unambiguous component links are supplied here. Shared clamps need
         // an explicit choice instead of being copied to several assemblies.
@@ -40,6 +48,7 @@ window.PoleScheduleModule = {
     setPoleScheduleActivityLink(index, value) {
         if (this.isFinalized) return;
         const k = this.selectedPoleScheduleKey || '907';
+        if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k)) return;
         const item = this.poleSchedules?.[k]?.materials?.[index];
         if (!item || item.isSection || item.isSpan) return;
         if (value && !this.getPoleScheduleActivityMaterials(k).some(m => String(m.no) === String(value))) return;
@@ -78,6 +87,7 @@ window.PoleScheduleModule = {
 
     getPoleScheduleRateLink(item, scheduleKey) {
         const sourceKey = String(scheduleKey || this.selectedPoleScheduleKey || '907').replace(/^PS\s*/i, '').trim();
+        if (window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, sourceKey)) return { status: 'departmental', rate: null, activityKey: '', code: '' };
         const key = window.PoleScheduleModule.getPoleScheduleActivityKey.call(this, sourceKey);
         if (!item || item.isSection || item.isSpan) return { status: 'not-applicable', rate: null, activityKey: key, code: '' };
         const cleanCode = code => String(code || '').trim().replace(/^\[([^\]]+)\].*$/, '$1').toUpperCase();
@@ -94,16 +104,23 @@ window.PoleScheduleModule = {
             return codes;
         };
         const scheduleCodes = codesFor(item);
-        if (!scheduleCodes.size) return { status: 'unmapped', rate: null, activityKey: key, code: '' };
+        const explicitLink = window.PoleScheduleModule.getPoleScheduleActivityLink.call(this, item, sourceKey);
+        if (!scheduleCodes.size && !explicitLink) return { status: 'unmapped', rate: null, activityKey: key, code: '' };
         const activity = this.activities && this.activities[key];
         if (!activity || !Array.isArray(activity.materials)) return { status: 'activity-missing', rate: null, activityKey: key, code: [...scheduleCodes].join(', ') };
 
-        const candidates = activity.materials.filter(source => {
+        let candidates = activity.materials.filter(source => {
             if (!source || source.isSection || source.isSpan) return false;
+            if (explicitLink) return String(source.no) === explicitLink;
             const sourceCodes = codesFor(source);
             if (sourceCodes.size < scheduleCodes.size) return false;
             return [...scheduleCodes].every(code => sourceCodes.has(code));
         });
+        if (!candidates.length && !explicitLink) {
+            const normalize = desc => String(desc || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const desc = normalize(item.desc);
+            candidates = activity.materials.filter(source => !source.isSection && !source.isSpan && desc && normalize(source.desc) === desc);
+        }
         if (!candidates.length) return { status: 'no-match', rate: null, activityKey: key, code: [...scheduleCodes].join(', ') };
         const exactCandidates = candidates.filter(source => codesFor(source).size === scheduleCodes.size);
         const preferredCandidates = exactCandidates.length ? exactCandidates : candidates;
@@ -140,7 +157,8 @@ window.PoleScheduleModule = {
     getPoleScheduleRateValue(item, scheduleKey) {
         const link = this.getPoleScheduleRateLink(item, scheduleKey);
         if (link.status === 'linked') return link.rate;
-        // 🏢 For unlinked schedules (e.g. Departmental Bill or standalone templates), fall back to item.rate directly
+        // Fixed departmental rates must never become a normal activity's rate.
+        if (link.status !== 'departmental') return 0;
         const r = Number(item && (typeof this.evalFormula === 'function' ? this.evalFormula(item.rate) : item.rate));
         return (Number.isFinite(r) && r > 0) ? r : 0;
     },
@@ -470,9 +488,9 @@ window.PoleScheduleModule = {
         const k = key || this.selectedPoleScheduleKey || '907';
         if (!this.poleScheduleLocations) this.poleScheduleLocations = {};
         if (!Array.isArray(this.poleScheduleLocations[k]) || this.poleScheduleLocations[k].length === 0) {
-            if (this.activityLocations && Array.isArray(this.activityLocations[k]) && this.activityLocations[k].length > 0) {
+            if (!window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k) && this.activityLocations && Array.isArray(this.activityLocations[k]) && this.activityLocations[k].length > 0) {
                 this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(this.activityLocations[k]));
-            } else if (this.locations && this.locations.length > 0) {
+            } else if (!window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k) && this.locations && this.locations.length > 0) {
                 this.poleScheduleLocations[k] = JSON.parse(JSON.stringify(this.locations));
             } else {
                 this.poleScheduleLocations[k] = [{ name: 'Location 1' }];
@@ -771,18 +789,20 @@ window.PoleScheduleModule = {
             this.poleScheduleQuantities[k][newLIdx] = {};
         }
 
-        // Synchronize with activityLocations
-        if (!this.activityLocations) this.activityLocations = {};
-        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+        if (!window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k)) {
+            // Synchronize with activityLocations
+            if (!this.activityLocations) this.activityLocations = {};
+            this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
 
-        // Ensure activityQuantities has a row for this new location
-        if (!this.activityQuantities) this.activityQuantities = {};
-        if (!this.activityQuantities[k] || !Array.isArray(this.activityQuantities[k])) {
-            this.activityQuantities[k] = [];
-        }
-        const matCount = (this.activities && this.activities[k] && this.activities[k].materials) ? this.activities[k].materials.length : 0;
-        while (this.activityQuantities[k].length < locs.length) {
-            this.activityQuantities[k].push(new Array(matCount).fill(''));
+            // Ensure activityQuantities has a row for this new location
+            if (!this.activityQuantities) this.activityQuantities = {};
+            if (!this.activityQuantities[k] || !Array.isArray(this.activityQuantities[k])) {
+                this.activityQuantities[k] = [];
+            }
+            const matCount = (this.activities && this.activities[k] && this.activities[k].materials) ? this.activities[k].materials.length : 0;
+            while (this.activityQuantities[k].length < locs.length) {
+                this.activityQuantities[k].push(new Array(matCount).fill(''));
+            }
         }
 
         // Trigger reactivity
@@ -799,7 +819,7 @@ window.PoleScheduleModule = {
         this.syncPoleScheduleToBillingAndReconciliation(k);
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
-        this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k} & Activity Billing`, '📍');
+        this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k}${window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k) ? '' : ' & Activity Billing'}`, '📍');
     },
 
     renamePoleScheduleLocation(lIdx) {
@@ -811,8 +831,10 @@ window.PoleScheduleModule = {
         const newName = prompt(`Rename Location:`, currentName);
         if (newName && newName.trim() && newName.trim() !== currentName) {
             locs[lIdx].name = newName.trim();
-            if (!this.activityLocations) this.activityLocations = {};
-            this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+            if (!window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k)) {
+                if (!this.activityLocations) this.activityLocations = {};
+                this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+            }
             this.poleScheduleLocations = { ...this.poleScheduleLocations };
             this.activityLocations = { ...this.activityLocations };
             this.syncPoleScheduleToBillingAndReconciliation(k);
@@ -844,10 +866,12 @@ window.PoleScheduleModule = {
             this.poleScheduleQuantities[k] = newObj;
         }
 
-        if (!this.activityLocations) this.activityLocations = {};
-        this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
-        if (this.activityQuantities && this.activityQuantities[k] && Array.isArray(this.activityQuantities[k])) {
-            this.activityQuantities[k].splice(lIdx, 1);
+        if (!window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k)) {
+            if (!this.activityLocations) this.activityLocations = {};
+            this.activityLocations[k] = JSON.parse(JSON.stringify(locs));
+            if (this.activityQuantities && this.activityQuantities[k] && Array.isArray(this.activityQuantities[k])) {
+                this.activityQuantities[k].splice(lIdx, 1);
+            }
         }
 
         this.poleScheduleLocations = { ...this.poleScheduleLocations };

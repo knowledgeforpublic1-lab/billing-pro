@@ -863,7 +863,7 @@
                 candidateActKeys.forEach(actKey => {
                     // 🛡️ Departmental Bill is strictly unlinked from Contractor Reconciliation:
                     // "isko kisi se bhi link nahi karna hai bas item issue ke acording mapping check karna hai"
-                    if (String(actKey).startsWith('dept_')) return;
+                    if (/^dept_/i.test(String(actKey)) || this.poleSchedules?.[actKey]?.isDepartmental) return;
                     const columnKey = typeof this.getPoleScheduleActivityKey === 'function' ? this.getPoleScheduleActivityKey(actKey) : actKey;
                     // Alias schedules are reconciled directly below. Do not add
                     // their combined activity quantities a second time.
