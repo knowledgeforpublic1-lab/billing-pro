@@ -24,6 +24,44 @@
         return String(str).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
     }
 
+    const STOCK_STOP_PATTERNS = [
+        'enterprise', 'enterprises', 'eterprise', 'enterpeises', 'enterises',
+        'electrical', 'electricals', 'electric',
+        'contractor', 'contractors', 'cont',
+        'infra', 'infrastructure', 'infrastucture',
+        'project', 'projects',
+        'construction', 'constructions', 'const',
+        'corporation', 'corp', 'co', 'company',
+        'engineering', 'engg', 'engineer', 'engineers',
+        'service', 'services', 'multiservice', 'multiservices',
+        'solution', 'solutions',
+        'agency', 'agencies',
+        'associates', 'associate',
+        'private', 'limited', 'pvt', 'ltd',
+        'thekedar', 'thekdar',
+        'workshop', 'works', 'work',
+        'and', 'm/s', 'ms'
+    ];
+
+    function isStockStopWord(w) {
+        const c = normId(w);
+        if (!c || c.length < 3) return true;
+        return STOCK_STOP_PATTERNS.some(p => c === p || c.startsWith(p) || p.startsWith(c));
+    }
+
+    function getDistinctiveTokens(name) {
+        return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ')
+            .split(/\s+/).map(normId).filter(w => !isStockStopWord(w) && w.length >= 3);
+    }
+
+    function normStem(v) {
+        if (!v) return '';
+        return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
+            .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
+            .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
+            .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
+    }
+
     const app = Vue.createApp({
         data() {
             const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };
@@ -399,21 +437,93 @@
                 }
             },
 
+            findContractorStockBlock(actC) {
+                actC = actC || this.activeContractor || {};
+                const sapStock = this.sapStock || window.ContractorSapStock;
+                const byNorm = sapStock && sapStock.byContractorNorm;
+                if (!byNorm || !actC) return null;
+
+                const candidateNames = [actC.id, actC.name].filter(Boolean);
+                const qNorms = [...new Set(candidateNames.map(normId).filter(n => n.length >= 2))];
+
+                // 1. Direct norm match
+                for (const q of qNorms) {
+                    if (byNorm[q]) return byNorm[q];
+                }
+
+                // 2. Mapping groups
+                const mapGroups = (window.DefaultSapContractorMapping || window.MasterSapCodeMapping || {}).groups || {};
+                for (const [gKey, group] of Object.entries(mapGroups)) {
+                    const names = [gKey, group && group.displayName, ...((group && group.rawNorms) || [])].map(normId).filter(Boolean);
+                    if (names.some(n => qNorms.includes(n))) {
+                        if (byNorm[gKey]) return byNorm[gKey];
+                        const wos = (group && group.wos) || [];
+                        for (const [key, block] of Object.entries(byNorm)) {
+                            if (names.includes(key) || (block && block.docHeader && wos.includes(block.docHeader))) return block;
+                        }
+                    }
+                }
+
+                // 3. Exact contractorName or substring match
+                for (const [key, block] of Object.entries(byNorm)) {
+                    const cName = normId(block && block.contractorName);
+                    if (qNorms.some(q => q === cName || (q.length >= 5 && (key.includes(q) || q.includes(key) || cName.includes(q) || q.includes(cName))))) {
+                        return block;
+                    }
+                }
+
+                // 4. Stem match
+                const stems = candidateNames.map(normStem).filter(Boolean);
+                for (const [key, block] of Object.entries(byNorm)) {
+                    const ks = normStem(key);
+                    const ns = normStem(block && block.contractorName);
+                    if (stems.some(s => s && (ks === s || ns === s || (s.length >= 5 && (ks.includes(s) || s.includes(ks) || ns.includes(s) || s.includes(ns)))))) {
+                        return block;
+                    }
+                }
+
+                // 5. Distinctive tokens overlap
+                const tokens = candidateNames.flatMap(getDistinctiveTokens);
+                const uniqueTokens = [...new Set(tokens)];
+                if (uniqueTokens.length > 0) {
+                    let bestBlock = null, maxScore = 0;
+                    for (const [key, block] of Object.entries(byNorm)) {
+                        const stockStr = (key + ' ' + (block.contractorName || '')).toLowerCase();
+                        let score = 0;
+                        for (const tok of uniqueTokens) {
+                            if (stockStr.includes(tok)) score++;
+                            else {
+                                const tokStem = normStem(tok);
+                                const stockStem = normStem(stockStr);
+                                if (stockStem.includes(tokStem)) score += 0.8;
+                            }
+                        }
+                        if (score > maxScore && score >= 0.8) {
+                            maxScore = score;
+                            bestBlock = block;
+                        }
+                    }
+                    if (bestBlock) return bestBlock;
+                }
+
+                return null;
+            },
+
             async ensureStock() {
                 const actC = this.activeContractor || {};
                 const cid = actC.id || this.selectedContractorId || '';
                 if (!cid) return;
-                const cidNorm = normId(cid);
-                const cNameNorm = normId(actC.name || '');
-                const current = this.sapStock || window.ContractorSapStock;
-                const blocks = current && current.byContractorNorm ? current.byContractorNorm : null;
-                if (blocks && ((cidNorm && blocks[cidNorm]) || (cNameNorm && blocks[cNameNorm]))) return;
-                if (this._stockRequest === cidNorm) return;
-                this._stockRequest = cidNorm;
+                if (this.findContractorStockBlock(actC)) return;
+                const reqKey = normId(cid) + '_' + normId(actC.name || '');
+                if (this._stockRequest === reqKey) return;
+                this._stockRequest = reqKey;
                 try {
-                    const res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
-                    if (!res.ok) return;
-                    const payload = await res.json();
+                    let res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
+                    let payload = res.ok ? await res.json() : null;
+                    if ((!payload || !payload.success || !payload.byContractorNorm || !Object.keys(payload.byContractorNorm).length) && actC.name && actC.name !== cid) {
+                        res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(actC.name), { cache: 'no-store' });
+                        if (res.ok) payload = await res.json();
+                    }
                     if (payload && payload.success && payload.byContractorNorm) {
                         const existing = (this.sapStock || window.ContractorSapStock || {}).byContractorNorm || {};
                         this.sapStock = { byContractorNorm: { ...existing, ...payload.byContractorNorm } };
@@ -494,40 +604,8 @@
                 const code = String(item.code || '').trim();
 
                 let sapIssued = 0;
-                const sapStock = this.sapStock || window.ContractorSapStock;
-                if (sapStock && code) {
-                    // Try to find contractor in stock
-                    let contractorBlock = null;
-                    if (sapStock.byContractorNorm) {
-                        if (cidNorm && sapStock.byContractorNorm[cidNorm]) {
-                            contractorBlock = sapStock.byContractorNorm[cidNorm];
-                        } else if (cNameNorm && sapStock.byContractorNorm[cNameNorm]) {
-                            contractorBlock = sapStock.byContractorNorm[cNameNorm];
-                        } else {
-                            // Check alias groups in DefaultSapContractorMapping
-                            const mapGroups = (window.DefaultSapContractorMapping || window.MasterSapCodeMapping || {}).groups || {};
-                            for (const [gKey, group] of Object.entries(mapGroups)) {
-                                const gNorm = normId(gKey);
-                                const dNorm = normId(group.displayName || '');
-                                if (gNorm === cidNorm || gNorm === cNameNorm || dNorm === cidNorm || dNorm === cNameNorm) {
-                                    if (sapStock.byContractorNorm[gKey]) {
-                                        contractorBlock = sapStock.byContractorNorm[gKey];
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!contractorBlock) {
-                                for (const [k, val] of Object.entries(sapStock.byContractorNorm)) {
-                                    if ((cidNorm && (k.includes(cidNorm) || cidNorm.includes(k))) ||
-                                        (cNameNorm && (k.includes(cNameNorm) || cNameNorm.includes(k)))) {
-                                        contractorBlock = val;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
+                if (code) {
+                    const contractorBlock = this.findContractorStockBlock(actC);
                     if (contractorBlock && contractorBlock.materials && contractorBlock.materials[code]) {
                         const m = contractorBlock.materials[code];
                         if (Array.isArray(m.txns) && m.txns.length > 0) {
@@ -549,7 +627,7 @@
                             }
                             sapIssued = Math.round((mGross - mMrn) * 1000) / 1000;
                         } else {
-                            sapIssued = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty || 0));
+                            sapIssued = Number(m.netIssue !== undefined ? m.netIssue : (m.issuedQty !== undefined ? m.issuedQty : (m.net || 0)));
                         }
                     }
                 }

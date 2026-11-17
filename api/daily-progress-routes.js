@@ -49,35 +49,120 @@ function sapMapping() {
     mappingCache = loadScript('default-sap-contractor-mapping.js', 'MasterSapCodeMapping') || loadScript('default-sap-contractor-mapping.js', 'DefaultSapContractorMapping') || { groups: {} };
     return mappingCache;
 }
+
+const STOCK_STOP_PATTERNS = [
+    'enterprise', 'enterprises', 'eterprise', 'enterpeises', 'enterises',
+    'electrical', 'electricals', 'electric',
+    'contractor', 'contractors', 'cont',
+    'infra', 'infrastructure', 'infrastucture',
+    'project', 'projects',
+    'construction', 'constructions', 'const',
+    'corporation', 'corp', 'co', 'company',
+    'engineering', 'engg', 'engineer', 'engineers',
+    'service', 'services', 'multiservice', 'multiservices',
+    'solution', 'solutions',
+    'agency', 'agencies',
+    'associates', 'associate',
+    'private', 'limited', 'pvt', 'ltd',
+    'thekedar', 'thekdar',
+    'workshop', 'works', 'work',
+    'and', 'm/s', 'ms'
+];
+
+function isStockStopWord(w) {
+    const c = normId(w);
+    if (!c || c.length < 3) return true;
+    return STOCK_STOP_PATTERNS.some(p => c === p || c.startsWith(p) || p.startsWith(c));
+}
+
+function getDistinctiveTokens(name) {
+    return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ')
+        .split(/\s+/).map(normId).filter(w => !isStockStopWord(w) && w.length >= 3);
+}
+
+function normStem(v) {
+    if (!v) return '';
+    return String(v).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '')
+        .replace(/aa+/g, 'a').replace(/ee+/g, 'e').replace(/oo+/g, 'o').replace(/ii+/g, 'i').replace(/ie/g, 'i')
+        .replace(/sh/g, 's').replace(/v/g, 'w').replace(/y/g, 'i').replace(/gate\b/g, 'gade')
+        .replace(/s\b/g, '').replace(/[^a-z0-9]/g, '').trim();
+}
+
 function stockKeysForQuery(query) {
     const byNorm = stockDatabase().byContractorNorm;
     const mapping = sapMapping();
-    const q = normId(query);
-    if (!q || q.length < 3) return [];
+    const qNorm = normId(query);
+    if (!qNorm || qNorm.length < 2) return [];
+
+    const contractors = publicContractors();
+    const c = contractors.find(item => normId(item.id) === qNorm || normId(item.name) === qNorm);
+    const candidateNames = [query];
+    if (c) {
+        if (c.id && !candidateNames.includes(c.id)) candidateNames.push(c.id);
+        if (c.name && !candidateNames.includes(c.name)) candidateNames.push(c.name);
+    }
+    const qNorms = [...new Set(candidateNames.map(normId).filter(n => n.length >= 2))];
+
     const keys = new Set();
-    if (byNorm[q]) keys.add(q);
+    for (const q of qNorms) {
+        if (byNorm[q]) keys.add(q);
+    }
+
     const groups = (mapping && mapping.groups) || {};
     for (const [gKey, group] of Object.entries(groups)) {
         const names = [gKey, group && group.displayName, ...((group && group.rawNorms) || [])].map(normId).filter(Boolean);
-        if (!names.includes(q)) continue;
-        const wos = (group && group.wos) || [];
-        for (const [key, block] of Object.entries(byNorm)) {
-            if (names.includes(key) || (block && block.docHeader && wos.includes(block.docHeader))) keys.add(key);
+        if (names.some(n => qNorms.includes(n))) {
+            const wos = (group && group.wos) || [];
+            for (const [key, block] of Object.entries(byNorm)) {
+                if (names.includes(key) || (block && block.docHeader && wos.includes(block.docHeader))) keys.add(key);
+            }
         }
     }
+
     for (const [key, block] of Object.entries(byNorm)) {
-        if (block && normId(block.contractorName) === q) keys.add(key);
+        const cName = normId(block && block.contractorName);
+        if (qNorms.some(q => q === cName || (q.length >= 5 && (key.includes(q) || q.includes(key) || cName.includes(q) || q.includes(cName))))) {
+            keys.add(key);
+        }
     }
-    // Only if exact matches not found, allow strict prefix matching with minimum 4 characters and max 3 keys
-    if (!keys.size && q.length >= 4) {
+
+    if (!keys.size) {
+        const stems = candidateNames.map(normStem).filter(Boolean);
         for (const [key, block] of Object.entries(byNorm)) {
-            const name = normId(block && block.contractorName);
-            if ((key.length >= 6 && key.startsWith(q)) || (name && name.length >= 6 && name.startsWith(q))) {
+            const ks = normStem(key);
+            const ns = normStem(block && block.contractorName);
+            if (stems.some(s => s && (ks === s || ns === s || (s.length >= 5 && (ks.includes(s) || s.includes(ks) || ns.includes(s) || s.includes(ns)))))) {
                 keys.add(key);
                 if (keys.size >= 3) break;
             }
         }
     }
+
+    if (!keys.size) {
+        const tokens = candidateNames.flatMap(getDistinctiveTokens);
+        const uniqueTokens = [...new Set(tokens)];
+        if (uniqueTokens.length > 0) {
+            let bestKey = null, maxScore = 0;
+            for (const [key, block] of Object.entries(byNorm)) {
+                const stockStr = (key + ' ' + (block.contractorName || '')).toLowerCase();
+                let score = 0;
+                for (const tok of uniqueTokens) {
+                    if (stockStr.includes(tok)) score++;
+                    else {
+                        const tokStem = normStem(tok);
+                        const stockStem = normStem(stockStr);
+                        if (stockStem.includes(tokStem)) score += 0.8;
+                    }
+                }
+                if (score > maxScore && score >= 0.8) {
+                    maxScore = score;
+                    bestKey = key;
+                }
+            }
+            if (bestKey) keys.add(bestKey);
+        }
+    }
+
     return [...keys];
 }
 
@@ -114,7 +199,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
     publicRouter.get('/stock/:contractorId', handle(async (req, res) => {
         const query = String(req.params.contractorId || '').trim();
-        if (!query || query.length > 150 || !/^[\w .&(),'-]+$/.test(query)) {
+        if (!query || query.length > 150 || !/^[\w .&(),'/-]+$/.test(query)) {
             return res.status(400).json({ success: false, error: 'Invalid contractor' });
         }
         const byNorm = stockDatabase().byContractorNorm;
