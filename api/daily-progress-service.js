@@ -127,12 +127,14 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             const ttlDays = Number(data.ttlDays) > 0 ? Number(data.ttlDays) : 90;
             const expiresAt = now() + (ttlDays * 24 * 60 * 60 * 1000);
             await db.atomicDailyRecord('token_' + tokenHash, () => ({ value: { contractorId: cid }, result: null }));
-            await db.atomicDailyRecord(linkKey(cid), old => ({ value: {
-                id: cid, name: String(data.name).trim().slice(0, 200), project: String(data.project || '').slice(0, 200),
-                feeder: String(data.feeder || '').slice(0, 200), tokenHash, disabled: false, createdAt: now(),
-                expiresAt,
-                linkVersion: (old?.linkVersion || 0) + 1
-            }, result: null }));
+            await db.atomicDailyRecord(linkKey(cid), old => ({
+                value: {
+                    id: cid, name: String(data.name).trim().slice(0, 200), project: String(data.project || '').slice(0, 200),
+                    feeder: String(data.feeder || '').slice(0, 200), tokenHash, disabled: false, createdAt: now(),
+                    expiresAt,
+                    linkVersion: (old?.linkVersion || 0) + 1
+                }, result: null
+            }));
             return { token, expiresAt };
         },
         async disable(cid) {
