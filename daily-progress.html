@@ -7,7 +7,7 @@
     <title>Daily Progress Register | Site Diary — RDSS T-10 GADCHIROLI</title>
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/daily-standalone.css?v=20261117_search_final">
+    <link rel="stylesheet" href="css/daily-standalone.css?v=20261117_mobile_layout">
 </head>
 
 <body>
@@ -70,57 +70,58 @@
                     
                     <div class="contractor-select-compact" title="CONTRACTOR / LABOUR TEAM">
                         <span class="compact-label">CONTRACTOR / LABOUR TEAM:</span>
-                        <div class="dp-contractor-picker-wrap" style="position: relative;" v-click-outside="closeContractorDropdown">
-                            <div class="dp-search-combo-box"
-                                 style="display: inline-flex; align-items: center; background: rgba(15, 23, 42, 0.9); border: 1.5px solid #38bdf8; border-radius: 6px; padding: 2px 8px; gap: 6px;">
-                                <span style="font-size: 12px; color: #38bdf8;">🔍</span>
-                                <input type="text"
-                                       v-model="contractorSearchText"
-                                       ref="contractorSearchRef"
-                                       @focus="contractorDropdownOpen = true"
-                                       @click.stop="contractorDropdownOpen = true"
-                                       @input="contractorDropdownOpen = true"
-                                       :placeholder="activeContractor ? activeContractor.name : 'Search contractor...'"
-                                       style="background: transparent; border: none; color: #f8fafc; font-size: 12px; font-weight: 700; width: 220px; outline: none; text-overflow: ellipsis;"
-                                       @keydown.esc="closeContractorDropdown"
-                                       @keydown.enter.prevent="filteredContractors.length && selectContractor(filteredContractors[0].id)"
-                                       autocomplete="off">
-                                <button v-if="contractorSearchText"
-                                        type="button"
-                                        @click.stop="contractorSearchText = ''; contractorDropdownOpen = true; $refs.contractorSearchRef && $refs.contractorSearchRef.focus()"
-                                        style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0 4px; font-size: 11px; font-weight: 700;"
-                                        title="Clear search">✕</button>
-                                <button type="button"
-                                        @click.stop="toggleContractorDropdown"
-                                        style="background: none; border: none; color: #38bdf8; cursor: pointer; padding: 0 2px; font-size: 11px; font-weight: 700;"
-                                        title="Toggle list">▾</button>
-                            </div>
-
-                            <!-- Dropdown Search Panel -->
-                            <div v-if="contractorDropdownOpen" class="dp-contractor-search-panel" @click.stop style="position: absolute; top: calc(100% + 4px); left: 0; width: 340px; max-width: 92vw; background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.7); z-index: 1050; overflow: hidden; display: flex; flex-direction: column;">
-                                <div style="padding: 6px 10px; background: rgba(56, 189, 248, 0.12); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 800; color: #38bdf8; display: flex; justify-content: space-between;">
-                                    <span>🔍 {{ filteredContractors.length }} CONTRACTORS FOUND</span>
-                                    <span v-if="contractorSearchText" style="cursor: pointer; color: #f87171;" @click="contractorSearchText = ''">Clear ✕</span>
+                        <div class="contractor-input-row">
+                            <div class="dp-contractor-picker-wrap" v-click-outside="closeContractorDropdown">
+                                <div class="dp-search-combo-box">
+                                    <span class="dp-combo-search-icon">🔍</span>
+                                    <input type="text"
+                                           v-model="contractorSearchText"
+                                           ref="contractorSearchRef"
+                                           class="dp-combo-input"
+                                           @focus="contractorDropdownOpen = true"
+                                           @click.stop="contractorDropdownOpen = true"
+                                           @input="contractorDropdownOpen = true"
+                                           :placeholder="activeContractor ? activeContractor.name : 'Search contractor...'"
+                                           @keydown.esc="closeContractorDropdown"
+                                           @keydown.enter.prevent="filteredContractors.length && selectContractor(filteredContractors[0].id)"
+                                           autocomplete="off">
+                                    <button v-if="contractorSearchText"
+                                            type="button"
+                                            class="dp-combo-clear-btn"
+                                            @click.stop="contractorSearchText = ''; contractorDropdownOpen = true; $refs.contractorSearchRef && $refs.contractorSearchRef.focus()"
+                                            title="Clear search">✕</button>
+                                    <button type="button"
+                                            class="dp-combo-arrow-btn"
+                                            @click.stop="toggleContractorDropdown"
+                                            title="Toggle list">▾</button>
                                 </div>
-                                <div class="dp-contractor-results-list" style="max-height: 280px; overflow-y: auto;">
-                                    <div v-for="c in filteredContractors"
-                                         :key="c.id"
-                                         class="dp-contractor-item"
-                                         :class="{ active: c.id === selectedContractorId }"
-                                         @click="selectContractor(c.id)">
-                                        <div class="dp-c-title">{{ c.name }}</div>
-                                        <div v-if="c.feeder || c.project" class="dp-c-sub">
-                                            <span v-if="c.feeder">⚡ {{ c.feeder }}</span>
-                                            <span v-if="c.project">📁 {{ c.project }}</span>
+
+                                <!-- Dropdown Search Panel -->
+                                <div v-if="contractorDropdownOpen" class="dp-contractor-search-panel" @click.stop>
+                                    <div class="dp-search-panel-header">
+                                        <span>🔍 {{ filteredContractors.length }} CONTRACTORS FOUND</span>
+                                        <span v-if="contractorSearchText" class="dp-panel-clear-action" @click="contractorSearchText = ''">Clear ✕</span>
+                                    </div>
+                                    <div class="dp-contractor-results-list">
+                                        <div v-for="c in filteredContractors"
+                                             :key="c.id"
+                                             class="dp-contractor-item"
+                                             :class="{ active: c.id === selectedContractorId }"
+                                             @click="selectContractor(c.id)">
+                                            <div class="dp-c-title">{{ c.name }}</div>
+                                            <div v-if="c.feeder || c.project" class="dp-c-sub">
+                                                <span v-if="c.feeder">⚡ {{ c.feeder }}</span>
+                                                <span v-if="c.project">📁 {{ c.project }}</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="!filteredContractors.length" class="dp-no-contractors">
+                                            Koi contractor match nahi hua
                                         </div>
                                     </div>
-                                    <div v-if="!filteredContractors.length" class="dp-no-contractors" style="padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
-                                        Koi contractor match nahi hua
-                                    </div>
                                 </div>
                             </div>
+                            <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
                         </div>
-                        <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
                     </div>
 
                     <div class="date-stepper-compact">
