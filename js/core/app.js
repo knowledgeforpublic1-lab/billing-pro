@@ -454,6 +454,9 @@
                 dailyProgressModal: '',
                 dailyProgressContractorDropdownOpen: false,
                 dailyProgressContractorSearch: '',
+                dailyProgressShareSearch: '',
+                dailyProgressShareSelectedContractor: null,
+                dailyProgressShareDate: '',
                 dailyProgressExportFrom: '2026-09-01',
                 dailyProgressExportTo: '2026-09-30',
                 dailyProgressExportFilter: 'active',
@@ -1229,6 +1232,30 @@
                            (c.feeder && c.feeder.toLowerCase().includes(q)) ||
                            (c.project && c.project.toLowerCase().includes(q));
                 });
+            },
+            dailyProgressShareFilteredContractors() {
+                const list = this.dailyProgressContractors || [];
+                const q = String(this.dailyProgressShareSearch || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(c => {
+                    return (c.name && c.name.toLowerCase().includes(q)) ||
+                           (c.id && c.id.toLowerCase().includes(q)) ||
+                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
+                           (c.project && c.project.toLowerCase().includes(q));
+                });
+            },
+            dailyProgressCurrentShareUrl() {
+                const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+                const c = this.dailyProgressShareSelectedContractor || this.dailyProgressActiveContractor || {};
+                const cid = c.id || '';
+                const dt = this.dailyProgressShareDate || this.dailyProgressDate || '';
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+            },
+            dailyProgressWhatsappShareUrl() {
+                const c = this.dailyProgressShareSelectedContractor || this.dailyProgressActiveContractor || {};
+                const dt = this.dailyProgressShareDate || this.dailyProgressDate || '';
+                const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${dt}\nLink: ${this.dailyProgressCurrentShareUrl}`;
+                return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
             },
             dailyProgressReports() {
                 const data = this.dailyProgressData;

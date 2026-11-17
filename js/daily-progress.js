@@ -251,11 +251,13 @@ window.DailyProgressModule = {
         this.dailyProgressContractorDropdownOpen = !this.dailyProgressContractorDropdownOpen;
         if (this.dailyProgressContractorDropdownOpen) {
             this.dailyProgressContractorSearch = '';
-            this.$nextTick(() => {
-                if (this.$refs.dpContractorSearchInput) {
-                    this.$refs.dpContractorSearchInput.focus();
-                }
-            });
+            if (typeof this.$nextTick === 'function') {
+                this.$nextTick(() => {
+                    if (this.$refs.dpContractorSearchInput) {
+                        this.$refs.dpContractorSearchInput.focus();
+                    }
+                });
+            }
         }
     },
 
@@ -858,7 +860,53 @@ window.DailyProgressModule = {
         return dateStr;
     },
 
+    selectDailyProgressShareContractor(c) {
+        this.dailyProgressShareSelectedContractor = c;
+    },
+
+    copyDailyProgressShareUrl(url) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                if (typeof this.showToast === 'function') {
+                    this.showToast('Daily Progress page link copied to clipboard! 📋', '✅');
+                } else {
+                    alert('Link copied to clipboard!\n' + url);
+                }
+            }).catch(() => {
+                prompt('Copy this Daily Progress link:', url);
+            });
+        } else {
+            prompt('Copy this Daily Progress link:', url);
+        }
+    },
+
+    getDailyProgressContractorShareUrl(cid, dt) {
+        const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+        return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt || this.dailyProgressDate || '')}`;
+    },
+
+    getDailyProgressContractorWhatsappUrl(c, dt) {
+        const url = this.getDailyProgressContractorShareUrl(c.id, dt);
+        const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${dt || this.dailyProgressDate || ''}\nLink: ${url}`;
+        return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    },
+
+    openDailyProgressShareModal() {
+        this.dailyProgressShareSelectedContractor = this.dailyProgressActiveContractor;
+        this.dailyProgressShareSearch = '';
+        this.dailyProgressShareDate = this.dailyProgressDate || (new Date().toISOString().slice(0, 10));
+        this.dailyProgressModal = 'share';
+        if (typeof this.$nextTick === 'function') {
+            this.$nextTick(() => {
+                if (this.$refs.dpShareSearchInput) {
+                    this.$refs.dpShareSearchInput.focus();
+                }
+            });
+        }
+    },
+
     copyDailyProgressShareLink() {
+        this.openDailyProgressShareModal();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
         const dt = this.dailyProgressDate || '';
@@ -873,18 +921,6 @@ window.DailyProgressModule = {
             }).catch(() => { });
         }
 
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(() => {
-                if (typeof this.showToast === 'function') {
-                    this.showToast('Daily Progress page link copied to clipboard! 📋', '✅');
-                } else {
-                    alert('Link copied to clipboard!\n' + url);
-                }
-            }).catch(() => {
-                prompt('Copy this Daily Progress link:', url);
-            });
-        } else {
-            prompt('Copy this Daily Progress link:', url);
-        }
+        this.copyDailyProgressShareUrl(url);
     }
 };

@@ -72,11 +72,43 @@
                 exportFilter: 'active',
                 exportSearch: '',
                 contractorDropdownOpen: false,
-                contractorSearchText: ''
+                contractorSearchText: '',
+                showShareModal: false,
+                shareContractorSearch: '',
+                shareSelectedContractor: null,
+                shareLinkDate: getTodayStr()
             };
         },
 
         computed: {
+            shareFilteredContractors() {
+                const list = this.contractors || [];
+                const q = String(this.shareContractorSearch || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(c => {
+                    return (c.name && c.name.toLowerCase().includes(q)) ||
+                           (c.id && c.id.toLowerCase().includes(q)) ||
+                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
+                           (c.engineer && c.engineer.toLowerCase().includes(q)) ||
+                           (c.project && c.project.toLowerCase().includes(q));
+                });
+            },
+
+            currentShareUrl() {
+                const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+                const c = this.shareSelectedContractor || this.activeContractor || {};
+                const cid = c.id || '';
+                const dt = this.shareLinkDate || this.selectedDate || '';
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+            },
+
+            whatsappShareUrl() {
+                const c = this.shareSelectedContractor || this.activeContractor || {};
+                const dt = this.shareLinkDate || this.selectedDate || '';
+                const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${dt}\nLink: ${this.currentShareUrl}`;
+                return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            },
+
             filteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.contractorSearchText || '').trim().toLowerCase();
@@ -171,11 +203,13 @@
                 this.contractorDropdownOpen = !this.contractorDropdownOpen;
                 if (this.contractorDropdownOpen) {
                     this.contractorSearchText = '';
-                    this.$nextTick(() => {
-                        if (this.$refs.contractorSearchRef) {
-                            this.$refs.contractorSearchRef.focus();
-                        }
-                    });
+                    if (typeof this.$nextTick === 'function') {
+                        this.$nextTick(() => {
+                            if (this.$refs.contractorSearchRef) {
+                                this.$refs.contractorSearchRef.focus();
+                            }
+                        });
+                    }
                 }
             },
 
@@ -608,13 +642,23 @@
                 }
             },
 
-            copyShareLink() {
-                const origin = window.location.origin || '';
-                const cid = this.activeContractor.id || '';
-                const dt = this.selectedDate || '';
-                const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}`;
+            getContractorShareUrl(cid, dt) {
+                const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+                return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt || this.selectedDate || '')}`;
+            },
 
-                if (navigator.clipboard && navigator.clipboard.writeText) {
+            getContractorWhatsappUrl(c, dt) {
+                const url = this.getContractorShareUrl(c.id, dt);
+                const text = `*Daily Progress Entry Link*\nContractor: ${c.name || ''}\nDate: ${dt || this.selectedDate || ''}\nLink: ${url}`;
+                return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            },
+
+            selectShareContractor(c) {
+                this.shareSelectedContractor = c;
+            },
+
+            copyShareUrl(url) {
+                if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(url).then(() => {
                         this.showToast('Daily Progress page link copied to clipboard! 📋', 'success');
                     }).catch(() => {
@@ -623,6 +667,25 @@
                 } else {
                     prompt('Copy this Daily Progress link:', url);
                 }
+            },
+
+            openShareModal() {
+                this.shareSelectedContractor = this.activeContractor;
+                this.shareContractorSearch = '';
+                this.shareLinkDate = this.selectedDate || getTodayStr();
+                this.showShareModal = true;
+                if (typeof this.$nextTick === 'function') {
+                    this.$nextTick(() => {
+                        if (this.$refs.shareSearchInput) {
+                            this.$refs.shareSearchInput.focus();
+                        }
+                    });
+                }
+            },
+
+            copyShareLink() {
+                this.openShareModal();
+                this.copyShareUrl(this.currentShareUrl);
             },
 
             openReport(date) {
