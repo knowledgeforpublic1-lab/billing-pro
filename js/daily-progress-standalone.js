@@ -47,6 +47,7 @@
                 items: seed.items || [],
                 sapStock: null,
                 contractors: [defaultContractor],
+                entryLoginUser: null,
                 reports: [],
                 issues: [],
                 // Current entry state
@@ -189,6 +190,7 @@
         },
 
         async mounted() {
+            if (window.DailyWorkerAuth) this.entryLoginUser = await window.DailyWorkerAuth.ready;
             await this.initData();
             if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
                 document.addEventListener('click', (e) => {
@@ -350,6 +352,14 @@
                     }
 
                     this.contractors = Array.from(contractorsMap.values());
+                    const login = window.DailyWorkerAuth && window.DailyWorkerAuth.user;
+                    if (login && login.role !== 'admin') {
+                        this.contractors = this.contractors.filter(c => login.contractorIds.includes(c.id));
+                        this.reports = this.reports.filter(row => login.contractorIds.includes(row.contractorId));
+                        this.issues = this.issues.filter(row => login.contractorIds.includes(row.contractorId));
+                        if (!this.contractors.length) throw new Error('Aapke login ke liye contractor available nahi hai. Admin se contact karein.');
+                        if (!this.contractors.some(c => c.id === this.selectedContractorId)) this.selectedContractorId = this.contractors[0].id;
+                    }
 
                     // If URL param matched a contractor, select it
                     const params = new URLSearchParams(window.location.search);
@@ -366,6 +376,7 @@
                         if (matched) {
                             this.selectedContractorId = matched.id;
                         } else {
+                            if (login && login.role !== 'admin') throw new Error('Is contractor ka link aapke login mein allowed nahi hai. Admin se sahi link lein.');
                             const niceName = qCid.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                             const fallbackContractor = {
                                 id: qCid,
@@ -637,6 +648,12 @@
                             const resJson = await res.json().catch(() => null);
                             if (resJson && resJson.success === true) {
                                 cloudSaved = true;
+                                for (const report of resJson.reports || []) {
+                                    const index = this.reports.findIndex(row => row.contractorId === report.contractorId && row.date === report.date);
+                                    if (index >= 0) this.reports[index] = report;
+                                    if (report.contractorId === cid && report.date === curDate) this.version = report.version;
+                                }
+                                try { localStorage.setItem('billing_daily_progress', JSON.stringify({ ...payload, reports: this.reports })); } catch {}
                             }
                         }
                     } catch (e) {

@@ -6,6 +6,39 @@
     const originalQuantity = module.onDailyProgressQuantityChange;
     const originalManpower = module.onDailyProgressManpowerChange;
     Object.assign(module, {
+        dailyProgressEntryTime(value) {
+            if (!value || isNaN(Date.parse(value))) return '—';
+            return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) + ' IST';
+        },
+        openDailyProgressWorkers() {
+            return this.runDailyProgressAdmin(async () => {
+                this.dailyProgressWorkerPanel = true;
+                if (!this.dailyProgressWorkerForm.contractorIds.length) this.dailyProgressWorkerForm.contractorIds = [this.dailyProgressContractorId];
+                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
+                await this.loadDailyProgressEntryHistory();
+            });
+        },
+        saveDailyProgressWorker() {
+            return this.runDailyProgressAdmin(async () => {
+                await this.dailyProgressRequest('workers', this.dailyProgressWorkerForm);
+                this.dailyProgressWorkerForm = { name: '', username: '', password: '', contractorIds: [this.dailyProgressContractorId], reset: false };
+                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
+            });
+        },
+        resetDailyProgressWorker(user) {
+            this.dailyProgressWorkerForm = { name: user.name, username: user.username, password: '', contractorIds: [...user.contractorIds], reset: true };
+        },
+        disableDailyProgressWorker(user) {
+            return this.runDailyProgressAdmin(async () => {
+                if (!confirm(user.name + ' ka entry login band karein?')) return;
+                await this.dailyProgressRequest('workers/disable', { username: user.username });
+                this.dailyProgressWorkers = (await this.dailyProgressRequest('workers')).users;
+            });
+        },
+        async loadDailyProgressEntryHistory() {
+            const result = await this.dailyProgressRequest('entry-history?contractorId=' + encodeURIComponent(this.dailyProgressContractorId));
+            this.dailyProgressEntryHistory = result.events;
+        },
         dailyProgressEditor() {
             if (!this._dpEditor) this._dpEditor = crypto.randomUUID() + crypto.randomUUID();
             return this._dpEditor;

@@ -81,7 +81,7 @@ function stockKeysForQuery(query) {
     return [...keys];
 }
 
-module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: providedSeed } = {}) {
+module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: providedSeed, workers = require('./daily-worker-auth')({ db, auth }) } = {}) {
     let seed = providedSeed;
     if (!seed) {
         const sandbox = { window: {} };
@@ -128,7 +128,12 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
 
     publicRouter.use(async (req, res, next) => {
-        try { req.dpContractor = await service.authorize(req.get('x-dp-link')); next(); }
+        try {
+            req.dpWorker = await workers.principal(req);
+            req.dpContractor = await service.authorize(req.get('x-dp-link'));
+            workers.assertContractor(req.dpWorker, req.dpContractor.id);
+            next();
+        }
         catch (e) { res.status(e.status || 503).json({ success: false, error: e.status ? e.message : 'Entry service unavailable' }); }
     });
     publicRouter.get('/bootstrap', handle(async (req, res) => {
@@ -146,11 +151,17 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         }));
     }
     publicRouter.post('/report/:date/save', handle(async (req, res) => {
-        res.json({ success: true, ...await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), req.body) });
+        const saved = await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), req.body, req.dpWorker);
+        if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.dpContractor.id, date: req.params.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
+        res.json({ success: true, ...saved });
     }));
 
     // Mounted after the normal session middleware. Management also needs admin elevation.
     adminRouter.get('/status', handle(async (req, res) => res.json({ success: true, configured: drive.configured(), links: await service.list() })));
+    adminRouter.get('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, users: await workers.listUsers() })));
+    adminRouter.post('/workers', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, user: await workers.saveUser(req.body) })));
+    adminRouter.post('/workers/disable', auth.requireAdmin, handle(async (req, res) => { await workers.disableUser(req.body.username); res.json({ success: true }); }));
+    adminRouter.get('/entry-history', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await workers.history(req.query.contractorId) })));
     adminRouter.post('/storage-check', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await drive.check() })));
     adminRouter.post('/links', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.createLink(req.body.contractor || {}) })));
     adminRouter.post('/links/disable', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, disabled: await service.disable(req.body.contractorId) })));
@@ -158,7 +169,12 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     adminRouter.get('/audit', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await service.audit(req.query.contractorId, req.query.date) })));
     adminRouter.get('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor')) })));
     adminRouter.post('/claim', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim') })));
-    adminRouter.post('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body) })));
+    adminRouter.post('/report', auth.requireAdmin, handle(async (req, res) => {
+        const actor = { id: 'owner:' + (req.authSession && req.authSession.uid || 'admin'), name: 'Admin', username: 'admin', role: 'admin' };
+        const saved = await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body, actor);
+        if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.body.contractorId, date: req.body.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
+        res.json({ success: true, ...saved });
+    }));
     adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat') })));
     adminRouter.post('/import', auth.requireAdmin, handle(async (req, res) => {
         const report = req.body.report;
@@ -172,10 +188,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         });
         res.json({ success: true, ...saved });
     }));
-    adminRouter.get('/data', handle(async (req, res) => {
+    async function readData() {
         const legacy = await db.getDefaultConfig('dailyProgressData');
         const base = readDailyProgressData(legacy);
         const reports = new Map((base.reports || []).map(r => [r.contractorId + '|' + r.date, r]));
+        for (const r of await workers.sharedReports()) reports.set(r.contractorId + '|' + r.date, r);
         for (const r of await service.reports()) reports.set(r.contractorId + '|' + r.date, r);
         const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
         for (const c of await service.list()) contractors.set(c.id, c);
@@ -191,8 +208,9 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
         const issues = new Map((base.issues || []).map(i => [i.id, i]));
         for (const issue of aux.issues) issues.set(issue.id, issue);
-        res.json({ success: true, data: { contractors: [...contractors.values()], reports: [...reports.values()], issues: [...issues.values()] } });
-    }));
+        return { contractors: [...contractors.values()], reports: [...reports.values()], issues: [...issues.values()] };
+    }
+    adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
     adminRouter.post('/auxiliary', auth.requireAdmin, handle(async (req, res) => {
         const body = req.body;
         if (body.kind !== 'contractor' && body.kind !== 'issue') throw Object.assign(new Error('Invalid record type'), { status: 400 });
@@ -219,5 +237,5 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         }
         res.json({ success: true });
     }));
-    return { publicRouter, adminRouter, service };
+    return { publicRouter, adminRouter, service, readData };
 };

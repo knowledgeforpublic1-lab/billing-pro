@@ -19,10 +19,11 @@
             ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(45000)
         });
         const result = await response.json();
+        if (response.status === 401 && window.DailyWorkerAuth) window.DailyWorkerAuth.expired();
         if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Connection failed. Retry karein.'), { status: response.status });
         return result;
     }
-    const pendingKey = () => 'daily-entry-pending:' + contractor.id + ':' + date + ':' + editor;
+    const pendingKey = () => 'daily-entry-pending:' + contractor.id + ':' + date + ':' + editor + (window.DailyWorkerAuth && window.DailyWorkerAuth.user ? ':' + window.DailyWorkerAuth.user.id : '');
     function retain() {
         try { localStorage.setItem(pendingKey(), JSON.stringify({ draft, pending, edits })); }
         catch { message('Device backup unavailable. Page band na karein; save retry karein.', true); }
@@ -187,9 +188,13 @@
     };
     window.addEventListener('beforeunload', event => { if (dirty || pending) { event.preventDefault(); event.returnValue = ''; } });
     // A duplicated tab inherits sessionStorage. Web Locks prevents two tabs sharing one editor identity.
+    function beginEntry() {
     if (navigator.locks) navigator.locks.request('daily-entry:' + token, { ifAvailable: true }, async lock => {
         if (!lock) { message('Ye entry link isi browser ke doosre tab mein open hai. Wahi tab use karein.', true); return; }
         await start(); await new Promise(() => {});
     });
     else { editor = crypto.randomUUID() + crypto.randomUUID(); start(); }
+    }
+    if (window.DailyWorkerAuth) window.DailyWorkerAuth.ready.then(beginEntry);
+    else beginEntry();
 })();

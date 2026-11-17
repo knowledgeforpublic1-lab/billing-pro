@@ -10,4 +10,14 @@ function readDailyProgressData(record) {
     }
     return { contractors: [], reports: [], issues: [] };
 }
-module.exports = { readDailyProgressData };
+let ids;
+function publicItemIds() {
+    if (!ids) {
+        const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
+        const context = { window: {} };
+        vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data/default-daily-progress.js'), 'utf8'), context);
+        ids = (context.window.DailyProgressSeed.items || []).map(item => String(item.id));
+    }
+    return ids;
+}
+module.exports = { readDailyProgressData, publicItemIds };

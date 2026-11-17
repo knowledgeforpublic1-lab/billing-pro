@@ -724,15 +724,19 @@ async function atomicDailyRecord(key, change) {
     }
     throw Object.assign(new Error('Concurrent update. Retry karein.'), { status: 409 });
 }
-async function listDailyRecords(prefix) {
+async function listDailyRecords(prefix, options = {}) {
     await connect();
     if (activeProvider === 'firebase') {
-        const snap = await firestoreDb.collection('daily_progress_control')
-            .orderBy('__name__').startAt(prefix).endAt(prefix + '\uf8ff').get();
+        let query = firestoreDb.collection('daily_progress_control')
+            .orderBy('__name__').startAt(prefix).endAt(prefix + '\uf8ff');
+        if (options.limit) query = query.limit(Math.min(1000, Math.max(1, options.limit)));
+        const snap = await query.get();
         return snap.docs.map(doc => ({ key: doc.id, value: doc.data().value }));
     }
-    const rows = await mongoose.connection.collection('daily_progress_control')
-        .find({ _id: { $gte: prefix, $lt: prefix + '\uffff' } }).toArray();
+    let query = mongoose.connection.collection('daily_progress_control')
+        .find({ _id: { $gte: prefix, $lt: prefix + '\uffff' } }).sort({ _id: 1 });
+    if (options.limit) query = query.limit(Math.min(1000, Math.max(1, options.limit)));
+    const rows = await query.toArray();
     return rows.map(row => ({ key: row._id, value: row.value }));
 }
 

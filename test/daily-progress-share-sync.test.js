@@ -3,37 +3,31 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const express = require('express');
-const db = require('../api/db');
-const api = require('../api/index');
-const createRoutes = require('../api/daily-progress-routes');
+const fixture = require('./helpers/daily-entry-fixture');
 const copy = value => structuredClone(value);
 const contractor = { id: 'shared-team', name: 'Shared Team' };
 const report = quantity => ({ contractorId: contractor.id, date: '2026-11-17', version: 1, quantities: { 15: quantity }, manpower: {}, remarks: '' });
 
 test('share POST persists a direct dataset; GET and admin recover nested historical records', async () => {
-    let stored = { key: 'dailyProgressData', data: { data: { contractors: [contractor], reports: [report(7)], issues: [] } } };
-    const originalGet = db.getDefaultConfig, originalSave = db.saveDefaultConfig;
-    db.getDefaultConfig = async key => key === 'dailyProgressData' ? copy(stored) : null;
-    db.saveDefaultConfig = async (key, data) => { assert.equal(key, 'dailyProgressData'); stored = { key, data: copy(data) }; };
-    const adminDb = { getDefaultConfig: (...args) => db.getDefaultConfig(...args), listDailyRecords: async () => [] };
-    const routes = createRoutes({ db: adminDb, seed: { items: [] }, auth: { requireAdmin(req, res, next) { next(); } }, drive: { configured: () => true } });
-    const app = express(); app.use('/api/dp-admin', routes.adminRouter); app.use(api);
+    const f = fixture();
+    f.configs.set('dailyProgressData', { key: 'dailyProgressData', data: { data: { contractors: [contractor], reports: [report(7)], issues: [] } } });
+    const app = f.app;
     const server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
     const origin = 'http://127.0.0.1:' + server.address().port;
     try {
         for (const path of ['/api/daily-progress/data', '/api/dp-admin/data']) {
-            const response = await fetch(origin + path);
+            const response = await fetch(origin + path, { headers: { cookie: f.ownerCookie } });
             assert.match(response.headers.get('cache-control'), /no-store/);
             const result = await response.json(); assert.equal(result.data.reports[0].quantities[15], 7, path);
         }
         const next = { ...report(9), date: '2026-11-18' };
-        const saved = await fetch(origin + '/api/daily-progress/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contractors: [contractor], reports: [next], issues: [] }) });
+        const saved = await fetch(origin + '/api/daily-progress/data', { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: f.ownerCookie }, body: JSON.stringify({ contractors: [contractor], reports: [next], issues: [] }) });
         assert.equal(saved.status, 200); assert.equal((await saved.json()).success, true);
-        assert.equal(stored.data.reports.length, 2, 'Historical shared reports survive a later save');
-        assert.equal(stored.data.data, undefined, 'No additional data wrapper');
-        const result = await (await fetch(origin + '/api/dp-admin/data')).json();
+        assert.equal(f.configs.get('dailyProgressData').data.reports.length, 2, 'Historical shared reports survive a later save');
+        assert.equal(f.configs.get('dailyProgressData').data.data, undefined, 'No additional data wrapper');
+        const result = await (await fetch(origin + '/api/dp-admin/data', { headers: { cookie: f.ownerCookie } })).json();
         assert.equal(result.data.reports.find(r => r.date === '2026-11-18').quantities[15], 9);
-    } finally { db.getDefaultConfig = originalGet; db.saveDefaultConfig = originalSave; await new Promise(resolve => server.close(resolve)); }
+    } finally { await new Promise(resolve => server.close(resolve)); }
 });
 
 function adminApp() {

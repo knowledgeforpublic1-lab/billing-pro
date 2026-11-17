@@ -120,7 +120,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
+                            <button v-if="!entryLoginUser || entryLoginUser.role === 'admin'" type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
                         </div>
                     </div>
 
@@ -332,7 +332,7 @@
                                 SAP Stock + Manual Challan issues vs. Daily consumption up to {{ selectedDate }}.
                             </p>
                         </div>
-                        <button type="button" class="btn-header-share" @click="showAddIssueModal = true">
+                        <button v-if="!entryLoginUser || entryLoginUser.role === 'admin'" type="button" class="btn-header-share" @click="showAddIssueModal = true">
                             <span>➕</span><span>Record Material Issue</span>
                         </button>
                     </div>
@@ -825,7 +825,8 @@
     <script src="js/data/default-contractors.js?v=20261116"></script>
     <script src="js/data/default-sap-contractor-mapping.js?v=20261116"></script>
     <script src="js/data/contractor-sap-issues.js?v=20261116"></script>
-    <script src="js/daily-progress-standalone.js?v=20261117_error_notifications"></script>
+    <script src="js/daily-worker-auth.js?v=20261117_worker_signup_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261117_worker_login_v2"></script>
 </body>
 
 </html>

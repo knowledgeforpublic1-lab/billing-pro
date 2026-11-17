@@ -92,7 +92,12 @@ test('link revocation, validation and API boundary protect other contractors/adm
     const auth = {
         requireAdmin(req, res, next) { if (req.get('x-test-admin') !== 'yes') return res.status(403).json({ error: 'Admin verification required' }); next(); }
     };
-    const routes = createRoutes({ db: f.db, drive: f.drive, seed: { items: f.items }, auth });
+    const workers = {
+        async principal(req) { if (req.get('x-test-worker') !== 'yes') throw Object.assign(new Error('Worker login required'), { status: 401 }); return { id: 'worker', name: 'Worker', role: 'worker', contractorIds: ['a'] }; },
+        assertContractor(actor, cid) { if (!actor.contractorIds.includes(cid)) throw Object.assign(new Error('Contractor not allowed'), { status: 403 }); },
+        async recordHistory() {}, async sharedReports() { return []; }
+    };
+    const routes = createRoutes({ db: f.db, drive: f.drive, seed: { items: f.items }, auth, workers });
     const app = express(); app.use(express.json());
     app.use('/api/daily-entry', routes.publicRouter);
     app.use('/api', (req, res, next) => req.get('x-test-login') === 'yes' ? next() : res.status(401).json({ error: 'Login required' }));
@@ -104,7 +109,7 @@ test('link revocation, validation and API boundary protect other contractors/adm
     try {
         const link = await routes.service.createLink({ id: 'a', name: 'Contractor A' });
         await routes.service.createLink({ id: 'b', name: 'SECRET CONTRACTOR B' });
-        const h = { 'x-dp-link': link.token, 'x-dp-editor': editor(1) };
+        const h = { 'x-dp-link': link.token, 'x-dp-editor': editor(1), 'x-test-worker': 'yes' };
         assert.equal((await request('/api/dp-admin/status', undefined, h)).status, 401);
         assert.equal((await request('/api/dp-admin/links', { contractor: { id: 'c', name: 'C' } }, { 'x-test-login': 'yes' })).status, 403);
         assert.equal((await request('/api/daily-entry/bootstrap')).status, 401);

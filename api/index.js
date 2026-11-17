@@ -6,6 +6,7 @@ require('dotenv').config();
 const db = require('./db');
 const { readDailyProgressData } = require('./daily-progress-data');
 const auth = require('./auth')({ db, config: require('./auth-settings') });
+const workers = require('./daily-worker-auth')({ db, auth });
 
 const app = express();
 app.set('trust proxy', 1);
@@ -39,7 +40,8 @@ const writeLimiter = rateLimit({
     legacyHeaders: false,
     message: { success: false, error: 'Too many saves, 1 min ruk kar retry karo' }
 });
-const dailyProgress = require('./daily-progress-routes')({ db, auth });
+const dailyProgress = require('./daily-progress-routes')({ db, auth, workers });
+app.use('/api/dp-worker', workers.router);
 app.use('/api/daily-entry', dailyProgress.publicRouter);
 app.use('/api/', apiLimiter);
 
@@ -799,14 +801,26 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
 app.get('/api/daily-progress/data', async (req, res) => {
     res.set('Cache-Control', 'no-store');
     try {
-        const legacy = await db.getDefaultConfig('dailyProgressData');
-        res.json({ success: true, data: legacy ? readDailyProgressData(legacy) : null });
+        const actor = await workers.principal(req);
+        const data = await dailyProgress.readData();
+        if (actor.role !== 'admin') {
+            const allowed = cid => actor.contractorIds.includes(cid);
+            data.contractors = data.contractors.filter(row => allowed(row.id)).map(({ id, name, project, feeder, engineer }) => ({ id, name, project, feeder, engineer }));
+            data.reports = data.reports.filter(row => allowed(row.contractorId));
+            data.issues = data.issues.filter(row => allowed(row.contractorId));
+        }
+        res.json({ success: true, data });
     } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
+        res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Entry data unavailable. Retry karein.' });
     }
 });
 app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req, res) => {
     try {
+        if (req.headers.origin) {
+            try { if (new URL(req.headers.origin).host !== req.headers.host) throw new Error(); }
+            catch { throw Object.assign(new Error('Cross-origin entry save blocked'), { status: 403 }); }
+        }
+        const actor = await workers.principal(req);
         const payload = req.body && req.body.data !== undefined ? req.body.data : req.body;
         if (!payload || typeof payload !== 'object') {
             return res.status(400).json({ success: false, error: 'Invalid payload' });
@@ -815,6 +829,36 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         // Server-side smart merge — prevents whole-dataset overwrite across multiple site devices
         const existingRec = await db.getDefaultConfig('dailyProgressData');
         const existingData = readDailyProgressData(existingRec);
+        if (actor.role !== 'admin') {
+            if (!Array.isArray(payload.reports) || payload.reports.length > 1000) return res.status(400).json({ success: false, error: 'Valid report list required' });
+            const itemIds = new Set((require('./daily-progress-data').publicItemIds)());
+            const clean = payload.reports.map(report => {
+                workers.assertContractor(actor, report.contractorId);
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(report.date || '') || report.date < '2020-01-01' || report.date > '2100-12-31' || isNaN(Date.parse(report.date)) || new Date(report.date).toISOString().slice(0, 10) !== report.date || !Number.isInteger(report.version) || report.version < 1) throw Object.assign(new Error('Valid work date and report version required'), { status: 400 });
+                const quantities = {};
+                for (const [key, raw] of Object.entries(report.quantities || {})) {
+                    const value = Number(raw);
+                    if (!itemIds.has(key) || !Number.isFinite(value) || value < 0 || value > 1e9) throw Object.assign(new Error('Invalid material quantity'), { status: 400 });
+                    if (value) quantities[key] = value;
+                }
+                const manpower = {};
+                for (const key of ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room']) {
+                    const value = Number(report.manpower && report.manpower[key] || 0);
+                    if (!Number.isFinite(value) || value < 0 || value > 1e9 || (['leader', 'skilled', 'unskilled'].includes(key) && !Number.isInteger(value))) throw Object.assign(new Error('Invalid manpower'), { status: 400 });
+                    manpower[key] = value;
+                }
+                return { contractorId: report.contractorId, date: report.date, quantities, manpower, remarks: String(report.remarks || '').slice(0, 5000), version: Number(report.version || 0) };
+            });
+            const loaded = await dailyProgress.readData();
+            const prior = new Map(loaded.reports.map(row => [row.contractorId + '|' + row.date, row]));
+            const saved = [];
+            for (const report of clean) {
+                const previous = prior.get(report.contractorId + '|' + report.date);
+                if (previous && Number(report.version) <= Number(previous.version) && JSON.stringify(report.quantities) === JSON.stringify(previous.quantities || {}) && report.remarks === (previous.remarks || '') && Object.keys(report.manpower).every(key => Number(report.manpower[key]) === Number(previous.manpower && previous.manpower[key] || 0))) continue;
+                saved.push(await workers.saveShared(actor, report, previous));
+            }
+            return res.json({ success: true, count: saved.length, reports: saved });
+        }
 
         const cMap = new Map();
         (existingData.contractors || []).forEach(c => cMap.set(String(c.id || c.name).toLowerCase(), c));
@@ -850,7 +894,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         await db.saveDefaultConfig('dailyProgressData', merged);
         res.json({ success: true, count: merged.reports.length });
     } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
+        res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Entry save unavailable. Draft safe rakhein aur retry karein.' });
     }
 });
 app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));

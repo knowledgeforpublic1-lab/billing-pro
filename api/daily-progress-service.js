@@ -71,10 +71,10 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             editable: state.state === 'open' && state.owner === who && state.leaseUntil > now(),
             occupied: state.state !== 'final' && !!state.owner && state.leaseUntil > now() && state.owner !== who,
             processing: !!(state.operation?.until > now()), leaseUntil: state.leaseUntil || 0,
-            report: report && { quantities: report.quantities, manpower: report.manpower, remarks: report.remarks }
+            report: report && { quantities: report.quantities, manpower: report.manpower, remarks: report.remarks, savedBy: report.savedBy, savedAt: report.savedAt }
         };
     }
-    async function save(cid, date, editor, body) {
+    async function save(cid, date, editor, body, actor = null) {
         assertDate(date);
         const who = editorHash(editor);
         if (!/^[\w-]{16,100}$/.test(body.requestId || '')) fail(400, 'Save request ID required');
@@ -85,7 +85,7 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         const operationId = crypto.randomUUID();
         const reserved = await db.atomicDailyRecord(key, old => {
             const r = clone(old || initial(cid, date));
-            if (r.lastRequestId === body.requestId && r.lastOwner === who && r.lastDigest === digest) return { result: { already: true, version: r.version, state: r.state } };
+            if (r.lastRequestId === body.requestId && r.lastOwner === who && r.lastDigest === digest) return { result: { already: true, version: r.version, state: r.state, savedAt: r.savedAt, savedBy: r.savedBy } };
             if (r.state === 'final') fail(423, 'Entry save ho chuki hai. Admin se reopen karwayein.');
             if (r.version >= 500) fail(400, 'Max revision limit reached for this daily report. Admin se contact karein.');
             if (r.owner !== who || r.leaseUntil <= now() || r.epoch !== body.epoch) fail(409, 'Editing reservation expire ya change ho gayi. Draft copy safe rakhein aur reload karein.');
@@ -95,10 +95,12 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             r.leaseUntil = now() + LEASE;
             return { value: r, result: { version: r.version + 1 } };
         });
-        if (reserved.already) return reserved;
+        if (reserved.already) return { ...reserved, report: payload };
+        const savedAt = new Date(now()).toISOString();
+        const savedBy = actor ? { id: actor.id, name: actor.name, username: actor.username, role: actor.role } : null;
         let fileId;
         try {
-            fileId = await drive.write(key, { ...payload, contractorId: cid, date, version: reserved.version, final: !!body.final, savedAt: new Date(now()).toISOString() });
+            fileId = await drive.write(key, { ...payload, contractorId: cid, date, version: reserved.version, final: !!body.final, savedAt, savedBy });
         } catch (error) {
             await db.atomicDailyRecord(key, old => {
                 if (old?.operation?.id !== operationId) return { result: null };
@@ -111,10 +113,11 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
             const r = clone(old);
             r.fileId = fileId; r.version = reserved.version; r.state = body.final ? 'final' : 'open';
             r.lastRequestId = body.requestId; r.lastOwner = who; r.lastDigest = digest;
+            r.savedAt = savedAt; r.savedBy = savedBy;
             delete r.operation;
             audit(r, body.final ? 'final_saved' : 'draft_saved');
             if (body.final) { delete r.owner; r.leaseUntil = 0; }
-            return { value: r, result: { version: r.version, state: r.state } };
+            return { value: r, result: { version: r.version, state: r.state, savedAt, savedBy, report: payload } };
         });
     }
     return {

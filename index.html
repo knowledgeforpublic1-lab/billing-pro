@@ -576,6 +576,7 @@
                         </div>
 
                         <!-- Single Share Button -->
+                        <button type="button" class="btn btn-secondary" @click="openDailyProgressWorkers" title="Staff logins aur kisne kab kitni entry ki">Staff &amp; Entry History</button>
                         <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
                             <span>📋</span><span>Share</span>
                         </button>
@@ -1966,6 +1967,22 @@
                 </div>
 
                 <!-- TAB 1: DAILY ENTRY -->
+                <section v-if="dailyProgressWorkerPanel" class="dp-panel no-print">
+                    <div class="dp-panel-header"><h2>Share-entry logins &amp; history</h2><button type="button" class="btn btn-secondary" @click="dailyProgressWorkerPanel = false">Close</button></div>
+                    <div style="padding:16px;">
+                        <p>Har ladke ka alag login banayein aur uske allowed contractors select karein. Phir usual share link, username aur password use de dein.</p>
+                        <form @submit.prevent="saveDailyProgressWorker" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin:16px 0;">
+                            <label>Naam<input v-model="dailyProgressWorkerForm.name" required maxlength="80" class="form-input" style="width:100%;"></label>
+                            <label>Username<input v-model="dailyProgressWorkerForm.username" required pattern="[a-zA-Z0-9._-]{3,40}" autocomplete="off" class="form-input" style="width:100%;"></label>
+                            <label>Naya password<input v-model="dailyProgressWorkerForm.password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" class="form-input" style="width:100%;"></label>
+                            <label>Allowed contractors<select v-model="dailyProgressWorkerForm.contractorIds" multiple required size="4" class="form-input" style="width:100%;"><option v-for="c in dailyProgressContractors" :key="c.id" :value="c.id">{{ c.name }}</option></select></label>
+                            <div><p v-if="dailyProgressWorkerForm.reset">Existing login ka password aur contractor access reset hoga. Purane sessions band honge.</p><button type="submit" class="btn btn-primary">{{ dailyProgressWorkerForm.reset ? 'Reset login' : 'Create login' }}</button><button v-if="dailyProgressWorkerForm.reset" type="button" class="btn btn-secondary" @click="dailyProgressWorkerForm = {name:'',username:'',password:'',contractorIds:[dailyProgressContractorId],reset:false}">Cancel reset</button></div>
+                        </form>
+                        <div class="dp-table-wrap"><table class="dp-table"><thead><tr><th>Naam / username</th><th>Contractors</th><th>Status</th><th>Manage</th></tr></thead><tbody><tr v-for="user in dailyProgressWorkers" :key="user.id"><td>{{ user.name }} · {{ user.username }}</td><td>{{ user.contractorIds.map(id => (dailyProgressContractors.find(c => c.id === id) || {}).name || id).join(', ') }}</td><td>{{ user.disabled ? 'Disabled' : 'Active' }}</td><td><button type="button" class="btn btn-secondary" @click="resetDailyProgressWorker(user)">Reset password / access</button><button v-if="!user.disabled" type="button" class="btn btn-secondary" @click="disableDailyProgressWorker(user)">Disable</button></td></tr><tr v-if="!dailyProgressWorkers.length"><td colspan="4">Abhi staff login nahi bana hai.</td></tr></tbody></table></div>
+                        <div style="display:flex;gap:12px;align-items:center;margin:18px 0;"><h3 style="margin:0;">Selected contractor ki latest 100 saves</h3><button type="button" class="btn btn-secondary" @click="runDailyProgressAdmin(loadDailyProgressEntryHistory)">Refresh history</button></div>
+                        <div class="dp-table-wrap"><table class="dp-table"><thead><tr><th>Kisne</th><th>Save time (IST)</th><th>Work date</th><th>Material-wise quantity</th><th>Version</th></tr></thead><tbody><tr v-for="event in dailyProgressEntryHistory" :key="event.source + event.date + event.version"><td>{{ event.savedBy ? event.savedBy.name : 'Naam record nahi hua' }}</td><td>{{ dailyProgressEntryTime(event.savedAt) }}</td><td>{{ event.date }}</td><td><div v-for="(value,id) in event.quantities" :key="id">{{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).name || id }}: <strong>{{ value }}</strong> {{ (dailyProgressSeedItems.find(item => String(item.id) === String(id)) || {}).unit || '' }}</div><span v-if="!Object.keys(event.quantities || {}).length">No material quantity</span><small>{{ event.remarks }}</small></td><td>{{ event.version }}</td></tr><tr v-if="!dailyProgressEntryHistory.length"><td colspan="5">Login ke baad ki nayi saves yahan dikhengi. Purani entries ke naam backfill nahi honge.</td></tr></tbody></table></div>
+                    </div>
+                </section>
                 <div v-if="dailyProgressTab === 'entry'">
                     <fieldset :disabled="dailyProgressBusy" style="border:0;padding:0;margin:0;min-width:0">
                     <!-- Two-column Entry Layout -->
@@ -2251,6 +2268,7 @@
                                 <thead>
                                     <tr>
                                         <th>Work Date</th>
+                                        <th>Entry by / saved time</th>
                                         <th>Items Consumed</th>
                                         <th>Team Manpower</th>
                                         <th>Site Notes / Location</th>
@@ -2260,6 +2278,7 @@
                                 <tbody>
                                     <tr v-for="rep in [...dailyProgressReports].reverse()" :key="rep.date">
                                         <td style="font-weight: 800; color: #60a5fa;">{{ formatDisplayDate(rep.date) }}</td>
+                                        <td>{{ rep.savedBy ? rep.savedBy.name : 'Naam record nahi hua' }}<small style="display:block;">{{ dailyProgressEntryTime(rep.savedAt || rep.updatedAt) }}</small></td>
                                         <td>{{ Object.keys(rep.quantities || {}).length }} items</td>
                                         <td>{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} people</td>
                                         <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ rep.remarks || '—' }}</td>
