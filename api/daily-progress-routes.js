@@ -179,9 +179,13 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
         for (const c of await service.list()) contractors.set(c.id, c);
         const aux = { contractors: [], issues: [] };
-        for (const { value } of await db.listDailyRecords('aux_')) {
-            const stored = await drive.read(value.fileId);
-            aux[stored.kind === 'issue' ? 'issues' : 'contractors'].push(stored.value);
+        const auxRecords = await db.listDailyRecords('aux_');
+        const auxDocs = await Promise.all(auxRecords.map(async ({ value }) => {
+            if (!value?.fileId) return null;
+            return drive.read(value.fileId);
+        }));
+        for (const stored of auxDocs) {
+            if (stored?.value) aux[stored.kind === 'issue' ? 'issues' : 'contractors'].push(stored.value);
         }
         for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
         const issues = new Map((base.issues || []).map(i => [i.id, i]));

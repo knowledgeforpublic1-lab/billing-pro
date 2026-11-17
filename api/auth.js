@@ -24,7 +24,7 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         }
         lookupCache.set(key, val);
     }
-    const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT;
+    const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT || crypto.randomBytes(32).toString('hex');
     const encryptionKey = secret && crypto.createHash('sha256').update('billing-auth-v1\0' + secret).digest();
     const encrypt = value => {
         const iv = crypto.randomBytes(12);
