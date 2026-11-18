@@ -549,6 +549,21 @@ function renderOverview() {
     bar('chartValueComparison',[{label:'Net issued',value:stats.issue},{label:'Consumed',value:stats.consumed},{label:'WIP',value:stats.wip},{label:'Positive balance',value:stats.balance},{label:'Excess consumption',value:stats.deficit}],'Debit-rate value (₹)',['#3b82f6','#10b981','#06b6d4','#f59e0b','#ef4444']);
 }
 
+// Preserve the user's visibility choice while filtering or switching contractors.
+const contractorProfileVisibility = new Map();
+function toggleContractorProfile(button) {
+    const profile = button.closest('.contractor-profile');
+    if (!profile) return;
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    button.setAttribute('aria-expanded', String(expanded));
+    button.title = expanded ? 'Hide contractor details' : 'Show contractor details';
+    profile.classList.toggle('profile-is-collapsed', !expanded);
+    const content = profile.querySelector('.contractor-profile-content');
+    content.setAttribute('aria-hidden', String(!expanded));
+    content.inert = !expanded;
+    contractorProfileVisibility.set(profile.dataset.entry, expanded);
+}
+
 // 2. CONTRACTOR VIEW
 function renderContractorView() {
     const selected = document.getElementById('contractorSelect').value;
@@ -579,12 +594,13 @@ function renderContractorView() {
                 return `<span class="badge ${cls}">${status}</span>`;
             };
 
+            const profileExpanded = contractorProfileVisibility.get(selected) !== false;
             infoPanel.innerHTML = `
-                <section class="contractor-profile" aria-label="Contractor basic details">
+                <section class="contractor-profile${profileExpanded ? '' : ' profile-is-collapsed'}" data-entry="${selected}" aria-label="Contractor basic details">
                 <div class="info-card-header">
 
                     <div class="info-card-title">
-                        <h2>👷 ${conData.ContractorName}</h2>
+                        <h2><button type="button" class="contractor-name-toggle" onclick="toggleContractorProfile(this)" aria-expanded="${profileExpanded}" aria-controls="contractorProfileContent" title="${profileExpanded ? 'Hide' : 'Show'} contractor details">👷 ${conData.ContractorName}<span class="profile-chevron" aria-hidden="true">⌄</span></button></h2>
                         <p class="subtitle">${meta.FirmName !== conData.ContractorName ? meta.FirmName : 'Sub-Contractor Statement'} | WO No: <strong>${meta.WONo || 'N/A'}</strong></p>
                     </div>
                     <div class="info-card-badges">
@@ -593,7 +609,9 @@ function renderContractorView() {
                         ${meta.ChequeSubmitted ? `<span class="badge badge-success">Cheque: ${meta.ChequeSubmitted}</span>` : ''}
                     </div>
                 </div>
+                <div id="contractorProfileContent" class="contractor-profile-content" aria-hidden="${!profileExpanded}" ${profileExpanded ? '' : 'inert'}>
                 <div class="contractor-profile-body">
+                <div class="contractor-profile-inner">
                 <div class="info-card-grid">
                     <!-- Group 1: General Info -->
                     <div class="info-group">
@@ -636,6 +654,8 @@ function renderContractorView() {
                     <strong>Remarks & Tracking:</strong> <span>${meta.Remarks}</span>
                 </div>
                 ` : ''}
+                </div>
+                </div>
                 </div>
                 </section>
             `;
@@ -2324,6 +2344,7 @@ function handleExcelUpload(event) {
                     throw new Error('Import rejected: missing required material/issue/consumption columns in ' + (missingColumnsContractors.join(', ') || 'all sheets'));
                 }
                 rawData = parsedData;
+                contractorProfileVisibility.clear();
                 updateDataQuality();
                 
                 // SAVE to localStorage FIRST (so reload always gets fresh data)

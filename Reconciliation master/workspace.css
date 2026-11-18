@@ -290,7 +290,7 @@ html[data-theme="light"] { --workspace-surface: #eef0f3; --workspace-header: #df
     .contractor-profile .info-card-title h2 { font-size: 13px; line-height: 1.5; }
     .contractor-profile .info-card-title .subtitle { font-size: 11px; margin: 0; }
     .contractor-profile .info-card-badges { gap: 6px; flex-shrink: 0; }
-    .contractor-profile-body { padding: 6px 8px; }
+    .contractor-profile-inner { padding: 6px 8px; }
     #tab-contractor .control-card { flex-wrap: nowrap; }
     #tab-contractor .filter-group { flex-wrap: nowrap; gap: 8px; min-width: 0; }
     #tab-contractor .select-box { flex: 0 1 300px; min-width: 0; }
@@ -323,4 +323,23 @@ html[data-theme="light"] { --workspace-surface: #eef0f3; --workspace-header: #df
 @media screen and (max-width: 540px) {
     .contractor-profile .info-card-grid { grid-template-columns: 1fr; }
     .contractor-profile .info-group { border-right: 0; }
+}
+
+/* The contractor name toggles the existing details without moving the header. */
+.contractor-name-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 0; margin: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.contractor-name-toggle:hover { color: var(--primary); }
+.contractor-name-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 2px; }
+.profile-chevron { display: inline-block; color: var(--text-secondary); transition: transform 220ms ease; }
+.contractor-profile-content { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 220ms ease, opacity 180ms ease; }
+.contractor-profile-body { min-height: 0; overflow: hidden; visibility: visible; transition: visibility 0s; }
+.profile-is-collapsed .contractor-profile-content { grid-template-rows: 0fr; opacity: 0; }
+.profile-is-collapsed .contractor-profile-body { visibility: hidden; transition-delay: 220ms; }
+.profile-is-collapsed .profile-chevron { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) {
+    .contractor-profile-content, .contractor-profile-body, .profile-chevron { transition: none !important; }
+}
+@media print {
+    .contractor-profile .contractor-profile-content { grid-template-rows: 1fr !important; opacity: 1 !important; }
+    .contractor-profile .contractor-profile-body { visibility: visible !important; overflow: visible !important; }
+    .profile-chevron { display: none; }
 }
