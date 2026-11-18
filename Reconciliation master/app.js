@@ -35,25 +35,69 @@ async function fetchReconCloud() {
         var res = await fetch('/api/reconciliation', { headers: reconApiHeaders(false) });
         if (!res.ok) return null;
         var j = await res.json();
-        if (j && j.success && j.data) return j;
+        if (j && j.success) { reconRevision = Number(j.rev) || 0; return j; }
     } catch (e) { console.warn('Recon cloud load failed:', e); }
     return null;
 }
 
-function saveReconCloud(jsonPayload) {
-    return fetch('/api/reconciliation', { method: 'POST', headers: reconApiHeaders(true), body: jsonPayload })
-        .then(function (res) {
-            if (res.status === 401) throw new Error('API key galat/missing');
-            if (!res.ok) return res.json().then(function (j) { throw new Error((j && j.error) || ('HTTP ' + res.status)); });
-            return res.json();
-        })
-        .then(function (j) { console.log('Recon cloud save OK:', j); return j; })
-        .catch(function (err) {
-            console.warn('Recon cloud save failed, legacy upload.php try ho raha hai:', err);
-            return fetch('upload.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: jsonPayload })
-                .then(function (r) { return r.json(); })
-                .then(function (d) { console.log('Legacy server save response:', d); return { legacy: true, resp: d }; });
-        });
+let reconRevision = null;
+async function saveReconCloud(jsonPayload) {
+    if (reconRevision === null) throw new Error('Cloud revision unavailable. Refresh online before uploading.');
+    const res = await fetch('/api/reconciliation', {
+        method: 'POST', headers: reconApiHeaders(true),
+        body: JSON.stringify({ data: JSON.parse(jsonPayload), expectedRev: reconRevision })
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || ('Cloud save failed: HTTP ' + res.status));
+    reconRevision = result.rev;
+    try { localStorage.removeItem('materialAppPending'); } catch (error) { console.warn('Could not clear local pending flag:', error); }
+    updateDataQuality();
+    return result;
+}
+
+function selectedContractorEntry(value) {
+    if (!rawData || !value) return null;
+    if (/^entry:\d+$/.test(value)) return rawData.Contractors[Number(value.slice(6))] || null;
+    const matches = rawData.Contractors.filter(c => c.ContractorName === value);
+    return matches.length === 1 ? matches[0] : null;
+}
+function positiveBalanceCost(item) {
+    return Math.max(0, Number(item.BalanceQty) || 0) * Math.max(0, Number(item.DebitRate) || 0);
+}
+function updateDataQuality() {
+    const banner = document.getElementById('reconciliationStatus');
+    if (!banner || !rawData) return;
+    const quality = MasterAnalytics.build(rawData);
+    const stockDate = rawData.StockSource?.generatedAt?.slice(0, 10) || 'Unknown';
+    const consumptionDate = rawData.ConsumptionDataAsOf?.slice(0, 10) || 'Unknown';
+    banner.textContent = 'Stock: ' + stockDate + ' · Consumption: ' + consumptionDate +
+        (stockDate === 'Unknown' || consumptionDate === 'Unknown' || stockDate !== consumptionDate ? ' · Dates need verification' : '') +
+        ' · ' + quality.missingRates + ' unpriced rows · ' + quality.formulaDifferences + ' balance formula differences' +
+        (localStorage.getItem('materialAppPending') ? ' · UNSYNCED LOCAL IMPORT' : '');
+}
+function exportDataChecks() {
+    if (!rawData) return;
+    const rows = [['Entry', 'Contractor', 'Item Code', 'Description', 'UOM', 'Issue', 'Consumption', 'WIP', 'Theft', 'Recorded Balance', 'Calculated Balance', 'Difference', 'Rate', 'Checks', 'Stock Date', 'Consumption Date']];
+    rawData.Contractors.forEach((contractor, index) => (contractor.Items || []).forEach(item => {
+        const calculated = item.NetIssue - item.Consumption - (item.WIP || 0) - (item.Theft || 0);
+        const checks = [];
+        if (!(item.DebitRate > 0) && (item.NetIssue || item.Consumption || item.BalanceQty)) checks.push('Missing rate');
+        if (Math.abs(item.BalanceQty - calculated) > 0.01) checks.push('Balance formula difference');
+        if (item.BalanceQty < 0) checks.push('Negative balance');
+        if (checks.length) rows.push([index + 1, contractor.ContractorName, item.ItemCode, item.ItemDescription, item.UOM, item.NetIssue, item.Consumption, item.WIP, item.Theft, item.BalanceQty, calculated, item.BalanceQty - calculated, item.DebitRate, checks.join('; '), rawData.StockSource?.generatedAt || 'Unknown', rawData.ConsumptionDataAsOf || 'Unknown']);
+    }));
+    downloadFile(new Blob(['\uFEFF' + rows.map(row => row.map(sanitizeCsvValue).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8;'}), 'Reconciliation_Data_Checks.csv');
+}
+function materialKey(item) {
+    return String(item.ItemCode || item.ItemDescription || '').trim() + '|' + MasterAnalytics.normalizeUnit(item.UOM);
+}
+function quantitySummary(rows, field) {
+    const units = new Map();
+    for (const row of rows) {
+        const unit = MasterAnalytics.normalizeUnit(row.uom);
+        units.set(unit, (units.get(unit) || 0) + (Number(row[field]) || 0));
+    }
+    return [...units].map(([unit, qty]) => formatNum(qty) + ' ' + unit).join(' · ') || '0';
 }
 
 function reconTimeMs(v) {
@@ -67,29 +111,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         let savedData = localStorage.getItem('materialAppData');
         
-        // Auto-detect and purge stale cached data from localStorage
-        if (savedData) {
-            try {
-                const parsed = JSON.parse(savedData);
-                const mb = parsed.Contractors && parsed.Contractors.find(c => c.ContractorName && c.ContractorName.toLowerCase().includes('bhawani'));
-                if (mb && mb.Items && mb.Items.filter(i => i.Consumption > 0).length === 0) {
-                    console.log('Outdated cache detected. Purging old localStorage data...');
-                    localStorage.removeItem('materialAppData');
-                    savedData = null;
-                }
-            } catch(e) {
-                localStorage.removeItem('materialAppData');
-                savedData = null;
-            }
-        }
-        
         // Check embedded DATA (from data.js)
         if (typeof DATA !== 'undefined' && DATA) {
             if (savedData) {
                 try {
                     const parsedSaved = JSON.parse(savedData);
                     // If embedded DATA is newer than cached localStorage, update cache
-                    if (!parsedSaved.ExtractedAt || (DATA.ExtractedAt && new Date(DATA.ExtractedAt) >= new Date(parsedSaved.ExtractedAt))) {
+                    if (!localStorage.getItem('materialAppPending') && (!parsedSaved.ExtractedAt || (DATA.ExtractedAt && new Date(DATA.ExtractedAt) >= new Date(parsedSaved.ExtractedAt)))) {
                         console.log('Loaded updated data from embedded DATA (data.js)');
                         rawData = DATA;
                         localStorage.removeItem('materialAppData');
@@ -137,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cloudMs = reconTimeMs(cloud.updatedAt) || reconTimeMs(cloud.data.ExtractedAt);
             const localMs = rawData ? (reconTimeMs(rawData.ExtractedAt) || reconTimeMs(rawData.savedAt)) : 0;
             // Khali cloud copy kabhi jeetegi nahi — sirf tab lo jab local hi na ho ya cloud naya+bhara ho
-            if ((!rawData && cloudHasData) || (cloudHasData && cloudMs > localMs) || (!rawData && cloud.data)) {
+            if (!localStorage.getItem('materialAppPending') && ((!rawData && cloudHasData) || (cloudHasData && cloudMs > localMs) || (!rawData && cloud.data))) {
                 rawData = cloud.data;
                 cloudUsed = true;
                 try { localStorage.setItem('materialAppData', JSON.stringify(rawData)); } catch (e) {}
@@ -148,6 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.masterDataSource = cloudUsed ? 'Cloud database' : 'Local / embedded snapshot';
         
         if (rawData) {
+            updateDataQuality();
             console.log('Loaded Data:', rawData);
             setupNavigation();
             setupFilters();
@@ -158,7 +187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (savedContractor) {
                 const contractorSelect = document.getElementById('contractorSelect');
                 if (contractorSelect) {
-                    contractorSelect.value = savedContractor;
+                    const entry = selectedContractorEntry(savedContractor);
+                    contractorSelect.value = entry ? 'entry:' + rawData.Contractors.indexOf(entry) : '';
                 }
             }
 
@@ -247,10 +277,10 @@ function populateDropdowns() {
     
     if (contractorSelect && rawData.Contractors) {
         contractorSelect.innerHTML = '<option value="">-- All Contractors --</option>';
-        rawData.Contractors.forEach(c => {
+        rawData.Contractors.forEach((c, index) => {
             const opt = document.createElement('option');
-            opt.value = c.ContractorName;
-            opt.textContent = `${c.ContractorName} (${c.ItemCount} items)`;
+            opt.value = 'entry:' + index;
+            opt.textContent = `${c.ContractorName} (#${index + 1}, ${c.ItemCount} items)`;
             contractorSelect.appendChild(opt);
         });
     }
@@ -264,12 +294,13 @@ function populateDropdowns() {
                 const desc = i.ItemDescription ? i.ItemDescription.trim() : '';
                 
                 if (code || desc) {
-                    const uniqueKey = code ? code : desc;
+                    const uniqueKey = materialKey(i);
                     if (!matMap.has(uniqueKey)) {
                         let label = '';
                         if (code && desc) label = `[${code}] ${desc}`;
                         else if (code) label = `[${code}] Unspecified Material`;
                         else label = desc;
+                        label += ' (' + MasterAnalytics.normalizeUnit(i.UOM) + ')';
                         
                         matMap.set(uniqueKey, { code, desc, label, key: uniqueKey });
                     }
@@ -313,7 +344,7 @@ function renderMaterialOptions(filterText = '') {
         div.innerHTML = `
             <div class="ms-checkbox">✓</div>
             <span class="ms-option-label">
-                ${m.code ? `<span class="ms-option-code">[${m.code}]</span>` : ''}${m.desc || 'Unspecified Material'}
+                ${m.code ? `<span class="ms-option-code">[${m.code}]</span>` : ''}${m.desc || 'Unspecified Material'} (${m.key.split('|').at(-1)})
             </span>
         `;
         
@@ -498,16 +529,20 @@ function renderOverview() {
     animateKpiValue('kpi-items',stats.rows,v=>Math.round(v).toLocaleString('en-IN'));
     animateKpiValue('kpi-issue-cost',stats.issue,formatCurrency);
     animateKpiValue('kpi-balance-cost',stats.balance,formatCurrency);
-    document.getElementById('dashboardContext').textContent=(window.masterDataSource || 'Loaded dataset')+' | Stock source: '+(rawData.StockSource?.generatedAt||rawData.ExtractedAt||'Not available').slice(0,10)+' | Consumption as of: '+(rawData.ConsumptionDataAsOf||rawData.ExtractedAt||'Not available').slice(0,10)+' | '+stats.updated+'/'+stats.contractors+' entries have updated stock mapping';
-    document.getElementById('dashboardQuality').textContent=stats.missingRates+' rows have missing/zero rates · '+stats.negativeRows+' rows have negative balance · Excess consumption value: '+formatCurrency(stats.deficit)+'. Values use debit rates; unpriced rows are excluded from value totals. Historical issue rows absent from the stock snapshot may remain; this is a mixed-date reconciliation, not a stock movement trend.';
+    document.getElementById('dashboardContext').textContent=(window.masterDataSource || 'Loaded dataset')+' | Stock source: '+(rawData.StockSource?.generatedAt?.slice(0,10)||'Not available')+' | Consumption as of: '+(rawData.ConsumptionDataAsOf?.slice(0,10)||'Not available')+' | '+stats.updated+'/'+stats.contractors+' entries have updated stock mapping';
+    document.getElementById('dashboardQuality').textContent=(localStorage.getItem('materialAppPending') ? 'UNSYNCED LOCAL IMPORT · ' : '')+stats.formulaDifferences+' rows differ from the balance formula · '+stats.missingRates+' rows have missing/zero rates · '+stats.negativeRows+' rows have negative balance · Excess consumption value: '+formatCurrency(stats.deficit)+'. Values use debit rates; unpriced rows are excluded from value totals. Historical issue rows absent from the stock snapshot may remain; this is a mixed-date reconciliation, not a stock movement trend.';
     overviewCharts.forEach(c=>c.destroy());overviewCharts=[];
     if(typeof Chart==='undefined'){document.getElementById('dashboardQuality').textContent+=' Charts could not load. Check internet and refresh.';return;}
+    const chartText = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#64748b';
+    Chart.defaults.color = chartText;
+    Chart.defaults.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
     const money=v=>formatCurrency(Number(v)||0);
     const bar=(id,rows,label,color,onClick)=>{
-        overviewCharts.push(new Chart(document.getElementById(id),{type:'bar',data:{labels:rows.map(r=>r.label),datasets:[{label,data:rows.map(r=>r.value),backgroundColor:color,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>money(ctx.raw)}}},scales:{x:{beginAtZero:true,ticks:{color:'#94a3b8',callback:v=>'₹ '+Intl.NumberFormat('en-IN',{notation:'compact'}).format(v)}},y:{ticks:{color:'#94a3b8',callback:function(v){const t=this.getLabelForValue(v);return t.length>34?t.slice(0,31)+'…':t;}}}},onClick:(event,elements)=>{if(elements.length&&onClick)onClick(rows[elements[0].index]);}}}));
+        overviewCharts.push(new Chart(document.getElementById(id),{type:'bar',data:{labels:rows.map(r=>r.label),datasets:[{label,data:rows.map(r=>r.value),backgroundColor:color,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>money(ctx.raw)}}},scales:{x:{beginAtZero:true,ticks:{color:chartText,callback:v=>'₹ '+Intl.NumberFormat('en-IN',{notation:'compact'}).format(v)}},y:{ticks:{color:chartText,callback:function(v){const t=this.getLabelForValue(v);return t.length>34?t.slice(0,31)+'…':t;}}}},onClick:(event,elements)=>{if(elements.length&&onClick)onClick(rows[elements[0].index]);}}}));
     };
     const mats=stats.materials.filter(m=>m.consumed>0).slice(0,count).map(m=>({...m,label:m.code+' · '+m.label+' ('+m.unit+')',value:m.consumed}));
-    const openMaterial=row=>{selectedMaterials.clear();if(row.code)selectedMaterials.add(row.code);document.querySelector('[data-tab="material"]').click();updateMaterialTags();updateSelectedCount();renderMaterialView();};
+    const openMaterial=row=>{selectedMaterials.clear();selectedMaterials.add((row.code || row.label)+'|'+MasterAnalytics.normalizeUnit(row.unit));document.querySelector('[data-tab="material"]').click();updateMaterialTags();updateSelectedCount();renderMaterialView();};
     bar('chartCons',mats,'Consumed value (₹)','#3b82f6',openMaterial);
     bar('chartBal',stats.ranking.filter(r=>r.value>0).slice(0,count).map(r=>({...r,label:r.name})),'Positive balance value (₹)','#f59e0b',r=>openContractorModal(r.name,r.index));
     bar('chartMaterialBalance',stats.materials.filter(m=>m.balance>0).sort((a,b)=>b.balance-a.balance).slice(0,count).map(m=>({...m,label:m.code+' · '+m.label+' ('+m.unit+')',value:m.balance})),'Material balance value (₹)','#8b5cf6',openMaterial);
@@ -526,7 +561,7 @@ function renderContractorView() {
 
     // Handle Contractor Info Card display
     if (selected) {
-        const conData = rawData.Contractors.find(c => c.ContractorName === selected);
+        const conData = selectedContractorEntry(selected);
         if (conData && conData.Metadata) {
             const meta = conData.Metadata;
             
@@ -534,7 +569,7 @@ function renderContractorView() {
                 if (!status) return `<span class="badge badge-info">N/A</span>`;
                 let cls = 'badge-info';
                 const s = status.toLowerCase();
-                if (s.includes('active') || s === 'working' || s === 'y' || s === 'yes') {
+                if ((s.includes('active') && !s.includes('inactive')) || s === 'working' || s === 'y' || s === 'yes') {
                     cls = 'badge-success';
                 } else if (s.includes('inactive') || s.includes('nonworking') || s === 'n' || s === 'no') {
                     cls = 'badge-danger';
@@ -587,7 +622,7 @@ function renderContractorView() {
                     <!-- Group 4: Liability & Risk -->
                     <div class="info-group">
                         <h4>Liability & Risk Alerts</h4>
-                        <div class="info-item"><span>Balance Material Cost:</span> <strong class="${meta.BalanceMaterialCost > 0 ? 'text-warning' : 'text-success'}">₹ ${formatNum(meta.BalanceMaterialCost)}</strong></div>
+                        <div class="info-item"><span>Positive Stock Value:</span> <strong class="${meta.BalanceMaterialCost > 0 ? 'text-warning' : 'text-success'}">₹ ${formatNum(conData.Items.reduce((sum, item) => sum + positiveBalanceCost(item), 0))}</strong></div>
                         <div class="info-item"><span>Recovery Amount:</span> <strong class="text-danger">₹ ${formatNum(meta.RecoveryAmount)}</strong></div>
                         <div class="info-item"><span>Physical Balance:</span> <strong>${meta.PhysicalMaterialBalance || 'N/A'}</strong></div>
                         <div class="info-item"><span>Notices Sent:</span> <span class="text-sm">${[meta.Notice1SentDate ? '1st Notice' : '', meta.Notice2SentDate ? '2nd Notice' : ''].filter(Boolean).join(', ') || 'None'}</span></div>
@@ -609,7 +644,7 @@ function renderContractorView() {
     
     let filteredContractors = rawData.Contractors;
     if (selected) {
-        filteredContractors = filteredContractors.filter(c => c.ContractorName === selected);
+        filteredContractors = filteredContractors.filter(c => c === selectedContractorEntry(selected));
     }
     
     let totalIssueCost = 0;
@@ -625,7 +660,7 @@ function renderContractorView() {
             }
             
             totalIssueCost += (i.NetIssue * i.DebitRate);
-            totalBalCost += i.BalanceCost;
+            totalBalCost += positiveBalanceCost(i);
             
             let statusBadge = '<span class="badge badge-success">Balanced</span>';
             if (i.BalanceQty > 0) statusBadge = '<span class="badge badge-warning">Stock Held</span>';
@@ -672,7 +707,7 @@ function renderContractorView() {
             <td>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <span>${r.desc}</span>
-                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${(r.code && r.code !== '-') ? r.code : r.desc.replace(/'/g, "\\'")}')" title="Check all contractors holding this item">
+                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${((r.code && r.code !== '-') ? r.code : r.desc).replace(/'/g, "\\'")}|${MasterAnalytics.normalizeUnit(r.uom)}')" title="Check all contractors holding this item">
                         ⚖️ Balance
                     </button>
                 </div>
@@ -708,19 +743,13 @@ function getItemBalanceData(itemKey) {
     let totalIssued = 0, totalCons = 0, totalBal = 0, totalBalCost = 0, totalWip = 0, totalTheft = 0;
     const contractors = [];
     
-    rawData.Contractors.forEach(c => {
-        const foundItem = c.Items.find(i => {
-            const curCode = (i.ItemCode || '').trim();
-            const curDesc = (i.ItemDescription || '').trim();
-            const key = curCode ? curCode : curDesc;
-            return key === itemKey || curCode === itemKey || curDesc.toLowerCase() === itemKey.toLowerCase();
-        });
-        
-        if (foundItem) {
+    rawData.Contractors.forEach((c, entryIndex) => {
+        const foundItems = c.Items.filter(i => materialKey(i) === itemKey);
+        for (const foundItem of foundItems) {
             if (!desc) {
                 desc = foundItem.ItemDescription || '';
                 code = foundItem.ItemCode || '';
-                uom = foundItem.UOM || '';
+                uom = MasterAnalytics.normalizeUnit(foundItem.UOM);
                 debitRate = foundItem.DebitRate || 0;
             }
             totalIssued += (foundItem.NetIssue || 0);
@@ -732,6 +761,7 @@ function getItemBalanceData(itemKey) {
             
             contractors.push({
                 contractor: c.ContractorName,
+                entryIndex,
                 firm: c.Metadata ? (c.Metadata.FirmName || '') : '',
                 activeStatus: c.Metadata ? (c.Metadata.ActiveStatus || '') : '',
                 workingStatus: c.Metadata ? (c.Metadata.WorkingStatus || '') : '',
@@ -772,14 +802,14 @@ function populateItemBalanceDropdown(filterText = '') {
             const code = (i.ItemCode || '').trim();
             const desc = (i.ItemDescription || '').trim();
             if (!code && !desc) return;
-            const key = code ? code : desc;
+            const key = materialKey(i);
             
             if (!matMap.has(key)) {
                 matMap.set(key, {
                     key,
                     code,
                     desc,
-                    uom: i.UOM || '',
+                    uom: MasterAnalytics.normalizeUnit(i.UOM),
                     rate: i.DebitRate || 0,
                     totalIssued: 0,
                     totalCons: 0,
@@ -1014,7 +1044,7 @@ function renderItemBalanceView(preferredKey) {
             <td><strong class="text-muted">${idx + 1}</strong></td>
             <td>
                 <div>
-                    <strong style="color: var(--text-primary); cursor: pointer;" onclick="jumpToContractor('${c.contractor.replace(/'/g, "\\'")}')" title="Click to open full statement">
+                    <strong style="color: var(--text-primary); cursor: pointer;" onclick="jumpToContractor('', ${c.entryIndex})" title="Click to open full statement">
                         ${c.contractor}
                     </strong>
                     ${c.firm && c.firm !== c.contractor ? `<div style="font-size: 11px; color: var(--text-muted);">${c.firm}</div>` : ''}
@@ -1040,7 +1070,7 @@ function renderItemBalanceView(preferredKey) {
             </td>
             <td class="text-center">${statusBadge}</td>
             <td class="text-center hide-print">
-                <button class="btn btn-secondary btn-xs" onclick="jumpToContractor('${c.contractor.replace(/'/g, "\\'")}')" title="View Contractor Statement">
+                <button class="btn btn-secondary btn-xs" onclick="jumpToContractor('', ${c.entryIndex})" title="View Contractor Statement">
                     👁️ View Statement
                 </button>
             </td>
@@ -1072,11 +1102,12 @@ function renderItemBalanceView(preferredKey) {
     });
 }
 
-function jumpToContractor(contractorName) {
+function jumpToContractor(contractorName, entryIndex) {
     const sel = document.getElementById('contractorSelect');
     if (sel) {
-        sel.value = contractorName;
-        localStorage.setItem('selectedContractor', contractorName);
+        const entry = Number.isInteger(entryIndex) ? rawData.Contractors[entryIndex] : selectedContractorEntry(contractorName);
+        sel.value = entry ? 'entry:' + rawData.Contractors.indexOf(entry) : '';
+        localStorage.setItem('selectedContractor', sel.value);
     }
     const btn = document.querySelector('.tab-btn[data-tab="contractor"]');
     if (btn) btn.click();
@@ -1114,14 +1145,14 @@ function renderMaterialView() {
             
             // Multi-select filter: match selected items by code or description
             if (hasSelection) {
-                const itemKey = itemCode ? itemCode : itemDesc;
+                const itemKey = materialKey(i);
                 if (!selectedMaterials.has(itemKey)) return;
             }
             
             totalNetIssue += i.NetIssue;
             totalCons += i.Consumption;
             totalBal += i.BalanceQty;
-            totalBalCost += i.BalanceCost;
+            totalBalCost += positiveBalanceCost(i);
             
             rows.push({
                 contractor: c.ContractorName,
@@ -1139,9 +1170,9 @@ function renderMaterialView() {
         });
     });
     
-    document.getElementById('mSumIssue').textContent = formatNum(totalNetIssue);
-    document.getElementById('mSumCons').textContent = formatNum(totalCons);
-    document.getElementById('mSumBal').textContent = formatNum(totalBal);
+    document.getElementById('mSumIssue').textContent = quantitySummary(rows, 'netIssue');
+    document.getElementById('mSumCons').textContent = quantitySummary(rows, 'consumption');
+    document.getElementById('mSumBal').textContent = quantitySummary(rows, 'balanceQty');
     document.getElementById('mSumCost').textContent = formatCurrency(totalBalCost);
 
     // Render paginated page
@@ -1163,7 +1194,7 @@ function renderMaterialView() {
             <td>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <span>${r.desc}</span>
-                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${(r.code && r.code !== '-') ? r.code : r.desc.replace(/'/g, "\\'")}')" title="Check all contractors holding this item">
+                    <button class="btn btn-secondary btn-xs hide-print" onclick="jumpToItemBalance('${((r.code && r.code !== '-') ? r.code : r.desc).replace(/'/g, "\\'")}|${MasterAnalytics.normalizeUnit(r.uom)}')" title="Check all contractors holding this item">
                         ⚖️ Balance
                     </button>
                 </div>
@@ -1388,38 +1419,7 @@ function downloadFile(blob, filename) {
 }
 
 // Export to CSV Function
-function exportActiveViewCSV() {
-    let tableId = '';
-    let filename = '';
-    
-    if (currentTab === 'contractor') { tableId = 'contractorTable'; filename = 'Contractor_Material_Reconciliation.csv'; }
-    else if (currentTab === 'item-balance') { tableId = 'itemBalTable'; filename = 'Item_Contractor_Balances.csv'; }
-    else if (currentTab === 'material') { tableId = 'materialTable'; filename = 'Material_wise_Reconciliation.csv'; }
-    else if (currentTab === 'debit') { tableId = 'debitTable'; filename = 'Master_Debit_Rates.csv'; }
-    else if (currentTab === 'alerts') { tableId = 'alertsTable'; filename = 'Material_Discrepancies_Alerts.csv'; }
-    else { alert('Pehle koi data tab select karo (Contractor / Item Balance / Material / Debit / Alerts)!'); return; }
-    
-    const table = document.getElementById(tableId);
-    if (!table) { alert('Table not found!'); return; }
-    
-    let csv = [];
-    const rows = table.querySelectorAll('tr');
-    
-    if (rows.length <= 1) { alert('No data to export!'); return; }
-    
-    rows.forEach(row => {
-        const cols = row.querySelectorAll('th, td');
-        const rowData = [];
-        cols.forEach(col => {
-            let text = col.innerText.replace(/"/g, '""').trim();
-            rowData.push(`"${text}"`);
-        });
-        csv.push(rowData.join(','));
-    });
-    
-    const blob = new Blob(['\uFEFF' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    downloadFile(blob, filename);
-}
+function exportActiveViewCSV() { return exportActiveViewExcel('csv'); }
 
 // Export to Excel (XLSX)
 // Export Missing Rates (Debit Rate = 0)
@@ -1483,7 +1483,7 @@ function exportMissingRates() {
 }
 
 // Export to Excel
-async function exportActiveViewExcel() {
+async function exportActiveViewExcel(format = 'xlsx') {
     let filename = '';
     let sheetName = 'Reconciliation';
     let dataToExport = [];
@@ -1499,7 +1499,7 @@ async function exportActiveViewExcel() {
         const selected = document.getElementById('contractorSelect') ? document.getElementById('contractorSelect').value : '';
         
         rawData.Contractors.forEach(c => {
-            if (selected && c.ContractorName !== selected) return;
+            if (selected && c !== selectedContractorEntry(selected)) return;
             c.Items.forEach(i => {
                 if (search && !c.ContractorName.toLowerCase().includes(search) && !i.ItemDescription.toLowerCase().includes(search) && !i.ItemCode.toLowerCase().includes(search)) return;
                 dataToExport.push({
@@ -1512,6 +1512,8 @@ async function exportActiveViewExcel() {
                     'MRN Qty': i.MRNQty,
                     'Net Issue': i.NetIssue,
                     'Consumption (Erected)': i.Consumption,
+                    'WIP': i.WIP,
+                    'Theft': i.Theft,
                     'Balance Qty': i.BalanceQty,
                     'Balance Cost': i.BalanceCost
                 });
@@ -1539,7 +1541,7 @@ async function exportActiveViewExcel() {
                     'Item Code': itemInfo.code || '-',
                     'Material Description': itemInfo.desc,
                     'UOM': itemInfo.uom || '-',
-                    'Debit Rate': itemInfo.debitRate,
+                    'Debit Rate': c.rate,
                     'Balance Stock (Qty)': c.balanceQty,
                     'Balance Cost (₹)': c.balanceCost,
                     'Net Issued': c.netIssue,
@@ -1560,7 +1562,7 @@ async function exportActiveViewExcel() {
                 const itemCode = (i.ItemCode || '').trim();
                 const itemDesc = (i.ItemDescription || '').trim();
                 if (hasSelection) {
-                    const itemKey = itemCode ? itemCode : itemDesc;
+                    const itemKey = materialKey(i);
                     if (!selectedMaterials.has(itemKey)) return;
                 }
                 dataToExport.push({
@@ -1571,6 +1573,8 @@ async function exportActiveViewExcel() {
                     'Debit Rate': i.DebitRate,
                     'Net Issue Qty': i.NetIssue,
                     'Consumption': i.Consumption,
+                    'WIP': i.WIP,
+                    'Theft': i.Theft,
                     'Balance Stock': i.BalanceQty,
                     'Balance Cost': i.BalanceCost
                 });
@@ -1608,6 +1612,8 @@ async function exportActiveViewExcel() {
                     'Material Description': i.ItemDescription,
                     'Net Issued': i.NetIssue,
                     'Erected': i.Consumption,
+                    'WIP': i.WIP,
+                    'Theft': i.Theft,
                     'Variance Qty': i.BalanceQty,
                     'UOM': i.UOM || '-',
                     'Financial Risk': i.BalanceCost,
@@ -1618,6 +1624,14 @@ async function exportActiveViewExcel() {
     }
     else { alert('Please select a valid tab to export.'); return; }
     
+    if (format === 'csv') {
+        if (!dataToExport.length) { alert('No data to export with the current filters!'); return; }
+        const keys = Object.keys(dataToExport[0]);
+        const lines = [keys, ...dataToExport.map(row => keys.map(key => row[key]))];
+        const csv = lines.map(row => row.map(sanitizeCsvValue).join(',')).join('\r\n');
+        downloadFile(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }), filename.replace(/\.xlsx$/, '.csv'));
+        return;
+    }
     if (typeof ExcelJS === 'undefined') {
         alert('ExcelJS library not loaded! Internet connection check karo aur page refresh karo.');
         return;
@@ -2205,7 +2219,7 @@ function handleExcelUpload(event) {
                         }
                     }
 
-                    const hasKeyColumns = (colMap.issue !== -1 || colMap.consumption !== -1 || colMap.balance !== -1);
+                    const hasKeyColumns = colMap.itemCode !== -1 && colMap.consumption !== -1 && (colMap.netIssue !== -1 || colMap.issue !== -1);
                     if (!hasKeyColumns) {
                         missingColumnsContractors.push(officialName);
                     }
@@ -2218,7 +2232,7 @@ function handleExcelUpload(event) {
                             FirmName: officialName,
                             ...(masterFirmDetails[officialName] || {}),
                             ...(billDetails[officialName] || {}),
-                            ActiveStatus: 'Working'
+                            ActiveStatus: (masterFirmDetails[officialName] || {}).ActiveStatus || 'Unknown'
                         }
                     };
                     
@@ -2246,7 +2260,7 @@ function handleExcelUpload(event) {
                         // NetIssue: read from sheet column if found, else calculate issuedQty - mrnQty
                         let netIssueRaw  = colMap.netIssue !== -1 ? parseQty(row[colMap.netIssue]) : 0;
                         if (netIssueRaw === 0 && (colMap.netIssue === -1 || (issuedQty !== 0 || mrnQty !== 0))) {
-                            if (colMap.netIssue === -1 || (netIssueRaw === 0 && row[colMap.netIssue] === '')) {
+                            if (colMap.netIssue === -1 || row[colMap.netIssue] === undefined || row[colMap.netIssue] === null || String(row[colMap.netIssue]).trim() === '') {
                                 netIssueRaw = issuedQty - mrnQty;
                             }
                         }
@@ -2257,7 +2271,7 @@ function handleExcelUpload(event) {
 
                         // BalanceQty: read from sheet column if found, else calculate formula
                         let balRaw = 0;
-                        if (colMap.balance !== -1) {
+                        if (colMap.balance !== -1 && row[colMap.balance] !== undefined && row[colMap.balance] !== null && String(row[colMap.balance]).trim() !== '') {
                             balRaw = parseQty(row[colMap.balance]);
                         } else {
                             balRaw = netIssueRaw - consumptionQty - wipQty - theftQty;
@@ -2301,14 +2315,20 @@ function handleExcelUpload(event) {
                 }
                 
                 parsedData.ContractorCount = parsedData.Contractors.length;
+                if (!parsedData.ContractorCount || missingColumnsContractors.length) {
+                    throw new Error('Import rejected: missing required material/issue/consumption columns in ' + (missingColumnsContractors.join(', ') || 'all sheets'));
+                }
                 rawData = parsedData;
+                updateDataQuality();
                 
                 // SAVE to localStorage FIRST (so reload always gets fresh data)
                 try {
+                    localStorage.setItem('materialAppPending', '1');
                     localStorage.setItem('materialAppData', JSON.stringify(rawData));
+                    updateDataQuality();
                     console.log('Data saved to localStorage successfully.');
                 } catch(storageErr) {
-                    console.warn('localStorage save failed (data too large?):', storageErr);
+                    throw new Error('Local backup failed. Import was not sent to cloud: ' + storageErr.message);
                 }
                 
                 // Re-render UI
@@ -2341,7 +2361,8 @@ function handleExcelUpload(event) {
                 })
                 .catch(err => {
                     console.warn('Server save failed (offline):', err);
-                    finalizeBtn('<span>⚠️ Local save OK — cloud retry hoga</span>', '#f59e0b');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Cloud save failed — upload again to retry'; }
+                    alert('Cloud save failed: ' + err.message + '\nImported data remains in this browser. No automatic retry or reload was performed.');
                 });
                 
                 if (missingColumnsContractors.length > 0) {
@@ -2400,7 +2421,7 @@ function renderReportsView() {
             totalRet += ((m.Retention5||0) + (m.Retention10||0) + (m.Retention15||0));
             
             let balCost = 0;
-            c.Items.forEach(i => balCost += i.BalanceCost);
+            c.Items.forEach(i => balCost += positiveBalanceCost(i));
             if (balCost > 0) overallRisk += balCost;
         });
         
@@ -2415,7 +2436,7 @@ function renderReportsView() {
         
         const riskData = rawData.Contractors.map(c => {
             let balCost = 0;
-            c.Items.forEach(i => balCost += i.BalanceCost);
+            c.Items.forEach(i => balCost += positiveBalanceCost(i));
             
             const retMoney = (c.Metadata.Retention5||0) + (c.Metadata.Retention10||0) + (c.Metadata.Retention15||0);
             const netBuffer = retMoney - balCost;
@@ -2477,7 +2498,7 @@ function renderReportsView() {
         
         const retData = rawData.Contractors.map(c => {
             let balCost = 0;
-            c.Items.forEach(i => balCost += i.BalanceCost);
+            c.Items.forEach(i => balCost += positiveBalanceCost(i));
             const retMoney = (c.Metadata.Retention5||0) + (c.Metadata.Retention10||0) + (c.Metadata.Retention15||0);
             const netBuffer = retMoney - balCost;
             

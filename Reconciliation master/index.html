@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         try {
-            var themeMode = new URLSearchParams(window.location.search).get('theme') || 'dark';
+            var requestedTheme = new URLSearchParams(window.location.search).get('theme');
+            var themeMode = ['light', 'soft', 'dark'].includes(requestedTheme) ? requestedTheme : 'light';
             document.documentElement.dataset.theme = themeMode;
         } catch (e) {}
     </script>
@@ -17,8 +18,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=20261114_dashboard">
+    <link rel="stylesheet" href="styles.css?v=20261118_recon">
     
+    <link rel="stylesheet" href="workspace.css?v=20261118_layout">
+
     <!-- Chart.js, SheetJS & ExcelJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <script src="xlsx.full.min.js"></script>
@@ -26,43 +29,35 @@
 </head>
 <body>
 
-    <!-- Header Navigation -->
-    <nav class="navbar">
-        <div class="nav-container nav-single">
-            <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
-            <div class="tab-navigation nav-tabs">
-                <button class="tab-btn active" data-tab="overview">
-                    <span>📊 Dashboard Overview</span>
-                </button>
-                <button class="tab-btn" data-tab="contractor">
-                    <span>👷 Contractor Statements</span>
-                </button>
-                <button class="tab-btn" data-tab="item-balance">
-                    <span>⚖️ Item Balance Finder</span>
-                </button>
-                <button class="tab-btn" data-tab="material">
-                    <span>📦 Material-wise Summary</span>
-                </button>
-                <button class="tab-btn" data-tab="debit">
-                    <span>💲 Debit Rates Master</span>
-                </button>
-            </div>
-            <div class="nav-stats">
-                <div class="nav-group">
-                    <button id="uploadExcelBtn" class="btn btn-primary" onclick="document.getElementById('excelUpload').click()" style="background: #3b82f6; border-color: #3b82f6;">
-                        <span>📂 Upload Excel</span>
-                    </button>
-                </div>
-                <div class="nav-sep"></div>
-                <div class="nav-group">
-                    <button class="btn btn-success" onclick="exportActiveViewExcel()">
-                        <span>📥 Export to Excel</span>
-                    </button>
-                    <button class="btn" style="background: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportMissingRates()">
-                        <span>⚠️ Missing Rates</span>
-                    </button>
-                </div>
-            </div>
+    <svg class="reco-icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <symbol id="ri-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+        <symbol id="ri-sheet" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8zM14 3v6h5M8 13h8M8 17h8"/></symbol>
+        <symbol id="ri-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5"/></symbol>
+        <symbol id="ri-box" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5"/></symbol>
+        <symbol id="ri-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/></symbol>
+        <symbol id="ri-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 15v6h16v-6"/></symbol>
+        <symbol id="ri-check" viewBox="0 0 24 24"><path d="m8 12 3 3 5-6M12 3l9 4v5c0 5-9 9-9 9S3 17 3 12V7z"/></symbol>
+    </svg>
+    <header class="workspace-header">
+        <div class="workspace-heading">
+            <span class="workspace-mark"><svg class="reco-icon"><use href="#ri-sheet"/></svg></span>
+            <div><p class="workspace-eyebrow">RDSS T-10 · GADCHIROLI</p><h1>Master Reconciliation</h1><p class="workspace-subtitle">Contractor stock, consumption &amp; material balances</p></div>
+        </div>
+        <div class="workspace-actions">
+            <input type="file" id="excelUpload" accept=".xlsx, .xls" hidden onchange="handleExcelUpload(event)">
+            <button id="uploadExcelBtn" class="btn btn-secondary" onclick="document.getElementById('excelUpload').click()"><svg class="reco-icon"><use href="#ri-upload"/></svg><span>Upload Excel</span></button>
+            <button class="btn btn-secondary" onclick="exportDataChecks()"><svg class="reco-icon"><use href="#ri-check"/></svg><span>Data Checks</span></button>
+            <button class="btn btn-secondary" onclick="exportMissingRates()">Missing Rates</button>
+            <button class="btn btn-success" onclick="exportActiveViewExcel()"><svg class="reco-icon"><use href="#ri-download"/></svg><span>Export Excel</span></button>
+        </div>
+    </header>
+    <nav class="navbar" aria-label="Master reconciliation views">
+        <div class="tab-navigation nav-tabs">
+            <button class="tab-btn active" data-tab="overview"><svg class="reco-icon"><use href="#ri-grid"/></svg>Overview</button>
+            <button class="tab-btn" data-tab="contractor"><svg class="reco-icon"><use href="#ri-users"/></svg>Contractor Statements</button>
+            <button class="tab-btn" data-tab="item-balance"><svg class="reco-icon"><use href="#ri-box"/></svg>Item Balances</button>
+            <button class="tab-btn" data-tab="material"><svg class="reco-icon"><use href="#ri-sheet"/></svg>Material Summary</button>
+            <button class="tab-btn" data-tab="debit">Debit Rates</button>
         </div>
     </nav>
 
@@ -71,23 +66,25 @@
 
 
         <!-- 1. OVERVIEW TAB -->
+        <p id="reconciliationStatus" class="workspace-status" role="status"></p>
+
         <div id="tab-overview" class="tab-content">
             <div class="dashboard-controls control-card">
-                <div><h2>Material Intelligence</h2><p id="dashboardContext"></p></div>
+                <div class="dashboard-heading"><h2>Reconciliation Overview</h2><p id="dashboardContext"></p></div>
                 <label>Contractor <select id="dashboardContractor" onchange="renderOverview()"><option value="">All contractor entries</option></select></label>
                 <label>Show <select id="dashboardTop" onchange="renderOverview()"><option value="8">Top 8</option><option value="15">Top 15</option></select></label>
                 <button class="btn btn-secondary" onclick="document.getElementById('dashboardContractor').value='';document.getElementById('dashboardTop').value='8';renderOverview()">Reset</button>
             </div>
-            <p id="dashboardQuality" class="dashboard-quality" role="status"></p>
+            <details class="quality-details"><summary>Data quality &amp; valuation notes</summary><p id="dashboardQuality" class="dashboard-quality" role="status"></p></details>
             <!-- KPI Grid -->
             <div class="kpi-grid" style="margin-bottom: 24px;">
                 <div class="kpi-card" style="--card-accent: #3b82f6; --card-icon-bg: rgba(59, 130, 246, 0.12);">
                     <div class="kpi-info">
                         <h3>Total Sub-Contractors</h3>
                         <div id="kpi-contractors" class="kpi-value">0</div>
-                        <div class="kpi-subtext">Active contract packages</div>
+                        <div class="kpi-subtext">Contractor entries in this view</div>
                     </div>
-                    <div class="kpi-icon">👷</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-users"/></svg></div>
                 </div>
 
                 <div class="kpi-card" style="--card-accent: #8b5cf6; --card-icon-bg: rgba(139, 92, 246, 0.12);">
@@ -96,7 +93,7 @@
                         <div id="kpi-items" class="kpi-value">0</div>
                         <div class="kpi-subtext">Reconciled line entries</div>
                     </div>
-                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-sheet"/></svg></div>
                 </div>
 
                 <div class="kpi-card" style="--card-accent: #10b981; --card-icon-bg: rgba(16, 185, 129, 0.12);">
@@ -105,7 +102,7 @@
                         <div id="kpi-issue-cost" class="kpi-value">₹ 0.00</div>
                         <div class="kpi-subtext">Valued at available debit rates</div>
                     </div>
-                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-box"/></svg></div>
                 </div>
 
                 <div class="kpi-card" style="--card-accent: #f59e0b; --card-icon-bg: rgba(245, 158, 11, 0.12);">
@@ -114,7 +111,7 @@
                         <div id="kpi-balance-cost" class="kpi-value">₹ 0.00</div>
                         <div class="kpi-subtext">Positive balances only; deficits shown separately</div>
                     </div>
-                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-check"/></svg></div>
                 </div>
             </div>
 
@@ -174,7 +171,7 @@
                 <div class="table-header">
                     <h3>Contractor Material Issued & Consumption Ledger</h3>
                     <div>
-                        <span class="text-muted">Showing <strong id="cViewCount" class="text-primary">0</strong> items | Total Balance Value: <strong id="cViewBalCost" class="text-warning">₹ 0.00</strong></span>
+                        <span class="text-muted">Showing <strong id="cViewCount" class="text-primary">0</strong> items | Positive Stock Value: <strong id="cViewBalCost" class="text-warning">₹ 0.00</strong></span>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -303,7 +300,7 @@
                         <div id="ibKpiBal" class="kpi-value text-warning">0</div>
                         <div id="ibKpiBalSub" class="kpi-subtext">Pending remaining stock</div>
                     </div>
-                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-check"/></svg></div>
                 </div>
                 <div class="kpi-card" style="--card-accent: #ef4444; --card-icon-bg: rgba(239, 68, 68, 0.12);">
                     <div class="kpi-info">
@@ -311,7 +308,7 @@
                         <div id="ibKpiCost" class="kpi-value text-danger">₹ 0.00</div>
                         <div id="ibKpiCostSub" class="kpi-subtext">Pending financial debit cost</div>
                     </div>
-                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-icon"><svg class="reco-icon"><use href="#ri-box"/></svg></div>
                 </div>
             </div>
 
@@ -411,24 +408,24 @@
                 <div class="kpi-card" style="--card-accent: #3b82f6;">
                     <div class="kpi-info">
                         <h3>Total Net Issued Qty</h3>
-                        <div id="mSumIssue" class="kpi-value">0</div>
+                        <div id="mSumIssue" class="quantity-summary">0</div>
                     </div>
                 </div>
                 <div class="kpi-card" style="--card-accent: #10b981;">
                     <div class="kpi-info">
                         <h3>Total Erected Qty</h3>
-                        <div id="mSumCons" class="kpi-value text-success">0</div>
+                        <div id="mSumCons" class="quantity-summary text-success">0</div>
                     </div>
                 </div>
                 <div class="kpi-card" style="--card-accent: #f59e0b;">
                     <div class="kpi-info">
                         <h3>Total Remaining Stock</h3>
-                        <div id="mSumBal" class="kpi-value text-warning">0</div>
+                        <div id="mSumBal" class="quantity-summary text-warning">0</div>
                     </div>
                 </div>
                 <div class="kpi-card" style="--card-accent: #8b5cf6;">
                     <div class="kpi-info">
-                        <h3>Total Remaining Cost</h3>
+                        <h3>Positive Stock Value</h3>
                         <div id="mSumCost" class="kpi-value">₹ 0.00</div>
                     </div>
                 </div>
@@ -559,8 +556,6 @@
             </div>
         </div>
 
-        </div>
-
         <!-- 6. REPORTS TAB -->
         <div id="tab-reports" class="tab-content" style="display: none;">
             <div class="reports-sidebar-layout">
@@ -600,7 +595,7 @@
                             </div>
                             <div class="kpi-card" style="--card-accent: #ef4444;">
                                 <div class="kpi-info">
-                                    <h3>Overall Material Risk</h3>
+                                    <h3>Positive Stock Exposure</h3>
                                     <div id="rMgmtRisk" class="kpi-value text-danger">₹ 0.00</div>
                                 </div>
                             </div>
@@ -719,13 +714,13 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© 2026 Ashoka Buildcon Ltd | Material Reconciliation Portal v2.0 | Auto-generated from <code>Contractor details.xlsx</code></p>
+        <p>Billing Pro · RDSS T-10 Gadchiroli <span>Master Reconciliation</span></p>
     </footer>
 
     <!-- Data (embedded as JS for file:// compatibility) -->
     <script src="data.js?v=20261114_stock"></script>
-    <script src="analytics.js?v=20261114_dashboard"></script>
+    <script src="analytics.js?v=20261118_recon"></script>
     <!-- App JS -->
-    <script src="app.js?v=20261114_dashboard"></script>
+    <script src="app.js?v=20261118_layout"></script>
 </body>
 </html>

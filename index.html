@@ -102,7 +102,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261114_reco_header_compact">
+    <link rel="stylesheet" href="css/style.css?v=20261118_master_layout">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261117_locations_v11">
 </head>
@@ -3025,11 +3025,11 @@
             </div>
         </div>
 
-            <!-- VIEW 6: MASTER RECONCILIATION (doosri site — iframe me poori khulti hai, logic untouched) -->
+            <!-- VIEW 6: MASTER RECONCILIATION -->
             <div v-if="currentView === 'masterrecon'" class="animate-fade-in">
-                <div class="table-card" style="padding: 0; overflow: hidden;">
-                    <iframe :src="'Reconciliation master/index.html?theme=' + (isDarkMode ? 'dark' : 'light')" title="Master Reconciliation"
-                        style="width: 100%; height: calc(100vh - 170px); min-height: 560px; border: 0; display: block; background: #fff;">
+                <div class="master-recon-workspace">
+                    <iframe :src="'Reconciliation master/index.html?v=20261118_layout&theme=' + themeMode" title="Master Reconciliation"
+                        class="master-recon-frame">
                     </iframe>
                 </div>
             </div>

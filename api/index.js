@@ -470,6 +470,13 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
         const incoming = req.body.data && typeof req.body.data === 'object' && !Array.isArray(req.body.data)
             ? req.body.data : req.body;
         const incomingContractors = Array.isArray(incoming.Contractors) ? incoming.Contractors : [];
+        if (!incomingContractors.length || !incomingContractors.every(c => c && typeof c.ContractorName === 'string' && Array.isArray(c.Items) && c.Items.every(row => row && ['NetIssue', 'Consumption', 'BalanceQty', 'DebitRate'].every(key => typeof row[key] === 'number' && Number.isFinite(row[key]))))) {
+            return res.status(400).json({ success: false, error: 'Invalid reconciliation: contractor items and numeric quantities/rates required' });
+        }
+        const expectedRev = req.body.expectedRev;
+        if (!Number.isInteger(expectedRev) || expectedRev < 0) {
+            return res.status(409).json({ success: false, error: 'Refresh before upload: expectedRev is required' });
+        }
         const existing = await db.getReconciliationState();
         const existingContractors = (existing && existing.stateData && Array.isArray(existing.stateData.Contractors))
             ? existing.stateData.Contractors : [];
@@ -486,13 +493,15 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
             });
         }
 
-        const nextRev = ((existing && typeof existing.rev === 'number') ? existing.rev : 0) + 1;
-        await db.saveReconciliationState(incoming, nextRev);
+        const currentRev = (existing && existing.rev) || 0;
+        if (expectedRev !== currentRev) return res.status(409).json({ success: false, error: 'Reconciliation changed. Refresh before uploading again.', rev: currentRev });
+        const nextRev = currentRev + 1;
+        await db.saveReconciliationState(incoming, nextRev, expectedRev);
         log.info('POST-RECON', `Saved (rev: ${nextRev}, payload: ${rawLen} bytes, provider: ${db.getProvider()})`);
         res.json({ success: true, message: 'Reconciliation data saved', rev: nextRev, provider: db.getProvider() });
     } catch (err) {
         log.error('POST-RECON', 'Error saving reconciliation data', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status === 409 ? 409 : 500).json({ success: false, error: err.status === 409 ? 'Reconciliation changed. Refresh before uploading again.' : db.getErrorHint(err) });
     }
 });
 

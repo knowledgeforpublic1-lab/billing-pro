@@ -272,7 +272,20 @@ function getErrorHint(err) {
 // Threshold below Firestore 1MB document limit (safety margin for metadata & UTF-8)
 const FIRESTORE_MAX_DOC_BYTES = 700000;
 
-async function writeFirestoreWithChunking(docRef, docData) {
+async function writeFirestoreWithChunking(docRef, docData, expectedRev) {
+    async function commit(value) {
+        if (expectedRev === undefined) return docRef.set(value, { merge: true });
+        return firestoreDb.runTransaction(async transaction => {
+            const current = await transaction.get(docRef);
+            const revision = current.exists ? (current.data().rev || 0) : 0;
+            if (revision !== expectedRev) {
+                const error = new Error('Reconciliation changed. Refresh before uploading again.');
+                error.status = 409;
+                throw error;
+            }
+            transaction.set(docRef, value);
+        });
+    }
     const serialized = JSON.stringify(docData);
     const byteLength = Buffer.byteLength(serialized, 'utf8');
     if (byteLength <= FIRESTORE_MAX_DOC_BYTES) {
@@ -280,7 +293,7 @@ async function writeFirestoreWithChunking(docRef, docData) {
         if (toSave.updatedAt instanceof Date) toSave.updatedAt = toSave.updatedAt.toISOString();
         if (toSave.createdAt instanceof Date) toSave.createdAt = toSave.createdAt.toISOString();
         toSave._isChunked = false;
-        await docRef.set(toSave, { merge: true });
+        await commit(toSave);
         return;
     }
 
@@ -315,7 +328,7 @@ async function writeFirestoreWithChunking(docRef, docData) {
     stub.byteLength = byteLength;
     if (stub.updatedAt instanceof Date) stub.updatedAt = stub.updatedAt.toISOString();
     if (stub.createdAt instanceof Date) stub.createdAt = stub.createdAt.toISOString();
-    await docRef.set(stub, { merge: true });
+    await commit(stub);
     log.info('DB-CHUNK', `✓ Successfully saved ${docRef.path} across ${totalChunks} versioned chunks (v: ${chunkVersion})`);
 }
 
@@ -630,7 +643,7 @@ async function getReconciliationState() {
     }
 }
 
-async function saveReconciliationState(stateData, nextRev) {
+async function saveReconciliationState(stateData, nextRev, expectedRev) {
     await connect();
     const docData = {
         dataId: 'main-reconciliation-state',
@@ -640,13 +653,23 @@ async function saveReconciliationState(stateData, nextRev) {
     };
     if (activeProvider === 'firebase') {
         const docRef = firestoreDb.collection('reconciliation_states').doc('main-reconciliation-state');
-        await writeFirestoreWithChunking(docRef, docData);
+        await writeFirestoreWithChunking(docRef, docData, expectedRev);
     } else {
-        await MongoReconciliationState.findOneAndUpdate(
-            { dataId: 'main-reconciliation-state' },
-            { stateData, rev: nextRev, updatedAt: new Date() },
-            { upsert: true, new: true }
-        );
+        const filter = { dataId: 'main-reconciliation-state' };
+        if (expectedRev !== undefined) {
+            if (expectedRev === 0) filter.$or = [{ rev: 0 }, { rev: { $exists: false } }];
+            else filter.rev = expectedRev;
+        }
+        try {
+            const saved = await MongoReconciliationState.findOneAndUpdate(
+                filter, { stateData, rev: nextRev, updatedAt: new Date() },
+                { upsert: expectedRev === undefined || expectedRev === 0, new: true }
+            );
+            if (!saved) { const error = new Error('Reconciliation changed. Refresh before uploading again.'); error.status = 409; throw error; }
+        } catch (error) {
+            if (error.code === 11000) error.status = 409;
+            throw error;
+        }
     }
 }
 
