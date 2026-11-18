@@ -579,11 +579,9 @@ function renderContractorView() {
                 return `<span class="badge ${cls}">${status}</span>`;
             };
 
-            const keepDetailsOpen = infoPanel.dataset.entry === selected && !!infoPanel.querySelector('.contractor-profile')?.open;
-            infoPanel.dataset.entry = selected;
             infoPanel.innerHTML = `
-                <details class="contractor-profile" ${keepDetailsOpen ? 'open' : ''}>
-                <summary class="info-card-header" title="Expand or collapse contractor details">
+                <section class="contractor-profile" aria-label="Contractor basic details">
+                <div class="info-card-header">
 
                     <div class="info-card-title">
                         <h2>👷 ${conData.ContractorName}</h2>
@@ -593,9 +591,8 @@ function renderContractorView() {
                         ${getStatusBadge(meta.ActiveStatus)}
                         ${getStatusBadge(meta.WorkingStatus)}
                         ${meta.ChequeSubmitted ? `<span class="badge badge-success">Cheque: ${meta.ChequeSubmitted}</span>` : ''}
-                        <span class="profile-toggle-label">Details <span aria-hidden="true">⌄</span></span>
                     </div>
-                </summary>
+                </div>
                 <div class="contractor-profile-body">
                 <div class="info-card-grid">
                     <!-- Group 1: General Info -->
@@ -640,7 +637,7 @@ function renderContractorView() {
                 </div>
                 ` : ''}
                 </div>
-                </details>
+                </section>
             `;
             infoPanel.style.display = 'block';
         } else {

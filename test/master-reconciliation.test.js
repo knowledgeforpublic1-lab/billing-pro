@@ -156,10 +156,9 @@ test('data checks export exposes actual source differences without changing the 
     assert.equal(JSON.stringify(dataset),before);
 });
 
-test('contractor profile starts collapsed, keeps explicit expansion while searching, and resets for another contractor', () => {
+test('all contractor basic details remain visible when selecting, searching and switching contractors', () => {
     const { context, nodes, run } = setup();
-    let open = false;
-    const panel = { dataset:{}, style:{}, innerHTML:'', querySelector:()=>({open}) };
+    const panel = { style:{}, innerHTML:'' };
     const table = {innerHTML:'',appendChild(){}};
     nodes.contractorSelect={value:'entry:0'};
     nodes.contractorSearch={value:''};
@@ -168,19 +167,19 @@ test('contractor profile starts collapsed, keeps explicit expansion while search
     context.document.querySelector=()=>table;
     context.document.createElement=()=>({innerHTML:''});
     context.updatePaginationUI=()=>{};
-    context.dataset={Contractors:[{ContractorName:'A',Metadata:{},Items:[row]},{ContractorName:'B',Metadata:{},Items:[row]}]};
+    context.dataset={Contractors:[{ContractorName:'A',Metadata:{OwnerName:'Owner A',GST:'GST-A',Address:'Full office address'},Items:[row]},{ContractorName:'B',Metadata:{OwnerName:'Owner B',GST:'GST-B'},Items:[row]}]};
     run('rawData=dataset');
     context.renderContractorView();
-    assert.match(panel.innerHTML,/<details class="contractor-profile" >/);
-    assert.match(panel.innerHTML,/<summary class="info-card-header"/);
-    assert.match(panel.innerHTML,/contractor-profile-body/);
+    for (const text of ['General Details','Compliance & Registration','Contract Value & Billing','Liability & Risk Alerts','Owner A','GST-A','Full office address']) assert(panel.innerHTML.includes(text));
+    assert(!panel.innerHTML.includes('<details'));
     assert.equal(nodes.cViewCount.textContent,1);
-    open=true;
     nodes.contractorSearch.value='Cable';
     context.renderContractorView();
-    assert.match(panel.innerHTML,/<details class="contractor-profile" open>/);
+    assert(panel.innerHTML.includes('Owner A'));
     nodes.contractorSelect.value='entry:1';
     context.renderContractorView();
-    assert.match(panel.innerHTML,/<details class="contractor-profile" >/);
-    assert.equal(panel.dataset.entry,'entry:1');
+    assert(panel.innerHTML.includes('Owner B'));
+    assert(panel.innerHTML.includes('GST-B'));
+    assert(!panel.innerHTML.includes('Owner A'));
+    assert.equal(panel.style.display,'block');
 });

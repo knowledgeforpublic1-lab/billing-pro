@@ -283,22 +283,14 @@ html[data-theme="light"] { --workspace-surface: #eef0f3; --workspace-header: #df
 }
 @media print { .workspace-toolbar { display: none !important; } }
 
-/* Keep the ledger visible; full contractor metadata is available on demand. */
+/* Basic details stay visible in a compact four-column panel above the ledger. */
 @media screen {
     #contractorInfoPanel { padding: 0; margin-bottom: 6px; }
-    .contractor-profile > summary { display: flex; align-items: center; justify-content: space-between; list-style: none; margin: 0; padding: 7px 10px; border: 0; gap: 8px; cursor: pointer; }
-    .contractor-profile > summary::-webkit-details-marker { display: none; }
-    .contractor-profile > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
     .contractor-profile .info-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
     .contractor-profile .info-card-title h2 { font-size: 13px; line-height: 1.5; }
     .contractor-profile .info-card-title .subtitle { font-size: 11px; margin: 0; }
     .contractor-profile .info-card-badges { gap: 6px; flex-shrink: 0; }
-    .profile-toggle-label { font-size: 11px; font-weight: 600; color: var(--primary); margin-left: 6px; }
-    .profile-toggle-label > span { display: inline-block; }
-    .contractor-profile[open] .profile-toggle-label > span { transform: rotate(180deg); }
-    .contractor-profile[open] > summary { border-bottom: 1px solid var(--border-color); }
-    .contractor-profile-body { padding: 10px; }
-    .contractor-profile .info-card-remarks { margin-top: 10px; }
+    .contractor-profile-body { padding: 6px 8px; }
     #tab-contractor .control-card { flex-wrap: nowrap; }
     #tab-contractor .filter-group { flex-wrap: nowrap; gap: 8px; min-width: 0; }
     #tab-contractor .select-box { flex: 0 1 300px; min-width: 0; }
@@ -309,9 +301,26 @@ html[data-theme="light"] { --workspace-surface: #eef0f3; --workspace-header: #df
 @media screen and (max-width: 760px) {
     #tab-contractor .control-card, #tab-contractor .filter-group { flex-wrap: wrap; }
     #tab-contractor .select-box { flex: 1 1 100%; }
-    .contractor-profile .info-card-title .subtitle { display: none; }
 }
-@media print {
-    .contractor-profile > .contractor-profile-body { display: block !important; }
-    .profile-toggle-label { display: none !important; }
+
+@media screen {
+    .contractor-profile > .info-card-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; padding: 6px 8px; margin: 0; border-bottom: 1px solid var(--border-color); }
+    .contractor-profile .info-card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .contractor-profile .info-group { border: 0; border-right: 1px solid var(--border-color); border-radius: 0; padding: 2px 8px 2px 0; gap: 5px; background: transparent; }
+    .contractor-profile .info-group:last-child { border-right: 0; }
+    .contractor-profile .info-group h4 { font-size: 10px; padding-bottom: 4px; margin-bottom: 1px; line-height: 1.4; }
+    .contractor-profile .info-item { font-size: 11px; line-height: 1.4; gap: 6px; align-items: flex-start; }
+    .contractor-profile .info-item > span:first-child { flex: 0 0 42%; }
+    .contractor-profile .info-item > :last-child { min-width: 0; overflow-wrap: anywhere; word-break: normal; }
+    .contractor-profile .info-item .text-sm, .contractor-profile .info-item code { font-size: 11px; }
+    .contractor-profile .info-item code { padding: 0 3px; }
+    .contractor-profile .info-card-remarks { margin-top: 6px; padding: 5px 8px; font-size: 11px; }
+}
+@media screen and (max-width: 1050px) {
+    .contractor-profile .info-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .contractor-profile .info-group:nth-child(2) { border-right: 0; }
+}
+@media screen and (max-width: 540px) {
+    .contractor-profile .info-card-grid { grid-template-columns: 1fr; }
+    .contractor-profile .info-group { border-right: 0; }
 }
