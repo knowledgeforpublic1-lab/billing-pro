@@ -282,3 +282,36 @@ html[data-theme="light"] { --workspace-surface: #eef0f3; --workspace-header: #df
     .table-responsive { max-height: calc(100dvh - 190px); }
 }
 @media print { .workspace-toolbar { display: none !important; } }
+
+/* Keep the ledger visible; full contractor metadata is available on demand. */
+@media screen {
+    #contractorInfoPanel { padding: 0; margin-bottom: 6px; }
+    .contractor-profile > summary { display: flex; align-items: center; justify-content: space-between; list-style: none; margin: 0; padding: 7px 10px; border: 0; gap: 8px; cursor: pointer; }
+    .contractor-profile > summary::-webkit-details-marker { display: none; }
+    .contractor-profile > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+    .contractor-profile .info-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
+    .contractor-profile .info-card-title h2 { font-size: 13px; line-height: 1.5; }
+    .contractor-profile .info-card-title .subtitle { font-size: 11px; margin: 0; }
+    .contractor-profile .info-card-badges { gap: 6px; flex-shrink: 0; }
+    .profile-toggle-label { font-size: 11px; font-weight: 600; color: var(--primary); margin-left: 6px; }
+    .profile-toggle-label > span { display: inline-block; }
+    .contractor-profile[open] .profile-toggle-label > span { transform: rotate(180deg); }
+    .contractor-profile[open] > summary { border-bottom: 1px solid var(--border-color); }
+    .contractor-profile-body { padding: 10px; }
+    .contractor-profile .info-card-remarks { margin-top: 10px; }
+    #tab-contractor .control-card { flex-wrap: nowrap; }
+    #tab-contractor .filter-group { flex-wrap: nowrap; gap: 8px; min-width: 0; }
+    #tab-contractor .select-box { flex: 0 1 300px; min-width: 0; }
+    #tab-contractor .select-box select { width: 100%; min-width: 0; }
+    #tab-contractor .search-box { flex: 1 1 200px; min-width: 100px; }
+    #tab-contractor .action-buttons { flex: 0 0 auto; }
+}
+@media screen and (max-width: 760px) {
+    #tab-contractor .control-card, #tab-contractor .filter-group { flex-wrap: wrap; }
+    #tab-contractor .select-box { flex: 1 1 100%; }
+    .contractor-profile .info-card-title .subtitle { display: none; }
+}
+@media print {
+    .contractor-profile > .contractor-profile-body { display: block !important; }
+    .profile-toggle-label { display: none !important; }
+}

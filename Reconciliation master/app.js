@@ -579,8 +579,12 @@ function renderContractorView() {
                 return `<span class="badge ${cls}">${status}</span>`;
             };
 
+            const keepDetailsOpen = infoPanel.dataset.entry === selected && !!infoPanel.querySelector('.contractor-profile')?.open;
+            infoPanel.dataset.entry = selected;
             infoPanel.innerHTML = `
-                <div class="info-card-header">
+                <details class="contractor-profile" ${keepDetailsOpen ? 'open' : ''}>
+                <summary class="info-card-header" title="Expand or collapse contractor details">
+
                     <div class="info-card-title">
                         <h2>👷 ${conData.ContractorName}</h2>
                         <p class="subtitle">${meta.FirmName !== conData.ContractorName ? meta.FirmName : 'Sub-Contractor Statement'} | WO No: <strong>${meta.WONo || 'N/A'}</strong></p>
@@ -589,8 +593,10 @@ function renderContractorView() {
                         ${getStatusBadge(meta.ActiveStatus)}
                         ${getStatusBadge(meta.WorkingStatus)}
                         ${meta.ChequeSubmitted ? `<span class="badge badge-success">Cheque: ${meta.ChequeSubmitted}</span>` : ''}
+                        <span class="profile-toggle-label">Details <span aria-hidden="true">⌄</span></span>
                     </div>
-                </div>
+                </summary>
+                <div class="contractor-profile-body">
                 <div class="info-card-grid">
                     <!-- Group 1: General Info -->
                     <div class="info-group">
@@ -633,6 +639,8 @@ function renderContractorView() {
                     <strong>Remarks & Tracking:</strong> <span>${meta.Remarks}</span>
                 </div>
                 ` : ''}
+                </div>
+                </details>
             `;
             infoPanel.style.display = 'block';
         } else {
