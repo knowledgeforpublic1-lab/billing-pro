@@ -22,6 +22,44 @@ const pageState = {
     alerts: 1
 };
 
+// Large snapshots and their sync status commit together in IndexedDB.
+const RECON_LOCAL_KEY = 'billing_master_reconciliation';
+let reconLocalPending = false;
+async function persistReconLocal(data, pending) {
+    if (!window.BillingStorage) throw new Error('Browser storage could not load. Refresh and try again.');
+    const record = { data, pending: !!pending, savedAt: Date.now() };
+    const result = await window.BillingStorage.setItem(RECON_LOCAL_KEY, record);
+    if (!result || !result.saved) throw new Error('Browser backup could not be saved. Check available disk space or browser storage permissions.');
+    reconLocalPending = record.pending;
+    // Remove only the old reconciliation cache, after the new backup is confirmed.
+    try {
+        localStorage.removeItem('materialAppData');
+        localStorage.removeItem('materialAppPending');
+    } catch (error) { console.warn('Legacy reconciliation cache cleanup failed:', error); }
+    return record;
+}
+async function loadReconLocal() {
+    if (window.BillingStorage) {
+        let record = await window.BillingStorage.getItemAsync(RECON_LOCAL_KEY);
+        if (typeof record === 'string') { try { record = JSON.parse(record); } catch (_) { record = null; } }
+        if (record && record.data && Array.isArray(record.data.Contractors)) {
+            reconLocalPending = !!record.pending;
+            return record.data;
+        }
+    }
+    // Existing browsers migrate without losing an upload that is still pending.
+    try {
+        const legacy = localStorage.getItem('materialAppData');
+        if (!legacy) return null;
+        const data = JSON.parse(legacy);
+        if (!data || !Array.isArray(data.Contractors)) return null;
+        reconLocalPending = !!localStorage.getItem('materialAppPending');
+        try { await persistReconLocal(data, reconLocalPending); }
+        catch (error) { console.warn('Legacy cache kept because migration failed:', error); }
+        return data;
+    } catch (error) { console.warn('Local reconciliation cache unavailable:', error); return null; }
+}
+
 // ---------- Cloud (MongoDB) helpers — ye hi ab primary online save hai ----------
 function reconApiHeaders(jsonBody) {
     var h = {};
@@ -50,7 +88,8 @@ async function saveReconCloud(jsonPayload) {
     const result = await res.json();
     if (!res.ok || !result.success) throw new Error(result.error || ('Cloud save failed: HTTP ' + res.status));
     reconRevision = result.rev;
-    try { localStorage.removeItem('materialAppPending'); } catch (error) { console.warn('Could not clear local pending flag:', error); }
+    try { await persistReconLocal(JSON.parse(jsonPayload), false); }
+    catch (error) { console.warn('Cloud saved, but local acknowledgement failed:', error); }
     updateDataQuality();
     return result;
 }
@@ -73,7 +112,7 @@ function updateDataQuality() {
     banner.textContent = 'Stock: ' + stockDate + ' · Consumption: ' + consumptionDate +
         (stockDate === 'Unknown' || consumptionDate === 'Unknown' || stockDate !== consumptionDate ? ' · Dates need verification' : '') +
         ' · ' + quality.missingRates + ' unpriced rows · ' + quality.formulaDifferences + ' balance formula differences' +
-        (localStorage.getItem('materialAppPending') ? ' · UNSYNCED LOCAL IMPORT' : '');
+        (reconLocalPending ? ' · UNSYNCED LOCAL IMPORT' : '');
 }
 function exportDataChecks() {
     if (!rawData) return;
@@ -109,40 +148,12 @@ function reconTimeMs(v) {
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        let savedData = localStorage.getItem('materialAppData');
-        
-        // Check embedded DATA (from data.js)
-        if (typeof DATA !== 'undefined' && DATA) {
-            if (savedData) {
-                try {
-                    const parsedSaved = JSON.parse(savedData);
-                    // If embedded DATA is newer than cached localStorage, update cache
-                    if (!localStorage.getItem('materialAppPending') && (!parsedSaved.ExtractedAt || (DATA.ExtractedAt && new Date(DATA.ExtractedAt) >= new Date(parsedSaved.ExtractedAt)))) {
-                        console.log('Loaded updated data from embedded DATA (data.js)');
-                        rawData = DATA;
-                        localStorage.removeItem('materialAppData');
-                    } else {
-                        console.log('Loaded freshest uploaded data from localStorage');
-                        rawData = parsedSaved;
-                    }
-                } catch(e) {
-                    rawData = DATA;
-                    localStorage.removeItem('materialAppData');
-                }
-            } else {
-                rawData = DATA;
-                console.log('Loaded data from embedded DATA (data.js)');
-            }
-        } else if (savedData) {
-            try {
-                rawData = JSON.parse(savedData);
-                console.log('Loaded data from localStorage');
-            } catch(e) {
-                rawData = null;
-                localStorage.removeItem('materialAppData');
-            }
+        rawData = await loadReconLocal();
+        if (typeof DATA !== 'undefined' && DATA && !reconLocalPending &&
+            (!rawData || reconTimeMs(DATA.ExtractedAt) >= reconTimeMs(rawData.ExtractedAt))) {
+            rawData = DATA;
         }
-        
+
         if (!rawData) {
             try {
                 const response = await fetch('data.json?t=' + new Date().getTime()); // Prevent caching
@@ -165,10 +176,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cloudMs = reconTimeMs(cloud.updatedAt) || reconTimeMs(cloud.data.ExtractedAt);
             const localMs = rawData ? (reconTimeMs(rawData.ExtractedAt) || reconTimeMs(rawData.savedAt)) : 0;
             // Khali cloud copy kabhi jeetegi nahi — sirf tab lo jab local hi na ho ya cloud naya+bhara ho
-            if (!localStorage.getItem('materialAppPending') && ((!rawData && cloudHasData) || (cloudHasData && cloudMs > localMs) || (!rawData && cloud.data))) {
+            if (!reconLocalPending && ((!rawData && cloudHasData) || (cloudHasData && cloudMs > localMs) || (!rawData && cloud.data))) {
                 rawData = cloud.data;
                 cloudUsed = true;
-                try { localStorage.setItem('materialAppData', JSON.stringify(rawData)); } catch (e) {}
+                try { await persistReconLocal(rawData, false); } catch (error) { console.warn('Cloud loaded; local cache save failed:', error); }
                 console.log('Loaded freshest data from cloud (MongoDB)');
             }
         }
@@ -530,7 +541,7 @@ function renderOverview() {
     animateKpiValue('kpi-issue-cost',stats.issue,formatCurrency);
     animateKpiValue('kpi-balance-cost',stats.balance,formatCurrency);
     document.getElementById('dashboardContext').textContent=(window.masterDataSource || 'Loaded dataset')+' | Stock source: '+(rawData.StockSource?.generatedAt?.slice(0,10)||'Not available')+' | Consumption as of: '+(rawData.ConsumptionDataAsOf?.slice(0,10)||'Not available')+' | '+stats.updated+'/'+stats.contractors+' entries have updated stock mapping';
-    document.getElementById('dashboardQuality').textContent=(localStorage.getItem('materialAppPending') ? 'UNSYNCED LOCAL IMPORT · ' : '')+stats.formulaDifferences+' rows differ from the balance formula · '+stats.missingRates+' rows have missing/zero rates · '+stats.negativeRows+' rows have negative balance · Excess consumption value: '+formatCurrency(stats.deficit)+'. Values use debit rates; unpriced rows are excluded from value totals. Historical issue rows absent from the stock snapshot may remain; this is a mixed-date reconciliation, not a stock movement trend.';
+    document.getElementById('dashboardQuality').textContent=(reconLocalPending ? 'UNSYNCED LOCAL IMPORT · ' : '')+stats.formulaDifferences+' rows differ from the balance formula · '+stats.missingRates+' rows have missing/zero rates · '+stats.negativeRows+' rows have negative balance · Excess consumption value: '+formatCurrency(stats.deficit)+'. Values use debit rates; unpriced rows are excluded from value totals. Historical issue rows absent from the stock snapshot may remain; this is a mixed-date reconciliation, not a stock movement trend.';
     overviewCharts.forEach(c=>c.destroy());overviewCharts=[];
     if(typeof Chart==='undefined'){document.getElementById('dashboardQuality').textContent+=' Charts could not load. Check internet and refresh.';return;}
     const chartText = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#64748b';
@@ -1818,7 +1829,7 @@ function handleExcelUpload(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         // Use setTimeout to allow the browser to render the "Processing..." state
-        setTimeout(() => {
+        setTimeout(async () => {
             try {
                 const data = new Uint8Array(e.target.result);
                 const wb = XLSX.read(data, {type: 'array'});
@@ -2343,20 +2354,16 @@ function handleExcelUpload(event) {
                 if (!parsedData.ContractorCount || missingColumnsContractors.length) {
                     throw new Error('Import rejected: missing required material/issue/consumption columns in ' + (missingColumnsContractors.join(', ') || 'all sheets'));
                 }
+                // Persist the new upload before replacing the displayed dataset or sending it online.
+                try {
+                    await persistReconLocal(parsedData, true);
+                } catch (storageErr) {
+                    throw new Error('Local backup failed. Import was not sent to cloud: ' + storageErr.message);
+                }
                 rawData = parsedData;
                 contractorProfileVisibility.clear();
                 updateDataQuality();
-                
-                // SAVE to localStorage FIRST (so reload always gets fresh data)
-                try {
-                    localStorage.setItem('materialAppPending', '1');
-                    localStorage.setItem('materialAppData', JSON.stringify(rawData));
-                    updateDataQuality();
-                    console.log('Data saved to localStorage successfully.');
-                } catch(storageErr) {
-                    throw new Error('Local backup failed. Import was not sent to cloud: ' + storageErr.message);
-                }
-                
+
                 // Re-render UI
                 populateDropdowns();
                 if (currentTab === 'overview') renderOverview();
@@ -2403,7 +2410,7 @@ function handleExcelUpload(event) {
                     btn.style.background = '#ef4444'; // Red
                     btn.style.borderColor = '#ef4444';
                 }
-                alert('Error parsing Excel file. Details: ' + err.message + '\n\n' + err.stack);
+                alert('Excel import failed: ' + err.message);
             }
             
             // Reset file input so same file can be re-selected

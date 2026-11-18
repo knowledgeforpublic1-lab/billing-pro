@@ -7,7 +7,7 @@ function setup(fetchImpl) {
     const nodes = {};
     const context = { console, Blob, Intl, setTimeout() {},
         document: { querySelector: () => ({ addEventListener() {} }), addEventListener() {}, getElementById: id => nodes[id] || { value: '' } },
-        window: { addEventListener() {} }, fetch: fetchImpl,
+        window: { addEventListener() {}, BillingStorage:{setItem:async()=>({saved:true}),getItemAsync:async()=>null} }, fetch: fetchImpl,
         localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
         alert(message) { throw new Error(message); } };
     vm.createContext(context);
@@ -218,4 +218,104 @@ test('contractor name toggles details on successive clicks and remembers the cho
     context.renderContractorView();
     assert(!panel.innerHTML.includes('profile-is-collapsed'));
     assert.match(panel.innerHTML,/aria-expanded="true"/);
+});
+
+function attachIndexedStorage(context, records = new Map()) {
+    const state = { failWrites:false, localWrites:0 };
+    context.localStorage.setItem=()=>{state.localWrites++;throw new Error('QuotaExceededError');};
+    context.window.indexedDB={open(){
+        const request={};
+        queueMicrotask(()=>request.onsuccess({target:{result:{transaction(){
+            const transaction={objectStore(){return {
+                put(value,key){queueMicrotask(()=>{
+                    if(state.failWrites) {transaction.error=new Error('Disk full');transaction.onabort();}
+                    else {records.set(key,JSON.parse(JSON.stringify(value)));transaction.oncomplete();}
+                });},
+                get(key){const read={};queueMicrotask(()=>{read.result=records.get(key);read.onsuccess();});return read;}
+            };}};
+            return transaction;
+        }}}}));
+        return request;
+    }};
+    vm.runInContext(fs.readFileSync('js/core/storage.js','utf8'),context);
+    return {records,state};
+}
+
+test('large reconciliation backup survives full localStorage and reload with atomic pending status', async () => {
+    const {context,run,storage}=setup();
+    const {records,state}=attachIndexedStorage(context);
+    storage.set('unrelated-bill','keep');
+    storage.set('materialAppData','old');
+    storage.set('materialAppPending','1');
+    const dataset={Contractors:[{ContractorName:'A',Items:[row]}],largePayload:'x'.repeat(3000000)};
+    await context.persistReconLocal(dataset,true);
+    assert.equal(state.localWrites,0,'Large snapshot must never be sent to localStorage');
+    assert.equal(records.get('billing_master_reconciliation').pending,true);
+    assert.equal(storage.get('unrelated-bill'),'keep');
+    assert(!storage.has('materialAppData'));
+    run('reconLocalPending=false');
+    const loaded=await context.loadReconLocal();
+    assert.equal(loaded.largePayload.length,3000000);
+    assert.equal(run('reconLocalPending'),true);
+    assert.equal(loaded.Contractors[0].Items[0].BalanceQty,7);
+    state.failWrites=true;
+    await assert.rejects(context.persistReconLocal({Contractors:[]},false),/could not be saved/);
+    assert.equal(records.get('billing_master_reconciliation').data.largePayload.length,3000000);
+    assert.equal(records.get('billing_master_reconciliation').pending,true);
+    assert.equal(run('reconLocalPending'),true);
+});
+
+test('legacy reconciliation backup migrates only after IndexedDB commit; failed migration preserves the original', async () => {
+    const {context,storage,run}=setup();
+    const {records,state}=attachIndexedStorage(context);
+    const legacy=JSON.stringify({Contractors:[{ContractorName:'Legacy',Items:[row]}]});
+    storage.set('materialAppData',legacy);storage.set('materialAppPending','1');
+    state.failWrites=true;
+    assert.equal((await context.loadReconLocal()).Contractors[0].ContractorName,'Legacy');
+    assert.equal(storage.get('materialAppData'),legacy);
+    assert.equal(storage.get('materialAppPending'),'1');
+    assert.equal(run('reconLocalPending'),true);
+    state.failWrites=false;
+    await context.loadReconLocal();
+    assert.equal(records.get('billing_master_reconciliation').pending,true);
+    assert(!storage.has('materialAppData'));
+    assert(!storage.has('materialAppPending'));
+});
+
+test('cloud rejection retains IndexedDB pending copy and success acknowledges that same snapshot', async () => {
+    let fail=true;
+    const {context,run}=setup(async()=>({ok:!fail,status:fail?409:200,json:async()=>fail?{error:'Conflict'}:{success:true,rev:4}}));
+    const {records}=attachIndexedStorage(context);
+    const dataset={Contractors:[{ContractorName:'A',Items:[row]}]};
+    await context.persistReconLocal(dataset,true);
+    run('reconRevision=3');
+    await assert.rejects(context.saveReconCloud(JSON.stringify(dataset)),/Conflict/);
+    assert.equal(records.get('billing_master_reconciliation').pending,true);
+    fail=false;
+    await context.saveReconCloud(JSON.stringify(dataset));
+    assert.equal(records.get('billing_master_reconciliation').pending,false);
+    assert.deepEqual(records.get('billing_master_reconciliation').data,dataset);
+    assert.equal(run('reconLocalPending'),false);
+});
+
+test('Excel upload reaches cloud after an IndexedDB backup even when localStorage quota is exhausted', async () => {
+    let requests=0, scheduled;
+    const {context,nodes,run}=setup(async()=>{requests++;return {ok:true,json:async()=>({success:true,rev:2})};});
+    const {records,state}=attachIndexedStorage(context);
+    const sheet=[['Item Code','Item Description','UOM','Issued Qty','MRN Qty','Net Issue','Consumption','WIP','Theft','Balance Qty'],['12345678','Test material','NO',10,0,10,2,1,0,7]];
+    context.XLSX={read:()=>({SheetNames:['Test Contractor'],Sheets:{'Test Contractor':sheet}}),utils:{sheet_to_json:value=>value}};
+    context.FileReader=class{readAsArrayBuffer(){this.onload({target:{result:new ArrayBuffer(0)}});}};
+    context.setTimeout=fn=>{scheduled=fn;};
+    context.populateDropdowns=()=>{};context.renderOverview=()=>{};
+    nodes.uploadExcelBtn={style:{},disabled:false};
+    run('reconRevision=1');
+    context.handleExcelUpload({target:{files:[{}],value:'test.xlsx'}});
+    await scheduled();
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(requests,1);
+    assert.equal(state.localWrites,0);
+    const saved=records.get('billing_master_reconciliation');
+    assert.equal(saved.data.Contractors[0].ContractorName,'Test Contractor');
+    assert.equal(saved.data.Contractors[0].Items[0].BalanceQty,7);
+    assert.equal(saved.pending,false);
 });

@@ -48,7 +48,7 @@
          */
         async setItem(key, value) {
             // Bypass LocalStorage and stringify for known large keys (SAP stock, Daily progress)
-            if (key === 'billing_custom_sap_stock' || key === 'billing_daily_progress') {
+            if (key === 'billing_custom_sap_stock' || key === 'billing_daily_progress' || key === 'billing_master_reconciliation') {
                 const result = { localStorage: false, indexedDB: false, saved: false };
                 try {
                     const db = await getDB();
