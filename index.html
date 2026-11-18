@@ -102,8 +102,8 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=20261118_master_layout">
-<link rel="stylesheet" href="css/sap-theme.css?v=20261116_mobile_redesign">
+    <link rel="stylesheet" href="css/style.css?v=20261118_master_compact2">
+<link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_compact2">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261117_locations_v11">
 </head>
 
@@ -329,10 +329,10 @@
             </aside>
 
             <!-- Main Work Area -->
-            <div class="work" :class="{ 'pole-schedule-area': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract', 'activity-area': currentView === 'detail' }">
+            <div class="work" :class="{ 'pole-schedule-area': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract', 'activity-area': currentView === 'detail', 'master-recon-area': currentView === 'masterrecon' }">
 
                 <!-- SAP App Toolbar — activity ke tools yahin merged hain, right me bill buttons -->
-                <div v-if="currentView !== 'dashboard' && currentView !== 'summary'" class="apptoolbar no-print" style="margin-bottom: 0.35rem; background: #eef0f3;">
+                <div v-if="currentView !== 'dashboard' && currentView !== 'summary' && currentView !== 'masterrecon'" class="apptoolbar no-print" style="margin-bottom: 0.35rem; background: #eef0f3;">
                     <!-- ⚡ Pole Schedule tools (sirf Pole Schedule view me) -->
                     <template v-if="currentView === 'poleSchedule' || currentView === 'abstract'">
                         <select v-model="selectedPoleScheduleKey" @change="onPoleScheduleChange(selectedPoleScheduleKey)" class="form-input ps-schedule-select" title="Select Pole Schedule — Activity choose karo" style="font-weight: 700; font-size: 0.82rem; width: min(420px, 30vw); padding: 3px 8px; background: var(--bg-input, #ffffff); color: var(--text-main, #111111); border: 1px solid #8f8f8f; border-radius: 4px; cursor: pointer;">
@@ -3026,9 +3026,9 @@
         </div>
 
             <!-- VIEW 6: MASTER RECONCILIATION -->
-            <div v-if="currentView === 'masterrecon'" class="animate-fade-in">
+            <div v-if="currentView === 'masterrecon'" class="master-recon-page">
                 <div class="master-recon-workspace">
-                    <iframe :src="'Reconciliation master/index.html?v=20261118_layout&theme=' + themeMode" title="Master Reconciliation"
+                    <iframe :src="'Reconciliation master/index.html?v=20261118_compact2&theme=' + themeMode" title="Master Reconciliation"
                         class="master-recon-frame">
                     </iframe>
                 </div>

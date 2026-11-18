@@ -8,6 +8,7 @@
             var requestedTheme = new URLSearchParams(window.location.search).get('theme');
             var themeMode = ['light', 'soft', 'dark'].includes(requestedTheme) ? requestedTheme : 'light';
             document.documentElement.dataset.theme = themeMode;
+            document.documentElement.dataset.embedded = window.self !== window.top ? 'true' : 'false';
         } catch (e) {}
     </script>
     <title>Material Reconciliation Dashboard | Ashoka Buildcon Ltd</title>
@@ -20,7 +21,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css?v=20261118_recon">
     
-    <link rel="stylesheet" href="workspace.css?v=20261118_layout">
+    <link rel="stylesheet" href="workspace.css?v=20261118_compact2">
 
     <!-- Chart.js, SheetJS & ExcelJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
@@ -38,39 +39,38 @@
         <symbol id="ri-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 15v6h16v-6"/></symbol>
         <symbol id="ri-check" viewBox="0 0 24 24"><path d="m8 12 3 3 5-6M12 3l9 4v5c0 5-9 9-9 9S3 17 3 12V7z"/></symbol>
     </svg>
-    <header class="workspace-header">
-        <div class="workspace-heading">
-            <span class="workspace-mark"><svg class="reco-icon"><use href="#ri-sheet"/></svg></span>
-            <div><p class="workspace-eyebrow">RDSS T-10 · GADCHIROLI</p><h1>Master Reconciliation</h1><p class="workspace-subtitle">Contractor stock, consumption &amp; material balances</p></div>
-        </div>
+    <header class="workspace-toolbar" aria-label="Master reconciliation toolbar">
+        <h1 class="workspace-compact-title">Master Reco</h1>
+        <nav class="tab-navigation" aria-label="Master reconciliation views">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="contractor">Contractors</button>
+            <button class="tab-btn" data-tab="item-balance">Item Balances</button>
+            <button class="tab-btn" data-tab="material">Materials</button>
+            <button class="tab-btn" data-tab="debit">Debit Rates</button>
+        </nav>
         <div class="workspace-actions">
             <input type="file" id="excelUpload" accept=".xlsx, .xls" hidden onchange="handleExcelUpload(event)">
-            <button id="uploadExcelBtn" class="btn btn-secondary" onclick="document.getElementById('excelUpload').click()"><svg class="reco-icon"><use href="#ri-upload"/></svg><span>Upload Excel</span></button>
-            <button class="btn btn-secondary" onclick="exportDataChecks()"><svg class="reco-icon"><use href="#ri-check"/></svg><span>Data Checks</span></button>
-            <button class="btn btn-secondary" onclick="exportMissingRates()">Missing Rates</button>
-            <button class="btn btn-success" onclick="exportActiveViewExcel()"><svg class="reco-icon"><use href="#ri-download"/></svg><span>Export Excel</span></button>
+            <button id="uploadExcelBtn" class="btn btn-secondary toolbar-icon" onclick="document.getElementById('excelUpload').click()" title="Upload reconciliation Excel" aria-label="Upload reconciliation Excel"><svg class="reco-icon"><use href="#ri-upload"/></svg></button>
+            <button class="btn btn-success toolbar-icon" onclick="exportActiveViewExcel()" title="Export current view to Excel" aria-label="Export current view to Excel"><svg class="reco-icon"><use href="#ri-download"/></svg></button>
+            <details class="workspace-more">
+                <summary class="btn btn-secondary toolbar-icon" title="Data checks and source information" aria-label="More reconciliation tools">⋯</summary>
+                <div class="workspace-more-menu">
+                    <button class="btn btn-secondary" onclick="exportDataChecks()">Data Checks CSV</button>
+                    <button class="btn btn-secondary" onclick="exportMissingRates()">Missing Rates CSV</button>
+                    <p id="reconciliationStatus" class="workspace-status" role="status"></p>
+                </div>
+            </details>
         </div>
     </header>
-    <nav class="navbar" aria-label="Master reconciliation views">
-        <div class="tab-navigation nav-tabs">
-            <button class="tab-btn active" data-tab="overview"><svg class="reco-icon"><use href="#ri-grid"/></svg>Overview</button>
-            <button class="tab-btn" data-tab="contractor"><svg class="reco-icon"><use href="#ri-users"/></svg>Contractor Statements</button>
-            <button class="tab-btn" data-tab="item-balance"><svg class="reco-icon"><use href="#ri-box"/></svg>Item Balances</button>
-            <button class="tab-btn" data-tab="material"><svg class="reco-icon"><use href="#ri-sheet"/></svg>Material Summary</button>
-            <button class="tab-btn" data-tab="debit">Debit Rates</button>
-        </div>
-    </nav>
 
     <!-- Main App Container -->
     <div class="main-wrapper">
 
 
         <!-- 1. OVERVIEW TAB -->
-        <p id="reconciliationStatus" class="workspace-status" role="status"></p>
-
         <div id="tab-overview" class="tab-content">
             <div class="dashboard-controls control-card">
-                <div class="dashboard-heading"><h2>Reconciliation Overview</h2><p id="dashboardContext"></p></div>
+                <div class="dashboard-heading"><h2>Overview</h2><p id="dashboardContext"></p></div>
                 <label>Contractor <select id="dashboardContractor" onchange="renderOverview()"><option value="">All contractor entries</option></select></label>
                 <label>Show <select id="dashboardTop" onchange="renderOverview()"><option value="8">Top 8</option><option value="15">Top 15</option></select></label>
                 <button class="btn btn-secondary" onclick="document.getElementById('dashboardContractor').value='';document.getElementById('dashboardTop').value='8';renderOverview()">Reset</button>
@@ -721,6 +721,6 @@
     <script src="data.js?v=20261114_stock"></script>
     <script src="analytics.js?v=20261118_recon"></script>
     <!-- App JS -->
-    <script src="app.js?v=20261118_layout"></script>
+    <script src="app.js?v=20261118_compact2"></script>
 </body>
 </html>
