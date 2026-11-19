@@ -13,6 +13,16 @@
     const STORE_NAME = 'app_state';
 
     let dbPromise = null;
+    function putSnapshot(store, value, key) {
+        try { return store.put(value, key); }
+        catch (error) {
+            // Vue reactive proxies are not structured-cloneable. JSON business
+            // snapshots are serialized only on that specific failure; plain large
+            // stock datasets retain the fast direct IndexedDB path.
+            if (error.name !== 'DataCloneError') throw error;
+            return store.put(JSON.parse(JSON.stringify(value)), key);
+        }
+    }
 
     function getDB() {
         if (dbPromise) return dbPromise;
@@ -43,12 +53,33 @@
     }
 
     const BillingStorage = {
+        // Read/compare/write in one transaction so an acknowledgement cannot erase
+        // an edit that arrived while a cloud request was in flight.
+        async updateItem(key, update) {
+            try {
+                const db = await getDB();
+                if (!db) return { saved: false };
+                return await new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite'), store = tx.objectStore(STORE_NAME);
+                    const request = store.get(key); let value;
+                    request.onsuccess = () => {
+                        try {
+                            value = request.result;
+                            const next = update(value);
+                            if (next !== undefined) { value = next; putSnapshot(store, next, key); }
+                        } catch (error) { tx.abort(); }
+                    };
+                    tx.oncomplete = () => resolve({ saved: true, value });
+                    tx.onerror = tx.onabort = () => reject(tx.error || new Error('Atomic local update failed'));
+                });
+            } catch (error) { console.warn('[StorageEngine] Atomic update failed:', error.message); return { saved: false }; }
+        },
         /**
          * Asynchronously set key-value in IndexedDB + LocalStorage (Dual-Write)
          */
         async setItem(key, value) {
             // Bypass LocalStorage and stringify for known large keys (SAP stock, Daily progress)
-            if (key === 'billing_custom_sap_stock' || key === 'billing_daily_progress' || key === 'billing_master_reconciliation') {
+            if (key === 'billing_custom_sap_stock' || key === 'billing_daily_progress' || key === 'billing_master_reconciliation' || key.startsWith('billing_drive_dataset_')) {
                 const result = { localStorage: false, indexedDB: false, saved: false };
                 try {
                     const db = await getDB();
@@ -56,7 +87,7 @@
                         await new Promise((resolve, reject) => {
                             const tx = db.transaction(STORE_NAME, 'readwrite');
                             const store = tx.objectStore(STORE_NAME);
-                            store.put(value, key);
+                            putSnapshot(store, value, key);
                             tx.oncomplete = () => resolve();
                             tx.onerror = () => reject(tx.error);
                             tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));
@@ -101,7 +132,7 @@
                     await new Promise((resolve, reject) => {
                         const tx = db.transaction(STORE_NAME, 'readwrite');
                         const store = tx.objectStore(STORE_NAME);
-                        store.put(strVal !== null ? strVal : value, key);
+                        putSnapshot(store, strVal !== null ? strVal : value, key);
                         tx.oncomplete = () => resolve();
                         tx.onerror = () => reject(tx.error);
                         tx.onabort = () => reject(tx.error || new Error('Storage transaction aborted'));

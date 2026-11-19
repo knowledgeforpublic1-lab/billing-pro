@@ -1218,7 +1218,11 @@ window.OldRecoImporterModule = {
                 localStorage.setItem('billing_custom_old_reco_edits_v1', JSON.stringify(this.customOldRecoEdits));
             }
             if (window.ContractorOldReco) {
-                window.OldRecoImporterModule.saveCustomOldRecoToDb(window.ContractorOldReco);
+                const snapshot = JSON.parse(JSON.stringify({ ...window.ContractorOldReco, customOldRecoEdits: this.customOldRecoEdits || {} }));
+                window.OldRecoImporterModule.saveCustomOldRecoToDb(snapshot).then(async saved => {
+                    if (!saved) throw new Error('Previous reconciliation local backup failed');
+                    if (window.BillingCloudDatasets) await window.BillingCloudDatasets.save('previousRecoMaster', snapshot);
+                }).catch(error => { if (typeof this.showToast === 'function') this.showToast(error.message, 'Alert'); });
             }
         } catch(e) {}
     },
@@ -1350,9 +1354,11 @@ window.OldRecoImporterModule = {
                 window.DefaultContractorOldReco = window.ContractorOldReco;
             }
 
+            const backedUp = await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
+            if (!backedUp) throw new Error('Local backup failed; previous reconciliation was not sent online');
+            if (window.BillingCloudDatasets) await window.BillingCloudDatasets.save('previousRecoMaster', updatedDb, file);
             window.ContractorOldReco = updatedDb;
             window.__customOldReco = updatedDb; // lazy default load ke aane par yahi restore rahega
-            await window.OldRecoImporterModule.saveCustomOldRecoToDb(updatedDb);
 
             this.hasCustomOldReco = true;
             this.$forceUpdate();

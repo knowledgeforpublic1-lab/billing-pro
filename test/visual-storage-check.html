@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Isolated native IndexedDB checks</title>
+<style>body{font:16px system-ui;padding:24px;background:#f7f9fc;color:#123}li{margin:12px 0}.pass{color:#06753c}.fail{color:#b42318}</style>
+<script src="/js/core/storage.js?v=20261118_review2"></script><script src="/js/cloud-datasets.js?v=20261118_review2"></script></head>
+<body><h1>Native browser storage checks</h1><p>Synthetic data only. No Firebase, Drive or production calls.</p><ul id="results"></ul>
+<script>
+(async()=>{
+ const results=document.getElementById('results');
+ const check=(message,ok)=>{const item=document.createElement('li');item.textContent=(ok?'PASS: ':'FAIL: ')+message;item.className=ok?'pass':'fail';results.appendChild(item);if(!ok)throw Error(message);};
+ const runId=Date.now();
+ const key='billing_drive_dataset_review_native_atomic_'+runId;
+ await BillingStorage.setItem(key,{data:{qty:1},pending:true,operationId:'old'});
+ await Promise.all([
+   BillingStorage.setItem(key,{data:{qty:2},pending:true,operationId:'new'}),
+   BillingStorage.updateItem(key,current=>current.operationId==='old'?{...current,pending:false}:undefined)
+ ]);
+ const kept=await BillingStorage.getItemAsync(key);
+ check('Native IndexedDB transaction preserves a later pending edit',kept.data.qty===2&&kept.pending);
+ const proxyKey='billing_drive_dataset_review_proxy';
+ const proxy={reports:[new Proxy({quantity:7.125,name:'मराठी',zero:0},{})]};
+ const proxySaved=await BillingStorage.setItem(proxyKey,proxy);
+ const proxyLoaded=await BillingStorage.getItemAsync(proxyKey);
+ check('Nested reactive proxies can be backed up without DataCloneError or changed quantities',proxySaved.saved&&proxyLoaded.reports[0].quantity===7.125&&proxyLoaded.reports[0].name==='मराठी'&&proxyLoaded.reports[0].zero===0);
+ let enterFirst,enterSecond,releaseFirst,releaseSecond,post=0;
+ const enteredFirst=new Promise(resolve=>enterFirst=resolve),enteredSecond=new Promise(resolve=>enterSecond=resolve);
+ const firstGate=new Promise(resolve=>releaseFirst=resolve),secondGate=new Promise(resolve=>releaseSecond=resolve);
+ const token='a'.repeat(64);let version=1;
+ window.fetch=async(url,options={})=>{
+   if(options.method==='POST'){
+     if(++post===1){enterFirst();await firstGate;}else{enterSecond();await secondGate;}
+     version++;
+   }
+   return new Response(JSON.stringify({success:true,data:{qty:0}}),{headers:{'Content-Type':'application/json','x-billing-storage-versions':JSON.stringify({[token]:{v:version,s:null}})}});
+ };
+ const overlap='review_overlap_'+runId;
+ const first=BillingCloudDatasets.save(overlap,{qty:1});await enteredFirst;
+ const second=BillingCloudDatasets.save(overlap,{qty:2});
+ const fresh=await BillingStorage.getItemAsync('billing_drive_dataset_'+overlap);
+ check('New edit is backed up before the preceding HTTP save finishes',fresh.data.qty===2&&fresh.pending&&post===1);
+ releaseFirst();await first;await enteredSecond;
+ const pending=await BillingStorage.getItemAsync('billing_drive_dataset_'+overlap);
+ check('Earlier cloud acknowledgement preserves newer pending data and advances only its own revision',pending.data.qty===2&&pending.pending&&pending.base[token].v===2);
+ releaseSecond();await second;
+ const saved=await BillingStorage.getItemAsync('billing_drive_dataset_'+overlap);
+ check('Second save is serialized and acknowledged with its exact data',saved.data.qty===2&&!saved.pending&&saved.base[token].v===3);
+ document.body.dataset.result='pass';
+})().catch(error=>{document.body.dataset.result='fail';const p=document.createElement('p');p.className='fail';p.textContent=error.message;document.body.appendChild(p);});
+</script></body></html>

@@ -229,8 +229,12 @@ async function tryConnectMongo() {
 async function connect() {
     const fb = tryInitFirebase();
     if (fb) {
+        if (process.env.BILLING_STORAGE_STAGING_PROJECT && fb.projectId !== process.env.BILLING_STORAGE_STAGING_PROJECT) throw Object.assign(new Error('Staging authority mismatch; production credentials cannot be used for staging'), { status: 503 });
         activeProvider = 'firebase';
         return { provider: 'firebase', db: fb };
+    }
+    if (process.env.BILLING_STORAGE_AUTHORITY === 'firestore' || process.env.BILLING_DRIVE_MODULES || process.env.BILLING_STORAGE_STAGING_PROJECT) {
+        throw Object.assign(new Error('Firestore storage authority unavailable; writable Mongo fallback is disabled'), { status: 503 });
     }
 
     const mg = await tryConnectMongo();
@@ -272,18 +276,30 @@ function getErrorHint(err) {
 // Threshold below Firestore 1MB document limit (safety margin for metadata & UTF-8)
 const FIRESTORE_MAX_DOC_BYTES = 700000;
 
+function storageEntity(collection, id) {
+    const kind = collection === 'billing_states' ? 'bill' : collection === 'reconciliation_states' ? 'reconciliation' : collection === 'daily_progress_control' && /^(shared_report_|entry_event_|report_)/.test(id) ? 'daily' : collection === 'default_configs' ? require('./storage-router').configKind(id) : null;
+    return kind ? require('./drive-first-store').resource(kind, id) : null;
+}
+async function assertLegacyStorage(tx, collection, id) {
+    const entity = storageEntity(collection, id);
+    if (entity) await module.exports.storageRepository.assertLegacy(tx, entity);
+}
 async function writeFirestoreWithChunking(docRef, docData, expectedRev) {
     async function commit(value) {
-        if (expectedRev === undefined) return docRef.set(value, { merge: true });
         return firestoreDb.runTransaction(async transaction => {
             const current = await transaction.get(docRef);
+            await assertLegacyStorage(transaction, docRef.parent.id, docRef.id);
+            const membershipRef = firestoreDb.collection('billing_storage_control').doc('bill-membership');
+            const membership = docRef.parent.id === 'billing_states' ? await transaction.get(membershipRef) : null;
             const revision = current.exists ? (current.data().rev || 0) : 0;
-            if (revision !== expectedRev) {
-                const error = new Error('Reconciliation changed. Refresh before uploading again.');
+            if (expectedRev !== undefined && revision !== expectedRev) {
+                const error = new Error('Cloud revision changed. Refresh before saving again.');
                 error.status = 409;
+                error.conflict = true;
                 throw error;
             }
-            transaction.set(docRef, value);
+            transaction.set(docRef, value, { merge: expectedRev === undefined });
+            if (membership) transaction.set(membershipRef, { revision: (membership.exists ? membership.data().revision : 0) + 1 });
         });
     }
     const serialized = JSON.stringify(docData);
@@ -299,17 +315,23 @@ async function writeFirestoreWithChunking(docRef, docData, expectedRev) {
 
     log.info('DB-CHUNK', `Document ${docRef.path} size (${byteLength} bytes) exceeds 700KB, writing in versioned chunks...`);
     const buf = Buffer.from(serialized, 'utf8');
-    const totalChunks = Math.ceil(buf.length / FIRESTORE_MAX_DOC_BYTES);
+    // Keep the original string-chunk format so the rollback build can still read
+    // later saves. Move byte boundaries to the start of a UTF-8 code point.
+    const parts = [];
+    for (let start = 0; start < buf.length;) {
+        let end = Math.min(start + FIRESTORE_MAX_DOC_BYTES, buf.length);
+        while (end < buf.length && (buf[end] & 0xc0) === 0x80) end--;
+        parts.push(buf.subarray(start, end).toString('utf8'));
+        start = end;
+    }
+    const totalChunks = parts.length;
     const chunkVersion = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const chunksColl = docRef.collection('chunks');
     const writePromises = [];
 
     for (let i = 0; i < totalChunks; i++) {
-        const start = i * FIRESTORE_MAX_DOC_BYTES;
-        const end = Math.min(start + FIRESTORE_MAX_DOC_BYTES, buf.length);
-        const slice = buf.subarray(start, end).toString('utf8');
         writePromises.push(chunksColl.doc(`${chunkVersion}_${i}`).set({
-            chunk: slice,
+            chunk: parts[i],
             v: chunkVersion,
             i,
             total: totalChunks,
@@ -347,17 +369,18 @@ async function readFirestoreWithChunking(docSnap) {
         readPromises.push(chunksColl.doc(docId).get());
     }
     const chunkSnaps = await Promise.all(readPromises);
-    let fullJson = '';
+    const buffers = [];
     for (let i = 0; i < chunkSnaps.length; i++) {
         const snap = chunkSnaps[i];
         if (!snap.exists) {
             log.error('DB-CHUNK', `Missing chunk ${i}/${totalChunks} for ${docSnap.ref.path}`);
-            return data;
+            throw Object.assign(new Error('Stored snapshot chunk is missing'), { status: 503 });
         }
-        fullJson += (snap.data().chunk || '');
+        const part = snap.data();
+        buffers.push(Buffer.from(part.chunk || '', part.encoding === 'base64' ? 'base64' : 'utf8'));
     }
     try {
-        const parsed = JSON.parse(fullJson);
+        const parsed = JSON.parse(Buffer.concat(buffers).toString('utf8'));
         const merged = { ...data, ...parsed };
         delete merged._isChunked;
         delete merged.totalChunks;
@@ -366,7 +389,7 @@ async function readFirestoreWithChunking(docSnap) {
         return merged;
     } catch (e) {
         log.error('DB-CHUNK', `Error parsing chunked document ${docSnap.ref.path}`, e);
-        return data;
+        throw Object.assign(new Error('Stored snapshot cannot be decoded'), { status: 503 });
     }
 }
 
@@ -532,7 +555,9 @@ async function countBills() {
 async function deleteBillingState(dataId) {
     await connect();
     if (activeProvider === 'firebase') {
-        await firestoreDb.collection('billing_states').doc(dataId).delete();
+        const entity = storageEntity('billing_states', dataId);
+        const state = await module.exports.storageRepository.read(entity);
+        await module.exports.storageRepository.removeBill(entity, state.version);
     } else {
         await MongoBillingState.deleteOne({ dataId });
     }
@@ -542,20 +567,7 @@ async function saveBillingState(dataId, updateDoc, expectedRev = null) {
     await connect();
     if (activeProvider === 'firebase') {
         const docRef = firestoreDb.collection('billing_states').doc(dataId);
-        if (expectedRev !== null && expectedRev > 0) {
-            const snap = await docRef.get();
-            if (snap.exists) {
-                const curRev = (snap.data() && snap.data().rev) || 0;
-                if (curRev > 0 && curRev !== expectedRev) {
-                    const err = new Error(`Conflict: expected revision ${expectedRev} but found ${curRev}`);
-                    err.conflict = true;
-                    err.status = 409;
-                    err.currentData = await readFirestoreWithChunking(snap);
-                    throw err;
-                }
-            }
-        }
-        await writeFirestoreWithChunking(docRef, updateDoc);
+        await writeFirestoreWithChunking(docRef, updateDoc, expectedRev === null ? undefined : expectedRev);
     } else {
         if (expectedRev !== null && expectedRev > 0) {
             const res = await MongoBillingState.findOneAndUpdate(
@@ -589,8 +601,10 @@ async function updateAllBillsPoleSchedules(poleSchedules) {
     await connect();
     if (activeProvider === 'firebase') {
         const snap = await firestoreDb.collection('billing_states').get();
-        const batch = firestoreDb.batch();
-        snap.docs.forEach(doc => {
+        await firestoreDb.runTransaction(async batch => {
+        const docs = await Promise.all(snap.docs.map(doc => batch.get(doc.ref)));
+        for (const doc of docs) await assertLegacyStorage(batch, 'billing_states', doc.id);
+        docs.forEach(doc => {
             const currentRev = (doc.data() && doc.data().rev) || 0;
             batch.update(doc.ref, {
                 'stateData.poleSchedules': poleSchedules,
@@ -598,7 +612,7 @@ async function updateAllBillsPoleSchedules(poleSchedules) {
                 rev: currentRev + 1
             });
         });
-        await batch.commit();
+        });
     } else {
         await MongoBillingState.updateMany(
             {},
@@ -611,8 +625,10 @@ async function updateAllBillsActivities(activities) {
     await connect();
     if (activeProvider === 'firebase') {
         const snap = await firestoreDb.collection('billing_states').get();
-        const batch = firestoreDb.batch();
-        snap.docs.forEach(doc => {
+        await firestoreDb.runTransaction(async batch => {
+        const docs = await Promise.all(snap.docs.map(doc => batch.get(doc.ref)));
+        for (const doc of docs) await assertLegacyStorage(batch, 'billing_states', doc.id);
+        docs.forEach(doc => {
             const currentRev = (doc.data() && doc.data().rev) || 0;
             batch.update(doc.ref, {
                 'stateData.activities': activities,
@@ -620,7 +636,7 @@ async function updateAllBillsActivities(activities) {
                 rev: currentRev + 1
             });
         });
-        await batch.commit();
+        });
     } else {
         await MongoBillingState.updateMany(
             {},
@@ -681,8 +697,10 @@ async function getDefaultConfig(key) {
     await connect();
     if (activeProvider === 'firebase') {
         const snap = await firestoreDb.collection('default_configs').doc(key).get();
+        const scope = require('./storage-context').getStore();
+        if (scope?.authorizing) scope.authorizationWitnesses.set(snap.ref, snap.exists && snap.updateTime ? `${snap.updateTime.seconds}.${snap.updateTime.nanoseconds}` : null);
         if (!snap.exists) return null;
-        return snap.data();
+        return readFirestoreWithChunking(snap);
     } else {
         return await MongoDefaultConfig.findOne({ key }).lean();
     }
@@ -696,7 +714,7 @@ async function saveDefaultConfig(key, data) {
         updatedAt: new Date().toISOString()
     };
     if (activeProvider === 'firebase') {
-        await firestoreDb.collection('default_configs').doc(key).set(docData, { merge: true });
+        await writeFirestoreWithChunking(firestoreDb.collection('default_configs').doc(key), docData);
     } else {
         await MongoDefaultConfig.findOneAndUpdate(
             { key },
@@ -709,7 +727,10 @@ async function saveDefaultConfig(key, data) {
 async function patchDefaultConfig(key, changes) {
     await connect();
     if (activeProvider === 'firebase') {
-        await firestoreDb.collection('default_configs').doc(key).set({ key, data: changes, updatedAt: new Date().toISOString() }, { merge: true });
+        await firestoreDb.runTransaction(async tx => {
+            await assertLegacyStorage(tx, 'default_configs', key);
+            tx.set(firestoreDb.collection('default_configs').doc(key), { key, data: changes, updatedAt: new Date().toISOString() }, { merge: true });
+        });
     } else {
         const fields = { updatedAt: new Date() };
         Object.entries(changes).forEach(([field, value]) => { fields['data.' + field] = value; });
@@ -724,8 +745,13 @@ async function atomicDailyRecord(key, change) {
         const ref = firestoreDb.collection('daily_progress_control').doc(key);
         return firestoreDb.runTransaction(async tx => {
             const snap = await tx.get(ref);
+            const scope = require('./storage-context').getStore();
+            if (scope?.authorizing) scope.authorizationWitnesses.set(ref, snap.exists && snap.updateTime ? `${snap.updateTime.seconds}.${snap.updateTime.nanoseconds}` : null);
             const result = change(snap.exists ? snap.data().value : null);
-            if (result.value !== undefined) tx.set(ref, { value: result.value });
+            if (result.value !== undefined) {
+                await assertLegacyStorage(tx, 'daily_progress_control', key);
+                tx.set(ref, { value: result.value });
+            }
             return result.result;
         });
     }
@@ -798,3 +824,6 @@ module.exports = {
         };
     }
 };
+const rawStorage = { ...module.exports };
+Object.assign(module.exports, require('./storage-router')({ raw: rawStorage, readLegacy: readFirestoreWithChunking,
+    drive: require('./daily-drive')({ folderEnv: 'BILLING_DRIVE_FOLDER_ID' }) }));

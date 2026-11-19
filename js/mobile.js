@@ -179,7 +179,8 @@
     syncTimer = null;
     var payload = buildPayload(), hash = contentHash(payload), json = JSON.stringify(payload);
     if (hash === lastHash) { dirty = false; saveLocal(); setSync('synced'); return Promise.resolve(true); }
-    if (json.length > 4 * 1024 * 1024) { setSync('error', 'Bill too large'); return Promise.resolve(false); }
+    const payloadBytes = typeof TextEncoder === 'function' ? new TextEncoder().encode(json).byteLength : json.length;
+    if (payloadBytes > (window.BillingStorageTransport ? 32 : 4) * 1024 * 1024) { setSync('error', 'Bill too large'); return Promise.resolve(false); }
     setSync('syncing');
     syncPromise = (async function () {
       try {

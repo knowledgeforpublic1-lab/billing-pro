@@ -288,7 +288,8 @@
                 this.syncDailyProgressContractorsList();
                 this.loadDailyProgressReportForDate(this.dailyProgressDate);
                 if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-                    await BillingStorage.setItem('billing_daily_progress', merged);
+                    const backup = await BillingStorage.setItem('billing_daily_progress', merged);
+                    if (!backup?.saved) throw new Error('Cloud entries loaded, but device backup failed. Check browser storage before editing.');
                 }
                 if (!silent) this.showToast('Share link ki latest entries sync ho gayi.', 'success');
                 return true;

@@ -74,6 +74,7 @@ window.SyncModule = {
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.success && Array.isArray(data.bills)) {
+                    if (data.provider) this.cloudProvider = data.provider;
                     this.savedBillsList = data.bills;
                 }
             }
@@ -237,6 +238,14 @@ window.SyncModule = {
                 try {
                     const buffer = e.target.result;
                     await this.parseAndLoadBillWorkbook(buffer, file.name);
+                    if (window.BillingStorageTransport && this.activeBillId) {
+                        const billId = this.activeBillId;
+                        const sourceAsset = await window.BillingStorageTransport.archiveFile(file, 'bill', billId);
+                        if (sourceAsset && this.activeBillId === billId) {
+                            this.projectMeta = { ...(this.projectMeta || {}), sourceWorkbook: sourceAsset };
+                            this.saveToStorage();
+                        }
+                    }
                 } catch(err) {
                     console.error('File parsing error:', err);
                     this.showToast('File parse error: ' + (err.message || err), '❌');
@@ -1258,7 +1267,9 @@ window.SyncModule = {
             const payload = this.buildSyncPayload(force ? { force: true } : {});
             const billId = payload.dataId || this.activeBillId || 'main-billing-state';
             const json = JSON.stringify(payload);
-            if (json.length > 4 * 1024 * 1024) {
+            const payloadBytes = typeof TextEncoder === 'function' ? new TextEncoder().encode(json).byteLength : json.length;
+            const maxPayloadBytes = (window.BillingStorageTransport ? 32 : 4) * 1024 * 1024;
+            if (payloadBytes > maxPayloadBytes) {
                 this.syncStatus = 'error';
                 console.warn('Sync skipped: payload too large (' + Math.round(json.length / 1024) + 'KB)');
                 this.showToast('Data too large (' + Math.round(json.length / 1024) + 'KB) — cloud sync skipped', '⚠️');
@@ -1331,6 +1342,7 @@ window.SyncModule = {
             }
             const okj = acknowledged || await res.json();
             if (!okj || okj.success === false || typeof okj.rev !== 'number') throw new Error('Cloud save confirmation missing');
+            if (okj.provider) this.cloudProvider = okj.provider;
             this.setSyncedHash(hash, billId);
             // A slow response for a previously opened bill must not change the new bill's revision.
             if (this.activeBillId && this.activeBillId !== billId) return true;
@@ -1441,7 +1453,8 @@ window.SyncModule = {
             }
             const payload = this.buildSyncPayload();
             const json = JSON.stringify(payload);
-            if (json.length > 4 * 1024 * 1024) return;
+            const payloadBytes = typeof TextEncoder === 'function' ? new TextEncoder().encode(json).byteLength : json.length;
+            if (payloadBytes > (window.BillingStorageTransport ? 32 : 4) * 1024 * 1024) return;
             const hash = this.stableStateHash(payload);
             if (hash === this.lastSentHash) return;
             try {
@@ -1627,6 +1640,7 @@ window.SyncModule = {
           }
 
           if (json && json.success && json.data) {
+              if (json.provider) this.cloudProvider = json.provider;
               serverRaw = JSON.stringify(json.data);
               try { serverUpdatedAt = json.updatedAt ? new Date(json.updatedAt).getTime() : 0; } catch(e) { serverUpdatedAt = 0; }
               if (!serverUpdatedAt && json.data && json.data.savedAt) {

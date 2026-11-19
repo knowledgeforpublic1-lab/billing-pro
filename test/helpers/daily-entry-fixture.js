@@ -4,7 +4,7 @@ const path = require('node:path');
 const { createRequire } = require('node:module');
 const express = require('express');
 const copy = value => structuredClone(value);
-module.exports = function fixture() {
+module.exports = function fixture(options = {}) {
     const records = new Map(), configs = new Map(), files = new Map(); let tail = Promise.resolve();
     const db = {
         async getDefaultConfig(key) { return copy(configs.get(key) || null); },
@@ -33,7 +33,7 @@ module.exports = function fixture() {
             if (name === './auth') return () => auth;
             if (name === './daily-worker-auth') return args => apiRequire(name)({ ...args, drive });
             if (name === 'dotenv') return { config() {} };
-            if (name === './daily-progress-routes') return args => apiRequire(name)({ ...args, drive, seed: { items: [{ id: '15', name: 'Sand', code: '100', unit: 'KG', row: 15 }] } });
+            if (name === './daily-progress-routes') return args => apiRequire(name)({ ...args, drive, seed: options.seed || { items: [{ id: '15', name: 'Sand', code: '100', unit: 'KG', row: 15 }] } });
             return apiRequire(name);
         }
     };

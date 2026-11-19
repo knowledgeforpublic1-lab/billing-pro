@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
+    <script src="/js/storage-transport.js?v=20261118_review3"></script>
+<script>
         try {
             var requestedTheme = new URLSearchParams(window.location.search).get('theme');
             var themeMode = ['light', 'soft', 'dark'].includes(requestedTheme) ? requestedTheme : 'light';
@@ -21,12 +22,12 @@
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css?v=20261118_recon">
     
-    <link rel="stylesheet" href="workspace.css?v=20261118_idb6">
+    <link rel="stylesheet" href="workspace.css?v=20261118_review2">
 
     <!-- Chart.js, SheetJS & ExcelJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
-    <script src="xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <script src="xlsx.full.min.js?v=0.20.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 <body>
 
@@ -720,8 +721,8 @@
     <!-- Data (embedded as JS for file:// compatibility) -->
     <script src="data.js?v=20261114_stock"></script>
     <script src="analytics.js?v=20261118_recon"></script>
-    <script src="../js/core/storage.js?v=20261118_recon_idb6"></script>
+    <script src="../js/core/storage.js?v=20261118_review3"></script>
     <!-- App JS -->
-    <script src="app.js?v=20261118_idb6"></script>
+    <script src="app.js?v=20261118_review2"></script>
 </body>
 </html>

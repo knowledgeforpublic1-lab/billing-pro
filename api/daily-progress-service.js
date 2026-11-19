@@ -118,9 +118,13 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         if (reserved.already) return { ...reserved, report: payload };
         const savedAt = new Date(now()).toISOString();
         const savedBy = actor ? { id: actor.id, name: actor.name, username: actor.username, role: actor.role } : null;
+        const snapshot = { ...payload, contractorId: cid, date, locationId, locationName: location?.name || 'Legacy / Unassigned', version: reserved.version, final: !!body.final, savedAt, savedBy };
+        // The shared router already uploads, verifies and commits the full business
+        // snapshot. Avoid a second unverified report file behind that verified head.
+        const routedSnapshot = db.storageRouted && await db.storageRouted('daily', key);
         let fileId;
         try {
-            fileId = await drive.write(key, { ...payload, contractorId: cid, date, locationId, locationName: location?.name || 'Legacy / Unassigned', version: reserved.version, final: !!body.final, savedAt, savedBy });
+            if (!routedSnapshot) fileId = await drive.write(key, snapshot);
         } catch (error) {
             await db.atomicDailyRecord(key, old => {
                 if (old?.operation?.id !== operationId) return { result: null };
@@ -131,7 +135,9 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
         return db.atomicDailyRecord(key, old => {
             if (old?.operation?.id !== operationId || old.epoch !== body.epoch) fail(409, 'Reservation changed; save not confirmed. Draft retained.');
             const r = clone(old);
-            r.fileId = fileId; r.version = reserved.version; r.state = body.final ? 'final' : 'open';
+            if (routedSnapshot) { r.baseReport = snapshot; delete r.fileId; }
+            else r.fileId = fileId;
+            r.version = reserved.version; r.state = body.final ? 'final' : 'open';
             r.locationId = locationId; r.locationName = location?.name || 'Legacy / Unassigned'; r.deleted = false; r.managed = false;
             r.lastRequestId = body.requestId; r.lastOwner = who; r.lastDigest = digest;
             r.savedAt = savedAt; r.savedBy = savedBy;

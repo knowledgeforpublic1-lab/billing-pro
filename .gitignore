@@ -16,6 +16,7 @@ contractor_data.json
 .env*
 *serviceAccountKey*.json
 *firebase*.json
+client_secret*.json
 # Local backup zips + Office lock files — repo me nahi
 BACKUP_FULL_2026-09-22.zip
 BACKUP_WORKING_2026-09-22.zip

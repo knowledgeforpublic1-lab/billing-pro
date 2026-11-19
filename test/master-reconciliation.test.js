@@ -66,6 +66,18 @@ test('CSV values guard formula injection', () => {
     const { context } = setup();
     assert.equal(context.sanitizeCsvValue('=SUM(1,2)'), '"\'=SUM(1,2)"');
 });
+test('KPI animations cannot briefly show negative positive-stock values or overwrite a newer selection', () => {
+    const { context, nodes } = setup(); const frames = [];
+    nodes.metric = { textContent: '0' }; context.performance = { now: () => 1000 };
+    context.requestAnimationFrame = callback => frames.push(callback);
+    context.animateKpiValue('metric', 1000, String);
+    const oldFrame = frames.shift(); oldFrame(990);
+    assert.equal(nodes.metric.textContent, '0', 'first frame may precede performance.now() slightly');
+    context.animateKpiValue('metric', 50, String);
+    const newFrame = frames.pop(); newFrame(1900);
+    assert.equal(nodes.metric.textContent, '50'); oldFrame(1900);
+    assert.equal(nodes.metric.textContent, '50', 'obsolete animation cannot write the old item total');
+});
 
 test('reconciliation API rejects stale revision and passes expected revision to atomic storage', async () => {
     let handler;
@@ -73,7 +85,7 @@ test('reconciliation API rejects stale revision and passes expected revision to 
     const db = { getReconciliationState: async () => ({rev:2,stateData:{Contractors:[]}}), saveReconciliationState: async (...args) => saves.push(args), getProvider: () => 'test', getErrorHint: error => error.message };
     const source = fs.readFileSync('api/index.js','utf8');
     const route = source.slice(source.indexOf("app.post('/api/reconciliation'"),source.indexOf('// ============ Google Drive Upload Proxy'));
-    vm.runInNewContext(route, { app:{post(...args){handler=args.at(-1);}}, requireApiKey(){}, writeLimiter(){}, db, log:{warn(){}, info(){}, error(){}} });
+    vm.runInNewContext(route, { Buffer, app:{post(...args){handler=args.at(-1);}}, requireApiKey(){}, writeLimiter(){}, db, log:{warn(){}, info(){}, error(){}} });
     const invoke = async expectedRev => {
         const response = { statusCode:200,status(code){this.statusCode=code;return this;},json(value){this.value=value;return this;} };
         await handler({body:{data:{Contractors:[{ContractorName:'A',Items:[row]}]},expectedRev}},response);
@@ -110,8 +122,8 @@ test('Firestore commits revision and chunk pointer in one transaction', async ()
     const end=source.indexOf('async function readFirestoreWithChunking',start);
     for(const threshold of [700000,20]){
         let revision=2, writes=0, committed;
-        const docRef={path:'test',collection(){return {doc(){return {set:async()=>{}};}};}};
-        const context={Buffer,Date,Math,JSON,FIRESTORE_MAX_DOC_BYTES:threshold,log:{info(){}},firestoreDb:{async runTransaction(fn){
+        const docRef={path:'test',parent:{id:'reconciliation_states'}, id:'main-reconciliation-state',collection(){return {doc(){return {set:async()=>{}};}};}};
+        const context={Buffer,Date,Math,JSON,assertLegacyStorage:async()=>{},FIRESTORE_MAX_DOC_BYTES:threshold,log:{info(){}},firestoreDb:{collection(){return{doc(){return {};}};},async runTransaction(fn){
             return fn({get:async()=>({exists:true,data:()=>({rev:revision})}),set(ref,value){writes++;revision=value.rev;committed=value;}});
         }}};
         vm.runInNewContext(source.slice(start,end),context);
@@ -133,6 +145,20 @@ test('item finder retains repeated rows and separates materials by unit', () => 
     assert.equal(metres.totalBalCost,140);
     assert.equal(metres.contractors.length,2);
     assert.equal(context.getItemBalanceData('123|KM').totalBal,1);
+});
+test('item holding-stock KPIs do not cancel one contractor positive stock against another deficit', () => {
+    const { context, run } = setup();
+    context.dataset = { Contractors: [
+        { ContractorName: 'Holding', Items: [{ ...row, BalanceQty: 12, BalanceCost: 120 }] },
+        { ContractorName: 'Deficit', Items: [{ ...row, BalanceQty: -5, BalanceCost: -50 }] }
+    ] };
+    const before = JSON.stringify(context.dataset); run('rawData=dataset');
+    const data = context.getItemBalanceData('123|M');
+    assert.equal(data.totalBal, 7, 'signed source balance remains available');
+    assert.equal(data.positiveBal, 12); assert.equal(data.positiveBalCost, 120); assert.equal(data.deficitQty, 5);
+    assert.equal(data.contractors.filter(row => row.balanceQty > 0).reduce((sum, row) => sum + row.balanceQty, 0), data.positiveBal);
+    assert.equal(data.contractors.filter(row => row.balanceQty > 0).reduce((sum, row) => sum + row.balanceCost, 0), data.positiveBalCost);
+    assert.equal(JSON.stringify(context.dataset), before, 'source data is unchanged');
 });
 
 test('data checks export exposes actual source differences without changing the snapshot', async () => {

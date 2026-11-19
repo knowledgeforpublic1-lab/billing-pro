@@ -594,14 +594,17 @@ window.StockImporterModule = {
                 activeContractorId,
                 activeWorkOrderNo
             });
+            if (!stockData?.meta?.matchedTxns) throw new Error('No material rows recognized; previous stock was retained');
 
             if (!window.DefaultContractorSapStock && window.ContractorSapStock) {
                 window.DefaultContractorSapStock = window.ContractorSapStock;
             }
 
             if (typeof BillingStorage !== 'undefined') {
-                await BillingStorage.setItem('billing_custom_sap_stock', stockData);
+                const backup = await BillingStorage.setItem('billing_custom_sap_stock', stockData);
+                if (!backup.saved) throw new Error('Local backup failed; stock was not sent online');
             }
+            if (window.BillingCloudDatasets) await window.BillingCloudDatasets.save('stockMaster', stockData, file);
 
             // 1. Auto-extract and merge ALL SAP materials from the uploaded file into sapMaterialsMaster
             let newMatsAdded = 0;

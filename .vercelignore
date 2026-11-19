@@ -11,6 +11,7 @@ App_Important_Links_And_Credentials.txt
 *firebase-adminsdk*.json
 serviceAccountKey*.json
 credentials.json
+client_secret*.json
 *.pem
 *.key
 

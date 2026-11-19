@@ -25,6 +25,9 @@ app.use((req, res, next) => {
     if (hasFirebase || process.env.MONGODB_URI) {
       return apiApp(req, res, next);
     }
+    if (process.env.BILLING_STORAGE_STAGING_PROJECT) {
+      return res.status(503).json({ success: false, error: 'Staging database missing; production proxy is disabled for staging' });
+    }
     const targetUrl = 'https://billing-pro-dusky.vercel.app' + req.originalUrl;
     const clientReq = https.request(targetUrl, {
       method: req.method,

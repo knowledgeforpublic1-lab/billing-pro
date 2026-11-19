@@ -336,6 +336,7 @@
                 // Optimistic concurrency — cloudRev = GET/POST se mila latest rev;
                 // cloudConflict = stale tab ne push kiya jo reject hua, Refresh zaroori
                 cloudRev: 0,
+                cloudProvider: '',
                 cloudConflict: false,
                 cloudConflictDismissed: false,
                 sapMaterialsMaster: typeof defaultSapMaterialsMaster !== 'undefined' ? defaultSapMaterialsMaster : [],
@@ -608,6 +609,9 @@
         },
 
         computed: {
+            cloudProviderName() {
+                return ({ firebase: 'Firebase Firestore', mongodb: 'MongoDB', 'visual-fixture': 'Local visual preview' })[this.cloudProvider] || 'Cloud service';
+            },
             isAllDashboardBillsSelected() {
                 const list = (this.savedBillsList && this.savedBillsList.length ? this.savedBillsList.slice(0, 8) : []);
                 if (list.length === 0) return false;
@@ -2368,8 +2372,25 @@
                 window.DefaultContractorOldReco = window.ContractorOldReco;
             }
             // ⚡ Concurrent load: Custom Old Reco & Custom SAP Stock from IndexedDB
+            if (!this._cloudDatasetListener && window.BillingCloudDatasets) {
+                this._cloudDatasetListener = event => {
+                    const { key, data } = event.detail || {};
+                    if (key === 'stockMaster') {
+                        window.ContractorSapStock = data || window.DefaultContractorSapStock;
+                        window.__customSapStock = data || null;
+                        this.hasCustomStock = !!data; this.customStockMeta = data?.meta || null;
+                    } else if (key === 'previousRecoMaster') {
+                        window.ContractorOldReco = data || window.DefaultContractorOldReco;
+                        window.__customOldReco = data || null; this.hasCustomOldReco = !!data;
+                        this.customOldRecoEdits = data?.customOldRecoEdits || {};
+                    }
+                    this.recoRevision = (this.recoRevision || 0) + 1;
+                    this.$forceUpdate();
+                };
+                window.addEventListener('billing-cloud-dataset', this._cloudDatasetListener);
+            }
             try {
-                const [customOldReco, customStockJson] = await Promise.all([
+                let [customOldReco, customStockJson] = await Promise.all([
                     (typeof window.OldRecoImporterModule !== 'undefined' && typeof window.OldRecoImporterModule.loadCustomOldRecoFromDb === 'function')
                         ? window.OldRecoImporterModule.loadCustomOldRecoFromDb().catch(e => { console.warn('[OldRecoImporter]', e); return null; })
                         : Promise.resolve(null),
@@ -2377,11 +2398,18 @@
                         ? BillingStorage.getItemAsync('billing_custom_sap_stock').catch(e => { console.warn('[StockImporter]', e); return null; })
                         : Promise.resolve(null)
                 ]);
+                if (window.BillingCloudDatasets) {
+                    [customOldReco, customStockJson] = await Promise.all([
+                        window.BillingCloudDatasets.load('previousRecoMaster', customOldReco),
+                        window.BillingCloudDatasets.load('stockMaster', customStockJson)
+                    ]);
+                }
 
                 if (customOldReco && customOldReco.byContractorNorm && Object.keys(customOldReco.byContractorNorm).length > 0) {
                     window.ContractorOldReco = customOldReco;
                     window.__customOldReco = customOldReco; // lazy default load ke baad yahi restore hoga
                     this.hasCustomOldReco = true;
+                    if (customOldReco.customOldRecoEdits) this.customOldRecoEdits = customOldReco.customOldRecoEdits;
                     console.log('[OldRecoImporter] Custom old reco loaded from IndexedDB:', customOldReco.meta);
                 }
                 const editsJson = localStorage.getItem('billing_custom_old_reco_edits_v1');
@@ -2604,7 +2632,8 @@
                 try {
                     const payload = this.buildSyncPayload();
                     const json = JSON.stringify(payload);
-                    if (json.length <= 4 * 1024 * 1024) {
+                    const payloadBytes = typeof TextEncoder === 'function' ? new TextEncoder().encode(json).byteLength : json.length;
+                    if (payloadBytes <= (window.BillingStorageTransport ? 32 : 4) * 1024 * 1024) {
                         const hash = typeof this.stableStateHash === 'function' ? this.stableStateHash(payload) : (typeof window !== 'undefined' && window.computeFullHash ? window.computeFullHash(json) : json.length + ':' + json.slice(0, 100));
                         if (hash !== this.lastSentHash) {
                             console.info('Heartbeat: unsynced change detected, pushing to cloud in real time');

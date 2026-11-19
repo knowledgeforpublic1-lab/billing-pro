@@ -41,6 +41,10 @@ const writeLimiter = rateLimit({
     message: { success: false, error: 'Too many saves, 1 min ruk kar retry karo' }
 });
 const dailyProgress = require('./daily-progress-routes')({ db, auth, workers });
+if (db.storageContext) app.use(require('./storage-http')({ db, auth, workers, dailyProgress }));
+if (db.storageContext) app.use('/api/storage/transport', rateLimit({ windowMs: 15 * 60 * 1000, max: 1200, standardHeaders: true, legacyHeaders: false }));
+if (db.storageContext) app.use(require('./storage-transport')({ db, auth, workers, drive: require('./daily-drive')({ folderEnv: 'BILLING_DRIVE_FOLDER_ID' }) }));
+if (db.storageContext) app.use(require('./storage-replay')({ db }));
 app.use('/api/dp-worker', workers.router);
 app.use('/api/daily-entry', dailyProgress.publicRouter);
 app.use('/api/', apiLimiter);
@@ -84,10 +88,58 @@ app.use(['/api', '/js/data'], (req, res, next) => {
     return auth.middleware(req, res, next);
 });
 app.use('/api/dp-admin', dailyProgress.adminRouter);
-app.get('/js/data/:file', (req, res) => {
+app.get('/js/data/:file', async (req, res) => {
     res.set('Cache-Control', 'private, max-age=3600, must-revalidate');
     if (!/^[a-zA-Z0-9_-]+\.js$/.test(req.params.file)) return res.status(404).end();
+    const master = { 'default-activities.js': ['activitiesMaster', 'defaultActivities'], 'default-pole-schedules.js': ['poleSchedulesMaster', 'defaultPoleSchedules'], 'default-sap-materials.js': ['sapMaterialsMaster', 'defaultSapMaterialsMaster'] }[req.params.file];
+    try {
+        if (master && db.storageRouted && await db.storageRouted('master', master[0])) {
+            const record = await db.getDefaultConfig(master[0]);
+            if (!record?.data) return res.status(503).send('Approved master unavailable');
+            const versions = db.storageContext.getStore()?.versions || {};
+            const safe = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+            res.set('Cache-Control', 'private, no-store');
+            return res.type('application/javascript').send('const ' + master[1] + '=' + safe(record.data) + ';window.' + master[1] + '=' + master[1] + ';Object.assign(window.BillingStorageVersions||(window.BillingStorageVersions={}),'+safe(versions)+');');
+        }
+    } catch (error) { return res.status(error.status || 503).send('Approved master unavailable; refresh after storage recovers'); }
     res.sendFile(require('path').join(__dirname, '../js/data', req.params.file));
+});
+app.get('/api/storage/status', requireApiKey, auth.requireAdmin, async (req, res) => {
+    try {
+        const result = await db.storageStore.status(String(req.query.kind || ''), String(req.query.id || ''), String(req.query.requestId || '') + '_1');
+        res.set('Cache-Control', 'no-store').json({ success: true, ...result });
+    } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
+});
+app.get('/api/storage/config', requireApiKey, auth.requireAdmin, (req, res) => {
+    res.set('Cache-Control', 'no-store').json({ success: true, modules: db.storageStore?.modules || [],
+        authority: process.env.BILLING_STORAGE_AUTHORITY || 'legacy', boundedTransport: process.env.BILLING_DRIVE_TRANSPORT === '1',
+        driveConfigured: require('./daily-drive')({ folderEnv: 'BILLING_DRIVE_FOLDER_ID' }).configured() });
+});
+app.post('/api/storage/check', requireApiKey, auth.requireAdmin, writeLimiter, async (req, res) => {
+    try {
+        const drive = require('./daily-drive')({ folderEnv: 'BILLING_DRIVE_FOLDER_ID' });
+        res.set('Cache-Control', 'no-store').json({ success: true, ...await drive.check() });
+    } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
+});
+const businessKeys = new Set(['stockMaster', 'previousRecoMaster', 'contractorsMaster']);
+app.get('/api/storage/business', requireApiKey, async (req, res) => {
+    try {
+        const key = String(req.query.key || '');
+        if (!businessKeys.has(key)) return res.status(400).json({ success: false, error: 'Unknown business dataset' });
+        if (!db.storageRouted || !await db.storageRouted('master', key)) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
+        const record = await db.getDefaultConfig(key);
+        res.set('Cache-Control', 'no-store').json({ success: true, data: record?.data || null });
+    } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
+});
+app.post('/api/storage/business', requireApiKey, auth.requireAdmin, writeLimiter, async (req, res) => {
+    try {
+        const key = String(req.body?.key || ''), data = req.body?.data;
+        if (!businessKeys.has(key) || !data || typeof data !== 'object' || Array.isArray(data)) return res.status(400).json({ success: false, error: 'Valid business dataset required' });
+        if ((key === 'stockMaster' || key === 'previousRecoMaster') && (!data.byContractorNorm || typeof data.byContractorNorm !== 'object' || Array.isArray(data.byContractorNorm) || !Object.keys(data.byContractorNorm).length)) return res.status(400).json({ success: false, error: 'Empty import rejected; existing cloud dataset retained' });
+        if (!db.storageRouted || !await db.storageRouted('master', key)) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
+        await db.saveDefaultConfig(key, data);
+        res.json({ success: true });
+    } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
 });
 app.get('/api/daily-progress/template', (req, res) => res.sendFile(require('path').join(__dirname, '../public/daily-progress-template.xlsx')));
 
@@ -176,13 +228,13 @@ app.get('/api/billing', requireApiKey, async (req, res) => {
         }
         if (!state) {
             log.info('GET', `No billing state found for ${rawDataId || 'latest'} — returning null`);
-            return res.json({ success: true, data: null, dataId: rawDataId || 'main-billing-state' });
+            return res.json({ success: true, data: null, dataId: rawDataId || 'main-billing-state', provider: db.getProvider() });
         }
         log.info('GET', `Billing state fetched for ${state.dataId} (rev: ${state.rev || 0}, provider: ${db.getProvider()})`);
-        res.json({ success: true, dataId: state.dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
+        res.json({ success: true, dataId: state.dataId, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0), provider: db.getProvider() });
     } catch (err) {
         log.error('GET', 'Error fetching billing data', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -192,7 +244,7 @@ app.get('/api/bills', requireApiKey, async (req, res) => {
         res.json({ success: true, bills, provider: db.getProvider() });
     } catch (err) {
         log.error('GET-BILLS', 'Error fetching bills list', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -211,7 +263,7 @@ app.post('/api/billing/delete', requireApiKey, auth.requireAdmin, async (req, re
         res.json({ success: true, message: 'Bill deleted successfully' });
     } catch (err) {
         log.error('DELETE-BILL', 'Error deleting bill', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -222,8 +274,8 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
         }
 
-        const rawLen = JSON.stringify(req.body || {}).length;
-        if (rawLen > 4 * 1024 * 1024) {
+        const rawLen = Buffer.byteLength(JSON.stringify(req.body || {}), 'utf8');
+        if (rawLen > (req.billingBoundedUpload ? 32 : 4) * 1024 * 1024) {
             log.warn('POST', `Payload too large: ${rawLen} bytes`);
             return res.status(413).json({ success: false, error: 'Payload too large (4MB limit — Vercel body limit)' });
         }
@@ -414,7 +466,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             stateData: dataToSave,
             rev: nextRev,
             updatedAt: new Date().toISOString()
-        }, isForce ? null : baseRev);
+        }, curRev);
 
         log.info('POST', `Data saved successfully for ${dataId} (rev: ${nextRev}, payload: ${rawLen} bytes, provider: ${db.getProvider()})`);
         res.json({ success: true, message: 'Data saved successfully', dataId, rev: nextRev, provider: db.getProvider() });
@@ -431,7 +483,7 @@ app.post('/api/billing', requireApiKey, writeLimiter, async (req, res) => {
             });
         }
         log.error('POST', 'Error saving billing data', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -448,7 +500,7 @@ app.get('/api/reconciliation', requireApiKey, async (req, res) => {
         res.json({ success: true, data: state.stateData, updatedAt: state.updatedAt, rev: (state.rev || 0) });
     } catch (err) {
         log.error('GET-RECON', 'Error fetching reconciliation data', err);
-        res.status(500).json({ success: false, error: db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -457,8 +509,8 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
         if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
             return res.status(400).json({ success: false, error: 'Invalid payload: JSON object expected' });
         }
-        const rawLen = JSON.stringify(req.body || {}).length;
-        if (rawLen > 4 * 1024 * 1024) {
+        const rawLen = Buffer.byteLength(JSON.stringify(req.body || {}), 'utf8');
+        if (rawLen > (req.billingBoundedUpload ? 32 : 4) * 1024 * 1024) {
             log.warn('POST-RECON', `Payload too large: ${rawLen} bytes`);
             return res.status(413).json({ success: false, error: 'Payload too large (4MB limit — Vercel body limit)' });
         }
@@ -501,7 +553,7 @@ app.post('/api/reconciliation', requireApiKey, writeLimiter, async (req, res) =>
         res.json({ success: true, message: 'Reconciliation data saved', rev: nextRev, provider: db.getProvider() });
     } catch (err) {
         log.error('POST-RECON', 'Error saving reconciliation data', err);
-        res.status(err.status === 409 ? 409 : 500).json({ success: false, error: err.status === 409 ? 'Reconciliation changed. Refresh before uploading again.' : db.getErrorHint(err) });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : db.getErrorHint(err) });
     }
 });
 
@@ -775,7 +827,7 @@ app.get('/api/contractor-mapping', requireApiKey, async (req, res) => {
         const profile = record && record.data && record.data.serialized ? JSON.parse(record.data.serialized) : null;
         res.json({ success: true, profile });
     } catch (err) {
-        res.status(500).json({ success: false, error: 'Contractor mapping load failed' });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : 'Contractor mapping load failed' });
     }
 });
 app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
@@ -802,7 +854,7 @@ app.post('/api/contractor-mapping', requireApiKey, async (req, res) => {
         await db.saveDefaultConfig(key, { serialized: JSON.stringify(stored) });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ success: false, error: 'Contractor mapping save failed' });
+        res.status(err.status || 500).json({ success: false, error: err.status ? err.message : 'Contractor mapping save failed' });
     }
 });
 
@@ -925,6 +977,10 @@ app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, e
         if (!poleSchedules || typeof poleSchedules !== 'object' || Object.keys(poleSchedules).length === 0) {
             return res.status(400).json({ success: false, error: 'poleSchedules object is required' });
         }
+        if (db.storageRouted && await db.storageRouted('master', 'poleSchedulesMaster')) {
+            await db.saveDefaultConfig('poleSchedulesMaster', poleSchedules);
+            return res.json({ success: true, diskSaved: false, cloudSaved: true, count: Object.keys(poleSchedules).length });
+        }
         const fsMod = require('fs');
         const pathMod = require('path');
         const targetPath = pathMod.join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
@@ -963,7 +1019,7 @@ app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, e
         });
     } catch (err) {
         log.error(ctx, 'Failed to save default-pole-schedules.js', err);
-        return res.status(500).json({ success: false, error: err.message || 'Unknown error' });
+        return res.status(err.status || 500).json({ success: false, error: err.message || 'Unknown error' });
     }
 });
 
@@ -975,7 +1031,7 @@ app.get('/api/default-pole-schedules', async (req, res) => {
             if (record && record.data && Object.keys(record.data).length > 0) {
                 return res.json({ success: true, poleSchedules: record.data, source: db.getProvider() });
             }
-        } catch (e) { }
+        } catch (e) { if (db.storageRouted && await db.storageRouted('master', 'poleSchedulesMaster')) throw e; }
 
         const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-pole-schedules.js');
         if (require('fs').existsSync(targetPath)) {
@@ -985,7 +1041,7 @@ app.get('/api/default-pole-schedules', async (req, res) => {
         }
         res.status(404).json({ success: false, error: 'Default pole schedules not found' });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(err.status || 500).json({ success: false, error: err.message });
     }
 });
 
@@ -1002,6 +1058,11 @@ app.post('/api/save-default-activities', requireApiKey, auth.requireAdmin, expre
             return res.status(400).json({ success: false, error: 'activities object ya sapMaterialsMaster array required hai' });
         }
 
+        if (db.storageRouted && ((isActObj && await db.storageRouted('master', 'activitiesMaster')) || (isSapArr && await db.storageRouted('master', 'sapMaterialsMaster')))) {
+            if (isActObj) await db.saveDefaultConfig('activitiesMaster', activities);
+            if (isSapArr) await db.saveDefaultConfig('sapMaterialsMaster', Array.isArray(sapMaterialsMaster) ? sapMaterialsMaster : (sapMaterialsMaster.items || []));
+            return res.json({ success: true, files: [], cloudSaved: true, provider: db.getProvider(), count: isActObj ? Object.keys(activities).length : 0 });
+        }
         const fsMod = require('fs');
         const pathMod = require('path');
         let wroteFiles = [];
@@ -1060,7 +1121,7 @@ app.post('/api/save-default-activities', requireApiKey, auth.requireAdmin, expre
         });
     } catch (err) {
         log.error(ctx, 'Failed to save default-activities mapping', err);
-        return res.status(500).json({ success: false, error: err.message || 'Unknown error' });
+        return res.status(err.status || 500).json({ success: false, error: err.message || 'Unknown error' });
     }
 });
 
@@ -1072,7 +1133,7 @@ app.get('/api/default-activities', async (req, res) => {
             if (record && record.data && Object.keys(record.data).length > 0) {
                 return res.json({ success: true, activities: record.data, source: db.getProvider() });
             }
-        } catch (e) { }
+        } catch (e) { if (db.storageRouted && await db.storageRouted('master', 'activitiesMaster')) throw e; }
 
         const targetPath = require('path').join(__dirname, '..', 'js', 'data', 'default-activities.js');
         if (require('fs').existsSync(targetPath)) {
@@ -1082,7 +1143,7 @@ app.get('/api/default-activities', async (req, res) => {
         }
         res.status(404).json({ success: false, error: 'Default activities mapping not found' });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(err.status || 500).json({ success: false, error: err.message });
     }
 });
 

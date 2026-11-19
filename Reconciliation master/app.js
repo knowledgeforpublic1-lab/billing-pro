@@ -260,9 +260,12 @@ function formatNum(val) {
 }
 
 // KPI count-up — dashboard numbers 0 se gin kar aate hain
+const kpiAnimations = new WeakMap();
 function animateKpiValue(id, target, formatter) {
     const el = document.getElementById(id);
     if (!el) return;
+    const animation = {};
+    kpiAnimations.set(el, animation);
     try {
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             el.textContent = formatter(target);
@@ -271,7 +274,8 @@ function animateKpiValue(id, target, formatter) {
     } catch(e) {}
     const dur = 900, t0 = performance.now();
     function frame(t) {
-        const p = Math.min(1, (t - t0) / dur);
+        if (kpiAnimations.get(el) !== animation) return;
+        const p = Math.max(0, Math.min(1, (t - t0) / dur));
         const e = 1 - Math.pow(1 - p, 3);
         el.textContent = formatter(target * e);
         if (p < 1) requestAnimationFrame(frame);
@@ -777,6 +781,7 @@ function getItemBalanceData(itemKey) {
     
     let code = '', desc = '', uom = '', debitRate = 0;
     let totalIssued = 0, totalCons = 0, totalBal = 0, totalBalCost = 0, totalWip = 0, totalTheft = 0;
+    let positiveBal = 0, positiveBalCost = 0, deficitQty = 0;
     const contractors = [];
     
     rawData.Contractors.forEach((c, entryIndex) => {
@@ -792,6 +797,9 @@ function getItemBalanceData(itemKey) {
             totalCons += (foundItem.Consumption || 0);
             totalBal += (foundItem.BalanceQty || 0);
             totalBalCost += (foundItem.BalanceCost || 0);
+            positiveBal += Math.max(0, Number(foundItem.BalanceQty) || 0);
+            positiveBalCost += positiveBalanceCost(foundItem);
+            deficitQty += Math.max(0, -(Number(foundItem.BalanceQty) || 0));
             totalWip += (foundItem.WIP || 0);
             totalTheft += (foundItem.Theft || 0);
             
@@ -807,7 +815,7 @@ function getItemBalanceData(itemKey) {
                 wip: foundItem.WIP || 0,
                 theft: foundItem.Theft || 0,
                 balanceQty: foundItem.BalanceQty || 0,
-                balanceCost: foundItem.BalanceCost || 0,
+                balanceCost: foundItem.BalanceQty > 0 ? positiveBalanceCost(foundItem) : (foundItem.BalanceCost || 0),
                 rate: foundItem.DebitRate || debitRate
             });
         }
@@ -823,6 +831,9 @@ function getItemBalanceData(itemKey) {
         totalCons,
         totalBal,
         totalBalCost,
+        positiveBal,
+        positiveBalCost,
+        deficitQty,
         totalWip,
         totalTheft,
         contractors
@@ -858,8 +869,8 @@ function populateItemBalanceDropdown(filterText = '') {
             const m = matMap.get(key);
             m.totalIssued += (i.NetIssue || 0);
             m.totalCons += (i.Consumption || 0);
-            m.totalBal += (i.BalanceQty || 0);
-            m.totalBalCost += (i.BalanceCost || 0);
+            m.totalBal += Math.max(0, Number(i.BalanceQty) || 0);
+            m.totalBalCost += positiveBalanceCost(i);
             m.contractorsTotal++;
             if (i.BalanceQty > 0) m.contractorsWithBal++;
         });
@@ -1010,13 +1021,13 @@ function renderItemBalanceView(preferredKey) {
     const subCons = document.getElementById('ibKpiConsSub');
     if (subCons) subCons.textContent = `${erectedPct}% completed / installed`;
     
-    animateKpiValue('ibKpiBal', data.totalBal, formatNum);
+    animateKpiValue('ibKpiBal', data.positiveBal, formatNum);
     const subBal = document.getElementById('ibKpiBalSub');
-    if (subBal) subBal.textContent = `${holdingCount} contractors currently holding ${data.uom || ''}`;
+    if (subBal) subBal.textContent = `${holdingCount} contractors holding ${data.uom || ''}${data.deficitQty ? `; deficit ${formatNum(data.deficitQty)} ${data.uom || ''} shown separately` : ''}`;
     
-    animateKpiValue('ibKpiCost', data.totalBalCost, formatCurrency);
+    animateKpiValue('ibKpiCost', data.positiveBalCost, formatCurrency);
     const subCost = document.getElementById('ibKpiCostSub');
-    if (subCost) subCost.textContent = `Total unerected stock value liability`;
+    if (subCost) subCost.textContent = `Positive stock only; deficits do not reduce liability`;
     
     const onlyPositive = document.getElementById('itemBalOnlyPositive') ? document.getElementById('itemBalOnlyPositive').checked : true;
     const sortMode = document.getElementById('itemBalSort') ? document.getElementById('itemBalSort').value : 'bal-desc';
@@ -1036,9 +1047,9 @@ function renderItemBalanceView(preferredKey) {
     const liveBadge = document.getElementById('itemBalLiveBadge');
     if (liveBadge) {
         liveBadge.style.display = 'inline-flex';
-        if (data.totalBal > 0) {
-            liveBadge.innerHTML = `⚡ Bal: <strong style="margin-left: 4px; color: #fef08a;">${formatNum(data.totalBal)} ${data.uom || ''}</strong>`;
-            liveBadge.title = `Total Balance Cost: ${formatCurrency(data.totalBalCost)}`;
+        if (data.positiveBal > 0) {
+            liveBadge.innerHTML = `⚡ Stock: <strong style="margin-left: 4px; color: var(--warning);">${formatNum(data.positiveBal)} ${data.uom || ''}</strong>`;
+            liveBadge.title = `Positive stock value: ${formatCurrency(data.positiveBalCost)}; deficit: ${formatNum(data.deficitQty)} ${data.uom || ''}`;
         } else {
             liveBadge.innerHTML = `✓ Nil Bal (0 ${data.uom || ''})`;
             liveBadge.style.color = 'var(--success)';
@@ -1116,7 +1127,7 @@ function renderItemBalanceView(preferredKey) {
     
     document.getElementById('ibTableCount').textContent = filtered.length;
     document.getElementById('ibTableBalTotal').textContent = `${formatNum(sumFilteredBal)} ${data.uom || ''} (${formatCurrency(sumFilteredCost)})`;
-    document.getElementById('itemBalTableTitle').textContent = `${data.desc} — Total Balance Stock: ${formatNum(data.totalBal)} ${data.uom || ''}`;
+    document.getElementById('itemBalTableTitle').textContent = `${data.desc} — Positive Stock: ${formatNum(data.positiveBal)} ${data.uom || ''}`;
 
     // Update tfoot totals
     const footBalQty = document.getElementById('ibFootBalQty');
@@ -2359,6 +2370,13 @@ function handleExcelUpload(event) {
                     await persistReconLocal(parsedData, true);
                 } catch (storageErr) {
                     throw new Error('Local backup failed. Import was not sent to cloud: ' + storageErr.message);
+                }
+                if (window.BillingStorageTransport) {
+                    const sourceAsset = await window.BillingStorageTransport.archiveFile(file, 'reconciliation', 'main-reconciliation-state');
+                    if (sourceAsset) {
+                        parsedData.SourceAsset = sourceAsset;
+                        await persistReconLocal(parsedData, true);
+                    }
                 }
                 rawData = parsedData;
                 contractorProfileVisibility.clear();
