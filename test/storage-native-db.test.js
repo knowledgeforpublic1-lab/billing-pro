@@ -31,6 +31,21 @@ test('native Firestore bill CAS rejects racing revision-zero creation and stale 
     assert.equal(results.find(result => result.status === 'rejected').reason.status, 409);
     assert.equal((await f.db.getBillingState('a')).rev, 1);
 });
+
+test('worker auth reads stay fresh without transactions and retain commit permission witnesses', async () => {
+    const f = fixture(), key = 'dp_worker_user_' + 'a'.repeat(64);
+    await f.firestore.seed('daily_progress_control/' + key, { value: { revision: 1 } });
+    f.firestore.runTransaction = () => { throw Error('Authentication read should not lock a transaction'); };
+    const witnesses = new Map();
+    await f.db.storageContext.run({ authorizing: true, authorizationWitnesses: witnesses }, async () => {
+        assert.equal((await f.db.getDailyAuthRecord(key)).revision, 1);
+    });
+    assert.equal(witnesses.size, 1);
+    assert.ok([...witnesses.values()][0]);
+    await f.firestore.seed('daily_progress_control/' + key, { value: { revision: 2, disabled: true } });
+    assert.equal((await f.db.getDailyAuthRecord(key)).disabled, true);
+    await assert.rejects(f.db.getDailyAuthRecord('report_business_data'), { status: 400 });
+});
 test('native UTF-8 chunk saves remain readable by the original live reader for rollback', async () => {
     const f = fixture(), text = 'मराठी🙂'.repeat(85000);
     await f.db.saveBillingState('a', { dataId: 'a', rev: 1, stateData: { text } }, 0);

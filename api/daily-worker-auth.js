@@ -11,7 +11,8 @@ const COOKIE = 'dp_worker_session';
 module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) {
     const router = express.Router();
     const locations = require('./daily-progress-locations')({ db });
-    const read = key => db.atomicDailyRecord(key, value => ({ result: value }));
+    const read = key => db.getDailyAuthRecord && /^dp_worker_/.test(key)
+        ? db.getDailyAuthRecord(key) : db.atomicDailyRecord(key, value => ({ result: value }));
     const userKey = username => 'dp_worker_user_' + hash(String(username).toLowerCase());
     const emailIndexKey = email => 'dp_worker_idx_email_' + hash(String(email).trim().toLowerCase());
     const mobileIndexKey = mobile => 'dp_worker_idx_mob_' + hash(String(mobile).replace(/[\s\-+]/g, '').slice(-10));
@@ -75,11 +76,6 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         // 3. Direct username lookup
         const direct = await read(userKey(raw.toLowerCase()));
         if (direct && !direct.deleted) return direct;
-        // 4. Fallback check as email or mobile without strict formatting
-        if (raw.includes('@')) {
-            const directEmailUser = await read(userKey(raw.toLowerCase()));
-            if (directEmailUser && !directEmailUser.deleted) return directEmailUser;
-        }
         return null;
     }
 
@@ -194,7 +190,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         const salt = user && user.salt || 'unknown-entry-account';
         const derived = await scrypt(password, salt, 64);
         const expected = Buffer.from(user && user.passwordHash || '00'.repeat(64), 'hex');
-        if (!user || user.disabled || expected.length !== derived.length || !crypto.timingSafeEqual(derived, expected)) {
+        if (!user || user.disabled || user.deleted || expected.length !== derived.length || !crypto.timingSafeEqual(derived, expected)) {
             fail(401, 'Incorrect email/mobile number or password.');
         }
         const token = crypto.randomBytes(32).toString('hex');

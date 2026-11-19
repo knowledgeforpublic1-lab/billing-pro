@@ -240,6 +240,7 @@ test('signup checkbox selections survive search and submit six contractors witho
     class Element {
         constructor() { this.children = []; this.style = {}; this.value = ''; this.textContent = ''; this.nodes = new Map(); }
         setAttribute() {}
+        removeAttribute() {}
         focus() {}
         append(...nodes) { nodes.forEach(node => this.appendChild(node)); }
         appendChild(node) { this.children.push(node); node.parentNode = this; }
@@ -257,18 +258,36 @@ test('signup checkbox selections survive search and submit six contractors witho
     signup.elements = Object.fromEntries(['name', 'email', 'mobile', 'password'].map(key => [key, new Element()]));
     login.elements = Object.fromEntries(['identifier', 'password'].map(key => [key, new Element()]));
     const directory = ['a', 'b', 'c', 'd', 'e', 'f'].map(id => ({ id, name: 'Team ' + id.toUpperCase() }));
-    let submitted;
+    let submitted, finishLogin;
+    let directoryRequests = 0;
     let first = true;
     const context = { window: { location: { search: '?contractor=' } }, URLSearchParams, AbortSignal, location: { reload() {} }, alert() {},
         document: { createElement() { if (first) { first = false; return root; } return new Element(); }, body, getElementById: () => null, querySelector: () => null },
         fetch: async (url, init) => {
-            if (url.endsWith('/contractors')) return { ok: true, json: async () => ({ success: true, contractors: directory }) };
+            if (url.endsWith('/contractors')) { directoryRequests++; return { ok: true, json: async () => ({ success: true, contractors: directory }) }; }
             if (url.endsWith('/session')) return { ok: false, json: async () => ({ success: false, error: 'Login required' }) };
+            if (url.endsWith('/login')) return new Promise(resolve => { finishLogin = () => resolve({ ok: false, json: async () => ({ success: false, error: 'Incorrect password' }) }); });
             submitted = JSON.parse(init.body);
             return { ok: true, json: async () => ({ success: true, user: { name: submitted.name, role: 'worker', contractorIds: submitted.contractorIds } }) };
         } };
     vm.runInNewContext(fs.readFileSync('js/daily-worker-auth.js', 'utf8'), context);
     for (let n = 0; n < 10; n++) await new Promise(resolve => setImmediate(resolve));
+    assert.equal(directoryRequests, 0, 'Sign-in screen does not start the signup directory request');
+    const loginButton = login.querySelector('button[type="submit"]');
+    loginButton.textContent = 'Sign In & Continue';
+    login.elements.identifier.value = 'test@example.invalid';
+    login.elements.password.value = 'synthetic';
+    const loginPending = login.onsubmit({ preventDefault() {} });
+    assert.equal(loginButton.disabled, true);
+    assert.equal(loginButton.textContent, 'Signing in…', 'Immediate progress while the login request is pending');
+    finishLogin(); await loginPending;
+    assert.equal(loginButton.disabled, false);
+    assert.equal(loginButton.textContent, 'Sign In & Continue');
+    assert.equal(directoryRequests, 0);
+    root.querySelector('[data-tab="signup"]').onclick();
+    root.querySelector('[data-tab="signup"]').onclick();
+    for (let n = 0; n < 10; n++) await new Promise(resolve => setImmediate(resolve));
+    assert.equal(directoryRequests, 1, 'Repeated signup clicks share one directory load');
     const list = root.querySelector('[data-contractor-list]');
     const search = root.querySelector('[data-contractor-search]');
     const count = root.querySelector('[data-contractor-count]');

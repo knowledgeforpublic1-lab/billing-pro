@@ -7,6 +7,7 @@ const copy = value => structuredClone(value);
 module.exports = function fixture(options = {}) {
     const records = new Map(), configs = new Map(), files = new Map(); let tail = Promise.resolve();
     const db = {
+        async getDailyAuthRecord(key) { return copy(records.get(key) || null); },
         async getDefaultConfig(key) { return copy(configs.get(key) || null); },
         async saveDefaultConfig(key, data) { configs.set(key, { key, data: copy(data) }); },
         atomicDailyRecord(key, fn) {

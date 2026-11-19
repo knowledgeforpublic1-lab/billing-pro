@@ -738,6 +738,24 @@ async function patchDefaultConfig(key, changes) {
     }
 }
 
+// Authentication reads need fresh values, but do not need transaction locks.
+// Restrict this shortcut to auth keys; business records must retain Drive routing.
+async function getDailyAuthRecord(key) {
+    if (!/^dp_worker_(?:user_|session_|idx_email_|idx_mob_)[a-f0-9]{64}$/.test(key)) {
+        throw Object.assign(new Error('Invalid worker authentication record'), { status: 400 });
+    }
+    await connect();
+    if (activeProvider === 'firebase') {
+        const ref = firestoreDb.collection('daily_progress_control').doc(key);
+        const snap = await ref.get();
+        const scope = require('./storage-context').getStore();
+        if (scope?.authorizing) scope.authorizationWitnesses.set(ref, snap.exists && snap.updateTime ? `${snap.updateTime.seconds}.${snap.updateTime.nanoseconds}` : null);
+        return snap.exists ? snap.data().value : null;
+    }
+    const row = await mongoose.connection.collection('daily_progress_control').findOne({ _id: key });
+    return row ? row.value : null;
+}
+
 // Small coordination records only. Callbacks are pure: Firestore/CAS may retry them.
 async function atomicDailyRecord(key, change) {
     await connect();
@@ -790,6 +808,7 @@ async function listDailyRecords(prefix, options = {}) {
 }
 
 module.exports = {
+    getDailyAuthRecord,
     atomicDailyRecord, listDailyRecords,
     patchDefaultConfig,
     connect,

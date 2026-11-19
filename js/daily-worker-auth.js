@@ -88,6 +88,7 @@
     const contractorCount = root.querySelector('[data-contractor-count]');
     const selectedContractors = new Set();
     let signupContractors = [];
+    let contractorsLoading, contractorsLoaded = false;
     const queryContractor = new URLSearchParams(window.location.search).get('contractor') || new URLSearchParams(window.location.search).get('c') || '';
     let queryContractorApplied = false;
 
@@ -104,6 +105,7 @@
             loginForm.style.display = 'none';
             desc.textContent = 'Register your account with your Full Name, Email, and Mobile number.';
             signupForm.elements.name.focus();
+            if (!contractorsLoaded) loadContractors();
         } else {
             loginTab.style.background = '#ffffff';
             loginTab.style.color = '#0f172a';
@@ -177,17 +179,22 @@
 
     // Populate contractors for dropdown
     async function loadContractors() {
+        if (contractorsLoading) return contractorsLoading;
+        contractorsLoading = (async () => {
         try {
             if (window.defaultContractorsList && Array.isArray(window.defaultContractorsList)) {
                 populateContractorOptions(window.defaultContractorsList);
             }
             const res = await request('contractors');
-            if (res.contractors && res.contractors.length) {
+            if (Array.isArray(res.contractors)) {
                 populateContractorOptions(res.contractors);
             }
+            contractorsLoaded = true;
         } catch {
             if (!signupContractors.length) contractorList.textContent = 'Contractors could not load. Refresh the page and retry.';
         }
+        })();
+        try { await contractorsLoading; } finally { contractorsLoading = null; }
     }
 
     function populateContractorOptions(list) {
@@ -231,7 +238,6 @@
         contractorCount.textContent = selectedContractors.size + ' selected';
     }
     contractorSearch.oninput = renderContractors;
-    loadContractors();
 
     function enter(user) {
         state.user = user;
@@ -284,6 +290,9 @@
         clearError();
         const btn = loginForm.querySelector('button[type="submit"]');
         btn.disabled = true;
+        const originalLabel = btn.textContent;
+        btn.textContent = 'Signing in…';
+        loginForm.setAttribute('aria-busy', 'true');
         try {
             const result = await request('login', {
                 identifier: loginForm.elements.identifier.value.trim(),
@@ -295,6 +304,8 @@
             showError(loginForm, e.message);
         } finally {
             btn.disabled = false;
+            btn.textContent = originalLabel;
+            loginForm.removeAttribute('aria-busy');
         }
     };
 
