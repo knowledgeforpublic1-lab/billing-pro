@@ -670,6 +670,11 @@ window.StockImporterModule = {
             this.hasCustomStock = true;
             this.customStockMeta = stockData.meta;
             this.recoRevision = (this.recoRevision || 0) + 1;
+            try {
+                if (typeof this.syncDailyProgressContractorsList === 'function') {
+                    this.syncDailyProgressContractorsList();
+                }
+            } catch (_) {}
 
             if (typeof this.saveToStorage === 'function') {
                 this.saveToStorage();
@@ -742,6 +747,11 @@ window.StockImporterModule = {
             this.hasCustomStock = false;
             this.customStockMeta = null;
             this.recoRevision = (this.recoRevision || 0) + 1;
+            try {
+                if (typeof this.syncDailyProgressContractorsList === 'function') {
+                    this.syncDailyProgressContractorsList();
+                }
+            } catch (_) {}
             if (typeof this.saveToStorage === 'function') {
                 this.saveToStorage();
             }

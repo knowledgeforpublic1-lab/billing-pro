@@ -117,6 +117,11 @@
                 if (!window.DefaultContractorOldReco) window.DefaultContractorOldReco = { byContractorNorm: {} };
             }
             try { this.recoRevision = (this.recoRevision || 0) + 1; } catch (e) {}
+            try {
+                if (typeof this.syncDailyProgressContractorsList === 'function') {
+                    this.syncDailyProgressContractorsList();
+                }
+            } catch (e) {}
         });
     };
 
@@ -1267,12 +1272,59 @@
                 return (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
             },
             dailyProgressActiveContractor() {
-                const data = this.dailyProgressData;
+                const list = this.dailyProgressContractors || [];
                 const cid = this.dailyProgressContractorId;
-                if (!data || !data.contractors) return null;
-                return data.contractors.find(c => c.id === cid) || data.contractors[0] || null;
+                if (!list.length) return null;
+                if (!cid) return list[0] || null;
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const targetNorm = normFn(cid);
+                return list.find(c => c.id === cid || normFn(c.id) === targetNorm || normFn(c.name) === targetNorm) || list[0] || null;
             },
             dailyProgressContractors() {
+                const sapStock = (typeof window !== 'undefined' && (window.ContractorSapStock || window.__customSapStock || window.DefaultContractorSapStock)) || null;
+                if (sapStock && sapStock.byContractorNorm && Object.keys(sapStock.byContractorNorm).length > 0) {
+                    const defMap = new Map();
+                    if (Array.isArray(this.contractorsList)) {
+                        this.contractorsList.forEach(c => {
+                            const n = String(c.id || c.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                            if (n && !defMap.has(n)) defMap.set(n, c);
+                        });
+                    }
+                    const seenNorms = new Set();
+                    const list = [];
+                    const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                    for (const [key, b] of Object.entries(sapStock.byContractorNorm)) {
+                        if (!b || !b.contractorName) continue;
+                        const name = String(b.contractorName).trim();
+                        const norm = normFn(name);
+                        if (!norm || seenNorms.has(norm)) continue;
+                        seenNorms.add(norm);
+                        const def = defMap.get(norm) || defMap.get(normFn(key));
+                        const id = (def && def.id) || key;
+                        list.push({
+                            id,
+                            name,
+                            project: (this.projectMeta && this.projectMeta.zone) || 'Gadchiroli (T-10)',
+                            feeder: (def && (def.feederName || def.feeder)) || 'ANGARA',
+                            engineer: (def && def.engineer) || 'SUPERVISOR',
+                            workOrderNo: (def && def.workOrderNo) || b.docHeader || '',
+                            workOrders: (b.allWorkOrders || []).join(', ')
+                        });
+                    }
+                    // Keep any contractor that has existing reports saved
+                    const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+                    const reportNorms = new Set(reports.map(r => normFn(r.contractorId)));
+                    (this.dailyProgressData?.contractors || []).forEach(c => {
+                        const norm = normFn(c.id || c.name);
+                        if (norm && reportNorms.has(norm) && !seenNorms.has(norm)) {
+                            seenNorms.add(norm);
+                            list.push(c);
+                        }
+                    });
+                    if (list.length > 0) {
+                        return list.sort((a, b) => a.name.localeCompare(b.name));
+                    }
+                }
                 return (this.dailyProgressData && this.dailyProgressData.contractors) || [];
             },
             dailyProgressFilteredContractors() {
@@ -1300,7 +1352,7 @@
             },
             dailyProgressWorkerFilteredContractors() {
                 const q = String(this.dailyProgressWorkerSearch || '').trim().toLowerCase();
-                const list = this.dailyProgressWorkerContractors.length ? this.dailyProgressWorkerContractors : this.dailyProgressContractors;
+                const list = (this.dailyProgressContractors && this.dailyProgressContractors.length) ? this.dailyProgressContractors : this.dailyProgressWorkerContractors;
                 return list.filter(c => !q || (c.name + ' ' + c.id).toLowerCase().includes(q));
             },
             dailyProgressVisibleWorkers() {

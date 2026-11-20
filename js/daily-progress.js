@@ -121,9 +121,54 @@ window.DailyProgressModule = {
             this.dailyProgressData.contractors = [];
         }
 
-        const existingKeys = new Set(this.dailyProgressData.contractors.map(c => this.normContractorId(c.id || c.name)));
+        const sapStock = (typeof window !== 'undefined' && (window.ContractorSapStock || window.__customSapStock || window.DefaultContractorSapStock)) || null;
+        if (sapStock && sapStock.byContractorNorm && Object.keys(sapStock.byContractorNorm).length > 0) {
+            const defMap = new Map();
+            if (Array.isArray(this.contractorsList)) {
+                this.contractorsList.forEach(c => {
+                    const n = this.normContractorId(c.id || c.name).replace(/eterprise/g, 'enterprise');
+                    if (n && !defMap.has(n)) defMap.set(n, c);
+                });
+            }
 
-        // Merge from Billing Pro contractorsList
+            const seenNorms = new Set();
+            const list = [];
+            for (const [key, b] of Object.entries(sapStock.byContractorNorm)) {
+                if (!b || !b.contractorName) continue;
+                const name = String(b.contractorName).trim();
+                const norm = this.normContractorId(name).replace(/eterprise/g, 'enterprise');
+                if (!norm || seenNorms.has(norm)) continue;
+                seenNorms.add(norm);
+                const def = defMap.get(norm) || defMap.get(this.normContractorId(key).replace(/eterprise/g, 'enterprise'));
+                const id = (def && def.id) || key;
+                list.push({
+                    id,
+                    name,
+                    project: (this.projectMeta && this.projectMeta.zone) || 'Gadchiroli (T-10)',
+                    feeder: (def && (def.feederName || def.feeder)) || 'ANGARA',
+                    engineer: (def && def.engineer) || 'SUPERVISOR',
+                    workOrderNo: (def && def.workOrderNo) || b.docHeader || '',
+                    workOrders: (b.allWorkOrders || []).join(', ')
+                });
+            }
+
+            // Also preserve any contractors with saved reports
+            const existingReports = this.dailyProgressData.reports || [];
+            const reportCids = new Set(existingReports.map(r => this.normContractorId(r.contractorId).replace(/eterprise/g, 'enterprise')));
+            (this.dailyProgressData.contractors || []).forEach(c => {
+                const norm = this.normContractorId(c.id || c.name).replace(/eterprise/g, 'enterprise');
+                if (norm && reportCids.has(norm) && !seenNorms.has(norm)) {
+                    seenNorms.add(norm);
+                    list.push(c);
+                }
+            });
+
+            this.dailyProgressData.contractors = list.sort((a, b) => a.name.localeCompare(b.name));
+            return;
+        }
+
+        // Fallback only if no SAP stock is loaded at all
+        const existingKeys = new Set(this.dailyProgressData.contractors.map(c => this.normContractorId(c.id || c.name)));
         if (Array.isArray(this.contractorsList)) {
             this.contractorsList.forEach(c => {
                 const norm = this.normContractorId(c.id || c.name);
