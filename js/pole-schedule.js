@@ -538,7 +538,8 @@ window.PoleScheduleModule = {
     getPoleScheduleCellQty(lIdx, mIdx) {
         const k = this.selectedPoleScheduleKey || '907';
         if (!this.poleScheduleQuantities || !this.poleScheduleQuantities[k] || !this.poleScheduleQuantities[k][lIdx]) return '';
-        return this.poleScheduleQuantities[k][lIdx][mIdx] || '';
+        const v = this.poleScheduleQuantities[k][lIdx][mIdx];
+        return (v === undefined || v === null) ? '' : v;
     },
 
     setPoleScheduleCellQty(lIdx, mIdx, val, skipAutoConcrete = false) {
@@ -1159,9 +1160,9 @@ window.PoleScheduleModule = {
                     if (previousRows.includes(rowIdentity)) this.activityQuantities[activityKey].forEach(row => { row[actMatIdx] = ''; });
                     return;
                 }
-                nextRows.push(rowIdentity);
                 matchingSmList.forEach(({ sm }) => matchedMaterials.add(sm));
 
+                let itemHasAnyNum = false;
                 // For each location, SUM all matching pole schedule rows
                 locs.forEach((_, lIdx) => {
                     let totalSum = 0;
@@ -1175,6 +1176,7 @@ window.PoleScheduleModule = {
                                 const ratio = getRatio(sm, am);
                                 totalSum += num * ratio;
                                 hasAnyNum = true;
+                                itemHasAnyNum = true;
                             }
                         }
                     });
@@ -1182,11 +1184,14 @@ window.PoleScheduleModule = {
                     if (this.activityQuantities[activityKey] && this.activityQuantities[activityKey][lIdx]) {
                         if (hasAnyNum) {
                             this.activityQuantities[activityKey][lIdx][actMatIdx] = Math.round(totalSum * 1000) / 1000;
-                        } else {
+                        } else if (previousRows.includes(rowIdentity)) {
                             this.activityQuantities[activityKey][lIdx][actMatIdx] = '';
                         }
                     }
                 });
+                if (itemHasAnyNum) {
+                    nextRows.push(rowIdentity);
+                }
             });
             transferred[activityKey] = nextRows;
             const warnings = { ...(this.poleScheduleTransferWarnings || {}) };
