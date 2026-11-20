@@ -196,7 +196,6 @@
         },
         checkAdminElevated(callback) {
             if (this.isPortalUnlocked && this.isAdminElevated && this.adminExpiresAt > this.authNow()) {
-                if (typeof callback === 'function') callback();
                 return true;
             }
             this.openAdminModal(callback);

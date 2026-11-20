@@ -791,10 +791,16 @@ window.PoleScheduleModule = {
         const k = this.selectedPoleScheduleKey || '907';
         const locs = this.getPoleScheduleLocations(k);
         const nextNum = locs.length + 1;
-        const name = prompt(`Enter Location Name for Schedule ${k}:`, `Loc ${nextNum}`);
-        if (!name || !name.trim()) return;
+        let name = '';
+        try {
+            name = prompt(`Enter Location Name for Schedule ${k}:`, `Loc ${nextNum}`);
+        } catch (e) {
+            name = `Loc ${nextNum}`;
+        }
+        if (name === null) return;
+        name = (name && name.trim()) ? name.trim() : `Loc ${nextNum}`;
 
-        locs.push({ name: name.trim() });
+        locs.push({ name });
 
         // Ensure poleScheduleQuantities has an entry for the new location
         if (!this.poleScheduleQuantities) this.poleScheduleQuantities = {};

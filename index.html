@@ -1155,6 +1155,11 @@
                                                 <button v-if="getPoleScheduleLocations().length > 1" class="no-print" @click.stop="removePoleScheduleLocation(lIdx)" title="Remove Location" style="background: none; border: none; cursor: pointer; color: #ef4444; font-size: 0.75rem; padding: 0 2px;">✕</button>
                                             </div>
                                         </th>
+                                        <th class="text-center no-print" style="width: 44px; vertical-align: middle;">
+                                            <button type="button" @click="addPoleScheduleLocation" :disabled="isFinalized" title="+ Location (Naya location column jodo)" class="btn btn-secondary ico-btn" style="padding: 2px 6px; font-size: 0.72rem; color: #b91c1c; font-weight: 800; border-radius: 4px; white-space: nowrap;">
+                                                + Loc
+                                            </button>
+                                        </th>
 
                                         <th class="text-right" style="width: 80px;">Total Qty</th>
                                         <th class="text-right" style="width: 85px;">Unit Rate</th>
@@ -4977,7 +4982,7 @@
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261117_mobile_users_v10"></script>
-    <script defer src="js/auth.js?v=20261114_refresh_animation"></script>
+    <script defer src="js/auth.js?v=20261120_pole_loc_fix"></script>
     <script defer src="js/history.js?v=20261114_contractor_mapping"></script>
 
     <!-- Feature Modules -->
@@ -4990,7 +4995,7 @@
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
     <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
-    <script defer src="js/pole-schedule.js?v=20261117_1220_concreting"></script>
+    <script defer src="js/pole-schedule.js?v=20261120_pole_loc_fix"></script>
     <script defer src="js/stock-importer.js?v=20261118_review4"></script>
     <script defer src="js/old-reco-importer.js?v=20261118_review4"></script>
 
