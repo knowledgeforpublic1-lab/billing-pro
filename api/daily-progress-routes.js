@@ -22,21 +22,48 @@ let stockCache = null;
 let mappingCache = null;
 function publicContractors() {
     if (publicContractorsCache) return publicContractorsCache;
+    const stock = stockDatabase();
     const raw = loadScript('default-contractors.js', 'defaultContractorsList') || loadScript('default-contractors.js', 'DefaultContractors') || [];
-    const seen = new Map();
+    const defMap = new Map();
     for (const c of raw) {
-        const id = String((c && (c.id || c.name)) || '').trim();
-        const name = String((c && (c.name || c.firmName)) || '').trim();
-        if (!id || !name || seen.has(id)) continue;
-        seen.set(id, {
-            id,
-            name: name.slice(0, 200),
-            project: 'Gadchiroli (T-10)',
-            feeder: String((c && (c.feederName || c.feeder)) || '').slice(0, 200),
-            engineer: String((c && c.engineer) || '').slice(0, 200)
-        });
+        const nName = normId(c && (c.name || c.firmName)).replace(/eterprise/g, 'enterprise');
+        const nId = normId(c && c.id).replace(/eterprise/g, 'enterprise');
+        if (nName && !defMap.has(nName)) defMap.set(nName, c);
+        if (nId && !defMap.has(nId)) defMap.set(nId, c);
     }
-    publicContractorsCache = [...seen.values()];
+    const seen = new Map();
+    if (stock && stock.byContractorNorm && Object.keys(stock.byContractorNorm).length > 0) {
+        for (const [key, block] of Object.entries(stock.byContractorNorm)) {
+            if (!block || !block.contractorName) continue;
+            const name = String(block.contractorName).trim();
+            const norm = normId(name).replace(/eterprise/g, 'enterprise');
+            if (!norm || seen.has(norm)) continue;
+            const def = defMap.get(norm) || defMap.get(normId(key).replace(/eterprise/g, 'enterprise'));
+            const id = (def && def.id) || key;
+            seen.set(norm, {
+                id,
+                name: name.slice(0, 200),
+                project: 'Gadchiroli (T-10)',
+                feeder: String((def && (def.feederName || def.feeder)) || 'ANGARA').slice(0, 200),
+                engineer: String((def && def.engineer) || 'SUPERVISOR').slice(0, 200)
+            });
+        }
+    }
+    if (seen.size === 0) {
+        for (const c of raw) {
+            const id = String((c && (c.id || c.name)) || '').trim();
+            const name = String((c && (c.name || c.firmName)) || '').trim();
+            if (!id || !name || seen.has(id)) continue;
+            seen.set(id, {
+                id,
+                name: name.slice(0, 200),
+                project: 'Gadchiroli (T-10)',
+                feeder: String((c && (c.feederName || c.feeder)) || '').slice(0, 200),
+                engineer: String((c && c.engineer) || '').slice(0, 200)
+            });
+        }
+    }
+    publicContractorsCache = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
     return publicContractorsCache;
 }
 function stockDatabase() {

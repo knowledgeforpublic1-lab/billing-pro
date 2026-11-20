@@ -1352,7 +1352,7 @@
             },
             dailyProgressWorkerFilteredContractors() {
                 const q = String(this.dailyProgressWorkerSearch || '').trim().toLowerCase();
-                const list = (this.dailyProgressContractors && this.dailyProgressContractors.length) ? this.dailyProgressContractors : this.dailyProgressWorkerContractors;
+                const list = this.dailyProgressWorkerContractors.length ? this.dailyProgressWorkerContractors : this.dailyProgressContractors;
                 return list.filter(c => !q || (c.name + ' ' + c.id).toLowerCase().includes(q));
             },
             dailyProgressVisibleWorkers() {
@@ -1375,7 +1375,16 @@
                 const data = this.dailyProgressData;
                 const cid = this.dailyProgressContractorId;
                 if (!data || !data.reports) return [];
-                return data.reports.filter(r => r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const targetNorm = normFn(cid);
+                return data.reports.filter(r => {
+                    const matchesC = r.contractorId === cid || normFn(r.contractorId) === targetNorm;
+                    if (!matchesC) return false;
+                    if (this.dailyProgressLocationId) {
+                        return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
+                    }
+                    return true;
+                });
             },
             dailyProgressEnteredEffectiveFrom() {
                 const mode = this.dailyProgressEnteredFilterMode || 'today';

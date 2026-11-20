@@ -25,7 +25,15 @@
                 const result = await this.dailyProgressRequest('locations?contractorId=' + encodeURIComponent(cid));
                 if (cid !== this.dailyProgressContractorId) return;
                 this.dailyProgressLocations = result.locations || [];
-                if (this.dailyProgressLocationId && this.dailyProgressLocationId !== 'legacy' && !this.dailyProgressLocations.some(row => row.id === this.dailyProgressLocationId)) this.dailyProgressLocationId = '';
+                if (!this.dailyProgressLocationId) {
+                    if (this.dailyProgressLocations.length === 1) {
+                        this.dailyProgressLocationId = this.dailyProgressLocations[0].id;
+                    } else if (this.dailyProgressLocations.length === 0) {
+                        this.dailyProgressLocationId = 'legacy';
+                    }
+                } else if (this.dailyProgressLocationId !== 'legacy' && !this.dailyProgressLocations.some(row => row.id === this.dailyProgressLocationId)) {
+                    this.dailyProgressLocationId = this.dailyProgressLocations.length === 1 ? this.dailyProgressLocations[0].id : 'legacy';
+                }
             } catch (error) { this.showToast('Locations load nahi hui: ' + error.message, 'Alert'); }
         },
         async onDailyProgressContractorChange(cid) {

@@ -364,6 +364,9 @@ window.DailyProgressModule = {
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar doosri date select karein?')) {
             return;
         }
+        if (!this.dailyProgressLocationId) {
+            this.dailyProgressLocationId = (this.dailyProgressLocations && this.dailyProgressLocations.length === 1) ? this.dailyProgressLocations[0].id : 'legacy';
+        }
         this.dailyProgressDate = newDate;
         this.loadDailyProgressReportForDate(newDate);
     },
@@ -372,6 +375,9 @@ window.DailyProgressModule = {
         if (this._dpPendingSave) { this.explainPendingDailyProgressSave(); return; }
         if (this.dailyProgressDirty && !confirm('Aapke paas unsaved badlav hain. Badlav chhod kar aage badhein?')) {
             return;
+        }
+        if (!this.dailyProgressLocationId) {
+            this.dailyProgressLocationId = (this.dailyProgressLocations && this.dailyProgressLocations.length === 1) ? this.dailyProgressLocations[0].id : 'legacy';
         }
         const cur = new Date(this.dailyProgressDate || new Date());
         cur.setDate(cur.getDate() + delta);
@@ -925,8 +931,28 @@ window.DailyProgressModule = {
 
     getDailyProgressDayReport(date) {
         const cid = this.dailyProgressContractorId;
+        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+        const targetNorm = normFn(cid);
+        const normD = this.normalizeDailyProgressDate(date);
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
-        return reports.find(r => r.contractorId === cid && r.date === date && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
+        return reports.find(r => {
+            const matchesC = r.contractorId === cid || normFn(r.contractorId) === targetNorm;
+            const matchesD = r.date === date || this.normalizeDailyProgressDate(r.date) === normD;
+            if (!matchesC || !matchesD) return false;
+            if (this.dailyProgressLocationId) {
+                return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
+            }
+            return true;
+        });
+    },
+
+    openDailyProgressReportFromHistory(rep) {
+        if (!rep) return;
+        const targetLoc = rep.locationId || 'legacy';
+        this.dailyProgressLocationId = targetLoc;
+        this.dailyProgressDate = rep.date;
+        this.loadDailyProgressReportForDate(rep.date);
+        this.dailyProgressTab = 'entry';
     },
 
     getDailyProgressExportQty(itemId, date) {

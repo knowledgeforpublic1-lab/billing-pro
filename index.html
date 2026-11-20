@@ -556,9 +556,9 @@
                         </div>
 
                         <div class="dp-date-pill" style="display: inline-flex; align-items: center; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; overflow: hidden;">
-                            <button type="button" :disabled="!dailyProgressLocationId || dailyProgressBusy" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
-                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" :disabled="!dailyProgressLocationId || dailyProgressBusy" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
-                            <button type="button" :disabled="!dailyProgressLocationId || dailyProgressBusy" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
+                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
+                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" :disabled="dailyProgressBusy" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
+                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
                         </div>
 
                         <div class="dp-segmented-tabs" style="display: inline-flex; background: var(--bg-surface, #e2e8f0); padding: 2px; border-radius: 5px; gap: 2px;">
@@ -1969,7 +1969,7 @@
                     </div>
                     <div class="dp-location-choice">
                         <label for="dp-location-date">2. Work date</label>
-                        <input id="dp-location-date" type="date" :value="dailyProgressDate" :disabled="!dailyProgressLocationId || dailyProgressBusy" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate">
+                        <input id="dp-location-date" type="date" :value="dailyProgressDate" :disabled="dailyProgressBusy" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate">
                     </div>
                     <div v-if="dailyProgressLocationId" class="dp-location-actions">
                         <button type="button" class="btn btn-primary" @click="startDailyProgressLocationEntry">Start / Edit selected date</button>
@@ -2435,7 +2435,7 @@
                                         <td data-label="Team manpower">{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} people</td>
                                         <td data-label="Site notes" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ rep.remarks || '—' }}</td>
                                         <td data-label="Actions" style="text-align: right;">
-                                            <button type="button" class="tbtn primary" style="padding: 3px 10px; font-size: 0.72rem;" @click="dailyProgressDate = rep.date; loadDailyProgressReportForDate(rep.date); dailyProgressTab = 'entry'">
+                                            <button type="button" class="tbtn primary" style="padding: 3px 10px; font-size: 0.72rem;" @click="openDailyProgressReportFromHistory(rep)">
                                                 Open ➔
                                             </button>
                                         </td>
@@ -2489,7 +2489,7 @@
 
                                 <button type="button"
                                         class="btn btn-primary"
-                                        :disabled="dailyProgressBusy || !dailyProgressLocationId || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
+                                        :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
                                         @click="downloadDailyProgressExcel"
                                         style="font-size: 0.76rem; padding: 5px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                                     <span>{{ dailyProgressBusy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
@@ -4996,10 +4996,10 @@
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
-    <script defer src="js/daily-progress.js?v=20261120_stock_contractors_v1"></script>
-    <script defer src="js/daily-progress-access.js?v=20261120_stock_contractors_v1"></script>
+    <script defer src="js/daily-progress.js?v=20261120_backdate_v1"></script>
+    <script defer src="js/daily-progress-access.js?v=20261120_backdate_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261120_stock_contractors_v1"></script>
+    <script defer src="js/core/app.js?v=20261120_backdate_v1"></script>
 </body>
 
 </html>
