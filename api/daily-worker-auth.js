@@ -244,6 +244,13 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         res.json({ success: true });
     }));
 
+    router.post('/unlock', handler(async (req, res) => {
+        const actor = await principal(req);
+        const { contractorId, date, locationId } = req.body || {};
+        const result = await unlock(actor, contractorId, date, locationId);
+        res.json({ success: true, ...result });
+    }));
+
     async function saveUser(body, options = {}) {
         if (options.isPublicSignup && body.reset) fail(400, 'Signup cannot reset an existing account. Contact admin.');
         const name = String(body.name || '').trim();
@@ -414,26 +421,48 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
             const location = locationId ? await locations.get(cid, locationId) : null;
             const legacy = await read('shared_report_' + hash(reportKey({ contractorId: cid, date, locationId })));
             const digest = hash(JSON.stringify({ quantities: incoming.quantities || {}, manpower: incoming.manpower || {}, remarks: incoming.remarks || '' }));
+            const isFinal = incoming.final === true || incoming.state === 'final';
             const report = await db.atomicDailyRecord(controlKey(cid, date, locationId), old => {
-                if (old && (old.state === 'final' || old.fileId || old.leaseUntil > now() || old.operation?.until > now())) fail(old.state === 'final' ? 423 : 409, 'Is location/date ki entry reserved/locked hai. Admin se reopen karwayein.');
+                if (old && actor.role !== 'admin' && (old.state === 'final' || old.fileId || old.leaseUntil > now() || old.operation?.until > now())) {
+                    fail(old.state === 'final' ? 423 : 409, 'Is date ki entry save hone ke baad lock ho chuki hai. Sirf Admin hi ise unlock kar sakta hai.');
+                }
                 if (old?.sharedDigest === digest && old.baseReport && !old.deleted) return { result: old.baseReport };
                 let base = newerReport(previous, legacy?.report);
                 if (old?.version > Number(base?.version || 0)) base = { version: old.version };
                 if (Number(incoming.version) !== Number(base && base.version || 0) + 1) {
                     fail(409, 'Nayi entry pehle se saved hai. Apna draft safe rakhein aur latest report load karein.');
                 }
+                const nextState = isFinal ? 'final' : (old?.state || 'open');
                 const next = {
                     ...incoming,
                     locationId, locationName: location?.name || 'Legacy / Unassigned',
                     version: Number(base && base.version || 0) + 1,
+                    state: nextState,
+                    final: isFinal,
                     updatedAt: new Date(now()).toISOString(),
                     savedAt: new Date(now()).toISOString(),
                     savedBy: { id: actor.id, name: actor.name, username: actor.username, email: actor.email || '', mobile: actor.mobile || '', role: actor.role }
                 };
-                return { value: { ...(old || {}), contractorId: cid, date, locationId, state: 'open', version: next.version, epoch: old?.epoch || 0, baseReport: next, sharedDigest: digest, deleted: false, managed: false }, result: next };
+                return { value: { ...(old || {}), contractorId: cid, date, locationId, state: nextState, version: next.version, epoch: old?.epoch || 0, baseReport: next, sharedDigest: digest, deleted: false, managed: false }, result: next };
             });
             await recordHistory({ contractorId: cid, date, version: report.version, savedAt: report.savedAt, savedBy: report.savedBy, report, source: 'share' });
             return report;
+        },
+        async unlock(actor, cid, date, locationId) {
+            if (actor.role !== 'admin') fail(403, 'Sirf Admin hi saved entry ko unlock kar sakta hai.');
+            if (typeof cid !== 'string' || !cid) fail(400, 'Contractor required.');
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) fail(400, 'Valid date required.');
+            const lid = normalizeLocation(locationId);
+            return db.atomicDailyRecord(controlKey(cid, date, lid), old => {
+                const r = { ...(old || {}), contractorId: cid, date, locationId: lid, state: 'open' };
+                r.epoch = (r.epoch || 0) + 1;
+                delete r.owner;
+                delete r.operation;
+                r.leaseUntil = 0;
+                delete r.lastRequestId;
+                r.audit = [...(r.audit || []), { action: 'admin_unlock', at: now(), by: actor.username }].slice(-100);
+                return { value: r, result: { success: true, state: 'open' } };
+            });
         }
     };
 };

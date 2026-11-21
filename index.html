@@ -2119,9 +2119,15 @@
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
                     </div>
                     <div class="dp-save-badge">
-                        <span v-if="dailyProgressDirty" style="color: var(--dp-accent-amber);">● Unsaved Changes</span>
-                        <span v-else-if="dailyProgressVersion" style="color: var(--dp-accent-green);">✓ Saved (v{{ dailyProgressVersion }})</span>
-                        <span v-else style="color: var(--text-muted);">Ready for {{ formatDisplayDate(dailyProgressDate) }}</span>
+                        <span v-if="dailyProgressLocked" style="color: #ef4444; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>🔒 Entry Locked (Saved)</span>
+                            <button type="button" class="btn btn-secondary" style="font-size: 0.72rem; padding: 2px 8px; font-weight: 700;" @click="unlockDailyProgressEntry" title="Admin: Unlock this entry">🔓 Unlock Entry</button>
+                        </span>
+                        <span v-else-if="dailyProgressDirty" style="color: var(--dp-accent-amber);">● Unsaved Changes</span>
+                        <span v-else-if="dailyProgressVersion" style="color: var(--dp-accent-green); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>🔓 Unlocked / Editable (v{{ dailyProgressVersion }})</span>
+                        </span>
+                        <span v-else style="color: #16a34a; font-weight: 700;">🟢 Open (Nayi Entry)</span>
                     </div>
                 </div>
 
@@ -5132,10 +5138,10 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script defer src="js/daily-progress.js?v=20261121_search_dropdown_v1"></script>
-    <script defer src="js/daily-progress-access.js?v=20261121_search_dropdown_v1"></script>
+    <script defer src="js/daily-progress.js?v=20261121_auto_lock_v1"></script>
+    <script defer src="js/daily-progress-access.js?v=20261121_auto_lock_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261121_search_dropdown_v1"></script>
+    <script defer src="js/core/app.js?v=20261121_auto_lock_v1"></script>
 </body>
 
 </html>

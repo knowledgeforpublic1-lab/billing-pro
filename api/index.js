@@ -971,6 +971,19 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
 app.get('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));
 app.post('/api/daily-progress', (req, res) => res.redirect(307, '/api/daily-progress/data'));
 
+app.post('/api/daily-progress/unlock', express.json(), async (req, res) => {
+    try {
+        const actor = await workers.principal(req);
+        if (actor.role !== 'admin') return res.status(403).json({ success: false, error: 'Sirf Admin hi saved entry ko unlock kar sakta hai.' });
+        const { contractorId, date, locationId } = req.body || {};
+        if (!contractorId || !date) return res.status(400).json({ success: false, error: 'Contractor aur date required' });
+        const result = await workers.unlock(actor, contractorId, date, locationId);
+        res.json({ success: true, ...result });
+    } catch (e) {
+        res.status(e.status || 500).json({ success: false, error: e.message || 'Unlock failed' });
+    }
+});
+
 // POST: Save shared pole schedule defaults without overwriting existing bills.
 app.post('/api/save-default-pole-schedules', requireApiKey, auth.requireAdmin, express.json({ limit: '15mb' }), async (req, res) => {
     const ctx = 'SAVE-DEFAULT-POLE-SCHEDULES';

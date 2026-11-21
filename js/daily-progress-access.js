@@ -481,11 +481,23 @@
             });
         },
         reopenDailyProgressEntry() {
+            return this.unlockDailyProgressEntry();
+        },
+        unlockDailyProgressEntry() {
             return this.runDailyProgressAdmin(async () => {
-                if (!confirm('Selected contractor/date ko dobara entry ke liye open karein?')) return;
-                await this.dailyProgressRequest('reopen', { contractorId: this.dailyProgressContractorId, date: this.dailyProgressDate });
+                const cid = this.dailyProgressContractorId, date = this.dailyProgressDate;
+                const locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+                if (!confirm(`Selected contractor (${cid}) / date (${date}) ki entry ko unlock karein?`)) return;
+                await this.dailyProgressRequest('reopen', { contractorId: cid, date, locationId });
+                this.dailyProgressLocked = false;
+                const reports = this.dailyProgressData && this.dailyProgressData.reports;
+                if (Array.isArray(reports)) {
+                    const found = reports.find(r => r.contractorId === cid && r.date === date && this.dailyProgressLocationKey(r.locationId) === locationId);
+                    if (found) found.state = 'open';
+                }
                 await this.refreshDailyProgressStatus(false);
-                this.showToast('Entry reopened. Purana draft retained hai.', 'Check');
+                this.dailyProgressLocked = false;
+                this.showToast('✅ Entry unlocked! Ab changes save kiye ja sakte hain.', 'Check');
             });
         },
         checkDailyProgressDrive() {

@@ -633,6 +633,7 @@ window.DailyProgressModule = {
             };
             this.dailyProgressRemarks = r.remarks || '';
             this.dailyProgressVersion = r.version || 1;
+            this.dailyProgressLocked = r.state !== 'open';
         } else {
             this.dailyProgressQuantities = {};
             this.dailyProgressManpower = {
@@ -645,6 +646,7 @@ window.DailyProgressModule = {
             };
             this.dailyProgressRemarks = '';
             this.dailyProgressVersion = 0;
+            this.dailyProgressLocked = false;
         }
         this.dailyProgressDirty = false;
     },

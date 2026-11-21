@@ -242,6 +242,46 @@
                 if (typeof window !== 'undefined' && window.DefaultFeeders) return window.DefaultFeeders.get(id);
                 return null;
             },
+            isAdmin() {
+                return !!(this.entryLoginUser && this.entryLoginUser.role === 'admin');
+            },
+            isCurrentDateLocked() {
+                const actC = this.activeContractor || {};
+                const curDate = normDate(this.selectedDate);
+                const locKey = locationKey(this.selectedLocationId);
+                
+                const stateObj = (this.reportStates || []).find(row => 
+                    matchesContractor(row.contractorId, actC) && 
+                    normDate(row.date) === curDate && 
+                    locationKey(row.locationId) === locKey
+                );
+
+                const rep = (this.reports || []).find(r => 
+                    matchesContractor(r.contractorId, actC) && 
+                    normDate(r.date) === curDate && 
+                    locationKey(r.locationId) === locKey
+                );
+
+                // 1. If explicit stateObj exists:
+                if (stateObj) {
+                    if (stateObj.state === 'final') return true;
+                    if (stateObj.state === 'open') return false;
+                }
+
+                // 2. If report exists:
+                if (rep) {
+                    if (rep.pending) return false;
+                    if (rep.state === 'final' || rep.final) return true;
+                    if (rep.state === 'open') return false;
+                }
+
+                return false;
+            },
+            canEditCurrentDate() {
+                if (this.busy) return false;
+                if (this.isCurrentDateLocked && !this.isAdmin) return false;
+                return true;
+            },
             shareFilteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.shareContractorSearch || '').trim().toLowerCase();
@@ -900,6 +940,10 @@
             },
 
             onQuantityInput(itemId, val) {
+                if (!this.canEditCurrentDate) {
+                    this.showToast('Yeh entry locked hai. Koyi change karne ke liye pehle Admin se unlock karwayein.', 'warning');
+                    return;
+                }
                 const num = Number(val);
                 if (num > 0) {
                     this.quantities = { ...this.quantities, [itemId]: num };
@@ -1015,6 +1059,7 @@
                         quantities: cleanQuantities,
                         manpower: { ...this.manpower },
                         remarks: this.remarks || '',
+                        state: 'final',
                         version: (this.version || 0) + 1,
                         updatedAt: new Date().toISOString()
                     };
@@ -1088,6 +1133,57 @@
                     }
                 } catch (err) {
                     this.showToast('Save failed: ' + err.message, 'error');
+                } finally {
+                    this.busy = false;
+                }
+            },
+
+            async unlockCurrentDate() {
+                if (!this.isAdmin) return this.showToast('Sirf Admin hi entry unlock kar sakta hai.', 'warning');
+                const cName = this.activeContractor?.name || this.selectedContractorId;
+                if (!confirm(`Kya aap ${this.selectedDate} (${cName}) ki entry unlock karna chahte hain?`)) return;
+                this.busy = true;
+                try {
+                    const actC = this.activeContractor || {};
+                    const res = await fetch('/api/daily-progress/unlock', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contractorId: actC.id || this.selectedContractorId,
+                            date: this.selectedDate,
+                            locationId: this.selectedLocationId
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) throw new Error(data.error || 'Unlock failed');
+                    
+                    const curDate = normDate(this.selectedDate);
+                    const locKey = locationKey(this.selectedLocationId);
+                    let stateObj = (this.reportStates || []).find(row => 
+                        matchesContractor(row.contractorId, actC) && 
+                        normDate(row.date) === curDate && 
+                        locationKey(row.locationId) === locKey
+                    );
+                    if (stateObj) {
+                        stateObj.state = 'open';
+                    } else {
+                        this.reportStates.push({
+                            contractorId: actC.id || this.selectedContractorId,
+                            date: curDate,
+                            locationId: this.selectedLocationId,
+                            state: 'open'
+                        });
+                    }
+                    const rep = (this.reports || []).find(r => 
+                        matchesContractor(r.contractorId, actC) && 
+                        normDate(r.date) === curDate && 
+                        locationKey(r.locationId) === locKey
+                    );
+                    if (rep) rep.state = 'open';
+
+                    this.showToast(`✅ Entry unlocked for ${this.selectedDate}! Ab changes save kiye ja sakte hain.`, 'success');
+                } catch (err) {
+                    this.showToast('Unlock error: ' + err.message, 'error');
                 } finally {
                     this.busy = false;
                 }

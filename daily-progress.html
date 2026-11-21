@@ -302,8 +302,46 @@
                         <span v-else style="color: #94a3b8;">Ready for {{ selectedDate }}</span>
                     </div>
 
+                    <!-- Lock / Unlock Alert Banner -->
+                    <div v-if="isCurrentDateLocked" class="dp-lock-banner locked">
+                        <div class="dp-lock-banner-content">
+                            <span class="dp-lock-icon">🔒</span>
+                            <div>
+                                <strong style="color: #f87171;">Entry Locked (Saved)</strong>
+                                <span style="display: block; font-size: 12px; color: #cbd5e1; margin-top: 2px;">
+                                    Is date ({{ selectedDate }}) ki entry pehle se saved hai aur locked hai. Koyi badlaav karne ke liye Admin se unlock karwayein.
+                                </span>
+                            </div>
+                        </div>
+                        <button v-if="isAdmin" type="button" class="btn-unlock-entry" @click="unlockCurrentDate" title="Admin: Unlock this entry">
+                            🔓 Unlock Entry
+                        </button>
+                    </div>
+                    <div v-else-if="reports.some(r => matchesContractor(r.contractorId, activeContractor) && normDate(r.date) === normDate(selectedDate) && locationKey(r.locationId) === locationKey(selectedLocationId))" class="dp-lock-banner unlocked">
+                        <div class="dp-lock-banner-content">
+                            <span class="dp-lock-icon">🔓</span>
+                            <div>
+                                <strong style="color: #38bdf8;">Entry Unlocked (Editable)</strong>
+                                <span style="display: block; font-size: 12px; color: #cbd5e1; margin-top: 2px;">
+                                    Admin dwara unlock kiya gaya hai. Changes karke Save karein (Save karte hi lock ho jayegi).
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="dp-lock-banner open">
+                        <div class="dp-lock-banner-content">
+                            <span class="dp-lock-icon">🟢</span>
+                            <div>
+                                <strong style="color: #4ade80;">New Entry (Open)</strong>
+                                <span style="display: block; font-size: 12px; color: #cbd5e1; margin-top: 2px;">
+                                    Is date par abhi koi entry nahi hai. Data enter karke Save karein (Save hone par lock ho jayegi).
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Two-column Entry Layout -->
-                    <fieldset class="dp-entry-fields" :disabled="!canEnterLocation || busy">
+                    <fieldset class="dp-entry-fields" :disabled="!canEnterLocation || busy || !canEditCurrentDate">
                     <div class="entry-layout">
                         <!-- Left: Materials Consumption Table -->
                         <div class="panel">
@@ -460,15 +498,26 @@
 
                     <!-- Sticky Save Bar -->
                     </fieldset>
-                    <div class="save-bar">
+                    <div class="save-bar" :style="{ background: isCurrentDateLocked && !isAdmin ? '#1e293b' : '' }">
                         <div class="save-status-info">
-                            <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready for Progress Entry') }}</strong>
-                            <span>{{ activeContractor.name }} · Work Date: {{ selectedDate }}</span>
+                            <template v-if="isCurrentDateLocked">
+                                <strong style="color: #f87171;">🔒 Entry Locked (Saved)</strong>
+                                <span style="color: #94a3b8;">{{ activeContractor.name }} · Work Date: {{ selectedDate }} (Locked)</span>
+                            </template>
+                            <template v-else>
+                                <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready for Progress Entry (Open)') }}</strong>
+                                <span>{{ activeContractor.name }} · Work Date: {{ selectedDate }}</span>
+                            </template>
                         </div>
-                        <button type="button" class="btn-save-progress" :disabled="busy || !canEnterLocation" @click="saveProgress">
-                            <span>💾</span>
-                            <span>{{ busy ? 'Saving...' : 'Save Daily Progress' }}</span>
-                        </button>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <button v-if="isCurrentDateLocked && isAdmin" type="button" class="btn-unlock-entry" @click="unlockCurrentDate" style="padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+                                🔓 Unlock Entry
+                            </button>
+                            <button type="button" class="btn-save-progress" :disabled="busy || !canEnterLocation || (isCurrentDateLocked && !isAdmin)" @click="saveProgress" :style="{ opacity: (isCurrentDateLocked && !isAdmin) ? '0.5' : '1', cursor: (isCurrentDateLocked && !isAdmin) ? 'not-allowed' : 'pointer' }">
+                                <span>{{ isCurrentDateLocked && !isAdmin ? '🔒' : '💾' }}</span>
+                                <span>{{ busy ? 'Saving...' : (isCurrentDateLocked ? (isAdmin ? 'Save (Admin)' : 'Locked') : 'Save Daily Progress') }}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -980,7 +1029,7 @@
     <script src="js/daily-worker-auth.js?v=20261119_fast_login_v1"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261121_search_dropdown_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261121_auto_lock_v1"></script>
 </body>
 
 </html>
