@@ -106,7 +106,7 @@ module.exports = function createRouter({ raw, readLegacy, env = process.env, dri
             const rows = new Map(legacy.map(row => [row.dataId, row]));
             for (const head of heads) {
                 if (head.deleted) rows.delete(head.id);
-                else if (head.mode === 'drive') rows.set(head.id, { ...(head.summary || {}), dataId: head.id, rev: head.version, updatedAt: head.updatedAt, totalAmount: head.summary?.grandTotal || 0 });
+                else if (head.mode === 'drive') rows.set(head.id, { ...(head.summary || {}), dataId: head.id, rev: head.version, updatedAt: head.summary?.updatedAt || head.updatedAt, totalAmount: head.summary?.grandTotal || 0 });
             }
             return [...rows.values()].sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
         },

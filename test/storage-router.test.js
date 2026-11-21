@@ -49,6 +49,17 @@ test('new Drive-only heads never hide unrelated legacy bills by cardinality', as
     assert.deepEqual(new Set(rows.map(row => row.dataId)), new Set(['legacy-a', 'legacy-b', 'new-a', 'new-b']));
     await assert.rejects(f.db.updateAllBillsActivities({}), { status: 409 });
 });
+test('copying historical bills preserves business ordering and the original latest bill', async () => {
+    const f = fixture('bill');
+    await f.db.storageContext.run(f.scope(), async () => {
+        await f.db.saveBillingState('newest', { dataId: 'newest', rev: 1, updatedAt: '2026-11-20T10:00:00.000Z', stateData: { qty: 12 } }, 0);
+        await f.db.saveBillingState('older', { dataId: 'older', rev: 1, updatedAt: '2026-10-01T10:00:00.000Z', stateData: { qty: 7 } }, 0);
+    });
+    assert.deepEqual((await f.db.listBills()).filter(row => ['newest', 'older'].includes(row.dataId)).map(row => row.dataId), ['newest', 'older']);
+    assert.equal((await f.db.getLatestBillingState()).dataId, 'newest');
+    assert.equal((await f.db.listBills())[0].updatedAt, '2026-11-20T10:00:00.000Z');
+});
+
 test('daily history and report payloads are hydrated before pure callbacks; lease-only changes reuse snapshots', async () => {
     const f = fixture('daily');
     await f.db.storageContext.run(f.scope(), async () => {
