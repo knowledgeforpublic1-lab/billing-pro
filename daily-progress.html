@@ -78,20 +78,20 @@
                                 <div class="dp-search-combo-box">
                                     <span class="dp-combo-search-icon">🔍</span>
                                     <input type="text"
-                                           v-model="contractorSearchText"
+                                           :value="contractorDropdownOpen ? contractorSearchText : (activeContractor ? activeContractor.name : '')"
+                                           @input="onContractorSearchInput($event.target.value)"
                                            ref="contractorSearchRef"
                                            class="dp-combo-input"
-                                           @focus="contractorDropdownOpen = true"
-                                           @click.stop="contractorDropdownOpen = true"
-                                           @input="contractorDropdownOpen = true"
-                                           :placeholder="activeContractor ? activeContractor.name : 'Search contractor...'"
+                                           @focus="onContractorSearchFocus"
+                                           @click.stop="onContractorSearchFocus"
+                                           placeholder="Search or select contractor..."
                                            @keydown.esc="closeContractorDropdown"
                                            @keydown.enter.prevent="filteredContractors.length && selectContractor(filteredContractors[0].id)"
                                            autocomplete="off">
-                                    <button v-if="contractorSearchText"
+                                    <button v-if="contractorDropdownOpen && contractorSearchText"
                                             type="button"
                                             class="dp-combo-clear-btn"
-                                            @click.stop="contractorSearchText = ''; contractorDropdownOpen = true; $refs.contractorSearchRef && $refs.contractorSearchRef.focus()"
+                                            @click.stop="clearContractorSearch"
                                             title="Clear search">✕</button>
                                     <button type="button"
                                             class="dp-combo-arrow-btn"
@@ -103,7 +103,7 @@
                                 <div v-if="contractorDropdownOpen" class="dp-contractor-search-panel" @click.stop>
                                     <div class="dp-search-panel-header">
                                         <span>🔍 {{ filteredContractors.length }} CONTRACTORS FOUND</span>
-                                        <span v-if="contractorSearchText" class="dp-panel-clear-action" @click="contractorSearchText = ''">Clear ✕</span>
+                                        <span v-if="contractorSearchText" class="dp-panel-clear-action" @click="clearContractorSearch">Clear ✕</span>
                                     </div>
                                     <div class="dp-contractor-results-list">
                                         <div v-for="c in filteredContractors"
@@ -317,7 +317,7 @@
                             🔓 Unlock Entry
                         </button>
                     </div>
-                    <div v-else-if="reports.some(r => matchesContractor(r.contractorId, activeContractor) && normDate(r.date) === normDate(selectedDate) && locationKey(r.locationId) === locationKey(selectedLocationId))" class="dp-lock-banner unlocked">
+                    <div v-else-if="isCurrentDateUnlocked" class="dp-lock-banner unlocked">
                         <div class="dp-lock-banner-content">
                             <span class="dp-lock-icon">🔓</span>
                             <div>
@@ -912,9 +912,9 @@
                         <div>
                             <span style="font-size:11px; color:#38bdf8; font-weight:800; text-transform:uppercase;">Selected Contractor:</span>
                             <div style="font-size:14px; font-weight:800; color:#f8fafc;">
-                                {{ (shareSelectedContractor || activeContractor).name }}
+                                {{ (shareSelectedContractor || activeContractor)?.name || 'Select Contractor' }}
                             </div>
-                            <div v-if="(shareSelectedContractor || activeContractor).feeder" style="font-size:11px; color:#94a3b8;">
+                            <div v-if="(shareSelectedContractor || activeContractor)?.feeder" style="font-size:11px; color:#94a3b8;">
                                 ⚡ Feeder: {{ (shareSelectedContractor || activeContractor).feeder }}
                             </div>
                         </div>
@@ -957,7 +957,7 @@
                          :key="c.id"
                          @click="selectShareContractor(c)"
                          style="padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:background 0.1s;"
-                         :style="{ background: (shareSelectedContractor ? shareSelectedContractor.id === c.id : activeContractor.id === c.id) ? 'rgba(56,189,248,0.15)' : 'transparent' }">
+                         :style="{ background: (shareSelectedContractor ? shareSelectedContractor.id === c.id : (activeContractor && activeContractor.id === c.id)) ? 'rgba(56,189,248,0.15)' : 'transparent' }">
                         <div>
                             <div style="font-size:12px; font-weight:700; color:#f8fafc;">{{ c.name }}</div>
                             <div style="font-size:10px; color:#94a3b8; display:flex; gap:8px;">

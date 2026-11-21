@@ -277,6 +277,28 @@
 
                 return false;
             },
+            isCurrentDateUnlocked() {
+                if (this.isCurrentDateLocked) return false;
+                const actC = this.activeContractor || {};
+                const curDate = normDate(this.selectedDate);
+                const locKey = locationKey(this.selectedLocationId);
+
+                const stateObj = (this.reportStates || []).find(row => 
+                    matchesContractor(row.contractorId, actC) && 
+                    normDate(row.date) === curDate && 
+                    locationKey(row.locationId) === locKey
+                );
+                if (stateObj && stateObj.state === 'open') return true;
+
+                const rep = (this.reports || []).find(r => 
+                    matchesContractor(r.contractorId, actC) && 
+                    normDate(r.date) === curDate && 
+                    locationKey(r.locationId) === locKey
+                );
+                if (rep && (rep.state === 'open' || !rep.state)) return true;
+
+                return false;
+            },
             canEditCurrentDate() {
                 if (this.busy) return false;
                 if (this.isCurrentDateLocked && !this.isAdmin) return false;
@@ -285,13 +307,14 @@
             shareFilteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.shareContractorSearch || '').trim().toLowerCase();
-                if (!q) return list;
+                if (!q) return list.filter(Boolean);
                 return list.filter(c => {
-                    return (c.name && c.name.toLowerCase().includes(q)) ||
-                           (c.id && c.id.toLowerCase().includes(q)) ||
-                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
-                           (c.engineer && c.engineer.toLowerCase().includes(q)) ||
-                           (c.project && c.project.toLowerCase().includes(q));
+                    if (!c) return false;
+                    return (c.name && String(c.name).toLowerCase().includes(q)) ||
+                           (c.id && String(c.id).toLowerCase().includes(q)) ||
+                           (c.feeder && String(c.feeder).toLowerCase().includes(q)) ||
+                           (c.engineer && String(c.engineer).toLowerCase().includes(q)) ||
+                           (c.project && String(c.project).toLowerCase().includes(q));
                 });
             },
 
@@ -313,14 +336,15 @@
             filteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.contractorSearchText || '').trim().toLowerCase();
-                if (!q) return list;
+                if (!q) return list.filter(Boolean);
                 return list.filter(c => {
-                    return (c.name && c.name.toLowerCase().includes(q)) ||
-                           (c.firmName && c.firmName.toLowerCase().includes(q)) ||
-                           (c.id && c.id.toLowerCase().includes(q)) ||
-                           (c.feeder && c.feeder.toLowerCase().includes(q)) ||
-                           (c.engineer && c.engineer.toLowerCase().includes(q)) ||
-                           (c.project && c.project.toLowerCase().includes(q));
+                    if (!c) return false;
+                    return (c.name && String(c.name).toLowerCase().includes(q)) ||
+                           (c.firmName && String(c.firmName).toLowerCase().includes(q)) ||
+                           (c.id && String(c.id).toLowerCase().includes(q)) ||
+                           (c.feeder && String(c.feeder).toLowerCase().includes(q)) ||
+                           (c.engineer && String(c.engineer).toLowerCase().includes(q)) ||
+                           (c.project && String(c.project).toLowerCase().includes(q));
                 });
             },
 
@@ -517,6 +541,26 @@
                 } catch (error) { this.showToast(error.message, 'error'); }
                 finally { this.busy = false; }
             },
+            matchesContractor(a, b) { return matchesContractor(a, b); },
+            normDate(d) { return normDate(d); },
+            locationKey(k) { return locationKey(k); },
+
+            onContractorSearchInput(val) {
+                this.contractorSearchText = val;
+                this.contractorDropdownOpen = true;
+            },
+
+            onContractorSearchFocus() {
+                this.contractorDropdownOpen = true;
+                this.contractorSearchText = '';
+            },
+
+            clearContractorSearch() {
+                this.contractorSearchText = '';
+                this.contractorDropdownOpen = true;
+                if (this.$refs.contractorSearchRef) this.$refs.contractorSearchRef.focus();
+            },
+
             toggleContractorDropdown() {
                 this.contractorDropdownOpen = !this.contractorDropdownOpen;
                 if (this.contractorDropdownOpen) {
