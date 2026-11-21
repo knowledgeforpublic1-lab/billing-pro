@@ -91,6 +91,8 @@
                 subDivisionFilter: 'ALL',
                 substationFilter: 'ALL',
                 feederSearch: '',
+                locationDropdownOpen: false,
+                locationSearchQuery: '',
                 showCustomLocation: false,
                 items: seed.items || [],
                 sapStock: null,
@@ -223,6 +225,14 @@
                 }
 
                 return filtered;
+            },
+            searchFilteredLocations() {
+                const q = String(this.locationSearchQuery || '').trim().toLowerCase();
+                if (!q) return this.filteredLocations;
+                return this.filteredLocations.filter(loc => {
+                    const text = (loc.name + ' ' + (loc.division || '') + ' ' + (loc.subDivision || '') + ' ' + (loc.substation || '') + ' ' + (loc.feeder || '')).toLowerCase();
+                    return text.includes(q);
+                });
             },
             activeLocationObj() {
                 const id = this.selectedLocationId;
@@ -384,6 +394,25 @@
                 this.subDivisionFilter = 'ALL';
                 this.substationFilter = 'ALL';
                 this.feederSearch = '';
+            },
+            toggleLocationDropdown() {
+                this.locationDropdownOpen = !this.locationDropdownOpen;
+                if (this.locationDropdownOpen) {
+                    this.locationSearchQuery = '';
+                    this.$nextTick(() => {
+                        const el = document.getElementById('location-search-input');
+                        if (el) el.focus();
+                    });
+                }
+            },
+            closeLocationDropdown() {
+                this.locationDropdownOpen = false;
+                this.locationSearchQuery = '';
+            },
+            selectLocation(id) {
+                this.locationDropdownOpen = false;
+                this.locationSearchQuery = '';
+                this.changeLocation(id);
             },
             syncFiltersFromLocation(id) {
                 if (!id || id === 'legacy') return;

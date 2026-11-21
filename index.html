@@ -105,7 +105,7 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_toggle5">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261121_locations_share_v3">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261121_search_dropdown_v1">
 </head>
 
 <body>
@@ -2023,17 +2023,43 @@
                         </div>
 
                         <div class="dp-field-box">
-                            <label for="dp-location">
+                            <label>
                                 <span>3. Feeder / Location</span>
                                 <span style="font-weight: 400; color: var(--dp-text-muted);">({{ filteredDailyProgressLocations.length }} match)</span>
                             </label>
-                            <select id="dp-location" :value="dailyProgressLocationId" :disabled="dailyProgressBusy" @change="changeDailyProgressLocation($event.target.value); $event.target.value = dailyProgressLocationId">
-                                <option value="">Feeder select karein…</option>
-                                <option v-for="loc in filteredDailyProgressLocations" :key="loc.id" :value="loc.id">
-                                    {{ loc.name }}
-                                </option>
-                                <option value="legacy">Legacy / Unassigned (Old Entries)</option>
-                            </select>
+                            <div class="searchable-dropdown">
+                                <button type="button" class="searchable-dropdown-trigger" :disabled="dailyProgressBusy" @click="toggleDpLocationDropdown">
+                                    <span class="searchable-dropdown-label" :class="{ placeholder: !dailyProgressLocationId }">
+                                        {{ dailyProgressLocationId === 'legacy' ? 'Legacy / Unassigned (Old Entries)' : (dailyProgressActiveLocationObj ? dailyProgressActiveLocationObj.name : 'Feeder select karein…') }}
+                                    </span>
+                                    <span class="searchable-dropdown-arrow">{{ dpLocationDropdownOpen ? '▲' : '▼' }}</span>
+                                </button>
+                                <div v-if="dpLocationDropdownOpen" class="searchable-dropdown-backdrop" @click="closeDpLocationDropdown"></div>
+                                <div v-if="dpLocationDropdownOpen" class="searchable-dropdown-panel">
+                                    <div class="searchable-dropdown-search-wrap">
+                                        <span class="searchable-dropdown-search-icon">🔍</span>
+                                        <input id="dp-location-search-input" type="text" v-model="dpLocationSearchQuery" placeholder="Feeder / Substation / Gaon search karein..." autocomplete="off" class="searchable-dropdown-search" @keydown.esc="closeDpLocationDropdown">
+                                        <button v-if="dpLocationSearchQuery" type="button" class="searchable-dropdown-search-clear" @click="dpLocationSearchQuery = ''">✕</button>
+                                    </div>
+                                    <div class="searchable-dropdown-list">
+                                        <div class="searchable-dropdown-item" :class="{ selected: !dailyProgressLocationId }" @click="selectDpLocation('')">
+                                            <span style="color: var(--dp-text-muted);">Feeder select karein…</span>
+                                        </div>
+                                        <div v-for="loc in dpSearchFilteredLocations" :key="loc.id"
+                                             class="searchable-dropdown-item" :class="{ selected: dailyProgressLocationId === loc.id }"
+                                             @click="selectDpLocation(loc.id)">
+                                            <span class="searchable-dropdown-item-name">{{ loc.name }}</span>
+                                            <span class="searchable-dropdown-item-meta" v-if="loc.substation">{{ loc.substation }}</span>
+                                        </div>
+                                        <div v-if="!dpSearchFilteredLocations.length" class="searchable-dropdown-empty">
+                                            Koi feeder match nahi hua "{{ dpLocationSearchQuery }}"
+                                        </div>
+                                        <div class="searchable-dropdown-item" :class="{ selected: dailyProgressLocationId === 'legacy' }" @click="selectDpLocation('legacy')">
+                                            <span style="color: var(--dp-text-muted); font-style: italic;">Legacy / Unassigned (Old Entries)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="dp-field-box">
@@ -5106,10 +5132,10 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script defer src="js/daily-progress.js?v=20261121_locations_share_v3"></script>
-    <script defer src="js/daily-progress-access.js?v=20261121_locations_share_v3"></script>
+    <script defer src="js/daily-progress.js?v=20261121_search_dropdown_v1"></script>
+    <script defer src="js/daily-progress-access.js?v=20261121_search_dropdown_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261121_locations_share_v3"></script>
+    <script defer src="js/core/app.js?v=20261121_search_dropdown_v1"></script>
 </body>
 
 </html>

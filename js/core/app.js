@@ -458,6 +458,8 @@
                 dpSubDivisionFilter: 'ALL',
                 dpSubstationFilter: 'ALL',
                 dpFeederSearch: '',
+                dpLocationDropdownOpen: false,
+                dpLocationSearchQuery: '',
                 dpShowCustomLocation: false,
                 dailyProgressUserSearch: '',
                 dailyProgressWorkerExpanded: {},
@@ -1522,6 +1524,14 @@
                 }
 
                 return filtered;
+            },
+            dpSearchFilteredLocations() {
+                const q = String(this.dpLocationSearchQuery || '').trim().toLowerCase();
+                if (!q) return this.filteredDailyProgressLocations;
+                return this.filteredDailyProgressLocations.filter(loc => {
+                    const text = (loc.name + ' ' + (loc.division || '') + ' ' + (loc.subDivision || '') + ' ' + (loc.substation || '') + ' ' + (loc.feeder || '')).toLowerCase();
+                    return text.includes(q);
+                });
             },
             dailyProgressActiveLocationObj() {
                 const id = this.dailyProgressLocationId;

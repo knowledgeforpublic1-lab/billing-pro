@@ -51,6 +51,25 @@ window.DailyProgressModule = {
         this.dpSubstationFilter = 'ALL';
         this.dpFeederSearch = '';
     },
+    toggleDpLocationDropdown() {
+        this.dpLocationDropdownOpen = !this.dpLocationDropdownOpen;
+        if (this.dpLocationDropdownOpen) {
+            this.dpLocationSearchQuery = '';
+            this.$nextTick(() => {
+                const el = document.getElementById('dp-location-search-input');
+                if (el) el.focus();
+            });
+        }
+    },
+    closeDpLocationDropdown() {
+        this.dpLocationDropdownOpen = false;
+        this.dpLocationSearchQuery = '';
+    },
+    selectDpLocation(id) {
+        this.dpLocationDropdownOpen = false;
+        this.dpLocationSearchQuery = '';
+        this.changeDailyProgressLocation(id);
+    },
     setDailyProgressDateToday() {
         const today = this.todayDateStr || new Date().toISOString().slice(0, 10);
         this.onDailyProgressDateChange(today);
