@@ -7,7 +7,7 @@
     <title>Daily Progress Register | Site Diary — RDSS T-10 GADCHIROLI</title>
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/daily-standalone.css?v=20261117_locations_v11">
+    <link rel="stylesheet" href="css/daily-standalone.css?v=20261121_locations_share_v3">
     <style>
         [v-cloak] { display: none !important; }
     </style>
@@ -147,24 +147,123 @@
             </header>
 
             <main>
-                <section class="dp-location-bar" aria-label="Select work location">
-                    <div class="dp-location-choice">
-                        <label for="work-location">1. Select location</label>
-                        <select id="work-location" :value="selectedLocationId" @change="changeLocation($event.target.value); $event.target.value = selectedLocationId">
-                            <option value="">Choose a location first…</option>
-                            <option v-for="location in locations" :key="location.id" :value="location.id">{{ location.name }}</option>
-                            <option value="legacy">Legacy / Unassigned (view old entries)</option>
-                        </select>
+                <!-- MASTER EXECUTIVE LOCATION & DATE HEADER -->
+                <section class="dp-master-header-card" aria-label="Select work location">
+                    <!-- Top Row: Division Pills & Date Quick Controls -->
+                    <div class="dp-header-top-row">
+                        <div class="dp-division-pills">
+                            <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'ALL' }" @click="setDivision('ALL')">
+                                <span>🌐 All</span>
+                                <span class="dp-pill-badge">105</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Gadchiroli' }" @click="setDivision('Gadchiroli')">
+                                <span>Gadchiroli</span>
+                                <span class="dp-pill-badge">39</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Bramhapuri' }" @click="setDivision('Bramhapuri')">
+                                <span>Bramhapuri</span>
+                                <span class="dp-pill-badge">28</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Allapalli' }" @click="setDivision('Allapalli')">
+                                <span>Allapalli</span>
+                                <span class="dp-pill-badge">38</span>
+                            </button>
+                        </div>
+
+                        <!-- Right: Custom Site Toggle -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="dp-custom-toggle-btn" @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
+                                <span>{{ showCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="dp-location-choice">
-                        <label for="new-work-location">Add site / village / work location</label>
-                        <div class="dp-location-add"><input id="new-work-location" v-model="newLocationName" maxlength="120" placeholder="e.g. Angara Village – Site A" @keydown.enter.prevent="addLocation"><button type="button" @click="addLocation">Add Location</button></div>
+
+                    <!-- Second Row: Cascading Filters & Feeder Selection -->
+                    <div class="dp-cascading-grid">
+                        <div class="dp-field-box">
+                            <label for="filter-subdivision">
+                                <span>1. Sub-Division</span>
+                                <span v-if="subDivisionFilter !== 'ALL'" style="color: #38bdf8; cursor: pointer;" @click="setSubDivision('ALL')">Clear ✕</span>
+                            </label>
+                            <select id="filter-subdivision" :value="subDivisionFilter" @change="setSubDivision($event.target.value)">
+                                <option value="ALL">All Sub-Divisions ({{ availableSubDivisions.length }})</option>
+                                <option v-for="sub in availableSubDivisions" :key="sub" :value="sub">{{ sub }}</option>
+                            </select>
+                        </div>
+
+                        <div class="dp-field-box">
+                            <label for="filter-substation">
+                                <span>2. Substation</span>
+                                <span v-if="substationFilter !== 'ALL'" style="color: #38bdf8; cursor: pointer;" @click="setSubstation('ALL')">Clear ✕</span>
+                            </label>
+                            <select id="filter-substation" :value="substationFilter" @change="setSubstation($event.target.value)">
+                                <option value="ALL">All Substations ({{ availableSubstations.length }})</option>
+                                <option v-for="sst in availableSubstations" :key="sst" :value="sst">{{ sst }}</option>
+                            </select>
+                        </div>
+
+                        <div class="dp-field-box">
+                            <label for="work-location">
+                                <span>3. Feeder / Location</span>
+                                <span style="font-weight: 400; color: #94a3b8;">({{ filteredLocations.length }} match)</span>
+                            </label>
+                            <select id="work-location" :value="selectedLocationId" @change="changeLocation($event.target.value); $event.target.value = selectedLocationId">
+                                <option value="">Feeder select karein…</option>
+                                <option v-for="location in filteredLocations" :key="location.id" :value="location.id">
+                                    {{ location.name }}
+                                </option>
+                                <option value="legacy">Legacy / Unassigned (view old entries)</option>
+                            </select>
+                        </div>
+
+                        <div class="dp-field-box">
+                            <label for="search-feeder">
+                                <span>🔍 Instant Search</span>
+                                <span v-if="feederSearch" style="color: #f87171; cursor: pointer;" @click="feederSearch = ''">Clear ✕</span>
+                            </label>
+                            <div class="dp-search-field-wrap">
+                                <span class="dp-search-icon">🔍</span>
+                                <input id="search-feeder" type="text" v-model="feederSearch" placeholder="Feeder / Substation / Gaon..." autocomplete="off">
+                                <button v-if="feederSearch" type="button" class="dp-search-clear" @click="feederSearch = ''" title="Clear">✕</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="dp-location-choice">
-                        <label for="location-work-date">2. Work date</label>
-                        <input id="location-work-date" type="date" v-model="selectedDate" :disabled="!selectedLocationId">
+
+                    <!-- Collapsible Custom Site Addition -->
+                    <div v-if="showCustomLocation" class="dp-custom-location-row">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #e2e8f0;">➕ Unlisted Site / Village Add Karein:</span>
+                        <input id="new-work-location" v-model="newLocationName" style="flex: 1; min-height: 36px; padding: 6px 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #f8fafc;" maxlength="120" placeholder="e.g. Angara Village – Site A" @keydown.enter.prevent="addLocation">
+                        <button type="button" style="padding: 6px 14px; font-size: 0.78rem; font-weight: 700; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;" @click="addLocation">Add Location</button>
+                        <button type="button" style="padding: 6px 10px; font-size: 0.78rem; background: #334155; color: #cbd5e1; border: none; border-radius: 6px; cursor: pointer;" @click="showCustomLocation = false">Cancel</button>
                     </div>
-                    <p class="dp-location-note" role="status">{{ locationError || (selectedLocationId ? 'Location: ' + activeLocationName + ' · Stock is shared across this contractor’s locations.' : 'Add or choose a location before entering daily progress.') }}</p>
+
+                    <!-- Active Location Hierarchy Banner -->
+                    <div v-if="selectedLocationId" class="dp-hierarchy-banner">
+                        <div class="dp-hierarchy-badges">
+                            <span style="font-size: 0.82rem; font-weight: 800; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>📍</span> Active:
+                            </span>
+                            <template v-if="activeLocationObj">
+                                <span v-if="activeLocationObj.division" class="dp-h-badge div">Div: {{ activeLocationObj.division }}</span>
+                                <span v-if="activeLocationObj.division" class="dp-h-arrow">›</span>
+                                <span v-if="activeLocationObj.subDivision" class="dp-h-badge sub">Sub-Div: {{ activeLocationObj.subDivision }}</span>
+                                <span v-if="activeLocationObj.subDivision" class="dp-h-arrow">›</span>
+                                <span v-if="activeLocationObj.substation" class="dp-h-badge sst">S/S: {{ activeLocationObj.substation }}</span>
+                                <span v-if="activeLocationObj.substation" class="dp-h-arrow">›</span>
+                                <span class="dp-h-badge fdr">⚡ {{ activeLocationObj.feeder || activeLocationObj.name }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="dp-h-badge fdr">{{ activeLocationName }}</span>
+                            </template>
+                        </div>
+                        <span style="font-size: 0.75rem; color: #94a3b8;">
+                            Stock is shared across this contractor’s locations.
+                        </span>
+                    </div>
+                    <p v-else class="dp-location-note" role="status">
+                        {{ locationError || '⚡ Kisi bhi division ya substation ke feeder ko select karein ya search me feeder ka naam likhein. Saare 105 official feeders by default available hain.' }}
+                    </p>
                 </section>
                 <!-- TAB 1: DAILY PROGRESS ENTRY -->
                 <div v-if="currentTab === 'entry'">
@@ -755,6 +854,7 @@
                     <!-- URL Box with Copy & WhatsApp -->
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                         <input type="text"
+                               ref="shareUrlInput"
                                :value="currentShareUrl"
                                readonly
                                style="flex:1; min-width:200px; background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:8px 10px; color:#38bdf8; font-size:11px; font-family:monospace; outline:none;"
@@ -849,10 +949,12 @@
 
     <!-- Scripts (Standalone, Decoupled from Billing) -->
     <script src="/js/storage-transport.js?v=20261118_review4"></script>
-<script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="js/daily-worker-auth.js?v=20261119_fast_login_v1"></script>
-    <script src="js/daily-progress-standalone.js?v=20261120_stock_contractors_v1"></script>
+    <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
+    <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
+    <script src="js/daily-progress-standalone.js?v=20261121_locations_share_v3"></script>
 </body>
 
 </html>

@@ -452,8 +452,13 @@
                 dailyProgressWorkerPanel: false,
                 dailyProgressWorkers: [],
                 dailyProgressLocationId: '',
-                dailyProgressLocations: [],
+                dailyProgressLocations: (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list ? [...window.DefaultFeeders.list] : []),
                 dailyProgressNewLocation: '',
+                dpDivisionFilter: 'ALL',
+                dpSubDivisionFilter: 'ALL',
+                dpSubstationFilter: 'ALL',
+                dpFeederSearch: '',
+                dpShowCustomLocation: false,
                 dailyProgressUserSearch: '',
                 dailyProgressWorkerExpanded: {},
                 dailyProgressWorkerContractors: [],
@@ -1448,6 +1453,85 @@
                 const cid = this.dailyProgressContractorId;
                 if (!data || !data.issues) return [];
                 return data.issues.filter(i => i.contractorId === cid);
+            },
+            dpAvailableSubDivisions() {
+                const div = this.dpDivisionFilter || 'ALL';
+                if (typeof window !== 'undefined' && window.DefaultFeeders) {
+                    return window.DefaultFeeders.getSubDivisions(div === 'ALL' ? '' : div);
+                }
+                const set = new Set();
+                (this.dailyProgressLocations || []).forEach(l => {
+                    if ((div === 'ALL' || l.division === div) && l.subDivision) set.add(l.subDivision);
+                });
+                return Array.from(set).sort();
+            },
+            dpAvailableSubstations() {
+                const div = this.dpDivisionFilter || 'ALL';
+                const sub = this.dpSubDivisionFilter || 'ALL';
+                if (typeof window !== 'undefined' && window.DefaultFeeders) {
+                    return window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub);
+                }
+                const set = new Set();
+                (this.dailyProgressLocations || []).forEach(l => {
+                    if ((div === 'ALL' || l.division === div) && (sub === 'ALL' || l.subDivision === sub) && l.substation) {
+                        set.add(l.substation);
+                    }
+                });
+                return Array.from(set).sort();
+            },
+            filteredDailyProgressLocations() {
+                const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+                const current = Array.isArray(this.dailyProgressLocations) ? this.dailyProgressLocations : [];
+                const map = new Map();
+                defaults.forEach(def => map.set(def.id, { ...def }));
+                current.forEach(loc => {
+                    if (loc && loc.id) {
+                        map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
+                    }
+                });
+                const list = Array.from(map.values());
+
+                let div = this.dpDivisionFilter || 'ALL';
+                let sub = this.dpSubDivisionFilter || 'ALL';
+                let sst = this.dpSubstationFilter || 'ALL';
+                const q = String(this.dpFeederSearch || '').trim().toLowerCase();
+
+                if (div !== 'ALL' && sub !== 'ALL') {
+                    const validSubs = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubDivisions(div) : [];
+                    if (validSubs.length && !validSubs.includes(sub)) sub = 'ALL';
+                }
+                if (sst !== 'ALL') {
+                    const validSsts = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub) : [];
+                    if (validSsts.length && !validSsts.includes(sst)) sst = 'ALL';
+                }
+
+                let filtered = list.filter(loc => {
+                    if (div !== 'ALL' && loc.division && loc.division !== div) return false;
+                    if (sub !== 'ALL' && loc.subDivision && loc.subDivision !== sub) return false;
+                    if (sst !== 'ALL' && loc.substation && loc.substation !== sst) return false;
+                    if (q) {
+                        const text = (loc.name + ' ' + (loc.division || '') + ' ' + (loc.subDivision || '') + ' ' + (loc.substation || '') + ' ' + (loc.feeder || '')).toLowerCase();
+                        if (!text.includes(q)) return false;
+                    }
+                    return true;
+                });
+
+                if (!filtered.length && !q) {
+                    filtered = list.filter(loc => div === 'ALL' || !loc.division || loc.division === div);
+                    if (!filtered.length) filtered = list;
+                }
+
+                return filtered;
+            },
+            dailyProgressActiveLocationObj() {
+                const id = this.dailyProgressLocationId;
+                if (!id || id === 'legacy') return null;
+                const found = (this.dailyProgressLocations || []).find(l => l.id === id);
+                if (found) return found;
+                if (typeof window !== 'undefined' && window.DefaultFeeders) {
+                    return window.DefaultFeeders.get(id);
+                }
+                return null;
             },
             dailyProgressVisibleItems() {
                 const items = this.dailyProgressSeedItems;

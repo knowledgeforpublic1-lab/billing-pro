@@ -21,10 +21,22 @@
             const cid = this.dailyProgressContractorId;
             if (!cid) return;
             this._dpLocationsContractor = cid;
+            const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+            if ((!this.dailyProgressLocations || !this.dailyProgressLocations.length) && defaults.length) {
+                this.dailyProgressLocations = [...defaults];
+            }
             try {
                 const result = await this.dailyProgressRequest('locations?contractorId=' + encodeURIComponent(cid));
                 if (cid !== this.dailyProgressContractorId) return;
-                this.dailyProgressLocations = result.locations || [];
+                const fetched = result.locations || [];
+                const map = new Map();
+                defaults.forEach(def => map.set(def.id, { ...def }));
+                fetched.forEach(loc => {
+                    if (loc && loc.id) {
+                        map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
+                    }
+                });
+                this.dailyProgressLocations = Array.from(map.values());
                 if (!this.dailyProgressLocationId) {
                     if (this.dailyProgressLocations.length === 1) {
                         this.dailyProgressLocationId = this.dailyProgressLocations[0].id;
@@ -34,7 +46,15 @@
                 } else if (this.dailyProgressLocationId !== 'legacy' && !this.dailyProgressLocations.some(row => row.id === this.dailyProgressLocationId)) {
                     this.dailyProgressLocationId = this.dailyProgressLocations.length === 1 ? this.dailyProgressLocations[0].id : 'legacy';
                 }
-            } catch (error) { this.showToast('Locations load nahi hui: ' + error.message, 'Alert'); }
+                if (this.dailyProgressLocationId && this.syncDailyProgressFiltersFromLocation) {
+                    this.syncDailyProgressFiltersFromLocation(this.dailyProgressLocationId);
+                }
+            } catch (error) {
+                this.showToast('Locations load nahi hui: ' + error.message, 'Alert');
+                if ((!this.dailyProgressLocations || !this.dailyProgressLocations.length) && defaults.length) {
+                    this.dailyProgressLocations = [...defaults];
+                }
+            }
         },
         async onDailyProgressContractorChange(cid) {
             if (this.dailyProgressBusy) return;
@@ -51,6 +71,9 @@
             if (this.dailyProgressBusy || this._dpPendingSave) return;
             if (this.dailyProgressDirty && !confirm('Unsaved changes chhodkar location badlein?')) return;
             this.dailyProgressLocationId = id;
+            if (this.syncDailyProgressFiltersFromLocation) {
+                this.syncDailyProgressFiltersFromLocation(id);
+            }
             this.loadDailyProgressReportForDate(this.dailyProgressDate);
             this.loadDailyProgressEntryHistory();
         },

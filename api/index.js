@@ -80,6 +80,8 @@ async function servePortalPage(req, res) {
 }
 app.get(['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation master/index.html', '/Reconciliation%20master/index.html'], servePortalPage);
 app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, max-age=3600, must-revalidate'); next(); });
+// The workbook's electrical hierarchy contains no contractor or billing data.
+app.get('/js/data/default-feeders.js', (req, res) => res.sendFile(require('path').join(__dirname, '../js/data/default-feeders.js')));
 app.use('/api/auth', auth.router);
 app.use(['/api', '/js/data'], (req, res, next) => {
     if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress') {

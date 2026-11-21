@@ -3,7 +3,7 @@
  * @description Completely decoupled, shareable Daily Progress register.
  * Provides contractor selection, net stock issue verification, daily consumption entry,
  * manpower tracking, and multi-sheet Excel export.
- * 
+ *
  * STRICT RULE: Completely isolated from Billing Pro billing states and RA bills.
  */
 
@@ -84,9 +84,14 @@
                 selectedDate: queryDate || getTodayStr(),
                 selectedContractorId: queryContractor || defaultContractor.id,
                 selectedLocationId: params.get('location') || '',
-                locations: [],
+                locations: (typeof window !== 'undefined' && window.DefaultFeeders) ? [...window.DefaultFeeders.list] : [],
                 newLocationName: '',
                 locationError: '',
+                divisionFilter: 'ALL',
+                subDivisionFilter: 'ALL',
+                substationFilter: 'ALL',
+                feederSearch: '',
+                showCustomLocation: false,
                 items: seed.items || [],
                 sapStock: null,
                 stockKeysByContractor: {},
@@ -138,8 +143,95 @@
         },
 
         computed: {
-            activeLocationName() { return this.selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (this.locations.find(row => row.id === this.selectedLocationId) || {}).name || ''; },
-            canEnterLocation() { return !!this.selectedLocationId && this.selectedLocationId !== 'legacy' && this.locations.some(row => row.id === this.selectedLocationId); },
+            activeLocationName() {
+                if (this.selectedLocationId === 'legacy' || !this.selectedLocationId) return 'Legacy / Unassigned';
+                const found = (this.locations || []).find(row => row.id === this.selectedLocationId);
+                if (found && found.name) return found.name;
+                if (typeof window !== 'undefined' && window.DefaultFeeders) {
+                    const def = window.DefaultFeeders.get(this.selectedLocationId);
+                    if (def && def.name) return def.name;
+                }
+                return '';
+            },
+            canEnterLocation() {
+                return !!this.selectedLocationId && this.selectedLocationId !== 'legacy' && (
+                    (this.locations || []).some(row => row.id === this.selectedLocationId) ||
+                    (typeof window !== 'undefined' && window.DefaultFeeders && !!window.DefaultFeeders.get(this.selectedLocationId))
+                );
+            },
+            availableSubDivisions() {
+                const div = this.divisionFilter || 'ALL';
+                if (typeof window !== 'undefined' && window.DefaultFeeders) return window.DefaultFeeders.getSubDivisions(div === 'ALL' ? '' : div);
+                const set = new Set();
+                (this.locations || []).forEach(l => {
+                    if ((div === 'ALL' || l.division === div) && l.subDivision) set.add(l.subDivision);
+                });
+                return Array.from(set).sort();
+            },
+            availableSubstations() {
+                const div = this.divisionFilter || 'ALL';
+                const sub = this.subDivisionFilter || 'ALL';
+                if (typeof window !== 'undefined' && window.DefaultFeeders) return window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub);
+                const set = new Set();
+                (this.locations || []).forEach(l => {
+                    if ((div === 'ALL' || l.division === div) && (sub === 'ALL' || l.subDivision === sub) && l.substation) {
+                        set.add(l.substation);
+                    }
+                });
+                return Array.from(set).sort();
+            },
+            filteredLocations() {
+                const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+                const current = Array.isArray(this.locations) ? this.locations : [];
+                const map = new Map();
+                defaults.forEach(def => map.set(def.id, { ...def }));
+                current.forEach(loc => {
+                    if (loc && loc.id) {
+                        map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
+                    }
+                });
+                const list = Array.from(map.values());
+
+                let div = this.divisionFilter || 'ALL';
+                let sub = this.subDivisionFilter || 'ALL';
+                let sst = this.substationFilter || 'ALL';
+                const q = String(this.feederSearch || '').trim().toLowerCase();
+
+                if (div !== 'ALL' && sub !== 'ALL') {
+                    const validSubs = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubDivisions(div) : [];
+                    if (validSubs.length && !validSubs.includes(sub)) sub = 'ALL';
+                }
+                if (sst !== 'ALL') {
+                    const validSsts = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub) : [];
+                    if (validSsts.length && !validSsts.includes(sst)) sst = 'ALL';
+                }
+
+                let filtered = list.filter(loc => {
+                    if (div !== 'ALL' && loc.division && loc.division !== div) return false;
+                    if (sub !== 'ALL' && loc.subDivision && loc.subDivision !== sub) return false;
+                    if (sst !== 'ALL' && loc.substation && loc.substation !== sst) return false;
+                    if (q) {
+                        const text = (loc.name + ' ' + (loc.division || '') + ' ' + (loc.subDivision || '') + ' ' + (loc.substation || '') + ' ' + (loc.feeder || '')).toLowerCase();
+                        if (!text.includes(q)) return false;
+                    }
+                    return true;
+                });
+
+                if (!filtered.length && !q) {
+                    filtered = list.filter(loc => div === 'ALL' || !loc.division || loc.division === div);
+                    if (!filtered.length) filtered = list;
+                }
+
+                return filtered;
+            },
+            activeLocationObj() {
+                const id = this.selectedLocationId;
+                if (!id || id === 'legacy') return null;
+                const found = (this.locations || []).find(l => l.id === id);
+                if (found) return found;
+                if (typeof window !== 'undefined' && window.DefaultFeeders) return window.DefaultFeeders.get(id);
+                return null;
+            },
             shareFilteredContractors() {
                 const list = this.contractors || [];
                 const q = String(this.shareContractorSearch || '').trim().toLowerCase();
@@ -275,24 +367,70 @@
         },
 
         methods: {
+            setDivision(div) {
+                this.divisionFilter = div || 'ALL';
+                this.subDivisionFilter = 'ALL';
+                this.substationFilter = 'ALL';
+            },
+            setSubDivision(sub) {
+                this.subDivisionFilter = sub || 'ALL';
+                this.substationFilter = 'ALL';
+            },
+            setSubstation(sst) {
+                this.substationFilter = sst || 'ALL';
+            },
+            clearLocationFilters() {
+                this.divisionFilter = 'ALL';
+                this.subDivisionFilter = 'ALL';
+                this.substationFilter = 'ALL';
+                this.feederSearch = '';
+            },
+            syncFiltersFromLocation(id) {
+                if (!id || id === 'legacy') return;
+                const obj = (this.locations || []).find(l => l.id === id) || (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.get(id));
+                if (obj) {
+                    if (obj.division) this.divisionFilter = obj.division;
+                    if (obj.subDivision) this.subDivisionFilter = obj.subDivision;
+                    if (obj.substation) this.substationFilter = obj.substation;
+                }
+            },
             async loadLocations() {
                 const cid = this.selectedContractorId;
                 if (this._locationContractor && this._locationContractor !== cid) this.selectedLocationId = '';
                 this._locationContractor = cid;
+                const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+                if ((!this.locations || !this.locations.length) && defaults.length) {
+                    this.locations = [...defaults];
+                }
                 try {
                     const response = await fetch('/api/dp-worker/locations?contractorId=' + encodeURIComponent(cid), { cache: 'no-store' });
                     const data = await response.json();
                     if (!response.ok || !data.success) throw new Error(data.error || 'Locations load nahi hui.');
                     if (cid !== this.selectedContractorId) return;
-                    this.locations = data.locations || [];
+                    const fetched = data.locations || [];
+                    const map = new Map();
+                    defaults.forEach(def => map.set(def.id, { ...def }));
+                    fetched.forEach(loc => {
+                        if (loc && loc.id) {
+                            map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
+                        }
+                    });
+                    this.locations = Array.from(map.values());
                     if (this.selectedLocationId && this.selectedLocationId !== 'legacy' && !this.locations.some(row => row.id === this.selectedLocationId)) this.selectedLocationId = '';
                     this.locationError = '';
-                } catch (error) { this.locationError = error.message; }
+                    if (this.selectedLocationId) this.syncFiltersFromLocation(this.selectedLocationId);
+                } catch (error) {
+                    this.locationError = error.message;
+                    if ((!this.locations || !this.locations.length) && defaults.length) {
+                        this.locations = [...defaults];
+                    }
+                }
             },
             changeLocation(id) {
                 if (this.busy) return;
                 if (this.dirty && !confirm('Unsaved changes chhodkar location badlein?')) return;
                 this.selectedLocationId = id;
+                this.syncFiltersFromLocation(id);
             },
             async addLocation() {
                 if (this.busy) return;
@@ -941,16 +1079,19 @@
                 this.shareSelectedContractor = c;
             },
 
-            copyShareUrl(url) {
-                if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(url).then(() => {
-                        this.showToast('Daily Progress page link copied to clipboard! 📋', 'success');
-                    }).catch(() => {
-                        prompt('Copy this Daily Progress link:', url);
-                    });
-                } else {
-                    prompt('Copy this Daily Progress link:', url);
+            async copyShareUrl(url) {
+                const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
+                let copied = false;
+                try {
+                    copied = window.BillingShareLink ? await window.BillingShareLink.copy(url, { clipboard })
+                        : clipboard?.writeText ? await Promise.resolve(clipboard.writeText(url)).then(() => true, () => false) : false;
+                } catch (_) { }
+                if (!copied) {
+                    const select = () => { const field = this.$refs?.shareUrlInput; if (field) { field.focus(); field.select(); } };
+                    if (typeof this.$nextTick === 'function') this.$nextTick(select); else select();
                 }
+                this.showToast(copied ? 'Share link copied.' : 'Link field se copy karein (Ctrl+C).', copied ? 'success' : 'info');
+                return copied;
             },
 
             openShareModal() {
@@ -969,7 +1110,7 @@
 
             copyShareLink() {
                 this.openShareModal();
-                this.copyShareUrl(this.currentShareUrl);
+                return this.copyShareUrl(this.currentShareUrl);
             },
 
             openReport(date) {

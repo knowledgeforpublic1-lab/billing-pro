@@ -122,3 +122,32 @@ test('admin reset/delete affect exactly one location/date; stale saves cannot re
         assert.ok(audit.some(event => event.action === 'delete'));
     } finally { await f.close(); }
 });
+
+test('default master feeders: all 105 official electrical locations are available by default without manual creation', async () => {
+    const f = await setup();
+    try {
+        const defaultFeeders = require('../js/data/default-feeders');
+        const res = await f.request('/api/dp-worker/locations?contractorId=a', undefined, f.cookie);
+        assert.equal(res.status, 200);
+        const locs = res.data.locations;
+        assert.ok(locs.length >= 105, 'Should include at least 105 default feeders');
+
+        // Pick first default feeder: 11KV Deulgaon FEEDER
+        const deulgaon = defaultFeeders.list[0];
+        assert.ok(deulgaon, 'First feeder exists');
+        const found = locs.find(l => l.id === deulgaon.id);
+        assert.ok(found, '11KV Deulgaon FEEDER must be present in locations list');
+        assert.equal(found.division, 'Gadchiroli');
+        assert.equal(found.subDivision, 'Armori');
+        assert.equal(found.feeder, '11KV Deulgaon FEEDER');
+
+        // Worker can save report for this default feeder without having to call POST /locations
+        const saveRes = await f.save(deulgaon.id, '2026-11-17', 1, 42);
+        assert.equal(saveRes.status, 200, 'Saving on default feeder should succeed');
+
+        const savedData = await f.data();
+        const savedReport = savedData.reports.find(r => r.locationId === deulgaon.id && r.date === '2026-11-17');
+        assert.ok(savedReport, 'Report must be saved for default feeder');
+        assert.equal(savedReport.quantities[15], 42);
+    } finally { await f.close(); }
+});

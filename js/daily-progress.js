@@ -10,11 +10,129 @@
 window.DailyProgressModule = {
     dailyProgressLocationKey(value) { return value === 'legacy' ? '' : String(value || ''); },
     dailyProgressReportKey(row) { return row.contractorId + '|' + row.date + '|' + this.dailyProgressLocationKey(row.locationId); },
-    dailyProgressLocationName() {
-        const id = this.dailyProgressLocationId;
-        return id === 'legacy' || !id ? 'Legacy / Unassigned' : ((this.dailyProgressLocations || []).find(row => row.id === id) || {}).name || 'Location';
+    dailyProgressLocationName(targetId) {
+        const id = targetId !== undefined ? targetId : this.dailyProgressLocationId;
+        if (id === 'legacy' || !id) return 'Legacy / Unassigned';
+        const found = (this.dailyProgressLocations || []).find(row => row.id === id);
+        if (found && found.name) return found.name;
+        if (typeof window !== 'undefined' && window.DefaultFeeders) {
+            const def = window.DefaultFeeders.get(id);
+            if (def && def.name) return def.name;
+        }
+        return 'Location';
     },
     dailyProgressLocationQuery(cid) { return cid === this.dailyProgressContractorId && this.dailyProgressLocationId ? '&location=' + encodeURIComponent(this.dailyProgressLocationId) : ''; },
+
+    dailyProgressActiveLocationObj() {
+        const id = this.dailyProgressLocationId;
+        if (!id || id === 'legacy') return null;
+        const found = (this.dailyProgressLocations || []).find(l => l.id === id);
+        if (found) return found;
+        if (typeof window !== 'undefined' && window.DefaultFeeders) {
+            return window.DefaultFeeders.get(id);
+        }
+        return null;
+    },
+    setDailyProgressDivision(div) {
+        this.dpDivisionFilter = div || 'ALL';
+        this.dpSubDivisionFilter = 'ALL';
+        this.dpSubstationFilter = 'ALL';
+    },
+    setDailyProgressSubDivision(sub) {
+        this.dpSubDivisionFilter = sub || 'ALL';
+        this.dpSubstationFilter = 'ALL';
+    },
+    setDailyProgressSubstation(sst) {
+        this.dpSubstationFilter = sst || 'ALL';
+    },
+    clearDailyProgressLocationFilter() {
+        this.dpDivisionFilter = 'ALL';
+        this.dpSubDivisionFilter = 'ALL';
+        this.dpSubstationFilter = 'ALL';
+        this.dpFeederSearch = '';
+    },
+    setDailyProgressDateToday() {
+        const today = this.todayDateStr || new Date().toISOString().slice(0, 10);
+        this.onDailyProgressDateChange(today);
+    },
+    syncDailyProgressFiltersFromLocation(id) {
+        if (!id || id === 'legacy') return;
+        const loc = (this.dailyProgressLocations || []).find(l => l.id === id) || (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.get(id));
+        if (loc) {
+            if (loc.division) this.dpDivisionFilter = loc.division;
+            if (loc.subDivision) this.dpSubDivisionFilter = loc.subDivision;
+            if (loc.substation) this.dpSubstationFilter = loc.substation;
+        }
+    },
+    getFilteredDailyProgressLocations() {
+        const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+        const current = Array.isArray(this.dailyProgressLocations) ? this.dailyProgressLocations : [];
+        const map = new Map();
+        defaults.forEach(def => map.set(def.id, { ...def }));
+        current.forEach(loc => {
+            if (loc && loc.id) {
+                map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
+            }
+        });
+        const list = Array.from(map.values());
+
+        let div = this.dpDivisionFilter || 'ALL';
+        let sub = this.dpSubDivisionFilter || 'ALL';
+        let sst = this.dpSubstationFilter || 'ALL';
+        const q = String(this.dpFeederSearch || '').trim().toLowerCase();
+
+        if (div !== 'ALL' && sub !== 'ALL') {
+            const validSubs = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubDivisions(div) : [];
+            if (validSubs.length && !validSubs.includes(sub)) sub = 'ALL';
+        }
+        if (sst !== 'ALL') {
+            const validSsts = typeof window !== 'undefined' && window.DefaultFeeders ? window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub) : [];
+            if (validSsts.length && !validSsts.includes(sst)) sst = 'ALL';
+        }
+
+        let filtered = list.filter(loc => {
+            if (div !== 'ALL' && loc.division && loc.division !== div) return false;
+            if (sub !== 'ALL' && loc.subDivision && loc.subDivision !== sub) return false;
+            if (sst !== 'ALL' && loc.substation && loc.substation !== sst) return false;
+            if (q) {
+                const text = (loc.name + ' ' + (loc.division || '') + ' ' + (loc.subDivision || '') + ' ' + (loc.substation || '') + ' ' + (loc.feeder || '')).toLowerCase();
+                if (!text.includes(q)) return false;
+            }
+            return true;
+        });
+
+        if (!filtered.length && !q) {
+            filtered = list.filter(loc => div === 'ALL' || !loc.division || loc.division === div);
+            if (!filtered.length) filtered = list;
+        }
+
+        return filtered;
+    },
+    getAvailableDailyProgressSubDivisions() {
+        const div = this.dpDivisionFilter || 'ALL';
+        if (typeof window !== 'undefined' && window.DefaultFeeders) {
+            return window.DefaultFeeders.getSubDivisions(div === 'ALL' ? '' : div);
+        }
+        const set = new Set();
+        (this.dailyProgressLocations || []).forEach(l => {
+            if ((div === 'ALL' || l.division === div) && l.subDivision) set.add(l.subDivision);
+        });
+        return Array.from(set).sort();
+    },
+    getAvailableDailyProgressSubstations() {
+        const div = this.dpDivisionFilter || 'ALL';
+        const sub = this.dpSubDivisionFilter || 'ALL';
+        if (typeof window !== 'undefined' && window.DefaultFeeders) {
+            return window.DefaultFeeders.getSubstations(div === 'ALL' ? '' : div, sub === 'ALL' ? '' : sub);
+        }
+        const set = new Set();
+        (this.dailyProgressLocations || []).forEach(l => {
+            if ((div === 'ALL' || l.division === div) && (sub === 'ALL' || l.subDivision === sub) && l.substation) {
+                set.add(l.substation);
+            }
+        });
+        return Array.from(set).sort();
+    },
     // ─── INITIALIZATION & PERSISTENCE ──────────────────────────────────────────
 
     async initDailyProgress() {
@@ -1047,24 +1165,22 @@ window.DailyProgressModule = {
         this.dailyProgressShareSelectedContractor = c;
     },
 
-    copyDailyProgressShareUrl(url) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(() => {
-                if (typeof this.showToast === 'function') {
-                    this.showToast('Daily Progress page link copied to clipboard! 📋', '✅');
-                } else {
-                    alert('Link copied to clipboard!\n' + url);
-                }
-            }).catch(() => {
-                prompt('Copy this Daily Progress link:', url);
-            });
-        } else {
-            prompt('Copy this Daily Progress link:', url);
+    async copyDailyProgressShareUrl(url) {
+        const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
+        let copied = false;
+        try {
+            copied = window.BillingShareLink ? await window.BillingShareLink.copy(url, { clipboard })
+                : clipboard?.writeText ? await Promise.resolve(clipboard.writeText(url)).then(() => true, () => false) : false;
+        } catch (_) { }
+        if (!copied) {
+            const select = () => { const field = this.$refs?.dpShareUrlInput; if (field) { field.focus(); field.select(); } };
+            if (typeof this.$nextTick === 'function') this.$nextTick(select); else select();
         }
+        if (typeof this.showToast === 'function') this.showToast(copied ? 'Share link copied.' : 'Link field se copy karein (Ctrl+C).', copied ? 'success' : 'Alert');
+        return copied;
     },
 
     getDailyProgressContractorShareUrl(cid, dt) {
-        this.syncCurrentDailyProgressDraft();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const normD = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(dt || this.dailyProgressDate)) || dt || this.dailyProgressDate || '';
         return `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(normD)}${this.dailyProgressLocationQuery(cid)}`;
@@ -1078,7 +1194,6 @@ window.DailyProgressModule = {
     },
 
     openDailyProgressShareModal() {
-        this.syncCurrentDailyProgressDraft();
         this.dailyProgressShareSelectedContractor = this.dailyProgressActiveContractor;
         this.dailyProgressShareSearch = '';
         this.dailyProgressShareDate = this.dailyProgressDate || (new Date().toISOString().slice(0, 10));
@@ -1093,13 +1208,12 @@ window.DailyProgressModule = {
     },
 
     copyDailyProgressShareLink() {
-        this.syncCurrentDailyProgressDraft();
         this.openDailyProgressShareModal();
         const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         const cid = this.dailyProgressContractorId || this.selectedContractorId || (this.dailyProgressActiveContractor && this.dailyProgressActiveContractor.id) || '';
         const dt = (this.normalizeDailyProgressDate && this.normalizeDailyProgressDate(this.dailyProgressDate)) || this.dailyProgressDate || '';
         const url = `${origin}/daily-progress.html?contractor=${encodeURIComponent(cid)}&date=${encodeURIComponent(dt)}${this.dailyProgressLocationQuery(cid)}`;
 
-        this.copyDailyProgressShareUrl(url);
+        return this.copyDailyProgressShareUrl(url);
     }
 };

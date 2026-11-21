@@ -247,3 +247,41 @@ See [real staging review](REAL_DRIVE_STAGING_REVIEW_20261119.md) for exact evide
 folder, recovery checkpoint and remaining hosted/production gates. Earlier missing
 staging/Drive setup notes above are historical and have now been resolved. No
 production migration, cleanup, push or deployment was performed.
+
+### Production cutover on 21 November 2026
+
+Production now uses the private `Billing-Pro-Production-App` Drive folder with
+Firestore as its authentication/coordination authority. All five module flags
+(`bill,reconciliation,master,mapping,daily`) and bounded transport are enabled.
+The production OAuth client belongs to the production Google project, requests
+only `drive.file`, and was reauthorised after its publishing status changed to
+In production. Credentials remain in ignored local configuration and Vercel
+server secrets; none are included in this document or source control.
+
+The cutover copied and readback-verified 38 records: 23 bills, one reconciliation,
+three masters, seven mappings and four Daily Progress datasets. Each batch used
+the verified fresh backup, source update-time fences, immutable Drive snapshots,
+revision checks and a durable verification journal. Original Firestore business
+records and obsolete chunks have not been deleted, so this release does not yet
+reclaim their existing Firestore storage. Authentication/session records stay in
+Firestore.
+
+External hosted staging passed eight checks, including two-device login,
+8 MiB upload/download equality, rejection of another worker and rejection after
+permissions changed. This exercised the deployed bounded transport with
+synthetic data; it did not create production test accounts. The download fixture
+used retained synthetic upload bytes and a staging-only download coordination
+record. The temporary Vercel automation bypass was revoked after testing.
+
+The release also preserves bill business update-times in list ordering, so
+migration does not change which saved bill is considered latest. The storage
+regression suite passed 46/46 after this correction; the production migration
+suite passed 5/5. A fresh connection restored the original latest bill with
+rollout flags disabled.
+
+Before/after Firestore exports, journals, deployment records and 38 independently
+verified Drive recovery copies are under the ignored directory
+`backups/production-storage-audit-20261121/`. The pre-cutover source checkpoint is
+tagged `backup/pre-production-drive-20261121`. Use a Drive-compatible build for
+any rollback after cutover; the pre-Drive implementation cannot read these
+heads, and restoring an older full database would discard later user edits.
