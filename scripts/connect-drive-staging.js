@@ -28,10 +28,11 @@ function matchesState(expected, actual) {
     return typeof actual === 'string' && Buffer.byteLength(actual) === Buffer.byteLength(expected) &&
         crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
 }
-async function start({ clientFile, envFile = '.env.drive-staging.local' }) {
+async function start({ clientFile, envFile = '.env.drive-staging.local', validateSetup = validate, label = 'staging' }) {
+    if (!['staging', 'production'].includes(label)) throw Error('Unknown OAuth setup environment');
     const client = JSON.parse(fs.readFileSync(clientFile, 'utf8')).web;
     const original = fs.readFileSync(envFile, 'utf8');
-    validate(client, require('dotenv').parse(original));
+    validateSetup(client, require('dotenv').parse(original));
     const oauth = new OAuth2Client(client.client_id, client.client_secret, redirect);
     const verifier = await oauth.generateCodeVerifierAsync();
     let state, cookie, active = false, busy = false;
@@ -51,7 +52,7 @@ async function start({ clientFile, envFile = '.env.drive-staging.local' }) {
             res.setHeader('Set-Cookie', 'billing_drive_setup=' + cookie + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=900');
             res.writeHead(302, { Location: target }); res.end(); return;
         }
-        if (url.pathname !== '/oauth2callback') return reply(404, 'Open /connect to start staging Drive authorization.');
+        if (url.pathname !== '/oauth2callback') return reply(404, 'Open /connect to start ' + label + ' Drive authorization.');
         const actualCookie = /(?:^|;\s*)billing_drive_setup=([\w-]+)/.exec(req.headers.cookie || '')?.[1];
         if (!active || busy || !matchesState(state, url.searchParams.get('state')) || !matchesState(cookie, actualCookie)) return reply(403, 'Invalid or expired login. Open /connect again.');
         active = false; busy = true;
@@ -67,8 +68,8 @@ async function start({ clientFile, envFile = '.env.drive-staging.local' }) {
             const temporary = envFile + '.oauth-tmp';
             fs.writeFileSync(temporary, updated, { flag: 'wx', mode: 0o600 });
             fs.renameSync(temporary, envFile);
-            reply(200, 'Drive staging authorization saved locally. You can close this tab and return to Codex. No production settings changed.');
-            console.log('Staging Drive OAuth saved in ignored private configuration. No token values logged.');
+            reply(200, 'Drive ' + label + ' authorization saved locally. You can close this tab and return to Codex. No hosted settings or business data changed.');
+            console.log('Drive ' + label + ' OAuth saved in ignored private configuration. No token values logged.');
             server.close(); clearTimeout(expiry);
         } catch (_) {
             busy = false;

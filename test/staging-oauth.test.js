@@ -3,6 +3,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { validate, patchPrivateEnv, matchesState } = require('../scripts/connect-drive-staging');
 const project = 'billing-pro-staging-ba9a8';
+
+test('production OAuth rejects staging clients, staging environments and credential overwrites', () => {
+    const validateProduction = require('../scripts/connect-drive-production').validate;
+    const client = { project_id: 'billing-pro-e6241', client_id: 'synthetic.apps.googleusercontent.com', client_secret: 'synthetic', redirect_uris: ['http://127.0.0.1:53682/oauth2callback'] };
+    const env = { BILLING_STORAGE_AUTHORITY: 'firestore', FIREBASE_SERVICE_ACCOUNT: JSON.stringify({ project_id: client.project_id }) };
+    assert.doesNotThrow(() => validateProduction(client, env));
+    assert.throws(() => validateProduction({ ...client, project_id: project }, env));
+    assert.throws(() => validateProduction(client, { ...env, BILLING_STORAGE_STAGING_PROJECT: project }));
+    assert.throws(() => validateProduction(client, { ...env, GOOGLE_DRIVE_REFRESH_TOKEN: 'existing' }));
+    assert.throws(() => validateProduction({ ...client, redirect_uris: [] }, env));
+});
 test('OAuth setup rejects production, wrong callback, and existing refresh credentials', () => {
     const client = { project_id: project, client_id: 'synthetic.apps.googleusercontent.com', client_secret: 'synthetic', redirect_uris: ['http://127.0.0.1:53682/oauth2callback'] };
     const env = { BILLING_STORAGE_STAGING_PROJECT: project, FIREBASE_SERVICE_ACCOUNT: JSON.stringify({ project_id: project }) };

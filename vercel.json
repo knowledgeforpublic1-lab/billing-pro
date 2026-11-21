@@ -24,6 +24,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "storage.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "privacy.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "daily-progress.html",
       "use": "@vercel/static"
     },

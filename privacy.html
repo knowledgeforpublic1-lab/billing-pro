@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Privacy and Storage Notice — Billing Pro</title>
+  <style>body{margin:0;background:#f4f6fa;color:#182335;font:16px/1.65 system-ui,sans-serif}main{max-width:760px;margin:48px auto;padding:32px;background:white;border:1px solid #dce2eb;border-radius:16px}h1{line-height:1.2}h2{font-size:1.2rem;margin-top:28px}a{color:#174cb8}@media(max-width:820px){main{margin:24px 16px;padding:24px}}</style>
+</head>
+<body><main>
+  <a href="storage.html">Billing Pro Storage</a>
+  <h1>Privacy and storage notice</h1>
+  <p>Updated 21 November 2026. This notice describes the Billing Pro application and its optional Google Drive storage connection.</p>
+  <h2>Information handled by the application</h2>
+  <p>Billing Pro processes records entered or imported by authorised users, including billing, contractor contact and registration details, work orders, materials, reconciliation and Daily Progress. Users should upload only records they are authorised to process. Account, session and permission information supports application access.</p>
+  <h2>Google Drive access and use</h2>
+  <p>The administrator's Google connection requests the <code>drive.file</code> permission: access to specific Drive files created by or selected for this application. The connection is used to store, read and verify application datasets and their versions. It does not request unrestricted access to all files in the Google account. Although the permission permits deleting app-accessible files, the migration process retains source records and previous snapshots.</p>
+  <p>Google user data is used to provide these storage and record-management functions. It is not sold, used for advertising, or used to train general-purpose AI models. Billing Pro's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+  <h2>Where data is processed</h2>
+  <p>The configured application server processes requests on Vercel. Firebase Firestore stores authentication, permission, session and coordination records, and business records for modules that have not moved to Drive. Enabled Drive modules store versioned snapshots in the connected private folder, with references and checksums retained in Firestore. The browser may keep local working copies and pending changes so users can recover interrupted saves. Infrastructure providers may process operational logs under their own service policies.</p>
+  <h2>Access and credentials</h2>
+  <p>Billing Pro applies application roles and permissions to its records. The Drive folder is intended to remain private. Drive connection credentials are held in server or administrator configuration rather than exposed in application pages. Other application users do not receive the administrator's Google credentials.</p>
+  <h2>Retention, disconnection and deletion requests</h2>
+  <p>Saved versions and backups may remain for recovery until an authorised administrator removes them. Disconnecting Google access does not automatically delete existing snapshots, Firebase records or backups. The Drive account owner can revoke the application's Google access through <a href="https://myaccount.google.com/connections">Google Account connections</a>; this stops subsequent authorised Drive operations and may interrupt application storage. Local browser copies are managed separately from cloud records.</p>
+  <p>For questions, corrections, access or deletion requests, contact the application administrator at <a href="mailto:rakeshatccivns@gmail.com">rakeshatccivns@gmail.com</a>. Requests involving shared project records require verification of authority and consideration of recovery and record-retention needs.</p>
+</main></body>
+</html>
