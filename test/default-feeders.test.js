@@ -28,7 +28,7 @@ test('all hierarchy values and row order match the supplied location workbook', 
 
 test('defaultFeeders loads properly with 105 official feeders and correct structure', () => {
     assert.equal(defaultFeeders.list.length, 105, 'Must contain all 105 feeders');
-    
+
     // Check all IDs match loc_[a-f0-9]{24}
     const idPattern = /^loc_[a-f0-9]{24}$/;
     defaultFeeders.list.forEach((f, i) => {
