@@ -1,4 +1,5 @@
 /* Billing dashboard's Daily Progress worksheet. Scoped to this view only. */
+.dp-mobile-item-meta { display:none; }
 .work.daily-sheet-area { display:flex; flex-direction:column; overflow:hidden!important; padding:0!important; background:#f5f9ff!important; }
 .daily-sheet-area>.apptoolbar { flex-shrink:0; min-height:52px; margin:0!important; padding:6px 12px!important; background:linear-gradient(110deg,#fff,#edf6ff)!important; border-color:#d7e5f7; gap:7px; }
 .daily-sheet-area .dp-brand-chip { margin-right:auto; font-size:15px!important; gap:9px!important; }
@@ -121,4 +122,78 @@ html[data-theme] #app .dp-dashboard-sheet .dp-save-status>div>div { color:#52688
  .dp-dashboard-sheet .dp-table th:nth-child(6) { width:70px!important; }
  .dp-dashboard-sheet .dp-table th:nth-child(7) { width:90px!important; }
  .dp-dashboard-sheet .dp-mat-desc { font-size:10px; }
+}
+/* Touch-first cards keep material names, stock, quantities and units together. */
+@media(max-width:600px) {
+ body:has(.daily-sheet-area) .sysbar { height:40px!important; min-height:40px!important; padding:4px 8px!important; gap:5px!important; flex-wrap:nowrap!important; overflow:hidden; }
+ body:has(.daily-sheet-area) .sysbar :is(.brand-ver,.sys-project,.logout-timer-chip,.user-chip>span:not(.avatar-rk),.sidebar-toggle-btn) { display:none!important; }
+ body:has(.daily-sheet-area) .sysbar .right { min-width:0; gap:5px!important; margin-left:auto; }
+ body:has(.daily-sheet-area) .sysbar .sync-chip { white-space:nowrap; font-size:9px!important; padding:3px!important; }
+ body:has(.daily-sheet-area) .sysbar .user-chip { padding:3px!important; flex-shrink:0; }
+ body:has(.daily-sheet-area) .portal-logout-btn { min-width:32px; height:30px; padding:4px!important; }
+ body:has(.daily-sheet-area) .portal-logout-btn span { display:none; }
+ .daily-sheet-area>.apptoolbar { padding:6px 8px!important; gap:5px!important; flex-wrap:wrap; }
+ .daily-sheet-area .dp-sheet-menu { width:38px; min-height:36px; }
+ .daily-sheet-area .dp-brand-chip { width:calc(100% - 50px); font-size:15px!important; }
+ .daily-sheet-area .dp-segmented-tabs { display:flex!important; width:100%; overflow-x:auto; flex-wrap:nowrap!important; gap:5px!important; padding-bottom:2px!important; }
+ .daily-sheet-area .dp-segmented-tabs button { flex:1 0 auto; min-height:38px!important; padding:7px 9px!important; font-size:11px!important; }
+ .daily-sheet-area .apptoolbar>.btn { min-height:36px!important; padding:6px 12px!important; font-size:11px!important; }
+ .daily-sheet-area .dp-dashboard-sheet { padding:0 8px 100px!important; gap:7px; }
+ .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+ .dp-dashboard-sheet .dp-contractor-pill,.dp-dashboard-sheet .dp-date-pill { grid-column:1/-1; height:40px; min-width:0; }
+ .dp-dashboard-sheet .dp-contractor-pill input { font-size:16px!important; width:100%!important; }
+ .dp-dashboard-sheet .dp-icon-add-btn { width:34px; height:34px; }
+ html[data-theme] #app .dp-dashboard-sheet .dp-date-pill input { height:36px!important; font-size:16px!important; flex:1; }
+ .dp-dashboard-sheet .dp-date-pill button { min-width:38px; height:38px; }
+ .dp-dashboard-sheet .dp-field-box { flex-direction:column; align-items:stretch; gap:4px; }
+ .dp-dashboard-sheet .dp-field-box>label { font-size:11px; }
+ .dp-dashboard-sheet .dp-field-box:nth-last-child(2) { grid-column:1/-1; }
+ .dp-dashboard-sheet .dp-field-box:last-child { display:none; }
+ .dp-dashboard-sheet .dp-field-box select,.dp-dashboard-sheet .searchable-dropdown-trigger { height:40px; min-height:40px; font-size:13px; width:100%; }
+ .dp-dashboard-sheet .dp-sheet-options summary,.dp-dashboard-sheet .dp-sheet-teams>summary,.dp-dashboard-sheet .dp-sheet-notes>summary { padding:7px 2px; font-size:11px; }
+ .dp-dashboard-sheet .searchable-dropdown-panel { position:fixed!important; left:8px!important; right:8px!important; top:12dvh!important; width:auto!important; max-width:none!important; max-height:70dvh; }
+ .dp-dashboard-sheet .searchable-dropdown-search { font-size:16px!important; min-height:42px; }
+ .dp-dashboard-sheet .searchable-dropdown-list { max-height:50dvh!important; }
+ .dp-dashboard-sheet .searchable-dropdown-item { padding:10px; min-height:44px; white-space:normal; }
+ .dp-dashboard-sheet .dp-status-strip { align-self:stretch; justify-content:flex-start; }
+ .dp-dashboard-sheet .dp-status-strip button { min-height:36px; }
+ .dp-dashboard-sheet .dp-sheet-materials>.dp-panel-header { gap:5px; flex-wrap:wrap; }
+ .dp-dashboard-sheet .dp-sheet-materials>.dp-panel-header h2 { font-size:13px; }
+ .dp-dashboard-sheet .dp-filter-select { width:100%; max-width:none; height:36px; font-size:12px; }
+ .dp-dashboard-sheet .dp-search-input { min-height:40px; font-size:16px!important; }
+ .dp-dashboard-sheet .dp-table-wrap { min-height:180px; max-height:55dvh; overflow:auto; background:#f4f8ff; padding:6px; }
+ .dp-dashboard-sheet .dp-table,.dp-dashboard-sheet .dp-table tbody { display:block; width:100%; min-width:0; }
+ .dp-dashboard-sheet .dp-table thead { display:none; }
+ .dp-dashboard-sheet .dp-table tbody td:nth-child(1),.dp-dashboard-sheet .dp-table tbody td:nth-child(3),.dp-dashboard-sheet .dp-table tbody td:nth-child(4),.dp-dashboard-sheet .dp-table tbody td:nth-child(5) { display:none!important; }
+ .dp-dashboard-sheet .dp-table tbody tr { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; padding:10px; margin:0 0 7px; border:1px solid #d4e2f4; border-radius:7px; background:#fff; }
+ html[data-theme] #app .dp-dashboard-sheet .dp-table tbody td { height:auto!important; border:0!important; padding:0!important; background:transparent!important; min-width:0; }
+ .dp-dashboard-sheet .dp-table tbody td:nth-child(2) { grid-column:1/-1; display:flex!important; flex-direction:column; align-items:flex-start; gap:4px; }
+ .dp-dashboard-sheet .dp-table tbody td.dp-sheet-empty { grid-column:1/-1; display:block!important; }
+ .dp-dashboard-sheet .dp-table tbody td:nth-child(6),.dp-dashboard-sheet .dp-table tbody td:nth-child(7) { display:flex!important; flex-direction:column; align-items:stretch; gap:5px; text-align:left!important; }
+ .dp-dashboard-sheet .dp-table tbody td:nth-child(6)::before { content:'Net issued'; font-size:11px; color:#526a88; }
+ .dp-dashboard-sheet .dp-table tbody td:nth-child(7)::before { content:'Today consumed'; font-size:11px; color:#526a88; }
+ .dp-dashboard-sheet .dp-mat-desc { font-size:12px; line-height:1.4; }
+ .dp-dashboard-sheet .dp-mobile-item-meta { display:block; font-size:10px; color:#547395; }
+ html[data-theme] #app .dp-dashboard-sheet .dp-qty-field { width:100%!important; position:relative; display:block!important; box-shadow:none!important; }
+ html[data-theme] #app .dp-dashboard-sheet .dp-qty-field input { height:42px!important; font-size:16px!important; padding:7px 40px 7px 8px!important; text-align:center; }
+ .dp-dashboard-sheet .dp-qty-unit { position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; max-width:34px; overflow:hidden; }
+ .dp-dashboard-sheet .dp-stock-badge { min-height:42px; display:flex; justify-content:center; align-items:center; font-size:12px; white-space:normal; }
+ .dp-dashboard-sheet .dp-stepper { width:132px; height:42px; }
+ html[data-theme] #app .dp-dashboard-sheet .dp-stepper input { width:48px; height:40px!important; font-size:16px!important; }
+ .dp-dashboard-sheet .dp-stepper button { width:40px; min-height:40px; }
+ .dp-dashboard-sheet .dp-save-bar { position:fixed; left:0; right:0; bottom:0; margin:0; padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px)); flex-direction:column; align-items:stretch; gap:5px; z-index:60; }
+ .dp-dashboard-sheet .dp-save-bar>button { width:100%; min-height:44px; font-size:13px!important; justify-content:center; }
+ .dp-dashboard-sheet .dp-save-status strong { font-size:10px!important; }
+ body:has(.daily-sheet-area) .statbar { display:none!important; }
+ .daily-sheet-area>.apptoolbar { display:grid!important; grid-template-columns:36px minmax(0,1fr) 56px 54px; align-items:center; }
+ .daily-sheet-area .dp-brand-chip { width:auto; margin:0; font-size:13px!important; }
+ .daily-sheet-area .dp-sheet-menu { grid-row:1; grid-column:1; }
+ .daily-sheet-area .dp-brand-chip { grid-row:1; grid-column:2; min-width:0; }
+ .daily-sheet-area .dp-sheet-calendar { display:none; }
+ .daily-sheet-area .dp-segmented-tabs { grid-column:1/-1; grid-row:2; }
+ .daily-sheet-area .apptoolbar>.btn { grid-row:1; padding:4px!important; min-width:0; }
+ .daily-sheet-area .apptoolbar>button[title^="Contractor ko"] { grid-column:3; }
+ .daily-sheet-area .apptoolbar>button[title^="Cloud se"] { grid-column:4; }
+ .daily-sheet-area>.apptoolbar>:not(.dp-sheet-menu):not(.dp-brand-chip):not(.dp-segmented-tabs):not(.btn) { display:none!important; }
+ .daily-sheet-area .apptoolbar>.btn>span:first-child { display:none; }
 }

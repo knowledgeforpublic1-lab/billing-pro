@@ -106,7 +106,7 @@
     <link rel="stylesheet" href="css/style.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261121_search_dropdown_v1">
-<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_dashboard_v1">
+<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_mobile_v2">
 </head>
 
 <body>
@@ -2249,6 +2249,7 @@
                                         <tr v-for="(item, itemIndex) in dailyProgressVisibleItems.slice(0, dailyProgressVisibleLimit)" :key="item.id">
                                             <td class="dp-sheet-number">{{ itemIndex + 1 }}</td><td>
                                                 <span class="dp-mat-desc">{{ item.name }}</span>
+                                                <small class="dp-mobile-item-meta">SAP {{ item.code || '—' }} · Row {{ item.row }} · {{ item.unit }}</small>
                                                 <div class="dp-mobile-balance-inline" style="display: none;">
                                                     <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock">
                                                         📦 Net Issue: {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
@@ -2281,7 +2282,7 @@
                                             </td>
                                         </tr>
                                         <tr v-if="!dailyProgressVisibleItems.length">
-                                            <td colspan="7" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
+                                            <td class="dp-sheet-empty" colspan="7" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
                                                 <div style="font-size: 0.82rem; font-weight: 700; margin-bottom: 4px;">
                                                     {{ dailyProgressFilter === 'issued' ? '📦 Is contractor ko abhi koi material issue nahi mila hai' : 'No matching materials found.' }}
                                                 </div>

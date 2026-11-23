@@ -1,4 +1,6 @@
 /* Compact spreadsheet workspace; existing entry and permission logic is retained. */
+.sheet-mobile-item-meta { display:none; }
+.sheet-sidebar-close { display:none; }
 .dp-sheet-page { margin:0; background:#f5f9ff; color:#172439; font-family:Arial,sans-serif; font-size:12px; }
 .dp-sheet-page #dp-worker-user-bar { padding:2px 12px!important; font-size:10px!important; min-height:20px; }
 .dp-sheet-page .shell { display:block; min-height:0; }
@@ -136,4 +138,64 @@ body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; 
  .dp-sheet-page .mat-table-head>span:nth-child(1),.dp-sheet-page .mat-table-head>span:nth-child(3),.dp-sheet-page .mat-table-head>span:nth-child(4),.dp-sheet-page .mat-table-head>span:nth-child(5),.dp-sheet-page .mat-row>div:nth-child(1),.dp-sheet-page .mat-row>div:nth-child(3),.dp-sheet-page .mat-row>div:nth-child(4),.dp-sheet-page .mat-row>div:nth-child(5) { display:none; }
  .dp-sheet-page .mat-table-body { background:repeating-linear-gradient(to bottom,transparent 0,transparent 25px,#e1ebf8 25px,#e1ebf8 26px); }
  .dp-sheet-page .mat-desc { font-size:10px; }
+}
+@media(max-width:600px) {
+ .dp-sheet-page #dp-worker-user-bar { gap:4px!important; padding:5px 8px!important; font-size:10px!important; }
+ .dp-sheet-page #dp-worker-user-bar>span { width:100%; overflow-wrap:anywhere; }
+ .dp-sheet-page #dp-worker-user-bar button { min-height:34px; font-size:11px!important; }
+ .dp-sheet-page .sheet-commandbar { height:auto; min-height:0; padding:6px 8px; flex-wrap:wrap; gap:6px; }
+ .dp-sheet-page .sheet-heading { width:100%; }
+ .dp-sheet-page .sheet-heading h1 { font-size:15px; }
+ .dp-sheet-page .sheet-menu { width:36px; min-height:36px; }
+ .dp-sheet-page .sheet-actions { width:100%; overflow-x:auto; flex-wrap:nowrap; justify-content:flex-start; gap:5px; padding-bottom:3px; }
+ .dp-sheet-page .sheet-actions button { flex:1 0 auto; width:auto!important; min-height:38px; padding:6px 9px; font-size:11px; }
+ .dp-sheet-page main { height:auto; min-height:0; padding:0 8px 110px; overflow:visible; }
+ .dp-sheet-page .dp-cascading-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+ .dp-sheet-page .contractor-select-compact { grid-column:1/-1; flex-direction:row!important; gap:6px!important; }
+ .dp-sheet-page .dp-search-combo-box { min-height:40px!important; height:40px!important; }
+ .dp-sheet-page .dp-combo-input { height:38px!important; font-size:16px!important; }
+ .dp-sheet-page .btn-compact-add { width:36px; height:38px; }
+ .dp-sheet-page .date-stepper-compact { grid-column:1/-1; height:40px; width:100%; }
+ .dp-sheet-page .date-stepper-compact input { height:38px!important; flex:1; font-size:16px!important; }
+ .dp-sheet-page .date-stepper-compact button { width:38px; min-width:38px; height:38px; }
+ .dp-sheet-page .dp-field-box { flex-direction:column; align-items:stretch; gap:4px; }
+ .dp-sheet-page .dp-field-box>label { font-size:11px; }
+ .dp-sheet-page .dp-field-box:nth-last-child(2) { grid-column:1/-1; }
+ .dp-sheet-page .dp-field-box:last-child { display:none; }
+ .dp-sheet-page .dp-field-box select,.dp-sheet-page .searchable-dropdown-trigger { height:40px; min-height:40px; font-size:13px; }
+ .dp-sheet-page .searchable-dropdown-panel,.dp-sheet-page .dp-contractor-search-panel { position:fixed!important; left:8px!important; right:8px!important; top:12dvh!important; width:auto!important; max-width:none!important; max-height:70dvh; }
+ .dp-sheet-page .searchable-dropdown-search-wrap input { min-height:42px; font-size:16px!important; }
+ .dp-sheet-page .searchable-dropdown-list,.dp-sheet-page .dp-contractor-list { max-height:50dvh; }
+ .dp-sheet-page .searchable-dropdown-item,.dp-sheet-page .dp-contractor-item { padding:10px; min-height:44px; white-space:normal; }
+ .dp-sheet-page .sheet-entry,.dp-sheet-page .dp-entry-fields,.dp-sheet-page .entry-layout { display:block; height:auto; min-height:0; }
+ .dp-sheet-page .entry-side { display:flex; margin-top:8px; }
+ .dp-sheet-page .material-panel .panel-header { flex-wrap:wrap; gap:5px; }
+ .dp-sheet-page .material-panel .panel-header h2 { font-size:13px; }
+ .dp-sheet-page .material-panel .panel-header select { width:100%; max-width:none; height:36px; font-size:12px!important; }
+ .dp-sheet-page .search-box input { min-height:40px; font-size:16px!important; }
+ .dp-sheet-page .mat-table-head { display:none!important; }
+ .dp-sheet-page .mat-table-body { min-height:180px; max-height:55dvh!important; overflow-y:auto!important; padding:6px!important; background:#f4f8ff; }
+ .dp-sheet-page .mat-row { min-width:0; display:grid!important; grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important; grid-template-areas:none!important; gap:8px!important; padding:10px!important; margin:0 0 7px!important; border:1px solid #d4e2f4!important; border-radius:7px!important; background:#fff!important; }
+ .dp-sheet-page .mat-row>div { padding:0; border:0; min-width:0; }
+ .dp-sheet-page .mat-row>div:nth-child(1),.dp-sheet-page .mat-row>div:nth-child(3),.dp-sheet-page .mat-row>div:nth-child(4),.dp-sheet-page .mat-row>div:nth-child(5) { display:none; }
+ .dp-sheet-page .mat-row>div:nth-child(2) { grid-column:1/-1!important; flex-direction:column; align-items:flex-start; gap:4px; }
+ .dp-sheet-page .mat-desc { font-size:12px!important; color:#172c47!important; line-height:1.4!important; }
+ .dp-sheet-page .sheet-mobile-item-meta { display:block; font-size:10px; color:#547395; }
+ .dp-sheet-page .mat-row>div:nth-child(6),.dp-sheet-page .mat-row>div:nth-child(7) { display:flex; flex-direction:column; align-items:stretch; gap:5px; }
+ .dp-sheet-page .mat-row>div:nth-child(6)::before { content:'Net issued'; font-size:11px; color:#526a88; text-align:left; }
+ .dp-sheet-page .mat-row>div:nth-child(7)::before { content:'Today consumed'; font-size:11px; color:#526a88; text-align:left; }
+ .dp-sheet-page .net-issue-badge { min-height:42px; display:flex; align-items:center; justify-content:center; font-size:12px!important; white-space:normal; }
+ .dp-sheet-page .qty-input-wrap { position:relative; width:100%!important; min-width:0!important; }
+ .dp-sheet-page .qty-input-wrap input { height:42px!important; min-height:42px; padding:7px 40px 7px 8px!important; font-size:16px!important; }
+ .dp-sheet-page .qty-input-wrap>span { position:absolute; right:8px; top:auto; bottom:13px; font-size:11px; max-width:34px; overflow:hidden; }
+ .dp-sheet-page .stepper { width:132px; height:42px; }
+ .dp-sheet-page .stepper input { width:48px; height:40px; font-size:16px!important; }
+ .dp-sheet-page .stepper button { width:40px; min-height:40px; }
+ .dp-sheet-page .save-bar { padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px))!important; flex-direction:column!important; align-items:stretch!important; gap:5px!important; }
+ .dp-sheet-page .save-status-info strong { font-size:10px!important; }
+ .dp-sheet-page .save-bar>div:last-child { flex-wrap:nowrap!important; }
+ .dp-sheet-page .btn-save-progress { flex:1; width:auto!important; min-height:44px; padding:8px!important; font-size:13px!important; justify-content:center; }
+ .dp-sheet-page .btn-unlock-entry { flex:1; min-height:44px; padding:7px!important; font-size:11px!important; }
+ .dp-sheet-page .sheet-sidebar-open .sidebar { top:0; bottom:0; width:min(280px,85vw); }
+ .dp-sheet-page .sheet-sidebar-close { display:block; margin:8px; min-height:40px; border:1px solid #6983a3; border-radius:5px; background:#fff; color:#17395e; cursor:pointer; }
 }
