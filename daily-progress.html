@@ -378,6 +378,11 @@
                                 <div class="search-box">
                                     <input type="search" v-model="searchQuery" placeholder="Search material name or SAP code...">
                                 </div>
+                                <div class="dp-filter-pills">
+                                    <button type="button" class="dp-filter-pill pill-entered" :class="{ active: filterMode === 'entered' }" @click="filterMode = filterMode === 'entered' ? 'issued' : 'entered'" title="Sirf entered quantity wale items dikhayein">⚡ Entered Qty ({{ enteredCount }})</button>
+                                    <button type="button" class="dp-filter-pill pill-issued" :class="{ active: filterMode === 'issued' }" @click="filterMode = 'issued'" title="Stock issue wale items dikhayein">📦 Issued Stock ({{ issuedItemsCount }})</button>
+                                    <button type="button" class="dp-filter-pill pill-all" :class="{ active: filterMode === 'all' }" @click="filterMode = 'all'" title="Sabhi materials dikhayein">🌐 All Items ({{ items.length }})</button>
+                                </div>
                             </div>
 
                             <!-- Materials Table with NET ISSUE Focus -->
@@ -389,7 +394,10 @@
                                     <span class="col-row">Row</span>
                                     <span class="col-unit">Unit</span>
                                     <span class="col-stock">Net Issue</span>
-                                    <span class="col-qty">Today Consumed</span>
+                                    <span class="col-qty col-qty-header" :class="{ 'is-filtered': filterMode === 'entered' }">
+                                        <span>Today Consumed</span>
+                                        <button type="button" class="entry-col-filter-btn" :class="{ active: filterMode === 'entered' }" @click.stop="filterMode = filterMode === 'entered' ? 'issued' : 'entered'" :title="filterMode === 'entered' ? 'Filter hatayein (Show all issued)' : 'Sirf entered quantity wale items filter karein'">⚡ {{ enteredCount }}</button>
+                                    </span>
                                 </div>
 
                                 <div class="mat-table-body">
@@ -682,6 +690,7 @@
                                     <select v-model="exportFilter"
                                             style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 5px; color: #0f172a; font-size: 11px; padding: 4px 6px; outline: none; cursor: pointer;">
                                         <option value="active">Active Items Only ({{ getExportPreviewItems().length }})</option>
+                                        <option value="entered">⚡ Entered Only</option>
                                         <option value="issued">Issued Stock Only</option>
                                         <option value="all">All Sheet Rows ({{ items.length }})</option>
                                     </select>

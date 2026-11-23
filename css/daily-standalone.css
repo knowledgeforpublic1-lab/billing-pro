@@ -1049,6 +1049,76 @@ main {
     outline: none;
 }
 
+.dp-filter-pills {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.dp-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.dp-filter-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+.dp-filter-pill.active {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.3);
+}
+.dp-filter-pill.pill-entered.active {
+    background: #d97706;
+    border-color: #f59e0b;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(217,119,6,0.35);
+}
+.col-qty-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+.entry-col-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.15s ease;
+}
+.entry-col-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #f8fafc;
+}
+.entry-col-filter-btn.active {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #f59e0b;
+    box-shadow: 0 1px 3px rgba(217,119,6,0.4);
+}
+
 /* Materials Table with 7 Columns — Typography & Alignment */
 .material-table {
     border: 1px solid rgba(255, 255, 255, 0.08);

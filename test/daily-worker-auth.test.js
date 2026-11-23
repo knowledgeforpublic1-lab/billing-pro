@@ -403,3 +403,53 @@ test('mobile user cards expand small lists, keep large lists compact and close o
     assert.equal(admin.isDailyProgressWorkerExpanded(users[49]), false);
     assert.equal(admin.dailyProgressModal, '');
 });
+
+test('admin unlock preserves entered quantities, manpower, and remarks without deletion', async () => {
+    const f = await setup();
+    try {
+        await f.create('testuser', ['a']);
+        const cookie = await f.login('testuser', 'Test-entry-password');
+        
+        // 1. Worker saves an entry with quantities and manpower
+        const saveRes = await f.request('/api/daily-progress/data', {
+            reports: [{
+                contractorId: 'a',
+                date: '2026-11-23',
+                version: 1,
+                quantities: { 15: 12.5 },
+                manpower: { leader: 1, skilled: 4, unskilled: 8 },
+                remarks: 'Pole erection completed',
+                state: 'final',
+                final: true
+            }]
+        }, cookie);
+        assert.equal(saveRes.status, 200);
+
+        // 2. Data check — verified saved
+        let dataRes = await (await f.request('/api/daily-progress/data', undefined, f.ownerCookie)).json();
+        let rep = dataRes.data.reports.find(r => r.contractorId === 'a' && r.date === '2026-11-23');
+        assert.ok(rep);
+        assert.equal(rep.quantities['15'], 12.5);
+        assert.equal(rep.manpower.skilled, 4);
+        assert.equal(rep.remarks, 'Pole erection completed');
+
+        // 3. Admin unlocks the entry
+        const unlockRes = await f.request('/api/daily-progress/unlock', {
+            contractorId: 'a',
+            date: '2026-11-23'
+        }, f.ownerCookie);
+        assert.equal(unlockRes.status, 200);
+        const unlockData = await unlockRes.json();
+        assert.equal(unlockData.success, true);
+        assert.equal(unlockData.state, 'open');
+
+        // 4. Data check — MUST PRESERVE all quantities, manpower, remarks
+        dataRes = await (await f.request('/api/daily-progress/data', undefined, f.ownerCookie)).json();
+        rep = dataRes.data.reports.find(r => r.contractorId === 'a' && r.date === '2026-11-23');
+        assert.ok(rep, 'Report must still exist');
+        assert.equal(rep.state, 'open', 'State must be open');
+        assert.equal(rep.quantities['15'], 12.5, 'Quantities must be intact');
+        assert.equal(rep.manpower.skilled, 4, 'Manpower must be intact');
+        assert.equal(rep.remarks, 'Pole erection completed', 'Remarks must be intact');
+    } finally { await f.close(); }
+});

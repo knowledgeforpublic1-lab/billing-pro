@@ -221,6 +221,10 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         res.json({ success: true, byContractorNorm: out });
     }));
 
+    let cachedData = null;
+    let cacheTime = 0;
+    const invalidateDataCache = () => { cachedData = null; cacheTime = 0; };
+
     publicRouter.use(async (req, res, next) => {
         try {
             req.dpWorker = await workers.principal(req);
@@ -237,7 +241,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             storageReady: drive.configured(), locations: await service.locations.list(c.id) });
     }));
     publicRouter.get('/locations', handle(async (req, res) => res.json({ success: true, locations: await service.locations.list(req.dpContractor.id) })));
-    publicRouter.post('/locations', handle(async (req, res) => res.json({ success: true, location: await service.locations.create(req.dpContractor.id, req.body.name, req.dpWorker) })));
+    publicRouter.post('/locations', handle(async (req, res) => {
+        const loc = await service.locations.create(req.dpContractor.id, req.body.name, req.dpWorker);
+        invalidateDataCache();
+        res.json({ success: true, location: loc });
+    }));
     publicRouter.get('/report/:date', handle(async (req, res) => {
         res.json({ success: true, ...await service.access(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), 'read', locationFor(req)) });
     }));
@@ -249,6 +257,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     publicRouter.post('/report/:date/save', handle(async (req, res) => {
         const saved = await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), { ...req.body, locationId: locationFor(req) }, req.dpWorker);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.dpContractor.id, date: req.params.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
+        invalidateDataCache();
         res.json({ success: true, ...saved });
     }));
 
@@ -266,11 +275,19 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         res.json({ success: true, events });
     }));
     adminRouter.get('/locations', handle(async (req, res) => res.json({ success: true, locations: await service.locations.list(String(req.query.contractorId || '')) })));
-    adminRouter.post('/locations', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, location: await service.locations.create(req.body.contractorId, req.body.name, { id: 'admin' }) })));
+    adminRouter.post('/locations', auth.requireAdmin, handle(async (req, res) => {
+        const loc = await service.locations.create(req.body.contractorId, req.body.name, { id: 'admin' });
+        invalidateDataCache();
+        res.json({ success: true, location: loc });
+    }));
     adminRouter.post('/storage-check', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await drive.check() })));
     adminRouter.post('/links', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.createLink(req.body.contractor || {}) })));
     adminRouter.post('/links/disable', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, disabled: await service.disable(req.body.contractorId) })));
-    adminRouter.post('/reopen', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, reopened: await service.reopen(req.body.contractorId, req.body.date, 'reopen', locationFor(req)) })));
+    adminRouter.post('/reopen', auth.requireAdmin, handle(async (req, res) => {
+        const reopened = await service.reopen(req.body.contractorId, req.body.date, 'reopen', locationFor(req));
+        invalidateDataCache();
+        res.json({ success: true, reopened });
+    }));
     adminRouter.get('/audit', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, events: await service.audit(req.query.contractorId, req.query.date, locationFor(req)) })));
     adminRouter.get('/report', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.query.contractorId, req.query.date, req.get('x-dp-editor'), 'read', locationFor(req)) })));
     adminRouter.post('/claim', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'claim', locationFor(req)) })));
@@ -278,6 +295,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const actor = { id: 'owner:' + (req.authSession && req.authSession.uid || 'admin'), name: 'Admin', username: 'admin', role: 'admin' };
         const saved = await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body, actor);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.body.contractorId, date: req.body.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
+        invalidateDataCache();
         res.json({ success: true, ...saved });
     }));
     adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat', locationFor(req)) })));
@@ -290,7 +308,8 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         if (!rows.length && allDates !== true) rows.push({ contractorId, date, locationId, version: 0 });
         const results = [];
         try { for (const row of rows) results.push(await service.manage(contractorId, row.date, locationId, action, row)); }
-        catch (error) { return res.status(error.status || 503).json({ success: false, error: `${results.length} dates updated. ` + error.message, results }); }
+        catch (error) { invalidateDataCache(); return res.status(error.status || 503).json({ success: false, error: `${results.length} dates updated. ` + error.message, results }); }
+        invalidateDataCache();
         res.json({ success: true, count: results.length, results });
     }));
     adminRouter.post('/import', auth.requireAdmin, handle(async (req, res) => {
@@ -303,12 +322,9 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const saved = await service.save(report.contractorId, report.date, editor, {
             report, locationId: normalizeLocation(report.locationId), final: true, version: status.version, epoch: status.epoch, requestId: req.body.requestId
         });
+        invalidateDataCache();
         res.json({ success: true, ...saved });
     }));
-    let cachedData = null;
-    let cacheTime = 0;
-    const invalidateDataCache = () => { cachedData = null; cacheTime = 0; };
-
     async function readData(forceFresh = false) {
         const nowMs = Date.now();
         if (!forceFresh && cachedData && (nowMs - cacheTime < 8000)) {

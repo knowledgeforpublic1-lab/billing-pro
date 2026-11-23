@@ -283,15 +283,15 @@
 
                 // 1. If explicit stateObj exists:
                 if (stateObj) {
-                    if (stateObj.state === 'final') return true;
                     if (stateObj.state === 'open') return false;
+                    if (stateObj.state === 'final') return true;
                 }
 
                 // 2. If report exists:
                 if (rep) {
                     if (rep.pending) return false;
-                    if ((rep.state === 'final' || rep.final) && this.hasReportContent(rep)) return true;
                     if (rep.state === 'open') return false;
+                    if ((rep.state === 'final' || rep.final) && this.hasReportContent(rep)) return true;
                 }
 
                 return false;
@@ -1296,7 +1296,24 @@
                         normDate(r.date) === curDate && 
                         locationKey(r.locationId) === locKey
                     );
-                    if (rep) rep.state = 'open';
+                    if (rep) {
+                        rep.state = 'open';
+                        rep.final = false;
+                    }
+
+                    // Preserve and populate existing entered quantities and manpower
+                    if (data.report && data.report.quantities && Object.keys(data.report.quantities).length) {
+                        this.quantities = { ...(data.report.quantities || {}) };
+                        if (data.report.manpower) this.manpower = { ...(data.report.manpower || {}) };
+                        if (data.report.remarks) this.remarks = data.report.remarks;
+                        if (data.report.version) this.version = Number(data.report.version);
+                    } else if (rep && rep.quantities && Object.keys(rep.quantities).length) {
+                        this.quantities = { ...(rep.quantities || {}) };
+                        if (rep.manpower) this.manpower = { ...(rep.manpower || {}) };
+                        if (rep.remarks) this.remarks = rep.remarks;
+                        if (rep.version) this.version = Number(rep.version);
+                    }
+                    this.dirty = false;
 
                     this.showToast(`✅ Entry unlocked for ${this.selectedDate}! Ab changes save kiye ja sakte hain.`, 'success');
                 } catch (err) {
@@ -1479,6 +1496,9 @@
                     if (filter === 'all') return true;
                     const stock = this.getItemStock(it);
                     const totalRangeConsumed = this.getExportItemTotal(it.id);
+                    if (filter === 'entered') {
+                        return totalRangeConsumed > 0;
+                    }
                     if (filter === 'issued') {
                         return (stock && stock.totalIssued > 0);
                     }

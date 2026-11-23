@@ -182,6 +182,10 @@ module.exports = function createService({ db, drive, now = Date.now, items = [] 
                 if (r.operation?.until > now()) fail(409, 'Save in progress. Retry after completion.');
                 r.state = 'open'; r.epoch++; delete r.owner; delete r.operation; r.leaseUntil = 0;
                 delete r.lastRequestId;
+                if (r.baseReport) {
+                    r.baseReport.state = 'open';
+                    r.baseReport.final = false;
+                }
                 audit(r, action);
                 return { value: r, result: true };
             });

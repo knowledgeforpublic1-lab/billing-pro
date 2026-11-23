@@ -481,15 +481,47 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
             if (typeof cid !== 'string' || !cid) fail(400, 'Contractor required.');
             if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) fail(400, 'Valid date required.');
             const lid = normalizeLocation(locationId);
-            return db.atomicDailyRecord(controlKey(cid, date, lid), old => {
+            const key = controlKey(cid, date, lid);
+            const existingRecord = await read(key);
+            let fallbackReport = existingRecord?.baseReport || null;
+            if (!fallbackReport && existingRecord?.fileId && drive && drive.read) {
+                try { fallbackReport = await drive.read(existingRecord.fileId); } catch {}
+            }
+            if (!fallbackReport) {
+                const legacyShared = await read('shared_report_' + hash(reportKey({ contractorId: cid, date, locationId: lid })));
+                if (legacyShared?.report) fallbackReport = legacyShared.report;
+            }
+            if (!fallbackReport && db.getDefaultConfig) {
+                try {
+                    const legacyConfig = await db.getDefaultConfig('dailyProgressData');
+                    const legacyData = readDailyProgressData(legacyConfig);
+                    for (const row of legacyData.reports || []) {
+                        if (row.contractorId === cid && row.date === date && normalizeLocation(row.locationId) === lid) {
+                            fallbackReport = newerReport(fallbackReport, row);
+                        }
+                    }
+                } catch {}
+            }
+            return db.atomicDailyRecord(key, old => {
                 const r = { ...(old || {}), contractorId: cid, date, locationId: lid, state: 'open' };
+                const base = r.baseReport || fallbackReport;
+                if (base) {
+                    r.baseReport = {
+                        ...base,
+                        contractorId: cid,
+                        date,
+                        locationId: lid,
+                        state: 'open',
+                        final: false
+                    };
+                }
                 r.epoch = (r.epoch || 0) + 1;
                 delete r.owner;
                 delete r.operation;
                 r.leaseUntil = 0;
                 delete r.lastRequestId;
                 r.audit = [...(r.audit || []), { action: 'admin_unlock', at: now(), by: actor.username }].slice(-100);
-                return { value: r, result: { success: true, state: 'open' } };
+                return { value: r, result: { success: true, state: 'open', report: r.baseReport || null } };
             });
         }
     };
