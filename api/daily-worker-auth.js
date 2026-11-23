@@ -106,7 +106,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         try { cid = decodeURIComponent(header); } catch { fail(400, 'Invalid contractor link.'); }
         if (!cid || cid.length > 150 || cid === '*' || cid === 'all') fail(400, 'Valid contractor link required.');
         assertContractor(actor, cid);
-        return { ...actor, ...(actor.role === 'admin' ? { name: 'Contractor entry', email: '', mobile: '' } : {}), role: 'worker', contractorIds: [cid], sharedView: true };
+        return { ...actor, ...(actor.role === 'admin' ? { name: 'Contractor entry', email: '', mobile: '' } : {}), role: 'worker', contractorIds: [cid], availableContractorIds: actor.role === 'admin' ? ['*'] : actor.contractorIds, sharedView: true };
     }
 
     function normId(value) {

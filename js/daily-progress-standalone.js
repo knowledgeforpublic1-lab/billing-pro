@@ -12,11 +12,12 @@
 
     const shareParams = new URLSearchParams(window.location.search);
     const linkContractor = shareParams.get('contractor') || shareParams.get('c') || '__link_required__';
+    let requestContractor = linkContractor;
     const shareStorageKey = 'billing_daily_progress_share:' + encodeURIComponent(linkContractor);
     const readShareCache = () => localStorage.getItem(shareStorageKey) || localStorage.getItem('billing_daily_progress');
     function shareFetch(url, options = {}) {
         return fetch(url, { ...options, credentials: 'same-origin', headers: {
-            ...(options.headers || {}), 'X-DP-Share-Contractor': encodeURIComponent(linkContractor)
+            ...(options.headers || {}), 'X-DP-Share-Contractor': encodeURIComponent(requestContractor)
         } });
     }
 
@@ -422,7 +423,10 @@
                 await this.ensureStock();
                 if (cid !== this.selectedContractorId) return;
                 await this.loadLocations();
-                if (cid === this.selectedContractorId && !this.dirty) this.loadReportForActiveDate();
+                if (cid === this.selectedContractorId && !this.dirty) {
+                    this.loadReportForActiveDate();
+                    await this.fetchLatestReportsSilently();
+                }
             },
             selectedLocationId() { this.loadReportForActiveDate(); },
             selectedDate() {
@@ -592,7 +596,9 @@
             },
 
             selectContractor(cid) {
-                if (!(this.contractors || []).some(c => c.id === cid && matchesContractor(linkContractor, c))) return;
+                if (!(this.contractors || []).some(c => c.id === cid)) return;
+                if (this.dirty) return this.showToast('Contractor badalne se pehle current entry save karein.', 'warning');
+                requestContractor = cid;
                 if (this.busy) return;
                 if (this.dirty && !confirm('Unsaved changes chhodkar contractor badlein?')) return;
                 if (cid !== this.selectedContractorId) { this.selectedLocationId = ''; this.locations = []; this.dirty = false; }
@@ -752,7 +758,7 @@
                     const login = window.DailyWorkerAuth && window.DailyWorkerAuth.user;
                     if (login && login.role !== 'admin') {
                         const hasPerm = cid => {
-                            const list = login.contractorIds || [];
+                            const list = login.availableContractorIds || login.contractorIds || [];
                             if (list.includes('*') || list.includes('all')) return true;
                             return list.some(allowedId => matchesContractor(allowedId, { id: cid, name: cid }));
                         };
@@ -785,14 +791,12 @@
                         }
                     }
 
-                    // Also isolate old device caches when an owner opens a shared link.
-                    const sharedContractor = this.contractors.find(c => matchesContractor(linkContractor, c));
-                    if (!sharedContractor) throw new Error('Is contractor ka sahi share link kholein.');
-                    this.contractors = [sharedContractor];
-                    this.selectedContractorId = sharedContractor.id;
-                    this.reports = this.reports.filter(row => matchesContractor(row.contractorId, sharedContractor));
-                    this.reportStates = this.reportStates.filter(row => matchesContractor(row.contractorId, sharedContractor));
-                    this.issues = this.issues.filter(row => matchesContractor(row.contractorId, sharedContractor));
+                    // Keep the permitted picker while isolating device data to its assignments.
+                    const allowed = cid => this.contractors.some(c => matchesContractor(cid, c));
+                    this.reports = this.reports.filter(row => allowed(row.contractorId));
+                    this.reportStates = this.reportStates.filter(row => allowed(row.contractorId));
+                    this.issues = this.issues.filter(row => allowed(row.contractorId));
+                    requestContractor = this.selectedContractorId;
 
                     await this.ensureStock();
                     await this.loadLocations();
@@ -964,9 +968,11 @@
                         if (this.dirty || this.busy || cid !== this.selectedContractorId || date !== this.selectedDate || location !== this.selectedLocationId || epoch !== (this._dataEpoch || 0)) return;
                         if (resJson && resJson.success && resJson.data && Array.isArray(resJson.data.reports)) {
                             const scope = this.activeContractor || {};
-                            const reports = new Map(resJson.data.reports.filter(r => matchesContractor(r.contractorId, scope)).map(r => [reportKey(r), r]));
+                            const permitted = row => this.contractors.some(c => matchesContractor(row.contractorId, c));
+                            const reports = new Map(this.reports.filter(r => permitted(r) && !matchesContractor(r.contractorId, scope)).map(r => [reportKey(r), r]));
+                            for (const r of resJson.data.reports.filter(r => matchesContractor(r.contractorId, scope))) reports.set(reportKey(r), r);
                             for (const r of this.reports) {
-                                if (r.pending && matchesContractor(r.contractorId, scope)) reports.set(reportKey(r), r);
+                                if (r.pending && permitted(r)) reports.set(reportKey(r), r);
                             }
                             this.reports = [...reports.values()];
                             this.reportStates = (resJson.data.reportStates || []).filter(r => matchesContractor(r.contractorId, scope));

@@ -8,7 +8,7 @@
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/daily-standalone.css?v=20261121_search_dropdown_v1">
-    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_mobile_v2">
+    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_share_picker_v2">
     <style>
         [v-cloak] { display: none !important; }
     </style>
@@ -176,10 +176,11 @@
                     </div>
 
                     <div class="date-stepper-compact">
-                        <button type="button" :disabled="!selectedLocationId" @click="navigateDay(-1)" title="Previous Day">◀</button>
-                        <input type="date" v-model="selectedDate" :disabled="!selectedLocationId" title="Choose date">
-                        <button type="button" :disabled="!selectedLocationId" @click="navigateDay(1)" title="Next Day">▶</button>
-                        <button type="button" class="btn-today-compact" :disabled="!selectedLocationId" @click="setToday" title="Jump to Today">Today</button>
+                        <span class="sheet-date-label">Date</span>
+                        <button type="button" @click="navigateDay(-1)" title="Previous Day">◀</button>
+                        <input type="date" v-model="selectedDate" title="Choose date">
+                        <button type="button" @click="navigateDay(1)" title="Next Day">▶</button>
+                        <button type="button" class="btn-today-compact" @click="setToday" title="Jump to Today">Today</button>
                     </div>
                 </div>
 
@@ -1027,10 +1028,10 @@
     <script src="/js/storage-transport.js?v=20261118_review4"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="js/daily-worker-auth.js?v=20261123_share_scope_v1"></script>
+    <script src="js/daily-worker-auth.js?v=20261123_share_picker_v2"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261123_share_scope_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261123_share_picker_v2"></script>
 </body>
 
 </html>

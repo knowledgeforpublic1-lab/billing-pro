@@ -44,6 +44,22 @@ test('shared requests keep the link scope and discard unrelated cached or refres
     assert.equal(app.issues.length, 0);
 });
 
+test('choosing an assigned contractor changes request scope without enabling admin controls', async () => {
+    let scope;
+    const { app } = sharePage(async (url, options) => {
+        scope = decodeURIComponent(options.headers['X-DP-Share-Contractor']);
+        return { ok: true, json: async () => ({ success: true, data: { reports: [], reportStates: [], issues: [] } }) };
+    });
+    app.contractors = [{ id: app.selectedContractorId, name: 'First' }, { id: 'second', name: 'Second' }];
+    app.selectContractor('second');
+    await app.fetchLatestReportsSilently();
+    assert.equal(scope, 'second');
+    assert.equal(app.selectedContractorId, 'second');
+    assert.equal(app.isAdmin, false);
+    app.selectContractor('unassigned');
+    assert.equal(app.selectedContractorId, 'second');
+});
+
 test('location is required for entry; same-day site quantities and legacy reports stay separate', async () => {
     let submitted;
     const { app } = sharePage(async (url, init) => {
@@ -358,9 +374,9 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     assert.ok(sandbox._copiedUrl, 'Share link copied');
     assert.ok(sandbox._copiedUrl.includes('/daily-progress.html?contractor=mangesh-sonwane'), 'Generates proper shareable link');
 
-    // Shared links cannot switch into another contractor, even in an owner browser.
-    assert.deepEqual(Array.from(mountedApp.contractors, c => c.id), ['mangesh-sonwane']);
-    mountedApp.selectContractor('maa-kali');
+    // Assigned contractors remain selectable while shared administrative actions stay off.
+    assert.ok(mountedApp.contractors.some(c => c.id === 'maa-kali'));
+    mountedApp.selectContractor('not-assigned');
     assert.equal(mountedApp.selectedContractorId, 'mangesh-sonwane');
     mountedApp.entryLoginUser = { role: 'admin' };
     assert.equal(mountedApp.isAdmin, false, 'Shared links never expose administrative actions');
@@ -374,7 +390,7 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
 
     // Search for a specific contractor
     mountedApp.contractorSearchText = 'maa';
-    assert.equal(mountedApp.filteredContractors.length, 0, 'Other contractors are absent from the shared picker');
+    assert.ok(mountedApp.filteredContractors.some(c => c.id === 'maa-kali'), 'Permitted contractors remain searchable');
     mountedApp.contractorSearchText = 'mangesh';
     assert.equal(mountedApp.filteredContractors.length, 1);
 

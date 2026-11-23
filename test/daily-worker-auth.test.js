@@ -50,6 +50,14 @@ test('shared contractor view narrows owner sessions and cannot expand worker acc
         await f.create();
         const cookie = await f.login();
         assert.equal((await f.request('/api/dp-worker/session', undefined, cookie, { 'x-dp-share-contractor': 'b' })).status, 403);
+        await f.create('amit', ['a', 'b']);
+        const assignedCookie = await f.login('amit');
+        const assigned = await (await f.request('/api/dp-worker/session', undefined, assignedCookie, view)).json();
+        assert.deepEqual(assigned.user.availableContractorIds, ['a', 'b']);
+        assert.deepEqual(assigned.user.contractorIds, ['a']);
+        const selected = await (await f.request('/api/daily-progress/data', undefined, assignedCookie, { 'x-dp-share-contractor': 'b' })).json();
+        assert.deepEqual(selected.data.contractors.map(c => c.id), ['b']);
+        assert.ok(selected.data.reports.every(r => r.contractorId === 'b'));
         assert.equal((await f.request('/api/dp-worker/session', undefined, f.ownerCookie, { 'x-dp-share-contractor': '*' })).status, 400);
         const owner = await (await f.request('/api/dp-worker/session', undefined, f.ownerCookie)).json();
         assert.equal(owner.user.role, 'admin');

@@ -19,7 +19,7 @@
 .dp-sheet-page main { margin:0; padding:0 8px 8px; height:calc(100dvh - 72px); min-height:350px; display:flex; flex-direction:column; overflow:auto; }
 .dp-sheet-page .dp-master-header-card { flex-shrink:0; padding:8px 0; margin:0 0 5px; border:0; border-radius:0; box-shadow:none; background:transparent; gap:0; color:#172439; }
 .dp-sheet-page .dp-header-top-row,.dp-sheet-page .dp-location-note,.dp-sheet-page .dp-hierarchy-banner,.dp-sheet-page .compact-strip,.dp-sheet-page .dp-lock-banner.open { display:none; }
-.dp-sheet-page .dp-cascading-grid { display:grid; grid-template-columns:minmax(165px,1.25fr) 155px minmax(110px,.8fr) minmax(120px,.9fr) minmax(155px,1.1fr) minmax(145px,1fr); gap:8px; align-items:center; }
+.dp-sheet-page .dp-cascading-grid { display:grid; grid-template-columns:minmax(165px,1.25fr) 185px minmax(110px,.8fr) minmax(120px,.9fr) minmax(155px,1.1fr) minmax(145px,1fr); gap:8px; align-items:center; }
 .dp-sheet-page .header-left { display:contents; }
 .dp-sheet-page .contractor-select-compact { width:auto; min-width:0; display:flex; align-items:center; gap:5px; border:0; background:transparent; padding:0; }
 .dp-sheet-page .compact-label { color:#24344d; font-size:10px; white-space:nowrap; }
@@ -29,8 +29,9 @@
 .dp-sheet-page .dp-combo-input { width:100%; min-width:0; height:27px; color:#182c49; font-size:11px; }
 .dp-sheet-page .dp-combo-search-icon,.dp-sheet-page .dp-combo-arrow-btn { color:#0876ff; }
 .dp-sheet-page .btn-compact-add { height:27px; width:27px; padding:0; border-radius:4px; background:#0876ff; }
-.dp-sheet-page .date-stepper-compact { display:flex; height:29px; min-height:0; width:155px; padding:0; border:1px solid #bfd1e9; border-radius:5px; background:#fff; }
-.dp-sheet-page .date-stepper-compact input { width:112px; color:#22344c; background:transparent; font-size:11px; padding:0; color-scheme:light; }
+.dp-sheet-page .date-stepper-compact { display:flex; height:29px; min-height:0; width:185px; padding:0; border:1px solid #bfd1e9; border-radius:5px; background:#fff; }
+.dp-sheet-page .date-stepper-compact input { width:0; flex:1; min-width:0; color:#22344c; background:transparent; font-size:11px; padding:0; color-scheme:light; }
+.dp-sheet-page .sheet-date-label { font-size:10px; padding-left:5px; color:#304967; flex-shrink:0; }
 .dp-sheet-page .date-stepper-compact button { width:23px; min-width:23px; padding:0; color:#1754a2; background:transparent; }
 .dp-sheet-page .date-stepper-compact .btn-today-compact { display:none; }
 .dp-sheet-page .dp-field-box { min-width:0; display:flex; flex-direction:row; align-items:center; gap:5px; }
@@ -110,7 +111,7 @@ body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; 
 .dp-sheet-page main div[style*="background: #1e293b"] { background:#f0f6ff!important; border-color:#dce7f7!important; }
 .dp-sheet-page main h2[style*="color: #f8fafc"],.dp-sheet-page main .panel strong[style*="color: #f8fafc"] { color:#213b5d!important; }
 @media(min-width:1600px) { .dp-sheet-page .mat-table-head,.dp-sheet-page .mat-row { grid-template-columns:44px minmax(230px,1fr) 110px 55px 55px 120px 150px; } }
-@media(max-width:1100px) { .dp-sheet-page .dp-cascading-grid { grid-template-columns:minmax(155px,1.2fr) 140px minmax(95px,.8fr) minmax(100px,.9fr) minmax(140px,1fr) minmax(120px,.9fr); gap:5px; } .dp-sheet-page .date-stepper-compact { width:140px; } .dp-sheet-page .date-stepper-compact input { width:94px; } .dp-sheet-page .dp-field-box>label { font-size:9px; } .sheet-actions { gap:4px; } .sheet-actions button { padding:5px 8px; } }
+@media(max-width:1100px) { .dp-sheet-page .dp-cascading-grid { grid-template-columns:minmax(155px,1.2fr) 185px minmax(95px,.8fr) minmax(100px,.9fr) minmax(140px,1fr) minmax(120px,.9fr); gap:5px; } .dp-sheet-page .date-stepper-compact { width:185px; } .dp-sheet-page .date-stepper-compact input { width:94px; } .dp-sheet-page .dp-field-box>label { font-size:9px; } .sheet-actions { gap:4px; } .sheet-actions button { padding:5px 8px; } }
 @media(max-width:850px) { .dp-sheet-page main { height:auto; min-height:calc(100dvh - 72px); padding-bottom:65px; } .dp-sheet-page .dp-cascading-grid { grid-template-columns:1.3fr 1fr 1fr; } .dp-sheet-page .date-stepper-compact { width:100%; } .dp-sheet-page .date-stepper-compact input { flex:1; } .dp-sheet-page .entry-layout { grid-template-columns:minmax(0,1fr); height:auto; } .dp-sheet-page .mat-table-body { min-height:320px; max-height:55vh; } .dp-sheet-page .sheet-entry { padding-bottom:0; } .dp-sheet-page .entry-side { display:grid; grid-template-columns:1fr 1fr; } .sheet-heading p { display:none; } .sheet-actions button { font-size:10px; } .dp-sheet-page .save-status-info span { display:none; } }
 @media(max-width:540px) { .sheet-heading h1 { font-size:13px; } .sheet-calendar { display:none; } .sheet-heading { gap:5px; } .sheet-actions { flex-wrap:wrap; justify-content:flex-end; gap:3px; } .sheet-actions button { padding:3px 5px; min-height:25px; } .dp-sheet-page .sheet-commandbar { height:64px; } .dp-sheet-page .dp-cascading-grid { grid-template-columns:1fr 1fr; gap:7px; } .dp-sheet-page .entry-side { display:flex; } .dp-sheet-page .btn-save-progress { padding:7px 10px; font-size:11px; } .dp-sheet-page .save-status-info strong { font-size:10px; } .dp-sheet-page .mat-table-head,.dp-sheet-page .mat-row { min-width:0; grid-template-columns:minmax(120px,1fr) 70px 92px; } }
 
@@ -157,6 +158,8 @@ body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; 
  .dp-sheet-page .btn-compact-add { width:36px; height:38px; }
  .dp-sheet-page .date-stepper-compact { grid-column:1/-1; height:40px; width:100%; }
  .dp-sheet-page .date-stepper-compact input { height:38px!important; flex:1; font-size:16px!important; }
+ .dp-sheet-page .date-stepper-compact input { width:0!important; min-width:0; }
+ .dp-sheet-page .date-stepper-compact .btn-today-compact { display:block; width:48px; min-width:48px; font-size:11px; }
  .dp-sheet-page .date-stepper-compact button { width:38px; min-width:38px; height:38px; }
  .dp-sheet-page .dp-field-box { flex-direction:column; align-items:stretch; gap:4px; }
  .dp-sheet-page .dp-field-box>label { font-size:11px; }
