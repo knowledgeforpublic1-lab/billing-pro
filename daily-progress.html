@@ -389,9 +389,8 @@
                             <div class="material-table">
                                 <div class="mat-table-head">
                                     <span class="col-seq">#</span>
-                                    <span class="col-desc">Item Description</span>
+                                    <span class="col-desc">Material Description</span>
                                     <span class="col-sap">SAP Code</span>
-                                    <span class="col-row">Row</span>
                                     <span class="col-unit">Unit</span>
                                     <span class="col-stock">Net Issue</span>
                                     <span class="col-qty col-qty-header" :class="{ 'is-filtered': filterMode === 'entered' }">
@@ -405,18 +404,17 @@
                                         <div class="col-seq sheet-row-number">{{ itemIndex + 1 }}</div>
                                         <div class="col-desc mat-info-cell">
                                             <span class="mat-desc">{{ item.name }}</span>
-                                            <small class="sheet-mobile-item-meta">SAP: {{ item.code || '—' }} · Row: {{ item.row }} · Unit: {{ item.unit }}</small>
+                                            <small class="sheet-mobile-item-meta">SAP: {{ item.code || '—' }} · Unit: {{ item.unit }}</small>
                                         </div>
                                         <div class="col-sap sheet-sap-code"><span>{{ item.code || '—' }}</span></div>
-                                        <div class="col-row sheet-source-row">{{ item.row }}</div>
                                         <div class="col-unit sheet-unit">{{ item.unit }}</div>
 
                                         <div class="col-stock mat-stock-cell">
-                                            <span v-if="getItemStock(item).totalIssued > 0" class="net-issue-badge" :title="'SAP Net Issue + Manual Challans up to ' + selectedDate">
-                                                📦 {{ getItemStock(item).totalIssued }} {{ item.unit }}
+                                            <span v-if="getItemStock(item).totalIssued > 0" class="net-issue-val net-issue-badge" :title="'SAP Net Issue up to ' + selectedDate">
+                                                {{ getItemStock(item).totalIssued }}
                                             </span>
-                                            <span v-else class="net-issue-badge zero" title="No stock issue recorded for this contractor">
-                                                0 {{ item.unit }}
+                                            <span v-else class="net-issue-val net-issue-badge zero" title="No stock issue recorded for this contractor">
+                                                -
                                             </span>
                                         </div>
 

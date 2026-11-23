@@ -1129,7 +1129,7 @@ main {
 
 .mat-table-head {
     display: grid;
-    grid-template-columns: 44px minmax(220px, 1fr) 115px 50px 60px 130px 145px;
+    grid-template-columns: 40px minmax(220px, 1fr) 100px 50px 95px 145px;
     align-items: center;
     gap: 10px;
     padding: 11px 16px;
@@ -1145,7 +1145,6 @@ main {
 .mat-table-head .col-seq { text-align: center; }
 .mat-table-head .col-desc { text-align: left; }
 .mat-table-head .col-sap { text-align: center; }
-.mat-table-head .col-row { text-align: center; }
 .mat-table-head .col-unit { text-align: center; }
 .mat-table-head .col-stock { text-align: center; }
 .mat-table-head .col-qty { text-align: right; }
@@ -1157,7 +1156,7 @@ main {
 
 .mat-row {
     display: grid;
-    grid-template-columns: 44px minmax(220px, 1fr) 115px 50px 60px 130px 145px;
+    grid-template-columns: 40px minmax(220px, 1fr) 100px 50px 95px 145px;
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
@@ -1234,27 +1233,22 @@ main {
     text-align: center;
 }
 
-/* Net Issue Badge — user requirement: NET ISSUE DIKHAO */
+/* Net Issue — Clean number matching current theme */
+.net-issue-val,
 .net-issue-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #38bdf8;
     white-space: nowrap;
 }
 
+.net-issue-val.zero,
 .net-issue-badge.zero {
-    background: rgba(148, 163, 184, 0.08);
-    color: #94a3b8;
-    border-color: rgba(148, 163, 184, 0.2);
+    color: #64748b;
 }
 
 .qty-input-wrap {
