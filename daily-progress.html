@@ -721,8 +721,8 @@
                                         <th class="st-unit">Unit</th>
                                         <th class="st-issue" title="Total Stock Issued to Contractor up to Work Date">Net Issue</th>
                                         <th v-for="(day, idx) in getExportDays()" :key="day" class="dp-excel-day-hdr" :title="day">
-                                            <div style="font-size: 9px; opacity: 0.6;">D{{ idx + 1 }}</div>
-                                            <div>{{ formatShortDay(day) }}</div>
+                                            <div class="dp-day-num">D{{ idx + 1 }}</div>
+                                            <div class="dp-day-name"><span class="dp-day-dd">{{ day.slice(8) }}</span><span class="dp-day-mmm">-{{ formatShortDay(day).split('-')[1] || '' }}</span></div>
                                         </th>
                                         <th class="dp-excel-tot-col" title="Sum of entered consumption across this date range">Range Consumed</th>
                                         <th class="dp-excel-bal-col" title="Net Issue minus Range Consumed">Net Balance</th>
