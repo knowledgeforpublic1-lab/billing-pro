@@ -257,6 +257,13 @@
             isAdmin() {
                 return false; // Administrative actions belong to the Billing dashboard, never shared links.
             },
+            hasReportContent(r) {
+                if (!r) return false;
+                const hasQty = Object.values(r.quantities || {}).some(v => Number(v) > 0);
+                const hasMp = Object.values(r.manpower || {}).some(v => Number(v) > 0);
+                const hasRem = Boolean(String(r.remarks || '').trim());
+                return hasQty || hasMp || hasRem;
+            },
             isCurrentDateLocked() {
                 const actC = this.activeContractor || {};
                 const curDate = normDate(this.selectedDate);
@@ -283,7 +290,7 @@
                 // 2. If report exists:
                 if (rep) {
                     if (rep.pending) return false;
-                    if (rep.state === 'final' || rep.final) return true;
+                    if ((rep.state === 'final' || rep.final) && this.hasReportContent(rep)) return true;
                     if (rep.state === 'open') return false;
                 }
 
@@ -440,7 +447,7 @@
             if (typeof setInterval === 'function') {
                 this._refreshTimer = setInterval(() => {
                     if (!document.hidden && !this.busy && !this.dirty) this.fetchLatestReportsSilently();
-                }, 15000);
+                }, 45000);
             }
             if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
                 document.addEventListener('click', (e) => {

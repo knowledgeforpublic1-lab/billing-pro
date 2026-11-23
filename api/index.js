@@ -921,6 +921,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
                 if (previous && Number(report.version) <= Number(previous.version) && JSON.stringify(report.quantities) === JSON.stringify(previous.quantities || {}) && report.remarks === (previous.remarks || '') && Object.keys(report.manpower).every(key => Number(report.manpower[key]) === Number(previous.manpower && previous.manpower[key] || 0))) continue;
                 saved.push(await workers.saveShared(actor, report, previous));
             }
+            if (dailyProgress.invalidateDataCache) dailyProgress.invalidateDataCache();
             return res.json({ success: true, count: saved.length, reports: saved });
         }
 
@@ -963,6 +964,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
         };
 
         await db.saveDefaultConfig('dailyProgressData', merged);
+        if (dailyProgress.invalidateDataCache) dailyProgress.invalidateDataCache();
         res.json({ success: true, count: merged.reports.length });
     } catch (e) {
         res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Entry save unavailable. Draft safe rakhein aur retry karein.' });
@@ -978,6 +980,7 @@ app.post('/api/daily-progress/unlock', express.json(), async (req, res) => {
         const { contractorId, date, locationId } = req.body || {};
         if (!contractorId || !date) return res.status(400).json({ success: false, error: 'Contractor aur date required' });
         const result = await workers.unlock(actor, contractorId, date, locationId);
+        if (dailyProgress.invalidateDataCache) dailyProgress.invalidateDataCache();
         res.json({ success: true, ...result });
     } catch (e) {
         res.status(e.status || 500).json({ success: false, error: e.message || 'Unlock failed' });

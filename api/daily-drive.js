@@ -1,6 +1,8 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 
+const driveReadCache = new Map();
+
 // Credentials stay server-side. Each save creates an immutable JSON version.
 module.exports = function createDrive({ env = process.env, fetchImpl = fetch, folderEnv = 'DAILY_PROGRESS_DRIVE_FOLDER_ID' } = {}) {
     let cachedToken;
@@ -159,11 +161,19 @@ module.exports = function createDrive({ env = process.env, fetchImpl = fetch, fo
                 method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body
             });
             if (!data.id) throw Object.assign(new Error('Drive save confirmation missing.'), { status: 503 });
+            driveReadCache.set(data.id, report);
             return data.id;
         },
         async read(id) {
             if (!/^[\w-]+$/.test(id)) throw new Error('Invalid Drive file reference');
-            return request('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media&supportsAllDrives=true');
+            if (driveReadCache.has(id)) return driveReadCache.get(id);
+            const data = await request('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media&supportsAllDrives=true');
+            if (driveReadCache.size > 2000) {
+                const firstKey = driveReadCache.keys().next().value;
+                driveReadCache.delete(firstKey);
+            }
+            driveReadCache.set(id, data);
+            return data;
         }
     };
 };

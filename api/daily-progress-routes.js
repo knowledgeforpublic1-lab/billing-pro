@@ -305,7 +305,15 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         });
         res.json({ success: true, ...saved });
     }));
-    async function readData() {
+    let cachedData = null;
+    let cacheTime = 0;
+    const invalidateDataCache = () => { cachedData = null; cacheTime = 0; };
+
+    async function readData(forceFresh = false) {
+        const nowMs = Date.now();
+        if (!forceFresh && cachedData && (nowMs - cacheTime < 8000)) {
+            return cachedData;
+        }
         const legacy = await db.getDefaultConfig('dailyProgressData');
         const base = readDailyProgressData(legacy);
         const reports = new Map((base.reports || []).map(r => [reportKey(r), r]));
@@ -329,7 +337,10 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const issues = new Map((base.issues || []).map(i => [i.id, i]));
         for (const issue of aux.issues) issues.set(issue.id, issue);
         const reportStates = controlledReports.map(({ contractorId, date, locationId, version, state, deleted }) => ({ contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted }));
-        return { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
+        const result = { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
+        cachedData = result;
+        cacheTime = Date.now();
+        return result;
     }
     adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
     adminRouter.post('/auxiliary', auth.requireAdmin, handle(async (req, res) => {
@@ -356,7 +367,8 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
                 return old ? { result: null } : { value: { fileId, digest, ...(body.kind === 'contractor' ? { contractor: clean } : {}) }, result: null };
             });
         }
+        invalidateDataCache();
         res.json({ success: true });
     }));
-    return { publicRouter, adminRouter, service, readData };
+    return { publicRouter, adminRouter, service, readData, invalidateDataCache };
 };
