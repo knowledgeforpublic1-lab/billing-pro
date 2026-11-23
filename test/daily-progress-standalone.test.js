@@ -25,6 +25,25 @@ function sharePage(fetcher) {
     return { app, storage, options };
 }
 
+test('shared requests keep the link scope and discard unrelated cached or refreshed rows', async () => {
+    let requestHeaders;
+    const cid = 'intally_dynamix_private_limited';
+    const { app } = sharePage(async (url, options) => {
+        requestHeaders = options.headers;
+        return { ok: true, json: async () => ({ success: true, data: {
+            reports: [{ contractorId: cid, date: '2026-11-17', version: 1 }, { contractorId: 'another', date: '2026-11-17', version: 1 }],
+            reportStates: [{ contractorId: 'another' }], issues: [{ contractorId: 'another' }]
+        } }) };
+    });
+    app.contractors = [{ id: cid, name: 'Intally' }];
+    app.reports = [{ contractorId: 'another', date: '2026-11-17', pending: true }];
+    await app.fetchLatestReportsSilently();
+    assert.equal(decodeURIComponent(requestHeaders['X-DP-Share-Contractor']), cid);
+    assert.ok(app.reports.every(r => r.contractorId === cid));
+    assert.equal(app.reportStates.length, 0);
+    assert.equal(app.issues.length, 0);
+});
+
 test('location is required for entry; same-day site quantities and legacy reports stay separate', async () => {
     let submitted;
     const { app } = sharePage(async (url, init) => {
@@ -116,13 +135,16 @@ test('failed share save preserves base version, exact server error and only retr
     app.reports = [{ contractorId: app.selectedContractorId, date: '2026-11-16', version: 1, quantities: { 15: 3 } }];
     app.version = 2;
     app.quantities = { 15: 9 };
+    const dashboardCache = JSON.stringify({ reports: [{ contractorId: 'another', pending: true }] });
+    storage.set('billing_daily_progress', dashboardCache);
     await app.saveProgress();
+    assert.equal(storage.get('billing_daily_progress'), dashboardCache, 'Shared saves preserve dashboard drafts');
     assert.equal(app.version, 2);
     assert.equal(app.dirty, true);
     assert.match(app.toastMsg, /Entry reserved by another editor/);
     assert.equal(bodies[0].reports.length, 1);
     assert.equal(bodies[0].reports[0].version, 3);
-    const draft = JSON.parse(storage.get('billing_daily_progress')).reports.find(r => r.date === app.selectedDate);
+    const draft = JSON.parse(storage.get('billing_daily_progress_share:intally_dynamix_private_limited')).reports.find(r => r.date === app.selectedDate);
     assert.equal(draft.pending, true);
     assert.equal(draft.version, 2);
     fail = false;
@@ -130,6 +152,7 @@ test('failed share save preserves base version, exact server error and only retr
     assert.equal(bodies[1].reports[0].version, 3);
     assert.equal(app.version, 3);
     assert.equal(app.dirty, false);
+    assert.equal(storage.get('billing_daily_progress'), dashboardCache);
 });
 
 test('share refresh picks corrected reports, clears removed entries and protects edits during a request', async () => {
@@ -313,7 +336,7 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     assert.equal(mountedApp.dirty, false);
     assert.ok(sandbox._savedCloudPayload, 'Saved payload to cloud API');
     assert.equal(sandbox._savedCloudPayload.reports[0].quantities['1'], 5);
-    assert.equal(mockLocalStorage['billing_daily_progress'] !== undefined, true, 'Saved to localStorage');
+    assert.equal(mockLocalStorage['billing_daily_progress_share:mangesh-sonwane'] !== undefined, true, 'Saved to localStorage');
 
     const workingFetch = sandbox.fetch;
     for (const failedResponse of [
@@ -335,12 +358,12 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
     assert.ok(sandbox._copiedUrl, 'Share link copied');
     assert.ok(sandbox._copiedUrl.includes('/daily-progress.html?contractor=mangesh-sonwane'), 'Generates proper shareable link');
 
-    // 10. Switch contractor
-    mountedApp.selectedContractorId = 'maa-kali';
-    mountedApp.loadReportForActiveDate();
-    assert.equal(mountedApp.activeContractor.name, 'MAA KALI ENTERPRISES');
-    // Maa kali has no entries yet
-    assert.equal(mountedApp.quantities['1'], undefined, 'Contractor change isolates report quantities');
+    // Shared links cannot switch into another contractor, even in an owner browser.
+    assert.deepEqual(Array.from(mountedApp.contractors, c => c.id), ['mangesh-sonwane']);
+    mountedApp.selectContractor('maa-kali');
+    assert.equal(mountedApp.selectedContractorId, 'mangesh-sonwane');
+    mountedApp.entryLoginUser = { role: 'admin' };
+    assert.equal(mountedApp.isAdmin, false, 'Shared links never expose administrative actions');
 
     // 11. Contractor Search Combo Box verification
     assert.ok(html.includes('dp-search-combo-box'), 'HTML contains dp-search-combo-box');
@@ -351,7 +374,9 @@ test('Daily Progress Standalone Page & Net Issue Verification', async (t) => {
 
     // Search for a specific contractor
     mountedApp.contractorSearchText = 'maa';
-    assert.ok(mountedApp.filteredContractors.some(c => c.name.toLowerCase().includes('maa')), 'Filters list by search text');
+    assert.equal(mountedApp.filteredContractors.length, 0, 'Other contractors are absent from the shared picker');
+    mountedApp.contractorSearchText = 'mangesh';
+    assert.equal(mountedApp.filteredContractors.length, 1);
 
     // Select contractor via search
     const firstMatch = mountedApp.filteredContractors[0];

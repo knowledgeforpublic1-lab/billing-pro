@@ -63,7 +63,7 @@
 
             <div class="sidebar-foot">
                 <span>BillingPro 6.0</span>
-                <a href="index.html" target="_blank" style="color: #38bdf8; font-weight: 700;">Open Studio ↗</a>
+                <span>Contractor access</span>
             </div>
         </aside>
 
@@ -108,7 +108,7 @@
 
                         <!-- Right: Custom Site Toggle -->
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" class="dp-custom-toggle-btn" @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
+                            <button v-if="isAdmin" type="button" class="dp-custom-toggle-btn" @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
                                 <span>{{ showCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
                             </button>
                         </div>
@@ -171,7 +171,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button v-if="!entryLoginUser || entryLoginUser.role === 'admin'" type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
+                            <button v-if="isAdmin" type="button" @click="showAddContractorModal = true" title="Add new contractor team" class="btn-compact-add">➕</button>
                         </div>
                     </div>
 
@@ -260,7 +260,7 @@
                     </div>
 
                     <!-- Collapsible Custom Site Addition -->
-                    <div v-if="showCustomLocation" class="dp-custom-location-row">
+                    <div v-if="isAdmin && showCustomLocation" class="dp-custom-location-row">
                         <span style="font-size: 0.8rem; font-weight: 700; color: #e2e8f0;">➕ Unlisted Site / Village Add Karein:</span>
                         <input id="new-work-location" v-model="newLocationName" style="flex: 1; min-height: 36px; padding: 6px 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #f8fafc;" maxlength="120" placeholder="e.g. Angara Village – Site A" @keydown.enter.prevent="addLocation">
                         <button type="button" style="padding: 6px 14px; font-size: 0.78rem; font-weight: 700; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;" @click="addLocation">Add Location</button>
@@ -531,7 +531,7 @@
                                 SAP Stock + Manual Challan issues vs. Daily consumption up to {{ selectedDate }}.
                             </p>
                         </div>
-                        <button v-if="!entryLoginUser || entryLoginUser.role === 'admin'" type="button" class="btn-header-share" @click="showAddIssueModal = true">
+                        <button v-if="isAdmin" type="button" class="btn-header-share" @click="showAddIssueModal = true">
                             <span>➕</span><span>Record Material Issue</span>
                         </button>
                     </div>
@@ -812,7 +812,7 @@
         </div>
 
         <!-- MODAL: ADD CONTRACTOR -->
-        <div v-if="showAddContractorModal" class="modal-overlay" @click.self="showAddContractorModal = false">
+        <div v-if="isAdmin && showAddContractorModal" class="modal-overlay" @click.self="showAddContractorModal = false">
             <div class="modal-card">
                 <div class="modal-header">
                     <h3>➕ Add Contractor / Labour Team</h3>
@@ -844,7 +844,7 @@
         </div>
 
         <!-- MODAL: ADD MANUAL STOCK ISSUE -->
-        <div v-if="showAddIssueModal" class="modal-overlay" @click.self="showAddIssueModal = false">
+        <div v-if="isAdmin && showAddIssueModal" class="modal-overlay" @click.self="showAddIssueModal = false">
             <div class="modal-card">
                 <div class="modal-header">
                     <h3>📦 Record Material Issue (Challan)</h3>
@@ -1027,10 +1027,10 @@
     <script src="/js/storage-transport.js?v=20261118_review4"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="js/daily-worker-auth.js?v=20261119_fast_login_v1"></script>
+    <script src="js/daily-worker-auth.js?v=20261123_share_scope_v1"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261123_sheet_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261123_share_scope_v1"></script>
 </body>
 
 </html>

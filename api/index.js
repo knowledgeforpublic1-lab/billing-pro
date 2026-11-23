@@ -911,7 +911,7 @@ app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req
                     if (!Number.isFinite(value) || value < 0 || value > 1e9 || (['leader', 'skilled', 'unskilled'].includes(key) && !Number.isInteger(value))) throw Object.assign(new Error('Invalid manpower'), { status: 400 });
                     manpower[key] = value;
                 }
-                return { contractorId: report.contractorId, date: report.date, locationId: normalizeLocation(report.locationId), quantities, manpower, remarks: String(report.remarks || '').slice(0, 5000), version: Number(report.version || 0) };
+                return { contractorId: report.contractorId, date: report.date, locationId: normalizeLocation(report.locationId), quantities, manpower, remarks: String(report.remarks || '').slice(0, 5000), version: Number(report.version || 0), ...(report.state === 'final' || report.final === true ? { state: 'final', final: true } : {}) };
             });
             const loaded = await dailyProgress.readData();
             const prior = new Map(loaded.reports.map(row => [reportKey(row), row]));

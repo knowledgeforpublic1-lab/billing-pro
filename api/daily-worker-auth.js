@@ -83,7 +83,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         if (auth && typeof auth.sessionFor === 'function' && /(?:^|;\s*)billing_session=/.test(req.headers.cookie || '')) {
             try {
                 const owner = await auth.sessionFor(req);
-                return { id: 'owner:' + owner.uid, name: 'Admin', username: 'admin', email: 'admin@system', mobile: '', role: 'admin', contractorIds: [] };
+                return shareView(req, { id: 'owner:' + owner.uid, name: 'Admin', username: 'admin', email: 'admin@system', mobile: '', role: 'admin', contractorIds: [] });
             } catch (e) {
                 if (e.status !== 401) throw e;
             }
@@ -95,7 +95,18 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         if (!session || session.expiresAt <= now()) fail(401, 'Entry login expire ho gaya. Dobara login karein.');
         const user = await read(userKey(session.username));
         if (!user || user.disabled || user.deleted || session.revision !== user.revision) fail(401, 'Entry login disabled ya password badal gaya hai.');
-        return publicUser(user);
+        return shareView(req, publicUser(user));
+    }
+
+    // A shared page may reduce an existing session's scope; it never grants access.
+    function shareView(req, actor) {
+        const header = req.headers['x-dp-share-contractor'];
+        if (header === undefined) return actor;
+        let cid;
+        try { cid = decodeURIComponent(header); } catch { fail(400, 'Invalid contractor link.'); }
+        if (!cid || cid.length > 150 || cid === '*' || cid === 'all') fail(400, 'Valid contractor link required.');
+        assertContractor(actor, cid);
+        return { ...actor, ...(actor.role === 'admin' ? { name: 'Contractor entry', email: '', mobile: '' } : {}), role: 'worker', contractorIds: [cid], sharedView: true };
     }
 
     function normId(value) {
@@ -199,7 +210,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
             result: null
         }));
         setCookie(req, res, token);
-        res.json({ success: true, user: publicUser(user) });
+        res.json({ success: true, user: shareView(req, publicUser(user)) });
     }));
 
     // Public worker signup (Name, Email, Mobile, Password, Contractors)
@@ -219,7 +230,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
             result: null
         }));
         setCookie(req, res, token);
-        res.json({ success: true, user: publicUser(user) });
+        res.json({ success: true, user: shareView(req, publicUser(user)) });
     }));
 
     router.get('/session', handler(async (req, res) => res.json({ success: true, user: await principal(req) })));

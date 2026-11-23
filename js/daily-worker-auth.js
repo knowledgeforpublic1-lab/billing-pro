@@ -165,9 +165,9 @@
             cache: 'no-store',
             ...(body === undefined ? {} : {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             }),
+            headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), 'X-DP-Share-Contractor': encodeURIComponent(queryContractor || '__link_required__') },
             signal: AbortSignal.timeout(20000)
         });
         const data = await response.json();
@@ -250,7 +250,7 @@
             const label = document.createElement('span');
             const details = [user.name, user.mobile || user.email].filter(Boolean).join(' • ');
             const ids = user.contractorIds || [];
-            const scope = user.role === 'admin' || ids.some(id => id === '*' || id === 'all') ? 'All contractors' : ids.length + ' contractors assigned';
+            const scope = user.sharedView ? 'Limited contractor access' : (user.role === 'admin' || ids.some(id => id === '*' || id === 'all') ? 'All contractors' : ids.length + ' contractors assigned');
             label.textContent = '👤 Signed In: ' + details + ' · ' + scope;
             bar.appendChild(label);
 

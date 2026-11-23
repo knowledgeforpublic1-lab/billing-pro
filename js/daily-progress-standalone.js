@@ -10,6 +10,16 @@
 (function () {
     'use strict';
 
+    const shareParams = new URLSearchParams(window.location.search);
+    const linkContractor = shareParams.get('contractor') || shareParams.get('c') || '__link_required__';
+    const shareStorageKey = 'billing_daily_progress_share:' + encodeURIComponent(linkContractor);
+    const readShareCache = () => localStorage.getItem(shareStorageKey) || localStorage.getItem('billing_daily_progress');
+    function shareFetch(url, options = {}) {
+        return fetch(url, { ...options, credentials: 'same-origin', headers: {
+            ...(options.headers || {}), 'X-DP-Share-Contractor': encodeURIComponent(linkContractor)
+        } });
+    }
+
     function getTodayStr() {
         return new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Kolkata',
@@ -244,7 +254,7 @@
                 return null;
             },
             isAdmin() {
-                return !!(this.entryLoginUser && this.entryLoginUser.role === 'admin');
+                return false; // Administrative actions belong to the Billing dashboard, never shared links.
             },
             isCurrentDateLocked() {
                 const actC = this.activeContractor || {};
@@ -497,7 +507,7 @@
                     this.locations = [...defaults];
                 }
                 try {
-                    const response = await fetch('/api/dp-worker/locations?contractorId=' + encodeURIComponent(cid), { cache: 'no-store' });
+                    const response = await shareFetch('/api/dp-worker/locations?contractorId=' + encodeURIComponent(cid), { cache: 'no-store' });
                     const data = await response.json();
                     if (!response.ok || !data.success) throw new Error(data.error || 'Locations load nahi hui.');
                     if (cid !== this.selectedContractorId) return;
@@ -533,7 +543,7 @@
                 if (!name) return this.showToast('Location name likhein.', 'warning');
                 this.busy = true;
                 try {
-                    const response = await fetch('/api/dp-worker/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contractorId: this.selectedContractorId, name }) });
+                    const response = await shareFetch('/api/dp-worker/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contractorId: this.selectedContractorId, name }) });
                     const data = await response.json();
                     if (!response.ok || !data.success) throw new Error(data.error || 'Location save nahi hui.');
                     await this.loadLocations();
@@ -582,6 +592,7 @@
             },
 
             selectContractor(cid) {
+                if (!(this.contractors || []).some(c => c.id === cid && matchesContractor(linkContractor, c))) return;
                 if (this.busy) return;
                 if (this.dirty && !confirm('Unsaved changes chhodkar contractor badlein?')) return;
                 if (cid !== this.selectedContractorId) { this.selectedLocationId = ''; this.locations = []; this.dirty = false; }
@@ -667,7 +678,7 @@
                     // 1b. Public sanitized catalog (contractor names + materials) for logged-out share links.
                     if (!this.items.length || this.contractors.length < 2) {
                         try {
-                            const catRes = await fetch('/api/daily-entry/catalog', { cache: 'no-store' });
+                            const catRes = await shareFetch('/api/daily-entry/catalog', { cache: 'no-store' });
                             if (catRes.ok) {
                                 const catalog = await catRes.json();
                                 if (catalog && catalog.success) {
@@ -686,7 +697,7 @@
                     // 2. Fetch cloud data or localStorage
                     let loaded = null;
                     try {
-                        const res = await fetch('/api/daily-progress/data?t=' + Date.now());
+                        const res = await shareFetch('/api/daily-progress/data?t=' + Date.now());
                         if (res.ok) {
                             const resJson = await res.json();
                             if (resJson && resJson.success && resJson.data) {
@@ -699,13 +710,13 @@
 
                     if (!loaded) {
                         try {
-                            const localStr = localStorage.getItem('billing_daily_progress');
+                            const localStr = readShareCache();
                             if (localStr) loaded = JSON.parse(localStr);
                         } catch (e) { }
                     } else {
                         // A confirmed cloud read must not discard an unsent device draft.
                         try {
-                            const cached = JSON.parse(localStorage.getItem('billing_daily_progress') || 'null');
+                            const cached = JSON.parse(readShareCache() || 'null');
                             const reports = new Map((loaded.reports || []).map(r => [reportKey(r), r]));
                             for (const r of cached && cached.reports || []) {
                                 if (r.pending) reports.set(reportKey(r), r);
@@ -773,6 +784,15 @@
                             this.selectedContractorId = fallbackContractor.id;
                         }
                     }
+
+                    // Also isolate old device caches when an owner opens a shared link.
+                    const sharedContractor = this.contractors.find(c => matchesContractor(linkContractor, c));
+                    if (!sharedContractor) throw new Error('Is contractor ka sahi share link kholein.');
+                    this.contractors = [sharedContractor];
+                    this.selectedContractorId = sharedContractor.id;
+                    this.reports = this.reports.filter(row => matchesContractor(row.contractorId, sharedContractor));
+                    this.reportStates = this.reportStates.filter(row => matchesContractor(row.contractorId, sharedContractor));
+                    this.issues = this.issues.filter(row => matchesContractor(row.contractorId, sharedContractor));
 
                     await this.ensureStock();
                     await this.loadLocations();
@@ -871,10 +891,10 @@
                 if (this._stockRequest === reqKey) return;
                 this._stockRequest = reqKey;
                 try {
-                    let res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
+                    let res = await shareFetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
                     let payload = res.ok ? await res.json() : null;
                     if ((!payload || !payload.success || !payload.byContractorNorm || !Object.keys(payload.byContractorNorm).length) && actC.name && actC.name !== cid) {
-                        res = await fetch('/api/daily-entry/stock/' + encodeURIComponent(actC.name), { cache: 'no-store' });
+                        res = await shareFetch('/api/daily-entry/stock/' + encodeURIComponent(actC.name), { cache: 'no-store' });
                         if (res.ok) payload = await res.json();
                     }
                     if (payload && payload.success && payload.byContractorNorm) {
@@ -938,18 +958,19 @@
                 const cid = this.selectedContractorId, date = this.selectedDate, location = this.selectedLocationId;
                 const epoch = this._dataEpoch || 0;
                 try {
-                    const res = await fetch('/api/daily-progress/data?t=' + Date.now());
+                    const res = await shareFetch('/api/daily-progress/data?t=' + Date.now());
                     if (res.ok) {
                         const resJson = await res.json();
                         if (this.dirty || this.busy || cid !== this.selectedContractorId || date !== this.selectedDate || location !== this.selectedLocationId || epoch !== (this._dataEpoch || 0)) return;
                         if (resJson && resJson.success && resJson.data && Array.isArray(resJson.data.reports)) {
-                            const reports = new Map(resJson.data.reports.map(r => [reportKey(r), r]));
+                            const scope = this.activeContractor || {};
+                            const reports = new Map(resJson.data.reports.filter(r => matchesContractor(r.contractorId, scope)).map(r => [reportKey(r), r]));
                             for (const r of this.reports) {
-                                if (r.pending) reports.set(reportKey(r), r);
+                                if (r.pending && matchesContractor(r.contractorId, scope)) reports.set(reportKey(r), r);
                             }
                             this.reports = [...reports.values()];
-                            this.reportStates = resJson.data.reportStates || [];
-                            if (Array.isArray(resJson.data.issues)) this.issues = resJson.data.issues;
+                            this.reportStates = (resJson.data.reportStates || []).filter(r => matchesContractor(r.contractorId, scope));
+                            if (Array.isArray(resJson.data.issues)) this.issues = resJson.data.issues.filter(r => matchesContractor(r.contractorId, scope));
                             const actC = this.activeContractor || {};
                             const curDate = normDate(this.selectedDate);
                             const matching = (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && normDate(r.date) === curDate && locationKey(r.locationId) === locationKey(this.selectedLocationId));
@@ -1130,7 +1151,7 @@
                     let localSaved = false;
                     try {
                         const drafts = payload.reports.map(row => reportKey(row) === reportKey(reportObj) ? { ...row, version: this.version, pending: true } : row);
-                        localStorage.setItem('billing_daily_progress', JSON.stringify({ ...payload, reports: drafts }));
+                        localStorage.setItem(shareStorageKey, JSON.stringify({ ...payload, reports: drafts }));
                         localSaved = true;
                     } catch (e) { }
 
@@ -1138,7 +1159,7 @@
                     let cloudSaved = false;
                     let cloudError = '';
                     try {
-                        const res = await fetch('/api/daily-progress/data', {
+                        const res = await shareFetch('/api/daily-progress/data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             // Submit only the edited date. Old cached dates must never block this save.
@@ -1157,7 +1178,7 @@
                                     if (index >= 0) this.reports[index] = report;
                                     if (report.contractorId === cid && report.date === curDate) this.version = report.version;
                                 }
-                                try { localStorage.setItem('billing_daily_progress', JSON.stringify({ ...payload, reports: this.reports })); } catch {}
+                                try { localStorage.setItem(shareStorageKey, JSON.stringify({ ...payload, reports: this.reports })); } catch {}
                             }
                         }
                     } catch (e) {
@@ -1190,7 +1211,7 @@
                 this.busy = true;
                 try {
                     const actC = this.activeContractor || {};
-                    const res = await fetch('/api/daily-progress/unlock', {
+                    const res = await shareFetch('/api/daily-progress/unlock', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1289,6 +1310,7 @@
             },
 
             async submitAddContractor() {
+                if (!this.isAdmin) return;
                 const name = (this.newContractorForm.name || '').trim();
                 if (!name) return;
                 const id = normId(name);
@@ -1308,6 +1330,7 @@
             },
 
             submitAddIssue() {
+                if (!this.isAdmin) return;
                 const qty = Number(this.newIssueForm.quantity);
                 if (!this.newIssueForm.itemId || !(qty > 0)) {
                     alert('Material aur valid quantity zaroori hai!');
@@ -1445,7 +1468,7 @@
 
                     let templateBuffer = null;
                     try {
-                        const res = await fetch('/api/daily-progress/template');
+                        const res = await shareFetch('/api/daily-progress/template');
                         if (res.ok) templateBuffer = await res.arrayBuffer();
                     } catch (e) { }
 

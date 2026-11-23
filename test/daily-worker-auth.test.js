@@ -18,6 +18,43 @@ async function setup() {
     };
     return { ...f, request, create, login, close: () => new Promise(resolve => server.close(resolve)) };
 }
+
+test('shared contractor view narrows owner sessions and cannot expand worker access', async () => {
+    const f = await setup();
+    const view = { 'x-dp-share-contractor': 'a' };
+    try {
+        f.configs.get('dailyProgressData').data = {
+            contractors: [{ id: 'a', name: 'Team A', pan: 'private-a' }, { id: 'b', name: 'Team B' }],
+            reports: ['a', 'b'].map(contractorId => ({ contractorId, date: '2026-11-23', quantities: {}, version: 1 })),
+            issues: ['a', 'b'].map(contractorId => ({ contractorId, itemId: '15', quantity: 2 })),
+            reportStates: ['a', 'b'].map(contractorId => ({ contractorId, date: '2026-11-23', state: 'final' }))
+        };
+        const session = await (await f.request('/api/dp-worker/session', undefined, f.ownerCookie, view)).json();
+        assert.equal(session.user.role, 'worker');
+        assert.deepEqual(session.user.contractorIds, ['a']);
+        assert.equal(session.user.sharedView, true);
+        const scoped = await (await f.request('/api/daily-progress/data', undefined, f.ownerCookie, view)).json();
+        assert.deepEqual(scoped.data.contractors.map(c => c.id), ['a']);
+        assert.equal(scoped.data.contractors[0].pan, undefined);
+        for (const key of ['reports', 'issues', 'reportStates']) assert.ok(scoped.data[key].every(r => r.contractorId === 'a'));
+        const sites = await (await f.request('/api/dp-worker/locations?contractorId=a', undefined, f.ownerCookie, view)).json();
+        const report = { contractorId: 'a', date: '2026-11-24', locationId: sites.locations[0].id, version: 1, state: 'final', quantities: { '15': 2 } };
+        const saved = await f.request('/api/daily-progress/data', { reports: [report] }, f.ownerCookie, view);
+        assert.equal(saved.status, 200);
+        assert.equal((await saved.json()).reports[0].state, 'final');
+        assert.equal((await f.request('/api/daily-progress/data', { reports: [{ ...report, version: 2, quantities: { '15': 3 } }] }, f.ownerCookie, view)).status, 423);
+        assert.equal((await f.request('/api/daily-progress/unlock', { contractorId: 'a', date: '2026-11-23' }, f.ownerCookie, view)).status, 403);
+        assert.equal((await f.request('/api/daily-progress/data', { reports: [{ contractorId: 'b' }] }, f.ownerCookie, view)).status, 403);
+        assert.equal((await f.request('/api/dp-worker/locations?contractorId=b', undefined, f.ownerCookie, view)).status, 403);
+        assert.equal((await f.request('/api/daily-progress/data', undefined, '', view)).status, 401);
+        await f.create();
+        const cookie = await f.login();
+        assert.equal((await f.request('/api/dp-worker/session', undefined, cookie, { 'x-dp-share-contractor': 'b' })).status, 403);
+        assert.equal((await f.request('/api/dp-worker/session', undefined, f.ownerCookie, { 'x-dp-share-contractor': '*' })).status, 400);
+        const owner = await (await f.request('/api/dp-worker/session', undefined, f.ownerCookie)).json();
+        assert.equal(owner.user.role, 'admin');
+    } finally { await f.close(); }
+});
 test('only admin creates entry logins; hashed passwords, contractor scope, logout and revocation are enforced', async () => {
     const f = await setup();
     try {
