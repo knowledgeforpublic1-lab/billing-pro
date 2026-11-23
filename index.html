@@ -106,6 +106,7 @@
     <link rel="stylesheet" href="css/style.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/daily-progress.css?v=20261121_search_dropdown_v1">
+<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_dashboard_v1">
 </head>
 
 <body>
@@ -330,7 +331,7 @@
             </aside>
 
             <!-- Main Work Area -->
-            <div class="work" :class="{ 'pole-schedule-area': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract', 'activity-area': currentView === 'detail', 'master-recon-area': currentView === 'masterrecon' }">
+            <div class="work" :class="{ 'pole-schedule-area': currentView === 'poleSchedule' && poleScheduleSubTab !== 'abstract', 'activity-area': currentView === 'detail', 'master-recon-area': currentView === 'masterrecon', 'daily-sheet-area': currentView === 'dailyProgress' }">
 
                 <!-- SAP App Toolbar — activity ke tools yahin merged hain, right me bill buttons -->
                 <div v-if="currentView !== 'dashboard' && currentView !== 'summary' && currentView !== 'masterrecon'" class="apptoolbar no-print" style="margin-bottom: 0.35rem; background: #eef0f3;">
@@ -503,63 +504,8 @@
                         </div>
                     </template>
                     <template v-if="currentView === 'dailyProgress'">
-                        <span class="dp-brand-chip" style="font-size: 0.82rem; font-weight: 800; color: var(--text-main, #111); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">📅 Daily Progress</span>
-
-                        <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1.5px solid #0284c7; border-radius: 5px; padding: 2px 6px;">
-                            <span class="dp-pill-label" style="font-size: 0.65rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">TEAM:</span>
-                            <div class="searchable-dropdown" v-click-outside="closeDailyProgressContractorDropdown" title="Contractor / Labour Team — searchable list" style="min-width: 210px; max-width: 320px; position: relative;">
-                                <div class="dp-search-combo-box"
-                                     style="display: inline-flex; align-items: center; background: transparent; gap: 5px; width: 100%;">
-                                    <span style="font-size: 11px; color: #0284c7;">🔍</span>
-                                    <input type="text"
-                                           v-model="dailyProgressContractorSearch"
-                                           ref="dpContractorSearchInput"
-                                           @focus="dailyProgressContractorDropdownOpen = true"
-                                           @click.stop="dailyProgressContractorDropdownOpen = true"
-                                           @input="dailyProgressContractorDropdownOpen = true"
-                                           :placeholder="dailyProgressActiveContractor ? dailyProgressActiveContractor.name : 'Search contractor...'"
-                                           style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.78rem; font-weight: 700; width: 180px; outline: none; text-overflow: ellipsis;"
-                                           @keydown.esc="closeDailyProgressContractorDropdown"
-                                           @keydown.enter.prevent="dailyProgressFilteredContractors.length && selectDailyProgressContractor(dailyProgressFilteredContractors[0].id)">
-                                    <button v-if="dailyProgressContractorSearch"
-                                            type="button"
-                                            @click.stop="dailyProgressContractorSearch = ''; dailyProgressContractorDropdownOpen = true; $refs.dpContractorSearchInput && $refs.dpContractorSearchInput.focus()"
-                                            style="background: none; border: none; color: #64748b; cursor: pointer; padding: 0 3px; font-size: 11px; font-weight: 800;"
-                                            title="Clear search">✕</button>
-                                    <button type="button"
-                                            @click.stop="toggleDailyProgressContractorDropdown"
-                                            style="background: none; border: none; color: #0284c7; cursor: pointer; padding: 0 2px; font-size: 10px; font-weight: 800;"
-                                            title="Toggle list">▾</button>
-                                </div>
-                                <div class="searchable-dropdown-panel" v-if="dailyProgressContractorDropdownOpen" style="width: 340px; max-width: 90vw; z-index: 1050; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card, #ffffff); border: 1.5px solid #0284c7; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.25);" @click.stop>
-                                    <div style="padding: 6px 10px; background: rgba(2, 132, 199, 0.08); border-bottom: 1px solid rgba(0,0,0,0.08); font-size: 0.68rem; font-weight: 800; color: #0284c7; display: flex; justify-content: space-between;">
-                                        <span>🔍 SEARCH CONTRACTOR ({{ dailyProgressFilteredContractors.length }} MATCHES)</span>
-                                        <span v-if="dailyProgressContractorSearch" style="cursor: pointer; color: #ef4444;" @click="dailyProgressContractorSearch = ''">Clear ✕</span>
-                                    </div>
-                                    <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
-                                        <template v-if="dailyProgressFilteredContractors.length">
-                                            <div v-for="c in dailyProgressFilteredContractors" :key="c.id" class="searchable-dropdown-item" :class="{ selected: dailyProgressContractorId === c.id }" @click="selectDailyProgressContractor(c.id)" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.04);">
-                                                <div style="font-weight: 700; font-size: 0.82rem;">{{ c.name }}</div>
-                                                <div v-if="c.feeder || c.project" style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
-                                                    <span v-if="c.feeder" style="color: #0284c7;">⚡ {{ c.feeder }}</span>
-                                                    <span v-if="c.project">📁 {{ c.project }}</span>
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <div v-else class="searchable-dropdown-empty" style="padding: 12px; text-align: center; color: #64748b; font-size: 0.78rem;">
-                                            Koi contractor match nahi hua
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="dp-icon-add-btn">➕</button>
-                        </div>
-
-                        <div class="dp-date-pill" style="display: inline-flex; align-items: center; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; overflow: hidden;">
-                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
-                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" :disabled="dailyProgressBusy" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
-                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
-                        </div>
+                        <button type="button" class="dp-sheet-menu" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" aria-controls="main-sidebar" aria-label="Toggle navigation">☰</button>
+                        <span class="dp-brand-chip" style="font-size: 0.82rem; font-weight: 800; color: var(--text-main, #111); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;"><span class="dp-sheet-calendar">▦</span><span>Daily Progress<small>Material consumption, manpower &amp; daily work progress</small></span></span>
 
                         <div class="dp-segmented-tabs" style="display: inline-flex; background: var(--bg-surface, #e2e8f0); padding: 2px; border-radius: 5px; gap: 2px;">
                             <button type="button" :class="{ active: dailyProgressTab === 'entry' }" @click="dailyProgressTab = 'entry'" title="Daily Material & Manpower Entry" style="font-size: 0.72rem; padding: 2px 8px; border: none; border-radius: 3px; cursor: pointer; font-weight: 700;">
@@ -1958,11 +1904,11 @@
 
         <!-- VIEW: DAILY PROGRESS REGISTER -->
         <div class="view-section animate-fade-in" v-if="currentView === 'dailyProgress'">
-            <div class="daily-progress-container" :inert="dailyProgressBusy">
+            <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section class="dp-master-header-card" aria-label="Location and work date">
                     <!-- Top Row: Division Pills & Date Stepper -->
-                    <div class="dp-header-top-row">
+                    <details class="dp-sheet-options"><summary>Division &amp; site options</summary><div class="dp-header-top-row">
                         <div class="dp-division-pills">
                             <span style="font-size: 0.78rem; font-weight: 800; color: var(--dp-text-muted); text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
                             <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'ALL' }" @click="setDailyProgressDivision('ALL')">
@@ -1998,11 +1944,97 @@
                         </div>
                     </div>
 
+                    <!-- Active Location Hierarchy Banner -->
+                    <div v-if="dailyProgressLocationId" class="dp-hierarchy-banner">
+                        <div class="dp-hierarchy-badges">
+                            <span style="font-size: 0.82rem; font-weight: 800; color: #1d4ed8; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>📍</span> Active:
+                            </span>
+                            <template v-if="dailyProgressActiveLocationObj">
+                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-badge div">Div: {{ dailyProgressActiveLocationObj.division }}</span>
+                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-arrow">›</span>
+                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-badge sub">Sub-Div: {{ dailyProgressActiveLocationObj.subDivision }}</span>
+                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-arrow">›</span>
+                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-badge sst">S/S: {{ dailyProgressActiveLocationObj.substation }}</span>
+                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-arrow">›</span>
+                                <span class="dp-h-badge fdr">⚡ {{ dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="dp-h-badge fdr">{{ dailyProgressLocationName() }}</span>
+                            </template>
+                        </div>
+                        <div class="dp-hierarchy-actions">
+                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('reset')" title="Is date ka progress reset karein">↺ Reset day</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress delete karein">🗑 Delete day</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
+                        </div>
+                    </div>
+                    <p v-else class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
+                        ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
+                    </p>
+                    </details>
                     <!-- Second Row: Cascading Selectors & Instant Search -->
                     <div class="dp-cascading-grid">
+                        <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1.5px solid #0284c7; border-radius: 5px; padding: 2px 6px;">
+                            <span class="dp-pill-label" style="font-size: 0.65rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">TEAM:</span>
+                            <div class="searchable-dropdown" v-click-outside="closeDailyProgressContractorDropdown" title="Contractor / Labour Team — searchable list" style="min-width: 210px; max-width: 320px; position: relative;">
+                                <div class="dp-search-combo-box"
+                                     style="display: inline-flex; align-items: center; background: transparent; gap: 5px; width: 100%;">
+                                    <span style="font-size: 11px; color: #0284c7;">🔍</span>
+                                    <input type="text"
+                                           v-model="dailyProgressContractorSearch"
+                                           ref="dpContractorSearchInput"
+                                           @focus="dailyProgressContractorDropdownOpen = true"
+                                           @click.stop="dailyProgressContractorDropdownOpen = true"
+                                           @input="dailyProgressContractorDropdownOpen = true"
+                                           :placeholder="dailyProgressActiveContractor ? dailyProgressActiveContractor.name : 'Search contractor...'"
+                                           style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.78rem; font-weight: 700; width: 180px; outline: none; text-overflow: ellipsis;"
+                                           @keydown.esc="closeDailyProgressContractorDropdown"
+                                           @keydown.enter.prevent="dailyProgressFilteredContractors.length && selectDailyProgressContractor(dailyProgressFilteredContractors[0].id)">
+                                    <button v-if="dailyProgressContractorSearch"
+                                            type="button"
+                                            @click.stop="dailyProgressContractorSearch = ''; dailyProgressContractorDropdownOpen = true; $refs.dpContractorSearchInput && $refs.dpContractorSearchInput.focus()"
+                                            style="background: none; border: none; color: #64748b; cursor: pointer; padding: 0 3px; font-size: 11px; font-weight: 800;"
+                                            title="Clear search">✕</button>
+                                    <button type="button"
+                                            @click.stop="toggleDailyProgressContractorDropdown"
+                                            style="background: none; border: none; color: #0284c7; cursor: pointer; padding: 0 2px; font-size: 10px; font-weight: 800;"
+                                            title="Toggle list">▾</button>
+                                </div>
+                                <div class="searchable-dropdown-panel" v-if="dailyProgressContractorDropdownOpen" style="width: 340px; max-width: 90vw; z-index: 1050; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card, #ffffff); border: 1.5px solid #0284c7; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.25);" @click.stop>
+                                    <div style="padding: 6px 10px; background: rgba(2, 132, 199, 0.08); border-bottom: 1px solid rgba(0,0,0,0.08); font-size: 0.68rem; font-weight: 800; color: #0284c7; display: flex; justify-content: space-between;">
+                                        <span>🔍 SEARCH CONTRACTOR ({{ dailyProgressFilteredContractors.length }} MATCHES)</span>
+                                        <span v-if="dailyProgressContractorSearch" style="cursor: pointer; color: #ef4444;" @click="dailyProgressContractorSearch = ''">Clear ✕</span>
+                                    </div>
+                                    <div class="searchable-dropdown-list" style="max-height: 260px; overflow-y: auto;">
+                                        <template v-if="dailyProgressFilteredContractors.length">
+                                            <div v-for="c in dailyProgressFilteredContractors" :key="c.id" class="searchable-dropdown-item" :class="{ selected: dailyProgressContractorId === c.id }" @click="selectDailyProgressContractor(c.id)" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                                                <div style="font-weight: 700; font-size: 0.82rem;">{{ c.name }}</div>
+                                                <div v-if="c.feeder || c.project" style="font-size: 0.70rem; color: var(--text-muted); display: flex; gap: 8px;">
+                                                    <span v-if="c.feeder" style="color: #0284c7;">⚡ {{ c.feeder }}</span>
+                                                    <span v-if="c.project">📁 {{ c.project }}</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <div v-else class="searchable-dropdown-empty" style="padding: 12px; text-align: center; color: #64748b; font-size: 0.78rem;">
+                                            Koi contractor match nahi hua
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" @click="dailyProgressModal = 'contractor'" title="Add new contractor" class="dp-icon-add-btn">➕</button>
+                        </div>
+
+                        <div class="dp-date-pill" style="display: inline-flex; align-items: center; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.18)); border-radius: 4px; overflow: hidden;">
+                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(-1)" title="Previous Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">◀</button>
+                            <input type="date" :value="dailyProgressDate" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate" title="Choose date" :disabled="dailyProgressBusy" style="background: transparent; border: none; color: var(--text-main, #111); font-size: 0.76rem; font-weight: 700; padding: 2px 4px; outline: none; cursor: pointer;">
+                            <button type="button" :disabled="dailyProgressBusy" @click="navigateDailyProgressDay(1)" title="Next Day" style="background: transparent; border: none; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 800;">▶</button>
+                        </div>
+
+
                         <div class="dp-field-box">
                             <label for="dp-filter-subdivision">
-                                <span>1. Sub-Division</span>
+                                <span>Sub-Division:</span>
                                 <span v-if="dpSubDivisionFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubDivision('ALL')">Clear ✕</span>
                             </label>
                             <select id="dp-filter-subdivision" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
@@ -2013,7 +2045,7 @@
 
                         <div class="dp-field-box">
                             <label for="dp-filter-substation">
-                                <span>2. Substation</span>
+                                <span>Substation:</span>
                                 <span v-if="dpSubstationFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubstation('ALL')">Clear ✕</span>
                             </label>
                             <select id="dp-filter-substation" :value="dpSubstationFilter" @change="setDailyProgressSubstation($event.target.value)">
@@ -2024,7 +2056,7 @@
 
                         <div class="dp-field-box">
                             <label>
-                                <span>3. Feeder / Location</span>
+                                <span>Feeder:</span>
                                 <span style="font-weight: 400; color: var(--dp-text-muted);">({{ filteredDailyProgressLocations.length }} match)</span>
                             </label>
                             <div class="searchable-dropdown">
@@ -2083,37 +2115,9 @@
                         <button type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.78rem;" @click="dpShowCustomLocation = false">Cancel</button>
                     </div>
 
-                    <!-- Active Location Hierarchy Banner -->
-                    <div v-if="dailyProgressLocationId" class="dp-hierarchy-banner">
-                        <div class="dp-hierarchy-badges">
-                            <span style="font-size: 0.82rem; font-weight: 800; color: #1d4ed8; display: inline-flex; align-items: center; gap: 4px;">
-                                <span>📍</span> Active:
-                            </span>
-                            <template v-if="dailyProgressActiveLocationObj">
-                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-badge div">Div: {{ dailyProgressActiveLocationObj.division }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-arrow">›</span>
-                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-badge sub">Sub-Div: {{ dailyProgressActiveLocationObj.subDivision }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-arrow">›</span>
-                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-badge sst">S/S: {{ dailyProgressActiveLocationObj.substation }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-arrow">›</span>
-                                <span class="dp-h-badge fdr">⚡ {{ dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name }}</span>
-                            </template>
-                            <template v-else>
-                                <span class="dp-h-badge fdr">{{ dailyProgressLocationName() }}</span>
-                            </template>
-                        </div>
-                        <div class="dp-hierarchy-actions">
-                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('reset')" title="Is date ka progress reset karein">↺ Reset day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress delete karein">🗑 Delete day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
-                        </div>
-                    </div>
-                    <p v-else class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
-                        ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
-                    </p>
                 </section>
                 <!-- Single-Line Dense Status Strip (~24px high) -->
-                <div class="dp-status-strip no-print">
+                <div v-if="dailyProgressLocked || dailyProgressDirty || dailyProgressVersion" class="dp-status-strip no-print">
                     <div class="dp-status-items">
                         <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> items entered</span>
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
@@ -2132,11 +2136,12 @@
                 </div>
 
                 <!-- TAB 1: DAILY ENTRY -->
-                <div v-if="dailyProgressTab === 'entry'">
+                <div v-if="dailyProgressTab === 'entry'" class="dp-sheet-entry">
                     <fieldset :disabled="dailyProgressBusy || !dailyProgressLocationId || dailyProgressLocked" style="border:0;padding:0;margin:0;min-width:0">
 
                     <!-- JIN CONTRACTOR KA DAILY PROGRESS ENTRY HUA HAI UNKA OVERVIEW -->
-                    <div class="dp-panel no-print" style="margin-bottom: 12px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.12)); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                    <details class="dp-panel dp-sheet-teams no-print" style="margin-bottom: 12px; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle, rgba(0,0,0,0.12)); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                        <summary>Teams with saved entries ({{ dailyProgressEnteredContractors.length }})</summary>
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-subtle, rgba(0,0,0,0.06)); background: rgba(59,130,246,0.03);">
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <strong style="font-size: 0.86rem; color: #1d4ed8; display: inline-flex; align-items: center; gap: 5px;">
@@ -2209,19 +2214,15 @@
                                 Is date range me kisi bhi contractor ki daily progress entry nahi mili.
                             </div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Two-column Entry Layout -->
                     <div class="dp-entry-layout">
                         <!-- Left: Material Consumption -->
-                        <div class="dp-panel">
+                        <div class="dp-panel dp-sheet-materials">
                             <div class="dp-panel-header">
-                                <h2><span>01</span> Material Consumption</h2>
+                                <h2><span>▣</span> Material Consumption</h2>
                                 <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">{{ dailyProgressVisibleItems.length }} {{ dailyProgressFilter === 'issued' ? 'issued items' : 'items' }}</span>
-                            </div>
-
-                            <div class="dp-filter-bar no-print">
-                                <input type="text" class="dp-search-input" v-model="dailyProgressSearch" placeholder="🔍 Search material name or SAP code...">
                                 <select class="dp-filter-select" v-model="dailyProgressFilter">
                                     <option value="issued">📦 Issued Stock Only ({{ dailyProgressIssuedCount }})</option>
                                     <option value="all">🌐 All Materials ({{ dailyProgressSeedItems.length }})</option>
@@ -2230,23 +2231,24 @@
                                 </select>
                             </div>
 
+                            <div class="dp-filter-bar no-print">
+                                <input type="text" class="dp-search-input" v-model="dailyProgressSearch" placeholder="🔍 Search material name or SAP code...">
+
+                            </div>
+
                             <div class="dp-table-wrap">
                                 <table class="dp-table">
                                     <thead>
                                         <tr>
-                                            <th style="min-width: 220px;">Item Description</th>
+                                            <th class="dp-sheet-number">#</th><th class="dp-sheet-description">Item Description</th><th class="dp-sheet-code">SAP Code</th><th class="dp-sheet-row">Row</th><th class="dp-sheet-unit">Unit</th>
                                             <th style="width: 120px; text-align: center;">Net Issue</th>
                                             <th style="width: 120px; text-align: right;">Today Consumed</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="item in dailyProgressVisibleItems.slice(0, dailyProgressVisibleLimit)" :key="item.id">
-                                            <td>
+                                        <tr v-for="(item, itemIndex) in dailyProgressVisibleItems.slice(0, dailyProgressVisibleLimit)" :key="item.id">
+                                            <td class="dp-sheet-number">{{ itemIndex + 1 }}</td><td>
                                                 <span class="dp-mat-desc">{{ item.name }}</span>
-                                                <div class="dp-mat-sub">
-                                                    <span v-if="item.code" class="dp-sap-badge">SAP: {{ item.code }}</span>
-                                                    <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
-                                                </div>
                                                 <div class="dp-mobile-balance-inline" style="display: none;">
                                                     <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock">
                                                         📦 Net Issue: {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
@@ -2256,6 +2258,7 @@
                                                     </span>
                                                 </div>
                                             </td>
+                                            <td class="dp-sheet-code">{{ item.code || '—' }}</td><td class="dp-sheet-row">{{ item.row }}</td><td class="dp-sheet-unit">{{ item.unit }}</td>
                                             <td style="text-align: center;">
                                                 <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock" :title="'SAP + Manual Net Issue up to ' + formatDisplayDate(dailyProgressDate)">
                                                     📦 {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
@@ -2267,6 +2270,7 @@
                                             <td style="text-align: right;">
                                                 <div class="dp-qty-field">
                                                     <input type="number"
+                                                           :aria-label="'Today consumed: ' + item.name"
                                                            :value="dailyProgressQuantities[item.id] || ''"
                                                            @input="onDailyProgressQuantityChange(item.id, $event.target.value)"
                                                            placeholder="0"
@@ -2277,7 +2281,7 @@
                                             </td>
                                         </tr>
                                         <tr v-if="!dailyProgressVisibleItems.length">
-                                            <td colspan="3" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
+                                            <td colspan="7" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
                                                 <div style="font-size: 0.82rem; font-weight: 700; margin-bottom: 4px;">
                                                     {{ dailyProgressFilter === 'issued' ? '📦 Is contractor ko abhi koi material issue nahi mila hai' : 'No matching materials found.' }}
                                                 </div>
@@ -2303,7 +2307,7 @@
                         <div class="dp-side-col">
                             <div class="dp-panel">
                                 <div class="dp-panel-header">
-                                    <h2><span>02</span> Manpower Details</h2>
+                                    <h2><span>♟</span> Manpower Details</h2>
                                 </div>
                                 <div class="dp-man-row">
                                     <span class="dp-man-label">Team Leader</span>
@@ -2354,7 +2358,7 @@
                                 </details>
                             </div>
 
-                            <div class="dp-panel">
+                            <details class="dp-panel dp-sheet-notes"><summary>Site notes &amp; remarks</summary>
                                 <div class="dp-panel-header">
                                     <h2><span>03</span> Site Notes &amp; Remarks</h2>
                                 </div>
@@ -2362,7 +2366,7 @@
                                 <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 8px;">
                                     Supervisor: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.engineer) || 'AMIT GOMASE' }}
                                 </div>
-                            </div>
+                            </details>
                         </div>
                     </div>
 
