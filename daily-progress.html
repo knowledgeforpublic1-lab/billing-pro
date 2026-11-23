@@ -8,7 +8,7 @@
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/daily-standalone.css?v=20261121_search_dropdown_v1">
-    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_share_picker_v2">
+    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_header_picker_v3">
     <style>
         [v-cloak] { display: none !important; }
     </style>
@@ -72,12 +72,12 @@
             <header class="sheet-commandbar">
                 <div class="sheet-heading"><button type="button" class="sheet-menu" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle navigation" :aria-expanded="sidebarOpen">☰</button><span class="sheet-calendar">▦</span><div><h1>Daily Progress</h1><p>Material consumption, manpower &amp; daily work progress</p></div></div>
                 <nav class="sheet-actions" aria-label="Daily Progress sections">
-                    <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'">＋ Entry</button>
-                    <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'" title="Material and stock logs">▤ Logs</button>
-                    <button type="button" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'">◴ History</button>
-                    <button type="button" :class="{ active: currentTab === 'download' }" @click="openExportTab()">⇩ Export</button>
-                    <button type="button" :disabled="busy || dirty" @click="fetchLatestReportsSilently()" title="Refresh saved reports">⟳ Sync</button>
-                    <button type="button" @click="copyShareLink" title="Share contractor entry link">↗ Share</button>
+                    <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'"><span class="sheet-action-icon">＋</span><span>Entry</span></button>
+                    <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'" title="Material and stock logs"><span class="sheet-action-icon">▤</span><span>Logs</span></button>
+                    <button type="button" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'"><span class="sheet-action-icon">◴</span><span>History</span></button>
+                    <button type="button" :class="{ active: currentTab === 'download' }" @click="openExportTab()"><span class="sheet-action-icon">⇩</span><span>Export</span></button>
+                    <button type="button" :disabled="busy || dirty" @click="fetchLatestReportsSilently()" title="Refresh saved reports"><span class="sheet-action-icon">⟳</span><span>Sync</span></button>
+                    <button type="button" @click="copyShareLink" title="Share contractor entry link"><span class="sheet-action-icon">↗</span><span>Share</span></button>
                 </nav>
             </header>
 
@@ -120,7 +120,7 @@
 
                     
                     <div class="contractor-select-compact" title="CONTRACTOR / LABOUR TEAM">
-                        <span class="compact-label">Team:</span>
+                        <span class="compact-label">Contractor</span>
                         <div class="contractor-input-row">
                             <div class="dp-contractor-picker-wrap" v-click-outside="closeContractorDropdown">
                                 <div class="dp-search-combo-box">
@@ -148,11 +148,13 @@
                                 </div>
 
                                 <!-- Dropdown Search Panel -->
+                                <div v-if="contractorDropdownOpen" class="dp-contractor-backdrop" @click.stop="closeContractorDropdown"></div>
                                 <div v-if="contractorDropdownOpen" class="dp-contractor-search-panel" @click.stop>
                                     <div class="dp-search-panel-header">
-                                        <span>🔍 {{ filteredContractors.length }} CONTRACTORS FOUND</span>
+                                        <span>Contractors ({{ filteredContractors.length }})</span><button type="button" class="dp-picker-close" @click="closeContractorDropdown" aria-label="Close contractor list">✕</button>
                                         <span v-if="contractorSearchText" class="dp-panel-clear-action" @click="clearContractorSearch">Clear ✕</span>
                                     </div>
+                                    <div class="dp-picker-search-row"><input type="search" ref="contractorPanelSearchRef" v-model="contractorSearchText" placeholder="Search contractor name..." aria-label="Search contractor names" autocomplete="off" @keydown.esc="closeContractorDropdown" @keydown.enter.prevent="filteredContractors.length && selectContractor(filteredContractors[0].id)"></div>
                                     <div class="dp-contractor-results-list">
                                         <div v-for="c in filteredContractors"
                                              :key="c.id"
@@ -1028,10 +1030,10 @@
     <script src="/js/storage-transport.js?v=20261118_review4"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="js/daily-worker-auth.js?v=20261123_share_picker_v2"></script>
+    <script src="js/daily-worker-auth.js?v=20261123_header_picker_v3"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261123_share_picker_v2"></script>
+    <script src="js/daily-progress-standalone.js?v=20261123_header_picker_v3"></script>
 </body>
 
 </html>

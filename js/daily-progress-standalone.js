@@ -573,7 +573,8 @@
             clearContractorSearch() {
                 this.contractorSearchText = '';
                 this.contractorDropdownOpen = true;
-                if (this.$refs.contractorSearchRef) this.$refs.contractorSearchRef.focus();
+                const field = this.$refs.contractorPanelSearchRef || this.$refs.contractorSearchRef;
+                if (field) field.focus();
             },
 
             toggleContractorDropdown() {
@@ -582,9 +583,8 @@
                     this.contractorSearchText = '';
                     if (typeof this.$nextTick === 'function') {
                         this.$nextTick(() => {
-                            if (this.$refs.contractorSearchRef) {
-                                this.$refs.contractorSearchRef.focus();
-                            }
+                            const field = this.$refs.contractorPanelSearchRef || this.$refs.contractorSearchRef;
+                            if (field) field.focus();
                         });
                     }
                 }

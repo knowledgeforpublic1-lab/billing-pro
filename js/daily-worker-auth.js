@@ -251,18 +251,24 @@
             const details = [user.name, user.mobile || user.email].filter(Boolean).join(' • ');
             const ids = user.contractorIds || [];
             const scope = user.sharedView ? 'Limited contractor access' : (user.role === 'admin' || ids.some(id => id === '*' || id === 'all') ? 'All contractors' : ids.length + ' contractors assigned');
-            label.textContent = '👤 Signed In: ' + details + ' · ' + scope;
+            label.className = 'dp-session-label';
+            label.title = details + ' · ' + scope;
+            label.textContent = user.sharedView ? '👤 Limited access · ' + (user.name === 'Contractor entry' ? 'Contractor' : user.name) : '👤 Signed In: ' + details + ' · ' + scope;
             bar.appendChild(label);
 
             if (user.role !== 'admin') {
                 const refresh = document.createElement('button');
                 refresh.type = 'button';
+                refresh.className = 'dp-session-refresh';
+                refresh.setAttribute('aria-label', 'Refresh contractors');
+                refresh.title = 'Refresh contractors';
                 refresh.textContent = 'Refresh Contractors';
                 refresh.style.cssText = 'padding:4px 12px;border:1px solid #86efac;border-radius:5px;background:#ffffff;color:#15803d;font-weight:600;cursor:pointer;font-size:12px;';
                 refresh.onclick = () => location.reload();
                 bar.appendChild(refresh);
                 const logout = document.createElement('button');
                 logout.type = 'button';
+                logout.className = 'dp-session-signout';
                 logout.textContent = 'Sign Out';
                 logout.style.cssText = 'padding:4px 12px;border:1px solid #86efac;border-radius:5px;background:#ffffff;color:#15803d;font-weight:600;cursor:pointer;font-size:12px;';
                 logout.onclick = async () => {

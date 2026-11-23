@@ -13,6 +13,20 @@
 .sheet-calendar { font-size:30px; line-height:1; color:#0876ff; }
 .sheet-menu { border:0; background:transparent; color:#0876ff; font-size:21px; cursor:pointer; }
 .sheet-actions { display:flex; gap:7px; align-items:center; }
+.sheet-action-icon { margin-right:4px; }
+.dp-sheet-page .dp-contractor-backdrop { position:fixed; inset:0; z-index:1040; background:#12273e26; }
+.dp-sheet-page .dp-contractor-search-panel { z-index:1050; }
+.dp-sheet-page .dp-search-panel-header { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; background:#edf4ff; color:#24466d; border-bottom:1px solid #d5e3f5; font-size:11px; }
+.dp-sheet-page .dp-picker-close { min-height:32px; min-width:32px; border:1px solid #c4d5ed; border-radius:5px; background:#fff; color:#24466d; cursor:pointer; }
+.dp-sheet-page .dp-picker-search-row { padding:7px; border-bottom:1px solid #d5e3f5; }
+.dp-sheet-page .dp-picker-search-row input { width:100%; min-height:38px; padding:8px 10px; border:1px solid #a9c3e9; border-radius:5px; background:#fff; color:#172c47; font-size:14px; }
+.dp-sheet-page .dp-contractor-results-list { padding:0; }
+.dp-sheet-page .dp-contractor-item { min-height:40px; display:flex; align-items:center; border-bottom:1px solid #e1e9f5; }
+.dp-sheet-page .dp-contractor-item .dp-c-title { color:#172c47; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+.dp-sheet-page .dp-contractor-item .dp-c-sub { display:none; }
+.dp-sheet-page .dp-contractor-item.active { background:#e7f1ff; box-shadow:inset 3px 0 #0876ff; }
+.dp-sheet-page .dp-contractor-item.active .dp-c-title { color:#064caa; }
+.dp-sheet-page .dp-no-contractors { color:#526b88; }
 .sheet-actions button { white-space:nowrap; min-height:30px; padding:5px 11px; font-size:11px; font-weight:700; border:1px solid #b9d4fb; border-radius:5px; color:#065ad9; background:linear-gradient(#fff,#eff6ff); cursor:pointer; box-shadow:0 1px 3px #2563eb15; }
 .sheet-actions button.active,.dp-sheet-page .btn-save-progress { background:linear-gradient(#1682ff,#0065ec); color:#fff; border:1px solid #0876ff; }
 .sheet-actions button:disabled { opacity:.5; cursor:default; }
@@ -201,4 +215,21 @@ body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; 
  .dp-sheet-page .btn-unlock-entry { flex:1; min-height:44px; padding:7px!important; font-size:11px!important; }
  .dp-sheet-page .sheet-sidebar-open .sidebar { top:0; bottom:0; width:min(280px,85vw); }
  .dp-sheet-page .sheet-sidebar-close { display:block; margin:8px; min-height:40px; border:1px solid #6983a3; border-radius:5px; background:#fff; color:#17395e; cursor:pointer; }
+ .dp-sheet-page #dp-worker-user-bar { display:grid!important; grid-template-columns:minmax(0,1fr) 32px 58px; gap:5px!important; align-items:center; padding:4px 8px!important; }
+ .dp-sheet-page #dp-worker-user-bar>span { width:auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .dp-sheet-page #dp-worker-user-bar button { min-height:30px; padding:3px 5px!important; }
+ .dp-sheet-page #dp-worker-user-bar .dp-session-refresh { font-size:0!important; }
+ .dp-sheet-page .dp-session-refresh::before { content:'↻'; font-size:20px; }
+ .dp-sheet-page .sheet-commandbar { gap:4px; padding:4px 8px; }
+ .dp-sheet-page .sheet-heading { gap:5px; }
+ .dp-sheet-page .sheet-menu { min-height:30px; width:30px; }
+ .dp-sheet-page .sheet-actions { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; overflow:visible; padding:0; }
+ .dp-sheet-page .sheet-actions button { min-width:0; min-height:34px; padding:4px 2px; font-size:11px; }
+ .dp-sheet-page .sheet-action-icon { display:none; }
+ .dp-sheet-page .dp-contractor-search-panel { top:6dvh!important; max-height:80dvh; }
+ .dp-sheet-page .dp-contractor-results-list { max-height:calc(80dvh - 110px); overflow-y:auto; overscroll-behavior:contain; }
+ .dp-sheet-page .dp-picker-search-row input { min-height:42px; font-size:16px!important; }
+ .dp-sheet-page .dp-search-panel-header { min-height:38px; }
+ .dp-sheet-page .dp-contractor-item { min-height:44px; padding:10px 12px; }
+ .dp-sheet-page .dp-contractor-item .dp-c-title { font-size:13px; }
 }
