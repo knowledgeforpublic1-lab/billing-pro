@@ -82,23 +82,228 @@
 .dp-dashboard-sheet .dp-save-status>div { display:flex; gap:10px; align-items:center; }
 .dp-dashboard-sheet .dp-save-status>div>div { font-size:10px!important; }
 .dp-dashboard-sheet .dp-save-bar>button { padding:7px 16px!important; font-size:12px!important; background:#087bff!important; }
-/* Keep the reference's white/blue worksheet legible in every application theme. */
-html[data-theme] #app .work.daily-sheet-area { background:#f5f9ff!important; }
-html[data-theme] #app .daily-sheet-area .apptoolbar { background:linear-gradient(110deg,#fff,#edf6ff)!important; }
-html[data-theme] #app .daily-sheet-area .dp-brand-chip,html[data-theme] #app .dp-dashboard-sheet :is(.dp-panel-header h2,.dp-mat-desc,.dp-man-label,.dp-save-status strong,.dp-sheet-number,.dp-sheet-code,.dp-sheet-row,.dp-sheet-unit) { color:#172c47!important; }
-html[data-theme] #app .dp-dashboard-sheet :is(.dp-panel,.dp-table td,.dp-filter-select,.dp-search-input,.dp-field-box select,.dp-date-pill,.dp-contractor-pill,.dp-stepper,.searchable-dropdown-trigger,.dp-search-field-wrap) { background:#fff!important; color:#243b59!important; border-color:#d3e1f2!important; }
-html[data-theme] #app .dp-dashboard-sheet :is(.dp-table th,.dp-panel-header) { background:#eaf2fc!important; color:#172c47!important; }
-html[data-theme] #app .dp-dashboard-sheet .dp-table td { padding:3px 5px!important; height:34px!important; box-sizing:border-box; }
-html[data-theme] #app .dp-dashboard-sheet .dp-qty-field { padding:0!important; border:0!important; background:transparent!important; }
-html[data-theme] #app .dp-dashboard-sheet .dp-qty-field input { border:1px solid #c9d9ef!important; border-radius:4px; }
-html[data-theme] #app .dp-dashboard-sheet .dp-table th { text-align:center; }
-html[data-theme] #app .dp-dashboard-sheet .dp-table th:nth-child(2) { text-align:left; }
-html[data-theme] #app .dp-dashboard-sheet :is(.dp-qty-field input,.dp-stepper input,.dp-date-pill input) { background:#fff!important; color:#134b9a!important; border-color:#c9d9ef!important; min-height:0!important; height:26px!important; }
-html[data-theme] #app .dp-dashboard-sheet .dp-stepper button { background:#f6f9ff!important; color:#23436a!important; }
-html[data-theme] #app .daily-sheet-area .apptoolbar button { background:#f5f9ff!important; color:#0759c7!important; }
-html[data-theme] #app .daily-sheet-area .dp-segmented-tabs button.active,html[data-theme] #app .dp-dashboard-sheet .dp-save-bar>button { background:#087bff!important; color:#fff!important; }
-html[data-theme] #app .dp-dashboard-sheet .dp-save-bar { background:#f5fff9!important; }
-html[data-theme] #app .dp-dashboard-sheet .dp-save-status>div>div { color:#526880!important; }
+/* ============================================================
+   Light Theme: Clean Excel Worksheet styling
+   ============================================================ */
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .work.daily-sheet-area { background:#f5f9ff!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .daily-sheet-area .apptoolbar { background:linear-gradient(110deg,#fff,#edf6ff)!important; border-bottom:1px solid #dce6f6!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .daily-sheet-area .dp-brand-chip,
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet :is(.dp-panel-header h2,.dp-mat-desc,.dp-man-label,.dp-save-status strong,.dp-sheet-number,.dp-sheet-code,.dp-sheet-unit) { color:#172c47!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet :is(.dp-panel,.dp-table td,.dp-filter-select,.dp-search-input,.dp-field-box select,.dp-date-pill,.dp-contractor-pill,.dp-stepper,.searchable-dropdown-trigger,.dp-search-field-wrap) { background:#fff!important; color:#243b59!important; border-color:#d3e1f2!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet :is(.dp-table th,.dp-panel-header) { background:#dbeafe!important; color:#1e3a8a!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-table td { padding:3px 5px!important; height:34px!important; box-sizing:border-box; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-qty-field { padding:0!important; border:0!important; background:transparent!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-qty-field input { border:1px solid #c9d9ef!important; border-radius:4px; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-table th { text-align:center; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-table th:nth-child(2) { text-align:left; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet :is(.dp-qty-field input,.dp-stepper input,.dp-date-pill input) { background:#fff!important; color:#134b9a!important; border-color:#c9d9ef!important; min-height:0!important; height:26px!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-stepper button { background:#f6f9ff!important; color:#23436a!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .daily-sheet-area .apptoolbar button { background:#f5f9ff!important; color:#0759c7!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .daily-sheet-area .dp-segmented-tabs button.active,
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-save-bar>button { background:#087bff!important; color:#fff!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-save-bar { background:#f5fff9!important; }
+:is(html:not(.dark):not([data-theme="dark"]):not(.soft):not([data-theme="soft"])) #app .dp-dashboard-sheet .dp-save-status>div>div { color:#526880!important; }
+
+/* ============================================================
+   Dark Mode Integration: Cohesive, Sleek Dark Palette
+   ============================================================ */
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .work.daily-sheet-area {
+    background: #070a12 !important;
+    color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .daily-sheet-area .apptoolbar {
+    background: #0e1526 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .daily-sheet-area .dp-brand-chip {
+    color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .daily-sheet-area .apptoolbar button {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .daily-sheet-area .dp-segmented-tabs button.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet :is(.dp-panel, .dp-sheet-materials, .dp-side-col > .dp-panel) {
+    background: #0e1526 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet :is(.dp-panel-header, .dp-filter-bar) {
+    background: #111a2e !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-panel-header h2 {
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table-wrap {
+    background: #080d1a !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table th {
+    background: #17223b !important;
+    color: #38bdf8 !important;
+    border-bottom: 2px solid #0284c7 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table td {
+    background: #0e1526 !important;
+    color: #f8fafc !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table tbody tr:hover td {
+    background: #17223b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table .dp-sheet-number {
+    color: #64748b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-mat-desc {
+    color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table .dp-sheet-code {
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-table .dp-sheet-unit {
+    color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-issue-val {
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-issue-val.zero {
+    color: #64748b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet :is(.dp-filter-select, .dp-search-input, .dp-field-box select, .dp-date-pill, .dp-contractor-pill, .dp-stepper, .searchable-dropdown-trigger, .dp-search-field-wrap) {
+    background: #080d1a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet :is(.dp-qty-field input, .dp-stepper input, .dp-date-pill input, .dp-search-input) {
+    background: #080d1a !important;
+    color: #38bdf8 !important;
+    border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-qty-unit {
+    color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-stepper button {
+    background: #1e293b !important;
+    color: #38bdf8 !important;
+    border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-man-label {
+    color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-field-box > label {
+    color: #cbd5e1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-save-bar {
+    background: #0e1526 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-save-status strong {
+    color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .dp-save-status > div > div {
+    color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .entry-col-filter-btn {
+    background: rgba(56, 189, 248, 0.15) !important;
+    color: #38bdf8 !important;
+    border-color: #0284c7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-dashboard-sheet .entry-col-filter-btn.active {
+    background: #d97706 !important;
+    color: #ffffff !important;
+    border-color: #f59e0b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .searchable-dropdown-panel {
+    background: #0e1526 !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .searchable-dropdown-item {
+    color: #f8fafc !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .searchable-dropdown-item:hover,
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .searchable-dropdown-item.selected {
+    background: rgba(56, 189, 248, 0.15) !important;
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-excel-sheet-table th {
+    background: #17223b !important;
+    color: #38bdf8 !important;
+    border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-excel-sheet-table td {
+    background: #0e1526 !important;
+    color: #f8fafc !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-excel-sheet-table tbody tr:hover td {
+    background: #17223b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-excel-sheet-table .dp-excel-val {
+    color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark-mode) #app .dp-excel-sheet-table .dp-excel-val-zero {
+    color: #64748b !important;
+}
+
+/* ============================================================
+   Soft Comfort Theme Support
+   ============================================================ */
+:is(html.soft, html[data-theme="soft"]) #app .work.daily-sheet-area { background: #f4eee0 !important; color: #3f382c !important; }
+:is(html.soft, html[data-theme="soft"]) #app .daily-sheet-area .apptoolbar { background: #eae2cf !important; border-bottom: 1px solid #d3c8ad !important; }
+:is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet :is(.dp-panel, .dp-sheet-materials, .dp-side-col > .dp-panel) { background: #fdfaf2 !important; border: 1px solid #d3c8ad !important; color: #3f382c !important; }
+:is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet :is(.dp-table th, .dp-panel-header) { background: #eae0cb !important; color: #6b4f2a !important; border-bottom: 2px solid #b3a78b !important; }
+:is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet .dp-table td { background: #fdfaf2 !important; color: #3f382c !important; border-color: #e0d7c1 !important; }
+:is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet :is(.dp-filter-select, .dp-search-input, .dp-field-box select, .dp-date-pill, .dp-contractor-pill, .dp-stepper, .searchable-dropdown-trigger, .dp-search-field-wrap, .dp-qty-field input) { background: #fffdf7 !important; color: #3f382c !important; border-color: #d3c8ad !important; }
 .dp-dashboard-sheet .dp-mobile-nav { display:none; }
 .dp-dashboard-sheet .dp-status-strip { margin-top:-24px; align-self:flex-end; padding:0; }
 .dp-dashboard-sheet .dp-status-strip button { min-height:22px; padding:2px 7px!important; font-size:10px!important; }

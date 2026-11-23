@@ -124,6 +124,7 @@
                 searchQuery: '',
                 visibleLimit: 80,
                 busy: false,
+                isDark: (typeof localStorage !== 'undefined' && (localStorage.getItem('billing_theme_mode') === 'dark' || localStorage.getItem('billing_theme') === 'dark')),
                 saveStatus: 'ready', // 'ready' | 'saving' | 'saved'
                 toastMsg: '',
                 toastType: 'info',
@@ -480,6 +481,7 @@
         },
 
         async mounted() {
+            this.applyTheme();
             if (window.DailyWorkerAuth) this.entryLoginUser = await window.DailyWorkerAuth.ready;
             await this.initData();
             if (typeof setInterval === 'function') {
@@ -501,6 +503,38 @@
         },
 
         methods: {
+            applyTheme() {
+                if (typeof document === 'undefined' || !document.documentElement) return;
+                const mode = this.isDark ? 'dark' : 'light';
+                if (document.documentElement.dataset) {
+                    document.documentElement.dataset.theme = mode;
+                }
+                if (document.documentElement.classList && typeof document.documentElement.classList.toggle === 'function') {
+                    document.documentElement.classList.toggle('dark', this.isDark);
+                    document.documentElement.classList.toggle('dark-mode', this.isDark);
+                }
+                if (document.body) {
+                    if (document.body.dataset) document.body.dataset.theme = mode;
+                    if (document.body.classList && typeof document.body.classList.toggle === 'function') {
+                        document.body.classList.toggle('dark', this.isDark);
+                        document.body.classList.toggle('dark-mode', this.isDark);
+                    }
+                }
+            },
+            toggleTheme() {
+                this.isDark = !this.isDark;
+                const mode = this.isDark ? 'dark' : 'light';
+                try {
+                    if (typeof localStorage !== 'undefined') {
+                        localStorage.setItem('billing_theme_mode', mode);
+                        localStorage.setItem('billing_theme', mode);
+                    }
+                } catch(e) {}
+                this.applyTheme();
+                if (typeof this.showToast === 'function') {
+                    this.showToast(this.isDark ? 'Dark Theme Active 🌙' : 'Light Theme Active ☀️', 'info');
+                }
+            },
             setDivision(div) {
                 this.divisionFilter = div || 'ALL';
                 this.subDivisionFilter = 'ALL';
