@@ -105,8 +105,8 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_toggle5">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261121_search_dropdown_v1">
-<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_mobile_v2">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261123_theme_v3">
+<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_theme_v3">
 </head>
 
 <body>
@@ -2240,32 +2240,48 @@
                                 <table class="dp-table">
                                     <thead>
                                         <tr>
-                                            <th class="dp-sheet-number">#</th><th class="dp-sheet-description">Item Description</th><th class="dp-sheet-code">SAP Code</th><th class="dp-sheet-row">Row</th><th class="dp-sheet-unit">Unit</th>
-                                            <th style="width: 120px; text-align: center;">Net Issue</th>
-                                            <th style="width: 120px; text-align: right;">Today Consumed</th>
+                                            <th class="dp-sheet-number">#</th>
+                                            <th class="dp-sheet-description">Material Description</th>
+                                            <th class="dp-sheet-code">SAP Code</th>
+                                            <th class="dp-sheet-unit">Unit</th>
+                                            <th style="width: 85px; text-align: center;">Net Issue</th>
+                                            <th style="width: 135px; text-align: right;" :class="{ 'is-filtered': dailyProgressFilter === 'entered' }">
+                                                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%;">
+                                                    <span>Today Consumed</span>
+                                                    <button type="button"
+                                                            class="entry-col-filter-btn"
+                                                            :class="{ active: dailyProgressFilter === 'entered' }"
+                                                            @click.stop="dailyProgressFilter = dailyProgressFilter === 'entered' ? 'issued' : 'entered'"
+                                                            :title="dailyProgressFilter === 'entered' ? 'Filter hatayein (Show all issued)' : 'Sirf entered quantity wale items filter karein'">
+                                                        ⚡ {{ dailyProgressSelectedCount }}
+                                                    </button>
+                                                </div>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="(item, itemIndex) in dailyProgressVisibleItems.slice(0, dailyProgressVisibleLimit)" :key="item.id">
-                                            <td class="dp-sheet-number">{{ itemIndex + 1 }}</td><td>
+                                            <td class="dp-sheet-number">{{ itemIndex + 1 }}</td>
+                                            <td>
                                                 <span class="dp-mat-desc">{{ item.name }}</span>
-                                                <small class="dp-mobile-item-meta">SAP {{ item.code || '—' }} · Row {{ item.row }} · {{ item.unit }}</small>
+                                                <small class="dp-mobile-item-meta">SAP {{ item.code || '—' }} · {{ item.unit }}</small>
                                                 <div class="dp-mobile-balance-inline" style="display: none;">
-                                                    <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock">
-                                                        📦 Net Issue: {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
+                                                    <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-issue-val">
+                                                        Net Issue: {{ getDailyProgressItemStock(item).totalIssued }}
                                                     </span>
-                                                    <span v-else class="dp-stock-badge awaiting_stock">
-                                                        Net Issue: 0 {{ item.unit }}
+                                                    <span v-else class="dp-issue-val zero">
+                                                        Net Issue: -
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="dp-sheet-code">{{ item.code || '—' }}</td><td class="dp-sheet-row">{{ item.row }}</td><td class="dp-sheet-unit">{{ item.unit }}</td>
+                                            <td class="dp-sheet-code">{{ item.code || '—' }}</td>
+                                            <td class="dp-sheet-unit">{{ item.unit }}</td>
                                             <td style="text-align: center;">
-                                                <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-stock-badge in_stock" :title="'SAP + Manual Net Issue up to ' + formatDisplayDate(dailyProgressDate)">
-                                                    📦 {{ getDailyProgressItemStock(item).totalIssued }} {{ item.unit }}
+                                                <span v-if="getDailyProgressItemStock(item).totalIssued > 0" class="dp-issue-val" :title="'SAP + Manual Net Issue up to ' + formatDisplayDate(dailyProgressDate)">
+                                                    {{ getDailyProgressItemStock(item).totalIssued }}
                                                 </span>
-                                                <span v-else class="dp-stock-badge awaiting_stock" title="No stock issue recorded for this contractor">
-                                                    0 {{ item.unit }}
+                                                <span v-else class="dp-issue-val zero" title="No stock issue recorded for this contractor">
+                                                    -
                                                 </span>
                                             </td>
                                             <td style="text-align: right;">
@@ -2282,7 +2298,7 @@
                                             </td>
                                         </tr>
                                         <tr v-if="!dailyProgressVisibleItems.length">
-                                            <td class="dp-sheet-empty" colspan="7" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
+                                            <td class="dp-sheet-empty" colspan="6" style="text-align: center; padding: 26px 16px; color: var(--text-muted);">
                                                 <div style="font-size: 0.82rem; font-weight: 700; margin-bottom: 4px;">
                                                     {{ dailyProgressFilter === 'issued' ? '📦 Is contractor ko abhi koi material issue nahi mila hai' : 'No matching materials found.' }}
                                                 </div>

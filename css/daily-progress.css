@@ -490,8 +490,16 @@ html.dark .dp-table tbody tr:nth-child(even) td {
 }
 
 .dp-issue-val {
-    color: var(--dp-accent-blue);
-    font-weight: 700;
+    color: var(--dp-accent-blue, #0284c7) !important;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.dp-issue-val.zero {
+    color: var(--dp-text-dim, #94a3b8) !important;
+    font-weight: 600;
 }
 
 .dp-excel-tot-val {
