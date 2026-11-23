@@ -152,12 +152,34 @@
 .dp-sheet-page .modal-card { background:#fff; color:#203651; border:1px solid #cbdcf3; }
 .dp-sheet-page .modal-card input { background:#fff!important; color:#203651!important; }
 .dp-sheet-page .modal-header h3 { color:#203651; }
-body.dp-sheet-page main .dp-excel-preview-wrap,body.dp-sheet-page main .dp-excel-toolbar,body.dp-sheet-page main .dp-excel-meta-bar,body.dp-sheet-page main .dp-excel-date-field,body.dp-sheet-page main .dp-excel-quick-ranges button,body.dp-sheet-page main .dp-excel-table td { background:#fff; color:#28415f; border-color:#dce7f7; }
-body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; border-color:#dce7f7; }
-.dp-sheet-page .dp-excel-toolbar input,.dp-sheet-page .dp-excel-toolbar select { background:#fff; color:#28415f; border-color:#c5d6ed; color-scheme:light; }
-.dp-sheet-page .dp-excel-meta-bar strong { color:#214a80; }
-.dp-sheet-page main div[style*="background: #1e293b"] { background:#f0f6ff!important; border-color:#dce7f7!important; }
-.dp-sheet-page main h2[style*="color: #f8fafc"],.dp-sheet-page main .panel strong[style*="color: #f8fafc"] { color:#213b5d!important; }
+body.dp-sheet-page main .dp-excel-preview-wrap { background:#fff!important; color:#1e293b!important; border:1px solid #cbd5e1!important; border-radius:8px!important; box-shadow:0 1px 4px rgba(16,45,80,0.08)!important; width:100%!important; overflow:hidden!important; }
+body.dp-sheet-page main .dp-excel-toolbar { background:#f8fafc!important; border-bottom:1px solid #cbd5e1!important; color:#1e293b!important; padding:8px 12px!important; }
+body.dp-sheet-page main .dp-excel-meta-bar { background:#edf4fe!important; border-bottom:1px solid #cbd5e1!important; color:#1e3a8a!important; padding:6px 12px!important; font-size:11px!important; }
+body.dp-sheet-page main .dp-excel-meta-bar strong { color:#0284c7!important; }
+body.dp-sheet-page main .dp-excel-date-field input { background:#fff!important; color:#0f172a!important; border:1px solid #cbd5e1!important; border-radius:4px!important; }
+body.dp-sheet-page main .dp-excel-quick-ranges button { background:#fff!important; color:#0284c7!important; border:1px solid #cbd5e1!important; border-radius:4px!important; font-weight:700!important; }
+body.dp-sheet-page main .dp-excel-quick-ranges button:hover { background:#f0f9ff!important; border-color:#93c5fd!important; }
+body.dp-sheet-page main .dp-excel-table-scroll { background:#ffffff!important; width:100%!important; overflow-x:auto!important; }
+body.dp-sheet-page main .dp-excel-sheet-table { width:100%!important; min-width:100%!important; background:#ffffff!important; color:#0f172a!important; border-collapse:separate!important; border-spacing:0!important; font-size:11px!important; }
+body.dp-sheet-page main .dp-excel-sheet-table th,body.dp-sheet-page main .dp-excel-sheet-table td { border-right:1px solid #e2e8f0!important; border-bottom:1px solid #e2e8f0!important; padding:5px 7px!important; }
+body.dp-sheet-page main .dp-excel-sheet-table thead th { background:#eaf2fc!important; color:#1e3a8a!important; font-weight:800!important; font-size:10px!important; border-bottom:2px solid #bfdbfe!important; text-transform:uppercase!important; }
+body.dp-sheet-page main .dp-excel-sheet-table thead th.st-row,body.dp-sheet-page main .dp-excel-sheet-table thead th.st-code,body.dp-sheet-page main .dp-excel-sheet-table thead th.st-name,body.dp-sheet-page main .dp-excel-sheet-table thead th.st-unit,body.dp-sheet-page main .dp-excel-sheet-table thead th.st-issue { background:#dbeafe!important; color:#1e3a8a!important; border-right:1px solid #bfdbfe!important; }
+body.dp-sheet-page main .dp-excel-sheet-table thead th.st-issue { border-right:2px solid #0284c7!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-row,body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-code,body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-name,body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-unit,body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-issue { background:#f8fafc!important; color:#0f172a!important; border-right:1px solid #e2e8f0!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-row { color:#64748b!important; font-weight:700!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-code { color:#0284c7!important; font-weight:700!important; font-family:monospace!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-name { color:#0f172a!important; font-weight:700!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-unit { color:#475569!important; font-weight:700!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.st-issue { color:#047857!important; font-weight:800!important; border-right:2px solid #0284c7!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody td.dp-excel-day-cell { background:#ffffff!important; color:#0f172a!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody tr:hover td.dp-excel-day-cell { background:#f0fdf4!important; }
+body.dp-sheet-page main .dp-excel-sheet-table tbody tr:hover td.st-name { background:#f1f5f9!important; }
+body.dp-sheet-page main .dp-excel-val { background:#e0f2fe!important; color:#0369a1!important; font-weight:800!important; border:1px solid #bae6fd!important; }
+body.dp-sheet-page main .dp-excel-val-zero { color:#cbd5e1!important; }
+body.dp-sheet-page main .dp-excel-mp-row td { background:#fffbeb!important; color:#92400e!important; font-weight:800!important; border-bottom:2px solid #fde68a!important; }
+body.dp-sheet-page main .dp-excel-tot-col { background:#f1f5f9!important; color:#0f172a!important; font-weight:800!important; }
+body.dp-sheet-page main .dp-excel-bal-col { background:#f8fafc!important; color:#047857!important; font-weight:800!important; }
+body.dp-sheet-page main .dp-excel-day-hdr,body.dp-sheet-page main .dp-excel-day-cell { min-width:44px!important; max-width:none!important; text-align:center!important; }
 @media(min-width:1600px) { .dp-sheet-page .mat-table-head,.dp-sheet-page .mat-row { grid-template-columns:44px minmax(230px,1fr) 110px 55px 55px 120px 150px; } }
 @media(max-width:1100px) { .dp-sheet-page .dp-cascading-grid { grid-template-columns:minmax(155px,1.2fr) 185px minmax(95px,.8fr) minmax(100px,.9fr) minmax(140px,1fr) minmax(120px,.9fr); gap:5px; } .dp-sheet-page .date-stepper-compact { width:185px; } .dp-sheet-page .date-stepper-compact input { width:94px; } .dp-sheet-page .dp-field-box>label { font-size:9px; } .sheet-actions { gap:4px; } .sheet-actions button { padding:5px 8px; } }
 @media(max-width:850px) { .dp-sheet-page main { height:auto; min-height:calc(100dvh - 72px); padding-bottom:65px; } .dp-sheet-page .dp-cascading-grid { grid-template-columns:1.3fr 1fr 1fr; } .dp-sheet-page .date-stepper-compact { width:100%; } .dp-sheet-page .date-stepper-compact input { flex:1; } .dp-sheet-page .entry-layout { grid-template-columns:minmax(0,1fr); height:auto; } .dp-sheet-page .mat-table-body { min-height:320px; max-height:55vh; } .dp-sheet-page .sheet-entry { padding-bottom:0; } .dp-sheet-page .entry-side { display:grid; grid-template-columns:1fr 1fr; } .sheet-heading p { display:none; } .sheet-actions button { font-size:10px; } .dp-sheet-page .save-status-info span { display:none; } }

@@ -382,7 +382,45 @@
 
             contractorReports() {
                 const actC = this.activeContractor || {};
-                return (this.reports || []).filter(r => matchesContractor(r.contractorId, actC) && locationKey(r.locationId) === locationKey(this.selectedLocationId));
+                return (this.reports || []).filter(r => matchesContractor(r.contractorId, actC));
+            },
+
+            activeReportObj() {
+                const actC = this.activeContractor || {};
+                const curDate = normDate(this.selectedDate);
+                const locKey = locationKey(this.selectedLocationId);
+                return (this.reports || []).find(r => 
+                    matchesContractor(r.contractorId, actC) && 
+                    normDate(r.date) === curDate && 
+                    locationKey(r.locationId) === locKey
+                ) || null;
+            },
+
+            activeReportSavedBy() {
+                const rep = this.activeReportObj;
+                if (!rep || !rep.savedBy) return '';
+                if (typeof rep.savedBy === 'object') {
+                    const name = rep.savedBy.name || rep.savedBy.username || rep.savedBy.id || '';
+                    const mobile = rep.savedBy.mobile ? `(${rep.savedBy.mobile})` : '';
+                    return [name, mobile].filter(Boolean).join(' ') || '';
+                }
+                return String(rep.savedBy);
+            },
+
+            activeReportSavedAt() {
+                const rep = this.activeReportObj;
+                if (!rep || (!rep.savedAt && !rep.updatedAt)) return '';
+                try {
+                    const d = new Date(rep.savedAt || rep.updatedAt);
+                    if (isNaN(d.getTime())) return String(rep.savedAt || rep.updatedAt);
+                    return new Intl.DateTimeFormat('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', hour12: true
+                    }).format(d);
+                } catch (e) {
+                    return rep.savedAt || rep.updatedAt;
+                }
             },
 
             totalManpower() {
@@ -1317,9 +1355,38 @@
                 return this.copyShareUrl(this.currentShareUrl);
             },
 
-            openReport(date) {
-                this.selectedDate = date;
+            openReport(date, locationId) {
+                if (date) this.selectedDate = date;
+                if (locationId !== undefined && locationId !== null) {
+                    this.selectedLocationId = locationId;
+                    this.syncFiltersFromLocation(locationId);
+                }
                 this.currentTab = 'entry';
+            },
+
+            formatSavedAt(dateStr) {
+                if (!dateStr) return '—';
+                try {
+                    const d = new Date(dateStr);
+                    if (isNaN(d.getTime())) return String(dateStr);
+                    return new Intl.DateTimeFormat('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', hour12: true
+                    }).format(d);
+                } catch (e) {
+                    return String(dateStr);
+                }
+            },
+
+            formatSavedBy(savedBy) {
+                if (!savedBy) return 'Field Supervisor';
+                if (typeof savedBy === 'object') {
+                    const name = savedBy.name || savedBy.username || savedBy.id || '';
+                    const mobile = savedBy.mobile ? `(${savedBy.mobile})` : '';
+                    return [name, mobile].filter(Boolean).join(' ') || 'Field Supervisor';
+                }
+                return String(savedBy);
             },
 
             async submitAddContractor() {

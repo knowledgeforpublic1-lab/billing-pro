@@ -217,7 +217,7 @@
                             <div class="searchable-dropdown">
                                 <button type="button" class="searchable-dropdown-trigger" @click="toggleLocationDropdown">
                                     <span class="searchable-dropdown-label" :class="{ placeholder: !selectedLocationId }">
-                                        {{ selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (activeLocationObj ? activeLocationObj.name : 'Feeder select karein…') }}
+                                        {{ selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (activeLocationObj ? (activeLocationObj.feeder || activeLocationObj.name) : 'Feeder select karein…') }}
                                     </span>
                                     <span class="searchable-dropdown-arrow">{{ locationDropdownOpen ? '▲' : '▼' }}</span>
                                 </button>
@@ -225,7 +225,7 @@
                                 <div v-if="locationDropdownOpen" class="searchable-dropdown-panel">
                                     <div class="searchable-dropdown-search-wrap">
                                         <span class="searchable-dropdown-search-icon">🔍</span>
-                                        <input id="location-search-input" type="text" v-model="locationSearchQuery" placeholder="Feeder / Substation / Gaon search karein..." autocomplete="off" class="searchable-dropdown-search" @keydown.esc="closeLocationDropdown">
+                                        <input id="location-search-input" type="text" v-model="locationSearchQuery" placeholder="Feeder search karein..." autocomplete="off" class="searchable-dropdown-search" @keydown.esc="closeLocationDropdown">
                                         <button v-if="locationSearchQuery" type="button" class="searchable-dropdown-search-clear" @click="locationSearchQuery = ''">✕</button>
                                     </div>
                                     <div class="searchable-dropdown-list">
@@ -235,8 +235,7 @@
                                         <div v-for="location in searchFilteredLocations" :key="location.id"
                                              class="searchable-dropdown-item" :class="{ selected: selectedLocationId === location.id }"
                                              @click="selectLocation(location.id)">
-                                            <span class="searchable-dropdown-item-name">{{ location.name }}</span>
-                                            <span class="searchable-dropdown-item-meta" v-if="location.substation">{{ location.substation }}</span>
+                                            <span class="searchable-dropdown-item-name">{{ location.feeder || location.name }}</span>
                                         </div>
                                         <div v-if="!searchFilteredLocations.length" class="searchable-dropdown-empty">
                                             Koi feeder match nahi hua "{{ locationSearchQuery }}"
@@ -313,10 +312,18 @@
                         <div class="dp-lock-banner-content">
                             <span class="dp-lock-icon">🔒</span>
                             <div>
-                                <strong style="color: #f87171;">Entry Locked (Saved)</strong>
-                                <span style="display: block; font-size: 12px; color: #cbd5e1; margin-top: 2px;">
-                                    Is date ({{ selectedDate }}) ki entry pehle se saved hai aur locked hai. Koyi badlaav karne ke liye Admin se unlock karwayein.
-                                </span>
+                                <strong style="color: #f87171;">Entry Locked (Saved) — {{ activeContractor.name }}</strong>
+                                <div style="font-size: 12px; color: #cbd5e1; margin-top: 3px; line-height: 1.5;">
+                                    <div>Work Date: <strong style="color: #fff;">{{ selectedDate }}</strong> | Contractor: <strong style="color: #fff;">{{ activeContractor.name }}</strong></div>
+                                    <div v-if="activeReportSavedBy || activeReportSavedAt" style="color: #38bdf8; margin-top: 2px;">
+                                        <span v-if="activeReportSavedBy">👤 <strong>Saved By:</strong> {{ activeReportSavedBy }}</span>
+                                        <span v-if="activeReportSavedBy && activeReportSavedAt">&nbsp;•&nbsp;</span>
+                                        <span v-if="activeReportSavedAt">🕒 <strong>Saved At:</strong> {{ activeReportSavedAt }}</span>
+                                    </div>
+                                    <div style="color: #94a3b8; font-size: 11px; margin-top: 2px;">
+                                        Is contractor ki date lock ho chuki hai. Koi badlaav karne ke liye Admin se unlock karwayein.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <button v-if="isAdmin" type="button" class="btn-unlock-entry" @click="unlockCurrentDate" title="Admin: Unlock this entry">
@@ -605,27 +612,37 @@
                                 <thead>
                                     <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
                                         <th style="padding: 10px 12px;">Work Date</th>
-                                        <th style="padding: 10px 12px;">Items Consumed</th>
-                                        <th style="padding: 10px 12px;">Manpower</th>
-                                        <th style="padding: 10px 12px;">Site Notes</th>
+                                        <th style="padding: 10px 12px;">Location / Feeder</th>
+                                        <th style="padding: 10px 12px;">Saved By (User)</th>
+                                        <th style="padding: 10px 12px;">Saved At (Time)</th>
+                                        <th style="padding: 10px 12px;">Items</th>
+                                        <th style="padding: 10px 12px;">Workers</th>
+                                        <th style="padding: 10px 12px;">Status</th>
                                         <th style="padding: 10px 12px; text-align: right;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="rep in [...contractorReports].reverse()" :key="rep.date" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <tr v-for="rep in [...contractorReports].reverse()" :key="rep.date + (rep.locationId || '')" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                         <td style="padding: 12px; font-weight: 800; color: #38bdf8; font-family: monospace;">{{ rep.date }}</td>
+                                        <td style="padding: 12px; color: #cbd5e1;">{{ rep.locationName || rep.locationId || '—' }}</td>
+                                        <td style="padding: 12px; color: #f8fafc; font-weight: 600;">{{ formatSavedBy(rep.savedBy) }}</td>
+                                        <td style="padding: 12px; color: #94a3b8; font-size: 11px;">{{ formatSavedAt(rep.savedAt || rep.updatedAt) }}</td>
                                         <td style="padding: 12px;">{{ Object.values(rep.quantities || {}).filter(q => q > 0).length }} items</td>
                                         <td style="padding: 12px;">{{ ((rep.manpower && rep.manpower.leader) || 0) + ((rep.manpower && rep.manpower.skilled) || 0) + ((rep.manpower && rep.manpower.unskilled) || 0) }} workers</td>
-                                        <td style="padding: 12px; color: #94a3b8; max-width: 250px;">{{ rep.remarks || '—' }}</td>
+                                        <td style="padding: 12px;">
+                                            <span :style="{ color: rep.state === 'final' ? '#f87171' : '#4ade80', fontWeight: '700' }">
+                                                {{ rep.state === 'final' ? '🔒 Locked' : '🟢 Open' }}
+                                            </span>
+                                        </td>
                                         <td style="padding: 12px; text-align: right;">
-                                            <button type="button" @click="openReport(rep.date)" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;">
+                                            <button type="button" @click="openReport(rep.date, rep.locationId)" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
                                                 Open ➔
                                             </button>
                                         </td>
                                     </tr>
                                     <tr v-if="!contractorReports.length">
-                                        <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
-                                            Is contractor ke liye abhi koi report save nahi hui hai.
+                                        <td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                            {{ activeContractor.name }} ke liye abhi koi report save nahi hui hai.
                                         </td>
                                     </tr>
                                 </tbody>

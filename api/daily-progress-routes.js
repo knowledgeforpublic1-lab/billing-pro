@@ -336,7 +336,19 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
         const issues = new Map((base.issues || []).map(i => [i.id, i]));
         for (const issue of aux.issues) issues.set(issue.id, issue);
-        const reportStates = controlledReports.map(({ contractorId, date, locationId, version, state, deleted }) => ({ contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted }));
+        const stateMap = new Map();
+        controlledReports.forEach(({ contractorId, date, locationId, version, state, deleted, savedAt, savedBy }) => {
+            stateMap.set(contractorId + '|' + date + '|' + normalizeLocation(locationId), { contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted, savedAt, savedBy });
+        });
+        const sharedControls = await db.listDailyRecords('control_');
+        for (const row of sharedControls) {
+            const val = row.value || {};
+            if (val.contractorId && val.date) {
+                const k = val.contractorId + '|' + val.date + '|' + normalizeLocation(val.locationId);
+                stateMap.set(k, { contractorId: val.contractorId, date: val.date, locationId: normalizeLocation(val.locationId), version: val.version || 1, state: val.state || 'final', deleted: !!val.deleted, savedAt: val.savedAt || val.baseReport?.savedAt, savedBy: val.savedBy || val.baseReport?.savedBy });
+            }
+        }
+        const reportStates = Array.from(stateMap.values());
         const result = { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
         cachedData = result;
         cacheTime = Date.now();

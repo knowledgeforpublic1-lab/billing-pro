@@ -234,6 +234,11 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
     }));
 
     router.get('/session', handler(async (req, res) => res.json({ success: true, user: await principal(req) })));
+    router.get('/history', handler(async (req, res) => {
+        const actor = await principal(req), cid = String(req.query.contractorId || '');
+        assertContractor(actor, cid);
+        res.json({ success: true, history: await history(cid) });
+    }));
     router.get('/locations', handler(async (req, res) => {
         const actor = await principal(req), cid = String(req.query.contractorId || '');
         assertContractor(actor, cid);
@@ -399,7 +404,19 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
     }
 
     async function sharedReports() {
-        return (await db.listDailyRecords('shared_report_')).map(row => row.value.report).filter(Boolean);
+        const legacy = (await db.listDailyRecords('shared_report_')).map(row => row.value && row.value.report).filter(Boolean);
+        const controlled = (await db.listDailyRecords('control_')).map(row => row.value && (row.value.baseReport || {
+            contractorId: row.value.contractorId,
+            date: row.value.date,
+            locationId: row.value.locationId,
+            locationName: row.value.locationName,
+            state: row.value.state,
+            version: row.value.version,
+            deleted: row.value.deleted,
+            savedAt: row.value.savedAt,
+            savedBy: row.value.savedBy
+        })).filter(Boolean);
+        return [...legacy, ...controlled];
     }
 
     async function history(cid) {
