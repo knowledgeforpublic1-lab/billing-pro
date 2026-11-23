@@ -8,7 +8,7 @@
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/daily-standalone.css?v=20261121_search_dropdown_v1">
-    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_header_picker_v3">
+    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_search_type_v4">
     <style>
         [v-cloak] { display: none !important; }
     </style>
@@ -347,7 +347,7 @@
                     </div>
 
                     <!-- Two-column Entry Layout -->
-                    <fieldset class="dp-entry-fields" :disabled="!canEnterLocation || busy || !canEditCurrentDate">
+                    <div class="dp-entry-fields">
                     <div class="entry-layout">
                         <!-- Left: Materials Consumption Table -->
                         <div class="panel material-panel">
@@ -371,24 +371,32 @@
                                 <div class="search-box">
                                     <input type="search" v-model="searchQuery" placeholder="Search material name or SAP code...">
                                 </div>
-
                             </div>
 
                             <!-- Materials Table with NET ISSUE Focus -->
                             <div class="material-table">
                                 <div class="mat-table-head">
-                                    <span>#</span><span>Item Description</span><span>SAP Code</span><span>Row</span><span>Unit</span><span>Net Issue</span><span>Today Consumed</span>
+                                    <span class="col-seq">#</span>
+                                    <span class="col-desc">Item Description</span>
+                                    <span class="col-sap">SAP Code</span>
+                                    <span class="col-row">Row</span>
+                                    <span class="col-unit">Unit</span>
+                                    <span class="col-stock">Net Issue</span>
+                                    <span class="col-qty">Today Consumed</span>
                                 </div>
 
                                 <div class="mat-table-body">
                                     <div v-for="(item, itemIndex) in filteredItems.slice(0, visibleLimit)" :key="item.id" class="mat-row">
-                                        <div class="sheet-row-number">{{ itemIndex + 1 }}</div>
-                                        <div><span class="mat-desc">{{ item.name }}</span><small class="sheet-mobile-item-meta">SAP {{ item.code || '—' }} · Row {{ item.row }} · {{ item.unit }}</small></div>
-                                        <div class="sheet-sap-code">{{ item.code || '—' }}</div>
-                                        <div class="sheet-source-row">{{ item.row }}</div>
-                                        <div class="sheet-unit">{{ item.unit }}</div>
+                                        <div class="col-seq sheet-row-number">{{ itemIndex + 1 }}</div>
+                                        <div class="col-desc mat-info-cell">
+                                            <span class="mat-desc">{{ item.name }}</span>
+                                            <small class="sheet-mobile-item-meta">SAP: {{ item.code || '—' }} · Row: {{ item.row }} · Unit: {{ item.unit }}</small>
+                                        </div>
+                                        <div class="col-sap sheet-sap-code"><span>{{ item.code || '—' }}</span></div>
+                                        <div class="col-row sheet-source-row">{{ item.row }}</div>
+                                        <div class="col-unit sheet-unit">{{ item.unit }}</div>
 
-                                        <div style="text-align: center;">
+                                        <div class="col-stock mat-stock-cell">
                                             <span v-if="getItemStock(item).totalIssued > 0" class="net-issue-badge" :title="'SAP Net Issue + Manual Challans up to ' + selectedDate">
                                                 📦 {{ getItemStock(item).totalIssued }} {{ item.unit }}
                                             </span>
@@ -397,7 +405,7 @@
                                             </span>
                                         </div>
 
-                                        <div class="qty-input-wrap">
+                                        <div class="col-qty qty-input-wrap">
                                             <input type="number"
                                                    min="0"
                                                    step="any"
@@ -405,13 +413,15 @@
                                                    placeholder="0"
                                                    :value="quantities[item.id] || ''"
                                                    :aria-label="'Today consumed: ' + item.name"
+                                                   :disabled="!canEnterLocation || busy || !canEditCurrentDate"
                                                    @input="onQuantityInput(item.id, $event.target.value)">
-                                            <span>{{ item.unit }}</span>
+                                            <span class="qty-unit-label">{{ item.unit }}</span>
                                         </div>
                                     </div>
 
-                                    <div v-if="!filteredItems.length" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                    <div v-if="!filteredItems.length" class="sheet-empty-state" style="text-align: center; padding: 24px;">
                                         Koi material match nahi hua. Search clear karein ya filter "All Materials" karein.
+                                        <button v-if="searchQuery && filterMode !== 'all'" type="button" class="sheet-search-all" @click="filterMode = 'all'">Search All Materials</button>
                                     </div>
                                 </div>
 
@@ -426,7 +436,7 @@
                         <!-- Right: Manpower & Notes Sidebar -->
                         <div class="entry-side">
                             <!-- Manpower Section -->
-                            <div class="panel manpower-panel">
+                            <fieldset class="panel manpower-panel" :disabled="!canEnterLocation || busy || !canEditCurrentDate">
                                 <div class="panel-header">
                                     <h2><span>♟</span> Manpower Details</h2>
                                 </div>
@@ -481,14 +491,14 @@
                                         </div>
                                     </div>
                                 </details>
-                            </div>
+                            </fieldset>
 
                             <!-- Notes Section -->
                             <details class="panel notes-panel"><summary>Site notes &amp; remarks</summary>
                                 <div class="panel-header">
                                     <h2><span>03</span> Site Notes &amp; Remarks</h2>
                                 </div>
-                                <textarea v-model="remarks"
+                                <textarea v-model="remarks" :disabled="!canEnterLocation || busy || !canEditCurrentDate"
                                           @input="dirty = true"
                                           rows="4"
                                           placeholder="Work location, section, weather conditions, or any delays..."
@@ -501,7 +511,7 @@
                     </div>
 
                     <!-- Sticky Save Bar -->
-                    </fieldset>
+                    </div>
                     <div class="save-bar" :style="{ background: isCurrentDateLocked && !isAdmin ? '#1e293b' : '' }">
                         <div class="save-status-info">
                             <template v-if="isCurrentDateLocked">
@@ -1030,10 +1040,10 @@
     <script src="/js/storage-transport.js?v=20261118_review4"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="js/daily-worker-auth.js?v=20261123_header_picker_v3"></script>
+    <script src="js/daily-worker-auth.js?v=20261123_search_type_v4"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261123_header_picker_v3"></script>
+    <script src="js/daily-progress-standalone.js?v=20261123_search_type_v4"></script>
 </body>
 
 </html>

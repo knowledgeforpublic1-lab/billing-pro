@@ -27,6 +27,18 @@
 .dp-sheet-page .dp-contractor-item.active { background:#e7f1ff; box-shadow:inset 3px 0 #0876ff; }
 .dp-sheet-page .dp-contractor-item.active .dp-c-title { color:#064caa; }
 .dp-sheet-page .dp-no-contractors { color:#526b88; }
+.dp-sheet-page .manpower-panel { margin:0; min-width:0; }
+.dp-sheet-page .sheet-empty-state { color:#526680; font-size:12px; line-height:1.6; }
+.dp-sheet-page :is(.mat-desc,.man-label,.panel-header h2) { font-family:inherit; }
+.dp-sheet-page .sheet-search-all { display:block; margin:10px auto 0; min-height:36px; padding:6px 12px; color:#0752b5; background:#edf5ff; border:1px solid #b6ccec; border-radius:5px; cursor:pointer; }
+.dp-sheet-page .dp-lock-banner { line-height:1.5; }
+.dp-sheet-page .dp-lock-banner.locked { background:#fff4eb; border:1px solid #ebc8b5; }
+.dp-sheet-page .dp-lock-banner.locked strong { color:#973813!important; }
+.dp-sheet-page .dp-lock-banner.locked .dp-lock-banner-content span[style] { color:#684531!important; }
+.dp-sheet-page .dp-lock-banner.unlocked { background:#eefaf5; border:1px solid #bddfd0; }
+.dp-sheet-page .dp-lock-banner.unlocked strong { color:#196047!important; }
+.dp-sheet-page .dp-lock-banner.unlocked .dp-lock-banner-content span[style] { color:#355f50!important; }
+.dp-sheet-page input:disabled,.dp-sheet-page textarea:disabled { opacity:1!important; color:#4b617d!important; background:#f0f4f9!important; }
 .sheet-actions button { white-space:nowrap; min-height:30px; padding:5px 11px; font-size:11px; font-weight:700; border:1px solid #b9d4fb; border-radius:5px; color:#065ad9; background:linear-gradient(#fff,#eff6ff); cursor:pointer; box-shadow:0 1px 3px #2563eb15; }
 .sheet-actions button.active,.dp-sheet-page .btn-save-progress { background:linear-gradient(#1682ff,#0065ec); color:#fff; border:1px solid #0876ff; }
 .sheet-actions button:disabled { opacity:.5; cursor:default; }
@@ -232,4 +244,12 @@ body.dp-sheet-page main .dp-excel-table th { background:#eaf2fc; color:#25456f; 
  .dp-sheet-page .dp-search-panel-header { min-height:38px; }
  .dp-sheet-page .dp-contractor-item { min-height:44px; padding:10px 12px; }
  .dp-sheet-page .dp-contractor-item .dp-c-title { font-size:13px; }
+ .dp-sheet-page { font-family:"Segoe UI",Arial,sans-serif; }
+ .dp-sheet-page .mat-desc { font-size:13px!important; line-height:1.45!important; }
+ .dp-sheet-page .sheet-mobile-item-meta { font-size:11px; line-height:1.5; }
+ .dp-sheet-page .material-panel .panel-header h2,.dp-sheet-page .manpower-panel .panel-header h2 { font-size:14px; }
+ .dp-sheet-page .dp-field-box>label,.dp-sheet-page .man-label { font-size:12px; }
+ .dp-sheet-page .dp-field-box select,.dp-sheet-page .searchable-dropdown-trigger { font-size:14px; }
+ .dp-sheet-page .mat-row>div:nth-child(6)::before,.dp-sheet-page .mat-row>div:nth-child(7)::before { font-size:12px; }
+ .dp-sheet-page .sheet-empty-state { font-size:13px; }
 }
