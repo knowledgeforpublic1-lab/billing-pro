@@ -80,6 +80,7 @@
             const queryDate = normDate(params.get('date') || params.get('d') || '');
 
             return {
+                sidebarOpen: false,
                 currentTab: 'entry', // 'entry' | 'stock' | 'history' | 'download'
                 selectedDate: queryDate || getTodayStr(),
                 selectedContractorId: queryContractor || defaultContractor.id,

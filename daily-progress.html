@@ -8,13 +8,14 @@
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/daily-standalone.css?v=20261121_search_dropdown_v1">
+    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_sheet_v1">
     <style>
         [v-cloak] { display: none !important; }
     </style>
 </head>
 
-<body>
-    <div id="app" class="shell" v-cloak :inert="busy">
+<body class="dp-sheet-page">
+    <div id="app" class="shell" :class="{ 'sheet-sidebar-open': sidebarOpen }" v-cloak :inert="busy">
         <!-- Desktop Sidebar -->
         <aside class="sidebar">
             <div class="brand">
@@ -67,12 +68,58 @@
 
         <!-- Main Workspace -->
         <div class="main">
-            <header class="app-header-compact">
+            <header class="sheet-commandbar">
+                <div class="sheet-heading"><button type="button" class="sheet-menu" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle navigation" :aria-expanded="sidebarOpen">☰</button><span class="sheet-calendar">▦</span><div><h1>Daily Progress</h1><p>Material consumption, manpower &amp; daily work progress</p></div></div>
+                <nav class="sheet-actions" aria-label="Daily Progress sections">
+                    <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'">＋ Entry</button>
+                    <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'" title="Material and stock logs">▤ Logs</button>
+                    <button type="button" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'">◴ History</button>
+                    <button type="button" :class="{ active: currentTab === 'download' }" @click="openExportTab()">⇩ Export</button>
+                    <button type="button" :disabled="busy || dirty" @click="fetchLatestReportsSilently()" title="Refresh saved reports">⟳ Sync</button>
+                    <button type="button" @click="copyShareLink" title="Share contractor entry link">↗ Share</button>
+                </nav>
+            </header>
+
+            <main>
+                <!-- MASTER EXECUTIVE LOCATION & DATE HEADER -->
+                <section class="dp-master-header-card" aria-label="Select work location">
+                    <!-- Top Row: Division Pills & Date Quick Controls -->
+                    <div class="dp-header-top-row">
+                        <div class="dp-division-pills">
+                            <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'ALL' }" @click="setDivision('ALL')">
+                                <span>🌐 All</span>
+                                <span class="dp-pill-badge">105</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Gadchiroli' }" @click="setDivision('Gadchiroli')">
+                                <span>Gadchiroli</span>
+                                <span class="dp-pill-badge">39</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Bramhapuri' }" @click="setDivision('Bramhapuri')">
+                                <span>Bramhapuri</span>
+                                <span class="dp-pill-badge">28</span>
+                            </button>
+                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Allapalli' }" @click="setDivision('Allapalli')">
+                                <span>Allapalli</span>
+                                <span class="dp-pill-badge">38</span>
+                            </button>
+                        </div>
+
+                        <!-- Right: Custom Site Toggle -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="dp-custom-toggle-btn" @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
+                                <span>{{ showCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Second Row: Cascading Filters & Feeder Selection -->
+                    <div class="dp-cascading-grid">
                 <div class="header-left">
-                    <span class="brand-chip-compact">📅 SiteDiary</span>
+
                     
                     <div class="contractor-select-compact" title="CONTRACTOR / LABOUR TEAM">
-                        <span class="compact-label">CONTRACTOR / LABOUR TEAM:</span>
+                        <span class="compact-label">Team:</span>
                         <div class="contractor-input-row">
                             <div class="dp-contractor-picker-wrap" v-click-outside="closeContractorDropdown">
                                 <div class="dp-search-combo-box">
@@ -135,55 +182,10 @@
                     </div>
                 </div>
 
-                <div class="header-right">
-                    <span class="sync-badge" :class="{ unsaved: dirty }">
-                        <span style="font-size: 8px;">●</span>
-                        <span>{{ dirty ? 'Unsaved' : 'Synced' }}</span>
-                    </span>
-                    <button type="button" class="btn-header-share" @click="copyShareLink" title="Contractor ko bhejne ke liye share link copy karein">
-                        <span>📋</span><span>Share Link</span>
-                    </button>
-                </div>
-            </header>
 
-            <main>
-                <!-- MASTER EXECUTIVE LOCATION & DATE HEADER -->
-                <section class="dp-master-header-card" aria-label="Select work location">
-                    <!-- Top Row: Division Pills & Date Quick Controls -->
-                    <div class="dp-header-top-row">
-                        <div class="dp-division-pills">
-                            <span style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
-                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'ALL' }" @click="setDivision('ALL')">
-                                <span>🌐 All</span>
-                                <span class="dp-pill-badge">105</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Gadchiroli' }" @click="setDivision('Gadchiroli')">
-                                <span>Gadchiroli</span>
-                                <span class="dp-pill-badge">39</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Bramhapuri' }" @click="setDivision('Bramhapuri')">
-                                <span>Bramhapuri</span>
-                                <span class="dp-pill-badge">28</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'Allapalli' }" @click="setDivision('Allapalli')">
-                                <span>Allapalli</span>
-                                <span class="dp-pill-badge">38</span>
-                            </button>
-                        </div>
-
-                        <!-- Right: Custom Site Toggle -->
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" class="dp-custom-toggle-btn" @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
-                                <span>{{ showCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Second Row: Cascading Filters & Feeder Selection -->
-                    <div class="dp-cascading-grid">
                         <div class="dp-field-box">
                             <label for="filter-subdivision">
-                                <span>1. Sub-Division</span>
+                                <span>Sub-Division:</span>
                                 <span v-if="subDivisionFilter !== 'ALL'" style="color: #38bdf8; cursor: pointer;" @click="setSubDivision('ALL')">Clear ✕</span>
                             </label>
                             <select id="filter-subdivision" :value="subDivisionFilter" @change="setSubDivision($event.target.value)">
@@ -194,7 +196,7 @@
 
                         <div class="dp-field-box">
                             <label for="filter-substation">
-                                <span>2. Substation</span>
+                                <span>Substation:</span>
                                 <span v-if="substationFilter !== 'ALL'" style="color: #38bdf8; cursor: pointer;" @click="setSubstation('ALL')">Clear ✕</span>
                             </label>
                             <select id="filter-substation" :value="substationFilter" @change="setSubstation($event.target.value)">
@@ -205,7 +207,7 @@
 
                         <div class="dp-field-box">
                             <label>
-                                <span>3. Feeder / Location</span>
+                                <span>Feeder:</span>
                                 <span style="font-weight: 400; color: #94a3b8;">({{ filteredLocations.length }} match)</span>
                             </label>
                             <div class="searchable-dropdown">
@@ -245,7 +247,7 @@
 
                         <div class="dp-field-box">
                             <label for="search-feeder">
-                                <span>🔍 Instant Search</span>
+                                <span>🔍 Instant Search</span><button type="button" class="sheet-reset" @click="clearLocationFilters" title="Show all divisions and locations">↺ All</button>
                                 <span v-if="feederSearch" style="color: #f87171; cursor: pointer;" @click="feederSearch = ''">Clear ✕</span>
                             </label>
                             <div class="dp-search-field-wrap">
@@ -292,7 +294,7 @@
                     </p>
                 </section>
                 <!-- TAB 1: DAILY PROGRESS ENTRY -->
-                <div v-if="currentTab === 'entry'">
+                <div v-if="currentTab === 'entry'" class="sheet-entry">
                     <!-- Single-line Compact Status Banner -->
                     <div class="compact-strip">
                         <span>📦 <strong>{{ enteredCount }}</strong> of <strong>{{ issuedItemsCount }}</strong> items entered</span>
@@ -344,12 +346,17 @@
                     <fieldset class="dp-entry-fields" :disabled="!canEnterLocation || busy || !canEditCurrentDate">
                     <div class="entry-layout">
                         <!-- Left: Materials Consumption Table -->
-                        <div class="panel">
+                        <div class="panel material-panel">
                             <div class="panel-header">
-                                <h2><span>01</span> Material Consumption</h2>
+                                <h2><span>▣</span> Material Consumption</h2>
                                 <span style="font-size: 11px; font-weight: 700; color: #38bdf8;">
                                     {{ filteredItems.length }} {{ filterMode === 'issued' ? 'Issued Items' : 'Items' }}
                                 </span>
+                                <select v-model="filterMode" title="Filter items">
+                                    <option value="issued">📦 Issued Stock Only ({{ issuedItemsCount }})</option>
+                                    <option value="all">🌐 All Materials ({{ items.length }})</option>
+                                    <option value="entered">⚡ Entered Today ({{ enteredCount }})</option>
+                                </select>
                             </div>
                             <p class="panel-sub">
                                 Aaj site par use hue material ki quantity bharein. Stock reference ke hisaab se Net Issue check karein.
@@ -360,30 +367,22 @@
                                 <div class="search-box">
                                     <input type="search" v-model="searchQuery" placeholder="Search material name or SAP code...">
                                 </div>
-                                <select v-model="filterMode" title="Filter items">
-                                    <option value="issued">📦 Issued Stock Only ({{ issuedItemsCount }})</option>
-                                    <option value="all">🌐 All Materials ({{ items.length }})</option>
-                                    <option value="entered">⚡ Entered Today ({{ enteredCount }})</option>
-                                </select>
+
                             </div>
 
                             <!-- Materials Table with NET ISSUE Focus -->
                             <div class="material-table">
                                 <div class="mat-table-head">
-                                    <span>Item Description</span>
-                                    <span>Net Issue</span>
-                                    <span>Today Consumed</span>
+                                    <span>#</span><span>Item Description</span><span>SAP Code</span><span>Row</span><span>Unit</span><span>Net Issue</span><span>Today Consumed</span>
                                 </div>
 
                                 <div class="mat-table-body">
-                                    <div v-for="item in filteredItems.slice(0, visibleLimit)" :key="item.id" class="mat-row">
-                                        <div>
-                                            <span class="mat-desc">{{ item.name }}</span>
-                                            <div class="mat-sub">
-                                                <span v-if="item.code" class="sap-code">SAP: {{ item.code }}</span>
-                                                <span>Row {{ item.row }} · Unit: {{ item.unit }}</span>
-                                            </div>
-                                        </div>
+                                    <div v-for="(item, itemIndex) in filteredItems.slice(0, visibleLimit)" :key="item.id" class="mat-row">
+                                        <div class="sheet-row-number">{{ itemIndex + 1 }}</div>
+                                        <div><span class="mat-desc">{{ item.name }}</span></div>
+                                        <div class="sheet-sap-code">{{ item.code || '—' }}</div>
+                                        <div class="sheet-source-row">{{ item.row }}</div>
+                                        <div class="sheet-unit">{{ item.unit }}</div>
 
                                         <div style="text-align: center;">
                                             <span v-if="getItemStock(item).totalIssued > 0" class="net-issue-badge" :title="'SAP Net Issue + Manual Challans up to ' + selectedDate">
@@ -401,6 +400,7 @@
                                                    inputmode="decimal"
                                                    placeholder="0"
                                                    :value="quantities[item.id] || ''"
+                                                   :aria-label="'Today consumed: ' + item.name"
                                                    @input="onQuantityInput(item.id, $event.target.value)">
                                             <span>{{ item.unit }}</span>
                                         </div>
@@ -422,9 +422,9 @@
                         <!-- Right: Manpower & Notes Sidebar -->
                         <div class="entry-side">
                             <!-- Manpower Section -->
-                            <div class="panel">
+                            <div class="panel manpower-panel">
                                 <div class="panel-header">
-                                    <h2><span>02</span> Manpower Details</h2>
+                                    <h2><span>♟</span> Manpower Details</h2>
                                 </div>
                                 <p class="panel-sub">Aaj site par kaam karne wali team ki sankhya.</p>
 
@@ -480,7 +480,7 @@
                             </div>
 
                             <!-- Notes Section -->
-                            <div class="panel">
+                            <details class="panel notes-panel"><summary>Site notes &amp; remarks</summary>
                                 <div class="panel-header">
                                     <h2><span>03</span> Site Notes &amp; Remarks</h2>
                                 </div>
@@ -492,7 +492,7 @@
                                 <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
                                     Supervisor: <strong>{{ activeContractor.engineer || 'AMIT GOMASE' }}</strong>
                                 </div>
-                            </div>
+                            </details>
                         </div>
                     </div>
 
@@ -505,7 +505,7 @@
                                 <span style="color: #94a3b8;">{{ activeContractor.name }} · Work Date: {{ selectedDate }} (Locked)</span>
                             </template>
                             <template v-else>
-                                <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready for Progress Entry (Open)') }}</strong>
+                                <strong>{{ dirty ? 'Changes Ready to Save' : (version ? 'Report Saved to Cloud & Device' : 'Ready to record today’s work') }}</strong>
                                 <span>{{ activeContractor.name }} · Work Date: {{ selectedDate }}</span>
                             </template>
                         </div>
@@ -515,7 +515,7 @@
                             </button>
                             <button type="button" class="btn-save-progress" :disabled="busy || !canEnterLocation || (isCurrentDateLocked && !isAdmin)" @click="saveProgress" :style="{ opacity: (isCurrentDateLocked && !isAdmin) ? '0.5' : '1', cursor: (isCurrentDateLocked && !isAdmin) ? 'not-allowed' : 'pointer' }">
                                 <span>{{ isCurrentDateLocked && !isAdmin ? '🔒' : '💾' }}</span>
-                                <span>{{ busy ? 'Saving...' : (isCurrentDateLocked ? (isAdmin ? 'Save (Admin)' : 'Locked') : 'Save Daily Progress') }}</span>
+                                <span>{{ busy ? 'Saving...' : (isCurrentDateLocked ? (isAdmin ? 'Save (Admin)' : 'Locked') : 'Save & Lock Daily Progress') }}</span>
                             </button>
                         </div>
                     </div>
@@ -1029,7 +1029,7 @@
     <script src="js/daily-worker-auth.js?v=20261119_fast_login_v1"></script>
     <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
     <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261121_auto_lock_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261123_sheet_v1"></script>
 </body>
 
 </html>
