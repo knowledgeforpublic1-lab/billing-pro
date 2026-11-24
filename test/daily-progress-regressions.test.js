@@ -4,6 +4,26 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ExcelJS = require('exceljs');
 
+test('dashboard reads device and cloud progress concurrently and still adopts confirmed cloud reports', async () => {
+    let releaseLocal, releaseCloud;
+    const localGate = new Promise(resolve => { releaseLocal = resolve; });
+    const cloudGate = new Promise(resolve => { releaseCloud = resolve; });
+    const started = [];
+    const latest = { contractors: [], reports: [{ contractorId: 'a', date: '2026-11-24', quantities: { 15: 7 } }], issues: [] };
+    const context = { window: {}, console,
+        BillingStorage: { async getItemAsync() { started.push('local'); await localGate; return { contractors: [], reports: [], issues: [] }; } },
+        fetch: async () => { started.push('cloud'); await cloudGate; return { ok: true, json: async () => ({ success: true, data: latest }) }; }
+    };
+    vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
+    const app = { ...context.window.DailyProgressModule, dailyProgressDate: '2026-11-24', dailyProgressExportFrom: '2026-11-01',
+        syncDailyProgressContractorsList() {}, syncWithBillingProActiveContractor() {}, loadDailyProgressReportForDate() {} };
+    const loading = app.initDailyProgress();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(started, ['local', 'cloud']);
+    releaseLocal(); releaseCloud(); await loading;
+    assert.equal(app.dailyProgressData.reports[0].quantities[15], 7);
+});
+
 test('Daily Progress text and action colors have readable contrast in light, dark and soft themes', () => {
     const css = fs.readFileSync('css/daily-progress.css', 'utf8');
     const tokens = selector => {

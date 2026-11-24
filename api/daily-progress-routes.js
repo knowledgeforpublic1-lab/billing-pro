@@ -200,15 +200,19 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     // Public, sanitized read-only data for the shareable /daily-progress.html page.
     // No PAN, GSTIN, bank details or other contractor records are exposed.
     publicRouter.get('/catalog', handle(async (req, res) => {
-        const contractors = new Map(publicContractors(await currentStock()).map(c => [c.id, c]));
+        const [stock, savedConfig, teams, assigned] = await Promise.all([
+            currentStock(), db.getDefaultConfig('dailyProgressData'), service.list(),
+            workers.listContractors ? workers.listContractors() : Promise.resolve([])
+        ]);
+        const contractors = new Map(publicContractors(stock).map(c => [c.id, c]));
         // Saved teams may not exist in the shipped contractor directory.
-        const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
-        for (const c of [...saved.contractors, ...await service.list()]) {
+        const saved = readDailyProgressData(savedConfig);
+        for (const c of [...saved.contractors, ...teams]) {
             if (!c.id || !c.name) continue;
             contractors.set(c.id, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' });
         }
         if (workers.listContractors) {
-            for (const c of await workers.listContractors()) {
+            for (const c of assigned) {
                 contractors.set(c.id, { project: '', feeder: '', engineer: '', ...contractors.get(c.id), ...c });
             }
         }

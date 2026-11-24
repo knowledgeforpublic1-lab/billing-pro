@@ -162,33 +162,40 @@ window.DailyProgressModule = {
             this.setDailyProgressExportRange('current_month');
         }
 
-        let stored = null;
-        let cloudLoaded = false;
-        try {
-            if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.getItemAsync === 'function') {
-                stored = await BillingStorage.getItemAsync('billing_daily_progress');
-                if (typeof stored === 'string') {
-                    stored = JSON.parse(stored);
-                }
-            }
-        } catch (e) {
-            console.warn('[DailyProgress] Storage load error:', e);
-        }
-
-        // Fetch latest cloud data to merge any reports/contractors entered via standalone link
-        try {
-            if (typeof fetch === 'function') {
-                const cRes = await fetch('/api/daily-progress/data');
-                if (cRes.ok) {
-                    const cData = await cRes.json();
-                    if (cData && cData.success && cData.data) {
-                        cloudLoaded = true;
-                        stored = this.mergeDailyProgressData(stored, cData.data);
-                        stored.reports = cData.data.reports || [];
+        const localData = (async () => {
+            let stored = null;
+            try {
+                if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.getItemAsync === 'function') {
+                    stored = await BillingStorage.getItemAsync('billing_daily_progress');
+                    if (typeof stored === 'string') {
+                        stored = JSON.parse(stored);
                     }
                 }
+            } catch (e) {
+                console.warn('[DailyProgress] Storage load error:', e);
             }
-        } catch (_) { }
+            return stored;
+        })();
+
+        // Fetch latest cloud data to merge any reports/contractors entered via standalone link
+        const cloudData = (async () => {
+            try {
+                if (typeof fetch === 'function') {
+                    const cRes = await fetch('/api/daily-progress/data');
+                    if (cRes.ok) {
+                        const cData = await cRes.json();
+                        if (cData && cData.success && cData.data) return cData.data;
+                    }
+                }
+            } catch (_) { }
+            return null;
+        })();
+        let [stored, latest] = await Promise.all([localData, cloudData]);
+        const cloudLoaded = !!latest;
+        if (latest) {
+            stored = this.mergeDailyProgressData(stored, latest);
+            stored.reports = latest.reports || [];
+        }
 
         // Initialize with default seed data if no saved reports exist
         const seed = window.DailyProgressSeed || { contractor: {}, items: [], records: [] };

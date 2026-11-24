@@ -486,9 +486,8 @@
                 }
             },
             async selectedContractorId(cid) {
-                await this.ensureStock();
                 if (cid !== this.selectedContractorId) return;
-                await this.loadLocations();
+                await Promise.all([this.ensureStock(), this.loadLocations()]);
                 if (cid === this.selectedContractorId && !this.dirty) {
                     this.loadReportForActiveDate();
                     await this.fetchLatestReportsSilently();
@@ -717,6 +716,19 @@
             async initData() {
                 this.busy = true;
                 try {
+                    // History and the display catalog do not depend on each other.
+                    const cloudData = (async () => {
+                        try {
+                            const res = await shareFetch('/api/daily-progress/data?t=' + Date.now());
+                            if (res.ok) {
+                                const result = await res.json();
+                                if (result && result.success && result.data) return result.data;
+                            }
+                        } catch (e) {
+                            console.info('[DailyProgressStandalone] Cloud load error, falling back to local:', e.message);
+                        }
+                        return null;
+                    })();
                     // 1. Build initial contractors list from defaultContractorsList + seed + SAP Stock
                     const contractorsMap = new Map();
                     const seed = window.DailyProgressSeed || {};
@@ -801,18 +813,7 @@
                     }
 
                     // 2. Fetch cloud data or localStorage
-                    let loaded = null;
-                    try {
-                        const res = await shareFetch('/api/daily-progress/data?t=' + Date.now());
-                        if (res.ok) {
-                            const resJson = await res.json();
-                            if (resJson && resJson.success && resJson.data) {
-                                loaded = resJson.data;
-                            }
-                        }
-                    } catch (e) {
-                        console.info('[DailyProgressStandalone] Cloud load error, falling back to local:', e.message);
-                    }
+                    let loaded = await cloudData;
 
                     if (!loaded) {
                         try {
@@ -898,8 +899,7 @@
                     this.issues = this.issues.filter(row => allowed(row.contractorId));
                     requestContractor = this.selectedContractorId;
 
-                    await this.ensureStock();
-                    await this.loadLocations();
+                    await Promise.all([this.ensureStock(), this.loadLocations()]);
                     this.loadReportForActiveDate();
                 } catch (err) {
                     console.error('[DailyProgressStandalone] Init error:', err);

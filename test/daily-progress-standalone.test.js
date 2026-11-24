@@ -25,6 +25,39 @@ function sharePage(fetcher) {
     return { app, storage, options };
 }
 
+test('startup overlaps catalog/history and stock/locations without changing the selected contractor', async () => {
+    let releaseCatalog, releaseStock, releaseLocations;
+    const catalogGate = new Promise(resolve => { releaseCatalog = resolve; });
+    const stockGate = new Promise(resolve => { releaseStock = resolve; });
+    const locationGate = new Promise(resolve => { releaseLocations = resolve; });
+    const started = [];
+    const cid = 'intally_dynamix_private_limited';
+    const { app } = sharePage(async url => {
+        if (url.includes('/catalog')) {
+            started.push('catalog'); await catalogGate;
+            return { ok: true, json: async () => ({ success: true, items: [{ id: '15', name: 'Sand' }], contractors: [{ id: cid, name: 'Intally' }] }) };
+        }
+        started.push('history');
+        return { ok: true, json: async () => ({ success: true, data: { contractors: [], reports: [], issues: [] } }) };
+    });
+    app.ensureStock = async () => { started.push('stock'); await stockGate; };
+    app.loadLocations = async () => { started.push('locations'); await locationGate; };
+    app.loadReportForActiveDate = () => started.push('ready');
+    const loading = app.initData();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(started.includes('catalog') && started.includes('history'), 'History starts while catalog is still pending');
+    releaseCatalog();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(started.includes('stock') && started.includes('locations'), 'Independent location read starts while stock is pending');
+    assert.equal(started.includes('ready'), false, 'Entry waits for both sources');
+    releaseStock(); releaseLocations(); await loading;
+    assert.equal(app.selectedContractorId, cid);
+    assert.equal(app.activeContractor.name, 'Intally');
+    assert.equal(app.items[0].name, 'Sand');
+    assert.equal(started.at(-1), 'ready');
+    assert.equal(app.busy, false);
+});
+
 test('stock refresh replaces 5 with 10, updates balances by posting date and keeps unsaved progress', async () => {
     let blocks = {}, fail = false;
     const { app } = sharePage(async () => ({ ok: !fail, json: async () => ({ success: true, byContractorNorm: blocks }) }));
