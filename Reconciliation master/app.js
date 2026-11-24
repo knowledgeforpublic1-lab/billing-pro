@@ -101,7 +101,7 @@ async function refreshMasterStock(render = true) {
         const directoryStamp = JSON.stringify(directory.map(row => [row.id, row.name, row.workOrderNo, row.workOrderNumbers]));
         const stamp = (response.headers?.get('x-billing-storage-versions') || JSON.stringify(body.data)) + directoryStamp;
         if (stamp === masterStockStamp) { if (render) updateDataQuality(); return; }
-        rawData = window.MasterStockSync.apply(rawData, body.data, { directory, referenceData: typeof DATA !== 'undefined' ? DATA : undefined });
+        rawData = window.MasterStockSync.apply(rawData, body.data, { directory, referenceData: window.ReconciliationStockAliases || (typeof DATA !== 'undefined' ? DATA : undefined) });
         masterStockStamp = stamp;
         if (render) {
             const selected = document.getElementById('contractorSelect')?.value;

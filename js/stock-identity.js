@@ -18,11 +18,15 @@
         const result = [...groups.values()]; cache.set(stock, { source: stock.byContractorNorm, groups: result }); return result;
     }
     function resolve(stock, identity, directory = []) {
-        const names = new Set([identity.id, identity.name, ...(identity.aliases || [])].map(normalize).filter(Boolean));
+        const primaryNames = new Set([identity.id, identity.name].map(normalize).filter(Boolean));
+        const names = new Set([...primaryNames, ...(identity.aliases || []).map(normalize).filter(Boolean)]);
+        const reference = (root.ReconciliationStockAliases?.Contractors || []).filter(row => normalize(row.ContractorName) === normalize(identity.name));
+        if (reference.length === 1 && reference[0].IssueStockSource?.contractor) names.add(normalize(reference[0].IssueStockSource.contractor));
         // IDs take precedence over similar display names. Never use substring or
         // single-word matches (e.g. "Construction") to select another firm's stock.
         const idMatches = identity.id ? directory.filter(row => normalize(row.id) === normalize(identity.id)) : [];
-        const profiles = idMatches.length ? idMatches : directory.filter(row => names.has(normalize(row.name)));
+        const namedProfiles = directory.filter(row => primaryNames.has(normalize(row.name)));
+        const profiles = idMatches.length ? idMatches : namedProfiles.length ? namedProfiles : directory.filter(row => names.has(normalize(row.name)));
         const explicitOrders = workOrders(identity.workOrderNo);
         const profileOrders = profiles.length === 1 ? workOrders([profiles[0].workOrderNo, profiles[0].workOrderNumbers, profiles[0].allWorkOrders || []]) : [];
         const orders = explicitOrders.length ? explicitOrders : profileOrders;

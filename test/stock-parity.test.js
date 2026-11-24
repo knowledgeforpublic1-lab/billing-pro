@@ -81,3 +81,22 @@ test('a named CSV ledger without work orders still resolves to its exact contrac
     const app = application(stock, directory, 'team_b', 'Team B');
     assert.equal(app.getReconciliationIssueStock().materials[100].netIssue, 20);
 });
+
+test('published identity-only aliases resolve a legacy spelling without the private master snapshot', () => {
+    const block = record('NITESH NAMDEV ABHARE', '31005981', 10);
+    const stock = { byContractorNorm: { niteshnamdevabhare: block } };
+    global.ReconciliationStockAliases = { Contractors: [{ ContractorName: 'NITESH ABHERE', IssueStockSource: { contractor: 'NITESH NAMDEV ABHARE' } }] };
+    const app = application(stock, [], 'legacy_name', 'NITESH ABHERE');
+    assert.equal(app.getReconciliationIssueStock().materials[100].netIssue, 10);
+    delete global.ReconciliationStockAliases;
+});
+
+test('a configured contractor work order stays authoritative when upload adds a profile with a stock alias', () => {
+    const first = record('MK. INFRA', '31005498', 10), second = record('MK. INFRA', '31007558', 50);
+    const stock = { byContractorNorm: { mkinfra: first, second_order: second } };
+    const directory = [{ id: 'm_k_infra_foundation', name: 'M K Infra Foundation', workOrderNo: '31005498' },
+        { id: 'mkinfra', name: 'MK. INFRA', workOrderNo: '31007558' }];
+    const referenceData = { Contractors: [{ ContractorName: 'M K Infra Foundation', IssueStockSource: { contractor: 'MK. INFRA' } }] };
+    const master = MasterStockSync.apply({ Contractors: [{ ContractorName: 'M K Infra Foundation', Items: [row('100')] }] }, stock, { directory, referenceData });
+    assert.equal(master.Contractors[0].Items[0].NetIssue, 10);
+});
