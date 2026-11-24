@@ -98,6 +98,35 @@ app.use('/api/dp-admin', dailyProgress.adminRouter);
 
 const telegram = require('./telegram');
 
+const https = require('https');
+
+app.get('/api/telegram/diag', async (req, res) => {
+    const token = req.query.token || telegram.BOT_TOKEN;
+    const url = `https://api.telegram.org/bot${token}/getMe`;
+    
+    const startTime = Date.now();
+    const result = { startTime, tokenPrefix: token.slice(0, 12) };
+    
+    // Test 1: native https with family: 4
+    try {
+        const httpsResult = await new Promise((resolve, reject) => {
+            const req = https.get(url, { family: 4, timeout: 8000 }, (r) => {
+                let data = '';
+                r.on('data', chunk => data += chunk);
+                r.on('end', () => resolve({ status: r.statusCode, body: data.slice(0, 500) }));
+            });
+            req.on('error', err => resolve({ error: err.message }));
+            req.on('timeout', () => { req.destroy(); resolve({ error: 'timeout' }); });
+        });
+        result.family4 = httpsResult;
+    } catch (e) {
+        result.family4 = { error: e.message };
+    }
+    
+    result.duration = Date.now() - startTime;
+    res.json(result);
+});
+
 // Telegram Webhook receiver (for /today, /pending, /help commands from Telegram chat)
 app.get('/api/telegram/info', async (req, res) => {
     const token = req.query.token || telegram.BOT_TOKEN;
