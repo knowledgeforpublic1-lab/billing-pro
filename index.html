@@ -291,11 +291,11 @@
                       @click="onUserChipClick" 
                       :class="{ 'is-admin-active': isAdminElevated }"
                       style="cursor: pointer; user-select: none;"
-                      :title="isAdminElevated ? 'Rakesh Kushawaha (Admin 5-Min Elevated Mode Active · ' + formatTimerDisplay(adminElevatedSecondsLeft) + ' baki) · Click to lock Admin mode' : 'Rakesh Kushawaha · Portal Active (Click for Admin Mode)'">
+                      :title="isAdminElevated ? 'Rakesh Kushawaha · Admin access active · Click to lock Admin mode' : 'Rakesh Kushawaha · Portal Active (Click for Admin Mode)'">
                     <span class="avatar-rk">RK</span>
                     <span>Rakesh Kushawaha</span>
-                    <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin Elevated (5 Min)' : 'Portal Active'"></span>
-                    <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN {{ formatTimerDisplay(adminElevatedSecondsLeft) }}</span>
+                    <span class="user-chip-status" :class="isAdminElevated ? 'active' : 'portal'" :title="isAdminElevated ? 'Admin access active' : 'Portal Active'"></span>
+                    <span v-if="isAdminElevated" class="user-chip-auth-action" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">ADMIN</span>
                 </span>
                 <button type="button" class="btn btn-secondary sidebar-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" aria-controls="main-sidebar" :title="sidebarCollapsed ? 'Show Sidebar Menu (☰)' : 'Hide Sidebar Menu (◀)'" style="padding: 4px 8px; font-size: 0.74rem; font-weight: 700; margin-right: 4px;">{{ sidebarCollapsed ? '☰ Menu' : '◀ Hide' }}</button>
                 <button v-if="isPortalUnlocked" type="button" class="btn btn-secondary portal-logout-btn" :disabled="authBusy" @click="logoutPortal" title="Save current work and log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h10"/></svg><span>{{ authBusy ? 'Please wait…' : 'Logout' }}</span></button>
