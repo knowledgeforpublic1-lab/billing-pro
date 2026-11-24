@@ -37,6 +37,54 @@ function qty(a, key, no, location = 0) {
     return a.activityQuantities[key]?.[location]?.[index];
 }
 
+test('schedule headings, material rows, sections and totals keep matching location columns', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    const start = html.indexOf('class="table-responsive ps-table-scroll"');
+    const table = html.slice(start, html.indexOf('</table>', start));
+    const head = table.match(/<thead\b[\s\S]*?<\/thead>/)[0];
+    const section = table.slice(table.indexOf('<!-- Section Header Row -->'), table.indexOf('<!-- Normal Material Row -->'));
+    const body = table.slice(table.indexOf('<!-- Normal Material Row -->'), table.indexOf('</tbody>'));
+    const footer = table.match(/<tfoot\b[\s\S]*?<\/tfoot>/)[0];
+    function columns(markup, locations) {
+        const cells = markup.match(/<(?:th|td)\b(?:[^"'>]|"[^"]*"|'[^']*')*>/g) || [];
+        return cells.reduce((sum, tag) => {
+            const expression = tag.match(/:colspan="([^"]+)"/)?.[1];
+            const span = expression ? vm.runInNewContext(expression, { getPoleScheduleLocations: () => Array.from({ length: locations }) }) : Number(tag.match(/\bcolspan="(\d+)"/)?.[1] || 1);
+            return sum + span * (/\bv-for=/.test(tag) ? locations : 1);
+        }, 0);
+    }
+    for (const locations of [1, 2, 6]) {
+        assert.equal(columns(head, locations), columns(body, locations), 'Header cannot introduce a phantom add-button column');
+        assert.equal(columns(section, locations), columns(body, locations));
+        assert.equal(columns(footer, locations), columns(body, locations));
+    }
+});
+
+test('adding a named location creates a blank quantity column, preserves old quantities and reveals the new header', () => {
+    const a = app();
+    a.poleScheduleLocations['907'] = [{ name: 'Existing Site' }];
+    a.poleScheduleQuantities['907'] = { 0: { 1: '7' } };
+    a.psAutoPole = false; a.psAutoStay = false; a.psAutoMuffing = false;
+    a.showToast = () => {}; a.checkAdminAccess = () => true;
+    const synced = [], scrolled = [];
+    a.syncPoleScheduleToBillingAndReconciliation = key => synced.push(key);
+    let saved;
+    a.saveToStorage = () => { saved = structuredClone({ locations: a.poleScheduleLocations['907'], quantities: a.poleScheduleQuantities['907'] }); };
+    a.$nextTick = callback => callback();
+    const oldPrompt = global.prompt, oldDocument = global.document;
+    try {
+        global.prompt = () => 'New Site';
+        global.document = { querySelector(selector) { scrolled.push(selector); return { scrollIntoView(options) { assert.equal(options.inline, 'nearest'); } }; } };
+        a.addPoleScheduleLocation();
+    } finally { global.prompt = oldPrompt; global.document = oldDocument; }
+    assert.deepEqual(a.poleScheduleLocations['907'].map(loc => loc.name), ['Existing Site', 'New Site']);
+    assert.equal(saved.quantities[0][1], '7'); assert.deepEqual(saved.quantities[1], {});
+    assert.equal(a.activityLocations['907'][1].name, 'New Site');
+    assert.equal(a.activityQuantities['907'].length, 2);
+    assert.deepEqual(synced, ['907']);
+    assert.deepEqual(scrolled, ['.ps-table-scroll th[data-ps-location-header="1"]']);
+});
+
 test('ambiguous clamp can be linked, moved and cleared without duplicating activity quantities', () => {
     const a = app();
     const index = enter(a, '907', 'Side Clamp A Type', 10);

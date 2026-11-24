@@ -842,6 +842,11 @@ window.PoleScheduleModule = {
         this.recoRevision = (this.recoRevision || 0) + 1;
         this.saveToStorage();
         this.showToast(`Location "${name.trim()}" added to Pole Schedule ${k}${window.PoleScheduleModule.isDepartmentalPoleSchedule.call(this, k) ? '' : ' & Activity Billing'}`, '📍');
+        if (typeof this.$nextTick === 'function') this.$nextTick(() => {
+            if ((this.selectedPoleScheduleKey || '907') !== k || typeof document === 'undefined') return;
+            const header = document.querySelector('.ps-table-scroll th[data-ps-location-header="' + newLIdx + '"]');
+            if (header && typeof header.scrollIntoView === 'function') header.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
     },
 
     renamePoleScheduleLocation(lIdx) {

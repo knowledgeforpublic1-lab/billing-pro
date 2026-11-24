@@ -535,7 +535,7 @@
                     <span class="sp"></span>
                     <div class="ps-toolbar-actions" v-if="currentView === 'poleSchedule' || currentView === 'abstract'">
                         <button class="btn btn-primary ico-btn" @click="openPoleScheduleAddMaterialModal(-1)" title="Add Row — is pole schedule me nayi material row jodo"><svg class="ic"><use href="#ic-fileplus"/></svg></button>
-                        <button class="btn btn-secondary ico-btn" @click="addPoleScheduleLocation" title="+ Location — naya location column jodo" style="color: #b91c1c;"><svg class="ic"><use href="#ic-pin"/></svg></button>
+                        <button type="button" class="btn btn-secondary" @click="addPoleScheduleLocation" :disabled="isFinalized" title="Naye location ke naam ka quantity column jodo" style="color: #b91c1c; white-space: nowrap;"><svg class="ic"><use href="#ic-pin"/></svg><span>+ Location</span></button>
                         <button class="btn btn-excel ico-btn" @click="exportPoleScheduleExcel(false)" title="Export — pura pole schedule Excel me download karo (formulas ke saath)"><svg class="ic"><use href="#ic-export"/></svg></button>
                         <details class="ps-more-actions no-print">
                             <summary class="btn btn-secondary ico-btn" title="More actions — Save Contractor Mapping / Reset to Default" style="color: #475569;"><svg class="ic"><use href="#ic-dots"/></svg></summary>
@@ -1095,17 +1095,12 @@
                                         <th class="text-center" style="width: 50px;">Unit</th>
 
                                         <!-- Dynamic Location Columns -->
-                                        <th v-for="(loc, lIdx) in getPoleScheduleLocations()" :key="lIdx" class="text-center" style="min-width: 90px; position: relative;">
+                                        <th v-for="(loc, lIdx) in getPoleScheduleLocations()" :key="lIdx" :data-ps-location-header="lIdx" class="text-center" style="min-width: 90px; position: relative;">
                                             <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
                                                 <span :title="loc.name" style="cursor: pointer;" @click="renamePoleScheduleLocation(lIdx)">{{ loc.name || ('Loc ' + (lIdx+1)) }}</span>
                                                 <button class="no-print" @click.stop="renamePoleScheduleLocation(lIdx)" title="Rename Location" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.7rem; padding: 0 2px;">✏️</button>
                                                 <button v-if="getPoleScheduleLocations().length > 1" class="no-print" @click.stop="removePoleScheduleLocation(lIdx)" title="Remove Location" style="background: none; border: none; cursor: pointer; color: #ef4444; font-size: 0.75rem; padding: 0 2px;">✕</button>
                                             </div>
-                                        </th>
-                                        <th class="text-center no-print" style="width: 44px; vertical-align: middle;">
-                                            <button type="button" @click="addPoleScheduleLocation" :disabled="isFinalized" title="+ Location (Naya location column jodo)" class="btn btn-secondary ico-btn" style="padding: 2px 6px; font-size: 0.72rem; color: #b91c1c; font-weight: 800; border-radius: 4px; white-space: nowrap;">
-                                                + Loc
-                                            </button>
                                         </th>
 
                                         <th class="text-right" style="width: 80px;">Total Qty</th>
@@ -5155,7 +5150,7 @@
     <script defer src="js/reco-units.js?v=20261114_conductor_km"></script>
     <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
-    <script defer src="js/pole-schedule.js?v=20261120_fix_1220_sync"></script>
+    <script defer src="js/pole-schedule.js?v=20261124_location_columns"></script>
     <script defer src="js/stock-importer.js?v=20261124_stock_identity"></script>
     <script defer src="js/old-reco-importer.js?v=20261118_review4"></script>
 
