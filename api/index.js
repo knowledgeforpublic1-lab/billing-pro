@@ -152,7 +152,10 @@ app.get('/api/telegram/info', async (req, res) => {
     }
 });
 
-app.post('/api/telegram/webhook', async (req, res) => {
+app.all('/api/telegram/webhook', async (req, res) => {
+    if (req.method === 'GET' || req.method === 'HEAD') {
+        return res.status(200).json({ ok: true, message: 'Telegram Webhook is ready and active' });
+    }
     try {
         const reply = await telegram.handleWebhookUpdate(req.body, { db, dailyProgressService: dailyProgress.service });
         if (reply && reply.method) {
