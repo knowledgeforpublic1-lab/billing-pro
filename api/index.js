@@ -151,10 +151,11 @@ app.get('/api/telegram/setup-webhook', async (req, res) => {
     const host = req.get('host') || 'billing-pro-dusky.vercel.app';
     const proto = req.get('x-forwarded-proto') || 'https';
     const webhookUrl = `${proto}://${host}/api/telegram/webhook`;
+    const token = req.query.token || telegram.BOT_TOKEN;
     try {
-        const tr = await fetch(`https://api.telegram.org/bot${telegram.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`, {
+        const tr = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(webhookUrl)}&drop_pending_updates=true`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BillingProBot/1.0)' },
-            signal: AbortSignal.timeout(12000)
+            signal: AbortSignal.timeout(20000)
         });
         const data = await tr.json();
         res.json({ webhookUrl, telegramResponse: data });
