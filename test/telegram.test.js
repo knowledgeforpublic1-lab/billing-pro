@@ -79,3 +79,106 @@ test('handleWebhookUpdate responds to /pending listing pending contractors', asy
     }, { db: mockDb });
     assert.equal(res.ok, true);
 });
+
+test('handleWebhookUpdate responds to /dashboard with executive KPI summary', async () => {
+    process.env.NODE_ENV = 'test';
+    const mockDb = {
+        readDailyProgressData: async () => ({
+            reports: [
+                {
+                    date: '2026-11-24',
+                    contractorName: 'Mangesh Sonwane',
+                    contractorId: 'mangesh',
+                    manpower: { leader: 1, skilled: 4, unskilled: 5 }
+                }
+            ],
+            contractors: [{ id: 'mangesh', name: 'Mangesh Sonwane', feeder: 'ANGARA' }]
+        })
+    };
+    const res = await telegram.handleWebhookUpdate({
+        message: {
+            chat: { id: '881238938' },
+            text: '/dashboard'
+        }
+    }, { db: mockDb });
+    assert.equal(res.ok, true);
+    assert.match(res.text, /EXECUTIVE BOT DASHBOARD/);
+});
+
+test('handleWebhookUpdate responds to /week with weekly contractor breakdown', async () => {
+    process.env.NODE_ENV = 'test';
+    const mockDb = {
+        readDailyProgressData: async () => ({
+            reports: [
+                {
+                    date: '2026-11-24',
+                    contractorName: 'Mangesh Sonwane',
+                    contractorId: 'mangesh',
+                    manpower: { leader: 1, skilled: 4, unskilled: 5 }
+                }
+            ],
+            contractors: [{ id: 'mangesh', name: 'Mangesh Sonwane', feeder: 'ANGARA' }]
+        })
+    };
+    const res = await telegram.handleWebhookUpdate({
+        message: {
+            chat: { id: '881238938' },
+            text: '/week'
+        }
+    }, { db: mockDb });
+    assert.equal(res.ok, true);
+    assert.match(res.text, /WEEKLY WORK PROGRESS REPORT/);
+});
+
+test('handleWebhookUpdate responds to /month with monthly contractor and material stats', async () => {
+    process.env.NODE_ENV = 'test';
+    const mockDb = {
+        readDailyProgressData: async () => ({
+            reports: [
+                {
+                    date: '2026-11-24',
+                    contractorName: 'Mangesh Sonwane',
+                    contractorId: 'mangesh',
+                    manpower: { leader: 1, skilled: 4, unskilled: 5 },
+                    quantities: { 'item1': 20 }
+                }
+            ],
+            contractors: [{ id: 'mangesh', name: 'Mangesh Sonwane', feeder: 'ANGARA' }],
+            items: [{ id: 'item1', name: 'RSJ Pole', unit: 'No' }]
+        })
+    };
+    const res = await telegram.handleWebhookUpdate({
+        message: {
+            chat: { id: '881238938' },
+            text: '/month'
+        }
+    }, { db: mockDb });
+    assert.equal(res.ok, true);
+    assert.match(res.text, /MONTHLY PROGRESS REPORT/);
+});
+
+test('handleWebhookUpdate responds to /contractor with contractor specific detail', async () => {
+    process.env.NODE_ENV = 'test';
+    const mockDb = {
+        readDailyProgressData: async () => ({
+            reports: [
+                {
+                    date: '2026-11-24',
+                    contractorName: 'Mangesh Sonwane',
+                    contractorId: 'mangesh',
+                    manpower: { leader: 1, skilled: 4, unskilled: 5 },
+                    remarks: 'Pole erection'
+                }
+            ],
+            contractors: [{ id: 'mangesh', name: 'Mangesh Sonwane', feeder: 'ANGARA' }]
+        })
+    };
+    const res = await telegram.handleWebhookUpdate({
+        message: {
+            chat: { id: '881238938' },
+            text: '/contractor mangesh'
+        }
+    }, { db: mockDb });
+    assert.equal(res.ok, true);
+    assert.match(res.text, /CONTRACTOR REPORT: Mangesh Sonwane/);
+});
