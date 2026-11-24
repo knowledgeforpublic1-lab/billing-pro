@@ -152,7 +152,17 @@ app.get('/api/telegram/info', async (req, res) => {
     }
 });
 
+let lastWebhookUpdate = null;
+let lastWebhookTime = null;
+
+app.get('/api/telegram/last-update', (req, res) => {
+    res.json({ lastWebhookTime, lastWebhookUpdate });
+});
+
 app.all('/api/telegram/webhook', async (req, res) => {
+    lastWebhookTime = new Date().toISOString();
+    lastWebhookUpdate = { method: req.method, body: req.body, headers: req.headers };
+    
     if (req.method === 'GET' || req.method === 'HEAD') {
         return res.status(200).json({ ok: true, message: 'Telegram Webhook is ready and active' });
     }
