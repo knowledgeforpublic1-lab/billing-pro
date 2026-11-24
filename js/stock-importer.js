@@ -1,6 +1,6 @@
 /**
  * @file Stock Importer Module
- * @description In-browser parser and manager for uploaded SAP Stock Excel files.
+ * @description In-browser parser and manager for stock Excel, CSV and ZIP files.
  * Parses 150k+ transactions in seconds using SheetJS, consolidates multiple
  * work orders per contractor, and persists custom stock to IndexedDB.
  *
@@ -9,6 +9,64 @@
  */
 
 window.StockImporterModule = {
+    stockFileExtension(name) {
+        return String(name || '').toLowerCase().match(/\.(xlsx|xls|xlsb|csv|zip)$/)?.[1] || '';
+    },
+
+    async parseStockFile(file, opts = {}) {
+        const extension = this.stockFileExtension(file.name);
+        if (!extension) throw new Error('Supported stock formats: .xlsx, .xls, .xlsb, .csv, .zip');
+        const maxBytes = 128 * 1024 * 1024;
+        if (file.size > maxBytes) throw new Error('Stock file exceeds the 128 MB upload limit.');
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (bytes.length > maxBytes) throw new Error('Stock file exceeds the 128 MB upload limit.');
+        if (extension !== 'zip') return this.parseStockExcel(bytes, { ...opts, fileName: file.name });
+        this.validateStockZip(bytes);
+        if (!window.JSZip) throw new Error('ZIP reader could not load. Refresh the page and upload again.');
+        const zip = await window.JSZip.loadAsync(bytes);
+        const files = Object.values(zip.files).filter(entry => !entry.dir && !/(^|\/)__MACOSX\/|(^|\/)(?:\._|~\$)/.test(entry.name) && /\.(xlsx|xls|xlsb|csv)$/i.test(entry.name));
+        const books = files.filter(entry => !/\.csv$/i.test(entry.name));
+        if (!files.length) throw new Error('ZIP mein .xlsx, .xls, .xlsb ya .csv stock file nahi mili.');
+        if (books.length) {
+            if (files.length !== 1) throw new Error('ZIP mein ek stock workbook rakhein; multiple stock files ka automatic merge nahi hota.');
+            const contents = await books[0].async('uint8array');
+            return this.parseStockExcel(contents, { ...opts, fileName: books[0].name });
+        }
+        const mapping = files.filter(entry => /sapcode/i.test(entry.name.split('/').pop().replace(/[^a-z0-9]/gi, '')));
+        const stocks = files.filter(entry => !mapping.includes(entry));
+        if (stocks.length !== 1 || mapping.length > 1) throw new Error('ZIP mein ek stock CSV aur optional ek SAP Code.csv rakhein.');
+        const workbook = { SheetNames: [], Sheets: {} };
+        for (const entry of [stocks[0], ...mapping]) {
+            const parsed = this.readStockWorkbook(await entry.async('uint8array'), entry.name);
+            const name = mapping.includes(entry) ? 'SAP Code' : 'Stock';
+            workbook.SheetNames.push(name); workbook.Sheets[name] = parsed.Sheets[parsed.SheetNames[0]];
+        }
+        return this.parseStockWorkbook(workbook, opts);
+    },
+
+    validateStockZip(bytes) {
+        // Bound expanded files before inflating an archive. Standard ZIP only;
+        // nested workbooks retain their own file format and column positions.
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        let end = -1;
+        for (let offset = bytes.length - 22; offset >= Math.max(0, bytes.length - 65557); offset--) {
+            if (view.getUint32(offset, true) === 0x06054b50 && offset + 22 + view.getUint16(offset + 20, true) === bytes.length) { end = offset; break; }
+        }
+        if (end < 0) throw new Error('Invalid ZIP file. Stock file ko dobara ZIP karke upload karein.');
+        const count = view.getUint16(end + 10, true), size = view.getUint32(end + 12, true);
+        let cursor = view.getUint32(end + 16, true), expanded = 0;
+        const limit = cursor + size;
+        if (count > 128 || limit > end || size === 0xffffffff || view.getUint16(end + 4, true) || view.getUint16(end + 6, true)) throw new Error('ZIP is too large or uses an unsupported archive format.');
+        for (let index = 0; index < count; index++) {
+            if (cursor + 46 > limit || view.getUint32(cursor, true) !== 0x02014b50) throw new Error('Invalid ZIP directory.');
+            const bytes = view.getUint32(cursor + 24, true);
+            expanded += bytes;
+            if (bytes > 128 * 1024 * 1024 || expanded > 256 * 1024 * 1024) throw new Error('ZIP expanded size exceeds the stock import limit.');
+            if (view.getUint16(cursor + 8, true) & 1) throw new Error('Password-protected ZIP is not supported.');
+            cursor += 46 + view.getUint16(cursor + 28, true) + view.getUint16(cursor + 30, true) + view.getUint16(cursor + 32, true);
+        }
+        if (cursor !== limit) throw new Error('Invalid ZIP directory length.');
+    },
     normContractorName(n) {
         if (!n) return '';
         return String(n)
@@ -44,6 +102,13 @@ window.StockImporterModule = {
             .trim();
     },
 
+    parseStockQuantity(value) {
+        let text = String(value ?? '').trim().replace(/[\s,]/g, '');
+        if (/^\(.*\)$/.test(text)) text = '-' + text.slice(1, -1);
+        const number = Number(text);
+        return Number.isFinite(number) ? number : 0;
+    },
+
     parseDateToYmd(val) {
         if (!val) return '';
         if (typeof val === 'string') {
@@ -73,14 +138,19 @@ window.StockImporterModule = {
      * @returns {Object} Standard ContractorSapStock data structure
      */
     parseStockExcel(arrayBuffer, opts = {}) {
+        return this.parseStockWorkbook(this.readStockWorkbook(arrayBuffer, opts.fileName || 'stock.xlsx'), opts);
+    },
+
+    readStockWorkbook(arrayBuffer, name) {
         if (typeof XLSX === 'undefined') {
             throw new Error('XLSX parser library is not loaded. Please check your internet connection and refresh.');
         }
 
         // 🛡️ High-performance Uint8Array slice + memory-optimized flags to prevent V8 "Invalid string length"
         const u8 = (arrayBuffer instanceof Uint8Array) ? arrayBuffer : new Uint8Array(arrayBuffer);
-        const wb = XLSX.read(u8, {
+        return XLSX.read(u8, {
             type: 'array',
+            ...(/\.csv$/i.test(name) ? { raw: true, codepage: 65001 } : {}),
             cellText: false,     // Critical: Do NOT generate formatted string (.w) for millions of cells
             cellStyles: false,
             cellHTML: false,
@@ -89,13 +159,17 @@ window.StockImporterModule = {
             cellNF: false
         });
 
+    },
+
+    parseStockWorkbook(wb, opts = {}) {
         const sheetNames = wb.SheetNames || [];
         if (sheetNames.length === 0) {
-            throw new Error('The uploaded Excel file contains no worksheets.');
+            throw new Error('The uploaded stock file contains no worksheets.');
         }
 
         const sapCodeSheetName = sheetNames.find(s => s.toLowerCase().replace(/[^a-z0-9]/g, '').includes('sapcode'));
         let txnSheetName = sheetNames.find(s => {
+            if (s === sapCodeSheetName) return false;
             const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');
             return clean.includes('sheet1') || clean.includes('stock') || clean.includes('issue') || clean.includes('transaction');
         });
@@ -111,10 +185,15 @@ window.StockImporterModule = {
         }
 
         // If we have a transaction sheet AND (we have an embedded SAP Code sheet OR preloaded MasterSapCodeMapping)
-        if (txnSheetName && (sapCodeSheetName || hasMasterMapping)) {
+        txnSheetName = txnSheetName || sheetNames.find(name => name !== sapCodeSheetName);
+        const sheet = wb.Sheets[txnSheetName];
+        const header = address => String(sheet?.[address]?.v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const fullSapLayout = /material|sapcode/.test(header('I1')) && /header|workorder/.test(header('P1'));
+        if (fullSapLayout && !sapCodeSheetName && !hasMasterMapping) throw new Error('SAP mapping nahi mili. SAP Code sheet/CSV include karein ya contractor mapping pehle save karein.');
+        if (txnSheetName && fullSapLayout && (sapCodeSheetName || hasMasterMapping)) {
             return this.parseFullSapDump(wb, sapCodeSheetName, txnSheetName);
         } else {
-            return this.parseGenericStockSheet(wb, sheetNames[0], opts);
+            return this.parseGenericStockSheet(wb, txnSheetName || sheetNames[0], opts);
         }
     },
 
@@ -254,7 +333,7 @@ window.StockImporterModule = {
 
             const desc = descCell ? String(descCell.v).trim() : mat;
             const uom = uomCell ? String(uomCell.v).trim() : 'No';
-            const qty = qtyCell ? Number(qtyCell.v) || 0 : 0;
+            const qty = qtyCell ? this.parseStockQuantity(qtyCell.v) : 0;
             const dt = this.parseDateToYmd(dateCell ? dateCell.v : null);
 
             if (!groupMaterials[key]) groupMaterials[key] = {};
@@ -398,24 +477,29 @@ window.StockImporterModule = {
             mat = mat.replace(/\.0+$/, '');
             if (!mat || mat.toLowerCase() === 'total' || mat.toLowerCase() === 'sum') continue;
 
-            const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : fallbackName;
             const wo = woCol !== -1 ? String(row[woCol] || '').trim() : fallbackWo;
+            const master = window.MasterSapCodeMapping;
+            const mappedKey = master?.dhToGroupKey?.[wo] || master?.woToGroupKey?.[wo];
+            const mappedName = mappedKey && (master.groups?.[mappedKey]?.displayName || mappedKey);
+            const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : (mappedName || fallbackName);
             const desc = descCol !== -1 ? String(row[descCol] || '').trim() : mat;
             const uom = uomCol !== -1 ? String(row[uomCol] || '').trim() : 'No';
 
-            let gross = grossCol !== -1 ? Number(row[grossCol]) || 0 : 0;
-            let mrn = mrnCol !== -1 ? Number(row[mrnCol]) || 0 : 0;
-            let net = netCol !== -1 ? Number(row[netCol]) || 0 : (gross - mrn);
+            let gross = grossCol !== -1 ? this.parseStockQuantity(row[grossCol]) : 0;
+            let mrn = mrnCol !== -1 ? this.parseStockQuantity(row[mrnCol]) : 0;
+            let net = netCol !== -1 ? this.parseStockQuantity(row[netCol]) : (gross - mrn);
+            if (gross < 0 && mrnCol === -1 && (netCol === -1 || netCol === grossCol)) { mrn = -gross; gross = 0; }
 
             if (grossCol === -1 && netCol !== -1) gross = net + mrn;
 
             const key = this.normContractorName(name) || 'uploadedstock';
             if (!groups[key]) {
-                const rawNormsSet = new Set([this.normRawKey(name), key, 'uploadedstock']);
-                if (fallbackId) {
+                const rawNormsSet = new Set([this.normRawKey(name), key]);
+                const useActiveIdentity = (!mappedName && cNameCol === -1) || key === this.normContractorName(opts.activeContractorName);
+                if (fallbackId && useActiveIdentity) {
                     rawNormsSet.add(fallbackId.toLowerCase().replace(/[^a-z0-9]/g, ''));
                 }
-                if (opts.activeContractorName) {
+                if (opts.activeContractorName && useActiveIdentity) {
                     rawNormsSet.add(this.normContractorName(opts.activeContractorName));
                     rawNormsSet.add(this.normRawKey(opts.activeContractorName));
                 }
@@ -574,8 +658,8 @@ window.StockImporterModule = {
         if (e.target) e.target.value = '';
 
         const name = file.name || 'file.xlsx';
-        if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
-            this.showToast('Please upload an Excel file (.xlsx or .xls)', 'Alert');
+        if (!window.StockImporterModule.stockFileExtension(name)) {
+            this.showToast('Upload .xlsx, .xls, .xlsb, .csv or .zip stock file', 'Alert');
             return;
         }
 
@@ -584,12 +668,11 @@ window.StockImporterModule = {
         await new Promise(r => setTimeout(r, 100));
 
         try {
-            const arrayBuffer = await file.arrayBuffer();
             const activeContractorName = this.selectedContractorName || (this.invoiceData && this.invoiceData.contractorName) || '';
             const activeContractorId = this.selectedContractorId || '';
             const activeWorkOrderNo = (this.invoiceData && this.invoiceData.workOrderNo) || (this.projectMeta && this.projectMeta.workOrderNo) || '';
 
-            const stockData = window.StockImporterModule.parseStockExcel(arrayBuffer, {
+            const stockData = await window.StockImporterModule.parseStockFile(file, {
                 activeContractorName,
                 activeContractorId,
                 activeWorkOrderNo

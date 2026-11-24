@@ -94,6 +94,7 @@
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" defer></script>
     <!-- SheetJS for Super Fast Stock Excel Parsing -->
     <script src="/Reconciliation%20master/xlsx.full.min.js?v=0.20.3" defer></script>
+    <script src="/js/jszip.min.js?v=3.10.2" defer></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -462,8 +463,8 @@
                             </div>
                         </div>
                         <div style="display: inline-flex; align-items: center; background: rgba(37, 99, 235, 0.10); border: 1px solid rgba(37, 99, 235, 0.35); border-radius: 6px; padding: 2px; gap: 4px;">
-                            <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls" style="display: none;" @change="handleStockFileUpload($event)">
-                            <button type="button" @click="$refs.reconStockFileInput.click()" :disabled="stockUploading" :title="currentContractorSapInfo ? ('SAP Stock: ' + currentContractorSapInfo + ' (' + currentContractorSapCount + ' items)') : 'Naya Stock Excel (.xlsx) upload karein'" style="height: 26px; padding: 0 10px; font-size: 0.74rem; font-weight: 800; border: none; border-radius: 5px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="file" ref="reconStockFileInput" accept=".xlsx,.xls,.xlsb,.csv,.zip" style="display: none;" @change="handleStockFileUpload($event)">
+                            <button type="button" @click="$refs.reconStockFileInput.click()" :disabled="stockUploading" :title="currentContractorSapInfo ? ('SAP Stock: ' + currentContractorSapInfo + ' (' + currentContractorSapCount + ' items)') : 'Upload Stock: XLSX, XLS, XLSB, CSV, ZIP'" style="height: 26px; padding: 0 10px; font-size: 0.74rem; font-weight: 800; border: none; border-radius: 5px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
                                 <span>{{ stockUploading ? '⏳' : '📥' }}</span>
                                 <span>{{ stockUploading ? 'Uploading...' : 'Upload Stock' }}</span>
                                 <span v-if="hasCustomStock" style="font-size: 0.62rem; background: #22c55e; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; margin-left: 2px;">CUSTOM</span>
@@ -5135,7 +5136,7 @@
 
     <!-- Core Storage Engine (IndexedDB + LocalStorage) -->
     <script defer src="js/core/storage.js?v=20261118_review4"></script>
-    <script defer src="js/cloud-datasets.js?v=20261124_transfer_idle"></script>
+    <script defer src="js/cloud-datasets.js?v=20261124_stock_formats"></script>
 
     <!-- Utility Modules -->
     <script defer src="js/utils.js?v=20261117_mobile_users_v10"></script>
@@ -5153,7 +5154,7 @@
     <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
     <script defer src="js/pole-schedule.js?v=20261120_fix_1220_sync"></script>
-    <script defer src="js/stock-importer.js?v=20261124_transfer_idle"></script>
+    <script defer src="js/stock-importer.js?v=20261124_stock_formats"></script>
     <script defer src="js/old-reco-importer.js?v=20261118_review4"></script>
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>

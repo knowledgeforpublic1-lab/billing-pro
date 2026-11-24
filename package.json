@@ -10,12 +10,13 @@
     "express-rate-limit": "^8.7.0",
     "firebase-admin": "^14.5.1",
     "helmet": "^8.3.0",
+    "jszip": "3.10.2",
     "mongoose": "^9.10.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node test/auth.test.js && node test/auth-client.test.js && node test/conductor-units.test.js && node test/reco-filters.test.js && node test/stock-posting-date.test.js && node test/concreting-sources.test.js && node test/contractor-mapping-api.test.js && node test/contractor-mapping.test.js && node test/storage-safety.test.js && node --test test/sync-conflict.test.js && node test/master-analytics.test.js && node --test test/master-reconciliation.test.js && node test/navigation.test.js && node --test test/mobile-workspace.test.js && node test/quantity-persistence.test.js && node test/sap-mapping.test.js && node --test test/pole-schedule-transfer.test.js test/daily-progress-share-sync.test.js test/contractor-mapping-cloud.test.js && node test/daily-progress.test.js && node --test test/daily-progress-public.test.js test/daily-progress-locations.test.js test/daily-progress-regressions.test.js test/daily-drive.test.js test/daily-entry-client.test.js test/daily-entry-boundary.test.js test/daily-progress-standalone.test.js test/daily-worker-auth.test.js && node test/calculations.test.js && npm run test:storage && npm run test:daily-progress:sharing",
+    "test": "node test/auth.test.js && node test/auth-client.test.js && node test/conductor-units.test.js && node test/reco-filters.test.js && npm run test:stock-formats && node test/stock-posting-date.test.js && node test/concreting-sources.test.js && node test/contractor-mapping-api.test.js && node test/contractor-mapping.test.js && node test/storage-safety.test.js && node --test test/sync-conflict.test.js && node test/master-analytics.test.js && node --test test/master-reconciliation.test.js && node test/navigation.test.js && node --test test/mobile-workspace.test.js && node test/quantity-persistence.test.js && node test/sap-mapping.test.js && node --test test/pole-schedule-transfer.test.js test/daily-progress-share-sync.test.js test/contractor-mapping-cloud.test.js && node test/daily-progress.test.js && node --test test/daily-progress-public.test.js test/daily-progress-locations.test.js test/daily-progress-regressions.test.js test/daily-drive.test.js test/daily-entry-client.test.js test/daily-entry-boundary.test.js test/daily-progress-standalone.test.js test/daily-worker-auth.test.js && node test/calculations.test.js && npm run test:storage && npm run test:daily-progress:sharing",
     "audit": "node scripts/software_health_check.js",
     "update-stock": "node scripts/build_stock_index.js",
     "test:storage": "node --test test/drive-first.test.js test/storage-router.test.js test/storage-native-db.test.js test/storage-transport.test.js test/storage-backup.test.js test/storage-http.test.js test/cloud-datasets.test.js test/storage-preflight.test.js test/staging-oauth.test.js",
@@ -25,7 +26,8 @@
     "storage:migrate:dry-run": "node scripts/migrate-drive-staging.js",
     "storage:preflight": "node scripts/storage-preflight.js",
     "storage:verify:staging": "node scripts/verify-drive-staging.js",
-    "test:daily-progress:sharing": "node --test test/default-feeders.test.js test/share-link.test.js"
+    "test:daily-progress:sharing": "node --test test/default-feeders.test.js test/share-link.test.js",
+    "test:stock-formats": "node --test test/stock-formats.test.js"
   },
   "overrides": {
     "exceljs": {
