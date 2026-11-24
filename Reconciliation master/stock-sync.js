@@ -17,6 +17,43 @@
         if (!Array.isArray(data?.Contractors) || !stock?.byContractorNorm) return data;
         const result = JSON.parse(JSON.stringify(data));
         if (!root.BillingStockIdentity) throw new Error('Stock identity engine unavailable. Refresh the page.');
+        const originalCount = result.StockSyncOriginalEntryCount ?? result.Contractors.length;
+        result.StockSyncOriginalEntryCount = originalCount;
+        const history = result.StockSyncArchivedEntries || [];
+        const duplicates = new Map();
+        result.Contractors.forEach((contractor, index) => {
+            contractor.StockSyncEntryIndices = contractor.StockSyncEntryIndices || [index];
+            contractor.StockSyncPrimaryEntryIndex = contractor.StockSyncPrimaryEntryIndex ?? index;
+            const metadata = contractor.Metadata || {};
+            if (!['PAN', 'GST', 'Aadhar', 'OwnerName'].some(key => String(metadata[key] || '').trim())) return;
+            const key = norm(contractor.ContractorName) + '|' + JSON.stringify(Object.fromEntries(Object.entries(metadata).sort(([a], [b]) => a.localeCompare(b))));
+            if (!duplicates.has(key)) duplicates.set(key, []);
+            duplicates.get(key).push(contractor);
+        });
+        const excluded = new Set();
+        for (const variants of duplicates.values()) {
+            if (variants.length < 2) continue;
+            const quality = contractor => ({ contractor, codes: new Set((contractor.Items || []).map(item => String(item.ItemCode) + '|' + unit(item.UOM))),
+                errors: (contractor.Items || []).filter(item => Math.abs(number(item.NetIssue) - number(item.Consumption) - number(item.WIP) - number(item.Theft) - number(item.BalanceQty)) > 0.01).length,
+                negativeWip: (contractor.Items || []).some(item => number(item.WIP) < 0) });
+            const scores = variants.map(quality);
+            // Resolve only a proven invalid duplicate: the formula-valid full
+            // statement must cover every code/unit in each inconsistent smaller copy.
+            const valid = scores.filter(candidate => !candidate.errors && !candidate.negativeWip && scores.every(other => other === candidate ||
+                (other.errors > 0 && [...other.codes].every(code => candidate.codes.has(code)))));
+            if (valid.length !== 1) continue;
+            const primary = valid[0].contractor;
+            const sourceEntries = new Set(primary.StockSyncEntryIndices);
+            for (const variant of variants) {
+                if (variant === primary) continue;
+                history.push({ reason: 'Inconsistent duplicate snapshot; formula-valid complete statement retained', sourceExtractedAt: data.ExtractedAt, contractor: variant });
+                variant.StockSyncEntryIndices.forEach(index => sourceEntries.add(index));
+                excluded.add(variant);
+            }
+            primary.StockSyncEntryIndices = [...sourceEntries].sort((a, b) => a - b);
+        }
+        result.Contractors = result.Contractors.filter(contractor => !excluded.has(contractor));
+        result.StockSyncArchivedEntries = history;
         const all = root.BillingStockIdentity.index(stock);
         const resolutions = [];
         const matches = result.Contractors.map(contractor => {
@@ -30,6 +67,7 @@
         const uses = new Map();
         for (const matching of matches) for (const group of matching) uses.set(group, (uses.get(group) || 0) + 1);
         const warnings = [];
+        const corrections = [];
         const rates = result.DebitRates || [];
         function update(contractor, matching) {
             const materials = new Map();
@@ -45,6 +83,17 @@
             const consumed = new Set();
             for (const item of contractor.Items || []) {
                 const code = String(item.ItemCode || '').trim();
+                const sameCode = [...materials.values()].filter(material => material.code === code);
+                const masterRates = rates.filter(rate => String(rate.ItemCode).trim() === code);
+                const masterUnits = [...new Set(masterRates.map(rate => unit(rate.Unit)).filter(Boolean))];
+                const confirmedRate = masterRates.some(rate => Math.abs(number(rate.DebitRate) - number(item.DebitRate)) < 0.00001);
+                if (sameCode.length === 1 && factor(sameCode[0].uom, item.UOM) === undefined && masterUnits.length === 1 && masterUnits[0] === unit(sameCode[0].uom) && confirmedRate) {
+                    // SAP stock and the debit-rate master independently confirm a
+                    // wrong row label. Correct the label, not historical quantities.
+                    item.StockUnitCorrection = { from: item.UOM, to: sameCode[0].uom, basis: 'Uploaded SAP unit agrees with debit-rate master' };
+                    item.UOM = sameCode[0].uom;
+                }
+                if (item.StockUnitCorrection) corrections.push({ contractor: contractor.ContractorName, code, ...item.StockUnitCorrection });
                 const candidates = [...materials.entries()].filter(([key, material]) => material.code === code && factor(material.uom, item.UOM) !== undefined);
                 if (candidates.length > 1 || (candidates.length && consumed.has(candidates[0][0]))) {
                     warnings.push(contractor.ContractorName + ': ambiguous material ' + code); continue;
@@ -83,12 +132,14 @@
         });
         for (const group of all) {
             if (uses.has(group)) continue;
-            const contractor = { ContractorName: group.block.contractorName || [...group.names][0], Metadata: { WONo: group.orders.join(', ') }, Items: [] };
+            const nextIndex = Math.max(originalCount - 1, ...result.Contractors.flatMap(row => row.StockSyncEntryIndices || [])) + 1;
+            const contractor = { ContractorName: group.block.contractorName || [...group.names][0], Metadata: { WONo: group.orders.join(', ') }, Items: [], StockSyncEntryIndices: [nextIndex], StockSyncPrimaryEntryIndex: nextIndex };
             update(contractor, [group]); result.Contractors.push(contractor);
         }
         result.ContractorCount = result.Contractors.length;
         result.StockSource = { ...result.StockSource, generatedAt: stock.meta?.uploadedAt || stock.meta?.generatedAt, uploaded: true };
         result.StockSyncWarnings = warnings;
+        result.StockSyncCorrections = corrections;
         return result;
     }
     root.MasterStockSync = { apply };

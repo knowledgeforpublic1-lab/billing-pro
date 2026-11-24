@@ -140,9 +140,15 @@ async function saveReconCloud(jsonPayload) {
 
 function selectedContractorEntry(value) {
     if (!rawData || !value) return null;
-    if (/^entry:\d+$/.test(value)) return rawData.Contractors[Number(value.slice(6))] || null;
+    if (/^entry:\d+$/.test(value)) {
+        const index = Number(value.slice(6));
+        return rawData.Contractors.find(row => row.StockSyncEntryIndices?.includes(index)) || rawData.Contractors[index] || null;
+    }
     const matches = rawData.Contractors.filter(c => c.ContractorName === value);
     return matches.length === 1 ? matches[0] : null;
+}
+function contractorEntryValue(entry) {
+    return 'entry:' + (entry.StockSyncEntryIndices?.[0] ?? rawData.Contractors.indexOf(entry));
 }
 function positiveBalanceCost(item) {
     return Math.max(0, Number(item.BalanceQty) || 0) * Math.max(0, Number(item.DebitRate) || 0);
@@ -158,8 +164,15 @@ function updateDataQuality() {
         ' · ' + quality.missingRates + ' unpriced rows · ' + quality.formulaDifferences + ' balance formula differences' +
         (reconLocalPending ? ' · UNSYNCED LOCAL IMPORT' : '') +
         (masterStockError ? ' · Latest stock unavailable; refresh to retry' : '') +
-        (rawData.StockSyncWarnings?.length ? ' · ' + rawData.StockSyncWarnings.length + ' stock mappings need review' : '');
+        (rawData.StockSyncWarnings?.length ? ' · ' + rawData.StockSyncWarnings.length + ' stock mappings need review' : '') +
+        (rawData.StockSyncCorrections?.length ? ' · ' + rawData.StockSyncCorrections.length + ' unit labels corrected' : '') +
+        (rawData.StockSyncArchivedEntries?.length ? ' · ' + rawData.StockSyncArchivedEntries.length + ' duplicate snapshot preserved in history' : '');
     banner.title = (rawData.StockSyncWarnings || []).join('\n');
+}
+function exportReconciliationHistory() {
+    if (!rawData) return;
+    const history = { stockSource: rawData.StockSource, unitCorrections: rawData.StockSyncCorrections || [], archivedEntries: rawData.StockSyncArchivedEntries || [] };
+    downloadFile(new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' }), 'Reconciliation_Corrections_History.json');
 }
 function exportDataChecks() {
     if (!rawData) return;
@@ -247,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const contractorSelect = document.getElementById('contractorSelect');
                 if (contractorSelect) {
                     const entry = selectedContractorEntry(savedContractor);
-                    contractorSelect.value = entry ? 'entry:' + rawData.Contractors.indexOf(entry) : '';
+                    contractorSelect.value = entry ? contractorEntryValue(entry) : '';
                 }
             }
 
@@ -342,7 +355,7 @@ function populateDropdowns() {
         contractorSelect.innerHTML = '<option value="">-- All Contractors --</option>';
         rawData.Contractors.forEach((c, index) => {
             const opt = document.createElement('option');
-            opt.value = 'entry:' + index;
+            opt.value = contractorEntryValue(c);
             opt.textContent = `${c.ContractorName} (#${index + 1}, ${c.ItemCount} items)`;
             contractorSelect.appendChild(opt);
         });
@@ -1204,7 +1217,7 @@ function jumpToContractor(contractorName, entryIndex) {
     const sel = document.getElementById('contractorSelect');
     if (sel) {
         const entry = Number.isInteger(entryIndex) ? rawData.Contractors[entryIndex] : selectedContractorEntry(contractorName);
-        sel.value = entry ? 'entry:' + rawData.Contractors.indexOf(entry) : '';
+        sel.value = entry ? contractorEntryValue(entry) : '';
         localStorage.setItem('selectedContractor', sel.value);
     }
     const btn = document.querySelector('.tab-btn[data-tab="contractor"]');

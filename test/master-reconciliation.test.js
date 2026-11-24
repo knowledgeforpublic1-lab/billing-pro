@@ -20,6 +20,77 @@ function setup(fetchImpl) {
 }
 const row = { ItemCode: '123', ItemDescription: 'Cable', UOM: 'M', DebitRate: 10, NetIssue: 10, Consumption: 2, WIP: 1, Theft: 0, BalanceQty: 7, BalanceCost: 70 };
 
+test('a formula-valid complete statement replaces only a proven invalid duplicate, preserving history and saved entry selections', async () => {
+    const { context, run } = setup();
+    const metadata = { FirmName: 'Anjali Electrical', OwnerName: 'Example Owner', WONo: '8' };
+    const invalid = { ContractorName: 'Anjali Electrical', Metadata: metadata, Items: [{ ...row, NetIssue: 5, Consumption: 5, WIP: -2, BalanceQty: 0 }] };
+    const valid = { ContractorName: 'Anjali Electrical', Metadata: metadata, Items: [
+        { ...row, NetIssue: 5, Consumption: 7, WIP: 0, BalanceQty: -2 },
+        { ...row, ItemCode: '124', NetIssue: 3, Consumption: 1, WIP: 0, BalanceQty: 2 }
+    ] };
+    const data = { Contractors: [invalid, { ContractorName: 'Other', Items: [{ ...row }] }, valid] };
+    const stock = { byContractorNorm: { anjalielectrical: { contractorName: 'Anjali Electrical', materials: { 123: { uom: 'M', netIssue: 10 }, 124: { uom: 'M', netIssue: 4 } } } } };
+    const before = JSON.stringify(data);
+    const result = context.window.MasterStockSync.apply(data, stock);
+    assert.equal(result.Contractors.length, 2);
+    const current = result.Contractors.find(c => c.ContractorName === 'Anjali Electrical');
+    assert.equal(current.Items[0].Consumption, 7);
+    assert.equal(current.Items[0].NetIssue, 10);
+    assert.equal(current.StockSyncPrimaryEntryIndex, 2);
+    assert.equal(result.StockSyncWarnings.length, 0);
+    assert.equal(result.StockSyncArchivedEntries.length, 1);
+    assert.equal(JSON.stringify(result.StockSyncArchivedEntries[0].contractor.Items), JSON.stringify(invalid.Items));
+    assert.equal(JSON.stringify(data), before);
+    context.dataset = result; run('rawData = dataset');
+    assert.equal(run('selectedContractorEntry("entry:0").ContractorName'), 'Anjali Electrical');
+    assert.equal(run('selectedContractorEntry("entry:2").ContractorName'), 'Anjali Electrical');
+    assert.equal(run('selectedContractorEntry("entry:1").ContractorName'), 'Other');
+    const repeated = context.window.MasterStockSync.apply(result, stock);
+    assert.equal(repeated.StockSyncArchivedEntries.length, 1);
+    assert.equal(repeated.Contractors.length, 2);
+    let exported;
+    context.downloadFile = (blob, filename) => { exported = { blob, filename }; };
+    context.exportReconciliationHistory();
+    assert.equal(exported.filename, 'Reconciliation_Corrections_History.json');
+    assert.equal(JSON.parse(await exported.blob.text()).archivedEntries[0].contractor.Items[0].WIP, -2);
+});
+
+test('a wrong unit label is corrected only when uploaded stock and matching debit-rate master confirm the same unit', () => {
+    const { context } = setup();
+    const data = { DebitRates: [{ ItemCode: '123', Unit: 'L', DebitRate: 10 }], Contractors: [{ ContractorName: 'Team', Items: [{ ...row, UOM: 'SET', Theft: 1 }] }] };
+    const stock = { byContractorNorm: { team: { contractorName: 'Team', materials: { 123: { uom: 'L', grossIssue: 20, mrnReturn: 2, netIssue: 18 } } } } };
+    const result = context.window.MasterStockSync.apply(data, stock);
+    const corrected = result.Contractors[0].Items[0];
+    assert.equal(corrected.UOM, 'L');
+    assert.equal(corrected.Consumption, 2); assert.equal(corrected.WIP, 1); assert.equal(corrected.Theft, 1);
+    assert.equal(corrected.DebitRate, 10); assert.equal(corrected.NetIssue, 18);
+    assert.equal(corrected.BalanceQty, 14); assert.equal(corrected.BalanceCost, 140);
+    assert.equal(corrected.StockUnitCorrection.from, 'SET');
+    assert.equal(result.StockSyncCorrections.length, 1); assert.equal(result.StockSyncWarnings.length, 0);
+    assert.equal(data.Contractors[0].Items[0].UOM, 'SET');
+    data.DebitRates[0].Unit = 'KG';
+    const unconfirmed = context.window.MasterStockSync.apply(data, stock);
+    assert.equal(unconfirmed.Contractors[0].Items[0].UOM, 'SET');
+    assert.equal(unconfirmed.StockSyncWarnings.length, 1);
+    data.DebitRates[0].Unit = 'L'; data.DebitRates[0].DebitRate = 999;
+    assert.equal(context.window.MasterStockSync.apply(data, stock).StockSyncWarnings.length, 1);
+});
+
+test('two valid conflicting statements are not treated as an invalid duplicate', () => {
+    const { context } = setup();
+    const metadata = { OwnerName: 'Example Owner', WONo: '8' };
+    const data = { Contractors: [{ ContractorName: 'Team', Metadata: metadata, Items: [{ ...row }] },
+        { ContractorName: 'Team', Metadata: metadata, Items: [{ ...row, NetIssue: 20, BalanceQty: 17 }] }] };
+    const stock = { byContractorNorm: { team: { contractorName: 'Team', materials: { 123: { uom: 'M', netIssue: 30 } } } } };
+    const result = context.window.MasterStockSync.apply(data, stock);
+    assert.equal(result.Contractors.length, 2); assert.equal(result.StockSyncArchivedEntries.length, 0);
+    assert.equal(result.StockSyncWarnings.length, 2);
+    data.Contractors[1].Items = [{ ...row, UOM: 'KG', NetIssue: 5, Consumption: 5, WIP: -2, BalanceQty: 0 }];
+    const differentUnits = context.window.MasterStockSync.apply(data, stock);
+    assert.equal(differentUnits.Contractors.length, 2);
+    assert.equal(differentUnits.StockSyncArchivedEntries.length, 0, 'Different physical units are not evidence of a duplicate snapshot');
+});
+
 test('uploaded stock updates Master Reconciliation issues, new materials and balances without changing consumption or source data', () => {
     const { context } = setup();
     const apply = context.window.MasterStockSync.apply;
