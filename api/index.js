@@ -105,15 +105,25 @@ app.get('/api/telegram/diag', async (req, res) => {
     const url = `https://api.telegram.org/bot${token}/getMe`;
     
     const startTime = Date.now();
-    const result = { startTime, tokenPrefix: token.slice(0, 12) };
+    const result = { startTime, tokenPrefix: token.slice(0, 12), region: process.env.VERCEL_REGION || 'unknown' };
     
-    // Test 1: native https with family: 4
+    // Test 1: native fetch
     try {
-        const httpsResult = await new Promise((resolve, reject) => {
-            const req = https.get(url, { family: 4, timeout: 8000 }, (r) => {
+        const tr = await fetch(url, { headers: { 'User-Agent': 'BillingBot/1.0' }, signal: AbortSignal.timeout(6000) });
+        result.fetchResult = await tr.json();
+    } catch (e) {
+        result.fetchResult = { error: e.message };
+    }
+
+    // Test 2: native https with family: 4
+    try {
+        const httpsResult = await new Promise((resolve) => {
+            const req = https.get(url, { family: 4, timeout: 6000 }, (r) => {
                 let data = '';
                 r.on('data', chunk => data += chunk);
-                r.on('end', () => resolve({ status: r.statusCode, body: data.slice(0, 500) }));
+                r.on('end', () => {
+                    try { resolve(JSON.parse(data)); } catch (e) { resolve({ status: r.statusCode, data: data.slice(0, 100) }); }
+                });
             });
             req.on('error', err => resolve({ error: err.message }));
             req.on('timeout', () => { req.destroy(); resolve({ error: 'timeout' }); });
