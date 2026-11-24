@@ -124,7 +124,22 @@
                 searchQuery: '',
                 visibleLimit: 80,
                 busy: false,
-                isDark: (typeof localStorage !== 'undefined' && (localStorage.getItem('billing_theme_mode') === 'dark' || localStorage.getItem('billing_theme') === 'dark')),
+                isDark: (function() {
+                    try {
+                        if (typeof document !== 'undefined' && document.documentElement) {
+                            if (document.documentElement.classList.contains('dark') || (document.documentElement.dataset && document.documentElement.dataset.theme === 'dark')) return true;
+                        }
+                        if (typeof localStorage !== 'undefined') {
+                            var sm = localStorage.getItem('billing_theme_mode') || localStorage.getItem('billing_theme');
+                            if (sm === 'dark') return true;
+                            if (sm === 'light' || sm === 'soft') return false;
+                        }
+                        if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            return true;
+                        }
+                    } catch(e) {}
+                    return false;
+                })(),
                 saveStatus: 'ready', // 'ready' | 'saving' | 'saved'
                 toastMsg: '',
                 toastType: 'info',

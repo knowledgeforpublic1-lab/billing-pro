@@ -76,11 +76,28 @@
 }
 
 .sheet-menu {
-  border: 0;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(8, 118, 255, 0.25);
+  background: rgba(8, 118, 255, 0.08);
   color: #0876ff;
-  font-size: 21px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
   cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  margin-right: 4px;
+}
+
+.sheet-menu:hover {
+  background: rgba(8, 118, 255, 0.16);
+  border-color: #0876ff;
 }
 
 .sheet-actions {
@@ -2302,173 +2319,490 @@ body.dp-sheet-page main .dp-excel-bal-col {
 /* ============================================================
    Dark Mode Support for Standalone Daily Progress (Site Diary)
    ============================================================ */
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, .dp-sheet-page.dark) {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) {
   background: #070a12 !important;
   color: #f8fafc !important;
   color-scheme: dark;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) body.dp-sheet-page,
+body.dp-sheet-page:is(.dark, .dark-mode, [data-theme="dark"]) {
   background: #070a12 !important;
   color: #f8fafc !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-commandbar {
+/* Mobile Navigation Drawer for Sheet Mode */
+.dp-sheet-page .shell.sheet-sidebar-open .sidebar {
+  display: flex !important;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 290px;
+  max-width: 85vw;
+  background: #ffffff;
+  color: #1e293b;
+  border-right: 1px solid #cbd5e1;
+  z-index: 2000;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .shell.sheet-sidebar-open .sidebar {
   background: #0e1526 !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+.dp-sheet-page .sheet-sidebar-backdrop {
+  display: none;
+}
+
+.dp-sheet-page .shell.sheet-sidebar-open .sheet-sidebar-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1999;
+}
+
+/* Top Worker Auth Bar in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) #dp-worker-user-bar {
+  background: #0b1329 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) #dp-worker-user-bar button {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) #dp-worker-user-bar button:hover {
+  background: #27354f !important;
+  color: #ffffff !important;
+  border-color: #38bdf8 !important;
+}
+
+/* Header & Command Bar in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-commandbar {
+  background: #0b1329 !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-heading h1 {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-heading h1 {
   color: #f8fafc !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-heading p {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-heading p {
   color: #94a3b8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-actions button {
-  background: #1e293b !important;
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-menu {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
   color: #38bdf8 !important;
-  border: 1px solid #334155 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-actions button.active,
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .btn-save-progress {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-menu:hover {
+  background: rgba(56, 189, 248, 0.22) !important;
+  border-color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-actions button {
+  background: #131e36 !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #233554 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-actions button:hover {
+  background: #1c2b4d !important;
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-actions button.active,
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .btn-save-progress {
   background: #2563eb !important;
   color: #ffffff !important;
   border-color: #3b82f6 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page :is(.material-panel, .manpower-panel, .panel, .dp-master-header-card) {
+/* Master Header Card & Cascading Controls */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-master-header-card {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .compact-label {
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-field-box > label {
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) :is(.dp-search-combo-box, .date-stepper-compact, .dp-field-box select, .searchable-dropdown-trigger, .dp-search-field-wrap) {
+  background: #0e1526 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) :is(.dp-combo-input, .date-stepper-compact input, .dp-search-field-wrap input) {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-date-label {
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .date-stepper-compact button {
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) :is(.dp-combo-search-icon, .dp-combo-arrow-btn) {
+  color: #38bdf8 !important;
+}
+
+/* Division Pills */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-div-pill {
+  background: #0e1526 !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-div-pill.active {
+  background: #2563eb !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Panels */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) :is(.panel, .material-panel, .manpower-panel, .notes-panel) {
   background: #0e1526 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #f8fafc !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .panel-header {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .panel-header {
   background: #111a2e !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .panel-header h2 {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .panel-header h2 {
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .material-table {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .panel-header h2 span {
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .panel-header select {
+  background: #080d1a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .table-toolbar {
+  background: #0e1526 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .search-box input {
+  background: #080d1a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-filter-pill {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-filter-pill.active {
+  background: #2563eb !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-filter-pill.pill-entered.active {
+  background: #d97706 !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+}
+
+/* Material Table */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .material-table {
   background: #080d1a !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-table-head {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-table-head {
   background: #17223b !important;
   color: #38bdf8 !important;
   border-bottom: 2px solid #0284c7 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-table-head > span {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-table-head > span {
   border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-table-body {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-table-body {
   background: #080d1a !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-row {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-row {
   background: #0e1526 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-row:hover {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-row:hover {
   background: #17223b !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-row > div {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-row > div {
   border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-row-number {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-row-number {
   color: #64748b !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .mat-desc {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mat-desc {
   color: #f8fafc !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-sap-code {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-sap-code {
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .sheet-unit {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .sheet-unit {
   color: #94a3b8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .net-issue-val {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .net-issue-val {
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .net-issue-val.zero {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .net-issue-val.zero {
   color: #64748b !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page :is(.qty-input-wrap input, .search-box input, .contractor-select-compact, .date-stepper-compact, .dp-cascading-grid select) {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .qty-input-wrap input {
   background: #080d1a !important;
   color: #38bdf8 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .qty-input-wrap > span {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .qty-input-wrap > span {
   color: #94a3b8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .save-bar {
-  background: #0e1526 !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5) !important;
-}
-
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .save-status-info strong {
-  color: #f8fafc !important;
-}
-
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .save-status-info span {
-  color: #94a3b8 !important;
-}
-
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .entry-col-filter-btn {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .entry-col-filter-btn {
   background: rgba(56, 189, 248, 0.15) !important;
   color: #38bdf8 !important;
-  border-color: #0284c7 !important;
+  border: 1px solid #0284c7 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .entry-col-filter-btn.active {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .entry-col-filter-btn.active {
   background: #d97706 !important;
   color: #ffffff !important;
   border-color: #f59e0b !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .dp-excel-sheet-table th {
+/* Manpower & Steppers */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .man-label {
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .stepper {
+  background: #080d1a !important;
+  border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .stepper input {
+  background: transparent !important;
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .stepper button {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .notes-panel textarea {
+  background: #080d1a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+/* Save Bar in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .save-bar {
+  background: #0e1526 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .save-status-info strong {
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .save-status-info span {
+  color: #94a3b8 !important;
+}
+
+/* Excel Month Register in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-sheet-table th {
   background: #17223b !important;
   color: #38bdf8 !important;
   border-color: #334155 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .dp-excel-sheet-table td {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-sheet-table td {
   background: #0e1526 !important;
   color: #f8fafc !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .dp-excel-sheet-table tbody tr:hover td {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-sheet-table tbody tr:hover td {
   background: #17223b !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .dp-excel-sheet-table .dp-excel-val {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-sheet-table .dp-excel-val {
   color: #38bdf8 !important;
 }
 
-:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode) .dp-sheet-page .dp-excel-sheet-table .dp-excel-val-zero {
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-sheet-table .dp-excel-val-zero {
   color: #64748b !important;
+}
+
+/* Searchable Dropdown Panels in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .searchable-dropdown-panel {
+  background: #0e1526 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .searchable-dropdown-search {
+  background: #080d1a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .searchable-dropdown-item {
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .searchable-dropdown-item:hover,
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .searchable-dropdown-item.selected {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+}
+
+/* Contractor Search Panel in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-contractor-search-panel {
+  background: #0e1526 !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-search-panel-header {
+  background: #17223b !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #38bdf8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-picker-search-row {
+  background: #0e1526 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-picker-search-row input {
+  background: #080d1a !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-contractor-item {
+  background: #0e1526 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-contractor-item:hover,
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-contractor-item.active {
+  background: rgba(56, 189, 248, 0.15) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-c-title {
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-c-sub {
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-picker-close {
+  color: #94a3b8 !important;
+}
+
+/* Excel / Month Register in Dark Mode */
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-preview-wrap {
+  background: #080d1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-toolbar {
+  background: #0e1526 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) :is(.dp-excel-date-field input, .dp-excel-filters input, .dp-excel-filters select) {
+  background: #080d1a !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-quick-ranges button {
+  background: #17223b !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-quick-ranges button:hover {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .dp-excel-meta-bar {
+  background: #111a2e !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mobile-bottom-nav {
+  background: #0b1329 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mobile-bottom-nav button {
+  color: #94a3b8 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body.dark-mode, body.dp-sheet-page.dark) .mobile-bottom-nav button.active {
+  color: #38bdf8 !important;
 }

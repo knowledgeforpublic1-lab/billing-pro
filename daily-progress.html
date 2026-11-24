@@ -7,12 +7,14 @@
     <title>Daily Progress Register | Site Diary — RDSS T-10 GADCHIROLI</title>
     <meta name="description" content="Shareable site progress register for tracking daily field operations, net stock issues, material consumption, and manpower.">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230284c7'/%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z' fill='%23ffffff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/daily-standalone.css?v=20261123_dark_v1">
-    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261123_dark_v1">
+    <link rel="stylesheet" href="css/daily-standalone.css?v=20261124_v1">
+    <link rel="stylesheet" href="css/daily-progress-sheet.css?v=20261124_v1">
     <script>
         try {
             var savedThemeMode = localStorage.getItem('billing_theme_mode') || localStorage.getItem('billing_theme') || '';
-            if (savedThemeMode === 'dark') {
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var isDark = savedThemeMode === 'dark' || (!savedThemeMode && prefersDark) || (savedThemeMode && savedThemeMode !== 'light' && savedThemeMode !== 'soft');
+            if (isDark) {
                 document.documentElement.dataset.theme = 'dark';
                 document.documentElement.classList.add('dark', 'dark-mode');
             }
@@ -25,9 +27,15 @@
 
 <body class="dp-sheet-page">
     <div id="app" class="shell" :class="{ 'sheet-sidebar-open': sidebarOpen }" v-cloak :inert="busy">
+        <!-- Backdrop for Mobile / Drawer Navigation -->
+        <div v-if="sidebarOpen" class="sheet-sidebar-backdrop" @click="sidebarOpen = false" aria-hidden="true"></div>
+
         <!-- Desktop Sidebar -->
-        <aside class="sidebar">
-            <button type="button" class="sheet-sidebar-close" @click="sidebarOpen = false" aria-label="Close navigation">✕ Close menu</button>
+        <aside class="sidebar" :class="{ open: sidebarOpen }">
+            <div class="sidebar-head-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8;">Site Diary Menu</span>
+                <button type="button" class="sheet-sidebar-close" @click="sidebarOpen = false" aria-label="Close navigation" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid rgba(255,255,255,0.15); border-radius:6px; background:rgba(255,255,255,0.06); color:#f8fafc; font-size:14px; cursor:pointer;">✕</button>
+            </div>
             <div class="brand">
                 <span class="brand-icon">📅</span>
                 <div>
@@ -62,6 +70,9 @@
                     <span>📥</span><span>Download Excel</span>
                     <span v-if="currentTab === 'download'" class="active-dot"></span>
                 </button>
+                <button type="button" @click="toggleTheme" :title="isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'">
+                    <span style="font-size:15px;">{{ isDark ? '☀️' : '🌙' }}</span><span>{{ isDark ? 'Light Theme' : 'Dark Theme' }}</span>
+                </button>
             </nav>
 
             <div class="side-card">
@@ -79,7 +90,7 @@
         <!-- Main Workspace -->
         <div class="main">
             <header class="sheet-commandbar">
-                <div class="sheet-heading"><button type="button" class="sheet-menu" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle navigation" :aria-expanded="sidebarOpen">☰</button><span class="sheet-calendar">▦</span><div><h1>Daily Progress</h1><p>Material consumption, manpower &amp; daily work progress</p></div></div>
+                <div class="sheet-heading"><button type="button" class="sheet-menu" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle navigation" :aria-expanded="sidebarOpen" title="Navigation Menu">☰</button><div><h1>Daily Progress</h1><p>Material consumption, manpower &amp; daily work progress</p></div></div>
                 <nav class="sheet-actions" aria-label="Daily Progress sections">
                     <button type="button" :class="{ active: currentTab === 'entry' }" @click="currentTab = 'entry'"><span class="sheet-action-icon">＋</span><span>Entry</span></button>
                     <button type="button" :class="{ active: currentTab === 'stock' }" @click="currentTab = 'stock'" title="Material and stock logs"><span class="sheet-action-icon">▤</span><span>Logs</span></button>
@@ -1071,13 +1082,13 @@
     </div>
 
     <!-- Scripts (Standalone, Decoupled from Billing) -->
-    <script src="/js/storage-transport.js?v=20261118_review4"></script>
+    <script src="/js/storage-transport.js?v=20261124_v1"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="js/daily-worker-auth.js?v=20261123_search_type_v4"></script>
-    <script src="js/data/default-feeders.js?v=20261121_locations_share_v3"></script>
-    <script src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script src="js/daily-progress-standalone.js?v=20261123_search_type_v4"></script>
+    <script src="js/daily-worker-auth.js?v=20261124_v1"></script>
+    <script src="js/data/default-feeders.js?v=20261124_v1"></script>
+    <script src="js/share-link.js?v=20261124_v1"></script>
+    <script src="js/daily-progress-standalone.js?v=20261124_v1"></script>
 </body>
 
 </html>
