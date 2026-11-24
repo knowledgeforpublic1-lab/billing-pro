@@ -13,10 +13,78 @@ function setup(fetchImpl) {
     vm.createContext(context);
     vm.runInContext(fs.readFileSync('Reconciliation master/analytics.js', 'utf8'), context);
     context.MasterAnalytics = context.window.MasterAnalytics;
+    vm.runInContext(fs.readFileSync('Reconciliation master/stock-sync.js', 'utf8'), context);
     vm.runInContext(fs.readFileSync('Reconciliation master/app.js', 'utf8'), context);
     return { context, storage, nodes, run: code => vm.runInContext(code, context) };
 }
 const row = { ItemCode: '123', ItemDescription: 'Cable', UOM: 'M', DebitRate: 10, NetIssue: 10, Consumption: 2, WIP: 1, Theft: 0, BalanceQty: 7, BalanceCost: 70 };
+
+test('uploaded stock updates Master Reconciliation issues, new materials and balances without changing consumption or source data', () => {
+    const { context } = setup();
+    const apply = context.window.MasterStockSync.apply;
+    const data = { Contractors: [{ ContractorName: 'A', Metadata: { OwnerName: 'Owner' }, Items: [{ ...row, NetIssue: 5, Theft: 1 }] }],
+        DebitRates: [{ ItemCode: '456', Unit: 'NO', DebitRate: 20 }] };
+    const block = { contractorName: 'A', materials: { 123: { uom: 'M', grossIssue: 12, mrnReturn: 2, netIssue: 10 }, 456: { uom: 'NO', netIssue: 3 } } };
+    const stock = { meta: { uploadedAt: '2026-11-24T06:00:00Z' }, byContractorNorm: { a: block, alias_a: JSON.parse(JSON.stringify(block)) } };
+    const before = JSON.stringify(data), stockBefore = JSON.stringify(stock);
+    const updated = apply(data, stock);
+    const item = updated.Contractors[0].Items[0];
+    assert.equal(item.NetIssue, 10, 'Alias ledger is counted once and replaces the previous 5');
+    assert.equal(item.IssuedQty, 12); assert.equal(item.MRNQty, 2);
+    assert.equal(item.Consumption, 2); assert.equal(item.WIP, 1); assert.equal(item.Theft, 1);
+    assert.equal(item.BalanceQty, 6); assert.equal(item.BalanceCost, 60);
+    assert.equal(updated.Contractors[0].Metadata.OwnerName, 'Owner');
+    assert.equal(updated.Contractors[0].Items[1].NetIssue, 3);
+    assert.equal(updated.Contractors[0].Items[1].DebitRate, 20);
+    assert.equal(JSON.stringify(data), before); assert.equal(JSON.stringify(stock), stockBefore);
+    block.materials = { 456: { uom: 'NO', netIssue: 7 } };
+    stock.byContractorNorm = { a: block, new_team: { contractorName: 'New Team', materials: { 456: { uom: 'NO', netIssue: 2 } } } };
+    const replaced = apply(updated, stock);
+    assert.equal(replaced.Contractors[0].Items[0].NetIssue, 0);
+    assert.equal(replaced.Contractors[0].Items[0].Consumption, 2);
+    assert.equal(replaced.Contractors[0].Items[1].NetIssue, 7);
+    assert.equal(replaced.Contractors[1].ContractorName, 'New Team');
+    assert.equal(replaced.Contractors[1].Items[0].NetIssue, 2);
+});
+
+test('Master stock mapping respects work orders, converts compatible units and flags ambiguous duplicate entries', () => {
+    const { context } = setup();
+    const data = { Contractors: [
+        { ContractorName: 'A', Metadata: { WONo: '31000001' }, Items: [{ ...row }] },
+        { ContractorName: 'A', Metadata: { WONo: '31000002' }, Items: [{ ...row }] },
+        { ContractorName: 'Twin', Items: [{ ...row }] }, { ContractorName: 'Twin', Items: [{ ...row }] }
+    ] };
+    const stock = { byContractorNorm: {
+        first: { contractorName: 'A', allWorkOrders: ['31000001'], materials: { 123: { uom: 'KM', netIssue: 0.01 } } },
+        second: { contractorName: 'A', allWorkOrders: ['31000002'], materials: { 123: { uom: 'M', netIssue: 20 } } },
+        twin: { contractorName: 'Twin', materials: { 123: { uom: 'M', netIssue: 99 } } }
+    } };
+    const updated = context.window.MasterStockSync.apply(data, stock);
+    assert.deepEqual(Array.from(updated.Contractors, c => c.Items[0].NetIssue), [10, 20, 10, 10]);
+    assert.equal(updated.StockSyncWarnings.length, 2);
+    assert.equal(updated.Contractors.length, 4, 'Ambiguous stock is not assigned again as a new contractor');
+});
+
+test('Master dashboard refresh reads uploaded stock without cloud writes or replacing a pending reconciliation import', async () => {
+    let requests = 0, net = 5;
+    const { context, run } = setup(async (url, options) => {
+        requests++;
+        assert.equal(url, '/api/storage/business?key=stockMaster');
+        assert.equal(options.method, undefined);
+        return { ok: true, json: async () => ({ success: true, data: { byContractorNorm: { a: { contractorName: 'A', materials: { 123: { uom: 'M', netIssue: net } } } } } }) };
+    });
+    context.dataset = { Contractors: [{ ContractorName: 'A', Items: [{ ...row }] }] };
+    run('rawData = dataset');
+    await context.refreshMasterStock(false);
+    assert.equal(run('rawData.Contractors[0].Items[0].NetIssue'), 5);
+    net = 10;
+    await context.refreshMasterStock(false);
+    assert.equal(run('rawData.Contractors[0].Items[0].NetIssue'), 10);
+    assert.equal(run('rawData.Contractors[0].Items[0].Consumption'), 2);
+    run('reconLocalPending = true');
+    await context.refreshMasterStock(false);
+    assert.equal(requests, 2);
+});
 test('duplicate contractor selection and CSV export preserve entry identity and all pages', async () => {
     const { context, nodes, run } = setup();
     context.dataset = { Contractors: [ { ContractorName: 'A', Items: Array.from({length: 61}, () => ({...row})) }, { ContractorName: 'A', Items: [{...row, ItemCode: 'OTHER'}] } ] };

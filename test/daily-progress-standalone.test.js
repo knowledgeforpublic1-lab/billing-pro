@@ -25,6 +25,40 @@ function sharePage(fetcher) {
     return { app, storage, options };
 }
 
+test('stock refresh replaces 5 with 10, updates balances by posting date and keeps unsaved progress', async () => {
+    let blocks = {}, fail = false;
+    const { app } = sharePage(async () => ({ ok: !fail, json: async () => ({ success: true, byContractorNorm: blocks }) }));
+    const cid = app.selectedContractorId;
+    app.contractors = [{ id: cid, name: 'Intally' }];
+    app.selectedDate = '2026-11-24';
+    app.reports = [{ contractorId: cid, date: '2026-11-20', quantities: { 15: 2 } }];
+    app.issues = [{ contractorId: cid, date: '2026-11-20', itemId: '15', quantity: 1 }];
+    app.quantities = { 15: 17 }; app.dirty = true;
+    const draft = app.quantities, item = { id: '15', code: '100' };
+    blocks = { intally: { contractorName: 'Intally', materials: { 100: { netIssue: 5 } } } };
+    await app.ensureStock();
+    assert.equal(app.getItemStock(item).sapIssued, 5);
+    blocks = { intallynew: { contractorName: 'Intally', materials: {
+        100: { netIssue: 15, txns: [['2026-11-20', 5, 0], ['2026-11-24', 5, 0], ['2026-11-25', 5, 0]] },
+        101: { netIssue: 3 }
+    } } };
+    await app.ensureStock(true);
+    const updated = app.getItemStock(item);
+    assert.equal(updated.sapIssued, 10, 'Future issues do not enter today\'s stock');
+    assert.equal(updated.totalIssued, 11);
+    assert.equal(updated.totalConsumed, 2);
+    assert.equal(updated.balance, 9);
+    assert.equal(app.getItemStock({ id: '16', code: '101' }).sapIssued, 3);
+    assert.equal(app.sapStock.byContractorNorm.intally, undefined, 'Old block is removed');
+    assert.equal(app.quantities, draft); assert.equal(app.dirty, true);
+    fail = true;
+    await app.ensureStock(true);
+    assert.equal(app.getItemStock(item).sapIssued, 10, 'Failed refresh retains the last good copy');
+    fail = false; blocks = {};
+    await app.ensureStock(true);
+    assert.equal(app.getItemStock(item).sapIssued, 0, 'Empty replacement clears old issues');
+});
+
 test('shared requests keep the link scope and discard unrelated cached or refreshed rows', async () => {
     let requestHeaders;
     const cid = 'intally_dynamix_private_limited';

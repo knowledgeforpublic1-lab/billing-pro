@@ -32,6 +32,44 @@ const editor = number => ('editor_' + number + '_').padEnd(40, 'x');
 const report = quantity => ({ quantities: { 15: quantity }, manpower: { leader: 1 }, remarks: 'Site work' });
 const body = (state, quantity, final = false, id = 'request_0000000000000001') => ({ version: state.version, epoch: state.epoch, requestId: id, report: report(quantity), final });
 
+test('public stock follows uploaded master replacements, resolves saved contractor IDs and never revives removed stock', async t => {
+    const f = fixture();
+    let stock = null, unavailable = false;
+    f.db.getDefaultConfig = async key => {
+        if (key === 'stockMaster') {
+            if (unavailable) throw Error('Cloud read failed');
+            return stock && { data: copy(stock) };
+        }
+        if (key === 'dailyProgressData') return { data: { contractors: [{ id: 'site_team_1', name: 'New Site Team' }] } };
+        return null;
+    };
+    const routes = createRoutes({ db: f.db, drive: f.drive, seed: { items: f.items }, auth: { requireAdmin(req, res, next) { next(); } } });
+    const app = express(); app.use('/api/daily-entry', routes.publicRouter);
+    const server = app.listen(0, '127.0.0.1');
+    await new Promise(resolve => server.once('listening', resolve));
+    t.after(() => { server.closeAllConnections(); return new Promise(resolve => server.close(resolve)); });
+    const origin = 'http://127.0.0.1:' + server.address().port;
+    const get = path => fetch(origin + '/api/daily-entry/' + path);
+    const ledger = qty => ({ byContractorNorm: { newsiteteam: { contractorName: 'New Site Team', vendorCode: 'private', materials: { 100: { netIssue: qty } } } } });
+    stock = ledger(5);
+    let response = await get('stock/site_team_1');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal((await response.json()).byContractorNorm.newsiteteam.materials[100].netIssue, 5);
+    stock = ledger(10);
+    stock.byContractorNorm.newsiteteam.materials[101] = { netIssue: 3 };
+    const latest = await (await get('stock/site_team_1')).json();
+    assert.equal(latest.byContractorNorm.newsiteteam.materials[100].netIssue, 10, 'New total replaces 5; it is not added to it');
+    assert.equal(latest.byContractorNorm.newsiteteam.materials[101].netIssue, 3);
+    assert.equal(latest.byContractorNorm.newsiteteam.vendorCode, undefined);
+    const catalog = await (await get('catalog')).json();
+    assert.ok(catalog.contractors.some(c => c.name === 'New Site Team'));
+    stock = { byContractorNorm: { different: { contractorName: 'Different Team', materials: {} } } };
+    assert.deepEqual((await (await get('stock/site_team_1')).json()).byContractorNorm, {});
+    assert.deepEqual((await (await get('stock/saurabh_dehariya')).json()).byContractorNorm, {}, 'Uploaded master does not merge shipped quantities');
+    unavailable = true;
+    assert.equal((await get('stock/site_team_1')).status, 503, 'Cloud outage must not return the shipped ledger as latest');
+});
+
 test('10 different contractors save concurrently without losing records', async () => {
     const f = fixture();
     await Promise.all(Array.from({ length: 10 }, async (_, n) => {

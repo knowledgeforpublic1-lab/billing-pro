@@ -501,6 +501,7 @@
             await this.initData();
             if (typeof setInterval === 'function') {
                 this._refreshTimer = setInterval(() => {
+                    if (!document.hidden && !this.busy) this.ensureStock(true);
                     if (!document.hidden && !this.busy && !this.dirty) this.fetchLatestReportsSilently();
                 }, 45000);
             }
@@ -980,24 +981,29 @@
                 return this.findContractorStockBlocks(actC)[0] || null;
             },
 
-            async ensureStock() {
+            async ensureStock(force = false) {
                 const actC = this.activeContractor || {};
                 const cid = actC.id || this.selectedContractorId || '';
                 if (!cid) return;
-                if (this.findContractorStockBlock(actC)) return;
+                if (!force && this.stockKeysByContractor[normId(cid)]) return;
                 const reqKey = normId(cid) + '_' + normId(actC.name || '');
                 if (this._stockRequest === reqKey) return;
                 this._stockRequest = reqKey;
                 try {
                     let res = await shareFetch('/api/daily-entry/stock/' + encodeURIComponent(cid), { cache: 'no-store' });
+                    if (!res.ok) throw new Error('Latest stock unavailable; retry shortly.');
                     let payload = res.ok ? await res.json() : null;
                     if ((!payload || !payload.success || !payload.byContractorNorm || !Object.keys(payload.byContractorNorm).length) && actC.name && actC.name !== cid) {
                         res = await shareFetch('/api/daily-entry/stock/' + encodeURIComponent(actC.name), { cache: 'no-store' });
+                        if (!res.ok) throw new Error('Latest stock unavailable; retry shortly.');
                         if (res.ok) payload = await res.json();
                     }
                     if (payload && payload.success && payload.byContractorNorm) {
+                        const existing = { ...(this.sapStock?.byContractorNorm || {}) };
+                        // A new upload replaces the contractor's ledger, including
+                        // removed materials/work orders; never merge old issues back in.
+                        for (const key of this.stockKeysByContractor[normId(cid)] || []) delete existing[key];
                         this.stockKeysByContractor = { ...this.stockKeysByContractor, [normId(cid)]: Object.keys(payload.byContractorNorm) };
-                        const existing = (this.sapStock || window.ContractorSapStock || {}).byContractorNorm || {};
                         this.sapStock = { byContractorNorm: { ...existing, ...payload.byContractorNorm } };
                     }
                 } catch (e) {

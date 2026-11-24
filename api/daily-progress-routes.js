@@ -20,9 +20,8 @@ let publicContractorsCache = null;
 let contractorDirectoryCache = null;
 let stockCache = null;
 let mappingCache = null;
-function publicContractors() {
-    if (publicContractorsCache) return publicContractorsCache;
-    const stock = stockDatabase();
+function publicContractors(stock = stockDatabase()) {
+    if (stock === stockCache && publicContractorsCache) return publicContractorsCache;
     const raw = loadScript('default-contractors.js', 'defaultContractorsList') || loadScript('default-contractors.js', 'DefaultContractors') || [];
     const defMap = new Map();
     for (const c of raw) {
@@ -63,8 +62,9 @@ function publicContractors() {
             });
         }
     }
-    publicContractorsCache = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
-    return publicContractorsCache;
+    const result = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+    if (stock === stockCache) publicContractorsCache = result;
+    return result;
 }
 function stockDatabase() {
     if (stockCache) return stockCache;
@@ -104,13 +104,13 @@ function contractorDirectory() {
     return contractorDirectoryCache;
 }
 
-function stockKeysForQuery(query) {
-    const byNorm = stockDatabase().byContractorNorm;
+function stockKeysForQuery(query, stock, directory = contractorDirectory()) {
+    const byNorm = stock.byContractorNorm;
     const mapping = sapMapping();
     const qNorm = normId(query);
     if (!qNorm || qNorm.length < 2) return [];
 
-    const contractors = publicContractors();
+    const contractors = [...publicContractors(stock), ...directory];
     const c = contractors.find(item => normId(item.id) === qNorm || normId(item.name) === qNorm);
     const candidateNames = [query];
     if (c) {
@@ -119,7 +119,7 @@ function stockKeysForQuery(query) {
     }
     const qNorms = [...new Set(candidateNames.map(normId).filter(n => n.length >= 2))];
 
-    const directoryMatch = contractorDirectory().find(item => qNorms.includes(normId(item.id)) || qNorms.includes(normId(item.name)));
+    const directoryMatch = directory.find(item => qNorms.includes(normId(item.id)) || qNorms.includes(normId(item.name)));
     const desiredWos = splitWorkOrders(directoryMatch ? [
         directoryMatch.workOrderNo,
         directoryMatch.workOrderNumbers,
@@ -185,10 +185,22 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }
     publicRouter.use(sameOrigin);
 
+    async function currentStock() {
+        // Read through the storage router on every request so Firestore and Drive
+        // uploads share the same source as Master Reconciliation. Only an absent
+        // uploaded dataset may fall back to the shipped stock ledger.
+        const saved = await db.getDefaultConfig('stockMaster');
+        if (!saved || saved.data == null) return stockDatabase();
+        if (!saved.data.byContractorNorm || typeof saved.data.byContractorNorm !== 'object' || Array.isArray(saved.data.byContractorNorm)) {
+            throw Object.assign(new Error('Uploaded stock is unavailable; retry after checking the stock upload.'), { status: 503 });
+        }
+        return saved.data;
+    }
+
     // Public, sanitized read-only data for the shareable /daily-progress.html page.
     // No PAN, GSTIN, bank details or other contractor records are exposed.
     publicRouter.get('/catalog', handle(async (req, res) => {
-        const contractors = new Map(publicContractors().map(c => [c.id, c]));
+        const contractors = new Map(publicContractors(await currentStock()).map(c => [c.id, c]));
         // Saved teams may not exist in the shipped contractor directory.
         const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
         for (const c of [...saved.contractors, ...await service.list()]) {
@@ -207,9 +219,12 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         if (!query || query.length > 150 || !/^[\w .&(),'/-]+$/.test(query)) {
             return res.status(400).json({ success: false, error: 'Invalid contractor' });
         }
-        const byNorm = stockDatabase().byContractorNorm;
+        const stock = await currentStock();
+        const byNorm = stock.byContractorNorm;
+        const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
+        const directory = [...contractorDirectory(), ...saved.contractors];
         const out = {};
-        for (const key of stockKeysForQuery(query)) {
+        for (const key of stockKeysForQuery(query, stock, directory)) {
             const block = byNorm[key];
             if (!block) continue;
             out[key] = {

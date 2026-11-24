@@ -1,6 +1,35 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const createDrive = require('../api/daily-drive');
+
+test('completed large uploads verify stored SHA-256 and size without downloading the workbook', async () => {
+    const hash = 'a'.repeat(64), size = 43175366, calls = [];
+    let metadata = { id: 'stock_file', size: String(size), sha256Checksum: hash };
+    const drive = createDrive({ env: { DAILY_PROGRESS_DRIVE_FOLDER_ID: 'private_folder_123', GOOGLE_DRIVE_CLIENT_ID: 'c', GOOGLE_DRIVE_CLIENT_SECRET: 's', GOOGLE_DRIVE_REFRESH_TOKEN: 'r' },
+        fetchImpl: async url => {
+            calls.push(url);
+            assert.ok(!url.includes('alt=media'));
+            return { ok: true, json: async () => url.includes('/token') ? { access_token: 'private' } : metadata };
+        } });
+    const limits = { maxBytes: 128 * 1024 * 1024 };
+    assert.equal(await drive.verifyBytes('stock_file', size, hash, limits), true);
+    metadata = { ...metadata, size: String(size - 1) };
+    assert.equal(await drive.verifyBytes('stock_file', size, hash, limits), false);
+    metadata = { ...metadata, size: String(size), sha256Checksum: 'b'.repeat(64) };
+    assert.equal(await drive.verifyBytes('stock_file', size, hash, limits), false);
+    assert.ok(calls.some(url => url.includes('fields=id,size,sha256Checksum')));
+});
+
+test('files without Drive checksum metadata still require an exact content checksum', async () => {
+    const bytes = Buffer.from('stock'), hash = require('node:crypto').createHash('sha256').update(bytes).digest('hex');
+    const drive = createDrive({ env: { DAILY_PROGRESS_DRIVE_FOLDER_ID: 'private_folder_123', GOOGLE_DRIVE_CLIENT_ID: 'c', GOOGLE_DRIVE_CLIENT_SECRET: 's', GOOGLE_DRIVE_REFRESH_TOKEN: 'r' },
+        fetchImpl: async url => ({ ok: true, json: async () => url.includes('/token') ? { access_token: 'private' } : { id: 'stock_file', size: String(bytes.length) } }) });
+    let reads = 0;
+    drive.readBytes = async () => { reads++; return bytes; };
+    assert.equal(await drive.verifyBytes('stock_file', bytes.length, hash), true);
+    assert.equal(await drive.verifyBytes('stock_file', bytes.length, 'a'.repeat(64)), false);
+    assert.equal(reads, 2);
+});
 test('Drive credentials are server-only; uploads are separate immutable versions in selected folder', async () => {
     const calls = [];
     const drive = createDrive({ env: { DAILY_PROGRESS_DRIVE_FOLDER_ID: 'private_folder_123', GOOGLE_DRIVE_CLIENT_ID: 'client', GOOGLE_DRIVE_CLIENT_SECRET: 'secret', GOOGLE_DRIVE_REFRESH_TOKEN: 'refresh' },

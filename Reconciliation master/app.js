@@ -79,6 +79,45 @@ async function fetchReconCloud() {
 }
 
 let reconRevision = null;
+let masterStockStamp = null;
+let masterStockRefreshing = false;
+let masterStockError = false;
+async function refreshMasterStock(render = true) {
+    if (!rawData || reconLocalPending || masterStockRefreshing || !window.MasterStockSync) return;
+    masterStockRefreshing = true;
+    const snapshot = rawData;
+    try {
+        const response = await fetch('/api/storage/business?key=stockMaster', { cache: 'no-store', credentials: 'same-origin', headers: reconApiHeaders(false) });
+        if (response.status === 404) return;
+        const body = await response.json();
+        if (!response.ok || !body.success) throw new Error(body.error || 'Latest uploaded stock unavailable');
+        if (rawData !== snapshot || reconLocalPending) return;
+        masterStockError = false;
+        if (!body.data) return;
+        const stamp = response.headers?.get('x-billing-storage-versions') || JSON.stringify(body.data);
+        if (stamp === masterStockStamp) { if (render) updateDataQuality(); return; }
+        rawData = window.MasterStockSync.apply(rawData, body.data);
+        masterStockStamp = stamp;
+        if (render) {
+            const selected = document.getElementById('contractorSelect')?.value;
+            populateDropdowns();
+            if (selected) document.getElementById('contractorSelect').value = selected;
+            updateDataQuality();
+            if (currentTab === 'overview') renderOverview();
+            else if (currentTab === 'contractor') renderContractorView();
+            else if (currentTab === 'item-balance') renderItemBalanceView();
+            else if (currentTab === 'material') renderMaterialView();
+            else if (currentTab === 'debit') renderDebitView();
+            else if (currentTab === 'alerts') renderAlertsView();
+            else if (currentTab === 'reports') renderReportsView();
+        }
+    } catch (error) {
+        console.warn('Master stock refresh failed:', error.message);
+        masterStockError = true;
+        if (render) updateDataQuality();
+    } finally { masterStockRefreshing = false; }
+}
+window.addEventListener('focus', () => refreshMasterStock());
 async function saveReconCloud(jsonPayload) {
     if (reconRevision === null) throw new Error('Cloud revision unavailable. Refresh online before uploading.');
     const res = await fetch('/api/reconciliation', {
@@ -112,7 +151,9 @@ function updateDataQuality() {
     banner.textContent = 'Stock: ' + stockDate + ' · Consumption: ' + consumptionDate +
         (stockDate === 'Unknown' || consumptionDate === 'Unknown' || stockDate !== consumptionDate ? ' · Dates need verification' : '') +
         ' · ' + quality.missingRates + ' unpriced rows · ' + quality.formulaDifferences + ' balance formula differences' +
-        (reconLocalPending ? ' · UNSYNCED LOCAL IMPORT' : '');
+        (reconLocalPending ? ' · UNSYNCED LOCAL IMPORT' : '') +
+        (masterStockError ? ' · Latest stock unavailable; refresh to retry' : '') +
+        (rawData.StockSyncWarnings?.length ? ' · ' + rawData.StockSyncWarnings.length + ' stock mappings need review' : '');
 }
 function exportDataChecks() {
     if (!rawData) return;
@@ -187,6 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.masterDataSource = cloudUsed ? 'Cloud database' : 'Local / embedded snapshot';
         
         if (rawData) {
+            await refreshMasterStock(false);
             updateDataQuality();
             console.log('Loaded Data:', rawData);
             setupNavigation();
@@ -445,8 +487,11 @@ function updateSelectedCount() {
 }
 
 // Setup multi-select component interactions
+const multiSelectBindings = new WeakSet();
 function setupMultiSelect() {
     const trigger = document.getElementById('materialSelectTrigger');
+    if (multiSelectBindings.has(trigger)) return;
+    multiSelectBindings.add(trigger);
     const dropdown = document.getElementById('materialDropdown');
     const searchInput = document.getElementById('materialDropdownSearch');
     const selectAllBtn = document.getElementById('materialSelectAll');

@@ -63,11 +63,28 @@
         if (!response.ok || !data.success) throw new Error(data.error || 'Storage transfer failed; pending copy retained');
         return data;
     }
+    async function uploadPart(url, init) {
+        // Repeating the same part is safe: the server checks Drive's acknowledged
+        // offset before writing, including after a response was lost.
+        for (let attempt = 0; ; attempt++) {
+            try {
+                const response = await originalFetch(url, init);
+                const data = await response.json().catch(() => null);
+                if (response.ok && data?.success) return data;
+                const error = new Error(data?.error || 'Storage transfer failed; pending copy retained');
+                error.retryable = [408, 429, 500, 502, 503, 504].includes(response.status);
+                throw error;
+            } catch (error) {
+                if (init.signal?.aborted || error.name === 'AbortError' || error.retryable === false || attempt >= 2) throw error;
+                await new Promise(resolve => global.setTimeout(resolve, 500 * (2 ** attempt)));
+            }
+        }
+    }
     async function upload(target, bytes, headers, signal, metadata = {}) {
         const common = { credentials: 'same-origin', headers, signal };
         const begin = await jsonFetch('/api/storage/transport', { ...common, method: 'POST', body: JSON.stringify({ ...metadata, target, bytes: bytes.length, sha256: await hash(bytes) }) });
         for (let offset = 0; offset < bytes.length; offset += CHUNK) {
-            const result = await jsonFetch('/api/storage/transport/' + begin.id, { ...common, method: 'PUT', body: JSON.stringify({ offset, base64: encode(bytes.subarray(offset, offset + CHUNK)) }) });
+            const result = await uploadPart('/api/storage/transport/' + begin.id, { ...common, method: 'PUT', body: JSON.stringify({ offset, base64: encode(bytes.subarray(offset, offset + CHUNK)) }) });
             if (result.offset < Math.min(offset + CHUNK, bytes.length)) throw new Error('Storage upload offset mismatch; pending copy retained');
         }
         return begin.id;

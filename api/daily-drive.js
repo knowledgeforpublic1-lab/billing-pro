@@ -96,6 +96,17 @@ module.exports = function createDrive({ env = process.env, fetchImpl = fetch, fo
     }
     return {
         beginUpload, uploadPart,
+        async verifyBytes(id, bytes, sha256, { maxBytes = 32 * 1024 * 1024 } = {}) {
+            if (!/^[\w-]+$/.test(id) || !Number.isSafeInteger(bytes) || bytes < 1 || bytes > maxBytes || !/^[a-f0-9]{64}$/.test(sha256)) throw new Error('Invalid file verification');
+            // Drive computes this checksum from stored content. Avoid downloading a large
+            // source workbook again inside the final chunk request's timeout budget.
+            const file = await request('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,size,sha256Checksum&supportsAllDrives=true');
+            if (file.id !== id || Number(file.size) !== bytes) return false;
+            if (file.sha256Checksum) return file.sha256Checksum === sha256;
+            // Older files may have no checksum metadata; never skip verification.
+            const content = await this.readBytes(id, { maxBytes });
+            return content.length === bytes && crypto.createHash('sha256').update(content).digest('hex') === sha256;
+        },
         configured() { return !!folderId() && !!(env.GOOGLE_DRIVE_SERVICE_ACCOUNT || (env.GOOGLE_DRIVE_REFRESH_TOKEN && env.GOOGLE_DRIVE_CLIENT_ID && env.GOOGLE_DRIVE_CLIENT_SECRET)); },
         async createId() {
             const data = await request('https://www.googleapis.com/drive/v3/files/generateIds?count=1&space=drive&type=files');

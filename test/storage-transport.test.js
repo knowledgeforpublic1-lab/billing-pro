@@ -10,7 +10,7 @@ const context = require('../api/storage-context');
 const createStore = require('../api/drive-first-store');
 const { versions } = require('../api/storage-http');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-async function fixture() {
+async function fixture({ intercept } = {}) {
     const records = new Map(), files = new Map(), sessions = new Map(); let next = 0, permissions = ['a'], tail = Promise.resolve();
     const drive = { configured: () => true, createId: async () => 'file_' + ++next,
         async beginUpload(id, name, total) { const url = 'https://www.googleapis.com/upload/drive/' + id; sessions.set(url, { id, total, bytes: Buffer.alloc(0) }); return url; },
@@ -22,6 +22,7 @@ async function fixture() {
         },
         async writeBytes(id, name, bytes) { files.set(id, Buffer.from(bytes)); },
         async readBytes(id) { return Buffer.from(files.get(id)); },
+        async verifyBytes(id, bytes, hash) { const stored = files.get(id); return stored.length === bytes && sha(stored) === hash; },
         async readRange(id, offset, length) { return Buffer.from(files.get(id).subarray(offset, offset + length)); } };
     const db = { storageContext: context, storageResource: createStore.resource,
         atomicDailyRecord(key, fn) {
@@ -47,9 +48,9 @@ async function fixture() {
         const headers = new Headers(options.headers); if (!headers.has('cookie')) headers.set('cookie', 'owner-a');
         const response = await fetch(new URL(url, base), { ...options, headers });
         responses.push((await response.clone().arrayBuffer()).byteLength);
-        return response;
+        return intercept ? intercept(url, options, response) : response;
     }
-    const global = { fetch: request, location: { origin: base, href: base + '/' }, crypto: crypto.webcrypto, btoa, atob };
+    const global = { fetch: request, location: { origin: base, href: base + '/' }, crypto: crypto.webcrypto, btoa, atob, setTimeout: fn => setTimeout(fn, 0) };
     vm.runInNewContext(fs.readFileSync('js/storage-transport.js', 'utf8'), { window: global, URL, Headers, Response, TextEncoder, Uint8Array, console });
     return { app, request, client: global, base, records, files, requests, responses, drive, changePermissions: next => { permissions = next; },
         close: () => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }) };
@@ -91,11 +92,46 @@ test('source workbook is retained as exact binary and returned reference omits c
 test('original workbooks above 32 MB use their separate asset budget while JSON remains bounded', async t => {
     const f = await fixture(); t.after(f.close);
     const bytes = Buffer.alloc(33 * 1024 * 1024, 23);
+    f.drive.readBytes = async () => { throw Error('Final source chunk must not download the entire workbook'); };
     const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'large-stock.xlsx', size: bytes.length, arrayBuffer: async () => bytes }, 'master', 'stockMaster');
     assert.equal(asset.bytes, bytes.length); assert.equal(asset.sha256, sha(bytes));
     assert.ok(f.requests.every(row => row.bytes < 400 * 1024));
     const rejected = await f.request('/api/storage/transport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: '/api/billing', bytes: bytes.length, sha256: sha(bytes) }) });
     assert.equal(rejected.status, 400, 'large source assets must not raise the JSON dataset limit');
+});
+
+test('a lost chunk response and transient 503 retry the same upload without duplicating bytes', async t => {
+    let failures = 0;
+    const f = await fixture({ intercept(url, options, response) {
+        if (options.method === 'PUT' && failures++ < 2) {
+            if (failures === 1) throw TypeError('Connection lost after Drive accepted the chunk');
+            return new Response(JSON.stringify({ success: false, error: 'Temporary storage failure' }), { status: 503 });
+        }
+        return response;
+    } });
+    t.after(f.close);
+    const bytes = crypto.randomBytes(300000);
+    const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'stock.xlsx', size: bytes.length, arrayBuffer: async () => bytes }, 'master', 'stockMaster');
+    assert.equal(asset.sha256, sha(bytes));
+    const parts = f.requests.filter(row => row.url.startsWith('/api/storage/transport/') && row.bytes);
+    assert.equal(parts.length, 4);
+    assert.equal(new Set(parts.map(row => row.url)).size, 1);
+});
+
+test('permission failures are not retried and persistent outages stop after three attempts', async t => {
+    for (const status of [403, 503]) {
+        let attempts = 0;
+        const f = await fixture({ intercept(url, options, response) {
+            if (options.method !== 'PUT') return response;
+            attempts++;
+            return new Response(JSON.stringify({ success: false, error: 'Upload rejected' }), { status });
+        } });
+        t.after(f.close);
+        const bytes = Buffer.from('stock');
+        await assert.rejects(f.client.BillingStorageTransport.archiveFile({ name: 'stock.xlsx', arrayBuffer: async () => bytes }, 'master', 'stockMaster'), /Upload rejected/);
+        assert.equal(attempts, status === 403 ? 1 : 3);
+        assert.equal([...f.records.keys()].some(key => key.startsWith('storage_asset_')), false);
+    }
 });
 test('upload rejects another user, revoked permissions, incorrect lengths and wrong destination', async t => {
     const f = await fixture(); t.after(f.close); const bytes = Buffer.from('{"x":1}');

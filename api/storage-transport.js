@@ -82,8 +82,9 @@ module.exports = function createTransport({ db, drive, workers, auth, env = proc
                     if (progress.offset < offset + bytes.length) throw fail(409, 'Upload offset changed; restart transfer from the pending snapshot');
                     if (progress.complete) {
                         if (progress.id !== record.fileId) throw fail(503, 'Upload identity mismatch');
-                        const verified = await drive.readBytes(record.fileId, { maxBytes: record.target === '/api/storage/assets' ? MAX_ASSET : MAX });
-                        if (verified.length !== record.bytes || sha(verified) !== record.sha256) throw fail(503, 'Upload checksum mismatch');
+                        const limits = { maxBytes: record.target === '/api/storage/assets' ? MAX_ASSET : MAX };
+                        const verified = await drive.verifyBytes(record.fileId, record.bytes, record.sha256, limits);
+                        if (!verified) throw fail(503, 'Upload checksum mismatch');
                     }
                     const currentActor = await actor(req); // Recheck after Drive responds.
                     if (currentActor.id !== record.owner || currentActor.permissions !== record.permissions) throw fail(403, 'Transfer permissions changed');
