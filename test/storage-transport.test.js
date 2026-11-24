@@ -10,7 +10,7 @@ const context = require('../api/storage-context');
 const createStore = require('../api/drive-first-store');
 const { versions } = require('../api/storage-http');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-async function fixture({ intercept } = {}) {
+async function fixture({ intercept, now = Date.now } = {}) {
     const records = new Map(), files = new Map(), sessions = new Map(); let next = 0, permissions = ['a'], tail = Promise.resolve();
     const drive = { configured: () => true, createId: async () => 'file_' + ++next,
         async beginUpload(id, name, total) { const url = 'https://www.googleapis.com/upload/drive/' + id; sessions.set(url, { id, total, bytes: Buffer.alloc(0) }); return url; },
@@ -33,10 +33,10 @@ async function fixture({ intercept } = {}) {
         if (!req.headers.cookie) throw Object.assign(Error('Login required'), { status: 401 });
         return { id: req.headers.cookie, role: 'admin', contractorIds: permissions };
     } };
-    const auth = { async sessionFor(req) { await workers.principal(req); return { adminExpiresAt: Date.now() + 600000 }; } };
-    const app = express(); app.use(express.json({ limit: '400kb' }));
+    const auth = { async sessionFor(req) { await workers.principal(req); return { adminExpiresAt: now() + 600000 }; } };
+    const app = express(); app.use(express.json({ limit: '1500kb' }));
     app.use((req, res, next) => context.run({ versions: {}, operations: {} }, next));
-    app.use(createTransport({ db, drive, workers, auth, env: { BILLING_DRIVE_TRANSPORT: '1' } }));
+    app.use(createTransport({ db, drive, workers, auth, now, env: { BILLING_DRIVE_TRANSPORT: '1' } }));
     let dataset;
     app.post('/api/billing', (req, res) => { dataset = req.body; res.json({ success: true, rev: 1 }); });
     app.get('/api/billing', (req, res) => res.json({ success: true, data: dataset }));
@@ -62,7 +62,7 @@ test('8 MB Unicode JSON crosses both directions with bounded HTTP bodies and exa
     assert.equal((await saved.json()).success, true);
     const loaded = await f.client.fetch('/api/billing');
     assert.deepEqual((await loaded.json()).data, payload);
-    assert.ok(f.requests.every(row => row.bytes < 400 * 1024));
+    assert.ok(f.requests.every(row => row.bytes < 1500 * 1024));
     assert.ok(f.responses.every(size => size < 1024 * 1024));
     for (const record of f.records.values()) assert.ok(Buffer.byteLength(JSON.stringify(record)) < 4096);
 });
@@ -74,7 +74,7 @@ test('actual desktop sync sends an 8 MB bill through bounded transport instead o
     const app = { ...f.client.SyncModule, cloudRev: 0, activeBillId: 'bill_a', showToast() {}, _scheduleSyncRetry() {},
         buildSyncPayload() { return { dataId: 'bill_a', baseRev: this.cloudRev, text }; } };
     assert.equal(await app.syncToCloudNow(), true); assert.equal(app.cloudRev, 1);
-    assert.ok(f.requests.every(row => row.bytes < 400 * 1024));
+    assert.ok(f.requests.every(row => row.bytes < 1500 * 1024));
 });
 test('medium saves do not use browser keepalive beyond its body budget', async t => {
     const f = await fixture(); t.after(f.close);
@@ -84,8 +84,11 @@ test('medium saves do not use browser keepalive beyond its body budget', async t
 test('source workbook is retained as exact binary and returned reference omits credentials/file IDs', async t => {
     const f = await fixture(); t.after(f.close);
     const bytes = crypto.randomBytes(700000);
-    const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'source.xlsx', arrayBuffer: async () => bytes }, 'reconciliation', 'main-reconciliation-state');
+    const progress = [];
+    const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'source.xlsx', arrayBuffer: async () => bytes }, 'reconciliation', 'main-reconciliation-state', value => progress.push(value));
     assert.equal(asset.sha256, sha(bytes)); assert.equal(asset.bytes, bytes.length); assert.equal(asset.fileId, undefined);
+    assert.equal(progress[0].loaded, 0);
+    assert.equal(progress.at(-1).loaded, bytes.length);
     const record = [...f.records.entries()].find(([key]) => key.startsWith('storage_asset_'))[1];
     assert.deepEqual(f.files.get(record.fileId), bytes);
 });
@@ -95,7 +98,8 @@ test('original workbooks above 32 MB use their separate asset budget while JSON 
     f.drive.readBytes = async () => { throw Error('Final source chunk must not download the entire workbook'); };
     const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'large-stock.xlsx', size: bytes.length, arrayBuffer: async () => bytes }, 'master', 'stockMaster');
     assert.equal(asset.bytes, bytes.length); assert.equal(asset.sha256, sha(bytes));
-    assert.ok(f.requests.every(row => row.bytes < 400 * 1024));
+    assert.ok(f.requests.every(row => row.bytes < 1500 * 1024));
+    assert.equal(f.requests.filter(row => row.url.startsWith('/api/storage/transport/') && row.bytes).length, 33, 'Negotiated 1 MB chunks reduce upload round trips by four');
     const rejected = await f.request('/api/storage/transport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: '/api/billing', bytes: bytes.length, sha256: sha(bytes) }) });
     assert.equal(rejected.status, 400, 'large source assets must not raise the JSON dataset limit');
 });
@@ -110,7 +114,7 @@ test('a lost chunk response and transient 503 retry the same upload without dupl
         return response;
     } });
     t.after(f.close);
-    const bytes = crypto.randomBytes(300000);
+    const bytes = crypto.randomBytes(1200000);
     const asset = await f.client.BillingStorageTransport.archiveFile({ name: 'stock.xlsx', size: bytes.length, arrayBuffer: async () => bytes }, 'master', 'stockMaster');
     assert.equal(asset.sha256, sha(bytes));
     const parts = f.requests.filter(row => row.url.startsWith('/api/storage/transport/') && row.bytes);
@@ -156,4 +160,46 @@ test('bad upload checksum never reaches the business save handler', async t => {
 test('request revisions are bounded and malformed headers cannot reach the store', () => {
     for (const value of ['[]', 'null', '{bad', JSON.stringify({ invalid: { v: 1 } }), JSON.stringify({ ['a'.repeat(64)]: { v: -1 } }), 'x'.repeat(6001)]) assert.throws(() => versions(value), { status: 400 });
     assert.deepEqual(versions(JSON.stringify({ ['a'.repeat(64)]: { v: 0, s: '123.0' } })), { ['a'.repeat(64)]: { v: 0, s: '123.0' } });
+});
+
+test('active transfers remain valid beyond 30 minutes while idle transfers still expire', async t => {
+    let time = Date.now();
+    const f = await fixture({ now: () => time }); t.after(f.close);
+    const writePart = f.drive.uploadPart;
+    f.drive.uploadPart = async (...args) => {
+        const result = await writePart(...args);
+        if (args[1].length) time += 20 * 60 * 1000;
+        return result;
+    };
+    const text = 'x'.repeat(2500000);
+    assert.equal((await (await f.client.fetch('/api/billing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })).json()).success, true);
+    const readRange = f.drive.readRange;
+    f.drive.readRange = async (...args) => { const bytes = await readRange(...args); time += 20 * 60 * 1000; return bytes; };
+    assert.equal((await (await f.client.fetch('/api/billing')).json()).data.text, text);
+    const bytes = Buffer.from('{}'), headers = { 'Content-Type': 'application/json' };
+    const begin = await (await f.request('/api/storage/transport', { method: 'POST', headers, body: JSON.stringify({ target: '/api/billing', bytes: bytes.length, sha256: sha(bytes) }) })).json();
+    time += 31 * 60 * 1000;
+    const expired = await f.request('/api/storage/transport/' + begin.id, { method: 'PUT', headers, body: JSON.stringify({ offset: 0, base64: bytes.toString('base64') }) });
+    assert.equal(expired.status, 410);
+});
+
+test('expired upload restarts once from exact retained bytes and persistent expiry reports failure', async t => {
+    for (const persistent of [false, true]) {
+        let failures = 0;
+        const f = await fixture({ intercept(url, options, response) {
+            if (options.method === 'PUT' && (persistent || failures++ === 0)) return new Response(JSON.stringify({ success: false, error: 'Transfer expired; local pending copy retained' }), { status: 410 });
+            return response;
+        } }); t.after(f.close);
+        const bytes = crypto.randomBytes(1200000);
+        const task = f.client.BillingStorageTransport.archiveFile({ name: 'stock.xlsx', arrayBuffer: async () => bytes }, 'master', 'stockMaster');
+        if (persistent) await assert.rejects(task, { status: 410 });
+        else {
+            const asset = await task;
+            assert.equal(asset.sha256, sha(bytes));
+            const record = [...f.records.entries()].find(([key]) => key.startsWith('storage_asset_'))[1];
+            assert.deepEqual(f.files.get(record.fileId), bytes);
+        }
+        assert.equal([...f.records.keys()].filter(key => key.startsWith('storage_transport_')).length, 2);
+        assert.equal([...f.records.keys()].filter(key => key.startsWith('storage_asset_')).length, persistent ? 0 : 1);
+    }
 });

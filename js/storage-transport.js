@@ -60,7 +60,7 @@
     async function jsonFetch(url, init) {
         const response = await originalFetch(url, init);
         let data; try { data = await response.json(); } catch (_) { throw new Error('Storage transfer response unreadable; pending copy retained'); }
-        if (!response.ok || !data.success) throw new Error(data.error || 'Storage transfer failed; pending copy retained');
+        if (!response.ok || !data.success) throw Object.assign(new Error(data.error || 'Storage transfer failed; pending copy retained'), { status: response.status });
         return data;
     }
     async function uploadPart(url, init) {
@@ -72,6 +72,7 @@
                 const data = await response.json().catch(() => null);
                 if (response.ok && data?.success) return data;
                 const error = new Error(data?.error || 'Storage transfer failed; pending copy retained');
+                error.status = response.status;
                 error.retryable = [408, 429, 500, 502, 503, 504].includes(response.status);
                 throw error;
             } catch (error) {
@@ -80,14 +81,27 @@
             }
         }
     }
-    async function upload(target, bytes, headers, signal, metadata = {}) {
+    async function upload(target, bytes, headers, signal, metadata = {}, onProgress) {
         const common = { credentials: 'same-origin', headers, signal };
-        const begin = await jsonFetch('/api/storage/transport', { ...common, method: 'POST', body: JSON.stringify({ ...metadata, target, bytes: bytes.length, sha256: await hash(bytes) }) });
-        for (let offset = 0; offset < bytes.length; offset += CHUNK) {
-            const result = await uploadPart('/api/storage/transport/' + begin.id, { ...common, method: 'PUT', body: JSON.stringify({ offset, base64: encode(bytes.subarray(offset, offset + CHUNK)) }) });
-            if (result.offset < Math.min(offset + CHUNK, bytes.length)) throw new Error('Storage upload offset mismatch; pending copy retained');
+        const sha256 = await hash(bytes);
+        for (let restart = 0; ; restart++) {
+            try {
+                onProgress?.({ loaded: 0, total: bytes.length, restarted: restart > 0 });
+                const begin = await jsonFetch('/api/storage/transport', { ...common, method: 'POST', body: JSON.stringify({ ...metadata, target, chunkBytes: 1024 * 1024, bytes: bytes.length, sha256 }) });
+                const chunkBytes = begin.chunkBytes || CHUNK;
+                if (![CHUNK, 1024 * 1024].includes(chunkBytes)) throw new Error('Invalid storage upload chunk size');
+                for (let offset = 0; offset < bytes.length; offset += chunkBytes) {
+                    const result = await uploadPart('/api/storage/transport/' + begin.id, { ...common, method: 'PUT', body: JSON.stringify({ offset, base64: encode(bytes.subarray(offset, offset + chunkBytes)) }) });
+                    if (result.offset < Math.min(offset + chunkBytes, bytes.length)) throw new Error('Storage upload offset mismatch; pending copy retained');
+                    onProgress?.({ loaded: Math.min(offset + chunkBytes, bytes.length), total: bytes.length, restarted: restart > 0 });
+                }
+                return begin.id;
+            } catch (error) {
+                // An idle/suspended browser may outlive its transfer. Restart once
+                // from the retained bytes, without changing the dataset or save ID.
+                if (error.status !== 410 || restart >= 1 || signal?.aborted) throw error;
+            }
         }
-        return begin.id;
     }
     async function expand(response, headers, signal) {
         if (!response.headers.get('content-type')?.includes('application/json')) return response;
@@ -142,7 +156,7 @@
         }
         return response;
     }
-    async function archiveFile(file, kind, id) {
+    async function archiveFile(file, kind, id, onProgress) {
         const headers = new Headers({ 'Content-Type': 'application/json' });
         const supported = await capabilities(headers);
         if (!supported?.success) return null;
@@ -150,7 +164,7 @@
         if (file.size > maxAsset) throw new Error('Source workbook exceeds the original-file storage budget; local copy retained');
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (bytes.length > maxAsset) throw new Error('Source workbook exceeds the original-file storage budget; local copy retained');
-        const uploadId = await upload('/api/storage/assets', bytes, headers, undefined, { name: file.name });
+        const uploadId = await upload('/api/storage/assets', bytes, headers, undefined, { name: file.name }, onProgress);
         return (await jsonFetch('/api/storage/assets', { method: 'POST', credentials: 'same-origin', headers, body: JSON.stringify({ uploadId, kind, id }) })).asset;
     }
     global.BillingStorageTransport = { fetch: storageFetch, capture, revisions, archiveFile };

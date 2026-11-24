@@ -3,6 +3,8 @@
 const crypto = require('node:crypto');
 const { canonical } = require('./drive-first-store');
 const CHUNK = 256 * 1024;
+const UPLOAD_CHUNK = 1024 * 1024;
+const TRANSFER_IDLE_MS = 30 * 60 * 1000;
 const MAX = 32 * 1024 * 1024;
 const MAX_ASSET = 128 * 1024 * 1024;
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -43,15 +45,17 @@ module.exports = function createTransport({ db, drive, workers, auth, env = proc
                 if (route === '/api/storage/transport' && req.method === 'POST') {
                     const body = req.body || {}, who = await actor(req);
                     const asset = body.target === '/api/storage/assets';
+                    const chunkBytes = body.chunkBytes === undefined ? CHUNK : body.chunkBytes;
+                    if (![CHUNK, UPLOAD_CHUNK].includes(chunkBytes)) throw fail(400, 'Invalid upload chunk size');
                     if ((!allowed(body.target) && !asset) || !Number.isSafeInteger(body.bytes) || body.bytes < 1 || body.bytes > (asset ? MAX_ASSET : MAX) || !/^[a-f0-9]{64}$/.test(body.sha256 || '')) throw fail(400, 'Invalid bounded upload manifest');
                     if (asset) await auth.sessionFor(req);
                     const id = crypto.randomUUID(), fileId = await drive.createId();
                     const name = asset ? String(body.name || 'source.xlsx').replace(/[^\w. -]/g, '_').slice(0, 150) : 'transfer_' + id + '.json';
                     const session = await drive.beginUpload(fileId, name, body.bytes, asset ? 'application/octet-stream' : 'application/json');
                     const record = { direction: 'upload', owner: who.id, permissions: who.permissions, target: body.target,
-                        fileId, session, name, bytes: body.bytes, sha256: body.sha256, offset: 0, expiresAt: now() + 30 * 60 * 1000 };
+                        fileId, session, name, chunkBytes, bytes: body.bytes, sha256: body.sha256, offset: 0, expiresAt: now() + TRANSFER_IDLE_MS };
                     await db.atomicDailyRecord(key(id), () => ({ value: record, result: null }));
-                    return res.json({ success: true, id, chunkBytes: CHUNK });
+                    return res.json({ success: true, id, chunkBytes });
                 }
                 const match = /^\/api\/storage\/transport\/([a-f0-9-]{36})$/.exec(route);
                 if (!match) throw fail(404, 'Transfer endpoint not found');
@@ -61,19 +65,24 @@ module.exports = function createTransport({ db, drive, workers, auth, env = proc
                     const offset = Number(req.query.offset);
                     if (!Number.isSafeInteger(offset) || offset < 0 || offset % CHUNK || offset >= record.bytes) throw fail(400, 'Invalid download offset');
                     const bytes = await drive.readRange(record.fileId, offset, Math.min(CHUNK, record.bytes - offset), record.bytes);
+                    await db.atomicDailyRecord(key(id), old => {
+                        if (!old || old.owner !== record.owner || old.permissions !== record.permissions || old.direction !== 'download') throw fail(410, 'Download transfer changed');
+                        return { value: { ...old, expiresAt: now() + TRANSFER_IDLE_MS }, result: null };
+                    });
                     return res.json({ success: true, offset, base64: bytes.toString('base64') });
                 }
                 if (req.method !== 'PUT') throw fail(405, 'Transfer method not supported');
                 const record = await owned(req, id, 'upload'), body = req.body || {};
-                if (typeof body.base64 !== 'string' || body.base64.length > Math.ceil(CHUNK / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw fail(400, 'Invalid bounded upload part');
+                const chunkBytes = record.chunkBytes || CHUNK;
+                if (typeof body.base64 !== 'string' || body.base64.length > Math.ceil(chunkBytes / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw fail(400, 'Invalid bounded upload part');
                 const bytes = Buffer.from(body.base64, 'base64'), offset = body.offset;
-                if (!Number.isSafeInteger(offset) || offset < 0 || offset % CHUNK || bytes.length !== Math.min(CHUNK, record.bytes - offset) || bytes.toString('base64') !== body.base64) throw fail(400, 'Invalid upload part offset or length');
+                if (!Number.isSafeInteger(offset) || offset < 0 || offset % chunkBytes || bytes.length !== Math.min(chunkBytes, record.bytes - offset) || bytes.toString('base64') !== body.base64) throw fail(400, 'Invalid upload part offset or length');
                 if (record.complete) return res.json({ success: true, offset: record.bytes, complete: true });
                 const operationId = crypto.randomUUID();
                 await db.atomicDailyRecord(key(id), old => {
                     if (old?.operation?.until > now()) throw fail(409, 'Transfer part already in progress');
                     if (!old || old.expiresAt <= now()) throw fail(410, 'Transfer expired');
-                    return { value: { ...old, operation: { id: operationId, until: now() + 60000 } }, result: null };
+                    return { value: { ...old, expiresAt: now() + TRANSFER_IDLE_MS, operation: { id: operationId, until: now() + 120000 } }, result: null };
                 });
                 try {
                     // Query Drive after a lost response; never guess whether a part arrived.
@@ -90,7 +99,7 @@ module.exports = function createTransport({ db, drive, workers, auth, env = proc
                     if (currentActor.id !== record.owner || currentActor.permissions !== record.permissions) throw fail(403, 'Transfer permissions changed');
                     await db.atomicDailyRecord(key(id), old => {
                         if (old?.operation?.id !== operationId) throw fail(409, 'Transfer operation changed');
-                        const value = { ...old, offset: progress.offset, complete: progress.complete };
+                        const value = { ...old, offset: progress.offset, complete: progress.complete, expiresAt: now() + TRANSFER_IDLE_MS };
                         delete value.operation;
                         if (progress.complete) delete value.session;
                         return { value, result: null };

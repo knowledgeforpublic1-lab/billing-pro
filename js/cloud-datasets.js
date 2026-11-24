@@ -80,8 +80,11 @@
         }
         let payload = snapshot;
         if (file && global.BillingStorageTransport) {
-            const sourceAsset = await global.BillingStorageTransport.archiveFile(file, 'master', key);
+            const sourceAsset = await global.BillingStorageTransport.archiveFile(file, 'master', key, progress => {
+                if (saving.get(key) === 1) notice(key, 'Uploading Excel: ' + Math.floor(progress.loaded * 100 / progress.total) + '%.' + (progress.restarted ? ' Transfer restarted automatically.' : '') + ' Please keep this page open.');
+            });
             if (sourceAsset) payload = { ...snapshot, sourceAsset };
+            if (saving.get(key) === 1) notice(key, 'Excel upload complete. Saving stock data to cloud; please wait for confirmation.');
         }
         const pending = await update(key, current => current?.operationId === operationId ? { ...current, data: payload, base } : undefined);
         if (pending?.operationId !== operationId) return { enabled: true, superseded: true };

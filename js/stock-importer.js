@@ -695,8 +695,7 @@ window.StockImporterModule = {
             this.showToast(`Stock Updated! ${count} contractors synced${extraText}.`, 'Check');
         } catch (err) {
             console.error('[StockUpload Error]:', err);
-            alert('Stock Upload Error:\n' + (err.message || err));
-            this.showToast('Failed to process stock Excel: ' + (err.message || 'Unknown error'), 'Alert');
+            this.showToast('Stock update nahi hua: ' + (err.message || 'Unknown error'), 'Alert');
         } finally {
             this.stockUploading = false;
         }
