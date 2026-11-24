@@ -3191,7 +3191,7 @@
             <!-- VIEW 6: MASTER RECONCILIATION -->
             <div v-if="currentView === 'masterrecon'" class="master-recon-page">
                 <div class="master-recon-workspace">
-                    <iframe :src="'Reconciliation master/index.html?v=20261124_stock_sync&theme=' + themeMode" title="Master Reconciliation"
+                    <iframe :src="'Reconciliation master/index.html?v=20261124_stock_identity&theme=' + themeMode" title="Master Reconciliation"
                         class="master-recon-frame">
                     </iframe>
                 </div>
@@ -5145,7 +5145,8 @@
 
     <!-- Feature Modules -->
     <script defer src="js/sync.js?v=20261118_review4"></script>
-    <script defer src="js/billing.js?v=20261117_entry_performance"></script>
+    <script defer src="js/stock-identity.js?v=20261124_stock_identity"></script>
+    <script defer src="js/billing.js?v=20261124_stock_identity"></script>
     <script defer src="js/mapping.js?v=20261114_contractor_mapping"></script>
     <script defer src="js/contractor-mapping.js?v=20261117_refresh_mapping_restore"></script>
     <script defer src="js/reco-layout.js?v=20261114_reco_header"></script>
@@ -5154,7 +5155,7 @@
     <script defer src="js/views.js?v=20261117_entry_performance"></script>
     <script defer src="js/export.js?v=20261114_conductor_km"></script>
     <script defer src="js/pole-schedule.js?v=20261120_fix_1220_sync"></script>
-    <script defer src="js/stock-importer.js?v=20261124_stock_formats"></script>
+    <script defer src="js/stock-importer.js?v=20261124_stock_identity"></script>
     <script defer src="js/old-reco-importer.js?v=20261118_review4"></script>
 
     <script defer src="js/sap-work-orders.js?v=20261116"></script>

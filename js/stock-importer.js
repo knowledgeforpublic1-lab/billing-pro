@@ -477,11 +477,13 @@ window.StockImporterModule = {
             mat = mat.replace(/\.0+$/, '');
             if (!mat || mat.toLowerCase() === 'total' || mat.toLowerCase() === 'sum') continue;
 
-            const wo = woCol !== -1 ? String(row[woCol] || '').trim() : fallbackWo;
+            const rowName = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : '';
+            const activeRow = cNameCol === -1 || this.normContractorName(rowName) === this.normContractorName(opts.activeContractorName);
+            const wo = woCol !== -1 ? String(row[woCol] || '').trim() : (activeRow ? fallbackWo : '');
             const master = window.MasterSapCodeMapping;
             const mappedKey = master?.dhToGroupKey?.[wo] || master?.woToGroupKey?.[wo];
             const mappedName = mappedKey && (master.groups?.[mappedKey]?.displayName || mappedKey);
-            const name = cNameCol !== -1 ? String(row[cNameCol] || '').trim() : (mappedName || fallbackName);
+            const name = cNameCol !== -1 ? rowName : (mappedName || fallbackName);
             const desc = descCol !== -1 ? String(row[descCol] || '').trim() : mat;
             const uom = uomCol !== -1 ? String(row[uomCol] || '').trim() : 'No';
 
@@ -493,9 +495,9 @@ window.StockImporterModule = {
             if (grossCol === -1 && netCol !== -1) gross = net + mrn;
 
             const key = this.normContractorName(name) || 'uploadedstock';
+            const useActiveIdentity = (!mappedName && cNameCol === -1) || key === this.normContractorName(opts.activeContractorName);
             if (!groups[key]) {
                 const rawNormsSet = new Set([this.normRawKey(name), key]);
-                const useActiveIdentity = (!mappedName && cNameCol === -1) || key === this.normContractorName(opts.activeContractorName);
                 if (fallbackId && useActiveIdentity) {
                     rawNormsSet.add(fallbackId.toLowerCase().replace(/[^a-z0-9]/g, ''));
                 }
@@ -521,7 +523,7 @@ window.StockImporterModule = {
                     groups[key].wos.add(m[0]);
                     dhToGroupKey[m[0]] = key;
                 }
-            } else if (fallbackWo) {
+            } else if (fallbackWo && useActiveIdentity) {
                 groups[key].dhs.add(fallbackWo);
                 dhToGroupKey[fallbackWo] = key;
                 const m = fallbackWo.match(/\b\d{8}\b/);

@@ -94,9 +94,14 @@ async function refreshMasterStock(render = true) {
         if (rawData !== snapshot || reconLocalPending) return;
         masterStockError = false;
         if (!body.data) return;
-        const stamp = response.headers?.get('x-billing-storage-versions') || JSON.stringify(body.data);
+        let directory = window.defaultContractorsList || [];
+        try {
+            if (window.parent !== window && Array.isArray(window.parent?.vm?.contractorsList)) directory = window.parent.vm.contractorsList;
+        } catch (_) {}
+        const directoryStamp = JSON.stringify(directory.map(row => [row.id, row.name, row.workOrderNo, row.workOrderNumbers]));
+        const stamp = (response.headers?.get('x-billing-storage-versions') || JSON.stringify(body.data)) + directoryStamp;
         if (stamp === masterStockStamp) { if (render) updateDataQuality(); return; }
-        rawData = window.MasterStockSync.apply(rawData, body.data);
+        rawData = window.MasterStockSync.apply(rawData, body.data, { directory, referenceData: typeof DATA !== 'undefined' ? DATA : undefined });
         masterStockStamp = stamp;
         if (render) {
             const selected = document.getElementById('contractorSelect')?.value;
@@ -154,6 +159,7 @@ function updateDataQuality() {
         (reconLocalPending ? ' · UNSYNCED LOCAL IMPORT' : '') +
         (masterStockError ? ' · Latest stock unavailable; refresh to retry' : '') +
         (rawData.StockSyncWarnings?.length ? ' · ' + rawData.StockSyncWarnings.length + ' stock mappings need review' : '');
+    banner.title = (rawData.StockSyncWarnings || []).join('\n');
 }
 function exportDataChecks() {
     if (!rawData) return;

@@ -27,7 +27,7 @@
     "storage:preflight": "node scripts/storage-preflight.js",
     "storage:verify:staging": "node scripts/verify-drive-staging.js",
     "test:daily-progress:sharing": "node --test test/default-feeders.test.js test/share-link.test.js",
-    "test:stock-formats": "node --test test/stock-formats.test.js"
+    "test:stock-formats": "node --test test/stock-formats.test.js test/stock-parity.test.js"
   },
   "overrides": {
     "exceljs": {

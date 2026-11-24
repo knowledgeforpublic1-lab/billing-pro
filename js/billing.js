@@ -15,10 +15,13 @@ window.BillingModule = {
         const old = typeof this.getContractorOldReco === 'function' ? this.getContractorOldReco() : null;
         if (!stock && !old) return null;
         const cached = reconciliationIssueCache.get(this);
-        if (cached && cached.stock === stock && cached.old === old && cached.revision === this.recoRevision &&
+        if (cached && cached.stock === stock && cached.old === old && cached.customStock === !!this.hasCustomStock && cached.revision === this.recoRevision &&
             cached.date === this.stockAsOnDate && cached.contractor === this.selectedContractorId && cached.name === this.selectedContractorName) return cached.value;
         const materials = { ...(stock && stock.materials || {}) };
         Object.entries(old && old.materials || {}).forEach(([code, item]) => {
+            // A confirmed/imported full stock snapshot is authoritative. Old reco
+            // keeps its consumption history but must not revive missing issues.
+            if (this.hasCustomStock) return;
             // An explicit SAP zero, including a posting-date cutoff, wins.
             if (Object.prototype.hasOwnProperty.call(materials, code)) return;
             const net = this.stockAsOnDate ? 0 : Number(item.netIssue !== undefined ? item.netIssue : (item.issuedQty || 0));
@@ -30,7 +33,7 @@ window.BillingModule = {
             };
         });
         const value = { ...(old || {}), ...(stock || {}), materials };
-        reconciliationIssueCache.set(this, { stock, old, revision: this.recoRevision, date: this.stockAsOnDate, contractor: this.selectedContractorId, name: this.selectedContractorName, value });
+        reconciliationIssueCache.set(this, { stock, old, customStock: !!this.hasCustomStock, revision: this.recoRevision, date: this.stockAsOnDate, contractor: this.selectedContractorId, name: this.selectedContractorName, value });
         return value;
     },
     // ─── SAP STOCK MATERIAL ISSUES AUTO-SYNC ────
@@ -42,7 +45,7 @@ window.BillingModule = {
         if (!stock) return null;
 
         const cacheKey = (this.selectedContractorId || '') + '__' + (this.selectedContractorName || '') + '__' + (_rev || 0) + '__' + (_cust ? '1' : '0') + '__' + (_asOn || '');
-        if (this._memoContractorSap && this._memoContractorSapKey === cacheKey) {
+        if (this._memoContractorSap && this._memoContractorSapKey === cacheKey && this._memoContractorSapSource === stock) {
             return this._memoContractorSap;
         }
 
@@ -98,8 +101,17 @@ window.BillingModule = {
             const finalVal = filterRecordByDate(val, _asOn);
             this._memoContractorSapKey = cacheKey;
             this._memoContractorSap = finalVal;
+            this._memoContractorSapSource = stock;
             return finalVal;
         };
+
+        if (this.hasCustomStock && window.BillingStockIdentity) {
+            const result = window.BillingStockIdentity.resolve(stock, {
+                id: this.selectedContractorId, name: this.selectedContractorName || this.invoiceData?.contractorName || this.projectMeta?.contractorName,
+                workOrderNo: this.invoiceData?.workOrderNo || this.projectMeta?.workOrderNo
+            }, this.contractorsList || []);
+            return setMemo(result.status === 'matched' ? result.matches[0].block : null);
+        }
 
         // 0. Direct match by selectedContractorId
         if (this.selectedContractorId && this.selectedContractorId !== 'custom') {

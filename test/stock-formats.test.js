@@ -108,3 +108,11 @@ test('CSV upload follows the same local backup, cloud confirmation and display u
     assert.equal(global.ContractorSapStock.byContractorNorm.teama.materials['00100'].netIssue, 7);
     assert.ok(messages.some(message => message.includes('Stock Updated!')));
 });
+
+test('multi-contractor CSV cannot assign the active contractor work order to every row', async () => {
+    const bytes = Buffer.from('Contractor,Material,Issue,Posting Date\nTeam A,100,10,2026-11-24\nTeam B,100,20,2026-11-24');
+    const parsed = await importer.parseStockFile(file('Stock.csv', bytes), { activeContractorName: 'Team A', activeContractorId: 'team_a', activeWorkOrderNo: '31000001' });
+    assert.deepEqual(parsed.byContractorNorm.teama.allWorkOrders, ['31000001']);
+    assert.deepEqual(parsed.byContractorNorm.teamb.allWorkOrders, []);
+    assert.equal(parsed.byDocHeader['31000001'].contractorName, 'Team A');
+});

@@ -13,6 +13,7 @@ function setup(fetchImpl) {
     vm.createContext(context);
     vm.runInContext(fs.readFileSync('Reconciliation master/analytics.js', 'utf8'), context);
     context.MasterAnalytics = context.window.MasterAnalytics;
+    vm.runInContext(fs.readFileSync('js/stock-identity.js', 'utf8'), context);
     vm.runInContext(fs.readFileSync('Reconciliation master/stock-sync.js', 'utf8'), context);
     vm.runInContext(fs.readFileSync('Reconciliation master/app.js', 'utf8'), context);
     return { context, storage, nodes, run: code => vm.runInContext(code, context) };
