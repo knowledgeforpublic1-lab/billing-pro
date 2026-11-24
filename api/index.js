@@ -84,12 +84,59 @@ app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, max
 app.get('/js/data/default-feeders.js', (req, res) => res.sendFile(require('path').join(__dirname, '../js/data/default-feeders.js')));
 app.use('/api/auth', auth.router);
 app.use(['/api', '/js/data'], (req, res, next) => {
-    if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress') {
+    if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress' || req.path.startsWith('/telegram')) {
         return next();
     }
     return auth.middleware(req, res, next);
 });
 app.use('/api/dp-admin', dailyProgress.adminRouter);
+
+const telegram = require('./telegram');
+
+// Telegram Webhook receiver (for /today, /pending, /help commands from Telegram chat)
+app.post('/api/telegram/webhook', async (req, res) => {
+    try {
+        await telegram.handleWebhookUpdate(req.body, { db, dailyProgressService: dailyProgress.service });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('[Telegram Webhook Error]', err);
+        res.status(200).json({ ok: false, error: err.message });
+    }
+});
+
+// Test Telegram notification directly
+app.get('/api/telegram/test', async (req, res) => {
+    const text = req.query.text || `🔔 <b>BillingPro RDSS Bot Test!</b>\n\nTelegram notification connection 100% active hai! ⚡\nChat ID: <code>${req.query.chat_id || telegram.DEFAULT_CHAT_ID}</code>\nTime: ${new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
+    const targetChat = req.query.chat_id || telegram.DEFAULT_CHAT_ID;
+    const result = await telegram.sendMessage(text, { chatId: targetChat });
+    res.json(result);
+});
+
+// Daily summary report trigger (can be called manually or by cron)
+app.get('/api/telegram/send-summary', async (req, res) => {
+    try {
+        const todayStr = req.query.date || new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).toISOString().slice(0, 10);
+        const summary = await telegram.buildDailySummary(todayStr, { db, dailyProgressService: dailyProgress.service });
+        const result = await telegram.sendMessage(summary, { chatId: req.query.chat_id || telegram.DEFAULT_CHAT_ID });
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Webhook setup helper (registers https://billing-pro-dusky.vercel.app/api/telegram/webhook)
+app.get('/api/telegram/setup-webhook', async (req, res) => {
+    const host = req.get('host') || 'billing-pro-dusky.vercel.app';
+    const proto = req.get('x-forwarded-proto') || 'https';
+    const webhookUrl = `${proto}://${host}/api/telegram/webhook`;
+    try {
+        const tr = await fetch(`https://api.telegram.org/bot${telegram.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
+        const data = await tr.json();
+        res.json({ webhookUrl, telegramResponse: data });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 app.get('/js/data/:file', async (req, res) => {
     res.set('Cache-Control', 'private, max-age=3600, must-revalidate');
     if (!/^[a-zA-Z0-9_-]+\.js$/.test(req.params.file)) return res.status(404).end();

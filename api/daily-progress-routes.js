@@ -258,6 +258,17 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const saved = await service.save(req.dpContractor.id, req.params.date, req.get('x-dp-editor'), { ...req.body, locationId: locationFor(req) }, req.dpWorker);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.dpContractor.id, date: req.params.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
         invalidateDataCache();
+        try {
+            const telegram = require('./telegram');
+            telegram.sendDailyProgressAlert({
+                contractorName: req.dpContractor?.name || req.dpContractor?.id,
+                feeder: req.body?.locationName || req.dpContractor?.feeder,
+                date: req.params.date,
+                report: saved.report || req.body,
+                savedBy: saved.savedBy || req.dpWorker?.name,
+                isFinal: saved.state === 'final' || req.body?.state === 'final'
+            }).catch(e => console.warn('[Telegram] Alert error:', e.message));
+        } catch (e) { }
         res.json({ success: true, ...saved });
     }));
 
@@ -296,6 +307,17 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         const saved = await service.save(req.body.contractorId, req.body.date, req.get('x-dp-editor'), req.body, actor);
         if (saved.savedBy && saved.savedAt) await workers.recordHistory({ contractorId: req.body.contractorId, date: req.body.date, version: saved.version, savedAt: saved.savedAt, savedBy: saved.savedBy, report: saved.report, source: 'token' });
         invalidateDataCache();
+        try {
+            const telegram = require('./telegram');
+            telegram.sendDailyProgressAlert({
+                contractorName: req.body.contractorName || req.body.contractorId,
+                feeder: req.body.locationName || req.body.feeder,
+                date: req.body.date,
+                report: saved.report || req.body,
+                savedBy: 'Admin',
+                isFinal: saved.state === 'final' || req.body?.state === 'final'
+            }).catch(e => console.warn('[Telegram] Alert error:', e.message));
+        } catch (e) { }
         res.json({ success: true, ...saved });
     }));
     adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat', locationFor(req)) })));
