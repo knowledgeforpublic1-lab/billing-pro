@@ -2650,7 +2650,7 @@
                         <div class="dp-excel-meta-bar">
                             <div>
                                 <strong>RDSS GADCHIROLI (T-10) — DAILY PROGRESS REGISTER</strong>
-                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.feeder) || 'ANGARA' }} · Team: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }}</span>
+                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ getDailyProgressExportFeederName() || 'Unassigned' }} · Team: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }}</span>
                             </div>
                             <div>
                                 <span style="color: var(--dp-accent-blue); font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
@@ -5150,7 +5150,7 @@
     <script defer src="js/sap-work-orders.js?v=20261116"></script>
     <script defer src="js/data/default-daily-progress.js?v=20261116"></script>
     <script defer src="js/share-link.js?v=20261121_locations_share_v3"></script>
-    <script defer src="js/daily-progress.js?v=20261121_auto_lock_v1"></script>
+    <script defer src="js/daily-progress.js?v=20261124_excel_location"></script>
     <script defer src="js/daily-progress-access.js?v=20261121_auto_lock_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
     <script defer src="js/core/app.js?v=20261124_timer_render"></script>

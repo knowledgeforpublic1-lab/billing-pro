@@ -48,7 +48,7 @@
                 <span>🏢</span>
                 <div>
                     {{ activeContractor.project || 'Gadchiroli (T-10)' }}
-                    <small>Feeder: {{ activeContractor.feeder || 'ANGARA' }}</small>
+                    <small>Feeder: {{ activeFeederName || 'Unassigned' }}</small>
                 </div>
             </div>
 
@@ -729,7 +729,7 @@
                         <div class="dp-excel-meta-bar">
                             <div>
                                 <strong>RDSS GADCHIROLI (T-10) — DAILY PROGRESS REGISTER</strong>
-                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ activeContractor.feeder || 'ANGARA' }} · Team: {{ activeContractor.name }}</span>
+                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ activeFeederName || 'Unassigned' }} · Team: {{ activeContractor.name }}</span>
                             </div>
                             <div>
                                 <span style="color: #38bdf8; font-weight: 700;">{{ getExportDays().length }} Days Range</span>
@@ -1088,7 +1088,7 @@
     <script src="js/daily-worker-auth.js?v=20261124_v1"></script>
     <script src="js/data/default-feeders.js?v=20261124_v1"></script>
     <script src="js/share-link.js?v=20261124_v1"></script>
-    <script src="js/daily-progress-standalone.js?v=20261124_stock_sync"></script>
+    <script src="js/daily-progress-standalone.js?v=20261124_excel_location"></script>
 </body>
 
 </html>

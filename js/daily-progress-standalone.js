@@ -173,6 +173,11 @@
         },
 
         computed: {
+            activeFeederName() {
+                const location = this.activeLocationObj;
+                const contractor = this.activeContractor || {};
+                return (location && (location.feeder || location.feederName || location.name)) || contractor.feeder || contractor.feederName || '';
+            },
             activeLocationName() {
                 if (this.selectedLocationId === 'legacy' || !this.selectedLocationId) return 'Legacy / Unassigned';
                 const found = (this.locations || []).find(row => row.id === this.selectedLocationId);
@@ -1515,7 +1520,10 @@
             },
 
             getExportDayReport(date) {
-                return this.contractorReports.find(r => r.date === date);
+                const day = normDate(date), location = locationKey(this.selectedLocationId);
+                return this.contractorReports.filter(r => normDate(r.date) === day && locationKey(r.locationId) === location)
+                    .sort((a, b) => Number(b.version || 0) - Number(a.version || 0) ||
+                        (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0))[0];
             },
 
             getExportDayQty(itemId, date) {
@@ -1620,6 +1628,7 @@
                         alert('1 se 366 dino ka date range chunein.');
                         return;
                     }
+                    const reportsByDate = new Map(days.map(date => [date, this.getExportDayReport(date)]));
 
                     let templateBuffer = null;
                     try {
@@ -1652,7 +1661,7 @@
 
                         // Header info
                         ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
-                        ws.getCell('A3').value = 'FEEDER: ' + (contractor.feeder || '') + ' | LOCATION: ' + (this.activeLocationName || 'Legacy / Unassigned');
+                        ws.getCell('A3').value = 'FEEDER: ' + (this.activeFeederName || 'Unassigned') + ' | LOCATION: ' + (this.activeLocationName || 'Legacy / Unassigned');
                         ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                         ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
 
@@ -1667,7 +1676,7 @@
 
                         chunk.forEach((dt, i) => {
                             const colLetter = getColLetter(i + 4);
-                            const rep = this.contractorReports.find(x => x.date === dt);
+                            const rep = reportsByDate.get(dt);
                             const mp = rep?.manpower || {};
 
                             ws.getCell(colLetter + '7').value = dt;
@@ -1688,7 +1697,7 @@
                         // Sum formula on AI column
                         this.items.forEach(it => {
                             const total = chunk.reduce((sum, d) => {
-                                const rep = this.contractorReports.find(x => x.date === d);
+                                const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
                             }, 0);
                             const aiCell = ws.getCell('AI' + it.row);

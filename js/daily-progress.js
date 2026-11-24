@@ -884,6 +884,15 @@ window.DailyProgressModule = {
 
     // ─── EXCEL REPORT EXPORT ──────────────────────────────────────────────────
 
+    getDailyProgressExportFeederName() {
+        const id = this.dailyProgressLocationId;
+        const location = (this.dailyProgressLocations || []).find(row => row.id === id) ||
+            (window.DefaultFeeders && window.DefaultFeeders.get(id));
+        const contractor = (this.dailyProgressData?.contractors || []).find(row => row.id === this.dailyProgressContractorId);
+        return (location && (location.feeder || location.feederName || location.name)) ||
+            (contractor && (contractor.feeder || contractor.feederName)) || '';
+    },
+
     async downloadDailyProgressExcel() {
         if (this.dailyProgressDirty) {
             this.showToast('Pehle daily progress save karein, phir Excel download karein.', 'Alert');
@@ -905,11 +914,10 @@ window.DailyProgressModule = {
             const contractor = (this.dailyProgressData && this.dailyProgressData.contractors || []).find(c => c.id === cid) || {
                 name: this.selectedContractorName || 'Contractor',
                 project: 'Gadchiroli (T-10)',
-                feeder: 'ANGARA',
+                feeder: '',
                 engineer: 'SUPERVISOR'
             };
 
-            const reports = (this.dailyProgressData && this.dailyProgressData.reports || []).filter(r => r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId));
             const seedItems = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
 
             // Calculate date range list
@@ -921,6 +929,7 @@ window.DailyProgressModule = {
             if (!days.length || days.length > 366) {
                 throw new Error('1 se 366 dino ka date range chunein.');
             }
+            const reportsByDate = new Map(days.map(date => [date, this.getDailyProgressDayReport(date)]));
 
             // Load template
             let templateBuffer = null;
@@ -965,7 +974,7 @@ window.DailyProgressModule = {
 
                 // Header metadata
                 ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
-                ws.getCell('A3').value = 'FEEDER: ' + (contractor.feeder || 'ANGARA') + ' | LOCATION: ' + this.dailyProgressLocationName();
+                ws.getCell('A3').value = 'FEEDER: ' + (this.getDailyProgressExportFeederName() || 'Unassigned') + ' | LOCATION: ' + this.dailyProgressLocationName();
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
 
@@ -985,7 +994,7 @@ window.DailyProgressModule = {
                 // Fill days and manpower
                 chunk.forEach((date, i) => {
                     const colLetter = getColLetter(i + 4); // Col E = 4 (0-based)
-                    const r = reports.find(x => x.date === date);
+                    const r = reportsByDate.get(date);
                     const m = (r && r.manpower) || {};
 
                     // Date serial in Row 7
@@ -1015,7 +1024,7 @@ window.DailyProgressModule = {
                 seedItems.forEach((it, i) => {
                     ws.getCell('A' + it.row).value = i + 1;
                     const totalConsumedInChunk = chunk.reduce((sum, d) => {
-                        const rep = reports.find(x => x.date === d);
+                        const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     ws.getCell('AI' + it.row).value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
@@ -1024,7 +1033,7 @@ window.DailyProgressModule = {
                 // Notes in AJ8
                 const notesStr = chunk
                     .map(d => {
-                        const rep = reports.find(x => x.date === d);
+                        const rep = reportsByDate.get(d);
                         return rep && rep.remarks ? `${d}: ${rep.remarks}` : '';
                     })
                     .filter(Boolean)
@@ -1074,15 +1083,13 @@ window.DailyProgressModule = {
         const targetNorm = normFn(cid);
         const normD = this.normalizeDailyProgressDate(date);
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
-        return reports.find(r => {
+        return reports.filter(r => {
             const matchesC = r.contractorId === cid || normFn(r.contractorId) === targetNorm;
             const matchesD = r.date === date || this.normalizeDailyProgressDate(r.date) === normD;
             if (!matchesC || !matchesD) return false;
-            if (this.dailyProgressLocationId) {
-                return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
-            }
-            return true;
-        });
+            return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        }).sort((a, b) => Number(b.version || 0) - Number(a.version || 0) ||
+            (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0))[0];
     },
 
     openDailyProgressReportFromHistory(rep) {

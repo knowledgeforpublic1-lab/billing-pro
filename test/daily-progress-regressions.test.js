@@ -82,6 +82,68 @@ test('31-day Excel export clears old data and preserves labels, merges and style
     assert.equal(second.getColumn(3).width, first.getColumn(3).width);
     assert.equal(first.getCell('AI15').value, 4); assert.equal(second.getCell('AI15').value, 8);
 });
+
+for (const page of ['dashboard', 'shared']) {
+    test(`${page} Excel exports the latest saved quantity for the selected feeder, including legacy date/id formats`, async () => {
+        let output, app;
+        const seed = { contractor: {}, records: [], items: [{ id: '15', row: 15, name: 'Sand', code: '100', unit: 'KG' }] };
+        const context = {
+            window: { ExcelJS, DailyProgressSeed: seed, location: { search: '?contractor=team-a' } },
+            console, URLSearchParams,
+            fetch: async () => ({ ok: true, arrayBuffer: async () => fs.readFileSync('public/daily-progress-template.xlsx') }),
+            Blob: class { constructor(parts) { output = Buffer.from(parts[0]); } },
+            URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
+            document: { body: { appendChild() {}, removeChild() {} }, createElement: () => ({ click() {} }) },
+            localStorage: { getItem() { return null; }, setItem() {} },
+            setTimeout: fn => fn(), clearTimeout() {}, alert(message) { throw Error(message); },
+            Vue: { createApp(options) {
+                app = { ...options.data(), ...options.methods };
+                for (const [key, getter] of Object.entries(options.computed)) Object.defineProperty(app, key, { get: () => getter.call(app) });
+                return { mount() {}, directive() {} };
+            } }
+        };
+        const contractors = [{ id: 'team-a', name: 'Team A', feeder: 'OLD FEEDER' }];
+        const locations = [{ id: 'site-a', name: 'Selected Site', feeder: 'CORRECT FEEDER' }, { id: 'site-b', name: 'Other Site', feeder: 'OTHER FEEDER' }];
+        const reports = [
+            { contractorId: 'team-a', date: '2026-11-24', locationId: 'site-b', quantities: { 15: 999 }, version: 50 },
+            { contractorId: 'team-a', date: '2026-11-24', locationId: 'site-a', quantities: {}, version: 1 },
+            { contractorId: 'M/s Team-A', date: '24/11/2026', locationId: 'site-a', quantities: { 15: 7.5 }, manpower: { leader: 2 }, version: 3 },
+            { contractorId: 'team-a', date: '2026-11-24', locationId: 'site-a', quantities: { 15: 5 }, version: 2, updatedAt: '2026-11-25T00:00:00Z' },
+            { contractorId: 'team-b', date: '2026-11-24', locationId: 'site-a', quantities: { 15: 888 }, version: 99 },
+            { contractorId: 'team-a', date: '2026-11-24', quantities: { 15: 444 }, version: 99 }
+        ];
+        if (page === 'dashboard') {
+            vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
+            app = { ...context.window.DailyProgressModule, dailyProgressContractorId: 'team-a', dailyProgressLocationId: 'site-a',
+                dailyProgressLocations: locations, dailyProgressData: { contractors, reports },
+                dailyProgressExportFrom: '2026-11-24', dailyProgressExportTo: '2026-11-25', showToast(message) { this.toast = message; } };
+            assert.equal(app.getDailyProgressExportQty('15', '2026-11-24'), 7.5);
+            await app.downloadDailyProgressExcel();
+        } else {
+            vm.runInNewContext(fs.readFileSync('js/daily-progress-standalone.js', 'utf8'), context);
+            Object.assign(app, { contractors, reports, locations, selectedContractorId: 'team-a', selectedLocationId: 'site-a',
+                exportFrom: '2026-11-24', exportTo: '2026-11-25', showToast(message) { this.toast = message; } });
+            assert.equal(app.getExportDayQty('15', '2026-11-24'), 7.5);
+            await app.downloadExcelReport();
+        }
+        assert.ok(output, app.toast);
+        const book = new ExcelJS.Workbook(); await book.xlsx.load(output);
+        const sheet = book.worksheets[0];
+        assert.equal(sheet.getCell('E15').value, 7.5);
+        assert.equal(sheet.getCell('F15').value, null, 'No report stays blank');
+        assert.equal(sheet.getCell('AI15').value, 7.5);
+        assert.equal(sheet.getCell('E8').value, 2);
+        assert.equal(sheet.getCell('A3').value, 'FEEDER: CORRECT FEEDER | LOCATION: Selected Site');
+        if (page === 'dashboard') {
+            app.dailyProgressLocationId = 'legacy';
+            assert.equal(app.getDailyProgressExportQty('15', '2026-11-24'), 444);
+        } else {
+            app.selectedLocationId = 'legacy';
+            assert.equal(app.getExportDayQty('15', '2026-11-24'), 444);
+        }
+        assert.deepEqual(reports[2].quantities, { 15: 7.5 }, 'Export never mutates saved entries');
+    });
+}
 test('production Mongo CAS adapter serializes concurrent updates across instances', async () => {
     const source = fs.readFileSync('api/db.js', 'utf8');
     const functions = source.slice(source.indexOf('async function atomicDailyRecord'), source.indexOf('module.exports = {'));
