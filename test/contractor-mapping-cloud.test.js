@@ -46,6 +46,74 @@ test('failed SAP cloud save shows the actual error, retains dirty mapping and al
     assert.equal(profile.dirty, false); assert.equal(app.mappingCloudError, '');
 });
 
+test('expired admin access defers background mapping saves without a failed request or password popup', async () => {
+    let requests = 0, dialogs = 0, resume;
+    const { app, profile, cache } = fixture(async () => { requests++; return { ok: true, status: 200, json: async () => ({ success: true }) }; });
+    Object.assign(app, { isPortalUnlocked: true, isAdminElevated: true, adminExpiresAt: 900, authNow: () => 1000,
+        openAdminModal(callback) { dialogs++; this.showAdminModal = true; resume = callback; } });
+    assert.equal(await app.persistContractorMapping(true), false);
+    assert.equal(requests, 0); assert.equal(dialogs, 0);
+    assert.equal(app.mappingCloudStatus, 'verification-required'); assert.equal(profile.dirty, true);
+    assert.equal(JSON.parse(cache.get('billing_contractor_mapping_v1_team')).dirty, true);
+    assert.equal(await app.persistContractorMapping(false), false);
+    assert.equal(dialogs, 1); assert.equal(requests, 0);
+    assert.equal(await app.persistContractorMapping(false), false);
+    assert.equal(dialogs, 1, 'Repeated Save clicks share the same verification dialog');
+    app.showAdminModal = false; app.isAdminElevated = true; app.adminExpiresAt = 5000;
+    assert.equal(await resume(), true);
+    assert.equal(requests, 1); assert.equal(profile.dirty, false); assert.equal(app.mappingCloudStatus, 'synced');
+});
+
+test('admin expiry reported during upload retains the mapping and resumes the original contractor after verification', async () => {
+    let authorized = false, resume;
+    const ids = [];
+    const { app, profile } = fixture(async (url, options) => {
+        ids.push(JSON.parse(options.body).contractorId);
+        return authorized ? { ok: true, status: 200, json: async () => ({ success: true }) }
+            : { ok: false, status: 403, json: async () => ({ success: false, error: 'Admin verification expired; pending changes retained' }) };
+    });
+    Object.assign(app, { isPortalUnlocked: true, isAdminElevated: true, adminExpiresAt: 5000, authNow: () => 1000,
+        openAdminModal(callback) { this.showAdminModal = true; resume = callback; } });
+    assert.equal(await app.persistContractorMapping(false), false);
+    assert.equal(app.isAdminElevated, false); assert.equal(app.mappingCloudStatus, 'verification-required');
+    assert.equal(profile.dirty, true); assert.equal(app.showAdminModal, true);
+    authorized = true; app.isAdminElevated = true; app.adminExpiresAt = 5000; app.showAdminModal = false;
+    app._activeMappingContractorId = 'other'; app.selectedContractorId = 'other'; app.mappingCloudStatus = 'idle';
+    assert.equal(await resume(), true);
+    assert.deepEqual(ids, ['team', 'team']); assert.equal(profile.dirty, false);
+    assert.equal(app.mappingCloudStatus, 'idle', 'Retry cannot change the other contractor status');
+});
+
+test('a generic 403 permission failure cannot trigger admin re-verification or discard mapping changes', async () => {
+    let dialogs = 0;
+    const { app, profile } = fixture(async () => ({ ok: false, status: 403, json: async () => ({ success: false, error: 'Contractor access denied' }) }));
+    Object.assign(app, { isPortalUnlocked: true, isAdminElevated: true, adminExpiresAt: 5000, authNow: () => 1000, openAdminModal() { dialogs++; } });
+    assert.equal(await app.persistContractorMapping(false), false);
+    assert.equal(dialogs, 0); assert.equal(profile.dirty, true); assert.equal(app.isAdminElevated, true);
+    assert.equal(app.mappingCloudStatus, 'error'); assert.match(app.mappingCloudError, /Contractor access denied/);
+});
+
+test('successful admin verification automatically saves pending profiles once without hiding the mapping acknowledgement', async () => {
+    const savedIds = [], messages = [];
+    const { app, profile, context } = fixture(async (url, options) => {
+        if (url === '/api/auth/admin') return { ok: true, status: 200, json: async () => ({ success: true, serverTime: Date.now(), expiresAt: Date.now() + 600000, adminExpiresAt: Date.now() + 600000 }) };
+        savedIds.push(JSON.parse(options.body).contractorId);
+        return { ok: true, status: 200, json: async () => ({ success: true }) };
+    });
+    vm.runInNewContext(fs.readFileSync('js/auth.js', 'utf8'), context);
+    Object.assign(app, context.window.AuthModule, { initPortalWatchdog() {}, isPortalUnlocked: true, isAdminElevated: false, showToast(message) { messages.push(message); } });
+    app.contractorMappingState.profiles.other = { ...structuredClone(profile), updatedAt: 124 };
+    app.adminPasswordInput = 'example';
+    app.adminPendingCallback = () => app.persistContractorMapping(false, 'team');
+    await app.verifyAdminPassword();
+    assert.deepEqual(savedIds, ['team', 'other']);
+    assert.equal(profile.dirty, false); assert.equal(app.contractorMappingState.profiles.other.dirty, false);
+    assert.equal(app.adminPendingCallback, null); assert.equal(app.adminPasswordInput, '');
+    assert.equal(app.authBusy, false); assert.equal(app.isAdminElevated, true);
+    assert.match(messages[0], /Admin access verified/);
+    assert.match(messages.at(-1), /mapping save ho gayi/);
+});
+
 test('confirmed local cache acknowledgement survives reload of a stale dirty bill snapshot', () => {
     const { app, profile, cache } = fixture(async () => {});
     const confirmed = { ...profile, dirty: false };

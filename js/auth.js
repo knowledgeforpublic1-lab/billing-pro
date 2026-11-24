@@ -176,8 +176,9 @@
                 this.showAdminModal = false;
                 const callback = this.adminPendingCallback;
                 this.adminPendingCallback = null;
+                this.showToast('Admin access verified hai', '✅');
                 if (typeof callback === 'function') callback();
-                this.showToast('Admin access 5 minute ke liye verified hai', '✅');
+                if (typeof this.retryPendingContractorMappings === 'function') await this.retryPendingContractorMappings();
             } catch (e) {
                 this.adminPasswordError = e.message || 'Admin verification nahi hua.';
             } finally { this.authBusy = false; }

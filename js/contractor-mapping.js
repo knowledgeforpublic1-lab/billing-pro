@@ -162,6 +162,29 @@
                 }
             } catch (e) { /* Offline: keep the bill/local contractor mapping. */ }
         },
+        deferContractorMappingForAdmin(id, silent) {
+            this.isAdminElevated = false; this.isAdminUnlocked = false; this.adminExpiresAt = 0;
+            if (id === this._activeMappingContractorId) {
+                this.mappingCloudStatus = 'verification-required';
+                this.mappingCloudError = 'Mapping local saved hai. Cloud save ke liye Admin verify karein.';
+            }
+            const current = this.contractorMappingState?.profiles?.[id];
+            if (current) this.cacheContractorMapping(id, current);
+            // Background saves never interrupt editing with password dialogs.
+            // An explicit Save/Retry resumes the original contractor after verification.
+            if (!silent && !this.showAdminModal && typeof this.openAdminModal === 'function') {
+                this.openAdminModal(() => this.persistContractorMapping(false, id));
+            }
+            return false;
+        },
+        async retryPendingContractorMappings() {
+            if (this.isFinalized || !this.contractorMappingState) return true;
+            let saved = true;
+            for (const id of Object.keys(this.contractorMappingState.profiles || {})) {
+                if (this.contractorMappingState.profiles[id]?.dirty && !await this.persistContractorMapping(true, id)) saved = false;
+            }
+            return saved;
+        },
         async persistContractorMapping(silent = true, contractorId) {
             if (!this.contractorMappingState) this.initializeContractorMappings();
             const id = contractorId || this._activeMappingContractorId;
@@ -179,6 +202,8 @@
                 if (!silent) this.showToast('Is contractor ki mapping pehle se saved hai', '✅');
                 return true;
             }
+            if (typeof this.authNow === 'function' && typeof this.openAdminModal === 'function' && this.isPortalUnlocked &&
+                (!this.isAdminElevated || !(this.adminExpiresAt > this.authNow()))) return this.deferContractorMappingForAdmin(id, silent);
             if (!this._contractorProfileWrites) this._contractorProfileWrites = {};
             if (!this._contractorProfileVersions) this._contractorProfileVersions = {};
             if (this._contractorProfileWrites[id] && this._contractorProfileVersions[id] === profile.updatedAt) return this._contractorProfileWrites[id];
@@ -209,6 +234,9 @@
                 });
                 const result = await response.json().catch(() => null);
                 if (!response.ok || !result || result.success !== true) {
+                    if (response.status === 403 && /admin verification (?:expired|required)/i.test(result?.error || '')) {
+                        return this.deferContractorMappingForAdmin(id, silent);
+                    }
                     const reason = response.status === 401 ? 'Login session expire hai. Dobara login karein.' : (result && result.error || 'Server ne save confirm nahi kiya.');
                     throw new Error('HTTP ' + response.status + ': ' + reason);
                 }
