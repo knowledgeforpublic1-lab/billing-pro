@@ -1144,13 +1144,6 @@
                                             <td>
                                                 <div style="font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                                     <span :style="isPoleScheduleItemUnissued(item) ? { color: '#ef4444' } : {}">{{ item.desc }}</span>
-                                                    <label v-if="getPoleScheduleActivityMaterials(selectedPoleScheduleKey).length && !String(selectedPoleScheduleKey).startsWith('dept_') && !isPoleScheduleConcreteBreakdownItem(item)" class="no-print" style="display: flex; align-items: center; gap: 4px; max-width: 100%; font-size: 0.72rem;">
-                                                        <button v-if="poleScheduleLinkEditorIndex !== item.origIndex" type="button" class="btn btn-secondary" style="padding: 1px 5px; font-size: inherit;" @click="poleScheduleLinkEditorIndex = item.origIndex" :disabled="isFinalized">{{ item.activityMaterialNo ? 'Activity item: ' + item.activityMaterialNo : 'Map activity item' }}</button>
-                                                        <select v-else :value="item.activityMaterialNo || ''" @change="setPoleScheduleActivityLink(item.origIndex, $event.target.value); poleScheduleLinkEditorIndex = -1" :disabled="isFinalized" style="max-width: 220px; min-width: 0; font-size: inherit;" aria-label="Manually map activity item">
-                                                            <option value="" disabled>Select activity item</option>
-                                                            <option v-for="target in getPoleScheduleActivityMaterials(selectedPoleScheduleKey)" :key="target.no" :value="String(target.no)">{{ target.no }} — {{ target.desc }}</option>
-                                                        </select>
-                                                    </label>
                                                     <span v-if="!isDepartmentalPoleSchedule(selectedPoleScheduleKey) && (poleScheduleTransferWarnings[selectedPoleScheduleKey] || []).includes(item.origIndex) && getPoleScheduleItemTotalQty(item.origIndex) > 0" class="no-print" style="font-size: 0.72rem; color: #b45309;">⚠ Activity mein transfer nahi hua — Activity link select karein.</span>
                                                     <span v-if="isPoleScheduleItemUnissued(item)" style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid #ef4444; padding: 1px 5px; border-radius: 4px; font-weight: 800;" :title="getPoleScheduleItemStockTooltip(item)">
                                                         ⚠️ Unissued (0)
