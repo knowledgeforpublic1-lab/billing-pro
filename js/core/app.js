@@ -158,6 +158,20 @@
     Object.assign(allMethods, window.AuthModule || {});
 
     const app = Vue.createApp({
+        // Keep second-by-second countdown dependencies out of the large workspace render.
+        components: {
+            'session-countdown': {
+                props: ['session', 'format'],
+                template: `<span
+                      class="logout-timer-chip"
+                      :class="{ 'warning': session.inactivitySecondsLeft <= 60 && session.inactivitySecondsLeft > 20, 'danger': session.inactivitySecondsLeft <= 20 }"
+                      :title="'Inactivity Logout Timer: ' + format(session.inactivitySecondsLeft) + ' baki hai. ' + session.authIdleMinutes + ' minute tak koi mouse/keyboard movement na ho to kaam save karke logout ho jayega. Koi bhi kaam karne se timer reset ho jata hai.'">
+                    <span class="timer-icon">{{ session.inactivitySecondsLeft <= 20 ? '🚨' : (session.inactivitySecondsLeft <= 60 ? '⚠️' : '⏱️') }}</span>
+                    <span class="timer-label">Logout in</span>
+                    <span class="timer-value">{{ format(session.inactivitySecondsLeft) }}</span>
+                </span>`
+            }
+        },
         data() {
             return {
                 isPortalUnlocked: false,

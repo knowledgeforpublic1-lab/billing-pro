@@ -278,14 +278,7 @@
                 </span>
 
                 <!-- ⏱️ Live Inactivity Logout Countdown Timer (Synced ke bagal me) -->
-                <span v-if="isPortalUnlocked" 
-                      class="logout-timer-chip" 
-                      :class="{ 'warning': inactivitySecondsLeft <= 60 && inactivitySecondsLeft > 20, 'danger': inactivitySecondsLeft <= 20 }"
-                      :title="'Inactivity Logout Timer: ' + formatTimerDisplay(inactivitySecondsLeft) + ' baki hai. ' + authIdleMinutes + ' minute tak koi mouse/keyboard movement na ho to kaam save karke logout ho jayega. Koi bhi kaam karne se timer reset ho jata hai.'">
-                    <span class="timer-icon">{{ inactivitySecondsLeft <= 20 ? '🚨' : (inactivitySecondsLeft <= 60 ? '⚠️' : '⏱️') }}</span>
-                    <span class="timer-label">Logout in</span>
-                    <span class="timer-value">{{ formatTimerDisplay(inactivitySecondsLeft) }}</span>
-                </span>
+                <session-countdown v-if="isPortalUnlocked" :session="$data" :format="formatTimerDisplay"></session-countdown>
 
                 <span class="u user-chip" 
                       @click="onUserChipClick" 
@@ -5160,7 +5153,7 @@
     <script defer src="js/daily-progress.js?v=20261121_auto_lock_v1"></script>
     <script defer src="js/daily-progress-access.js?v=20261121_auto_lock_v1"></script>
     <!-- Core Application (creates and mounts Vue app) -->
-    <script defer src="js/core/app.js?v=20261121_auto_lock_v1"></script>
+    <script defer src="js/core/app.js?v=20261124_timer_render"></script>
 </body>
 
 </html>
