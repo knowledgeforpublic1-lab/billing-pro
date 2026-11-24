@@ -1,3 +1,8 @@
+const dns = require('dns');
+if (dns && typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
 /**
  * Telegram Bot Notification and Reporting Service for BillingPro
  * Bot: @rdss_t10_gad_bot
@@ -126,6 +131,17 @@ ${remarks ? `📝 <b>Field Remarks:</b>\n<i>${escapeHtml(remarks)}</i>\n` : ''}
     }
 }
 
+function makeWebhookReply(chatId, text, options = {}) {
+    return {
+        ok: true,
+        method: 'sendMessage',
+        chat_id: chatId,
+        text,
+        parse_mode: options.parseMode || 'HTML',
+        disable_web_page_preview: options.disablePreview !== false
+    };
+}
+
 /**
  * Handle incoming webhook commands from Telegram (/start, /today, /pending, etc.)
  */
@@ -156,8 +172,7 @@ Aap yahan se site daily progress, manpower aur stock reports dekh sakte hain.
 
 🔔 Site par koi bhi contractor entry save karega to aapko turant alert yahan milega.
 `.trim();
-        await sendMessage(welcome, { chatId });
-        return { ok: true };
+        return makeWebhookReply(chatId, welcome);
     }
 
     if (cmd === '/status' || cmd === '/test') {
@@ -169,8 +184,7 @@ Aap yahan se site daily progress, manpower aur stock reports dekh sakte hain.
 🕒 <b>Server Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
 ⚡ <b>Project:</b> RDSS GADCHIROLI (T-10)
 `.trim();
-        await sendMessage(reply, { chatId });
-        return { ok: true };
+        return makeWebhookReply(chatId, reply);
     }
 
     if (cmd === '/link' || cmd === '/share') {
@@ -183,27 +197,23 @@ https://billing-pro-dusky.vercel.app/daily-progress.html
 📱 <b>Contractor Entry Form:</b>
 https://billing-pro-dusky.vercel.app/daily-progress.html?contractor=all
 `.trim();
-        await sendMessage(linkMsg, { chatId });
-        return { ok: true };
+        return makeWebhookReply(chatId, linkMsg);
     }
 
     if (cmd === '/today' || cmd === '/aaj' || cmd === '/summary') {
         const todayStr = getTodayKolkata();
         const summary = await buildDailySummary(todayStr, context);
-        await sendMessage(summary, { chatId });
-        return { ok: true };
+        return makeWebhookReply(chatId, summary);
     }
 
     if (cmd === '/pending') {
         const todayStr = getTodayKolkata();
         const pending = await buildPendingReport(todayStr, context);
-        await sendMessage(pending, { chatId });
-        return { ok: true };
+        return makeWebhookReply(chatId, pending);
     }
 
     // Default reply for unrecognized commands
-    await sendMessage(`Command samajh nahi aaya. Kripya <code>/help</code> ya <code>/today</code> type karein.`, { chatId });
-    return { ok: true };
+    return makeWebhookReply(chatId, `Command samajh nahi aaya. Kripya <code>/help</code> ya <code>/today</code> type karein.`);
 }
 
 function getTodayKolkata() {

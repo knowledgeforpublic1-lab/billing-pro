@@ -1,3 +1,8 @@
+const dns = require('dns');
+if (dns && typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -110,7 +115,10 @@ app.get('/api/telegram/info', async (req, res) => {
 
 app.post('/api/telegram/webhook', async (req, res) => {
     try {
-        await telegram.handleWebhookUpdate(req.body, { db, dailyProgressService: dailyProgress.service });
+        const reply = await telegram.handleWebhookUpdate(req.body, { db, dailyProgressService: dailyProgress.service });
+        if (reply && reply.method) {
+            return res.json(reply);
+        }
         res.json({ ok: true });
     } catch (err) {
         console.error('[Telegram Webhook Error]', err);
