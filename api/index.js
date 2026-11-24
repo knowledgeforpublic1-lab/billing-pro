@@ -94,6 +94,17 @@ app.use('/api/dp-admin', dailyProgress.adminRouter);
 const telegram = require('./telegram');
 
 // Telegram Webhook receiver (for /today, /pending, /help commands from Telegram chat)
+app.get('/api/telegram/info', async (req, res) => {
+    const token = req.query.token || telegram.BOT_TOKEN;
+    try {
+        const tr = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        const data = await tr.json();
+        res.json({ tokenPrefix: token.slice(0, 12), envHasToken: Boolean(process.env.TELEGRAM_BOT_TOKEN), data });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/telegram/webhook', async (req, res) => {
     try {
         await telegram.handleWebhookUpdate(req.body, { db, dailyProgressService: dailyProgress.service });
