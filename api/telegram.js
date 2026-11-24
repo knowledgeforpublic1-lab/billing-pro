@@ -3,7 +3,7 @@
  * Bot: @rdss_t10_gad_bot
  */
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '9210192291:AAG7baDniNvn9o1J11014ZiskHarXaaT0Xk';
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '9210192291:AAF2VBd7Xoi3_cMbpkLuYzFoHk57qqbMSdY';
 const DEFAULT_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '881238938';
 
 function getTelegramApiUrl(method) {
