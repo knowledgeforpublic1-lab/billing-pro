@@ -39,9 +39,12 @@ async function sendMessage(text, options = {}) {
 
         const res = await fetch(getTelegramApiUrl('sendMessage'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; BillingProBot/1.0; +https://billing-pro-dusky.vercel.app)'
+            },
             body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(10000)
+            signal: AbortSignal.timeout(12000)
         });
 
         const data = await res.json();

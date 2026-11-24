@@ -97,7 +97,10 @@ const telegram = require('./telegram');
 app.get('/api/telegram/info', async (req, res) => {
     const token = req.query.token || telegram.BOT_TOKEN;
     try {
-        const tr = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        const tr = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BillingProBot/1.0)' },
+            signal: AbortSignal.timeout(12000)
+        });
         const data = await tr.json();
         res.json({ tokenPrefix: token.slice(0, 12), envHasToken: Boolean(process.env.TELEGRAM_BOT_TOKEN), data });
     } catch (e) {
@@ -141,7 +144,10 @@ app.get('/api/telegram/setup-webhook', async (req, res) => {
     const proto = req.get('x-forwarded-proto') || 'https';
     const webhookUrl = `${proto}://${host}/api/telegram/webhook`;
     try {
-        const tr = await fetch(`https://api.telegram.org/bot${telegram.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
+        const tr = await fetch(`https://api.telegram.org/bot${telegram.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BillingProBot/1.0)' },
+            signal: AbortSignal.timeout(12000)
+        });
         const data = await tr.json();
         res.json({ webhookUrl, telegramResponse: data });
     } catch (e) {
