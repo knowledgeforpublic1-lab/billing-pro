@@ -2020,7 +2020,7 @@
                                 <span v-if="dpSubDivisionFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubDivision('ALL')">Clear ✕</span>
                             </label>
                             <select id="dp-filter-subdivision" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
-                                <option value="ALL">All Sub-Divisions ({{ dpAvailableSubDivisions.length }})</option>
+                                <option value="ALL">-- Select Sub-Division ({{ dpAvailableSubDivisions.length }}) --</option>
                                 <option v-for="sub in dpAvailableSubDivisions" :key="sub" :value="sub">{{ sub }}</option>
                             </select>
                         </div>
@@ -2031,7 +2031,7 @@
                                 <span v-if="dpSubstationFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubstation('ALL')">Clear ✕</span>
                             </label>
                             <select id="dp-filter-substation" :value="dpSubstationFilter" @change="setDailyProgressSubstation($event.target.value)">
-                                <option value="ALL">All Substations ({{ dpAvailableSubstations.length }})</option>
+                                <option value="ALL">-- Select Substation ({{ dpAvailableSubstations.length }}) --</option>
                                 <option v-for="sst in dpAvailableSubstations" :key="sst" :value="sst">{{ sst }}</option>
                             </select>
                         </div>

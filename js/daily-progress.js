@@ -357,8 +357,6 @@ window.DailyProgressModule = {
         }
         if (matched) {
             this.dailyProgressContractorId = matched.id;
-        } else if (this.dailyProgressData.contractors.length > 0 && !this.dailyProgressContractorId) {
-            this.dailyProgressContractorId = this.dailyProgressData.contractors[0].id;
         }
 
         // If contractor changed or quantities not loaded yet, immediately reload report for current date
