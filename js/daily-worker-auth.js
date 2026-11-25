@@ -160,6 +160,10 @@
     }
 
     async function request(path, body) {
+        const headers = body === undefined ? {} : { 'Content-Type': 'application/json' };
+        if (typeof queryContractor === 'string' && queryContractor && queryContractor.toLowerCase() !== 'all') {
+            headers['X-DP-Share-Contractor'] = encodeURIComponent(queryContractor);
+        }
         const response = await fetch('/api/dp-worker/' + path, {
             credentials: 'same-origin',
             cache: 'no-store',
@@ -167,7 +171,7 @@
                 method: 'POST',
                 body: JSON.stringify(body)
             }),
-            headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), 'X-DP-Share-Contractor': encodeURIComponent(queryContractor || '__link_required__') },
+            headers,
             signal: AbortSignal.timeout(20000)
         });
         const data = await response.json();

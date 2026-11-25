@@ -110,7 +110,11 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
     }
 
     function normId(value) {
-        return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+        return String(value || '')
+            .toLowerCase()
+            .replace(/^m\/s\.?\s*/i, '')
+            .replace(/[^a-z0-9]/g, '')
+            .replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
     }
 
     function hasContractorPermission(actor, cid) {
