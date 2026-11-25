@@ -71,11 +71,19 @@
     },
     {
       "src": "/daily-progress(\\.html)?",
-      "dest": "/daily-progress.html"
+      "dest": "/daily-progress.html",
+      "headers": {
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff"
+      }
     },
     {
       "src": "/daily-entry(\\.html)?",
-      "dest": "/daily-entry.html"
+      "dest": "/daily-entry.html",
+      "headers": {
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff"
+      }
     },
     {
       "src": "/(index\\.html)?",
@@ -126,19 +134,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/(daily-progress|daily-entry|storage|privacy)(\\.html)?",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
         }
       ]
     }
