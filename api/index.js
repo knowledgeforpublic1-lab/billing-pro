@@ -89,7 +89,7 @@ app.use('/js/data', (req, res, next) => { res.set('Cache-Control', 'private, max
 app.get('/js/data/default-feeders.js', (req, res) => res.sendFile(require('path').join(__dirname, '../js/data/default-feeders.js')));
 app.use('/api/auth', auth.router);
 app.use(['/api', '/js/data'], (req, res, next) => {
-    if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress' || req.path.startsWith('/telegram')) {
+    if (req.path === '/health' || req.path === '/daily-progress/data' || req.path === '/daily-progress' || req.path === '/telegram/webhook') {
         return next();
     }
     return auth.middleware(req, res, next);
@@ -161,7 +161,13 @@ app.get('/api/telegram/last-update', (req, res) => {
 
 app.all('/api/telegram/webhook', async (req, res) => {
     lastWebhookTime = new Date().toISOString();
-    lastWebhookUpdate = { method: req.method, body: req.body, headers: req.headers };
+    const msg = req.body && req.body.message;
+    lastWebhookUpdate = {
+        method: req.method,
+        updateId: req.body && req.body.update_id ? req.body.update_id : null,
+        chatId: msg && msg.chat ? msg.chat.id : null,
+        textPreview: msg && typeof msg.text === 'string' ? msg.text.slice(0, 60) : null
+    };
     
     if (req.method === 'GET' || req.method === 'HEAD') {
         return res.status(200).json({ ok: true, message: 'Telegram Webhook is ready and active' });

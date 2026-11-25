@@ -128,6 +128,19 @@
           "value": "public, max-age=3600, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/(daily-progress|daily-entry|storage|privacy)(\\.html)?",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
     }
   ]
 }
