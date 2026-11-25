@@ -242,6 +242,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
 
     let cachedData = null;
     let cacheTime = 0;
+    let inFlightRead = null;
     const invalidateDataCache = () => { cachedData = null; cacheTime = 0; };
 
     publicRouter.use(async (req, res, next) => {
@@ -368,48 +369,63 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
     async function readData(forceFresh = false) {
         const nowMs = Date.now();
-        if (!forceFresh && cachedData && (nowMs - cacheTime < 8000)) {
+        if (!forceFresh && cachedData && (nowMs - cacheTime < 30000)) {
             return cachedData;
         }
-        const legacy = await db.getDefaultConfig('dailyProgressData');
-        const base = readDailyProgressData(legacy);
-        const reports = new Map((base.reports || []).map(r => [reportKey(r), r]));
-        const controlledReports = await service.reports();
-        for (const r of [...await workers.sharedReports(), ...controlledReports]) {
-            const key = reportKey(r);
-            reports.set(key, r.deleted || r.managed ? r : newerReport(reports.get(key), r));
+        if (!forceFresh && inFlightRead) {
+            return inFlightRead;
         }
-        const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
-        for (const c of await service.list()) contractors.set(c.id, c);
-        const aux = { contractors: [], issues: [] };
-        const auxRecords = await db.listDailyRecords('aux_');
-        const auxDocs = await Promise.all(auxRecords.map(async ({ value }) => {
-            if (!value?.fileId) return null;
-            return drive.read(value.fileId);
-        }));
-        for (const stored of auxDocs) {
-            if (stored?.value) aux[stored.kind === 'issue' ? 'issues' : 'contractors'].push(stored.value);
-        }
-        for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
-        const issues = new Map((base.issues || []).map(i => [i.id, i]));
-        for (const issue of aux.issues) issues.set(issue.id, issue);
-        const stateMap = new Map();
-        controlledReports.forEach(({ contractorId, date, locationId, version, state, deleted, savedAt, savedBy }) => {
-            stateMap.set(contractorId + '|' + date + '|' + normalizeLocation(locationId), { contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted, savedAt, savedBy });
-        });
-        const sharedControls = await db.listDailyRecords('control_');
-        for (const row of sharedControls) {
-            const val = row.value || {};
-            if (val.contractorId && val.date) {
-                const k = val.contractorId + '|' + val.date + '|' + normalizeLocation(val.locationId);
-                stateMap.set(k, { contractorId: val.contractorId, date: val.date, locationId: normalizeLocation(val.locationId), version: val.version || 1, state: val.state || 'final', deleted: !!val.deleted, savedAt: val.savedAt || val.baseReport?.savedAt, savedBy: val.savedBy || val.baseReport?.savedBy });
+        const work = (async () => {
+            const [legacy, controlledReports, sharedReports, teams, auxRecords, sharedControls] = await Promise.all([
+                db.getDefaultConfig('dailyProgressData'),
+                service.reports(),
+                workers.sharedReports(),
+                service.list(),
+                db.listDailyRecords('aux_'),
+                db.listDailyRecords('control_')
+            ]);
+            const base = readDailyProgressData(legacy);
+            const reports = new Map((base.reports || []).map(r => [reportKey(r), r]));
+            for (const r of [...sharedReports, ...controlledReports]) {
+                const key = reportKey(r);
+                reports.set(key, r.deleted || r.managed ? r : newerReport(reports.get(key), r));
             }
+            const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
+            for (const c of teams) contractors.set(c.id, c);
+            const aux = { contractors: [], issues: [] };
+            const auxDocs = await Promise.all(auxRecords.map(async ({ value }) => {
+                if (!value?.fileId) return null;
+                return drive.read(value.fileId);
+            }));
+            for (const stored of auxDocs) {
+                if (stored?.value) aux[stored.kind === 'issue' ? 'issues' : 'contractors'].push(stored.value);
+            }
+            for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
+            const issues = new Map((base.issues || []).map(i => [i.id, i]));
+            for (const issue of aux.issues) issues.set(issue.id, issue);
+            const stateMap = new Map();
+            controlledReports.forEach(({ contractorId, date, locationId, version, state, deleted, savedAt, savedBy }) => {
+                stateMap.set(contractorId + '|' + date + '|' + normalizeLocation(locationId), { contractorId, date, locationId: normalizeLocation(locationId), version, state, deleted, savedAt, savedBy });
+            });
+            for (const row of sharedControls) {
+                const val = row.value || {};
+                if (val.contractorId && val.date) {
+                    const k = val.contractorId + '|' + val.date + '|' + normalizeLocation(val.locationId);
+                    stateMap.set(k, { contractorId: val.contractorId, date: val.date, locationId: normalizeLocation(val.locationId), version: val.version || 1, state: val.state || 'final', deleted: !!val.deleted, savedAt: val.savedAt || val.baseReport?.savedAt, savedBy: val.savedBy || val.baseReport?.savedBy });
+                }
+            }
+            const reportStates = Array.from(stateMap.values());
+            const result = { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
+            cachedData = result;
+            cacheTime = Date.now();
+            return result;
+        })();
+        if (!forceFresh) inFlightRead = work;
+        try {
+            return await work;
+        } finally {
+            if (inFlightRead === work) inFlightRead = null;
         }
-        const reportStates = Array.from(stateMap.values());
-        const result = { contractors: [...contractors.values()], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates };
-        cachedData = result;
-        cacheTime = Date.now();
-        return result;
     }
     adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
     adminRouter.post('/auxiliary', auth.requireAdmin, handle(async (req, res) => {

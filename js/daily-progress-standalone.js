@@ -490,7 +490,6 @@
                 await Promise.all([this.ensureStock(), this.loadLocations()]);
                 if (cid === this.selectedContractorId && !this.dirty) {
                     this.loadReportForActiveDate();
-                    await this.fetchLatestReportsSilently();
                 }
             },
             selectedLocationId() { this.loadReportForActiveDate(); },
@@ -507,7 +506,7 @@
                 this._refreshTimer = setInterval(() => {
                     if (!document.hidden && !this.busy) this.ensureStock(true);
                     if (!document.hidden && !this.busy && !this.dirty) this.fetchLatestReportsSilently();
-                }, 45000);
+                }, 90000);
             }
             if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
                 document.addEventListener('click', (e) => {
@@ -722,7 +721,10 @@
                             const res = await shareFetch('/api/daily-progress/data?t=' + Date.now());
                             if (res.ok) {
                                 const result = await res.json();
-                                if (result && result.success && result.data) return result.data;
+                                if (result && result.success && result.data) {
+                                    this._lastSilentFetchAt = Date.now();
+                                    return result.data;
+                                }
                             }
                         } catch (e) {
                             console.info('[DailyProgressStandalone] Cloud load error, falling back to local:', e.message);
@@ -1054,9 +1056,11 @@
                     this.version = (this.reportStates.find(row => matchesContractor(row.contractorId, actC) && row.date === curDate && locationKey(row.locationId) === locationKey(this.selectedLocationId)) || {}).version || 0;
                     this.dirty = false;
 
-                    // Silently check if server has fresh draft/save from portal
+                    // Silently check if server has fresh draft/save from portal (throttled on rapid date/feeder switches)
                     if (!this._fetchingLatestReport && typeof fetch === 'function') {
-                        this.fetchLatestReportsSilently();
+                        if (!this._lastSilentFetchAt || (Date.now() - this._lastSilentFetchAt >= 15000)) {
+                            this.fetchLatestReportsSilently();
+                        }
                     }
                 }
             },
@@ -1064,6 +1068,7 @@
             async fetchLatestReportsSilently() {
                 if (this._fetchingLatestReport || this.busy || this.dirty) return;
                 this._fetchingLatestReport = true;
+                this._lastSilentFetchAt = Date.now();
                 const cid = this.selectedContractorId, date = this.selectedDate, location = this.selectedLocationId;
                 const epoch = this._dataEpoch || 0;
                 try {
