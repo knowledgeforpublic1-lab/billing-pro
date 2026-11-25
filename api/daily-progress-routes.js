@@ -236,6 +236,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
                 mergeContractorByName(contractors, c, true);
             }
         }
+        res.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=120');
         res.json({ success: true, contractors: [...contractors.values()], items });
     }));
     publicRouter.get('/stock/:contractorId', handle(async (req, res) => {

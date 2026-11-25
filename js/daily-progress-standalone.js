@@ -507,7 +507,7 @@
                 this._refreshTimer = setInterval(() => {
                     if (!document.hidden && !this.busy) this.ensureStock(true);
                     if (!document.hidden && !this.busy && !this.dirty) this.fetchLatestReportsSilently();
-                }, 90000);
+                }, 300000);
             }
             if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
                 document.addEventListener('click', (e) => {
