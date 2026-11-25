@@ -87,14 +87,15 @@
 
             // URL query parameters
             const params = new URLSearchParams(window.location.search);
-            const queryContractor = params.get('contractor') || params.get('c') || '';
+            const rawQueryContractor = params.get('contractor') || params.get('c') || '';
+            const queryContractor = rawQueryContractor.toLowerCase() === 'all' ? '' : rawQueryContractor;
             const queryDate = normDate(params.get('date') || params.get('d') || '');
 
             return {
                 sidebarOpen: false,
                 currentTab: 'entry', // 'entry' | 'stock' | 'history' | 'download'
                 selectedDate: queryDate || getTodayStr(),
-                selectedContractorId: queryContractor || defaultContractor.id,
+                selectedContractorId: queryContractor || '',
                 selectedLocationId: params.get('location') || '',
                 locations: (typeof window !== 'undefined' && window.DefaultFeeders) ? [...window.DefaultFeeders.list] : [],
                 newLocationName: '',
@@ -398,7 +399,7 @@
                     const niceName = String(curId).replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     return { id: curId, name: niceName, project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
                 }
-                return list[0] || { id: 'mangesh-sonwane', name: 'MANGESH SONWANE', project: 'Gadchiroli (T-10)', feeder: 'ANGARA' };
+                return { id: '', name: '', project: 'Gadchiroli (T-10)', feeder: '', engineer: '' };
             },
 
             contractorReports() {
@@ -869,13 +870,17 @@
                         this.reports = this.reports.filter(row => hasPerm(row.contractorId));
                         this.issues = this.issues.filter(row => hasPerm(row.contractorId));
                         if (!this.contractors.length) throw new Error('Aapke login ke liye contractor available nahi hai. Admin se contact karein.');
-                        if (!this.contractors.some(c => c.id === this.selectedContractorId)) this.selectedContractorId = this.contractors[0].id;
+                        if (this.contractors.length === 1 && !this.contractors.some(c => c.id === this.selectedContractorId)) {
+                            this.selectedContractorId = this.contractors[0].id;
+                        } else if (this.selectedContractorId && !this.contractors.some(c => c.id === this.selectedContractorId)) {
+                            this.selectedContractorId = '';
+                        }
                     }
 
-                    // If URL param matched a contractor, select it
+                    // If URL param matched a specific contractor, select it
                     const params = new URLSearchParams(window.location.search);
                     const qCid = params.get('contractor') || params.get('c');
-                    if (qCid) {
+                    if (qCid && qCid.toLowerCase() !== 'all') {
                         let matched = this.contractors.find(c => matchesContractor(qCid, c));
                         if (matched) {
                             this.selectedContractorId = matched.id;

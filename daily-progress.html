@@ -259,7 +259,7 @@
                             </label>
                             <select id="filter-subdivision" :value="subDivisionFilter"
                                 @change="setSubDivision($event.target.value)">
-                                <option value="ALL">All Sub-Divisions ({{ availableSubDivisions.length }})</option>
+                                <option value="ALL">-- Select Sub-Division ({{ availableSubDivisions.length }}) --</option>
                                 <option v-for="sub in availableSubDivisions" :key="sub" :value="sub">{{ sub }}</option>
                             </select>
                         </div>
@@ -272,7 +272,7 @@
                             </label>
                             <select id="filter-substation" :value="substationFilter"
                                 @change="setSubstation($event.target.value)">
-                                <option value="ALL">All Substations ({{ availableSubstations.length }})</option>
+                                <option value="ALL">-- Select Substation ({{ availableSubstations.length }}) --</option>
                                 <option v-for="sst in availableSubstations" :key="sst" :value="sst">{{ sst }}</option>
                             </select>
                         </div>
@@ -1309,11 +1309,25 @@
     <!-- Scripts (Standalone, Decoupled from Billing) -->
     <script src="/js/storage-transport.js?v=20261124_v1"></script>
     <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <script>
+        if (!window.Vue) {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"><\/script>');
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="js/daily-worker-auth.js?v=20261124_v1"></script>
     <script src="js/data/default-feeders.js?v=20261124_v1"></script>
     <script src="js/share-link.js?v=20261124_v1"></script>
-    <script src="js/daily-progress-standalone.js?v=20261125_perf"></script>
+    <script src="js/daily-progress-standalone.js?v=20261125_blank_select"></script>
+    <script>
+        window.addEventListener('error', function (e) {
+            var el = document.getElementById('app');
+            if (el && el.hasAttribute('v-cloak')) {
+                el.removeAttribute('v-cloak');
+                el.innerHTML = '<div style="padding:32px;text-align:center;font-family:sans-serif;"><h3>Page Load Error</h3><p style="color:#ef4444;">' + (e && e.message ? e.message : 'Script error') + '</p><button onclick="location.reload()" style="padding:8px 16px;cursor:pointer;">Reload</button></div>';
+            }
+        });
+    </script>
 </body>
 
 </html>
