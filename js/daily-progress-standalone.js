@@ -32,7 +32,11 @@
 
     function normId(str) {
         if (!str) return '';
-        return String(str).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+        return String(str)
+            .toLowerCase()
+            .replace(/^m\/s\.?\s*/i, '')
+            .replace(/[^a-z0-9]/g, '')
+            .replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
     }
     function locationKey(value) { return value === 'legacy' ? '' : String(value || ''); }
     function reportKey(row) { return row.contractorId + '|' + row.date + '|' + locationKey(row.locationId); }
@@ -838,9 +842,12 @@
                     // 3. Merge data
                     if (loaded) {
                         if (Array.isArray(loaded.contractors)) {
+                            const hasAuthoritativeList = contractorsMap.size > 0;
                             loaded.contractors.forEach(c => {
                                 const n = normId(c.name || c.id);
-                                if (n) contractorsMap.set(n, { ...contractorsMap.get(n), ...c });
+                                if (!n) return;
+                                if (hasAuthoritativeList && !contractorsMap.has(n)) return;
+                                contractorsMap.set(n, { ...contractorsMap.get(n), ...c });
                             });
                         }
                         this.reports = Array.isArray(loaded.reports) ? loaded.reports : [];

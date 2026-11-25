@@ -9,7 +9,11 @@ const crypto = require('node:crypto');
 const { readDailyProgressData, newerReport, reportKey, locationId: normalizeLocation } = require('./daily-progress-data');
 
 function normId(value) {
-    return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+    return String(value || '')
+        .toLowerCase()
+        .replace(/^m\/s\.?\s*/i, '')
+        .replace(/[^a-z0-9]/g, '')
+        .replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
 }
 function mergeContractorByName(map, entry, preferIncomingId = false) {
     if (!entry || (!entry.id && !entry.name)) return;
@@ -223,11 +227,19 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             currentStock(), db.getDefaultConfig('dailyProgressData'), service.list(),
             workers.listContractors ? workers.listContractors() : Promise.resolve([])
         ]);
+        const stockList = publicContractors(stock);
+        const hasStock = !!(stock && stock.byContractorNorm && Object.keys(stock.byContractorNorm).length > 0);
         const contractors = new Map();
-        for (const c of publicContractors(stock)) mergeContractorByName(contractors, c, false);
-        // Saved teams may not exist in the shipped contractor directory.
+        for (const c of stockList) mergeContractorByName(contractors, c, false);
+        // Saved teams may not exist in the shipped contractor directory, but when Stock sheet is active,
+        // skip unlinked legacy saved.contractors that are not in the Stock sheet.
         const saved = readDailyProgressData(savedConfig);
-        for (const c of [...saved.contractors, ...teams]) {
+        for (const c of saved.contractors) {
+            if (!c.id || !c.name) continue;
+            if (hasStock && !contractors.has(normId(c.name || c.id))) continue;
+            mergeContractorByName(contractors, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' }, true);
+        }
+        for (const c of teams) {
             if (!c.id || !c.name) continue;
             mergeContractorByName(contractors, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' }, true);
         }
