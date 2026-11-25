@@ -804,7 +804,7 @@
                                 if (catalog && catalog.success) {
                                     if (Array.isArray(catalog.items) && catalog.items.length) this.items = catalog.items;
                                     (catalog.contractors || []).forEach(c => {
-                                        const n = normId(c.id || c.name);
+                                        const n = normId(c.name || c.id);
                                         if (n && !contractorsMap.has(n)) contractorsMap.set(n, c);
                                     });
                                 }
@@ -838,7 +838,7 @@
                     if (loaded) {
                         if (Array.isArray(loaded.contractors)) {
                             loaded.contractors.forEach(c => {
-                                const n = normId(c.id || c.name);
+                                const n = normId(c.name || c.id);
                                 if (n) contractorsMap.set(n, { ...contractorsMap.get(n), ...c });
                             });
                         }

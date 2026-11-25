@@ -373,9 +373,9 @@ window.DailyProgressModule = {
         const res = { ...local };
         // Merge contractors
         const cMap = new Map();
-        (local.contractors || []).forEach(c => cMap.set(this.normContractorId(c.id || c.name), c));
+        (local.contractors || []).forEach(c => cMap.set(this.normContractorId(c.name || c.id), c));
         (cloud.contractors || []).forEach(c => {
-            const n = this.normContractorId(c.id || c.name);
+            const n = this.normContractorId(c.name || c.id);
             if (n && !cMap.has(n)) cMap.set(n, c);
         });
         res.contractors = Array.from(cMap.values());

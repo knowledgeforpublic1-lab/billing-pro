@@ -11,6 +11,25 @@ const { readDailyProgressData, newerReport, reportKey, locationId: normalizeLoca
 function normId(value) {
     return String(value || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
 }
+function mergeContractorByName(map, entry, preferIncomingId = false) {
+    if (!entry || (!entry.id && !entry.name)) return;
+    const key = normId(entry.name || entry.id);
+    if (!key) return;
+    const existing = map.get(key);
+    if (!existing) {
+        map.set(key, { project: '', feeder: '', engineer: '', ...entry });
+        return;
+    }
+    map.set(key, {
+        ...existing,
+        ...entry,
+        id: preferIncomingId ? (entry.id || existing.id) : (existing.id || entry.id),
+        name: entry.name || existing.name,
+        project: entry.project || existing.project || '',
+        feeder: entry.feeder || existing.feeder || '',
+        engineer: entry.engineer || existing.engineer || ''
+    });
+}
 function loadScript(file, globalName) {
     const sandbox = { window: {} };
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/data', file), 'utf8'), sandbox);
@@ -204,16 +223,17 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             currentStock(), db.getDefaultConfig('dailyProgressData'), service.list(),
             workers.listContractors ? workers.listContractors() : Promise.resolve([])
         ]);
-        const contractors = new Map(publicContractors(stock).map(c => [c.id, c]));
+        const contractors = new Map();
+        for (const c of publicContractors(stock)) mergeContractorByName(contractors, c, false);
         // Saved teams may not exist in the shipped contractor directory.
         const saved = readDailyProgressData(savedConfig);
         for (const c of [...saved.contractors, ...teams]) {
             if (!c.id || !c.name) continue;
-            contractors.set(c.id, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' });
+            mergeContractorByName(contractors, { id: c.id, name: c.name, project: c.project || '', feeder: c.feeder || '', engineer: c.engineer || '' }, true);
         }
         if (workers.listContractors) {
             for (const c of assigned) {
-                contractors.set(c.id, { project: '', feeder: '', engineer: '', ...contractors.get(c.id), ...c });
+                mergeContractorByName(contractors, c, true);
             }
         }
         res.json({ success: true, contractors: [...contractors.values()], items });
@@ -390,8 +410,9 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
                 const key = reportKey(r);
                 reports.set(key, r.deleted || r.managed ? r : newerReport(reports.get(key), r));
             }
-            const contractors = new Map((base.contractors || []).map(c => [c.id, c]));
-            for (const c of teams) contractors.set(c.id, c);
+            const contractors = new Map();
+            for (const c of (base.contractors || [])) mergeContractorByName(contractors, c, false);
+            for (const c of teams) mergeContractorByName(contractors, c, true);
             const aux = { contractors: [], issues: [] };
             const auxDocs = await Promise.all(auxRecords.map(async ({ value }) => {
                 if (!value?.fileId) return null;
@@ -400,7 +421,7 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             for (const stored of auxDocs) {
                 if (stored?.value) aux[stored.kind === 'issue' ? 'issues' : 'contractors'].push(stored.value);
             }
-            for (const c of aux.contractors) if (!contractors.has(c.id)) contractors.set(c.id, c);
+            for (const c of aux.contractors) mergeContractorByName(contractors, c, false);
             const issues = new Map((base.issues || []).map(i => [i.id, i]));
             for (const issue of aux.issues) issues.set(issue.id, issue);
             const stateMap = new Map();
