@@ -288,12 +288,9 @@
                                     @click="toggleLocationDropdown">
                                     <span class="searchable-dropdown-label"
                                         :class="{ placeholder: !selectedLocationId }">
-                                        {{ selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (activeLocationObj
-                                        ? (activeLocationObj.feeder || activeLocationObj.name) : 'Feeder select
-                                        karein…') }}
+                                        {{ selectedLocationId === 'legacy' ? 'Legacy / Unassigned' : (activeLocationObj ? (activeLocationObj.feeder || activeLocationObj.name) : 'Feeder select karein…') }}
                                     </span>
-                                    <span class="searchable-dropdown-arrow">{{ locationDropdownOpen ? '▲' : '▼'
-                                        }}</span>
+                                    <span class="searchable-dropdown-arrow">{{ locationDropdownOpen ? '▲' : '▼' }}</span>
                                 </button>
                                 <div v-if="locationDropdownOpen" class="searchable-dropdown-backdrop"
                                     @click="closeLocationDropdown"></div>
@@ -396,8 +393,7 @@
                         </span>
                     </div>
                     <p v-else class="dp-location-note" role="status">
-                        {{ locationError || '⚡ Kisi bhi division ya substation ke feeder ko select karein ya search me
-                        feeder ka naam likhein. Saare 105 official feeders by default available hain.' }}
+                        {{ locationError || '⚡ Kisi bhi division ya substation ke feeder ko select karein ya search me feeder ka naam likhein. Saare 105 official feeders by default available hain.' }}
                     </p>
                 </section>
                 <!-- TAB 1: DAILY PROGRESS ENTRY -->
