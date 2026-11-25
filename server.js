@@ -10,9 +10,9 @@ const https = require('https');
 const app = express();
 
 // API routes (/api/billing) — helmet/rate-limit/auth api/index.js ke andar.
-// IMPORTANT: apiApp ko sirf /api/* par chalao. Agar local database (Firebase/MongoDB) nahi hai,
-// to live Vercel backend se transparently proxy karo taaki local dev me sabhi bills,
-// 62 contractors aur sync seamless chalein.
+// IMPORTANT: Agar local machine par Firebase/Drive OAuth credentials poore nahi hain,
+// to live Vercel backend se transparently proxy karo taaki local dev me login,
+// master data (/js/data/*) aur bills seamless chalein.
 app.use((req, res, next) => {
   if (req.path === '/api' || req.path.startsWith('/api/') || req.path.startsWith('/js/data/') || ['/', '/index.html', '/old', '/old/index.html', '/mobile', '/mobile.html', '/Reconciliation%20master/index.html', '/Reconciliation master/index.html'].includes(req.path)) {
     const fs = require('fs');
@@ -22,21 +22,41 @@ app.use((req, res, next) => {
       fs.existsSync(path.join(__dirname, 'serviceAccountKey.json')) ||
       fs.existsSync(path.join(__dirname, 'firebase-key.json'))
     );
-    if (hasFirebase || process.env.MONGODB_URI) {
+    const hasDriveOAuth = !!(
+      process.env.GOOGLE_DRIVE_CLIENT_ID &&
+      process.env.GOOGLE_DRIVE_CLIENT_SECRET &&
+      process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+    );
+    if (hasDriveOAuth && (hasFirebase || process.env.MONGODB_URI)) {
       return apiApp(req, res, next);
     }
     if (process.env.BILLING_STORAGE_STAGING_PROJECT) {
       return res.status(503).json({ success: false, error: 'Staging database missing; production proxy is disabled for staging' });
     }
     const targetUrl = 'https://billing-pro-dusky.vercel.app' + req.originalUrl;
+    const proxyHeaders = {
+      ...req.headers,
+      host: 'billing-pro-dusky.vercel.app'
+    };
+    if (proxyHeaders.origin) proxyHeaders.origin = 'https://billing-pro-dusky.vercel.app';
+    if (proxyHeaders.referer) proxyHeaders.referer = 'https://billing-pro-dusky.vercel.app/';
     const clientReq = https.request(targetUrl, {
       method: req.method,
-      headers: {
-        ...req.headers,
-        host: 'billing-pro-dusky.vercel.app'
-      }
+      headers: proxyHeaders
     }, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      const respHeaders = { ...proxyRes.headers };
+      // Allow HttpOnly session cookie on plain http://localhost during local dev
+      if (Array.isArray(respHeaders['set-cookie'])) {
+        respHeaders['set-cookie'] = respHeaders['set-cookie'].map(c =>
+          c.replace(/;\s*Secure/gi, '').replace(/;\s*Domain=[^;]+/gi, '')
+        );
+      }
+      delete respHeaders['strict-transport-security'];
+      if (typeof respHeaders['content-security-policy'] === 'string') {
+        respHeaders['content-security-policy'] = respHeaders['content-security-policy']
+          .replace(/;?\s*upgrade-insecure-requests/gi, '');
+      }
+      res.writeHead(proxyRes.statusCode, respHeaders);
       proxyRes.pipe(res);
     });
     clientReq.on('error', (err) => {
