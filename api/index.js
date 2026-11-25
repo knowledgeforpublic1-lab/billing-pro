@@ -23,8 +23,22 @@ const log = {
     error: (ctx, msg, err) => console.error(`[${new Date().toISOString()}] [ERROR] [${ctx}] ${msg}`, err || ''),
 };
 
-// Security headers
-app.use(helmet());
+// Security headers — enable HSTS & upgrade-insecure-requests only on HTTPS (live),
+// so plain HTTP localhost dev never upgrades /api/auth/* requests to broken https://localhost.
+const helmetHttps = helmet();
+const helmetHttpLocal = helmet({
+    hsts: false,
+    contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+            'upgrade-insecure-requests': null
+        }
+    }
+});
+app.use((req, res, next) => {
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    return (isHttps ? helmetHttps : helmetHttpLocal)(req, res, next);
+});
 
 // Middleware
 app.use(cors());
