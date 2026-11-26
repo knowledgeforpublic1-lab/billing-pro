@@ -65,8 +65,10 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     }
     async function ownerEmail() {
         if (!encryptionKey || !config.apiKey) throw error(503, 'Login configuration incomplete');
+        const envEmail = String(env.AUTH_REGISTERED_EMAIL || '').trim().toLowerCase();
+        if (envEmail && envEmail.includes('@')) return envEmail;
         const record = await db.getDefaultConfig('portalAuthOwnerV1');
-        const email = String(env.AUTH_REGISTERED_EMAIL || record && record.data && record.data.email || '').trim().toLowerCase();
+        const email = String(record && record.data && record.data.email || '').trim().toLowerCase();
         if (!email || !email.includes('@')) throw error(503, 'Registered recovery email is not configured');
         return email;
     }
@@ -138,7 +140,15 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     function handler(fn) {
         return async (req, res, next) => {
             try { await fn(req, res, next); }
-            catch (e) { res.status(e.status || 503).json({ success: false, error: e.status ? e.message : 'Authentication service unavailable' }); }
+            catch (e) {
+                if (!e.status) console.error('[Auth] Unexpected error:', e && (e.stack || e.message || e));
+                const msg = String(e && e.message || '');
+                const isQuota = !e.status && (e && (e.code === 8 || e.code === 'RESOURCE_EXHAUSTED') || /RESOURCE_EXHAUSTED|quota/i.test(msg));
+                res.status(e.status || 503).json({
+                    success: false,
+                    error: e.status ? e.message : (isQuota ? 'Database daily quota exceeded (Firebase Firestore). Please wait for quota reset or upgrade plan.' : 'Authentication service unavailable')
+                });
+            }
         };
     }
     router.use((req, res, next) => {
