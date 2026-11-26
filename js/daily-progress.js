@@ -987,9 +987,13 @@ window.DailyProgressModule = {
             const templateModel = baseWorksheet ? JSON.parse(JSON.stringify(baseWorksheet.model)) : null;
             const getColLetter = (i) => i < 26 ? String.fromCharCode(65 + i) : 'A' + String.fromCharCode(65 + i - 26);
 
-            // Chunk days into groups of 30 days per sheet
-            for (let start = 0, sheetIdx = 1; start < days.length; start += 30, sheetIdx++) {
-                const chunk = days.slice(start, start + 30);
+            // Use 31 days on a single sheet when exporting a full 31-day calendar month; otherwise chunk by 30
+            const isSingle31Month = days.length === 31 && from.slice(0, 7) === to.slice(0, 7);
+            const chunkSize = isSingle31Month ? 31 : 30;
+            for (let start = 0, sheetIdx = 1; start < days.length; start += chunkSize, sheetIdx++) {
+                const chunk = days.slice(start, start + chunkSize);
+                const totalColIdx = chunk.length === 31 ? 35 : 34; // AI for <=30 days, AJ for 31-day month
+                const totalColLetter = getColLetter(totalColIdx);
                 let ws;
                 if (sheetIdx === 1 && baseWorksheet) {
                     ws = baseWorksheet;
@@ -1026,8 +1030,8 @@ window.DailyProgressModule = {
                 if (ws.getColumn(2)) ws.getColumn(2).width = 12;
                 if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 44);
                 if (ws.getColumn(4)) ws.getColumn(4).width = 8;
-                if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 14);
-                if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 30);
+                if (ws.getColumn(totalColIdx + 1)) ws.getColumn(totalColIdx + 1).width = Math.max(ws.getColumn(totalColIdx + 1).width || 0, 14);
+                if (ws.getColumn(totalColIdx + 2)) ws.getColumn(totalColIdx + 2).width = 10;
 
                 const thinBorder = { top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } }, bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } } };
                 const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
@@ -1054,7 +1058,14 @@ window.DailyProgressModule = {
                     c.border = headerTotalBorder;
                     c.alignment = { vertical: 'middle', horizontal: addr === 'C14' ? 'left' : 'center' };
                 });
-                ['AI7', 'AI14'].forEach(addr => {
+                // Clear any old AI/AJ headers before setting TOTAL on totalColLetter
+                ['AI7', 'AI14', 'AJ7', 'AJ14', 'AJ8'].forEach(addr => {
+                    const c = ws.getCell(addr);
+                    c.value = null;
+                    c.fill = { type: 'pattern', pattern: 'none' };
+                    c.border = undefined;
+                });
+                [totalColLetter + '7', totalColLetter + '14'].forEach(addr => {
                     const c = ws.getCell(addr);
                     c.value = 'TOTAL';
                     c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
@@ -1062,27 +1073,27 @@ window.DailyProgressModule = {
                     c.fill = totalFill;
                     c.border = headerTotalBorder;
                 });
-                ['AJ7', 'AJ14'].forEach(addr => {
-                    const c = ws.getCell(addr);
-                    c.value = 'NOTES / REMARKS';
-                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
-                    c.alignment = { vertical: 'middle', horizontal: 'center' };
-                    c.fill = headerFill;
-                    c.border = headerTotalBorder;
-                });
 
-                // Clear all dynamic data cells across all 30 day columns (E to AH) to remove any template dummy values
-                for (let c = 0; c < 30; c++) {
+                // Clear all dynamic data cells across day columns (E to AJ) and reset numFmt to General
+                for (let c = 0; c < 31; c++) {
                     const colLetter = getColLetter(c + 4);
-                    if (ws.getColumn(c + 5)) ws.getColumn(c + 5).hidden = c >= chunk.length;
+                    if (ws.getColumn(c + 5) && (c + 4) !== totalColIdx) {
+                        ws.getColumn(c + 5).hidden = c >= chunk.length;
+                    } else if (ws.getColumn(c + 5)) {
+                        ws.getColumn(c + 5).hidden = false;
+                    }
                     ws.getCell(colLetter + '6').value = null;
                     ws.getCell(colLetter + '7').value = null;
                     ws.getCell(colLetter + '14').value = null;
                     for (let mpR = 8; mpR <= 13; mpR++) {
-                        ws.getCell(colLetter + mpR).value = null;
+                        const cell = ws.getCell(colLetter + mpR);
+                        cell.value = null;
+                        cell.numFmt = 'General';
                     }
                     seedItems.forEach(it => {
-                        ws.getCell(colLetter + it.row).value = null;
+                        const cell = ws.getCell(colLetter + it.row);
+                        cell.value = null;
+                        cell.numFmt = 'General';
                     });
                 }
 
@@ -1148,8 +1159,8 @@ window.DailyProgressModule = {
                     });
                 });
 
-                // Manpower Totals in Column AI (Rows 6 and 8..13)
-                const aiMpTot = ws.getCell('AI6');
+                // Manpower Totals in totalColLetter (Rows 6 and 8..13)
+                const aiMpTot = ws.getCell(totalColLetter + '6');
                 aiMpTot.value = chunkManpowerGrandTotal > 0 ? chunkManpowerGrandTotal : null;
                 aiMpTot.numFmt = '#,##0';
                 aiMpTot.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
@@ -1158,7 +1169,7 @@ window.DailyProgressModule = {
                 aiMpTot.border = thinBorder;
                 ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
                     ws.getRow(8 + j).height = 18;
-                    const aiMp = ws.getCell('AI' + (8 + j));
+                    const aiMp = ws.getCell(totalColLetter + (8 + j));
                     aiMp.value = chunkMpTotals[k] > 0 ? chunkMpTotals[k] : null;
                     aiMp.numFmt = '#,##0';
                     aiMp.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
@@ -1167,7 +1178,7 @@ window.DailyProgressModule = {
                     aiMp.border = thinBorder;
                 });
 
-                // Row serials, uniform row styling, and Totals in Column AI
+                // Row serials, uniform row styling, and Totals in totalColLetter
                 let grandTotalMaterials = 0;
                 let maxItemRow = 15;
                 let visibleSrNo = 0;
@@ -1203,7 +1214,7 @@ window.DailyProgressModule = {
                         if (!dayCell.font) dayCell.font = { name: 'Calibri', size: 10 };
                     }
 
-                    const aiCell = ws.getCell('AI' + it.row);
+                    const aiCell = ws.getCell(totalColLetter + it.row);
                     aiCell.value = totalConsumedInChunk;
                     aiCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
                     aiCell.numFmt = qtyFmt(totalConsumedInChunk);
@@ -1238,7 +1249,7 @@ window.DailyProgressModule = {
                     cell.border = headerTotalBorder;
                 });
                 const grandRounded = Math.round(grandTotalMaterials * 1000) / 1000;
-                const grandAiCell = ws.getCell('AI' + grandRowNum);
+                const grandAiCell = ws.getCell(totalColLetter + grandRowNum);
                 grandAiCell.value = grandRounded > 0 ? grandRounded : null;
                 grandAiCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: 'FF1E3A8A' } };
                 grandAiCell.numFmt = qtyFmt(grandRounded);
@@ -1246,17 +1257,48 @@ window.DailyProgressModule = {
                 grandAiCell.fill = grandTotalFill;
                 grandAiCell.border = headerTotalBorder;
 
-                // Notes in AJ8
-                const notesStr = chunk
+                // Remark Date wise section below Grand Total
+                const remarkRows = chunk
                     .map(d => {
                         const rep = reportsByDate.get(d);
-                        return rep && rep.remarks ? `${d}: ${rep.remarks}` : '';
+                        return rep && rep.remarks && String(rep.remarks).trim() ? { date: d, remarks: String(rep.remarks).trim() } : null;
                     })
-                    .filter(Boolean)
-                    .join('\n');
-                const ajCell = ws.getCell('AJ8');
-                ajCell.value = notesStr || null;
-                ajCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+                    .filter(Boolean);
+                const remHdrRow = grandRowNum + 2;
+                ws.getRow(remHdrRow).height = 22;
+                const remTitle = ws.getCell('A' + remHdrRow);
+                remTitle.value = 'Remark Date wise';
+                remTitle.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
+                remTitle.fill = headerFill;
+                remTitle.border = headerTotalBorder;
+                remTitle.alignment = { vertical: 'middle', horizontal: 'left' };
+                ['B', 'C'].forEach(col => {
+                    const c = ws.getCell(col + remHdrRow);
+                    c.fill = headerFill;
+                    c.border = headerTotalBorder;
+                });
+                if (remarkRows.length) {
+                    remarkRows.forEach((item, idx) => {
+                        const rr = remHdrRow + 1 + idx;
+                        ws.getRow(rr).height = 20;
+                        const dCell = ws.getCell('B' + rr);
+                        dCell.value = item.date;
+                        dCell.font = { name: 'Calibri', bold: true, size: 10 };
+                        dCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        dCell.border = thinBorder;
+                        const tCell = ws.getCell('C' + rr);
+                        tCell.value = item.remarks;
+                        tCell.font = { name: 'Calibri', size: 10 };
+                        tCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        tCell.border = thinBorder;
+                    });
+                } else {
+                    const rr = remHdrRow + 1;
+                    ws.getRow(rr).height = 19;
+                    const tCell = ws.getCell('C' + rr);
+                    tCell.value = '—';
+                    tCell.font = { name: 'Calibri', size: 10, color: { argb: 'FF64748B' } };
+                }
             }
 
             const buffer = await workbook.xlsx.writeBuffer();
