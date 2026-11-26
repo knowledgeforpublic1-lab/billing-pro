@@ -1888,7 +1888,7 @@
         <div class="view-section animate-fade-in" v-if="currentView === 'dailyProgress'">
             <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
-                <section class="dp-master-header-card" aria-label="Location and work date">
+                <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
                     <!-- Top Row: Division Pills & Date Stepper -->
                     <details class="dp-sheet-options"><summary>Division &amp; site options</summary><div class="dp-header-top-row">
                         <div class="dp-division-pills">
@@ -2095,7 +2095,7 @@
 
                 </section>
                 <!-- Single-Line Dense Status Strip (~24px high) -->
-                <div v-if="dailyProgressLocked || dailyProgressDirty || dailyProgressVersion" class="dp-status-strip no-print">
+                <div v-if="dailyProgressTab !== 'history' && (dailyProgressLocked || dailyProgressDirty || dailyProgressVersion)" class="dp-status-strip no-print">
                     <div class="dp-status-items">
                         <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> items entered</span>
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
