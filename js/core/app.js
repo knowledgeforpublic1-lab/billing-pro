@@ -507,6 +507,9 @@
                 dailyProgressHistoryTo: '',
                 dailyProgressHistorySearch: '',
                 dailyProgressHistorySelectedKeys: [],
+                dailyProgressExportEditMode: false,
+                dailyProgressExportDirtyDates: [],
+                dailyProgressNewItemForm: { code: '', name: '', unit: 'No' },
                 dailyProgressContractorId: 'mangesh-sonwane',
                 dailyProgressData: null,
                 dailyProgressQuantities: {},
@@ -1314,7 +1317,9 @@
 
             // Daily Progress Computed Properties
             dailyProgressSeedItems() {
-                return (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
+                const base = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
+                const custom = (this.dailyProgressData && Array.isArray(this.dailyProgressData.customItems)) ? this.dailyProgressData.customItems : [];
+                return custom.length ? [...base, ...custom] : base;
             },
             dailyProgressActiveContractor() {
                 const list = this.dailyProgressContractors || [];

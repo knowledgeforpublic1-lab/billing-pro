@@ -1844,33 +1844,29 @@
                             aiMp.border = thinBorder;
                         });
 
-                        // Row serials + Sum totals in totalColLetter
+                        // Row serials + Sum totals in totalColLetter (keep all 401+ rows visible per template format)
                         let grandTotalMaterials = 0;
                         let maxItemRow = 15;
-                        let visibleSrNo = 0;
-                        this.items.forEach((it) => {
+                        this.items.forEach((it, idx) => {
                             if (Number(it.row) > maxItemRow) maxItemRow = Number(it.row);
                             const total = chunk.reduce((sum, d) => {
                                 const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
                             }, 0);
                             grandTotalMaterials += total;
-                            const isVisible = total > 0;
-                            if (it.row) ws.getRow(it.row).hidden = !isVisible;
-                            if (!isVisible) return;
-
-                            visibleSrNo++;
-                            const rowFill = (visibleSrNo % 2 === 0) ? zebraFill : whiteFill;
-                            ws.getRow(it.row).height = 20;
-                            const aCell = ws.getCell('A' + it.row);
-                            aCell.value = visibleSrNo;
-                            aCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                            if (it.row) {
+                                ws.getRow(it.row).hidden = false;
+                                ws.getRow(it.row).height = 19;
+                            }
+                            const srNo = idx + 1;
+                            const rowFill = (srNo % 2 === 0) ? zebraFill : whiteFill;
+                            ws.getCell('A' + it.row).value = srNo;
                             ['A', 'B', 'C', 'D'].forEach(col => {
                                 const c = ws.getCell(col + it.row);
                                 c.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
                                 c.fill = rowFill;
                                 c.border = thinBorder;
-                                if (col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
+                                if (col === 'A' || col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
                                 if (col === 'C') c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
                             });
                             for (let c = 0; c < chunk.length; c++) {
@@ -1881,9 +1877,9 @@
                             }
 
                             const aiCell = ws.getCell(totalColLetter + it.row);
-                            aiCell.value = total;
+                            aiCell.value = total > 0 ? total : null;
                             aiCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                            aiCell.numFmt = qtyFmt(total);
+                            if (total > 0) aiCell.numFmt = qtyFmt(total);
                             aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
                             aiCell.fill = totalFill;
                             aiCell.border = thinBorder;

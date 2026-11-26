@@ -955,7 +955,9 @@ window.DailyProgressModule = {
                 engineer: 'SUPERVISOR'
             };
 
-            const seedItems = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
+            const baseSeedItems = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
+            const customSeedItems = (this.dailyProgressData && Array.isArray(this.dailyProgressData.customItems)) ? this.dailyProgressData.customItems : [];
+            const seedItems = [...baseSeedItems, ...customSeedItems];
 
             // Calculate date range list
             const days = [];
@@ -1186,33 +1188,32 @@ window.DailyProgressModule = {
                     aiMp.border = thinBorder;
                 });
 
-                // Row serials, uniform row styling, and Totals in totalColLetter
+                // Row serials, uniform row styling, and Totals in totalColLetter (keep all 401+ rows visible per template format)
                 let grandTotalMaterials = 0;
                 let maxItemRow = 15;
-                let visibleSrNo = 0;
-                seedItems.forEach((it) => {
+                seedItems.forEach((it, idx) => {
                     if (Number(it.row) > maxItemRow) maxItemRow = Number(it.row);
                     const totalConsumedInChunk = chunk.reduce((sum, d) => {
                         const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     grandTotalMaterials += totalConsumedInChunk;
-                    const isVisible = totalConsumedInChunk > 0;
-                    ws.getRow(it.row).hidden = !isVisible;
-                    if (!isVisible) return;
-
-                    visibleSrNo++;
-                    const rowFill = (visibleSrNo % 2 === 0) ? zebraFill : whiteFill;
-                    ws.getRow(it.row).height = 20;
-                    const aCell = ws.getCell('A' + it.row);
-                    aCell.value = visibleSrNo;
-                    aCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    ws.getRow(it.row).hidden = false;
+                    ws.getRow(it.row).height = 19;
+                    const srNo = idx + 1;
+                    const rowFill = (srNo % 2 === 0) ? zebraFill : whiteFill;
+                    ws.getCell('A' + it.row).value = srNo;
+                    if (it.custom) {
+                        ws.getCell('B' + it.row).value = it.code || '';
+                        ws.getCell('C' + it.row).value = it.name || '';
+                        ws.getCell('D' + it.row).value = it.unit || '';
+                    }
                     ['A', 'B', 'C', 'D'].forEach(col => {
                         const c = ws.getCell(col + it.row);
                         c.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
                         c.fill = rowFill;
                         c.border = thinBorder;
-                        if (col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
+                        if (col === 'A' || col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
                         if (col === 'C') c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
                     });
                     for (let c = 0; c < chunk.length; c++) {
@@ -1223,9 +1224,9 @@ window.DailyProgressModule = {
                     }
 
                     const aiCell = ws.getCell(totalColLetter + it.row);
-                    aiCell.value = totalConsumedInChunk;
+                    aiCell.value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
                     aiCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                    aiCell.numFmt = qtyFmt(totalConsumedInChunk);
+                    if (totalConsumedInChunk > 0) aiCell.numFmt = qtyFmt(totalConsumedInChunk);
                     aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
                     aiCell.fill = totalFill;
                     aiCell.border = thinBorder;
@@ -1510,6 +1511,134 @@ window.DailyProgressModule = {
     openDailyProgressExportTab() {
         this.setDailyProgressExportRange('current_month');
         this.dailyProgressTab = 'download';
+    },
+
+    openDailyProgressAddRowModal() {
+        const openModal = () => {
+            this.dailyProgressNewItemForm = { code: '', name: '', unit: 'No' };
+            this.dailyProgressModal = 'addItem';
+        };
+        if (typeof this.checkAdminAccess === 'function') {
+            this.checkAdminAccess(openModal);
+        } else {
+            openModal();
+        }
+    },
+
+    addDailyProgressCustomItem() {
+        const form = this.dailyProgressNewItemForm || {};
+        const name = String(form.name || '').trim();
+        const unit = String(form.unit || '').trim() || 'No';
+        const code = String(form.code || '').trim();
+        if (!name) {
+            this.showToast('Material description zaroori hai.', 'Alert');
+            return;
+        }
+        const currentItems = this.dailyProgressSeedItems || [];
+        const maxRow = currentItems.reduce((m, it) => Math.max(m, Number(it.row) || 0), 415);
+        const newItem = { id: 'custom_' + Date.now(), row: maxRow + 1, code, name, unit, custom: true };
+        const existingCustom = (this.dailyProgressData && Array.isArray(this.dailyProgressData.customItems)) ? this.dailyProgressData.customItems : [];
+        this.dailyProgressData = { ...(this.dailyProgressData || { contractors: [], reports: [], issues: [] }), customItems: [...existingCustom, newItem] };
+        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+            BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+        }
+        this.dailyProgressModal = '';
+        this.showToast(`Material "${name}" sheet me add ho gaya!`, 'Check');
+    },
+
+    toggleDailyProgressExportEditMode() {
+        const toggle = () => {
+            this.dailyProgressExportEditMode = !this.dailyProgressExportEditMode;
+        };
+        if (this.dailyProgressExportEditMode) {
+            this.dailyProgressExportEditMode = false;
+        } else if (typeof this.checkAdminAccess === 'function') {
+            this.checkAdminAccess(toggle);
+        } else {
+            toggle();
+        }
+    },
+
+    _mutateExportReport(date, mutator) {
+        const cid = this.dailyProgressContractorId;
+        const locKey = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        const normD = this.normalizeDailyProgressDate(date) || date;
+        const reports = [...((this.dailyProgressData && this.dailyProgressData.reports) || [])];
+        const idx = reports.findIndex(r => r && r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locKey && (r.date === date || this.normalizeDailyProgressDate(r.date) === normD));
+        const base = idx >= 0 ? { ...reports[idx], quantities: { ...(reports[idx].quantities || {}) }, manpower: { ...(reports[idx].manpower || {}) } } : {
+            contractorId: cid, date: normD, locationId: locKey, locationName: this.dailyProgressLocationName(),
+            quantities: {}, manpower: { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 }, remarks: '', version: 0
+        };
+        mutator(base);
+        if (idx >= 0) reports[idx] = base;
+        else reports.push(base);
+        this.dailyProgressData = { ...(this.dailyProgressData || { contractors: [], reports: [], issues: [] }), reports };
+        const dirty = new Set(this.dailyProgressExportDirtyDates || []);
+        dirty.add(normD);
+        this.dailyProgressExportDirtyDates = Array.from(dirty);
+    },
+
+    setDailyProgressExportCellQty(itemId, date, rawVal) {
+        const val = Math.max(0, Number(rawVal) || 0);
+        this._mutateExportReport(date, rep => {
+            if (val > 0) rep.quantities[itemId] = val;
+            else delete rep.quantities[itemId];
+        });
+    },
+
+    setDailyProgressExportManpower(key, date, rawVal) {
+        const val = Math.max(0, Math.round(Number(rawVal) || 0));
+        this._mutateExportReport(date, rep => {
+            rep.manpower[key] = val;
+        });
+    },
+
+    async saveDailyProgressExportEdits() {
+        const dates = [...(this.dailyProgressExportDirtyDates || [])];
+        if (!dates.length) return;
+        const cid = this.dailyProgressContractorId;
+        const locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        const locationName = this.dailyProgressLocationName();
+        const saveAction = async () => {
+            if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Saving Export Sheet Edits', `0 / ${dates.length} dates...`, 10);
+            this.dailyProgressBusy = true;
+            let saved = 0;
+            try {
+                for (const dt of dates) {
+                    const rep = this.getDailyProgressDayReport(dt);
+                    if (!rep) continue;
+                    const res = await this.dailyProgressRequest('report', {
+                        contractorId: cid, date: dt, locationId, locationName,
+                        quantities: rep.quantities || {}, manpower: rep.manpower || {}, remarks: rep.remarks || '',
+                        version: Number(rep.version) || 0, final: true
+                    });
+                    if (res && res.report) {
+                        const reports = [...((this.dailyProgressData && this.dailyProgressData.reports) || [])];
+                        const idx = reports.findIndex(r => r && r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === dt);
+                        if (idx >= 0) reports[idx] = res.report;
+                        else reports.push(res.report);
+                        this.dailyProgressData = { ...this.dailyProgressData, reports };
+                    }
+                    saved++;
+                    if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(Math.round((saved / dates.length) * 95), `${saved} / ${dates.length} dates saved...`);
+                }
+                this.dailyProgressExportDirtyDates = [];
+                if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                    await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+                }
+                if (dates.includes(this.dailyProgressDate)) {
+                    this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                }
+                this.showToast(`${saved} dates ke changes save ho gaye!`, 'Check');
+            } finally {
+                this.dailyProgressBusy = false;
+                if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+            }
+        };
+        if (typeof this.runDailyProgressAdmin === 'function') {
+            return this.runDailyProgressAdmin(saveAction);
+        }
+        return saveAction();
     },
 
     setDailyProgressExportRange(rangeType) {
