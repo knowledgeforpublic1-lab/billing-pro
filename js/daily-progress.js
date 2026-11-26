@@ -1517,11 +1517,8 @@ window.DailyProgressModule = {
             this.dailyProgressNewItemForm = { code: '', name: '', unit: 'No' };
             this.dailyProgressModal = 'addItem';
         };
-        if (typeof this.checkAdminAccess === 'function') {
-            this.checkAdminAccess(openModal);
-        } else {
-            openModal();
-        }
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(openModal)) return;
+        openModal();
     },
 
     addDailyProgressCustomItem() {
@@ -1557,11 +1554,8 @@ window.DailyProgressModule = {
         const enable = () => {
             this.dailyProgressExportEditMode = true;
         };
-        if (typeof this.checkAdminAccess === 'function') {
-            this.checkAdminAccess(enable);
-        } else {
-            enable();
-        }
+        if (typeof this.checkAdminAccess === 'function' && !this.checkAdminAccess(enable)) return;
+        enable();
     },
 
     _mutateExportReport(date, mutator) {
