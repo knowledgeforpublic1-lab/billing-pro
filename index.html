@@ -2729,7 +2729,8 @@
                                         <td class="st-unit">NOS</td>
                                         <td class="st-issue">-</td>
                                         <td v-for="day in getDailyProgressExportDays()" :key="'ldr-' + day" class="dp-excel-day-cell">
-                                            <span v-if="getDailyProgressDayManpower(day, 'leader') > 0">{{ getDailyProgressDayManpower(day, 'leader') }}</span>
+                                            <input v-if="dailyProgressExportEditMode" type="number" step="1" min="0" :value="getDailyProgressDayManpower(day, 'leader') || ''" @change="setDailyProgressExportManpower('leader', day, $event.target.value)" placeholder="0" style="width: 48px; padding: 2px 4px; font-size: 0.74rem; text-align: center; border: 1px solid #f59e0b; border-radius: 4px; background: var(--bg-card); color: var(--text-main);">
+                                            <span v-else-if="getDailyProgressDayManpower(day, 'leader') > 0">{{ getDailyProgressDayManpower(day, 'leader') }}</span>
                                             <span v-else class="dp-excel-val-zero">-</span>
                                         </td>
                                         <td class="dp-excel-tot-col">
@@ -2745,7 +2746,8 @@
                                         <td class="st-unit">NOS</td>
                                         <td class="st-issue">-</td>
                                         <td v-for="day in getDailyProgressExportDays()" :key="'sk-' + day" class="dp-excel-day-cell">
-                                            <span v-if="getDailyProgressDayManpower(day, 'skilled') > 0">{{ getDailyProgressDayManpower(day, 'skilled') }}</span>
+                                            <input v-if="dailyProgressExportEditMode" type="number" step="1" min="0" :value="getDailyProgressDayManpower(day, 'skilled') || ''" @change="setDailyProgressExportManpower('skilled', day, $event.target.value)" placeholder="0" style="width: 48px; padding: 2px 4px; font-size: 0.74rem; text-align: center; border: 1px solid #f59e0b; border-radius: 4px; background: var(--bg-card); color: var(--text-main);">
+                                            <span v-else-if="getDailyProgressDayManpower(day, 'skilled') > 0">{{ getDailyProgressDayManpower(day, 'skilled') }}</span>
                                             <span v-else class="dp-excel-val-zero">-</span>
                                         </td>
                                         <td class="dp-excel-tot-col">
@@ -2761,7 +2763,8 @@
                                         <td class="st-unit">NOS</td>
                                         <td class="st-issue">-</td>
                                         <td v-for="day in getDailyProgressExportDays()" :key="'unsk-' + day" class="dp-excel-day-cell">
-                                            <span v-if="getDailyProgressDayManpower(day, 'unskilled') > 0">{{ getDailyProgressDayManpower(day, 'unskilled') }}</span>
+                                            <input v-if="dailyProgressExportEditMode" type="number" step="1" min="0" :value="getDailyProgressDayManpower(day, 'unskilled') || ''" @change="setDailyProgressExportManpower('unskilled', day, $event.target.value)" placeholder="0" style="width: 48px; padding: 2px 4px; font-size: 0.74rem; text-align: center; border: 1px solid #f59e0b; border-radius: 4px; background: var(--bg-card); color: var(--text-main);">
+                                            <span v-else-if="getDailyProgressDayManpower(day, 'unskilled') > 0">{{ getDailyProgressDayManpower(day, 'unskilled') }}</span>
                                             <span v-else class="dp-excel-val-zero">-</span>
                                         </td>
                                         <td class="dp-excel-tot-col">
