@@ -991,35 +991,63 @@ window.DailyProgressModule = {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                 }
 
+                // Unmerge fragmented top metadata & AI5:AI7 so full-width headers and AI6/AI7 render cleanly
+                ['A3:C3', 'D3:E3', 'G3:H3', 'J3:AH3', 'A4:E4', 'G4:AJ4', 'A5:E5', 'AI5:AI7'].forEach(rng => {
+                    try { ws.unMergeCells(rng); } catch (e) {}
+                });
+                ['A3:AJ3', 'A4:AJ4', 'A5:AJ5'].forEach(rng => {
+                    try { ws.mergeCells(rng); } catch (e) {}
+                });
+
                 // Header metadata & clean sheet formatting
                 ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
                 ws.getCell('A3').value = 'FEEDER: ' + (this.getDailyProgressExportFeederName() || 'Unassigned') + ' | LOCATION: ' + this.dailyProgressLocationName();
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
-                ['A2', 'A3', 'A4', 'A5'].forEach(addr => {
+                ['A2', 'A3', 'A4', 'A5'].forEach((addr, idx) => {
                     const hc = ws.getCell(addr);
-                    hc.font = { ...(hc.font || {}), bold: true, size: 10 };
+                    hc.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
                     hc.alignment = { vertical: 'middle', horizontal: 'left' };
+                    ws.getRow(idx + 2).height = 19;
                 });
                 ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 7 }];
                 ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
-                if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 42);
+                if (ws.getColumn(1)) ws.getColumn(1).width = 7;
+                if (ws.getColumn(2)) ws.getColumn(2).width = 12;
+                if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 44);
+                if (ws.getColumn(4)) ws.getColumn(4).width = 8;
                 if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 14);
-                if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 28);
+                if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 30);
 
-                const thinBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+                const thinBorder = { top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } }, bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } } };
                 const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
                 const grandTotalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+                const whiteFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+                const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
                 const headerTotalBorder = { top: { style: 'thin', color: { argb: 'FF94A3B8' } }, left: { style: 'thin', color: { argb: 'FF94A3B8' } }, bottom: { style: 'medium', color: { argb: 'FF475569' } }, right: { style: 'thin', color: { argb: 'FF94A3B8' } } };
+                const qtyFmt = (v) => (Math.abs(v - Math.round(v)) < 1e-6 ? '#,##0' : '#,##0.###');
 
+                ws.getRow(6).height = 20;
+                ws.getRow(7).height = 22;
+                ws.getRow(14).height = 24;
                 ws.getCell('C6').value = 'TOTAL MANPOWER';
-                ws.getCell('C6').font = { ...(ws.getCell('C6').font || {}), bold: true, size: 10 };
+                ws.getCell('C6').font = { name: 'Calibri', bold: true, size: 10 };
+                ws.getCell('C6').fill = zebraFill;
                 ws.getCell('D6').value = 'Nos';
                 ws.getCell('D6').alignment = { vertical: 'middle', horizontal: 'center' };
+                ws.getCell('D6').fill = zebraFill;
+                ['A14', 'B14', 'C14', 'D14'].forEach(addr => {
+                    const c = ws.getCell(addr);
+                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
+                    c.fill = headerFill;
+                    c.border = headerTotalBorder;
+                    c.alignment = { vertical: 'middle', horizontal: addr === 'C14' ? 'left' : 'center' };
+                });
                 ['AI7', 'AI14'].forEach(addr => {
                     const c = ws.getCell(addr);
                     c.value = 'TOTAL';
-                    c.font = { ...(c.font || {}), bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
                     c.alignment = { vertical: 'middle', horizontal: 'center' };
                     c.fill = totalFill;
                     c.border = headerTotalBorder;
@@ -1027,8 +1055,10 @@ window.DailyProgressModule = {
                 ['AJ7', 'AJ14'].forEach(addr => {
                     const c = ws.getCell(addr);
                     c.value = 'NOTES / REMARKS';
-                    c.font = { ...(c.font || {}), bold: true, size: 10 };
+                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
                     c.alignment = { vertical: 'middle', horizontal: 'center' };
+                    c.fill = headerFill;
+                    c.border = headerTotalBorder;
                 });
 
                 // Clear all dynamic data cells across all 30 day columns (E to AH) to remove any template dummy values
@@ -1037,6 +1067,7 @@ window.DailyProgressModule = {
                     if (ws.getColumn(c + 5)) ws.getColumn(c + 5).hidden = c >= chunk.length;
                     ws.getCell(colLetter + '6').value = null;
                     ws.getCell(colLetter + '7').value = null;
+                    ws.getCell(colLetter + '14').value = null;
                     for (let mpR = 8; mpR <= 13; mpR++) {
                         ws.getCell(colLetter + mpR).value = null;
                     }
@@ -1055,22 +1086,28 @@ window.DailyProgressModule = {
                     const r = reportsByDate.get(date);
                     const m = (r && r.manpower) || {};
 
-                    // Date serial in Row 7
+                    // Date serial in Row 7 and Row 14
                     const dtObj = new Date(date + 'T00:00:00Z');
                     const serial = Math.round((dtObj.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
-                    const dtCell = ws.getCell(colLetter + '7');
-                    dtCell.value = serial;
-                    dtCell.numFmt = 'dd-mmm';
-                    dtCell.font = { ...(dtCell.font || {}), bold: true, size: 9 };
-                    dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    [colLetter + '7', colLetter + '14'].forEach((addr, idx) => {
+                        const dtCell = ws.getCell(addr);
+                        dtCell.value = serial;
+                        dtCell.numFmt = 'dd-mmm';
+                        dtCell.font = { name: 'Calibri', bold: true, size: 9, color: { argb: 'FF0F172A' } };
+                        dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        dtCell.fill = headerFill;
+                        dtCell.border = idx === 1 ? headerTotalBorder : thinBorder;
+                    });
 
                     // Total manpower in Row 6
                     const totMp = r ? ((Number(m.leader) || 0) + (Number(m.skilled) || 0) + (Number(m.unskilled) || 0)) : 0;
                     chunkManpowerGrandTotal += totMp;
                     const mpTotCell = ws.getCell(colLetter + '6');
                     mpTotCell.value = totMp > 0 ? totMp : null;
-                    mpTotCell.font = { ...(mpTotCell.font || {}), bold: true };
+                    mpTotCell.numFmt = '#,##0';
+                    mpTotCell.font = { name: 'Calibri', bold: true, size: 10 };
                     mpTotCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    mpTotCell.fill = zebraFill;
                     mpTotCell.border = thinBorder;
 
                     // Manpower rows 8 to 13
@@ -1080,7 +1117,10 @@ window.DailyProgressModule = {
                         chunkMpTotals[k] += val;
                         const cCell = ws.getCell(colLetter + (8 + j));
                         cCell.value = val > 0 ? val : null;
+                        cCell.numFmt = '#,##0';
+                        cCell.font = { name: 'Calibri', size: 10 };
                         cCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cCell.fill = whiteFill;
                         cCell.border = thinBorder;
                     });
 
@@ -1091,9 +1131,9 @@ window.DailyProgressModule = {
                             dayMaterialTotals[i] += q;
                             const qCell = ws.getCell(colLetter + it.row);
                             qCell.value = q;
-                            qCell.numFmt = '#,##0.###';
+                            qCell.numFmt = qtyFmt(q);
+                            qCell.font = { name: 'Calibri', size: 10 };
                             qCell.alignment = { vertical: 'middle', horizontal: 'right' };
-                            qCell.border = thinBorder;
                         }
                     });
                 });
@@ -1101,45 +1141,74 @@ window.DailyProgressModule = {
                 // Manpower Totals in Column AI (Rows 6 and 8..13)
                 const aiMpTot = ws.getCell('AI6');
                 aiMpTot.value = chunkManpowerGrandTotal > 0 ? chunkManpowerGrandTotal : null;
-                aiMpTot.font = { ...(aiMpTot.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                aiMpTot.numFmt = '#,##0';
+                aiMpTot.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
                 aiMpTot.alignment = { vertical: 'middle', horizontal: 'center' };
                 aiMpTot.fill = totalFill;
                 aiMpTot.border = thinBorder;
                 ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
+                    ws.getRow(8 + j).height = 18;
                     const aiMp = ws.getCell('AI' + (8 + j));
                     aiMp.value = chunkMpTotals[k] > 0 ? chunkMpTotals[k] : null;
-                    aiMp.font = { ...(aiMp.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                    aiMp.numFmt = '#,##0';
+                    aiMp.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
                     aiMp.alignment = { vertical: 'middle', horizontal: 'center' };
                     aiMp.fill = totalFill;
                     aiMp.border = thinBorder;
                 });
 
-                // Row serials and Totals in Column AI
+                // Row serials, uniform row styling, and Totals in Column AI
                 let grandTotalMaterials = 0;
                 let maxItemRow = 15;
-                seedItems.forEach((it, i) => {
+                let visibleSrNo = 0;
+                seedItems.forEach((it) => {
                     if (Number(it.row) > maxItemRow) maxItemRow = Number(it.row);
-                    ws.getCell('A' + it.row).value = i + 1;
                     const totalConsumedInChunk = chunk.reduce((sum, d) => {
                         const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     grandTotalMaterials += totalConsumedInChunk;
+                    const isVisible = totalConsumedInChunk > 0;
+                    ws.getRow(it.row).hidden = !isVisible;
+                    if (!isVisible) return;
+
+                    visibleSrNo++;
+                    const rowFill = (visibleSrNo % 2 === 0) ? zebraFill : whiteFill;
+                    ws.getRow(it.row).height = 20;
+                    const aCell = ws.getCell('A' + it.row);
+                    aCell.value = visibleSrNo;
+                    aCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    ['A', 'B', 'C', 'D'].forEach(col => {
+                        const c = ws.getCell(col + it.row);
+                        c.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
+                        c.fill = rowFill;
+                        c.border = thinBorder;
+                        if (col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
+                        if (col === 'C') c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                    });
+                    for (let c = 0; c < chunk.length; c++) {
+                        const dayCell = ws.getCell(getColLetter(c + 4) + it.row);
+                        dayCell.fill = rowFill;
+                        dayCell.border = thinBorder;
+                        if (!dayCell.font) dayCell.font = { name: 'Calibri', size: 10 };
+                    }
+
                     const aiCell = ws.getCell('AI' + it.row);
-                    aiCell.value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
-                    aiCell.font = { ...(aiCell.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
-                    aiCell.numFmt = '#,##0.###';
+                    aiCell.value = totalConsumedInChunk;
+                    aiCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                    aiCell.numFmt = qtyFmt(totalConsumedInChunk);
                     aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
                     aiCell.fill = totalFill;
                     aiCell.border = thinBorder;
-                    ws.getRow(it.row).hidden = totalConsumedInChunk <= 0;
                 });
 
                 // Bottom Grand Total Row across all exported materials
                 const grandRowNum = maxItemRow + 1;
+                ws.getRow(grandRowNum).height = 22;
                 const grandLabel = ws.getCell('C' + grandRowNum);
                 grandLabel.value = 'GRAND TOTAL (ALL MATERIALS)';
-                grandLabel.font = { ...(grandLabel.font || {}), bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                grandLabel.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                grandLabel.alignment = { vertical: 'middle', horizontal: 'left' };
                 grandLabel.fill = grandTotalFill;
                 grandLabel.border = headerTotalBorder;
                 ['A', 'B', 'D'].forEach(col => {
@@ -1149,18 +1218,20 @@ window.DailyProgressModule = {
                 });
                 dayMaterialTotals.forEach((daySum, i) => {
                     const colLetter = getColLetter(i + 4);
+                    const rounded = Math.round(daySum * 1000) / 1000;
                     const cell = ws.getCell(colLetter + grandRowNum);
-                    cell.value = daySum > 0 ? Math.round(daySum * 1000) / 1000 : null;
-                    cell.font = { ...(cell.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
-                    cell.numFmt = '#,##0.###';
+                    cell.value = rounded > 0 ? rounded : null;
+                    cell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                    cell.numFmt = qtyFmt(rounded);
                     cell.alignment = { vertical: 'middle', horizontal: 'right' };
                     cell.fill = grandTotalFill;
                     cell.border = headerTotalBorder;
                 });
+                const grandRounded = Math.round(grandTotalMaterials * 1000) / 1000;
                 const grandAiCell = ws.getCell('AI' + grandRowNum);
-                grandAiCell.value = grandTotalMaterials > 0 ? Math.round(grandTotalMaterials * 1000) / 1000 : null;
-                grandAiCell.font = { ...(grandAiCell.font || {}), bold: true, size: 11, color: { argb: 'FF1E3A8A' } };
-                grandAiCell.numFmt = '#,##0.###';
+                grandAiCell.value = grandRounded > 0 ? grandRounded : null;
+                grandAiCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: 'FF1E3A8A' } };
+                grandAiCell.numFmt = qtyFmt(grandRounded);
                 grandAiCell.alignment = { vertical: 'middle', horizontal: 'right' };
                 grandAiCell.fill = grandTotalFill;
                 grandAiCell.border = headerTotalBorder;
