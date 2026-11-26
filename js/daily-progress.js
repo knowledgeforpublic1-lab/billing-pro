@@ -757,9 +757,14 @@ window.DailyProgressModule = {
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         const sapRoot = (typeof window !== 'undefined' && (window.ContractorSapStock || window.__customSapStock || window.DefaultContractorSapStock)) || null;
 
-        // Memoize contractor-level SAP lookup across all 180+ item rows (avoids 500x Proxy/SAP scans per render)
+        // Memoize contractor-level SAP, manual issue, and consumed maps across all 415+ item rows (O(1) per item)
         const memo = this._dpStockMemo;
-        if (!memo || memo.cid !== cid || memo.curDate !== curDate || memo.sapRoot !== sapRoot) {
+        const epoch = this._dpDataEpoch || 0;
+        const ver = this.dailyProgressVersion || 0;
+        if (!memo || memo.cid !== cid || memo.curDate !== curDate || memo.sapRoot !== sapRoot ||
+            memo.issues !== issues || memo.issuesLen !== issues.length ||
+            memo.reports !== reports || memo.reportsLen !== reports.length ||
+            memo.epoch !== epoch || memo.ver !== ver) {
             const contractorSap = (typeof this.getContractorSapIssues === 'function')
                 ? this.getContractorSapIssues.call(new Proxy(this, {
                     get(target, key) {
@@ -772,10 +777,37 @@ window.DailyProgressModule = {
                     },
                     set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
                 })) : null;
-            this._dpStockMemo = { cid, curDate, sapRoot, contractorSap };
+            const manualIssuedMap = new Map();
+            for (let i = 0; i < issues.length; i++) {
+                const iss = issues[i];
+                if (iss && iss.contractorId === cid && (!iss.date || iss.date <= curDate)) {
+                    const key = String(iss.itemId);
+                    manualIssuedMap.set(key, (manualIssuedMap.get(key) || 0) + (Number(iss.quantity) || 0));
+                }
+            }
+            const consumedMap = new Map();
+            for (let i = 0; i < reports.length; i++) {
+                const r = reports[i];
+                if (r && r.contractorId === cid && r.date && r.date <= curDate && r.quantities) {
+                    const qObj = r.quantities;
+                    for (const k in qObj) {
+                        if (Object.prototype.hasOwnProperty.call(qObj, k)) {
+                            const v = Number(qObj[k]) || 0;
+                            if (v) consumedMap.set(k, (consumedMap.get(k) || 0) + v);
+                        }
+                    }
+                }
+            }
+            this._dpStockMemo = {
+                cid, curDate, sapRoot, contractorSap,
+                issues, issuesLen: issues.length,
+                reports, reportsLen: reports.length,
+                epoch, ver,
+                manualIssuedMap, consumedMap
+            };
         }
 
-        const { contractorSap } = this._dpStockMemo;
+        const { contractorSap, manualIssuedMap, consumedMap } = this._dpStockMemo;
 
         // 1. SAP Stock Issued to Active Contractor strictly filtered up to curDate (Work Date)
         let sapIssued = 0;
@@ -807,16 +839,12 @@ window.DailyProgressModule = {
         }
 
         // 2. Manual stock issues recorded in Daily Progress
-        const manualIssued = issues
-            .filter(iss => iss.contractorId === cid && iss.itemId === item.id && (!iss.date || iss.date <= curDate))
-            .reduce((sum, iss) => sum + (Number(iss.quantity) || 0), 0);
+        const manualIssued = manualIssuedMap.get(String(item.id)) || 0;
 
         const totalIssued = Math.round((sapIssued + manualIssued) * 1000) / 1000;
 
         // 3. Material consumed across saved daily reports up to curDate
-        const totalConsumed = reports
-            .filter(r => r.contractorId === cid && r.date <= curDate)
-            .reduce((sum, r) => sum + (Number(r.quantities && r.quantities[item.id]) || 0), 0);
+        const totalConsumed = consumedMap.get(String(item.id)) || 0;
 
         const balance = Math.round((totalIssued - totalConsumed) * 1000) / 1000;
 

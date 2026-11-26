@@ -21,8 +21,11 @@
             const cid = this.dailyProgressContractorId;
             if (!cid) return;
             this._dpLocationsContractor = cid;
+            this._dpLocationsCache = this._dpLocationsCache || {};
             const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
-            if ((!this.dailyProgressLocations || !this.dailyProgressLocations.length) && defaults.length) {
+            if (this._dpLocationsCache[cid]) {
+                this.dailyProgressLocations = this._dpLocationsCache[cid];
+            } else if ((!this.dailyProgressLocations || !this.dailyProgressLocations.length) && defaults.length) {
                 this.dailyProgressLocations = [...defaults];
             }
             try {
@@ -36,7 +39,9 @@
                         map.set(loc.id, map.has(loc.id) ? { ...map.get(loc.id), ...loc } : loc);
                     }
                 });
-                this.dailyProgressLocations = Array.from(map.values());
+                const merged = Array.from(map.values());
+                this._dpLocationsCache[cid] = merged;
+                this.dailyProgressLocations = merged;
                 if (!this.dailyProgressLocationId) {
                     if (this.dailyProgressLocations.length === 1) {
                         this.dailyProgressLocationId = this.dailyProgressLocations[0].id;
@@ -59,10 +64,16 @@
         async onDailyProgressContractorChange(cid) {
             if (this.dailyProgressBusy) return;
             const previous = this.dailyProgressContractorId;
+            if (previous !== cid) {
+                // Clear location before originalContractorChange so it doesn't fire a wasted status fetch on the old location
+                this.dailyProgressLocationId = '';
+            }
             originalContractorChange.call(this, cid);
             if (previous !== this.dailyProgressContractorId) {
                 const wanted = this.dailyProgressContractorId;
-                this.dailyProgressLocationId = ''; this.dailyProgressLocations = [];
+                const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
+                const cached = this._dpLocationsCache && this._dpLocationsCache[wanted];
+                this.dailyProgressLocations = cached ? cached : [...defaults];
                 await this.loadDailyProgressLocations();
                 if (wanted === this.dailyProgressContractorId && !this.dailyProgressDirty) this.loadDailyProgressReportForDate(this.dailyProgressDate);
             }
