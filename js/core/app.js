@@ -483,7 +483,8 @@
                 dailyProgressEntryHistory: [],
                 dailyProgressVisibleLimit: 80,
                 dailyProgressDate: '',
-                dailyProgressHistoryDate: '',
+                dailyProgressHistoryFrom: '',
+                dailyProgressHistoryTo: '',
                 dailyProgressHistorySearch: '',
                 dailyProgressContractorId: 'mangesh-sonwane',
                 dailyProgressData: null,
@@ -1412,7 +1413,8 @@
             dailyProgressHistoryRows() {
                 const data = this.dailyProgressData;
                 if (!data || !Array.isArray(data.reports) || !data.reports.length) return [];
-                const selectedDate = String(this.dailyProgressHistoryDate || '').trim();
+                const fromDate = String(this.dailyProgressHistoryFrom || '').trim();
+                const toDate = String(this.dailyProgressHistoryTo || '').trim();
                 const search = String(this.dailyProgressHistorySearch || '').trim().toLowerCase();
                 const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
                 const contractorById = new Map();
@@ -1433,7 +1435,8 @@
                 const rows = [];
                 for (const r of data.reports) {
                     if (!r || r.deleted) continue;
-                    if (selectedDate && r.date !== selectedDate) continue;
+                    if (fromDate && String(r.date || '') < fromDate) continue;
+                    if (toDate && String(r.date || '') > toDate) continue;
                     const qtyValues = r.quantities ? Object.values(r.quantities) : [];
                     const itemCount = qtyValues.filter(v => Number(v) > 0).length;
                     const mp = r.manpower || {};
@@ -1449,7 +1452,7 @@
                     const feederName = (loc && loc.name) || (r.locationName && r.locationName !== 'Legacy / Unassigned' ? r.locationName : '') || (contractor && contractor.feeder) || 'Legacy / Unassigned';
                     const savedByObj = (r.savedBy && typeof r.savedBy === 'object') ? r.savedBy : null;
                     const userName = savedByObj ? (savedByObj.name || savedByObj.username || 'Direct Entry') : (typeof r.savedBy === 'string' && r.savedBy.trim() ? r.savedBy.trim() : 'Direct / Admin');
-                    const userContact = savedByObj ? [savedByObj.mobile, savedByObj.email, savedByObj.username].filter(Boolean).join(' • ') : '';
+                    const userContact = savedByObj ? ([savedByObj.mobile, savedByObj.email].filter(Boolean).join(' • ') || savedByObj.username || '') : '';
 
                     if (search) {
                         const haystack = (userName + ' ' + userContact + ' ' + feederName + ' ' + contractorName + ' ' + (r.remarks || '')).toLowerCase();
@@ -1459,6 +1462,8 @@
                     rows.push({
                         key: (r.contractorId || '') + '|' + (r.date || '') + '|' + (locKey || 'legacy') + '|' + (r.savedAt || ''),
                         report: r,
+                        contractorId: r.contractorId || '',
+                        locationId: locKey,
                         userName,
                         userContact,
                         feederName,
@@ -2473,8 +2478,11 @@
 
         watch: {
             dailyProgressTab(newTab) {
-                if (newTab === 'history' && !this.dailyProgressHistoryDate) {
-                    this.dailyProgressHistoryDate = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+                if (newTab === 'history' && !this.dailyProgressHistoryFrom && !this.dailyProgressHistoryTo && !this._dpHistoryInitialized) {
+                    this._dpHistoryInitialized = true;
+                    const d = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+                    this.dailyProgressHistoryFrom = d;
+                    this.dailyProgressHistoryTo = d;
                 }
                 if (newTab === 'download' && typeof this.setDailyProgressExportRange === 'function') {
                     if (!this.dailyProgressExportFrom || this.dailyProgressExportFrom.startsWith('2026-09')) {

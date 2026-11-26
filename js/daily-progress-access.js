@@ -120,6 +120,33 @@
                 this.showToast('Selected location ka progress ' + (action === 'reset' ? 'reset' : 'delete') + ' ho gaya.', 'Check');
             });
         },
+        deleteDailyProgressHistoryRow(row) {
+            if (!row || !row.contractorId || !row.date) return;
+            return this.runDailyProgressAdmin(async () => {
+                if (this.dailyProgressBusy || this._dpPendingSave) throw new Error('Pending save pehle complete karein.');
+                const cid = row.contractorId;
+                const locationId = this.dailyProgressLocationKey(row.locationId);
+                if (!confirm(`${row.contractorName} · ${row.feederName} (${row.date}) ka data permanently delete karein?`)) return;
+                this.invalidateDailyProgressReads();
+                this.dailyProgressBusy = true;
+                try {
+                    await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
+                    this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r =>
+                        !(r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === row.date)
+                    );
+                    if (cid === this.dailyProgressContractorId && locationId === this.dailyProgressLocationKey(this.dailyProgressLocationId) && row.date === this.dailyProgressDate) {
+                        this.dailyProgressDirty = false;
+                        this._dpEditVersion = null;
+                        this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                    }
+                } finally {
+                    this.dailyProgressBusy = false;
+                }
+                await this.syncDailyProgressCloudData(true);
+                await this.refreshDailyProgressStatus(false);
+                this.showToast(`${row.date} (${row.contractorName}) ka data delete ho gaya.`, 'Check');
+            });
+        },
         startDailyProgressLocationEntry() {
             return this.runDailyProgressAdmin(async () => {
                 if (!this.dailyProgressLocationId) throw new Error('Pehle location select karein.');
