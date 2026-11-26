@@ -79,7 +79,8 @@
     // Sirf ek hi baar chalega (guard). Custom (user-uploaded) data window.__customSapStock /
     // window.__customOldReco me capture hota hai aur defaults ke aane par wapas restore ho jata hai.
     allMethods.lazyLoadHeavyData = function() {
-        if (window.__heavyDataLoaded || window.__heavyDataLoading) return;
+        if (window.__heavyDataLoaded) return Promise.resolve();
+        if (window.__heavyDataLoading && window.__heavyDataPromise) return window.__heavyDataPromise;
         window.__heavyDataLoading = true;
         // fetch (http/https) fast hai; file:// direct open par fetch block hota hai — wahan
         // <script> injection fallback chalega (script tag file:// me allowed hai).
@@ -93,7 +94,7 @@
                 s.onerror = () => reject(new Error('script load failed: ' + url));
                 document.head.appendChild(s);
             }));
-        Promise.all([
+        window.__heavyDataPromise = Promise.all([
             loadScript('js/data/contractor-sap-issues.js?v=' + Date.now())
                 .catch(e => { console.warn('[LazyLoad] SAP stock:', e.message); return null; }),
             loadScript('js/data/contractor-old-reconciliation.js?v=20261109_v2200')
@@ -116,6 +117,7 @@
                 window.ContractorOldReco = window.__customOldReco;
                 if (!window.DefaultContractorOldReco) window.DefaultContractorOldReco = { byContractorNorm: {} };
             }
+            this._dpStockMemo = null;
             try { this.recoRevision = (this.recoRevision || 0) + 1; } catch (e) {}
             try {
                 if (typeof this.syncDailyProgressContractorsList === 'function') {
@@ -123,6 +125,7 @@
                 }
             } catch (e) {}
         });
+        return window.__heavyDataPromise;
     };
 
     allMethods.toggleTheme = function() {
@@ -2661,6 +2664,7 @@
                 };
                 window.addEventListener('billing-cloud-dataset', this._cloudDatasetListener);
             }
+            const loadCloudDatasets = (async () => {
             try {
                 let [customOldReco, customStockJson] = await Promise.all([
                     (typeof window.OldRecoImporterModule !== 'undefined' && typeof window.OldRecoImporterModule.loadCustomOldRecoFromDb === 'function')
@@ -2701,12 +2705,16 @@
                         this.hasCustomStock = true;
                         this.customStockMeta = customStock.meta;
                         this.recoRevision = (this.recoRevision || 0) + 1;
+                        this._dpStockMemo = null;
                         console.log('[StockImporter] Custom stock loaded from storage:', customStock.meta);
                     }
                 }
             } catch (e) {
                 console.warn('[Workspace] Concurrent custom data load failed:', e);
             }
+            })();
+            this._cloudDatasetsPromise = loadCloudDatasets;
+            await loadCloudDatasets;
             // ⚡ Heavy defaults (8.1MB SAP stock + 2.2MB old-reco) boot ke baad idle-time par load —
             // pehle 10.6MB parse-time blocking JS thi. Custom data ho to usi ko restore rakhte hain.
             try {

@@ -78,7 +78,14 @@
                     this.startTaskProgress('Loading Contractor Data', 'Locations aur stock load ho rahe hain...', 25);
                 }
                 try {
-                    await this.loadDailyProgressLocations();
+                    if (typeof this.ensureDailyProgressStockReady === 'function') {
+                        await Promise.all([
+                            this.loadDailyProgressLocations(),
+                            this.ensureDailyProgressStockReady()
+                        ]);
+                    } else {
+                        await this.loadDailyProgressLocations();
+                    }
                     if (typeof this.updateTaskProgress === 'function') {
                         this.updateTaskProgress(70, 'Selected date ki entry load ho rahi hai...');
                     }
@@ -495,6 +502,22 @@
                 return false;
             } finally { this._dpCloudRefreshing = false; }
         },
+        async ensureDailyProgressStockReady() {
+            try {
+                if (this._cloudDatasetsPromise) await this._cloudDatasetsPromise;
+            } catch (_) {}
+            const hasStock = typeof window !== 'undefined' && window.ContractorSapStock && window.ContractorSapStock.byContractorNorm && Object.keys(window.ContractorSapStock.byContractorNorm).length > 0;
+            if (!hasStock && typeof this.lazyLoadHeavyData === 'function') {
+                try { await this.lazyLoadHeavyData(); } catch (_) {}
+            }
+            this._dpStockMemo = null;
+            if (typeof this.syncDailyProgressContractorsList === 'function') {
+                this.syncDailyProgressContractorsList();
+            }
+            if (typeof this.$forceUpdate === 'function') {
+                this.$forceUpdate();
+            }
+        },
         async initDailyProgress() {
             if (typeof this.startTaskProgress === 'function') {
                 this.startTaskProgress('Loading Daily Progress', 'Local & master data load ho raha hai...', 15);
@@ -504,9 +527,12 @@
                 catch (e) { this.showToast(e.message, 'Alert'); }
                 try {
                     if (typeof this.updateTaskProgress === 'function') {
-                        this.updateTaskProgress(40, 'Server se contractor & report data load ho raha hai...');
+                        this.updateTaskProgress(35, 'Contractor stock & server data load ho raha hai...');
                     }
-                    const response = await this.dailyProgressRequest('data');
+                    const [response] = await Promise.all([
+                        this.dailyProgressRequest('data'),
+                        this.ensureDailyProgressStockReady()
+                    ]);
                     if (response.data) {
                         const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
                         for (const kind of ['contractors', 'reports', 'issues']) {
@@ -516,6 +542,7 @@
                             local[kind] = [...records.values()];
                         }
                         this.dailyProgressData = local;
+                        this._dpStockMemo = null;
                         this.syncDailyProgressContractorsList();
                     }
                     if (typeof this.updateTaskProgress === 'function') {
