@@ -74,19 +74,44 @@
                 const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
                 const cached = this._dpLocationsCache && this._dpLocationsCache[wanted];
                 this.dailyProgressLocations = cached ? cached : [...defaults];
-                await this.loadDailyProgressLocations();
-                if (wanted === this.dailyProgressContractorId && !this.dailyProgressDirty) this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                if (typeof this.startTaskProgress === 'function') {
+                    this.startTaskProgress('Loading Contractor Data', 'Locations aur stock load ho rahe hain...', 25);
+                }
+                try {
+                    await this.loadDailyProgressLocations();
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(70, 'Selected date ki entry load ho rahi hai...');
+                    }
+                    if (wanted === this.dailyProgressContractorId && !this.dailyProgressDirty) {
+                        await this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                    }
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(100, 'Ready!');
+                    }
+                } finally {
+                    if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+                }
             }
         },
-        changeDailyProgressLocation(id) {
+        async changeDailyProgressLocation(id) {
             if (this.dailyProgressBusy || this._dpPendingSave) return;
             if (this.dailyProgressDirty && !confirm('Unsaved changes chhodkar location badlein?')) return;
             this.dailyProgressLocationId = id;
             if (this.syncDailyProgressFiltersFromLocation) {
                 this.syncDailyProgressFiltersFromLocation(id);
             }
-            this.loadDailyProgressReportForDate(this.dailyProgressDate);
-            this.loadDailyProgressEntryHistory();
+            if (typeof this.startTaskProgress === 'function') {
+                this.startTaskProgress('Loading Location Data', 'Entry aur history load ho rahi hai...', 35);
+            }
+            try {
+                await Promise.all([
+                    this.loadDailyProgressReportForDate(this.dailyProgressDate),
+                    this.loadDailyProgressEntryHistory()
+                ]);
+                if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(100, 'Ready!');
+            } finally {
+                if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+            }
         },
         addDailyProgressLocation() {
             return this.runDailyProgressAdmin(async () => {
@@ -471,25 +496,48 @@
             } finally { this._dpCloudRefreshing = false; }
         },
         async initDailyProgress() {
-            try { await originalInit.call(this); }
-            catch (e) { this.showToast(e.message, 'Alert'); }
+            if (typeof this.startTaskProgress === 'function') {
+                this.startTaskProgress('Loading Daily Progress', 'Local & master data load ho raha hai...', 15);
+            }
             try {
-                const response = await this.dailyProgressRequest('data');
-                if (response.data) {
-                    const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
-                    for (const kind of ['contractors', 'reports', 'issues']) {
-                        const key = row => kind === 'reports' ? this.dailyProgressReportKey(row) : row.id;
-                        const records = new Map((kind === 'reports' ? [] : local[kind] || []).map(row => [key(row), row]));
-                        for (const row of response.data[kind] || []) records.set(key(row), row);
-                        local[kind] = [...records.values()];
+                try { await originalInit.call(this); }
+                catch (e) { this.showToast(e.message, 'Alert'); }
+                try {
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(40, 'Server se contractor & report data load ho raha hai...');
                     }
-                    this.dailyProgressData = local;
-                    this.syncDailyProgressContractorsList();
-                    if (!this.dailyProgressDirty) this.loadDailyProgressReportForDate(this.dailyProgressDate);
-                }
-                await this.refreshDailyProgressAccess();
-                await this.loadDailyProgressLocations();
-            } catch (e) { this.dailyProgressAccessMessage = e.message; }
+                    const response = await this.dailyProgressRequest('data');
+                    if (response.data) {
+                        const local = this.dailyProgressData || { contractors: [], reports: [], issues: [] };
+                        for (const kind of ['contractors', 'reports', 'issues']) {
+                            const key = row => kind === 'reports' ? this.dailyProgressReportKey(row) : row.id;
+                            const records = new Map((kind === 'reports' ? [] : local[kind] || []).map(row => [key(row), row]));
+                            for (const row of response.data[kind] || []) records.set(key(row), row);
+                            local[kind] = [...records.values()];
+                        }
+                        this.dailyProgressData = local;
+                        this.syncDailyProgressContractorsList();
+                    }
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(70, 'Access links & locations load ho rahi hain...');
+                    }
+                    await Promise.all([
+                        this.refreshDailyProgressAccess(),
+                        this.loadDailyProgressLocations()
+                    ]);
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(90, 'Selected entry ready ho rahi hai...');
+                    }
+                    if (!this.dailyProgressDirty) {
+                        await this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                    }
+                    if (typeof this.updateTaskProgress === 'function') {
+                        this.updateTaskProgress(100, 'Ready!');
+                    }
+                } catch (e) { this.dailyProgressAccessMessage = e.message; }
+            } finally {
+                if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+            }
             if (!this._dpStatusTimer) this._dpStatusTimer = setInterval(() => {
                 if (this.currentView === 'dailyProgress' && !this.dailyProgressBusy) {
                     if (this.dailyProgressServerState?.editable && Date.now() - (this._dpLastInput || 0) < 30000) {
@@ -509,7 +557,7 @@
             this.dailyProgressServerState = null;
             this._dpEditVersion = null;
             this.dailyProgressLocked = true;
-            if (typeof fetch === 'function' && this.currentView === 'dailyProgress') this.refreshDailyProgressStatus(false);
+            if (typeof fetch === 'function' && this.currentView === 'dailyProgress') return this.refreshDailyProgressStatus(false);
         },
         async explainPendingDailyProgressSave() {
             if (!this._dpPendingSave) return;
