@@ -129,8 +129,10 @@
                 if (!confirm(`${row.contractorName} · ${row.feederName} (${row.date}) ka data permanently delete karein?`)) return;
                 this.invalidateDailyProgressReads();
                 this.dailyProgressBusy = true;
+                if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Deleting Entry...', `${row.contractorName} · ${row.date}`, 30);
                 try {
                     await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
+                    if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(90, 'Updating local list...');
                     this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r =>
                         r !== row.report && !(r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === row.date)
                     );
@@ -145,6 +147,7 @@
                     }
                 } finally {
                     this.dailyProgressBusy = false;
+                    if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
                 }
                 this.showToast(`${row.date} (${row.contractorName}) ka data delete ho gaya.`, 'Check');
             });
@@ -178,6 +181,7 @@
                 if (!confirm(`Selected ${targets.length} entries ko permanently delete karein?`)) return;
                 this.invalidateDailyProgressReads();
                 this.dailyProgressBusy = true;
+                if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Deleting Selected Entries', `0 / ${targets.length} deleted...`, 5);
                 const deletedKeys = new Set();
                 const deletedReports = new Set();
                 const deletedSignatures = new Set();
@@ -199,6 +203,8 @@
                                 currentEntryAffected = true;
                             }
                         }));
+                        const pct = Math.min(95, Math.round((deletedKeys.size / targets.length) * 95));
+                        if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(pct, `${deletedKeys.size} / ${targets.length} entries deleted...`);
                     }
                 } finally {
                     if (deletedKeys.size) {
@@ -219,6 +225,7 @@
                         }
                     }
                     this.dailyProgressBusy = false;
+                    if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
                 }
                 this.showToast(`${deletedKeys.size} entries delete ho gayi.`, 'Check');
             });

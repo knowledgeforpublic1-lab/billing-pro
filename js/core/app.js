@@ -156,6 +156,25 @@
     };
 
     Object.assign(allMethods, window.AuthModule || {});
+    allMethods.startTaskProgress = function(title, detail, percent) {
+        this.taskProgress = {
+            active: true,
+            title: String(title || 'Processing...'),
+            detail: String(detail || ''),
+            percent: Math.min(100, Math.max(0, Number(percent) || 0))
+        };
+    };
+    allMethods.updateTaskProgress = function(percent, detail) {
+        if (!this.taskProgress || !this.taskProgress.active) return;
+        this.taskProgress = {
+            ...this.taskProgress,
+            percent: Math.min(100, Math.max(0, Number(percent) || 0)),
+            ...(detail !== undefined ? { detail: String(detail) } : {})
+        };
+    };
+    allMethods.finishTaskProgress = function() {
+        this.taskProgress = { active: false, title: '', detail: '', percent: 0 };
+    };
 
     const app = Vue.createApp({
         // Keep second-by-second countdown dependencies out of the large workspace render.
@@ -177,6 +196,7 @@
                 isPortalUnlocked: false,
                 authReady: false,
                 authBusy: false,
+                taskProgress: { active: false, title: '', detail: '', percent: 0 },
                 localSaveFailed: false,
                 workspaceReady: false,
                 workspaceLoading: false,

@@ -438,10 +438,14 @@ window.DailyProgressModule = {
     },
 
     async syncDailyProgressCloudData(silent = false) {
+        if (!silent && typeof this.startTaskProgress === 'function') {
+            this.startTaskProgress('Syncing Cloud Data', 'Fetching latest entries...', 25);
+        }
         try {
             if (typeof fetch === 'function') {
                 const cRes = await fetch('/api/daily-progress/data?t=' + Date.now());
                 if (cRes.ok) {
+                    if (!silent && typeof this.updateTaskProgress === 'function') this.updateTaskProgress(70, 'Merging & saving locally...');
                     const cData = await cRes.json();
                     if (cData && cData.success && cData.data) {
                         this.dailyProgressData = this.mergeDailyProgressData(this.dailyProgressData, cData.data);
@@ -460,6 +464,8 @@ window.DailyProgressModule = {
             if (!silent && typeof this.showToast === 'function') {
                 this.showToast('Sync warning: ' + (e.message || 'Network issue'), 'warning');
             }
+        } finally {
+            if (!silent && typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
         }
         return false;
     },
@@ -729,6 +735,7 @@ window.DailyProgressModule = {
             this.showToast('Failed to save daily progress: ' + (e.message || e), 'Alert');
         } finally {
             this.dailyProgressBusy = false;
+            if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
         }
     },
 
@@ -936,6 +943,7 @@ window.DailyProgressModule = {
         }
 
         this.dailyProgressBusy = true;
+        if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Generating Excel Report', 'Loading template...', 15);
         this.showToast('Excel report generate ho raha hai...', '⏳');
 
         try {
@@ -1301,6 +1309,7 @@ window.DailyProgressModule = {
                 }
             }
 
+            if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(90, 'Building Excel file...');
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
@@ -1319,6 +1328,7 @@ window.DailyProgressModule = {
             this.showToast('Export failed: ' + (e.message || e), 'Alert');
         } finally {
             this.dailyProgressBusy = false;
+            if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
         }
     },
 
