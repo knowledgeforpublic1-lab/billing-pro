@@ -1148,7 +1148,8 @@ window.DailyProgressModule = {
 
     openDailyProgressReportFromHistory(rep) {
         if (!rep) return;
-        const targetLoc = rep.locationId || 'legacy';
+        if (rep.contractorId) this.dailyProgressContractorId = rep.contractorId;
+        const targetLoc = (rep.locationId && rep.locationId !== 'legacy') ? rep.locationId : '';
         this.dailyProgressLocationId = targetLoc;
         this.dailyProgressDate = rep.date;
         this.loadDailyProgressReportForDate(rep.date);

@@ -483,6 +483,8 @@
                 dailyProgressEntryHistory: [],
                 dailyProgressVisibleLimit: 80,
                 dailyProgressDate: '',
+                dailyProgressHistoryDate: '',
+                dailyProgressHistorySearch: '',
                 dailyProgressContractorId: 'mangesh-sonwane',
                 dailyProgressData: null,
                 dailyProgressQuantities: {},
@@ -1405,6 +1407,76 @@
                         return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
                     }
                     return true;
+                });
+            },
+            dailyProgressHistoryRows() {
+                const data = this.dailyProgressData;
+                if (!data || !Array.isArray(data.reports) || !data.reports.length) return [];
+                const selectedDate = String(this.dailyProgressHistoryDate || '').trim();
+                const search = String(this.dailyProgressHistorySearch || '').trim().toLowerCase();
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const contractorById = new Map();
+                const contractorByNorm = new Map();
+                (this.dailyProgressContractors || []).forEach(c => {
+                    if (!c || !c.id) return;
+                    contractorById.set(c.id, c);
+                    contractorByNorm.set(normFn(c.id), c);
+                });
+                const locationById = new Map();
+                ((typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || []).forEach(l => {
+                    if (l && l.id) locationById.set(l.id, l);
+                });
+                (this.dailyProgressLocations || []).forEach(l => {
+                    if (l && l.id) locationById.set(l.id, l);
+                });
+
+                const rows = [];
+                for (const r of data.reports) {
+                    if (!r || r.deleted) continue;
+                    if (selectedDate && r.date !== selectedDate) continue;
+                    const qtyValues = r.quantities ? Object.values(r.quantities) : [];
+                    const itemCount = qtyValues.filter(v => Number(v) > 0).length;
+                    const mp = r.manpower || {};
+                    const manpowerTotal = (Number(mp.leader) || 0) + (Number(mp.skilled) || 0) + (Number(mp.unskilled) || 0);
+                    const hasRemarks = !!(r.remarks && String(r.remarks).trim());
+                    const hasSavedBy = !!(r.savedBy && (typeof r.savedBy === 'string' ? r.savedBy.trim() : (r.savedBy.name || r.savedBy.username)));
+                    if (!itemCount && !manpowerTotal && !hasRemarks && !hasSavedBy) continue;
+
+                    const contractor = contractorById.get(r.contractorId) || contractorByNorm.get(normFn(r.contractorId));
+                    const contractorName = (contractor && contractor.name) || r.contractorName || r.contractorId || '—';
+                    const locKey = typeof this.dailyProgressLocationKey === 'function' ? this.dailyProgressLocationKey(r.locationId) : (r.locationId === 'legacy' ? '' : String(r.locationId || ''));
+                    const loc = locKey ? locationById.get(locKey) : null;
+                    const feederName = (loc && loc.name) || (r.locationName && r.locationName !== 'Legacy / Unassigned' ? r.locationName : '') || (contractor && contractor.feeder) || 'Legacy / Unassigned';
+                    const savedByObj = (r.savedBy && typeof r.savedBy === 'object') ? r.savedBy : null;
+                    const userName = savedByObj ? (savedByObj.name || savedByObj.username || 'Direct Entry') : (typeof r.savedBy === 'string' && r.savedBy.trim() ? r.savedBy.trim() : 'Direct / Admin');
+                    const userContact = savedByObj ? [savedByObj.mobile, savedByObj.email, savedByObj.username].filter(Boolean).join(' • ') : '';
+
+                    if (search) {
+                        const haystack = (userName + ' ' + userContact + ' ' + feederName + ' ' + contractorName + ' ' + (r.remarks || '')).toLowerCase();
+                        if (!haystack.includes(search)) continue;
+                    }
+
+                    rows.push({
+                        key: (r.contractorId || '') + '|' + (r.date || '') + '|' + (locKey || 'legacy') + '|' + (r.savedAt || ''),
+                        report: r,
+                        userName,
+                        userContact,
+                        feederName,
+                        contractorName,
+                        date: r.date || '',
+                        savedAt: r.savedAt || r.updatedAt || '',
+                        itemCount,
+                        manpowerTotal,
+                        remarks: r.remarks || ''
+                    });
+                }
+
+                return rows.sort((a, b) => {
+                    const cmpDate = String(b.date).localeCompare(String(a.date));
+                    if (cmpDate !== 0) return cmpDate;
+                    const cmpSaved = String(b.savedAt).localeCompare(String(a.savedAt));
+                    if (cmpSaved !== 0) return cmpSaved;
+                    return a.contractorName.localeCompare(b.contractorName);
                 });
             },
             dailyProgressEnteredEffectiveFrom() {
@@ -2401,6 +2473,9 @@
 
         watch: {
             dailyProgressTab(newTab) {
+                if (newTab === 'history' && !this.dailyProgressHistoryDate) {
+                    this.dailyProgressHistoryDate = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+                }
                 if (newTab === 'download' && typeof this.setDailyProgressExportRange === 'function') {
                     if (!this.dailyProgressExportFrom || this.dailyProgressExportFrom.startsWith('2026-09')) {
                         this.setDailyProgressExportRange('current_month');
