@@ -1205,28 +1205,56 @@ window.DailyProgressModule = {
         const from = this.dailyProgressExportFrom;
         const to = this.dailyProgressExportTo;
         if (!from || !to || from > to) return [];
+        const cache = this._dpExportDaysCache;
+        if (cache && cache.from === from && cache.to === to) return cache.days;
         const days = [];
         const dStart = new Date(from + 'T00:00:00Z');
         const dEnd = new Date(to + 'T00:00:00Z');
         for (let d = new Date(dStart); d <= dEnd; d.setUTCDate(d.getUTCDate() + 1)) {
             days.push(d.toISOString().slice(0, 10));
         }
-        return days.slice(0, 62); // cap preview to 62 days for high performance
+        const sliced = days.slice(0, 62); // cap preview to 62 days for high performance
+        this._dpExportDaysCache = { from, to, days: sliced };
+        return sliced;
+    },
+
+    _getDailyProgressExportReportMap() {
+        const cid = this.dailyProgressContractorId;
+        const locKey = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        const now = Date.now();
+        const cache = this._dpReportMapCache;
+        if (cache && cache.cid === cid && cache.locKey === locKey && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
+            return cache.map;
+        }
+        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+        const targetNorm = normFn(cid);
+        const map = new Map();
+        for (let i = 0; i < reports.length; i++) {
+            const r = reports[i];
+            if (!r) continue;
+            if (r.contractorId !== cid && normFn(r.contractorId) !== targetNorm) continue;
+            if (this.dailyProgressLocationKey(r.locationId) !== locKey) continue;
+            const normD = this.normalizeDailyProgressDate(r.date);
+            if (!normD) continue;
+            const prev = map.get(normD);
+            if (!prev) {
+                map.set(normD, r);
+            } else {
+                const vDiff = Number(r.version || 0) - Number(prev.version || 0);
+                if (vDiff > 0 || (vDiff === 0 && (Date.parse(r.savedAt || r.updatedAt || '') || 0) > (Date.parse(prev.savedAt || prev.updatedAt || '') || 0))) {
+                    map.set(normD, r);
+                }
+            }
+        }
+        this._dpReportMapCache = { cid, locKey, reports, len: reports.length, ts: now, map };
+        return map;
     },
 
     getDailyProgressDayReport(date) {
-        const cid = this.dailyProgressContractorId;
-        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
-        const targetNorm = normFn(cid);
         const normD = this.normalizeDailyProgressDate(date);
-        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
-        return reports.filter(r => {
-            const matchesC = r.contractorId === cid || normFn(r.contractorId) === targetNorm;
-            const matchesD = r.date === date || this.normalizeDailyProgressDate(r.date) === normD;
-            if (!matchesC || !matchesD) return false;
-            return this.dailyProgressLocationKey(r.locationId) === this.dailyProgressLocationKey(this.dailyProgressLocationId);
-        }).sort((a, b) => Number(b.version || 0) - Number(a.version || 0) ||
-            (Date.parse(b.savedAt || b.updatedAt || '') || 0) - (Date.parse(a.savedAt || a.updatedAt || '') || 0))[0];
+        if (!normD) return undefined;
+        return this._getDailyProgressExportReportMap().get(normD);
     },
 
     openDailyProgressReportFromHistory(rep) {
@@ -1244,9 +1272,38 @@ window.DailyProgressModule = {
         return (rep && rep.quantities && Number(rep.quantities[itemId])) || 0;
     },
 
-    getDailyProgressExportItemTotal(itemId) {
+    _getDailyProgressExportTotalsMap() {
+        const cid = this.dailyProgressContractorId;
+        const locKey = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        const from = this.dailyProgressExportFrom || '';
+        const to = this.dailyProgressExportTo || '';
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        const now = Date.now();
+        const cache = this._dpExportTotalsCache;
+        if (cache && cache.cid === cid && cache.locKey === locKey && cache.from === from && cache.to === to && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
+            return cache.totals;
+        }
         const days = this.getDailyProgressExportDays();
-        return days.reduce((sum, d) => sum + this.getDailyProgressExportQty(itemId, d), 0);
+        const reportMap = this._getDailyProgressExportReportMap();
+        const totals = new Map();
+        for (let i = 0; i < days.length; i++) {
+            const rep = reportMap.get(days[i]);
+            if (!rep || !rep.quantities) continue;
+            const entries = Object.entries(rep.quantities);
+            for (let j = 0; j < entries.length; j++) {
+                const val = Number(entries[j][1]) || 0;
+                if (val > 0) {
+                    const key = String(entries[j][0]);
+                    totals.set(key, (totals.get(key) || 0) + val);
+                }
+            }
+        }
+        this._dpExportTotalsCache = { cid, locKey, from, to, reports, len: reports.length, ts: now, totals };
+        return totals;
+    },
+
+    getDailyProgressExportItemTotal(itemId) {
+        return this._getDailyProgressExportTotalsMap().get(String(itemId)) || 0;
     },
 
     getDailyProgressDayManpower(date, key) {
@@ -1262,8 +1319,18 @@ window.DailyProgressModule = {
         const items = this.dailyProgressSeedItems || [];
         const filter = this.dailyProgressExportFilter || 'active'; // 'active', 'issued', 'all'
         const q = String(this.dailyProgressExportSearch || '').trim().toLowerCase();
-
-        return items.filter(it => {
+        const cid = this.dailyProgressContractorId;
+        const locKey = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+        const from = this.dailyProgressExportFrom || '';
+        const to = this.dailyProgressExportTo || '';
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        const now = Date.now();
+        const cache = this._dpExportPreviewCache;
+        if (cache && cache.cid === cid && cache.locKey === locKey && cache.from === from && cache.to === to && cache.filter === filter && cache.q === q && cache.items === items && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
+            return cache.result;
+        }
+        const totalsMap = this._getDailyProgressExportTotalsMap();
+        const result = items.filter(it => {
             if (q) {
                 const matches = String(it.name || '').toLowerCase().includes(q) ||
                     String(it.code || '').toLowerCase().includes(q);
@@ -1271,13 +1338,15 @@ window.DailyProgressModule = {
             }
             if (filter === 'all') return true;
             const stock = this.getDailyProgressItemStock(it);
-            const totalRangeConsumed = this.getDailyProgressExportItemTotal(it.id);
+            const totalRangeConsumed = totalsMap.get(String(it.id)) || 0;
             if (filter === 'issued') {
                 return (stock && stock.totalIssued > 0);
             }
             // default 'active': either has stock issued or has consumption in this date range
             return (stock && stock.totalIssued > 0) || totalRangeConsumed > 0;
         });
+        this._dpExportPreviewCache = { cid, locKey, from, to, filter, q, items, reports, len: reports.length, ts: now, result };
+        return result;
     },
 
     openDailyProgressExportTab() {
