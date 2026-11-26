@@ -1476,16 +1476,22 @@ window.DailyProgressModule = {
         this.showToast(`Material "${name}" sheet me add ho gaya!`, 'Check');
     },
 
-    toggleDailyProgressExportEditMode() {
-        const toggle = () => {
-            this.dailyProgressExportEditMode = !this.dailyProgressExportEditMode;
-        };
+    async toggleDailyProgressExportEditMode() {
         if (this.dailyProgressExportEditMode) {
-            this.dailyProgressExportEditMode = false;
-        } else if (typeof this.checkAdminAccess === 'function') {
-            this.checkAdminAccess(toggle);
+            if (this.dailyProgressExportDirtyDates && this.dailyProgressExportDirtyDates.length) {
+                await this.saveDailyProgressExportEdits();
+            } else {
+                this.dailyProgressExportEditMode = false;
+            }
+            return;
+        }
+        const enable = () => {
+            this.dailyProgressExportEditMode = true;
+        };
+        if (typeof this.checkAdminAccess === 'function') {
+            this.checkAdminAccess(enable);
         } else {
-            toggle();
+            enable();
         }
     },
 
@@ -1537,22 +1543,44 @@ window.DailyProgressModule = {
                 for (const dt of dates) {
                     const rep = this.getDailyProgressDayReport(dt);
                     if (!rep) continue;
+                    let status = await this.dailyProgressRequest('claim', { contractorId: cid, date: dt, locationId });
+                    if (status && status.state === 'final') {
+                        await this.dailyProgressRequest('reopen', { contractorId: cid, date: dt, locationId });
+                        status = await this.dailyProgressRequest('claim', { contractorId: cid, date: dt, locationId });
+                    }
+                    const requestId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+                        ? crypto.randomUUID()
+                        : ('exp_' + Date.now() + '_' + Math.random().toString(36).slice(2));
                     const res = await this.dailyProgressRequest('report', {
                         contractorId: cid, date: dt, locationId, locationName,
-                        quantities: rep.quantities || {}, manpower: rep.manpower || {}, remarks: rep.remarks || '',
-                        version: Number(rep.version) || 0, final: true
+                        report: {
+                            contractorId: cid, date: dt, locationId, locationName,
+                            quantities: rep.quantities || {}, manpower: rep.manpower || {}, remarks: rep.remarks || ''
+                        },
+                        version: Number(status && status.version) || 0,
+                        epoch: Number(status && status.epoch) || 0,
+                        requestId,
+                        final: true
                     });
-                    if (res && res.report) {
+                    if (res) {
                         const reports = [...((this.dailyProgressData && this.dailyProgressData.reports) || [])];
                         const idx = reports.findIndex(r => r && r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === dt);
-                        if (idx >= 0) reports[idx] = res.report;
-                        else reports.push(res.report);
+                        const updated = {
+                            ...(idx >= 0 ? reports[idx] : rep),
+                            ...(res.report || {}),
+                            contractorId: cid, date: dt, locationId, locationName,
+                            version: res.version || (idx >= 0 ? reports[idx].version : rep.version),
+                            state: res.state || 'final'
+                        };
+                        if (idx >= 0) reports[idx] = updated;
+                        else reports.push(updated);
                         this.dailyProgressData = { ...this.dailyProgressData, reports };
                     }
                     saved++;
                     if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(Math.round((saved / dates.length) * 95), `${saved} / ${dates.length} dates saved...`);
                 }
                 this.dailyProgressExportDirtyDates = [];
+                this.dailyProgressExportEditMode = false;
                 if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
                     await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
                 }
