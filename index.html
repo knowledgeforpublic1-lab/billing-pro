@@ -1949,8 +1949,8 @@
                             </template>
                         </div>
                         <div class="dp-hierarchy-actions">
-                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('reset')" title="Is date ka progress reset karein">↺ Reset day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress delete karein">🗑 Delete day</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
                             <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
                         </div>
                     </div>
