@@ -526,6 +526,9 @@
                 dailyProgressFilter: 'issued',
                 dailyProgressDirty: false,
                 dailyProgressBusy: false,
+                dailyProgressLoading: false,
+                dailyProgressLoadError: '',
+                dailyProgressStockReady: false,
                 dailyProgressModal: '',
                 dailyProgressContractorDropdownOpen: false,
                 dailyProgressContractorSearch: '',
@@ -2654,6 +2657,9 @@
                         window.ContractorSapStock = data || window.DefaultContractorSapStock;
                         window.__customSapStock = data || null;
                         this.hasCustomStock = !!data; this.customStockMeta = data?.meta || null;
+                        this._dpContractorStockCache = {};
+                        this._dpStockMemo = null;
+                        this._dpMemo = null;
                     } else if (key === 'previousRecoMaster') {
                         window.ContractorOldReco = data || window.DefaultContractorOldReco;
                         window.__customOldReco = data || null; this.hasCustomOldReco = !!data;

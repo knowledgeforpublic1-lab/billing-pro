@@ -745,12 +745,12 @@ window.DailyProgressModule = {
      * Calculates SAP stock issued, manual issues, consumption to-date, and available balance
      * for any item in the daily progress register.
      */
-    getDailyProgressItemStock(item) {
+    getDailyProgressItemStock(item, asOfDate) {
         if (!item) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0, status: 'none' };
 
         const cid = this.dailyProgressContractorId;
         if (!cid) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0, status: 'awaiting_stock' };
-        const curDate = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
+        const curDate = asOfDate || this.dailyProgressDate || new Date().toISOString().slice(0, 10);
         const code = String(item.code || '').trim();
 
         const issues = (this.dailyProgressData && this.dailyProgressData.issues) || [];
@@ -1644,6 +1644,8 @@ window.DailyProgressModule = {
                 }
                 this.dailyProgressExportDirtyDates = [];
                 this.dailyProgressExportEditMode = false;
+                this._dpStockMemo = null;
+                this._dpMemo = null;
                 if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
                     await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
                 }

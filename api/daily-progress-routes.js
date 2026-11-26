@@ -208,16 +208,62 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }
     publicRouter.use(sameOrigin);
 
-    async function currentStock() {
-        // Read through the storage router on every request so Firestore and Drive
-        // uploads share the same source as Master Reconciliation. Only an absent
-        // uploaded dataset may fall back to the shipped stock ledger.
-        const saved = await db.getDefaultConfig('stockMaster');
-        if (!saved || saved.data == null) return stockDatabase();
-        if (!saved.data.byContractorNorm || typeof saved.data.byContractorNorm !== 'object' || Array.isArray(saved.data.byContractorNorm)) {
-            throw Object.assign(new Error('Uploaded stock is unavailable; retry after checking the stock upload.'), { status: 503 });
+    let cachedStock = null;
+    let stockCacheTime = 0;
+    let inFlightStockRead = null;
+    const invalidateStockCache = () => { cachedStock = null; stockCacheTime = 0; };
+
+    async function currentStock(forceFresh = false) {
+        const nowMs = Date.now();
+        if (!forceFresh && cachedStock && (nowMs - stockCacheTime < 30000)) {
+            return cachedStock;
         }
-        return saved.data;
+        if (!forceFresh && inFlightStockRead) {
+            return inFlightStockRead;
+        }
+        const work = (async () => {
+            // Read through the storage router so Firestore and Drive uploads share the same source
+            // as Master Reconciliation. Only an absent uploaded dataset falls back to the shipped ledger.
+            const saved = await db.getDefaultConfig('stockMaster');
+            let data;
+            if (!saved || saved.data == null) {
+                data = stockDatabase();
+            } else if (!saved.data.byContractorNorm || typeof saved.data.byContractorNorm !== 'object' || Array.isArray(saved.data.byContractorNorm)) {
+                throw Object.assign(new Error('Uploaded stock is unavailable; retry after checking the stock upload.'), { status: 503 });
+            } else {
+                data = saved.data;
+            }
+            cachedStock = data;
+            stockCacheTime = Date.now();
+            return data;
+        })();
+        if (!forceFresh) inFlightStockRead = work;
+        try { return await work; }
+        finally { if (inFlightStockRead === work) inFlightStockRead = null; }
+    }
+
+    async function buildContractorStockSlice(query) {
+        if (!query || query.length > 150 || !/^[\w .&(),'/-]+$/.test(query)) {
+            throw Object.assign(new Error('Invalid contractor'), { status: 400 });
+        }
+        const [stock, dpConfig] = await Promise.all([
+            currentStock(),
+            db.getDefaultConfig('dailyProgressData')
+        ]);
+        const byNorm = stock.byContractorNorm || {};
+        const saved = readDailyProgressData(dpConfig);
+        const directory = [...contractorDirectory(), ...saved.contractors];
+        const out = {};
+        for (const key of stockKeysForQuery(query, stock, directory)) {
+            const block = byNorm[key];
+            if (!block) continue;
+            out[key] = {
+                contractorName: block.contractorName || '',
+                workOrders: stockBlockWorkOrders(block),
+                materials: block.materials || {}
+            };
+        }
+        return { byContractorNorm: out, meta: stock.meta || null };
     }
 
     // Public, sanitized read-only data for the shareable /daily-progress.html page.
@@ -253,24 +299,8 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
     publicRouter.get('/stock/:contractorId', handle(async (req, res) => {
         const query = String(req.params.contractorId || '').trim();
-        if (!query || query.length > 150 || !/^[\w .&(),'/-]+$/.test(query)) {
-            return res.status(400).json({ success: false, error: 'Invalid contractor' });
-        }
-        const stock = await currentStock();
-        const byNorm = stock.byContractorNorm;
-        const saved = readDailyProgressData(await db.getDefaultConfig('dailyProgressData'));
-        const directory = [...contractorDirectory(), ...saved.contractors];
-        const out = {};
-        for (const key of stockKeysForQuery(query, stock, directory)) {
-            const block = byNorm[key];
-            if (!block) continue;
-            out[key] = {
-                contractorName: block.contractorName || '',
-                workOrders: stockBlockWorkOrders(block),
-                materials: block.materials || {}
-            };
-        }
-        res.json({ success: true, byContractorNorm: out });
+        const slice = await buildContractorStockSlice(query);
+        res.json({ success: true, ...slice });
     }));
 
     let cachedData = null;
@@ -289,9 +319,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     });
     publicRouter.get('/bootstrap', handle(async (req, res) => {
         const c = req.dpContractor;
-        res.json({ success: true, contractor: { id: c.id, name: c.name, project: c.project, feeder: c.feeder }, items,
+        res.json({
+            success: true, contractor: { id: c.id, name: c.name, project: c.project, feeder: c.feeder }, items,
             today: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
-            storageReady: drive.configured(), locations: await service.locations.list(c.id) });
+            storageReady: drive.configured(), locations: await service.locations.list(c.id)
+        });
     }));
     publicRouter.get('/locations', handle(async (req, res) => res.json({ success: true, locations: await service.locations.list(req.dpContractor.id) })));
     publicRouter.post('/locations', handle(async (req, res) => {
@@ -481,6 +513,11 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         }
     }
     adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
+    adminRouter.get('/stock/:contractorId', auth.requireAdmin, handle(async (req, res) => {
+        const query = String(req.params.contractorId || '').trim();
+        const slice = await buildContractorStockSlice(query);
+        res.json({ success: true, contractorId: query, ...slice });
+    }));
     adminRouter.post('/auxiliary', auth.requireAdmin, handle(async (req, res) => {
         const body = req.body;
         if (body.kind !== 'contractor' && body.kind !== 'issue') throw Object.assign(new Error('Invalid record type'), { status: 400 });
@@ -508,5 +545,5 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         invalidateDataCache();
         res.json({ success: true });
     }));
-    return { publicRouter, adminRouter, service, readData, invalidateDataCache };
+    return { publicRouter, adminRouter, service, readData, invalidateDataCache, invalidateStockCache };
 };

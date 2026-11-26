@@ -285,6 +285,9 @@ app.post('/api/storage/business', requireApiKey, auth.requireAdmin, writeLimiter
         if ((key === 'stockMaster' || key === 'previousRecoMaster') && (!data.byContractorNorm || typeof data.byContractorNorm !== 'object' || Array.isArray(data.byContractorNorm) || !Object.keys(data.byContractorNorm).length)) return res.status(400).json({ success: false, error: 'Empty import rejected; existing cloud dataset retained' });
         if (!db.storageRouted || !await db.storageRouted('master', key)) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
         await db.saveDefaultConfig(key, data);
+        if (key === 'stockMaster' && dailyProgress && typeof dailyProgress.invalidateStockCache === 'function') {
+            dailyProgress.invalidateStockCache();
+        }
         res.json({ success: true });
     } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
 });

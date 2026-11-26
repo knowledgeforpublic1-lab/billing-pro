@@ -1958,6 +1958,11 @@
                         ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
                     </p>
                     </details>
+
+                    <div v-if="dailyProgressLoadError" class="dp-load-error-banner" style="margin: 8px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.45); background: rgba(239,68,68,0.1); color: #fecaca; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <span style="font-size: 0.82rem; font-weight: 600;">⚠️ Contractor data load error: {{ dailyProgressLoadError }}</span>
+                        <button type="button" class="btn btn-primary" style="padding: 4px 12px; font-size: 0.76rem; font-weight: 700;" @click="retryDailyProgressLoad">↻ Retry</button>
+                    </div>
                     <!-- Second Row: Cascading Selectors & Instant Search -->
                     <div class="dp-cascading-grid">
                         <div class="dp-contractor-pill" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-surface, #ffffff); border: 1.5px solid #0284c7; border-radius: 5px; padding: 2px 6px;">
@@ -2663,10 +2668,10 @@
                                 <button v-if="dailyProgressExportDirtyDates && dailyProgressExportDirtyDates.length" type="button" class="btn btn-primary" :disabled="dailyProgressBusy" @click="saveDailyProgressExportEdits" style="font-size: 0.69rem; padding: 3px 9px; font-weight: 800; background: #16a34a; border-color: #15803d; white-space: nowrap;">💾 Save ({{ dailyProgressExportDirtyDates.length }})</button>
                                 <button type="button"
                                         class="btn btn-primary"
-                                        :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
+                                        :disabled="dailyProgressBusy || dailyProgressLoading || !dailyProgressStockReady || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
                                         @click="downloadDailyProgressExcel"
                                         style="font-size: 0.7rem; padding: 4px 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-                                    <span>{{ dailyProgressBusy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
+                                    <span>{{ dailyProgressBusy ? '⏳ Generating...' : (dailyProgressLoading || !dailyProgressStockReady ? '⏳ Loading Stock...' : '📥 Download Excel') }}</span>
                                 </button>
                             </div>
                         </div>

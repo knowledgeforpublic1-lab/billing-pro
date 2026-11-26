@@ -17,7 +17,7 @@
             this._dpDataEpoch = (this._dpDataEpoch || 0) + 1;
             this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
         },
-        async loadDailyProgressLocations() {
+        async loadDailyProgressLocations(signal) {
             const cid = this.dailyProgressContractorId;
             if (!cid) return;
             this._dpLocationsContractor = cid;
@@ -29,8 +29,8 @@
                 this.dailyProgressLocations = [...defaults];
             }
             try {
-                const result = await this.dailyProgressRequest('locations?contractorId=' + encodeURIComponent(cid));
-                if (cid !== this.dailyProgressContractorId) return;
+                const result = await this.dailyProgressRequest('locations?contractorId=' + encodeURIComponent(cid), undefined, signal);
+                if (signal?.aborted || cid !== this.dailyProgressContractorId) return;
                 const fetched = result.locations || [];
                 const map = new Map();
                 defaults.forEach(def => map.set(def.id, { ...def }));
@@ -55,49 +55,158 @@
                     this.syncDailyProgressFiltersFromLocation(this.dailyProgressLocationId);
                 }
             } catch (error) {
+                if (error && error.name === 'AbortError') return;
                 this.showToast('Locations load nahi hui: ' + error.message, 'Alert');
                 if ((!this.dailyProgressLocations || !this.dailyProgressLocations.length) && defaults.length) {
                     this.dailyProgressLocations = [...defaults];
                 }
+                throw error;
             }
+        },
+        async loadDailyProgressStockForContractor(cid, signal, forceFresh = false) {
+            if (!cid) return;
+            this._dpContractorStockCache = this._dpContractorStockCache || {};
+            if (!forceFresh && this._dpContractorStockCache[cid]) {
+                return this._dpContractorStockCache[cid];
+            }
+            // If full stock dataset is already loaded in memory and not forcing fresh, reuse it immediately
+            const fullLoaded = typeof window !== 'undefined' && (window.__heavyDataLoaded || this.hasCustomStock) &&
+                window.ContractorSapStock && window.ContractorSapStock.byContractorNorm;
+            if (!forceFresh && fullLoaded) {
+                this._dpContractorStockCache[cid] = { cachedFromFull: true };
+                this._dpStockMemo = null;
+                return this._dpContractorStockCache[cid];
+            }
+            const result = await this.dailyProgressRequest('stock/' + encodeURIComponent(cid), undefined, signal);
+            if (signal?.aborted || cid !== this.dailyProgressContractorId) return null;
+            if (typeof window !== 'undefined') {
+                if (!window.ContractorSapStock || typeof window.ContractorSapStock !== 'object') {
+                    window.ContractorSapStock = { byContractorNorm: {}, meta: result.meta || null };
+                }
+                if (!window.ContractorSapStock.byContractorNorm || typeof window.ContractorSapStock.byContractorNorm !== 'object') {
+                    window.ContractorSapStock.byContractorNorm = {};
+                }
+                Object.assign(window.ContractorSapStock.byContractorNorm, result.byContractorNorm || {});
+                if (result.meta && !window.ContractorSapStock.meta) {
+                    window.ContractorSapStock.meta = result.meta;
+                }
+            }
+            this._dpContractorStockCache[cid] = result;
+            this._dpStockMemo = null;
+            this.recoRevision = (this.recoRevision || 0) + 1;
+            return result;
         },
         async onDailyProgressContractorChange(cid) {
             if (this.dailyProgressBusy) return;
             const previous = this.dailyProgressContractorId;
             if (previous !== cid) {
-                // Clear location before originalContractorChange so it doesn't fire a wasted status fetch on the old location
+                // Cancel any in-flight contractor/location/stock/report requests immediately
+                if (this._dpLoadController) {
+                    try { this._dpLoadController.abort(); } catch (_) {}
+                }
+                this._dpLoadController = typeof AbortController === 'function' ? new AbortController() : null;
+                this._dpContractorSeq = (this._dpContractorSeq || 0) + 1;
+                // Reset contractor-specific state immediately so old contractor's data never flashes under new contractor
                 this.dailyProgressLocationId = '';
+                this.dailyProgressServerState = null;
+                this.dailyProgressLocked = true;
+                this.dailyProgressQuantities = {};
+                this.dailyProgressManpower = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
+                this.dailyProgressRemarks = '';
+                this.dailyProgressEntryHistory = [];
+                this.dailyProgressExportDirtyDates = [];
+                this._dpStockMemo = null;
+                this._dpMemo = null;
+                this.dailyProgressLoadError = '';
+                this.dailyProgressStockReady = false;
             }
             originalContractorChange.call(this, cid);
             if (previous !== this.dailyProgressContractorId) {
                 const wanted = this.dailyProgressContractorId;
+                const seq = this._dpContractorSeq;
+                const signal = this._dpLoadController ? this._dpLoadController.signal : undefined;
                 const defaults = (typeof window !== 'undefined' && window.DefaultFeeders && window.DefaultFeeders.list) || [];
                 const cached = this._dpLocationsCache && this._dpLocationsCache[wanted];
                 this.dailyProgressLocations = cached ? cached : [...defaults];
+                this.dailyProgressLoading = true;
                 if (typeof this.startTaskProgress === 'function') {
-                    this.startTaskProgress('Loading Contractor Data', 'Locations aur stock load ho rahe hain...', 25);
+                    this.startTaskProgress('Loading Contractor Data', 'Stock aur locations load ho rahe hain...', 20);
                 }
                 try {
-                    if (typeof this.ensureDailyProgressStockReady === 'function') {
-                        await Promise.all([
-                            this.loadDailyProgressLocations(),
-                            this.ensureDailyProgressStockReady()
-                        ]);
-                    } else {
-                        await this.loadDailyProgressLocations();
-                    }
+                    await Promise.all([
+                        this.loadDailyProgressLocations(signal),
+                        this.loadDailyProgressStockForContractor(wanted, signal)
+                    ]);
+                    if (signal?.aborted || seq !== this._dpContractorSeq || wanted !== this.dailyProgressContractorId) return;
                     if (typeof this.updateTaskProgress === 'function') {
                         this.updateTaskProgress(70, 'Selected date ki entry load ho rahi hai...');
                     }
-                    if (wanted === this.dailyProgressContractorId && !this.dailyProgressDirty) {
-                        await this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                    if (!this.dailyProgressDirty) {
+                        await this.loadDailyProgressReportForDate(this.dailyProgressDate, signal);
                     }
+                    if (signal?.aborted || seq !== this._dpContractorSeq || wanted !== this.dailyProgressContractorId) return;
+                    this.dailyProgressStockReady = true;
+                    this._dpStockMemo = null;
+                    this._dpMemo = null;
                     if (typeof this.updateTaskProgress === 'function') {
-                        this.updateTaskProgress(100, 'Ready!');
+                        this.updateTaskProgress(95, 'Sheet render ho rahi hai...');
                     }
-                } finally {
-                    if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+                    if (typeof this.$nextTick === 'function') await this.$nextTick();
+                    if (seq === this._dpContractorSeq && wanted === this.dailyProgressContractorId) {
+                        this.dailyProgressLoading = false;
+                        if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+                    }
+                } catch (error) {
+                    if (error && error.name === 'AbortError') return;
+                    if (seq === this._dpContractorSeq && wanted === this.dailyProgressContractorId) {
+                        this.dailyProgressLoadError = error.message || 'Contractor data load nahi ho saka.';
+                        this.dailyProgressLoading = false;
+                        if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+                    }
                 }
+            }
+        },
+        async retryDailyProgressLoad() {
+            const cid = this.dailyProgressContractorId;
+            if (cid) {
+                if (this._dpContractorStockCache) delete this._dpContractorStockCache[cid];
+                if (this._dpLocationsCache) delete this._dpLocationsCache[cid];
+            }
+            this._dpStockMemo = null;
+            this._dpMemo = null;
+            this.dailyProgressLoadError = '';
+            if (!this.dailyProgressData || !(this.dailyProgressData.contractors || []).length) {
+                return this.initDailyProgress();
+            }
+            if (this._dpLoadController) {
+                try { this._dpLoadController.abort(); } catch (_) {}
+            }
+            this._dpLoadController = typeof AbortController === 'function' ? new AbortController() : null;
+            this._dpContractorSeq = (this._dpContractorSeq || 0) + 1;
+            const seq = this._dpContractorSeq;
+            const signal = this._dpLoadController ? this._dpLoadController.signal : undefined;
+            this.dailyProgressLoading = true;
+            this.dailyProgressStockReady = false;
+            if (typeof this.startTaskProgress === 'function') {
+                this.startTaskProgress('Retrying Data Load', 'Stock aur locations reload ho rahe hain...', 25);
+            }
+            try {
+                await Promise.all([
+                    this.loadDailyProgressLocations(signal),
+                    this.loadDailyProgressStockForContractor(cid, signal, true)
+                ]);
+                if (signal?.aborted || seq !== this._dpContractorSeq) return;
+                if (!this.dailyProgressDirty) await this.loadDailyProgressReportForDate(this.dailyProgressDate, signal);
+                if (signal?.aborted || seq !== this._dpContractorSeq) return;
+                this.dailyProgressStockReady = true;
+                if (typeof this.$nextTick === 'function') await this.$nextTick();
+                this.dailyProgressLoading = false;
+                if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
+            } catch (error) {
+                if (error && error.name === 'AbortError') return;
+                this.dailyProgressLoadError = error.message || 'Retry failed. Internet/server check karein.';
+                this.dailyProgressLoading = false;
+                if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
             }
         },
         async changeDailyProgressLocation(id) {
@@ -457,16 +566,21 @@
             if (!this._dpEditor) this._dpEditor = crypto.randomUUID() + crypto.randomUUID();
             return this._dpEditor;
         },
-        async dailyProgressRequest(route, body) {
+        async dailyProgressRequest(route, body, externalSignal) {
             if (/^(report(?:\?|$)|claim$|heartbeat$|reopen$|audit\?|entry-history\?|import$|manage-reports$)/.test(route)) {
                 const locationId = this.dailyProgressLocationKey(body?.locationId ?? body?.report?.locationId ?? this.dailyProgressLocationId);
                 if (body === undefined) route += (route.includes('?') ? '&' : '?') + 'locationId=' + encodeURIComponent(locationId);
                 else body = { ...body, locationId };
             }
+            const timeoutSignal = AbortSignal.timeout(45000);
+            const signal = externalSignal
+                ? (typeof AbortSignal.any === 'function' ? AbortSignal.any([externalSignal, timeoutSignal]) : externalSignal)
+                : timeoutSignal;
             const response = await fetch('/api/dp-admin/' + route, {
                 credentials: 'same-origin', cache: 'no-store',
                 headers: { 'Content-Type': 'application/json', 'x-dp-editor': this.dailyProgressEditor() },
-                ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }), signal: AbortSignal.timeout(45000)
+                ...(body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }),
+                signal
             });
             const result = await response.json();
             if (!response.ok || !result.success) throw Object.assign(new Error(result.error || 'Daily Progress service unavailable'), { status: response.status, results: result.results });
@@ -502,7 +616,20 @@
                 return false;
             } finally { this._dpCloudRefreshing = false; }
         },
-        async ensureDailyProgressStockReady() {
+        async ensureDailyProgressStockReady(signal) {
+            const cid = this.dailyProgressContractorId;
+            if (cid && typeof this.loadDailyProgressStockForContractor === 'function') {
+                try {
+                    const res = await this.loadDailyProgressStockForContractor(cid, signal);
+                    if (res) {
+                        this._dpStockMemo = null;
+                        if (typeof this.syncDailyProgressContractorsList === 'function') this.syncDailyProgressContractorsList();
+                        return;
+                    }
+                } catch (e) {
+                    if (e && e.name === 'AbortError') throw e;
+                }
+            }
             try {
                 if (this._cloudDatasetsPromise) await this._cloudDatasetsPromise;
             } catch (_) {}
@@ -514,11 +641,11 @@
             if (typeof this.syncDailyProgressContractorsList === 'function') {
                 this.syncDailyProgressContractorsList();
             }
-            if (typeof this.$forceUpdate === 'function') {
-                this.$forceUpdate();
-            }
         },
         async initDailyProgress() {
+            this.dailyProgressLoading = true;
+            this.dailyProgressLoadError = '';
+            this.dailyProgressStockReady = false;
             if (typeof this.startTaskProgress === 'function') {
                 this.startTaskProgress('Loading Daily Progress', 'Local & master data load ho raha hai...', 15);
             }
@@ -550,7 +677,8 @@
                     }
                     await Promise.all([
                         this.refreshDailyProgressAccess(),
-                        this.loadDailyProgressLocations()
+                        this.loadDailyProgressLocations(),
+                        this.ensureDailyProgressStockReady()
                     ]);
                     if (typeof this.updateTaskProgress === 'function') {
                         this.updateTaskProgress(90, 'Selected entry ready ho rahi hai...');
@@ -558,11 +686,19 @@
                     if (!this.dailyProgressDirty) {
                         await this.loadDailyProgressReportForDate(this.dailyProgressDate);
                     }
+                    this.dailyProgressStockReady = true;
+                    this._dpStockMemo = null;
+                    this._dpMemo = null;
                     if (typeof this.updateTaskProgress === 'function') {
-                        this.updateTaskProgress(100, 'Ready!');
+                        this.updateTaskProgress(95, 'Sheet render ho rahi hai...');
                     }
-                } catch (e) { this.dailyProgressAccessMessage = e.message; }
+                    if (typeof this.$nextTick === 'function') await this.$nextTick();
+                } catch (e) {
+                    this.dailyProgressAccessMessage = e.message;
+                    this.dailyProgressLoadError = e.message || 'Data load nahi ho saka.';
+                }
             } finally {
+                this.dailyProgressLoading = false;
                 if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
             }
             if (!this._dpStatusTimer) this._dpStatusTimer = setInterval(() => {
@@ -574,23 +710,23 @@
                 }
             }, 20000);
         },
-        loadDailyProgressReportForDate(date) {
+        loadDailyProgressReportForDate(date, signal) {
             this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
             if (this.dailyProgressLocationId !== undefined && this._dpLocationsContractor !== this.dailyProgressContractorId) {
                 this.dailyProgressLocationId = ''; this.dailyProgressLocations = [];
-                this.loadDailyProgressLocations();
+                this.loadDailyProgressLocations(signal);
             }
             originalLoad.call(this, date);
             this.dailyProgressServerState = null;
             this._dpEditVersion = null;
             this.dailyProgressLocked = true;
-            if (typeof fetch === 'function' && this.currentView === 'dailyProgress') return this.refreshDailyProgressStatus(false);
+            if (typeof fetch === 'function' && this.currentView === 'dailyProgress') return this.refreshDailyProgressStatus(false, signal);
         },
         async explainPendingDailyProgressSave() {
             if (!this._dpPendingSave) return;
             this.showToast('Pending save pehle retry karein; contractor/date abhi change nahi hui.', 'Alert');
         },
-        async refreshDailyProgressStatus(claim = false) {
+        async refreshDailyProgressStatus(claim = false, signal) {
             const cid = this.dailyProgressContractorId, date = this.dailyProgressDate;
             const locationId = this.dailyProgressLocationKey(this.dailyProgressLocationId);
             if (this.dailyProgressLocationId !== undefined && !this.dailyProgressLocationId) return;
@@ -598,9 +734,9 @@
             const requestSeq = this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
             try {
                 const result = claim
-                    ? await this.dailyProgressRequest('claim', { contractorId: cid, date })
-                    : await this.dailyProgressRequest('report?contractorId=' + encodeURIComponent(cid) + '&date=' + encodeURIComponent(date));
-                if (cid !== this.dailyProgressContractorId || date !== this.dailyProgressDate || locationId !== this.dailyProgressLocationKey(this.dailyProgressLocationId) || this.dailyProgressBusy || requestSeq !== this._dpStatusSeq) return;
+                    ? await this.dailyProgressRequest('claim', { contractorId: cid, date }, signal)
+                    : await this.dailyProgressRequest('report?contractorId=' + encodeURIComponent(cid) + '&date=' + encodeURIComponent(date), undefined, signal);
+                if (signal?.aborted || cid !== this.dailyProgressContractorId || date !== this.dailyProgressDate || locationId !== this.dailyProgressLocationKey(this.dailyProgressLocationId) || this.dailyProgressBusy || requestSeq !== this._dpStatusSeq) return;
                 this.dailyProgressServerState = result;
                 if (!this.dailyProgressDirty) this._dpEditVersion = result.version;
                 this.dailyProgressLocked = !result.editable;
@@ -617,7 +753,11 @@
                     this.dailyProgressRemarks = result.report.remarks || '';
                     this.dailyProgressVersion = result.version;
                 }
-            } catch (e) { this.dailyProgressLocked = true; this.dailyProgressAccessMessage = e.message; }
+            } catch (e) {
+                if (e && e.name === 'AbortError') return;
+                this.dailyProgressLocked = true;
+                this.dailyProgressAccessMessage = e.message;
+            }
         },
         onDailyProgressQuantityChange(id, value) {
             if (this.dailyProgressLocked || this.dailyProgressBusy) return;
