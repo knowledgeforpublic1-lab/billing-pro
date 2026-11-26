@@ -58,10 +58,17 @@ async function main() {
     assert.equal(app.isPortalUnlocked, false);
     assert.equal(app.adminPendingCallback, null);
     assert.equal(saves, 1, 'Idle lock preserves current entries locally first');
+    await Promise.resolve();
+    assert.match(requests.at(-1).url, /logout$/, 'Idle expiry also revokes server session');
     app.poleScheduleQuantities = { '907': { 0: { 1: 37 } } };
     await app.verifyPortalPassword();
     assert.equal(initializes, 1, 'Re-login resumes existing workspace instead of loading over unsynced work');
     assert.equal(app.poleScheduleQuantities['907'][0][1], 37);
+    const secondExpiry = app.sessionExpiresAt;
+    time = secondExpiry + 5000;
+    app.onUserActivity();
+    assert.equal(app.isPortalUnlocked, false, 'Activity after deadline must lock instead of resetting countdown');
+    await app.verifyPortalPassword();
     app.workspaceReady = false;
     app.initializeWorkspace = async () => { throw new Error('Bill unavailable'); };
     await app.preparePortalWorkspace();

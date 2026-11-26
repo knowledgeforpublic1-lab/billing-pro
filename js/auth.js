@@ -104,13 +104,17 @@
                 try { this.saveToStorage(); } catch (e) {}
                 try {
                     if (typeof this.showToast === 'function') {
-                        this.showToast('5 minute inactivity: Kaam save karke session logout ho gaya hai.', 'info');
+                        const mins = Number(this.authIdleMinutes) || 5;
+                        this.showToast(mins + ' minute inactivity: Kaam save karke session logout ho gaya hai.', 'info');
                     }
                 } catch (e) {}
             }
             this.isPortalUnlocked = false;
             this.isAdminElevated = false;
             this.isAdminUnlocked = false;
+            this.sessionExpiresAt = 0;
+            this.adminExpiresAt = 0;
+            this.adminElevatedSecondsLeft = 0;
             this.showAdminModal = false;
             this.showAddSapWoModal = false;
             this.showNewBillModal = false;
@@ -210,16 +214,30 @@
             const secs = String(total % 60).padStart(2, '0');
             return hours > 0 ? hours + ':' + minutes + ':' + secs : minutes + ':' + secs;
         },
+        expirePortalSession() {
+            if (!this.isPortalUnlocked) return;
+            this.lockPortalLocally();
+            if (typeof this.authRequest === 'function') {
+                Promise.resolve(this.authRequest('logout', {})).catch(() => {});
+            }
+        },
         updateAuthCountdown() {
             if (!this.isPortalUnlocked) return;
-            this.inactivitySecondsLeft = Math.max(0, Math.ceil((this.sessionExpiresAt - this.authNow()) / 1000));
-            this.adminElevatedSecondsLeft = Math.max(0, Math.ceil((this.adminExpiresAt - this.authNow()) / 1000));
-            if (!this.adminElevatedSecondsLeft) { this.isAdminElevated = false; this.isAdminUnlocked = false; }
-            if (!this.inactivitySecondsLeft) this.lockPortalLocally();
+            const remainingMs = Number(this.sessionExpiresAt || 0) - this.authNow();
+            this.inactivitySecondsLeft = Number.isFinite(remainingMs) ? Math.max(0, Math.ceil(remainingMs / 1000)) : 0;
+            const adminRemainingMs = Number(this.adminExpiresAt || 0) - this.authNow();
+            this.adminElevatedSecondsLeft = Number.isFinite(adminRemainingMs) ? Math.max(0, Math.ceil(adminRemainingMs / 1000)) : 0;
+            if (this.adminElevatedSecondsLeft <= 0) { this.isAdminElevated = false; this.isAdminUnlocked = false; }
+            if (this.inactivitySecondsLeft <= 0) this.expirePortalSession();
         },
         onUserActivity() {
             if (!this.isPortalUnlocked) return;
-            // Instantly reset the inactivity countdown on user interaction (05:00)
+            // Never resurrect an expired session if a throttled/sleeping tab wakes up on mouse/key input.
+            if (!this.sessionExpiresAt || this.authNow() >= this.sessionExpiresAt) {
+                this.updateAuthCountdown();
+                return;
+            }
+            // Instantly reset the inactivity countdown on user interaction
             const idleSec = (Number(this.authIdleMinutes) || 5) * 60;
             this.sessionExpiresAt = this.authNow() + idleSec * 1000;
             this.inactivitySecondsLeft = idleSec;
