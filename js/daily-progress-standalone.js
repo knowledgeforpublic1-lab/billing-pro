@@ -1688,9 +1688,34 @@
                             hc.alignment = { vertical: 'middle', horizontal: 'left' };
                         });
                         ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 7 }];
+                        ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
                         if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 42);
-                        if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 12);
+                        if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 14);
                         if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 28);
+
+                        const thinBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+                        const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
+                        const grandTotalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                        const headerTotalBorder = { top: { style: 'thin', color: { argb: 'FF94A3B8' } }, left: { style: 'thin', color: { argb: 'FF94A3B8' } }, bottom: { style: 'medium', color: { argb: 'FF475569' } }, right: { style: 'thin', color: { argb: 'FF94A3B8' } } };
+
+                        ws.getCell('C6').value = 'TOTAL MANPOWER';
+                        ws.getCell('C6').font = { ...(ws.getCell('C6').font || {}), bold: true, size: 10 };
+                        ws.getCell('D6').value = 'Nos';
+                        ws.getCell('D6').alignment = { vertical: 'middle', horizontal: 'center' };
+                        ['AI7', 'AI14'].forEach(addr => {
+                            const c = ws.getCell(addr);
+                            c.value = 'TOTAL';
+                            c.font = { ...(c.font || {}), bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                            c.alignment = { vertical: 'middle', horizontal: 'center' };
+                            c.fill = totalFill;
+                            c.border = headerTotalBorder;
+                        });
+                        ['AJ7', 'AJ14'].forEach(addr => {
+                            const c = ws.getCell(addr);
+                            c.value = 'NOTES / REMARKS';
+                            c.font = { ...(c.font || {}), bold: true, size: 10 };
+                            c.alignment = { vertical: 'middle', horizontal: 'center' };
+                        });
 
                         // Clear sample values in chunk range
                         for (let r = 6; r <= 420; r++) {
@@ -1700,11 +1725,16 @@
                                 if (cell && cell.value !== undefined) cell.value = null;
                             }
                         }
+                        for (let c = 0; c < 30; c++) {
+                            if (ws.getColumn(c + 5)) ws.getColumn(c + 5).hidden = c >= chunk.length;
+                        }
 
-                        const thinBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+                        let chunkManpowerGrandTotal = 0;
+                        const chunkMpTotals = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
+                        const dayMaterialTotals = new Array(chunk.length).fill(0);
                         chunk.forEach((dt, i) => {
                             const colLetter = getColLetter(i + 4);
-                            if (ws.getColumn(i + 5)) ws.getColumn(i + 5).width = Math.max(ws.getColumn(i + 5).width || 0, 9);
+                            if (ws.getColumn(i + 5)) ws.getColumn(i + 5).width = Math.max(ws.getColumn(i + 5).width || 0, 10);
                             const rep = reportsByDate.get(dt);
                             const mp = rep?.manpower || {};
 
@@ -1717,21 +1747,26 @@
                             dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
                             const totMp = rep ? ((Number(mp.leader) || 0) + (Number(mp.skilled) || 0) + (Number(mp.unskilled) || 0)) : 0;
+                            chunkManpowerGrandTotal += totMp;
                             const mpTotCell = ws.getCell(colLetter + '6');
                             mpTotCell.value = totMp > 0 ? totMp : null;
                             mpTotCell.font = { ...(mpTotCell.font || {}), bold: true };
                             mpTotCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                            mpTotCell.border = thinBorder;
 
                             ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
                                 const val = rep ? (Number(mp[k]) || 0) : 0;
+                                chunkMpTotals[k] += val;
                                 const cCell = ws.getCell(colLetter + (8 + j));
                                 cCell.value = val > 0 ? val : null;
                                 cCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                                cCell.border = thinBorder;
                             });
 
                             this.items.forEach(it => {
                                 const q = rep?.quantities && rep.quantities[it.id];
                                 if (Number(q) > 0) {
+                                    dayMaterialTotals[i] += Number(q);
                                     const qCell = ws.getCell(colLetter + it.row);
                                     qCell.value = Number(q);
                                     qCell.numFmt = '#,##0.###';
@@ -1741,21 +1776,72 @@
                             });
                         });
 
+                        // Manpower Totals in Column AI (Rows 6 and 8..13)
+                        const aiMpTot = ws.getCell('AI6');
+                        aiMpTot.value = chunkManpowerGrandTotal > 0 ? chunkManpowerGrandTotal : null;
+                        aiMpTot.font = { ...(aiMpTot.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                        aiMpTot.alignment = { vertical: 'middle', horizontal: 'center' };
+                        aiMpTot.fill = totalFill;
+                        aiMpTot.border = thinBorder;
+                        ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
+                            const aiMp = ws.getCell('AI' + (8 + j));
+                            aiMp.value = chunkMpTotals[k] > 0 ? chunkMpTotals[k] : null;
+                            aiMp.font = { ...(aiMp.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                            aiMp.alignment = { vertical: 'middle', horizontal: 'center' };
+                            aiMp.fill = totalFill;
+                            aiMp.border = thinBorder;
+                        });
+
                         // Row serials + Sum totals in AI column
+                        let grandTotalMaterials = 0;
+                        let maxItemRow = 15;
                         this.items.forEach((it, idx) => {
+                            if (Number(it.row) > maxItemRow) maxItemRow = Number(it.row);
                             if (it.row) ws.getCell('A' + it.row).value = idx + 1;
                             const total = chunk.reduce((sum, d) => {
                                 const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
                             }, 0);
+                            grandTotalMaterials += total;
                             const aiCell = ws.getCell('AI' + it.row);
                             aiCell.value = total > 0 ? total : null;
-                            if (total > 0) {
-                                aiCell.font = { ...(aiCell.font || {}), bold: true };
-                                aiCell.numFmt = '#,##0.###';
-                                aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
-                            }
+                            aiCell.font = { ...(aiCell.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                            aiCell.numFmt = '#,##0.###';
+                            aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                            aiCell.fill = totalFill;
+                            aiCell.border = thinBorder;
+                            if (it.row) ws.getRow(it.row).hidden = total <= 0;
                         });
+
+                        // Bottom Grand Total Row across all exported materials
+                        const grandRowNum = maxItemRow + 1;
+                        const grandLabel = ws.getCell('C' + grandRowNum);
+                        grandLabel.value = 'GRAND TOTAL (ALL MATERIALS)';
+                        grandLabel.font = { ...(grandLabel.font || {}), bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                        grandLabel.fill = grandTotalFill;
+                        grandLabel.border = headerTotalBorder;
+                        ['A', 'B', 'D'].forEach(col => {
+                            const c = ws.getCell(col + grandRowNum);
+                            c.fill = grandTotalFill;
+                            c.border = headerTotalBorder;
+                        });
+                        dayMaterialTotals.forEach((daySum, i) => {
+                            const colLetter = getColLetter(i + 4);
+                            const cell = ws.getCell(colLetter + grandRowNum);
+                            cell.value = daySum > 0 ? Math.round(daySum * 1000) / 1000 : null;
+                            cell.font = { ...(cell.font || {}), bold: true, color: { argb: 'FF1E3A8A' } };
+                            cell.numFmt = '#,##0.###';
+                            cell.alignment = { vertical: 'middle', horizontal: 'right' };
+                            cell.fill = grandTotalFill;
+                            cell.border = headerTotalBorder;
+                        });
+                        const grandAiCell = ws.getCell('AI' + grandRowNum);
+                        grandAiCell.value = grandTotalMaterials > 0 ? Math.round(grandTotalMaterials * 1000) / 1000 : null;
+                        grandAiCell.font = { ...(grandAiCell.font || {}), bold: true, size: 11, color: { argb: 'FF1E3A8A' } };
+                        grandAiCell.numFmt = '#,##0.###';
+                        grandAiCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                        grandAiCell.fill = grandTotalFill;
+                        grandAiCell.border = headerTotalBorder;
 
                         // Remarks in AJ8
                         const notesStr = chunk
