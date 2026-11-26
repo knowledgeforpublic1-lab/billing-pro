@@ -1166,7 +1166,8 @@ window.DailyProgressModule = {
                 // Item-wise Monthly Totals in TOTAL column using SUM formulas; show only contractor's issued/active items (or all if filter === 'all')
                 let grandTotalMaterials = 0;
                 let maxItemRow = 415;
-                let visibleSrNo = 0;
+                const visibleRowSet = new Set();
+                const rowTotalsMap = new Map();
                 const exportFilter = this.dailyProgressExportFilter || 'active';
                 seedItems.forEach((it, idx) => {
                     const targetRow = resolvedRows[idx];
@@ -1180,11 +1181,8 @@ window.DailyProgressModule = {
                     const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
                     const hasIssued = !!(stock && stock.totalIssued > 0);
                     const isVisible = exportFilter === 'all' ? true : exportFilter === 'issued' ? hasIssued : (hasIssued || totalConsumedInChunk > 0 || !!it.custom);
-                    ws.getRow(targetRow).hidden = !isVisible;
-                    if (isVisible) {
-                        visibleSrNo++;
-                        ws.getCell('A' + targetRow).value = visibleSrNo;
-                    }
+                    if (isVisible) visibleRowSet.add(targetRow);
+                    rowTotalsMap.set(targetRow, (rowTotalsMap.get(targetRow) || 0) + totalConsumedInChunk);
                     if (it.custom) {
                         ws.getCell('B' + targetRow).value = it.code || '';
                         ws.getCell('C' + targetRow).value = it.name || '';
@@ -1195,23 +1193,57 @@ window.DailyProgressModule = {
                     aiCell.numFmt = qtyFmt(totalConsumedInChunk);
                 });
 
-                // Grand Total Row (Row 416 in template) with dynamic SUM formulas
-                const grandRowNum = 416;
-                ws.getCell('C' + grandRowNum).value = 'GRAND TOTAL (ALL MATERIALS)';
+                let effectiveMaxItemRow = maxItemRow;
+                let effectiveGrandRowNum = 416;
+                let effectiveRemarkHdrRow = 418;
+                let effectiveRemarkStartRow = 419;
+                if (exportFilter !== 'all') {
+                    // Unmerge remarks rows before splicing so merges don't point to stale row indices
+                    for (let r = 418; r <= 444; r++) {
+                        try { ws.unMergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) {}
+                    }
+                    const keptTotals = [];
+                    for (let r = 15; r <= maxItemRow; r++) {
+                        if (visibleRowSet.has(r)) keptTotals.push(rowTotalsMap.get(r) || 0);
+                    }
+                    for (let r = maxItemRow; r >= 15; r--) {
+                        if (!visibleRowSet.has(r)) ws.spliceRows(r, 1);
+                    }
+                    effectiveMaxItemRow = 14 + keptTotals.length;
+                    effectiveGrandRowNum = effectiveMaxItemRow + 1;
+                    effectiveRemarkHdrRow = effectiveGrandRowNum + 2;
+                    effectiveRemarkStartRow = effectiveGrandRowNum + 3;
+                    for (let i = 0; i < keptTotals.length; i++) {
+                        const r = 15 + i;
+                        ws.getCell('A' + r).value = i + 1;
+                        const aiCell = ws.getCell(totalColLetter + r);
+                        aiCell.value = { formula: `SUM(E${r}:${lastDayColLetter}${r})`, result: keptTotals[i] };
+                        aiCell.numFmt = qtyFmt(keptTotals[i]);
+                    }
+                    for (let r = effectiveRemarkHdrRow; r <= effectiveRemarkStartRow + 25; r++) {
+                        try { ws.mergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) {}
+                    }
+                }
+
+                // Grand Total Row with dynamic SUM formulas
+                ws.getCell('C' + effectiveGrandRowNum).value = 'GRAND TOTAL (ALL MATERIALS)';
                 dayMaterialTotals.forEach((daySum, i) => {
                     const colLetter = getColLetter(i + 4);
                     const rounded = Math.round(daySum * 1000) / 1000;
-                    const cell = ws.getCell(colLetter + grandRowNum);
-                    cell.value = { formula: `SUM(${colLetter}15:${colLetter}${maxItemRow})`, result: rounded };
+                    const cell = ws.getCell(colLetter + effectiveGrandRowNum);
+                    cell.value = {
+                        formula: effectiveMaxItemRow >= 15 ? `SUM(${colLetter}15:${colLetter}${effectiveMaxItemRow})` : '0',
+                        result: rounded
+                    };
                     cell.numFmt = qtyFmt(rounded);
                 });
                 const grandRounded = Math.round(grandTotalMaterials * 1000) / 1000;
-                const grandAiCell = ws.getCell(totalColLetter + grandRowNum);
-                grandAiCell.value = { formula: `SUM(E${grandRowNum}:${lastDayColLetter}${grandRowNum})`, result: grandRounded };
+                const grandAiCell = ws.getCell(totalColLetter + effectiveGrandRowNum);
+                grandAiCell.value = { formula: `SUM(E${effectiveGrandRowNum}:${lastDayColLetter}${effectiveGrandRowNum})`, result: grandRounded };
                 grandAiCell.numFmt = qtyFmt(grandRounded);
 
-                // Remark Date wise section (Rows 419..444 in template)
-                ws.getCell('A418').value = 'Remark Date wise';
+                // Remark Date wise section
+                ws.getCell('A' + effectiveRemarkHdrRow).value = 'Remark Date wise';
                 const remarkRows = chunk
                     .map(d => {
                         const rep = reportsByDate.get(d);
@@ -1219,7 +1251,7 @@ window.DailyProgressModule = {
                     })
                     .filter(Boolean);
                 remarkRows.slice(0, 26).forEach((text, idx) => {
-                    ws.getCell('A' + (419 + idx)).value = text;
+                    ws.getCell('A' + (effectiveRemarkStartRow + idx)).value = text;
                 });
             }
 

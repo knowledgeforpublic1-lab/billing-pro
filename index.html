@@ -2774,10 +2774,10 @@
                                     </tr>
 
                                     <!-- Material Items -->
-                                    <tr v-for="it in getDailyProgressExportPreviewItems()" :key="it.id">
-                                        <td class="st-row">{{ it.row }}</td>
+                                    <tr v-for="(it, itIdx) in getDailyProgressExportPreviewItems()" :key="it.id">
+                                        <td class="st-row">{{ itIdx + 1 }}</td>
                                         <td class="st-code">{{ it.code || 'ITEM' }}</td>
-                                        <td class="st-name" :title="it.name">{{ it.name }}<small class="dp-excel-mobile-code">{{ it.code || 'ITEM' }} · {{ it.unit }} · Row {{ it.row }}</small></td>
+                                        <td class="st-name" :title="it.name">{{ it.name }}<small class="dp-excel-mobile-code">{{ it.code || 'ITEM' }} · {{ it.unit }} · Row {{ itIdx + 1 }}</small></td>
                                         <td class="st-unit">{{ it.unit }}</td>
                                         <td class="st-issue">
                                             <span v-if="getDailyProgressItemStock(it).totalIssued > 0" class="dp-issue-val" style="font-weight: 700;">
