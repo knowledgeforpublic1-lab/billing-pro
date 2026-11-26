@@ -375,12 +375,31 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
     }));
     adminRouter.post('/heartbeat', auth.requireAdmin, handle(async (req, res) => res.json({ success: true, ...await service.access(req.body.contractorId, req.body.date, req.get('x-dp-editor'), 'heartbeat', locationFor(req)) })));
     adminRouter.post('/manage-reports', auth.requireAdmin, handle(async (req, res) => {
-        const { contractorId, date, action, allDates } = req.body;
-        if (!contractorId || !['delete', 'reset'].includes(action)) throw Object.assign(new Error('Contractor, location and action required.'), { status: 400 });
+        const { contractorId, date, action, allDates, items } = req.body;
+        if (!['delete', 'reset'].includes(action)) throw Object.assign(new Error('Valid action required.'), { status: 400 });
+        if (Array.isArray(items) && items.length) {
+            const results = [];
+            try {
+                const batch = items.slice(0, 100);
+                const settled = await Promise.all(batch.map(item => {
+                    if (!item || !item.contractorId || !item.date) throw Object.assign(new Error('Invalid batch item.'), { status: 400 });
+                    const loc = normalizeLocation(item.locationId);
+                    return service.manage(item.contractorId, item.date, loc, action, { version: Number(item.version) || 0 });
+                }));
+                results.push(...settled);
+            } catch (error) {
+                invalidateDataCache();
+                return res.status(error.status || 503).json({ success: false, error: `${results.length} dates updated. ` + error.message, results });
+            }
+            invalidateDataCache();
+            return res.json({ success: true, count: results.length, results });
+        }
+        if (!contractorId) throw Object.assign(new Error('Contractor, location and action required.'), { status: 400 });
         const locationId = locationFor(req);
         if (locationId) await service.locations.get(contractorId, locationId);
-        const rows = (await readData()).reports.filter(row => row.contractorId === contractorId && normalizeLocation(row.locationId) === locationId && (allDates === true || row.date === date));
-        if (!rows.length && allDates !== true) rows.push({ contractorId, date, locationId, version: 0 });
+        const rows = allDates === true
+            ? (await readData()).reports.filter(row => row.contractorId === contractorId && normalizeLocation(row.locationId) === locationId)
+            : [{ contractorId, date, locationId, version: Number(req.body.version) || 0 }];
         const results = [];
         try { for (const row of rows) results.push(await service.manage(contractorId, row.date, locationId, action, row)); }
         catch (error) { invalidateDataCache(); return res.status(error.status || 503).json({ success: false, error: `${results.length} dates updated. ` + error.message, results }); }

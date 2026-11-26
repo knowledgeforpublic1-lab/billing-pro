@@ -131,12 +131,16 @@
                 this.dailyProgressBusy = true;
                 if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Deleting Entry...', `${row.contractorName} · ${row.date}`, 30);
                 try {
-                    await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
+                    await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, version: Number(row.report && row.report.version) || 0, action: 'delete', allDates: false });
                     if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(90, 'Updating local list...');
-                    this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r =>
+                    const nextReports = (this.dailyProgressData.reports || []).filter(r =>
                         r !== row.report && !(r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === row.date)
                     );
-                    if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
+                    if (row.report) row.report.deleted = true;
+                    this.dailyProgressData = { ...this.dailyProgressData, reports: nextReports };
+                    if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                        BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+                    } else if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
                         BillingStorage.setItemAsync('billing_daily_progress', JSON.stringify(this.dailyProgressData)).catch(() => {});
                     }
                     if (cid === this.dailyProgressContractorId && locationId === this.dailyProgressLocationKey(this.dailyProgressLocationId) && row.date === this.dailyProgressDate) {
@@ -190,31 +194,46 @@
                 const activeLoc = this.dailyProgressLocationKey(this.dailyProgressLocationId);
                 const activeDate = this.dailyProgressDate;
                 try {
-                    for (let i = 0; i < targets.length; i += 5) {
-                        const batch = targets.slice(i, i + 5);
-                        await Promise.all(batch.map(async (row) => {
+                    for (let i = 0; i < targets.length; i += 20) {
+                        const batch = targets.slice(i, i + 20);
+                        await this.dailyProgressRequest('manage-reports', {
+                            action: 'delete',
+                            items: batch.map(row => ({
+                                contractorId: row.contractorId,
+                                locationId: this.dailyProgressLocationKey(row.locationId),
+                                date: row.date,
+                                version: Number(row.report && row.report.version) || 0
+                            }))
+                        });
+                        for (const row of batch) {
                             const cid = row.contractorId;
                             const locationId = this.dailyProgressLocationKey(row.locationId);
-                            await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
                             deletedKeys.add(row.key);
-                            if (row.report) deletedReports.add(row.report);
+                            if (row.report) {
+                                row.report.deleted = true;
+                                deletedReports.add(row.report);
+                            }
                             deletedSignatures.add(cid + '|' + locationId + '|' + row.date);
                             if (cid === activeCid && locationId === activeLoc && row.date === activeDate) {
                                 currentEntryAffected = true;
                             }
-                        }));
+                        }
                         const pct = Math.min(95, Math.round((deletedKeys.size / targets.length) * 95));
                         if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(pct, `${deletedKeys.size} / ${targets.length} entries deleted...`);
                     }
                 } finally {
                     if (deletedKeys.size) {
-                        this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r => {
+                        const nextReports = (this.dailyProgressData.reports || []).filter(r => {
+                            if (r && r.deleted) return false;
                             if (deletedReports.has(r)) return false;
                             const sig = (r.contractorId || '') + '|' + this.dailyProgressLocationKey(r.locationId) + '|' + (r.date || '');
                             return !deletedSignatures.has(sig);
                         });
+                        this.dailyProgressData = { ...this.dailyProgressData, reports: nextReports };
                         this.dailyProgressHistorySelectedKeys = (this.dailyProgressHistorySelectedKeys || []).filter(k => !deletedKeys.has(k));
-                        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
+                        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
+                            BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+                        } else if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
                             BillingStorage.setItemAsync('billing_daily_progress', JSON.stringify(this.dailyProgressData)).catch(() => {});
                         }
                         if (currentEntryAffected) {
