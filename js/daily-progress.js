@@ -1170,8 +1170,8 @@ window.DailyProgressModule = {
                     const targetRow = resolvedRows[idx];
                     if (!targetRow) return;
                     if (targetRow > maxItemRow) maxItemRow = targetRow;
+                    ws.getCell('A' + targetRow).value = idx + 1;
                     if (it.custom) {
-                        ws.getCell('A' + targetRow).value = idx + 1;
                         ws.getCell('B' + targetRow).value = it.code || '';
                         ws.getCell('C' + targetRow).value = it.name || '';
                         ws.getCell('D' + targetRow).value = it.unit || '';

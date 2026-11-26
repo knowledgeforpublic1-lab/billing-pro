@@ -1821,6 +1821,7 @@
                             const targetRow = resolvedRows[idx];
                             if (!targetRow) return;
                             if (targetRow > maxItemRow) maxItemRow = targetRow;
+                            ws.getCell('A' + targetRow).value = idx + 1;
                             const total = chunk.reduce((sum, d) => {
                                 const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
