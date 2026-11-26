@@ -244,7 +244,7 @@ window.DailyProgressModule = {
         // Load report for active date
         this.loadDailyProgressReportForDate(this.dailyProgressDate);
 
-        // Auto-poll cloud data every 15s in background when viewing Daily Progress (picks up mobile entries in real time)
+        // Auto-poll cloud data every 2m in background when viewing Daily Progress (avoids hammering UI/server every 15s)
         const timerFn = typeof setInterval === 'function' ? setInterval : (typeof window !== 'undefined' && typeof window.setInterval === 'function' ? window.setInterval : null);
         if (timerFn && typeof window !== 'undefined' && !window._dpAutoSyncTimer) {
             window._dpAutoSyncTimer = timerFn(() => {
@@ -255,7 +255,7 @@ window.DailyProgressModule = {
                         }
                     }
                 } catch (_) { }
-            }, 15000);
+            }, 120000);
         }
     },
 
@@ -703,9 +703,13 @@ window.DailyProgressModule = {
         try {
             const dt = this.normalizeDailyProgressDate(this.dailyProgressDate);
             const reportPayload = this.syncCurrentDailyProgressDraft();
+            if (!reportPayload) {
+                this.showToast('Pehle Feeder / Location select karein.', 'Alert');
+                return;
+            }
             await this.saveDailyProgressData();
             this.dailyProgressDirty = false;
-            if (reportPayload) this.dailyProgressVersion = reportPayload.version;
+            this.dailyProgressVersion = reportPayload.version;
             this.showToast(`Daily Progress Saved! (${this.formatDisplayDate(dt)})`, 'Check');
         } catch (e) {
             this.dailyProgressVersion = previousVersion;
@@ -728,24 +732,36 @@ window.DailyProgressModule = {
         if (!item) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0, status: 'none' };
 
         const cid = this.dailyProgressContractorId;
+        if (!cid) return { sapIssued: 0, manualIssued: 0, totalIssued: 0, totalConsumed: 0, balance: 0, status: 'awaiting_stock' };
         const curDate = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
         const code = String(item.code || '').trim();
 
+        const issues = (this.dailyProgressData && this.dailyProgressData.issues) || [];
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        const sapRoot = (typeof window !== 'undefined' && (window.ContractorSapStock || window.__customSapStock || window.DefaultContractorSapStock)) || null;
+
+        // Memoize contractor-level SAP lookup across all 180+ item rows (avoids 500x Proxy/SAP scans per render)
+        const memo = this._dpStockMemo;
+        if (!memo || memo.cid !== cid || memo.curDate !== curDate || memo.sapRoot !== sapRoot) {
+            const contractorSap = (typeof this.getContractorSapIssues === 'function')
+                ? this.getContractorSapIssues.call(new Proxy(this, {
+                    get(target, key) {
+                        if (key === 'stockAsOnDate') return curDate;
+                        if (key === 'selectedContractorId') return cid;
+                        const team = (target.dailyProgressData?.contractors || []).find(c => c.id === cid);
+                        if (key === 'selectedContractorName') return team?.name || '';
+                        if (key === 'invoiceData' || key === 'projectMeta') return { ...(target[key] || {}), workOrderNo: '', contractorName: team?.name || '' };
+                        return Reflect.get(target, key);
+                    },
+                    set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
+                })) : null;
+            this._dpStockMemo = { cid, curDate, sapRoot, contractorSap };
+        }
+
+        const { contractorSap } = this._dpStockMemo;
+
         // 1. SAP Stock Issued to Active Contractor strictly filtered up to curDate (Work Date)
         let sapIssued = 0;
-        // Resolve against work date, independent of reconciliation's cutoff.
-        const contractorSap = (typeof this.getContractorSapIssues === 'function')
-            ? this.getContractorSapIssues.call(new Proxy(this, {
-                get(target, key) {
-                    if (key === 'stockAsOnDate') return curDate;
-                    if (key === 'selectedContractorId') return cid;
-                    const team = (target.dailyProgressData?.contractors || []).find(c => c.id === cid);
-                    if (key === 'selectedContractorName') return team?.name || '';
-                    if (key === 'invoiceData' || key === 'projectMeta') return { ...(target[key] || {}), workOrderNo: '', contractorName: team?.name || '' };
-                    return Reflect.get(target, key);
-                },
-                set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
-            })) : null;
         if (contractorSap && contractorSap.materials && code && contractorSap.materials[code]) {
             const m = contractorSap.materials[code];
             if (Array.isArray(m.txns) && m.txns.length > 0) {
@@ -774,7 +790,6 @@ window.DailyProgressModule = {
         }
 
         // 2. Manual stock issues recorded in Daily Progress
-        const issues = (this.dailyProgressData && this.dailyProgressData.issues) || [];
         const manualIssued = issues
             .filter(iss => iss.contractorId === cid && iss.itemId === item.id && (!iss.date || iss.date <= curDate))
             .reduce((sum, iss) => sum + (Number(iss.quantity) || 0), 0);
@@ -782,7 +797,6 @@ window.DailyProgressModule = {
         const totalIssued = Math.round((sapIssued + manualIssued) * 1000) / 1000;
 
         // 3. Material consumed across saved daily reports up to curDate
-        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         const totalConsumed = reports
             .filter(r => r.contractorId === cid && r.date <= curDate)
             .reduce((sum, r) => sum + (Number(r.quantities && r.quantities[item.id]) || 0), 0);
@@ -977,11 +991,20 @@ window.DailyProgressModule = {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                 }
 
-                // Header metadata
+                // Header metadata & clean sheet formatting
                 ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
                 ws.getCell('A3').value = 'FEEDER: ' + (this.getDailyProgressExportFeederName() || 'Unassigned') + ' | LOCATION: ' + this.dailyProgressLocationName();
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
+                ['A2', 'A3', 'A4', 'A5'].forEach(addr => {
+                    const hc = ws.getCell(addr);
+                    hc.font = { ...(hc.font || {}), bold: true, size: 10 };
+                    hc.alignment = { vertical: 'middle', horizontal: 'left' };
+                });
+                ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 7 }];
+                if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 42);
+                if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 12);
+                if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 28);
 
                 // Clear all dynamic data cells across all 30 day columns (E to AH) to remove any template dummy values
                 for (let c = 0; c < 30; c++) {
@@ -996,31 +1019,49 @@ window.DailyProgressModule = {
                     });
                 }
 
+                const thinBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+
                 // Fill days and manpower
                 chunk.forEach((date, i) => {
                     const colLetter = getColLetter(i + 4); // Col E = 4 (0-based)
+                    if (ws.getColumn(i + 5)) ws.getColumn(i + 5).width = Math.max(ws.getColumn(i + 5).width || 0, 9);
                     const r = reportsByDate.get(date);
                     const m = (r && r.manpower) || {};
 
                     // Date serial in Row 7
                     const dtObj = new Date(date + 'T00:00:00Z');
                     const serial = Math.round((dtObj.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
-                    ws.getCell(colLetter + '7').value = serial;
+                    const dtCell = ws.getCell(colLetter + '7');
+                    dtCell.value = serial;
+                    dtCell.numFmt = 'dd-mmm';
+                    dtCell.font = { ...(dtCell.font || {}), bold: true, size: 9 };
+                    dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
                     // Total manpower in Row 6
-                    ws.getCell(colLetter + '6').value = r ? ((m.leader || 0) + (m.skilled || 0) + (m.unskilled || 0)) : null;
+                    const totMp = r ? ((Number(m.leader) || 0) + (Number(m.skilled) || 0) + (Number(m.unskilled) || 0)) : 0;
+                    const mpTotCell = ws.getCell(colLetter + '6');
+                    mpTotCell.value = totMp > 0 ? totMp : null;
+                    mpTotCell.font = { ...(mpTotCell.font || {}), bold: true };
+                    mpTotCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
                     // Manpower rows 8 to 13
                     const mpKeys = ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'];
                     mpKeys.forEach((k, j) => {
-                        ws.getCell(colLetter + (8 + j)).value = r ? (m[k] || 0) : null;
+                        const val = r ? (Number(m[k]) || 0) : 0;
+                        const cCell = ws.getCell(colLetter + (8 + j));
+                        cCell.value = val > 0 ? val : null;
+                        cCell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
                     // Material quantities: write actual quantity if > 0, otherwise cell is clean null
                     seedItems.forEach(it => {
                         const q = r && r.quantities && Number(r.quantities[it.id]);
                         if (q && q > 0) {
-                            ws.getCell(colLetter + it.row).value = q;
+                            const qCell = ws.getCell(colLetter + it.row);
+                            qCell.value = q;
+                            qCell.numFmt = '#,##0.###';
+                            qCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                            qCell.border = thinBorder;
                         }
                     });
                 });
@@ -1032,7 +1073,13 @@ window.DailyProgressModule = {
                         const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
-                    ws.getCell('AI' + it.row).value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
+                    const aiCell = ws.getCell('AI' + it.row);
+                    aiCell.value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
+                    if (totalConsumedInChunk > 0) {
+                        aiCell.font = { ...(aiCell.font || {}), bold: true };
+                        aiCell.numFmt = '#,##0.###';
+                        aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                    }
                 });
 
                 // Notes in AJ8
@@ -1043,7 +1090,9 @@ window.DailyProgressModule = {
                     })
                     .filter(Boolean)
                     .join('\n');
-                ws.getCell('AJ8').value = notesStr;
+                const ajCell = ws.getCell('AJ8');
+                ajCell.value = notesStr || null;
+                ajCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
             }
 
             const buffer = await workbook.xlsx.writeBuffer();

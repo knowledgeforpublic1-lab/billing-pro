@@ -194,7 +194,7 @@
                 return '';
             },
             canEnterLocation() {
-                return !!this.selectedLocationId && this.selectedLocationId !== 'legacy' && (
+                return !!this.selectedContractorId && !!this.selectedLocationId && this.selectedLocationId !== 'legacy' && (
                     (this.locations || []).some(row => row.id === this.selectedLocationId) ||
                     (typeof window !== 'undefined' && window.DefaultFeeders && !!window.DefaultFeeders.get(this.selectedLocationId))
                 );
@@ -1228,6 +1228,7 @@
 
             async saveProgress() {
                 if (this.busy) return;
+                if (!this.selectedContractorId) return this.showToast('Pehle Contractor select karein.', 'warning');
                 if (!this.canEnterLocation) return this.showToast('Pehle location add ya select karein. Legacy entries admin hi change kar sakta hai.', 'warning');
                 this._dataEpoch = (this._dataEpoch || 0) + 1;
                 this.busy = true;
@@ -1267,31 +1268,31 @@
                         this.reports.push(reportObj);
                     }
 
-                    const payload = {
-                        contractors: this.contractors,
-                        reports: this.reports,
-                        reportStates: this.reportStates,
-                        issues: this.issues,
+                    const scopedReports = this.reports.filter(r => matchesContractor(r.contractorId, actC));
+                    const localPayload = {
+                        contractors: actC.id ? [actC] : [],
+                        reports: scopedReports,
+                        reportStates: (this.reportStates || []).filter(r => matchesContractor(r.contractorId, actC)),
+                        issues: (this.issues || []).filter(i => matchesContractor(i.contractorId, actC)),
                         updatedAt: new Date().toISOString()
                     };
 
-                    // Save locally first
+                    // Save locally first (scoped to active contractor to stay well under mobile storage limits)
                     let localSaved = false;
                     try {
-                        const drafts = payload.reports.map(row => reportKey(row) === reportKey(reportObj) ? { ...row, version: this.version, pending: true } : row);
-                        localStorage.setItem(shareStorageKey, JSON.stringify({ ...payload, reports: drafts }));
+                        const drafts = scopedReports.map(row => reportKey(row) === reportKey(reportObj) ? { ...row, version: this.version, pending: true } : row);
+                        localStorage.setItem(shareStorageKey, JSON.stringify({ ...localPayload, reports: drafts }));
                         localSaved = true;
                     } catch (e) { }
 
-                    // Save to cloud API
+                    // Save to cloud API (send only the edited report to prevent large payload crashes)
                     let cloudSaved = false;
                     let cloudError = '';
                     try {
                         const res = await shareFetch('/api/daily-progress/data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            // Submit only the edited date. Old cached dates must never block this save.
-                            body: JSON.stringify({ ...payload, reports: [reportObj] })
+                            body: JSON.stringify({ reports: [reportObj], updatedAt: localPayload.updatedAt })
                         });
                         const resJson = await res.json().catch(() => null);
                         if (!res.ok || !resJson || resJson.success !== true) {
@@ -1306,7 +1307,7 @@
                                     if (index >= 0) this.reports[index] = report;
                                     if (report.contractorId === cid && report.date === curDate) this.version = report.version;
                                 }
-                                try { localStorage.setItem(shareStorageKey, JSON.stringify({ ...payload, reports: this.reports })); } catch {}
+                                try { localStorage.setItem(shareStorageKey, JSON.stringify({ ...localPayload, reports: this.reports.filter(r => matchesContractor(r.contractorId, actC)) })); } catch {}
                             }
                         }
                     } catch (e) {
@@ -1676,11 +1677,20 @@
                             ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                         }
 
-                        // Header info
+                        // Header info & clean sheet styling
                         ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
                         ws.getCell('A3').value = 'FEEDER: ' + (this.activeFeederName || 'Unassigned') + ' | LOCATION: ' + (this.activeLocationName || 'Legacy / Unassigned');
                         ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                         ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
+                        ['A2', 'A3', 'A4', 'A5'].forEach(addr => {
+                            const hc = ws.getCell(addr);
+                            hc.font = { ...(hc.font || {}), bold: true, size: 10 };
+                            hc.alignment = { vertical: 'middle', horizontal: 'left' };
+                        });
+                        ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 7 }];
+                        if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 42);
+                        if (ws.getColumn(35)) ws.getColumn(35).width = Math.max(ws.getColumn(35).width || 0, 12);
+                        if (ws.getColumn(36)) ws.getColumn(36).width = Math.max(ws.getColumn(36).width || 0, 28);
 
                         // Clear sample values in chunk range
                         for (let r = 6; r <= 420; r++) {
@@ -1691,35 +1701,73 @@
                             }
                         }
 
+                        const thinBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
                         chunk.forEach((dt, i) => {
                             const colLetter = getColLetter(i + 4);
+                            if (ws.getColumn(i + 5)) ws.getColumn(i + 5).width = Math.max(ws.getColumn(i + 5).width || 0, 9);
                             const rep = reportsByDate.get(dt);
                             const mp = rep?.manpower || {};
 
-                            ws.getCell(colLetter + '7').value = dt;
-                            ws.getCell(colLetter + '6').value = rep ? ((mp.leader || 0) + (mp.skilled || 0) + (mp.unskilled || 0)) : null;
+                            const dtObj = new Date(dt + 'T00:00:00Z');
+                            const serial = Math.round((dtObj.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
+                            const dtCell = ws.getCell(colLetter + '7');
+                            dtCell.value = serial;
+                            dtCell.numFmt = 'dd-mmm';
+                            dtCell.font = { ...(dtCell.font || {}), bold: true, size: 9 };
+                            dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+                            const totMp = rep ? ((Number(mp.leader) || 0) + (Number(mp.skilled) || 0) + (Number(mp.unskilled) || 0)) : 0;
+                            const mpTotCell = ws.getCell(colLetter + '6');
+                            mpTotCell.value = totMp > 0 ? totMp : null;
+                            mpTotCell.font = { ...(mpTotCell.font || {}), bold: true };
+                            mpTotCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
                             ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
-                                ws.getCell(colLetter + (8 + j)).value = rep ? (mp[k] || 0) : null;
+                                const val = rep ? (Number(mp[k]) || 0) : 0;
+                                const cCell = ws.getCell(colLetter + (8 + j));
+                                cCell.value = val > 0 ? val : null;
+                                cCell.alignment = { vertical: 'middle', horizontal: 'center' };
                             });
 
                             this.items.forEach(it => {
                                 const q = rep?.quantities && rep.quantities[it.id];
                                 if (Number(q) > 0) {
-                                    ws.getCell(colLetter + it.row).value = Number(q);
+                                    const qCell = ws.getCell(colLetter + it.row);
+                                    qCell.value = Number(q);
+                                    qCell.numFmt = '#,##0.###';
+                                    qCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                                    qCell.border = thinBorder;
                                 }
                             });
                         });
 
-                        // Sum formula on AI column
-                        this.items.forEach(it => {
+                        // Row serials + Sum totals in AI column
+                        this.items.forEach((it, idx) => {
+                            if (it.row) ws.getCell('A' + it.row).value = idx + 1;
                             const total = chunk.reduce((sum, d) => {
                                 const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
                             }, 0);
                             const aiCell = ws.getCell('AI' + it.row);
                             aiCell.value = total > 0 ? total : null;
+                            if (total > 0) {
+                                aiCell.font = { ...(aiCell.font || {}), bold: true };
+                                aiCell.numFmt = '#,##0.###';
+                                aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
+                            }
                         });
+
+                        // Remarks in AJ8
+                        const notesStr = chunk
+                            .map(d => {
+                                const rep = reportsByDate.get(d);
+                                return rep && rep.remarks ? `${d}: ${rep.remarks}` : '';
+                            })
+                            .filter(Boolean)
+                            .join('\n');
+                        const ajCell = ws.getCell('AJ8');
+                        ajCell.value = notesStr || null;
+                        ajCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
                     }
 
                     const outBuffer = await workbook.xlsx.writeBuffer();
