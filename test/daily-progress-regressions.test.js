@@ -100,7 +100,51 @@ test('31-day Excel export clears old data and preserves labels, merges and style
     assert.equal(second.getCell('C15').value, first.getCell('C15').value);
     assert.deepEqual(second.model.merges, first.model.merges);
     assert.equal(second.getColumn(3).width, first.getColumn(3).width);
-    assert.equal(first.getCell('AI15').value, 4); assert.equal(second.getCell('AI15').value, 8);
+    assert.equal(first.getCell('AI15').value.result, 4); assert.equal(second.getCell('AI15').value.result, 8);
+    assert.equal(first.getCell('AI15').value.formula, 'SUM(E15:AH15)');
+});
+
+test('Excel export handles 28-day Feb, 29-day leap Feb, 30-day, and 31-day months with Item Code mapping, formulas, and no sample data', async () => {
+    const cases = [
+        { from: '2026-02-01', to: '2026-02-28', days: 28, totalCol: 'AI', lastDayCol: 'AF' },
+        { from: '2024-02-01', to: '2024-02-29', days: 29, totalCol: 'AI', lastDayCol: 'AG' },
+        { from: '2026-11-01', to: '2026-11-30', days: 30, totalCol: 'AI', lastDayCol: 'AH' },
+        { from: '2026-10-01', to: '2026-10-31', days: 31, totalCol: 'AJ', lastDayCol: 'AI' }
+    ];
+    for (const tc of cases) {
+        let output;
+        const context = {
+            window: { ExcelJS, DailyProgressSeed: { items: [{ id: 'sand-id', row: 99, name: 'M SAND 0-6 MM', code: '11000123', unit: 'KG' }] } }, console,
+            fetch: async () => ({ ok: true, arrayBuffer: async () => fs.readFileSync('templates/Excel xport formate.xlsx') }),
+            Blob: class { constructor(parts) { output = Buffer.from(parts[0]); } },
+            URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
+            document: { body: { appendChild() {}, removeChild() {} }, createElement: () => ({ click() {} }) }, setTimeout: fn => fn()
+        };
+        vm.runInNewContext(fs.readFileSync('js/daily-progress.js', 'utf8'), context);
+        const app = {
+            ...context.window.DailyProgressModule,
+            dailyProgressExportFrom: tc.from, dailyProgressExportTo: tc.to, dailyProgressContractorId: 'c1',
+            dailyProgressLocationId: 'loc1', dailyProgressLocations: [{ id: 'loc1', name: 'Feeder 1' }],
+            dailyProgressData: {
+                contractors: [{ id: 'c1', name: 'Team 1', project: 'Proj X', engineer: 'Eng Y' }],
+                reports: [{ contractorId: 'c1', locationId: 'loc1', date: tc.to, quantities: { 'sand-id': 12.5 }, manpower: { leader: 1, skilled: 2, unskilled: 3, tractor: 1 }, remarks: 'Done ' + tc.to }]
+            },
+            showToast() {}
+        };
+        await app.downloadDailyProgressExcel();
+        const book = new ExcelJS.Workbook(); await book.xlsx.load(output);
+        assert.equal(book.worksheets.length, 1, `${tc.days}-day month fits on 1 sheet`);
+        const ws = book.worksheets[0];
+        assert.equal(ws.name, 'Progress 1');
+        assert.equal(ws.getCell(tc.lastDayCol + '15').value, 12.5, 'Maps by Item Code 11000123 to row 15');
+        assert.equal(ws.getCell(tc.totalCol + '15').value.result, 12.5);
+        assert.equal(ws.getCell(tc.lastDayCol + '6').value.result, 6);
+        assert.equal(ws.getCell(tc.totalCol + '6').value.result, 6);
+        assert.equal(ws.getCell('X8').value, null, 'Sample manpower from template is cleared');
+        assert.equal(ws.getCell('X6').value.formula, 'SUM(X8:X10)');
+        assert.equal(ws.getCell('X6').value.result || 0, 0);
+        assert.equal(ws.getCell('A419').value, `${tc.to}: Done ${tc.to}`);
+    }
 });
 
 for (const page of ['dashboard', 'shared']) {
@@ -151,7 +195,7 @@ for (const page of ['dashboard', 'shared']) {
         const sheet = book.worksheets[0];
         assert.equal(sheet.getCell('E15').value, 7.5);
         assert.equal(sheet.getCell('F15').value, null, 'No report stays blank');
-        assert.equal(sheet.getCell('AI15').value, 7.5);
+        assert.equal(sheet.getCell('AI15').value.result, 7.5);
         assert.equal(sheet.getCell('E8').value, 2);
         assert.equal(sheet.getCell('A3').value, 'FEEDER: CORRECT FEEDER | LOCATION: Selected Site');
         if (page === 'dashboard') {

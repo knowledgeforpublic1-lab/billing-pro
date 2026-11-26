@@ -1004,10 +1004,12 @@ window.DailyProgressModule = {
                 const chunk = days.slice(start, start + chunkSize);
                 const totalColIdx = chunk.length === 31 ? 35 : 34; // AI for <=30 days, AJ for 31-day month
                 const totalColLetter = getColLetter(totalColIdx);
+                const lastDayColIdx = 4 + Math.max(0, chunk.length - 1);
+                const lastDayColLetter = getColLetter(lastDayColIdx);
                 let ws;
                 if (sheetIdx === 1 && baseWorksheet) {
                     ws = baseWorksheet;
-                    ws.name = `Progress 1`;
+                    ws.name = 'Progress 1';
                 } else if (baseWorksheet) {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                     ws.model = { ...JSON.parse(JSON.stringify(templateModel)), id: ws.id, name: `Progress ${sheetIdx}`, mergeCells: templateModel.merges };
@@ -1015,299 +1017,201 @@ window.DailyProgressModule = {
                     ws = workbook.addWorksheet(`Progress ${sheetIdx}`);
                 }
 
-                // Unmerge fragmented top metadata & AI5:AI7 so full-width headers and AI6/AI7 render cleanly
-                ['A3:C3', 'D3:E3', 'G3:H3', 'J3:AH3', 'A4:E4', 'G4:AJ4', 'A5:E5', 'AI5:AI7'].forEach(rng => {
-                    try { ws.unMergeCells(rng); } catch (e) {}
-                });
-                ['A3:AJ3', 'A4:AJ4', 'A5:AJ5'].forEach(rng => {
-                    try { ws.mergeCells(rng); } catch (e) {}
-                });
-
-                // Header metadata & clean sheet formatting
-                ws.getCell('A2').value = 'PROJECT NAME: ' + (contractor.project || 'Gadchiroli (T-10)');
-                ws.getCell('A3').value = 'FEEDER: ' + (this.getDailyProgressExportFeederName() || 'Unassigned') + ' | LOCATION: ' + this.dailyProgressLocationName();
-                ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
-                ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
-                ['A2', 'A3', 'A4', 'A5'].forEach((addr, idx) => {
-                    const hc = ws.getCell(addr);
-                    hc.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
-                    hc.alignment = { vertical: 'middle', horizontal: 'left' };
-                    ws.getRow(idx + 2).height = 19;
-                });
-                ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 7 }];
-                ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
-                if (ws.getColumn(1)) ws.getColumn(1).width = 7;
-                if (ws.getColumn(2)) ws.getColumn(2).width = 12;
-                if (ws.getColumn(3)) ws.getColumn(3).width = Math.max(ws.getColumn(3).width || 0, 44);
-                if (ws.getColumn(4)) ws.getColumn(4).width = 8;
-                if (ws.getColumn(totalColIdx + 1)) ws.getColumn(totalColIdx + 1).width = Math.max(ws.getColumn(totalColIdx + 1).width || 0, 14);
-                if (ws.getColumn(totalColIdx + 2)) ws.getColumn(totalColIdx + 2).width = 10;
-
-                const thinBorder = { top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } }, bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } } };
-                const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
-                const grandTotalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
-                const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
-                const whiteFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-                const zebraFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
-                const headerTotalBorder = { top: { style: 'thin', color: { argb: 'FF94A3B8' } }, left: { style: 'thin', color: { argb: 'FF94A3B8' } }, bottom: { style: 'medium', color: { argb: 'FF475569' } }, right: { style: 'thin', color: { argb: 'FF94A3B8' } } };
-                const qtyFmt = (v) => (Math.abs(v - Math.round(v)) < 1e-6 ? '#,##0' : '#,##0.###');
-
-                ws.getRow(6).height = 20;
-                ws.getRow(7).height = 22;
-                ws.getRow(14).height = 24;
-                ws.getCell('C6').value = 'TOTAL MANPOWER';
-                ws.getCell('C6').font = { name: 'Calibri', bold: true, size: 10 };
-                ws.getCell('C6').fill = zebraFill;
-                ws.getCell('D6').value = 'Nos';
-                ws.getCell('D6').alignment = { vertical: 'middle', horizontal: 'center' };
-                ws.getCell('D6').fill = zebraFill;
-                ['A14', 'B14', 'C14', 'D14'].forEach(addr => {
-                    const c = ws.getCell(addr);
-                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
-                    c.fill = headerFill;
-                    c.border = headerTotalBorder;
-                    c.alignment = { vertical: 'middle', horizontal: addr === 'C14' ? 'left' : 'center' };
-                });
-                // Clear any old AI/AJ headers before setting TOTAL on totalColLetter
-                ['AI7', 'AI14', 'AJ7', 'AJ14', 'AJ8'].forEach(addr => {
-                    const c = ws.getCell(addr);
-                    c.value = null;
-                    c.fill = { type: 'pattern', pattern: 'none' };
-                    c.border = undefined;
-                });
-                [totalColLetter + '7', totalColLetter + '14'].forEach(addr => {
-                    const c = ws.getCell(addr);
-                    c.value = 'TOTAL';
-                    c.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                    c.alignment = { vertical: 'middle', horizontal: 'center' };
-                    c.fill = totalFill;
-                    c.border = headerTotalBorder;
-                });
-
-                // Clear all dynamic data cells across day columns (E to AJ) and reset numFmt to General
-                for (let c = 0; c < 31; c++) {
-                    const colLetter = getColLetter(c + 4);
-                    if (ws.getColumn(c + 5) && (c + 4) !== totalColIdx) {
-                        ws.getColumn(c + 5).hidden = c >= chunk.length;
-                    } else if (ws.getColumn(c + 5)) {
-                        ws.getColumn(c + 5).hidden = false;
+                // If 31-day single month, copy day style from AH (col 34) to AI (col 35), move TOTAL to AJ (col 36), and extend top/remark merges to AJ
+                if (chunk.length === 31) {
+                    for (let r = 1; r <= 444; r++) {
+                        try { ws.unMergeCells(`A${r}:AI${r}`); } catch (e) {}
                     }
-                    ws.getCell(colLetter + '6').value = null;
-                    ws.getCell(colLetter + '7').value = null;
-                    ws.getCell(colLetter + '14').value = null;
-                    for (let mpR = 8; mpR <= 13; mpR++) {
-                        const cell = ws.getCell(colLetter + mpR);
-                        cell.value = null;
-                        cell.numFmt = 'General';
+                    ws.getColumn(35).width = ws.getColumn(34).width || 10;
+                    ws.getColumn(36).width = 14;
+                    for (let r = 6; r <= 416; r++) {
+                        const srcDay = ws.getCell(r, 34);
+                        const dstDay = ws.getCell(r, 35);
+                        const srcTot = ws.getCell(r, 35);
+                        const dstTot = ws.getCell(r, 36);
+                        dstTot.style = srcTot.style ? JSON.parse(JSON.stringify(srcTot.style)) : {};
+                        dstTot.value = srcTot.value;
+                        dstDay.style = srcDay.style ? JSON.parse(JSON.stringify(srcDay.style)) : {};
+                        dstDay.value = null;
                     }
-                    seedItems.forEach(it => {
-                        const cell = ws.getCell(colLetter + it.row);
-                        cell.value = null;
-                        cell.numFmt = 'General';
-                    });
+                    for (let r = 1; r <= 5; r++) {
+                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) {}
+                    }
+                    for (let r = 418; r <= 444; r++) {
+                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) {}
+                    }
                 }
 
-                // Fill days and manpower
-                let chunkManpowerGrandTotal = 0;
+                // Dynamic Header Data Mapping (preserving template styles)
+                const projectName = contractor.project || (this.projectMeta && this.projectMeta.projectName) || 'Gadchiroli (T-10)';
+                const feederLabel = this.getDailyProgressExportFeederName() || 'Unassigned';
+                const locLabel = typeof this.dailyProgressLocationName === 'function' ? this.dailyProgressLocationName() : 'Unassigned';
+                ws.getCell('A1').value = 'DAILY PROGRESS REGISTER';
+                ws.getCell('A2').value = 'PROJECT NAME: ' + projectName;
+                ws.getCell('A3').value = 'FEEDER: ' + feederLabel + (locLabel ? ' | LOCATION: ' + locLabel : '');
+                ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
+                ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
+                ws.getCell(totalColLetter + '7').value = 'TOTAL';
+                ws.getCell(totalColLetter + '14').value = 'TOTAL';
+
+                const qtyFmt = (v) => (Math.abs(v - Math.round(v)) < 1e-6 ? '#,##0' : '#,##0.###');
+
+                // Clear sample data across day columns (E to totalColLetter), preserving static item master & formatting
+                for (let c = 0; c < 31; c++) {
+                    const colIdx = c + 5;
+                    const colLetter = getColLetter(c + 4);
+                    if (c + 4 !== totalColIdx && ws.getColumn(colIdx)) {
+                        ws.getColumn(colIdx).hidden = c >= chunk.length;
+                    } else if (ws.getColumn(colIdx)) {
+                        ws.getColumn(colIdx).hidden = false;
+                    }
+                    if (c + 4 !== totalColIdx) {
+                        ws.getCell(colLetter + '6').value = null;
+                        ws.getCell(colLetter + '7').value = null;
+                        ws.getCell(colLetter + '14').value = null;
+                        for (let mpR = 8; mpR <= 13; mpR++) {
+                            ws.getCell(colLetter + mpR).value = null;
+                        }
+                    }
+                    for (let r = 15; r <= 416; r++) {
+                        const cell = ws.getCell(colLetter + r);
+                        cell.value = null;
+                        if (cell.numFmt && /d|m|y/i.test(cell.numFmt)) cell.numFmt = '#,##0';
+                    }
+                }
+                for (let r = 419; r <= 444; r++) {
+                    ws.getCell('A' + r).value = null;
+                }
+
+                // Map template rows by Item Code (preferring matching row when duplicate SAP codes exist)
+                const rowsByCode = new Map();
+                for (let r = 15; r <= 415; r++) {
+                    const code = String(ws.getCell('B' + r).value || '').trim();
+                    if (code) {
+                        if (!rowsByCode.has(code)) rowsByCode.set(code, []);
+                        rowsByCode.get(code).push(r);
+                    }
+                }
+                const resolvedRows = seedItems.map((it) => {
+                    const code = String(it.code || '').trim();
+                    const rowNum = Number(it.row) || 0;
+                    if (rowNum >= 15 && rowNum <= 415) {
+                        const tmplCode = String(ws.getCell('B' + rowNum).value || '').trim();
+                        if (!code || tmplCode === code) return rowNum;
+                    }
+                    const matches = code ? rowsByCode.get(code) : null;
+                    if (matches && matches.length) return matches[0];
+                    return rowNum;
+                });
+
+                // Populate Date-wise Manpower, Machinery, Charges & Quantities
                 const chunkMpTotals = { leader: 0, skilled: 0, unskilled: 0, tractor: 0, augur: 0, room: 0 };
+                let chunkManpowerGrandTotal = 0;
                 const dayMaterialTotals = new Array(chunk.length).fill(0);
                 chunk.forEach((date, i) => {
-                    const colLetter = getColLetter(i + 4); // Col E = 4 (0-based)
-                    if (ws.getColumn(i + 5)) ws.getColumn(i + 5).width = Math.max(ws.getColumn(i + 5).width || 0, 10);
+                    const colLetter = getColLetter(i + 4);
                     const r = reportsByDate.get(date);
                     const m = (r && r.manpower) || {};
 
-                    // Date serial in Row 7 and Row 14
-                    const dtObj = new Date(date + 'T00:00:00Z');
-                    const serial = Math.round((dtObj.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
-                    [colLetter + '7', colLetter + '14'].forEach((addr, idx) => {
+                    // Actual Excel Date value in Row 7 and Row 14
+                    const [yy, mm, dd] = date.split('-').map(Number);
+                    const excelDate = new Date(Date.UTC(yy, mm - 1, dd));
+                    [colLetter + '7', colLetter + '14'].forEach(addr => {
                         const dtCell = ws.getCell(addr);
-                        dtCell.value = serial;
-                        dtCell.numFmt = 'dd-mmm';
-                        dtCell.font = { name: 'Calibri', bold: true, size: 9, color: { argb: 'FF0F172A' } };
-                        dtCell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        dtCell.fill = headerFill;
-                        dtCell.border = idx === 1 ? headerTotalBorder : thinBorder;
+                        dtCell.value = excelDate;
+                        dtCell.numFmt = 'dd/mmm';
                     });
 
-                    // Total manpower in Row 6
+                    // Daily Total Manpower formula in Row 6 (Team Leader + Skilled + Unskilled)
                     const totMp = r ? ((Number(m.leader) || 0) + (Number(m.skilled) || 0) + (Number(m.unskilled) || 0)) : 0;
                     chunkManpowerGrandTotal += totMp;
                     const mpTotCell = ws.getCell(colLetter + '6');
-                    mpTotCell.value = totMp > 0 ? totMp : null;
+                    mpTotCell.value = { formula: `SUM(${colLetter}8:${colLetter}10)`, result: totMp };
                     mpTotCell.numFmt = '#,##0';
-                    mpTotCell.font = { name: 'Calibri', bold: true, size: 10 };
-                    mpTotCell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    mpTotCell.fill = zebraFill;
-                    mpTotCell.border = thinBorder;
 
-                    // Manpower rows 8 to 13
-                    const mpKeys = ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'];
-                    mpKeys.forEach((k, j) => {
+                    // Manpower & Machinery/Charges rows 8..13
+                    ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
                         const val = r ? (Number(m[k]) || 0) : 0;
                         chunkMpTotals[k] += val;
                         const cCell = ws.getCell(colLetter + (8 + j));
                         cCell.value = val > 0 ? val : null;
-                        cCell.numFmt = '#,##0';
-                        cCell.font = { name: 'Calibri', size: 10 };
-                        cCell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        cCell.fill = whiteFill;
-                        cCell.border = thinBorder;
+                        if (val > 0) cCell.numFmt = qtyFmt(val);
                     });
 
-                    // Material quantities: write actual quantity if > 0, otherwise cell is clean null
-                    seedItems.forEach(it => {
+                    // Item-wise quantities
+                    seedItems.forEach((it, idx) => {
+                        const targetRow = resolvedRows[idx];
+                        if (!targetRow) return;
                         const q = r && r.quantities && Number(r.quantities[it.id]);
                         if (q && q > 0) {
                             dayMaterialTotals[i] += q;
-                            const qCell = ws.getCell(colLetter + it.row);
+                            const qCell = ws.getCell(colLetter + targetRow);
                             qCell.value = q;
                             qCell.numFmt = qtyFmt(q);
-                            qCell.font = { name: 'Calibri', size: 10 };
-                            qCell.alignment = { vertical: 'middle', horizontal: 'right' };
                         }
                     });
                 });
 
-                // Manpower Totals in totalColLetter (Rows 6 and 8..13)
+                // Monthly Manpower & Machinery Totals in TOTAL column using SUM formulas
                 const aiMpTot = ws.getCell(totalColLetter + '6');
-                aiMpTot.value = chunkManpowerGrandTotal > 0 ? chunkManpowerGrandTotal : null;
+                aiMpTot.value = { formula: `SUM(E6:${lastDayColLetter}6)`, result: chunkManpowerGrandTotal };
                 aiMpTot.numFmt = '#,##0';
-                aiMpTot.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                aiMpTot.alignment = { vertical: 'middle', horizontal: 'center' };
-                aiMpTot.fill = totalFill;
-                aiMpTot.border = thinBorder;
                 ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].forEach((k, j) => {
-                    ws.getRow(8 + j).height = 18;
-                    const aiMp = ws.getCell(totalColLetter + (8 + j));
-                    aiMp.value = chunkMpTotals[k] > 0 ? chunkMpTotals[k] : null;
-                    aiMp.numFmt = '#,##0';
-                    aiMp.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                    aiMp.alignment = { vertical: 'middle', horizontal: 'center' };
-                    aiMp.fill = totalFill;
-                    aiMp.border = thinBorder;
+                    const rowNum = 8 + j;
+                    const aiMp = ws.getCell(totalColLetter + rowNum);
+                    aiMp.value = { formula: `SUM(E${rowNum}:${lastDayColLetter}${rowNum})`, result: chunkMpTotals[k] };
+                    aiMp.numFmt = qtyFmt(chunkMpTotals[k]);
                 });
 
-                // Row serials, uniform row styling, and Totals in totalColLetter (keep all 401+ rows visible per template format)
+                // Item-wise Monthly Totals in TOTAL column using SUM formulas (preserving all master rows)
                 let grandTotalMaterials = 0;
-                let maxItemRow = 15;
+                let maxItemRow = 415;
                 seedItems.forEach((it, idx) => {
-                    if (Number(it.row) > maxItemRow) maxItemRow = Number(it.row);
+                    const targetRow = resolvedRows[idx];
+                    if (!targetRow) return;
+                    if (targetRow > maxItemRow) maxItemRow = targetRow;
+                    if (it.custom) {
+                        ws.getCell('A' + targetRow).value = idx + 1;
+                        ws.getCell('B' + targetRow).value = it.code || '';
+                        ws.getCell('C' + targetRow).value = it.name || '';
+                        ws.getCell('D' + targetRow).value = it.unit || '';
+                    }
                     const totalConsumedInChunk = chunk.reduce((sum, d) => {
                         const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     grandTotalMaterials += totalConsumedInChunk;
-                    ws.getRow(it.row).hidden = false;
-                    ws.getRow(it.row).height = 19;
-                    const srNo = idx + 1;
-                    const rowFill = (srNo % 2 === 0) ? zebraFill : whiteFill;
-                    ws.getCell('A' + it.row).value = srNo;
-                    if (it.custom) {
-                        ws.getCell('B' + it.row).value = it.code || '';
-                        ws.getCell('C' + it.row).value = it.name || '';
-                        ws.getCell('D' + it.row).value = it.unit || '';
-                    }
-                    ['A', 'B', 'C', 'D'].forEach(col => {
-                        const c = ws.getCell(col + it.row);
-                        c.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
-                        c.fill = rowFill;
-                        c.border = thinBorder;
-                        if (col === 'A' || col === 'B' || col === 'D') c.alignment = { vertical: 'middle', horizontal: 'center' };
-                        if (col === 'C') c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-                    });
-                    for (let c = 0; c < chunk.length; c++) {
-                        const dayCell = ws.getCell(getColLetter(c + 4) + it.row);
-                        dayCell.fill = rowFill;
-                        dayCell.border = thinBorder;
-                        if (!dayCell.font) dayCell.font = { name: 'Calibri', size: 10 };
-                    }
-
-                    const aiCell = ws.getCell(totalColLetter + it.row);
-                    aiCell.value = totalConsumedInChunk > 0 ? totalConsumedInChunk : null;
-                    aiCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                    if (totalConsumedInChunk > 0) aiCell.numFmt = qtyFmt(totalConsumedInChunk);
-                    aiCell.alignment = { vertical: 'middle', horizontal: 'right' };
-                    aiCell.fill = totalFill;
-                    aiCell.border = thinBorder;
+                    const aiCell = ws.getCell(totalColLetter + targetRow);
+                    aiCell.value = { formula: `SUM(E${targetRow}:${lastDayColLetter}${targetRow})`, result: totalConsumedInChunk };
+                    aiCell.numFmt = qtyFmt(totalConsumedInChunk);
                 });
 
-                // Bottom Grand Total Row across all exported materials
-                const grandRowNum = maxItemRow + 1;
-                ws.getRow(grandRowNum).height = 22;
-                const grandLabel = ws.getCell('C' + grandRowNum);
-                grandLabel.value = 'GRAND TOTAL (ALL MATERIALS)';
-                grandLabel.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
-                grandLabel.alignment = { vertical: 'middle', horizontal: 'left' };
-                grandLabel.fill = grandTotalFill;
-                grandLabel.border = headerTotalBorder;
-                ['A', 'B', 'D'].forEach(col => {
-                    const c = ws.getCell(col + grandRowNum);
-                    c.fill = grandTotalFill;
-                    c.border = headerTotalBorder;
-                });
+                // Grand Total Row (Row 416 in template) with dynamic SUM formulas
+                const grandRowNum = 416;
+                ws.getCell('C' + grandRowNum).value = 'GRAND TOTAL (ALL MATERIALS)';
                 dayMaterialTotals.forEach((daySum, i) => {
                     const colLetter = getColLetter(i + 4);
                     const rounded = Math.round(daySum * 1000) / 1000;
                     const cell = ws.getCell(colLetter + grandRowNum);
-                    cell.value = rounded > 0 ? rounded : null;
-                    cell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A8A' } };
+                    cell.value = { formula: `SUM(${colLetter}15:${colLetter}${maxItemRow})`, result: rounded };
                     cell.numFmt = qtyFmt(rounded);
-                    cell.alignment = { vertical: 'middle', horizontal: 'right' };
-                    cell.fill = grandTotalFill;
-                    cell.border = headerTotalBorder;
                 });
                 const grandRounded = Math.round(grandTotalMaterials * 1000) / 1000;
                 const grandAiCell = ws.getCell(totalColLetter + grandRowNum);
-                grandAiCell.value = grandRounded > 0 ? grandRounded : null;
-                grandAiCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: 'FF1E3A8A' } };
+                grandAiCell.value = { formula: `SUM(E${grandRowNum}:${lastDayColLetter}${grandRowNum})`, result: grandRounded };
                 grandAiCell.numFmt = qtyFmt(grandRounded);
-                grandAiCell.alignment = { vertical: 'middle', horizontal: 'right' };
-                grandAiCell.fill = grandTotalFill;
-                grandAiCell.border = headerTotalBorder;
 
-                // Remark Date wise section below Grand Total
+                // Remark Date wise section (Rows 419..444 in template)
+                ws.getCell('A418').value = 'Remark Date wise';
                 const remarkRows = chunk
                     .map(d => {
                         const rep = reportsByDate.get(d);
-                        return rep && rep.remarks && String(rep.remarks).trim() ? { date: d, remarks: String(rep.remarks).trim() } : null;
+                        return rep && rep.remarks && String(rep.remarks).trim() ? `${d}: ${String(rep.remarks).trim()}` : '';
                     })
                     .filter(Boolean);
-                const remHdrRow = grandRowNum + 2;
-                ws.getRow(remHdrRow).height = 22;
-                const remTitle = ws.getCell('A' + remHdrRow);
-                remTitle.value = 'Remark Date wise';
-                remTitle.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF0F172A' } };
-                remTitle.fill = headerFill;
-                remTitle.border = headerTotalBorder;
-                remTitle.alignment = { vertical: 'middle', horizontal: 'left' };
-                ['B', 'C'].forEach(col => {
-                    const c = ws.getCell(col + remHdrRow);
-                    c.fill = headerFill;
-                    c.border = headerTotalBorder;
+                remarkRows.slice(0, 26).forEach((text, idx) => {
+                    ws.getCell('A' + (419 + idx)).value = text;
                 });
-                if (remarkRows.length) {
-                    remarkRows.forEach((item, idx) => {
-                        const rr = remHdrRow + 1 + idx;
-                        ws.getRow(rr).height = 20;
-                        const dCell = ws.getCell('B' + rr);
-                        dCell.value = item.date;
-                        dCell.font = { name: 'Calibri', bold: true, size: 10 };
-                        dCell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        dCell.border = thinBorder;
-                        const tCell = ws.getCell('C' + rr);
-                        tCell.value = item.remarks;
-                        tCell.font = { name: 'Calibri', size: 10 };
-                        tCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-                        tCell.border = thinBorder;
-                    });
-                } else {
-                    const rr = remHdrRow + 1;
-                    ws.getRow(rr).height = 19;
-                    const tCell = ws.getCell('C' + rr);
-                    tCell.value = '—';
-                    tCell.font = { name: 'Calibri', size: 10, color: { argb: 'FF64748B' } };
-                }
             }
 
             if (typeof this.updateTaskProgress === 'function') this.updateTaskProgress(90, 'Building Excel file...');
@@ -1315,9 +1219,14 @@ window.DailyProgressModule = {
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const safeCont = (contractor.name || 'Contractor').replace(/[^a-z0-9 -]/gi, '_');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const fromParts = String(from || '').split('-');
+            const monthLabel = fromParts[1] ? (monthNames[Number(fromParts[1]) - 1] || fromParts[1]) : 'Period';
+            const yearLabel = fromParts[0] || '';
+            const safeProj = String(contractor.project || (this.projectMeta && this.projectMeta.projectName) || 'Gadchiroli_T-10').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
+            const safeFeeder = String(this.getDailyProgressExportFeederName() || this.dailyProgressLocationName() || 'Feeder').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
             a.href = url;
-            a.download = `${safeCont}_${this.dailyProgressLocationName().replace(/[^a-z0-9]/gi, '_')}_Daily_Progress_${from}_to_${to}.xlsx`;
+            a.download = `Daily_Progress_${safeProj}_${safeFeeder}_${monthLabel}_${yearLabel}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

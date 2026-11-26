@@ -288,7 +288,13 @@ app.post('/api/storage/business', requireApiKey, auth.requireAdmin, writeLimiter
         res.json({ success: true });
     } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
 });
-app.get('/api/daily-progress/template', (req, res) => res.sendFile(require('path').join(__dirname, '../public/daily-progress-template.xlsx')));
+app.get('/api/daily-progress/template', (req, res) => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const primary = path.join(__dirname, '../templates/Excel xport formate.xlsx');
+    const fallback = path.join(__dirname, '../public/daily-progress-template.xlsx');
+    res.sendFile(fs.existsSync(primary) ? primary : fallback);
+});
 
 // Optional API key — Vercel/local me API_KEY set ho to POST+GET dono par required.
 // Frontend localStorage 'billing_api_key' se 'x-api-key' header bhejta hai.
