@@ -2482,11 +2482,13 @@
                                                 {{ user.disabled ? '🔴 Disabled' : '🟢 Active' }}
                                             </span>
                                         </td>
-                                        <td data-label="Actions" style="text-align: right; white-space: nowrap;">
-                                            <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="assignDailyProgressWorker(user)">Assign Contractors</button>
-                                            <button type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="resetDailyProgressWorker(user)">Reset Password</button>
-                                            <button v-if="!user.disabled" type="button" class="tbtn secondary" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;" @click="disableDailyProgressWorker(user)">Disable</button>
-                                            <button type="button" class="tbtn danger" style="padding: 2px 8px; font-size: 0.72rem; color: var(--dp-accent-red); border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
+                                        <td data-label="Actions" style="text-align: right;">
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;">
+                                                <button type="button" class="tbtn secondary" style="padding: 2px 7px; font-size: 0.71rem;" @click="assignDailyProgressWorker(user)">Assign</button>
+                                                <button type="button" class="tbtn secondary" style="padding: 2px 7px; font-size: 0.71rem;" @click="resetDailyProgressWorker(user)">Reset Pass</button>
+                                                <button v-if="!user.disabled" type="button" class="tbtn secondary" style="padding: 2px 7px; font-size: 0.71rem;" @click="disableDailyProgressWorker(user)">Disable</button>
+                                                <button type="button" class="tbtn danger" style="padding: 2px 7px; font-size: 0.71rem; color: var(--dp-accent-red); border-color: rgba(239,68,68,0.4);" @click="deleteDailyProgressWorker(user)" title="Permanently delete user">🗑️ Delete</button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr v-if="!dailyProgressWorkers.length">
