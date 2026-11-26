@@ -592,18 +592,18 @@
                                         }
                                     });
                                 }
-                                if (parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length !== (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 18))) {
+                                if (typeof defaultActivities !== 'undefined' && parsed.activities['922'] && (!parsed.activities['922'].materials || parsed.activities['922'].materials.length !== (defaultActivities['922'] && defaultActivities['922'].materials ? defaultActivities['922'].materials.length : 18))) {
                                     parsed.activities['922'] = JSON.parse(JSON.stringify(defaultActivities['922']));
                                 }
                                 return parsed.activities;
                             }
                         }
                     } catch(e) {}
-                    return JSON.parse(JSON.stringify(defaultActivities));
+                    return typeof defaultActivities !== 'undefined' ? JSON.parse(JSON.stringify(defaultActivities)) : {};
                 })(),
-                masterAbstractList: JSON.parse(JSON.stringify(defaultMasterAbstract)),
+                masterAbstractList: typeof defaultMasterAbstract !== 'undefined' ? JSON.parse(JSON.stringify(defaultMasterAbstract)) : [],
                 activityQuantities: {},
-                invoiceData: JSON.parse(JSON.stringify(defaultInvoiceData)),
+                invoiceData: typeof defaultInvoiceData !== 'undefined' ? JSON.parse(JSON.stringify(defaultInvoiceData)) : {},
                 editingInvoiceRow: null, // jis invoice row me user type kar raha hai — sync isko skip karega
                 editingSapKey: null, // mapping me jis SAP input par focus hai — sirf uska datalist render hoga (perf)
                 quickSelectedActivityKey: '',
@@ -2732,7 +2732,7 @@
             if (!localStorage.getItem('patch_907_934a_merge_v3')) {
                 let patched = false;
                 ['907', '934A'].forEach(code => {
-                    const def = defaultActivities[code];
+                    const def = typeof defaultActivities !== 'undefined' ? defaultActivities[code] : null;
                     if (!def) return;
                     if (!this.activities[code]) {
                         this.activities[code] = JSON.parse(JSON.stringify(def));
