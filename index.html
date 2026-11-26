@@ -2644,28 +2644,28 @@
                                 </div>
                             </div>
 
-                            <div class="dp-excel-tools">
-                                <div class="dp-excel-filters">
+                            <div class="dp-excel-tools" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                                <div class="dp-excel-filters" style="display: flex; align-items: center; gap: 5px;">
                                     <input type="search"
                                            v-model="dailyProgressExportSearch"
-                                           placeholder="Search material in sheet..."
-                                           style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.72rem; padding: 4px 8px; width: 170px; outline: none;">
+                                           placeholder="Search material..."
+                                           style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.69rem; padding: 3px 7px; width: 130px; outline: none;">
                                     <select v-model="dailyProgressExportFilter"
-                                            style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.72rem; padding: 4px 6px; outline: none; cursor: pointer;">
-                                        <option value="active">Active Items Only ({{ getDailyProgressExportPreviewItems().length }})</option>
+                                            style="background: var(--bg-surface, #0f172a); border: 1px solid var(--border-subtle, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--text-main, #ffffff); font-size: 0.69rem; padding: 3px 5px; max-width: 142px; outline: none; cursor: pointer;">
+                                        <option value="active">Active Items ({{ getDailyProgressExportPreviewItems().length }})</option>
                                         <option value="issued">Issued Stock Only</option>
-                                        <option value="all">All Sheet Rows ({{ (dailyProgressSeedItems || []).length }})</option>
+                                        <option value="all">All Rows ({{ (dailyProgressSeedItems || []).length }})</option>
                                     </select>
                                 </div>
 
-                                <button type="button" class="btn btn-secondary" @click="openDailyProgressAddRowModal" title="Admin: Sheet me nayi material row add karein" style="font-size: 0.74rem; padding: 5px 10px; font-weight: 700;">➕ Add Row</button>
-                                <button type="button" class="btn" :class="dailyProgressExportEditMode ? 'btn-primary' : 'btn-secondary'" @click="toggleDailyProgressExportEditMode" title="Admin: Sheet me quantity edit karein" style="font-size: 0.74rem; padding: 5px 10px; font-weight: 700;">{{ dailyProgressExportEditMode ? '✅ Done Editing' : '✏️ Edit Qty' }}</button>
-                                <button v-if="dailyProgressExportDirtyDates && dailyProgressExportDirtyDates.length" type="button" class="btn btn-primary" :disabled="dailyProgressBusy" @click="saveDailyProgressExportEdits" style="font-size: 0.74rem; padding: 5px 11px; font-weight: 800; background: #16a34a; border-color: #15803d;">💾 Save Edits ({{ dailyProgressExportDirtyDates.length }})</button>
+                                <button type="button" class="btn btn-secondary" @click="openDailyProgressAddRowModal" title="Admin: Sheet me nayi material row add karein" style="font-size: 0.69rem; padding: 3px 8px; font-weight: 700; white-space: nowrap;">➕ Add Row</button>
+                                <button type="button" class="btn" :class="dailyProgressExportEditMode ? 'btn-primary' : 'btn-secondary'" @click="toggleDailyProgressExportEditMode" title="Admin: Sheet me quantity edit karein" style="font-size: 0.69rem; padding: 3px 8px; font-weight: 700; white-space: nowrap;">{{ dailyProgressExportEditMode ? '✅ Done' : '✏️ Edit Qty' }}</button>
+                                <button v-if="dailyProgressExportDirtyDates && dailyProgressExportDirtyDates.length" type="button" class="btn btn-primary" :disabled="dailyProgressBusy" @click="saveDailyProgressExportEdits" style="font-size: 0.69rem; padding: 3px 9px; font-weight: 800; background: #16a34a; border-color: #15803d; white-space: nowrap;">💾 Save ({{ dailyProgressExportDirtyDates.length }})</button>
                                 <button type="button"
                                         class="btn btn-primary"
                                         :disabled="dailyProgressBusy || !dailyProgressExportFrom || !dailyProgressExportTo || dailyProgressExportFrom > dailyProgressExportTo"
                                         @click="downloadDailyProgressExcel"
-                                        style="font-size: 0.76rem; padding: 5px 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                        style="font-size: 0.7rem; padding: 4px 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                                     <span>{{ dailyProgressBusy ? '⏳ Generating...' : '📥 Download Excel' }}</span>
                                 </button>
                             </div>
