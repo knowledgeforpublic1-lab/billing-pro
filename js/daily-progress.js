@@ -1163,24 +1163,33 @@ window.DailyProgressModule = {
                     aiMp.numFmt = qtyFmt(chunkMpTotals[k]);
                 });
 
-                // Item-wise Monthly Totals in TOTAL column using SUM formulas (preserving all master rows)
+                // Item-wise Monthly Totals in TOTAL column using SUM formulas; show only contractor's issued/active items (or all if filter === 'all')
                 let grandTotalMaterials = 0;
                 let maxItemRow = 415;
+                let visibleSrNo = 0;
+                const exportFilter = this.dailyProgressExportFilter || 'active';
                 seedItems.forEach((it, idx) => {
                     const targetRow = resolvedRows[idx];
                     if (!targetRow) return;
                     if (targetRow > maxItemRow) maxItemRow = targetRow;
-                    ws.getCell('A' + targetRow).value = idx + 1;
-                    if (it.custom) {
-                        ws.getCell('B' + targetRow).value = it.code || '';
-                        ws.getCell('C' + targetRow).value = it.name || '';
-                        ws.getCell('D' + targetRow).value = it.unit || '';
-                    }
                     const totalConsumedInChunk = chunk.reduce((sum, d) => {
                         const rep = reportsByDate.get(d);
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     grandTotalMaterials += totalConsumedInChunk;
+                    const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
+                    const hasIssued = !!(stock && stock.totalIssued > 0);
+                    const isVisible = exportFilter === 'all' ? true : exportFilter === 'issued' ? hasIssued : (hasIssued || totalConsumedInChunk > 0 || !!it.custom);
+                    ws.getRow(targetRow).hidden = !isVisible;
+                    if (isVisible) {
+                        visibleSrNo++;
+                        ws.getCell('A' + targetRow).value = visibleSrNo;
+                    }
+                    if (it.custom) {
+                        ws.getCell('B' + targetRow).value = it.code || '';
+                        ws.getCell('C' + targetRow).value = it.name || '';
+                        ws.getCell('D' + targetRow).value = it.unit || '';
+                    }
                     const aiCell = ws.getCell(totalColLetter + targetRow);
                     aiCell.value = { formula: `SUM(E${targetRow}:${lastDayColLetter}${targetRow})`, result: totalConsumedInChunk };
                     aiCell.numFmt = qtyFmt(totalConsumedInChunk);

@@ -1814,19 +1814,28 @@
                             aiMp.numFmt = qtyFmt(chunkMpTotals[k]);
                         });
 
-                        // Item-wise Totals with SUM formulas
+                        // Item-wise Totals with SUM formulas; show only contractor's issued/active items (or all if filter === 'all')
                         let grandTotalMaterials = 0;
                         let maxItemRow = 415;
+                        let visibleSrNo = 0;
+                        const exportFilter = this.exportFilter || 'active';
                         this.items.forEach((it, idx) => {
                             const targetRow = resolvedRows[idx];
                             if (!targetRow) return;
                             if (targetRow > maxItemRow) maxItemRow = targetRow;
-                            ws.getCell('A' + targetRow).value = idx + 1;
                             const total = chunk.reduce((sum, d) => {
                                 const rep = reportsByDate.get(d);
                                 return sum + (Number(rep?.quantities && rep.quantities[it.id]) || 0);
                             }, 0);
                             grandTotalMaterials += total;
+                            const stock = typeof this.getItemStock === 'function' ? this.getItemStock(it) : null;
+                            const hasIssued = !!(stock && stock.totalIssued > 0);
+                            const isVisible = exportFilter === 'all' ? true : exportFilter === 'issued' ? hasIssued : (hasIssued || total > 0);
+                            ws.getRow(targetRow).hidden = !isVisible;
+                            if (isVisible) {
+                                visibleSrNo++;
+                                ws.getCell('A' + targetRow).value = visibleSrNo;
+                            }
                             const aiCell = ws.getCell(totalColLetter + targetRow);
                             aiCell.value = { formula: `SUM(E${targetRow}:${lastDayColLetter}${targetRow})`, result: total };
                             aiCell.numFmt = qtyFmt(total);
