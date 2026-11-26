@@ -132,18 +132,20 @@
                 try {
                     await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
                     this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r =>
-                        !(r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === row.date)
+                        r !== row.report && !(r.contractorId === cid && this.dailyProgressLocationKey(r.locationId) === locationId && r.date === row.date)
                     );
+                    if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
+                        BillingStorage.setItemAsync('billing_daily_progress', JSON.stringify(this.dailyProgressData)).catch(() => {});
+                    }
                     if (cid === this.dailyProgressContractorId && locationId === this.dailyProgressLocationKey(this.dailyProgressLocationId) && row.date === this.dailyProgressDate) {
                         this.dailyProgressDirty = false;
                         this._dpEditVersion = null;
                         this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                        this.refreshDailyProgressStatus(false).catch(() => {});
                     }
                 } finally {
                     this.dailyProgressBusy = false;
                 }
-                await this.syncDailyProgressCloudData(true);
-                await this.refreshDailyProgressStatus(false);
                 this.showToast(`${row.date} (${row.contractorName}) ka data delete ho gaya.`, 'Check');
             });
         },
