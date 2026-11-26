@@ -2499,12 +2499,6 @@
 
         watch: {
             dailyProgressTab(newTab) {
-                if (newTab === 'history' && !this.dailyProgressHistoryFrom && !this.dailyProgressHistoryTo && !this._dpHistoryInitialized) {
-                    this._dpHistoryInitialized = true;
-                    const d = this.dailyProgressDate || new Date().toISOString().slice(0, 10);
-                    this.dailyProgressHistoryFrom = d;
-                    this.dailyProgressHistoryTo = d;
-                }
                 if (newTab === 'download' && typeof this.setDailyProgressExportRange === 'function') {
                     if (!this.dailyProgressExportFrom || this.dailyProgressExportFrom.startsWith('2026-09')) {
                         this.setDailyProgressExportRange('current_month');
