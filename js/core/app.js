@@ -486,6 +486,7 @@
                 dailyProgressHistoryFrom: '',
                 dailyProgressHistoryTo: '',
                 dailyProgressHistorySearch: '',
+                dailyProgressHistorySelectedKeys: [],
                 dailyProgressContractorId: 'mangesh-sonwane',
                 dailyProgressData: null,
                 dailyProgressQuantities: {},

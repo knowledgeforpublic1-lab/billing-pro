@@ -149,6 +149,80 @@
                 this.showToast(`${row.date} (${row.contractorName}) ka data delete ho gaya.`, 'Check');
             });
         },
+        isDailyProgressHistorySelected(key) {
+            return Array.isArray(this.dailyProgressHistorySelectedKeys) && this.dailyProgressHistorySelectedKeys.includes(key);
+        },
+        toggleDailyProgressHistoryRow(key) {
+            if (!key) return;
+            const list = Array.isArray(this.dailyProgressHistorySelectedKeys) ? [...this.dailyProgressHistorySelectedKeys] : [];
+            const idx = list.indexOf(key);
+            if (idx >= 0) list.splice(idx, 1);
+            else list.push(key);
+            this.dailyProgressHistorySelectedKeys = list;
+        },
+        toggleAllDailyProgressHistoryRows() {
+            const visibleKeys = (this.dailyProgressHistoryRows || []).map(r => r.key).filter(Boolean);
+            const current = new Set(this.dailyProgressHistorySelectedKeys || []);
+            const allSelected = visibleKeys.length > 0 && visibleKeys.every(k => current.has(k));
+            this.dailyProgressHistorySelectedKeys = allSelected ? [] : visibleKeys;
+        },
+        deleteSelectedDailyProgressHistoryRows() {
+            const selectedSet = new Set(this.dailyProgressHistorySelectedKeys || []);
+            const targets = (this.dailyProgressHistoryRows || []).filter(r => selectedSet.has(r.key));
+            if (!targets.length) {
+                this.showToast('Pehle delete karne ke liye entries select karein.', 'Alert');
+                return;
+            }
+            return this.runDailyProgressAdmin(async () => {
+                if (this.dailyProgressBusy || this._dpPendingSave) throw new Error('Pending save pehle complete karein.');
+                if (!confirm(`Selected ${targets.length} entries ko permanently delete karein?`)) return;
+                this.invalidateDailyProgressReads();
+                this.dailyProgressBusy = true;
+                const deletedKeys = new Set();
+                const deletedReports = new Set();
+                const deletedSignatures = new Set();
+                let currentEntryAffected = false;
+                const activeCid = this.dailyProgressContractorId;
+                const activeLoc = this.dailyProgressLocationKey(this.dailyProgressLocationId);
+                const activeDate = this.dailyProgressDate;
+                try {
+                    for (let i = 0; i < targets.length; i += 5) {
+                        const batch = targets.slice(i, i + 5);
+                        await Promise.all(batch.map(async (row) => {
+                            const cid = row.contractorId;
+                            const locationId = this.dailyProgressLocationKey(row.locationId);
+                            await this.dailyProgressRequest('manage-reports', { contractorId: cid, locationId, date: row.date, action: 'delete', allDates: false });
+                            deletedKeys.add(row.key);
+                            if (row.report) deletedReports.add(row.report);
+                            deletedSignatures.add(cid + '|' + locationId + '|' + row.date);
+                            if (cid === activeCid && locationId === activeLoc && row.date === activeDate) {
+                                currentEntryAffected = true;
+                            }
+                        }));
+                    }
+                } finally {
+                    if (deletedKeys.size) {
+                        this.dailyProgressData.reports = (this.dailyProgressData.reports || []).filter(r => {
+                            if (deletedReports.has(r)) return false;
+                            const sig = (r.contractorId || '') + '|' + this.dailyProgressLocationKey(r.locationId) + '|' + (r.date || '');
+                            return !deletedSignatures.has(sig);
+                        });
+                        this.dailyProgressHistorySelectedKeys = (this.dailyProgressHistorySelectedKeys || []).filter(k => !deletedKeys.has(k));
+                        if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItemAsync === 'function') {
+                            BillingStorage.setItemAsync('billing_daily_progress', JSON.stringify(this.dailyProgressData)).catch(() => {});
+                        }
+                        if (currentEntryAffected) {
+                            this.dailyProgressDirty = false;
+                            this._dpEditVersion = null;
+                            this.loadDailyProgressReportForDate(this.dailyProgressDate);
+                            this.refreshDailyProgressStatus(false).catch(() => {});
+                        }
+                    }
+                    this.dailyProgressBusy = false;
+                }
+                this.showToast(`${deletedKeys.size} entries delete ho gayi.`, 'Check');
+            });
+        },
         startDailyProgressLocationEntry() {
             return this.runDailyProgressAdmin(async () => {
                 if (!this.dailyProgressLocationId) throw new Error('Pehle location select karein.');

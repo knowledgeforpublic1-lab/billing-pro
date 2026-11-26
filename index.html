@@ -516,6 +516,9 @@
                                 <span>📥</span><span>Export</span>
                             </button>
                         </div>
+                        <button v-if="dailyProgressTab === 'history'" type="button" class="tbtn danger" :disabled="dailyProgressBusy || !dailyProgressHistorySelectedKeys.length" @click="deleteSelectedDailyProgressHistoryRows" title="Selected entries delete karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
+                            <span>🗑</span><span>Delete{{ dailyProgressHistorySelectedKeys.length ? (' (' + dailyProgressHistorySelectedKeys.length + ')') : '' }}</span>
+                        </button>
 
                         <!-- Single Share Button -->
                         <button type="button" class="btn btn-primary" @click="copyDailyProgressShareLink" title="Contractor ko bhejne ke liye share link copy karein" style="font-size: 0.74rem; font-weight: 700; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px;">
@@ -2579,7 +2582,12 @@
                                         <th>Save Time (IST)</th>
                                         <th>Items / Manpower</th>
                                         <th>Site Notes</th>
-                                        <th style="text-align: right;">Action</th>
+                                        <th style="text-align: right;">
+                                            <div style="display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                                                <span>Action</span>
+                                                <input type="checkbox" :checked="dailyProgressHistoryRows.length > 0 && dailyProgressHistoryRows.every(r => isDailyProgressHistorySelected(r.key))" @change="toggleAllDailyProgressHistoryRows" title="Select / Deselect All" style="width: 15px; height: 15px; cursor: pointer;">
+                                            </div>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2595,9 +2603,9 @@
                                         <td data-label="Items / Manpower" style="white-space: nowrap;">{{ row.itemCount }} items • {{ row.manpowerTotal }} people</td>
                                         <td data-label="Site notes" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ row.remarks || '—' }}</td>
                                         <td data-label="Actions" style="text-align: right; white-space: nowrap;">
-                                            <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                            <div style="display: inline-flex; align-items: center; gap: 10px;">
                                                 <button type="button" class="tbtn primary" style="padding: 4px 10px; font-size: 0.72rem;" @click="openDailyProgressReportFromHistory(row.report)">Open ➔</button>
-                                                <button type="button" class="tbtn danger" style="padding: 4px 8px; font-size: 0.72rem;" :disabled="dailyProgressBusy" @click="deleteDailyProgressHistoryRow(row)" title="Is date ka data delete karein">🗑 Delete</button>
+                                                <input type="checkbox" :checked="isDailyProgressHistorySelected(row.key)" @change="toggleDailyProgressHistoryRow(row.key)" title="Delete ke liye select karein" style="width: 16px; height: 16px; cursor: pointer;">
                                             </div>
                                         </td>
                                     </tr>
