@@ -7,6 +7,16 @@
  * @since v2.0
  */
 
+const _dpExportMemo = new WeakMap();
+function _getDpMemo(ctx) {
+    let entry = _dpExportMemo.get(ctx);
+    if (!entry) {
+        entry = { days: null, reportMap: null, totals: null, preview: null };
+        _dpExportMemo.set(ctx, entry);
+    }
+    return entry;
+}
+
 window.DailyProgressModule = {
     dailyProgressLocationKey(value) { return value === 'legacy' ? '' : String(value || ''); },
     dailyProgressReportKey(row) { return row.contractorId + '|' + row.date + '|' + this.dailyProgressLocationKey(row.locationId); },
@@ -1276,7 +1286,8 @@ window.DailyProgressModule = {
         const from = this.dailyProgressExportFrom;
         const to = this.dailyProgressExportTo;
         if (!from || !to || from > to) return [];
-        const cache = this._dpExportDaysCache;
+        const memo = _getDpMemo(this);
+        const cache = memo.days;
         if (cache && cache.from === from && cache.to === to) return cache.days;
         const days = [];
         const dStart = new Date(from + 'T00:00:00Z');
@@ -1285,7 +1296,7 @@ window.DailyProgressModule = {
             days.push(d.toISOString().slice(0, 10));
         }
         const sliced = days.slice(0, 62); // cap preview to 62 days for high performance
-        this._dpExportDaysCache = { from, to, days: sliced };
+        memo.days = { from, to, days: sliced };
         return sliced;
     },
 
@@ -1294,7 +1305,8 @@ window.DailyProgressModule = {
         const locKey = this.dailyProgressLocationKey(this.dailyProgressLocationId);
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         const now = Date.now();
-        const cache = this._dpReportMapCache;
+        const memo = _getDpMemo(this);
+        const cache = memo.reportMap;
         if (cache && cache.cid === cid && cache.locKey === locKey && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
             return cache.map;
         }
@@ -1318,7 +1330,7 @@ window.DailyProgressModule = {
                 }
             }
         }
-        this._dpReportMapCache = { cid, locKey, reports, len: reports.length, ts: now, map };
+        memo.reportMap = { cid, locKey, reports, len: reports.length, ts: now, map };
         return map;
     },
 
@@ -1350,7 +1362,8 @@ window.DailyProgressModule = {
         const to = this.dailyProgressExportTo || '';
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         const now = Date.now();
-        const cache = this._dpExportTotalsCache;
+        const memo = _getDpMemo(this);
+        const cache = memo.totals;
         if (cache && cache.cid === cid && cache.locKey === locKey && cache.from === from && cache.to === to && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
             return cache.totals;
         }
@@ -1369,7 +1382,7 @@ window.DailyProgressModule = {
                 }
             }
         }
-        this._dpExportTotalsCache = { cid, locKey, from, to, reports, len: reports.length, ts: now, totals };
+        memo.totals = { cid, locKey, from, to, reports, len: reports.length, ts: now, totals };
         return totals;
     },
 
@@ -1396,7 +1409,8 @@ window.DailyProgressModule = {
         const to = this.dailyProgressExportTo || '';
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         const now = Date.now();
-        const cache = this._dpExportPreviewCache;
+        const memo = _getDpMemo(this);
+        const cache = memo.preview;
         if (cache && cache.cid === cid && cache.locKey === locKey && cache.from === from && cache.to === to && cache.filter === filter && cache.q === q && cache.items === items && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
             return cache.result;
         }
@@ -1416,8 +1430,29 @@ window.DailyProgressModule = {
             // default 'active': either has stock issued or has consumption in this date range
             return (stock && stock.totalIssued > 0) || totalRangeConsumed > 0;
         });
-        this._dpExportPreviewCache = { cid, locKey, from, to, filter, q, items, reports, len: reports.length, ts: now, result };
+        memo.preview = { cid, locKey, from, to, filter, q, items, reports, len: reports.length, ts: now, result };
         return result;
+    },
+
+    setDailyProgressHistoryPreset(preset) {
+        const today = new Date().toISOString().slice(0, 10);
+        if (preset === 'today') {
+            const d = this.dailyProgressDate || today;
+            this.dailyProgressHistoryFrom = d;
+            this.dailyProgressHistoryTo = d;
+        } else if (preset === 'last7') {
+            const t = new Date();
+            const f = new Date(t);
+            f.setDate(t.getDate() - 6);
+            this.dailyProgressHistoryFrom = f.toISOString().slice(0, 10);
+            this.dailyProgressHistoryTo = t.toISOString().slice(0, 10);
+        } else if (preset === 'month') {
+            this.dailyProgressHistoryFrom = today.slice(0, 8) + '01';
+            this.dailyProgressHistoryTo = today;
+        } else {
+            this.dailyProgressHistoryFrom = '';
+            this.dailyProgressHistoryTo = '';
+        }
     },
 
     openDailyProgressExportTab() {

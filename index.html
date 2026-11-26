@@ -2561,10 +2561,10 @@
                                 <input type="date" v-model="dailyProgressHistoryFrom" title="From Date" style="padding: 4px 7px; font-size: 0.76rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text-main);">
                                 <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">To</label>
                                 <input type="date" v-model="dailyProgressHistoryTo" title="To Date" style="padding: 4px 7px; font-size: 0.76rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text-main);">
-                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="dailyProgressHistoryFrom = dailyProgressDate || new Date().toISOString().slice(0, 10); dailyProgressHistoryTo = dailyProgressHistoryFrom">Today</button>
-                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="(() => { const t = new Date(); const f = new Date(t); f.setDate(t.getDate() - 6); dailyProgressHistoryFrom = f.toISOString().slice(0, 10); dailyProgressHistoryTo = t.toISOString().slice(0, 10); })()">Last 7 Days</button>
-                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="(() => { const t = new Date(); dailyProgressHistoryFrom = t.toISOString().slice(0, 8) + '01'; dailyProgressHistoryTo = t.toISOString().slice(0, 10); })()">This Month</button>
-                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="dailyProgressHistoryFrom = ''; dailyProgressHistoryTo = ''">All Dates</button>
+                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="setDailyProgressHistoryPreset('today')">Today</button>
+                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="setDailyProgressHistoryPreset('last7')">Last 7 Days</button>
+                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="setDailyProgressHistoryPreset('month')">This Month</button>
+                                <button type="button" class="tbtn" style="padding: 4px 8px; font-size: 0.72rem;" @click="setDailyProgressHistoryPreset('all')">All Dates</button>
                                 <input type="text" v-model="dailyProgressHistorySearch" placeholder="Search user, feeder, contractor..." style="padding: 4px 9px; font-size: 0.76rem; min-width: 190px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text-main);">
                             </div>
                         </div>
