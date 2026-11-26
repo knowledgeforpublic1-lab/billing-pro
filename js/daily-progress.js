@@ -1395,12 +1395,33 @@ window.DailyProgressModule = {
 
     openDailyProgressReportFromHistory(rep) {
         if (!rep) return;
-        if (rep.contractorId) this.dailyProgressContractorId = rep.contractorId;
-        const targetLoc = (rep.locationId && rep.locationId !== 'legacy') ? rep.locationId : '';
+        if (rep.contractorId) {
+            const norm = typeof this.normContractorId === 'function' ? this.normContractorId(rep.contractorId) : String(rep.contractorId).toLowerCase();
+            const matched = (this.dailyProgressContractors || []).find(c => c && (c.id === rep.contractorId || (typeof this.normContractorId === 'function' ? this.normContractorId(c.id) === norm || this.normContractorId(c.name) === norm : false)));
+            this.dailyProgressContractorId = matched ? matched.id : rep.contractorId;
+            this.dailyProgressContractorSearch = '';
+        }
+        const targetLoc = (rep.locationId && rep.locationId !== 'legacy') ? rep.locationId : 'legacy';
         this.dailyProgressLocationId = targetLoc;
-        this.dailyProgressDate = rep.date;
-        this.loadDailyProgressReportForDate(rep.date);
-        this.dailyProgressTab = 'entry';
+        if (typeof this.syncDailyProgressFiltersFromLocation === 'function') {
+            this.syncDailyProgressFiltersFromLocation(targetLoc);
+        }
+        if (rep.date) {
+            this.dailyProgressDate = rep.date;
+            const normD = typeof this.normalizeDailyProgressDate === 'function' ? (this.normalizeDailyProgressDate(rep.date) || rep.date) : rep.date;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(normD)) {
+                const y = Number(normD.slice(0, 4));
+                const m = Number(normD.slice(5, 7));
+                const lastDay = new Date(y, m, 0).getDate();
+                this.dailyProgressExportFrom = normD.slice(0, 7) + '-01';
+                this.dailyProgressExportTo = normD.slice(0, 7) + '-' + String(lastDay).padStart(2, '0');
+            }
+        }
+        this.loadDailyProgressReportForDate(this.dailyProgressDate);
+        if (typeof this.refreshDailyProgressStatus === 'function') {
+            Promise.resolve(this.refreshDailyProgressStatus(false)).catch(() => {});
+        }
+        this.dailyProgressTab = 'download';
     },
 
     getDailyProgressExportQty(itemId, date) {
