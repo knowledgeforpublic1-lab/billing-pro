@@ -1517,17 +1517,17 @@ window.DailyProgressModule = {
     },
 
     setDailyProgressHistoryPreset(preset) {
-        const today = new Date().toISOString().slice(0, 10);
+        const localYmd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const now = new Date();
+        const today = this.todayDateStr || localYmd(now);
         if (preset === 'today') {
-            const d = this.dailyProgressDate || today;
-            this.dailyProgressHistoryFrom = d;
-            this.dailyProgressHistoryTo = d;
+            this.dailyProgressHistoryFrom = today;
+            this.dailyProgressHistoryTo = today;
         } else if (preset === 'last7') {
-            const t = new Date();
-            const f = new Date(t);
-            f.setDate(t.getDate() - 6);
-            this.dailyProgressHistoryFrom = f.toISOString().slice(0, 10);
-            this.dailyProgressHistoryTo = t.toISOString().slice(0, 10);
+            const f = new Date(now);
+            f.setDate(now.getDate() - 6);
+            this.dailyProgressHistoryFrom = localYmd(f);
+            this.dailyProgressHistoryTo = today;
         } else if (preset === 'month') {
             this.dailyProgressHistoryFrom = today.slice(0, 8) + '01';
             this.dailyProgressHistoryTo = today;
