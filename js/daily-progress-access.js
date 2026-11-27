@@ -69,8 +69,8 @@
             if (!forceFresh && this._dpContractorStockCache[cid]) {
                 return this._dpContractorStockCache[cid];
             }
-            // If full stock dataset is already loaded in memory and not forcing fresh, reuse it immediately
-            const fullLoaded = typeof window !== 'undefined' && (window.__heavyDataLoaded || this.hasCustomStock) &&
+            // Only reuse in-memory stock if the authoritative uploaded stockMaster is already loaded
+            const fullLoaded = typeof window !== 'undefined' && this.hasCustomStock &&
                 window.ContractorSapStock && window.ContractorSapStock.byContractorNorm;
             if (!forceFresh && fullLoaded) {
                 this._dpContractorStockCache[cid] = { cachedFromFull: true };
@@ -80,15 +80,17 @@
             const result = await this.dailyProgressRequest('stock/' + encodeURIComponent(cid), undefined, signal);
             if (signal?.aborted || cid !== this.dailyProgressContractorId) return null;
             if (typeof window !== 'undefined') {
-                if (!window.ContractorSapStock || typeof window.ContractorSapStock !== 'object') {
-                    window.ContractorSapStock = { byContractorNorm: {}, meta: result.meta || null };
-                }
-                if (!window.ContractorSapStock.byContractorNorm || typeof window.ContractorSapStock.byContractorNorm !== 'object') {
-                    window.ContractorSapStock.byContractorNorm = {};
-                }
-                Object.assign(window.ContractorSapStock.byContractorNorm, result.byContractorNorm || {});
-                if (result.meta && !window.ContractorSapStock.meta) {
-                    window.ContractorSapStock.meta = result.meta;
+                const prev = (window.ContractorSapStock && typeof window.ContractorSapStock === 'object') ? window.ContractorSapStock : {};
+                window.ContractorSapStock = {
+                    ...prev,
+                    byContractorNorm: {
+                        ...(prev.byContractorNorm || {}),
+                        ...(result.byContractorNorm || {})
+                    },
+                    meta: result.meta || prev.meta || null
+                };
+                if (result.meta && result.meta.uploadedAt) {
+                    this.hasCustomStock = true;
                 }
             }
             this._dpContractorStockCache[cid] = result;

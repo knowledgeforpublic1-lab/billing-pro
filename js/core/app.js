@@ -1325,7 +1325,38 @@
             dailyProgressSeedItems() {
                 const base = (window.DailyProgressSeed && window.DailyProgressSeed.items) || [];
                 const custom = (this.dailyProgressData && Array.isArray(this.dailyProgressData.customItems)) ? this.dailyProgressData.customItems : [];
-                return custom.length ? [...base, ...custom] : base;
+                const combined = custom.length ? [...base, ...custom] : [...base];
+                // Also include any issued SAP material codes for the active contractor that aren't in the static seed
+                const cid = this.dailyProgressContractorId;
+                const sapRoot = (typeof window !== 'undefined' && (window.ContractorSapStock || window.__customSapStock || window.DefaultContractorSapStock)) || null;
+                if (cid && sapRoot && sapRoot.byContractorNorm) {
+                    const _rev = this.recoRevision;
+                    const team = this.dailyProgressActiveContractor;
+                    const normFn = s => String(s || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '');
+                    const candidateKeys = new Set([normFn(cid), normFn(team && team.name)].filter(Boolean));
+                    const knownCodes = new Set(combined.map(it => String(it.code || '').trim()).filter(Boolean));
+                    let nextRow = combined.reduce((m, it) => Math.max(m, Number(it.row) || 0), 415);
+                    for (const [k, block] of Object.entries(sapRoot.byContractorNorm)) {
+                        if (!block || !block.materials) continue;
+                        if (!candidateKeys.has(normFn(k)) && !candidateKeys.has(normFn(block.contractorName))) continue;
+                        for (const [code, mat] of Object.entries(block.materials)) {
+                            const cleanCode = String(code || (mat && mat.code) || '').trim();
+                            if (!cleanCode || knownCodes.has(cleanCode)) continue;
+                            if (Number((mat && (mat.netIssue !== undefined ? mat.netIssue : mat.issuedQty)) || 0) <= 0) continue;
+                            knownCodes.add(cleanCode);
+                            nextRow++;
+                            combined.push({
+                                id: 'sap_' + cleanCode,
+                                row: nextRow,
+                                code: cleanCode,
+                                name: (mat && mat.desc) || ('SAP ' + cleanCode),
+                                unit: (mat && mat.uom) || 'NO',
+                                custom: true
+                            });
+                        }
+                    }
+                }
+                return combined;
             },
             dailyProgressActiveContractor() {
                 const list = this.dailyProgressContractors || [];

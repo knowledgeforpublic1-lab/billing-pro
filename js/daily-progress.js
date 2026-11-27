@@ -761,51 +761,25 @@ window.DailyProgressModule = {
         const memo = this._dpStockMemo;
         const epoch = this._dpDataEpoch || 0;
         const ver = this.dailyProgressVersion || 0;
+        const hasCustom = !!this.hasCustomStock;
+        const recoRev = this.recoRevision || 0;
         if (!memo || memo.cid !== cid || memo.curDate !== curDate || memo.sapRoot !== sapRoot ||
+            memo.hasCustom !== hasCustom || memo.recoRev !== recoRev ||
             memo.issues !== issues || memo.issuesLen !== issues.length ||
             memo.reports !== reports || memo.reportsLen !== reports.length ||
             memo.epoch !== epoch || memo.ver !== ver) {
-            const contractorList = Array.isArray(this.dailyProgressContractors) && this.dailyProgressContractors.length
-                ? this.dailyProgressContractors
-                : ((this.dailyProgressData && this.dailyProgressData.contractors) || []);
-            const team = contractorList.find(c => c.id === cid) || null;
-            let contractorSap = (typeof this.getContractorSapIssues === 'function')
+            const contractorSap = (typeof this.getContractorSapIssues === 'function')
                 ? this.getContractorSapIssues.call(new Proxy(this, {
                     get(target, key) {
-                        if (String(key).startsWith('_memoContractorSap')) return undefined;
                         if (key === 'stockAsOnDate') return curDate;
                         if (key === 'selectedContractorId') return cid;
-                        if (key === 'selectedContractorName') return (team && team.name) || '';
-                        if (key === 'invoiceData' || key === 'projectMeta') {
-                            return { ...(target[key] || {}), workOrderNo: (team && team.workOrderNo) || '', contractorName: (team && team.name) || '' };
-                        }
+                        const team = (target.dailyProgressData?.contractors || []).find(c => c.id === cid);
+                        if (key === 'selectedContractorName') return team?.name || '';
+                        if (key === 'invoiceData' || key === 'projectMeta') return { ...(target[key] || {}), workOrderNo: '', contractorName: team?.name || '' };
                         return Reflect.get(target, key);
                     },
                     set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
                 })) : null;
-            // If BillingStockIdentity returned 'ambiguous' (e.g. multiple work orders or duplicate firm spellings),
-            // merge all matched blocks so every issued material for this contractor is visible in Daily Progress.
-            if (!contractorSap && sapRoot && sapRoot.byContractorNorm && typeof window !== 'undefined' && window.BillingStockIdentity) {
-                const res = window.BillingStockIdentity.resolve(sapRoot, {
-                    id: cid,
-                    name: (team && team.name) || cid,
-                    workOrderNo: (team && team.workOrderNo) || ''
-                }, this.contractorsList || []);
-                if (res && Array.isArray(res.matches) && res.matches.length > 0) {
-                    const mergedMaterials = {};
-                    for (const match of res.matches) {
-                        const mats = (match && match.block && match.block.materials) || {};
-                        for (const [mCode, mat] of Object.entries(mats)) {
-                            if (!mergedMaterials[mCode]) {
-                                mergedMaterials[mCode] = mat;
-                            } else if (Array.isArray(mat.txns) && mat.txns.length > (mergedMaterials[mCode].txns || []).length) {
-                                mergedMaterials[mCode] = mat;
-                            }
-                        }
-                    }
-                    contractorSap = { ...res.matches[0].block, materials: mergedMaterials };
-                }
-            }
             const manualIssuedMap = new Map();
             for (let i = 0; i < issues.length; i++) {
                 const iss = issues[i];
@@ -829,6 +803,7 @@ window.DailyProgressModule = {
             }
             this._dpStockMemo = {
                 cid, curDate, sapRoot, contractorSap,
+                hasCustom, recoRev,
                 issues, issuesLen: issues.length,
                 reports, reportsLen: reports.length,
                 epoch, ver,
@@ -981,7 +956,8 @@ window.DailyProgressModule = {
         const id = this.dailyProgressLocationId;
         const location = (this.dailyProgressLocations || []).find(row => row.id === id) ||
             (window.DefaultFeeders && window.DefaultFeeders.get(id));
-        const contractor = (this.dailyProgressData?.contractors || []).find(row => row.id === this.dailyProgressContractorId);
+        const contractor = this.dailyProgressActiveContractor ||
+            (this.dailyProgressData?.contractors || []).find(row => row.id === this.dailyProgressContractorId);
         return (location && (location.feeder || location.feederName || location.name)) ||
             (contractor && (contractor.feeder || contractor.feederName)) || '';
     },
@@ -1077,7 +1053,7 @@ window.DailyProgressModule = {
                 // If 31-day single month, copy day style from AH (col 34) to AI (col 35), move TOTAL to AJ (col 36), and extend top/remark merges to AJ
                 if (chunk.length === 31) {
                     for (let r = 1; r <= 444; r++) {
-                        try { ws.unMergeCells(`A${r}:AI${r}`); } catch (e) {}
+                        try { ws.unMergeCells(`A${r}:AI${r}`); } catch (e) { }
                     }
                     ws.getColumn(35).width = ws.getColumn(34).width || 10;
                     ws.getColumn(36).width = 14;
@@ -1092,10 +1068,10 @@ window.DailyProgressModule = {
                         dstDay.value = null;
                     }
                     for (let r = 1; r <= 5; r++) {
-                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) {}
+                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) { }
                     }
                     for (let r = 418; r <= 444; r++) {
-                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) {}
+                        try { ws.mergeCells(`A${r}:AJ${r}`); } catch (e) { }
                     }
                 }
 
@@ -1257,7 +1233,7 @@ window.DailyProgressModule = {
                 if (exportFilter !== 'all') {
                     // Unmerge remarks rows before splicing so merges don't point to stale row indices
                     for (let r = 418; r <= 444; r++) {
-                        try { ws.unMergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) {}
+                        try { ws.unMergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) { }
                     }
                     const keptTotals = [];
                     for (let r = 15; r <= maxItemRow; r++) {
@@ -1278,7 +1254,7 @@ window.DailyProgressModule = {
                         aiCell.numFmt = qtyFmt(keptTotals[i]);
                     }
                     for (let r = effectiveRemarkHdrRow; r <= effectiveRemarkStartRow + 25; r++) {
-                        try { ws.mergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) {}
+                        try { ws.mergeCells(`A${r}:${totalColLetter}${r}`); } catch (_) { }
                     }
                 }
 
@@ -1426,7 +1402,7 @@ window.DailyProgressModule = {
         }
         this.loadDailyProgressReportForDate(this.dailyProgressDate);
         if (typeof this.refreshDailyProgressStatus === 'function') {
-            Promise.resolve(this.refreshDailyProgressStatus(false)).catch(() => {});
+            Promise.resolve(this.refreshDailyProgressStatus(false)).catch(() => { });
         }
         this.dailyProgressTab = 'download';
     },
@@ -1565,7 +1541,7 @@ window.DailyProgressModule = {
         const existingCustom = (this.dailyProgressData && Array.isArray(this.dailyProgressData.customItems)) ? this.dailyProgressData.customItems : [];
         this.dailyProgressData = { ...(this.dailyProgressData || { contractors: [], reports: [], issues: [] }), customItems: [...existingCustom, newItem] };
         if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-            BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+            BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => { });
         }
         this.dailyProgressModal = '';
         this.showToast(`Material "${name}" sheet me add ho gaya!`, 'Check');
@@ -1676,7 +1652,7 @@ window.DailyProgressModule = {
                 this._dpStockMemo = null;
                 this._dpMemo = null;
                 if (typeof BillingStorage !== 'undefined' && typeof BillingStorage.setItem === 'function') {
-                    await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => {});
+                    await BillingStorage.setItem('billing_daily_progress', this.dailyProgressData).catch(() => { });
                 }
                 if (dates.includes(this.dailyProgressDate)) {
                     this.loadDailyProgressReportForDate(this.dailyProgressDate);

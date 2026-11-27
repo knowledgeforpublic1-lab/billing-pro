@@ -1893,7 +1893,7 @@
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
                     <!-- Top Row: Division Pills & Date Stepper -->
-                    <details class="dp-sheet-options"><summary>Division &amp; site options</summary><div class="dp-header-top-row">
+                    <details class="dp-sheet-options" open><summary>Division &amp; site options — ⚡ {{ dailyProgressActiveLocationObj ? (dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name) : (getDailyProgressExportFeederName() || 'Feeder select karein') }}</summary><div class="dp-header-top-row">
                         <div class="dp-division-pills">
                             <span style="font-size: 0.78rem; font-weight: 800; color: var(--dp-text-muted); text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
                             <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'ALL' }" @click="setDailyProgressDivision('ALL')">
