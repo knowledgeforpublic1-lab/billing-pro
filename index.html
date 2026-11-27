@@ -2685,6 +2685,7 @@
                             <div>
                                 <span style="color: var(--dp-accent-blue); font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
                                 <span style="opacity: 0.6; margin-left: 6px;">({{ formatDisplayDate(dailyProgressExportFrom) }} — {{ formatDisplayDate(dailyProgressExportTo) }})</span>
+                                <span style="margin-left: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(16, 185, 129, 0.14); color: #059669; font-weight: 800; font-size: 0.72rem;">Net Issue Total: {{ getDailyProgressExportNetIssueTotal() }}</span>
                             </div>
                         </div>
 
@@ -2812,6 +2813,18 @@
                                         </td>
                                     </tr>
                                 </tbody>
+                                <tfoot v-if="getDailyProgressExportPreviewItems().length">
+                                    <tr style="font-weight: 800; background: rgba(15, 23, 42, 0.06);">
+                                        <td class="st-row">∑</td>
+                                        <td class="st-code">TOTAL</td>
+                                        <td class="st-name">GRAND TOTAL ({{ getDailyProgressExportPreviewItems().length }} Items)</td>
+                                        <td class="st-unit">-</td>
+                                        <td class="st-issue" style="font-weight: 800; color: #059669;">{{ getDailyProgressExportNetIssueTotal() }}</td>
+                                        <td v-for="day in getDailyProgressExportDays()" :key="'gt-' + day" class="dp-excel-day-cell" style="opacity: 0.5;">-</td>
+                                        <td class="dp-excel-tot-col" style="font-weight: 800;">{{ getDailyProgressExportRangeConsumedTotal() }}</td>
+                                        <td class="dp-excel-bal-col" style="font-weight: 800;">{{ Math.round((getDailyProgressExportNetIssueTotal() - getDailyProgressExportRangeConsumedTotal()) * 1000) / 1000 }}</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>

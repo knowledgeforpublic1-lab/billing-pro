@@ -1491,6 +1491,25 @@ window.DailyProgressModule = {
         return result;
     },
 
+    getDailyProgressExportNetIssueTotal() {
+        const items = this.getDailyProgressExportPreviewItems();
+        let total = 0;
+        for (let i = 0; i < items.length; i++) {
+            const st = this.getDailyProgressItemStock(items[i]);
+            total += Number(st && st.totalIssued) || 0;
+        }
+        return Math.round(total * 1000) / 1000;
+    },
+
+    getDailyProgressExportRangeConsumedTotal() {
+        const items = this.getDailyProgressExportPreviewItems();
+        let total = 0;
+        for (let i = 0; i < items.length; i++) {
+            total += Number(this.getDailyProgressExportItemTotal(items[i].id)) || 0;
+        }
+        return Math.round(total * 1000) / 1000;
+    },
+
     setDailyProgressHistoryPreset(preset) {
         const today = new Date().toISOString().slice(0, 10);
         if (preset === 'today') {
