@@ -1892,42 +1892,7 @@
             <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
-                    <!-- Top Row: Division Pills & Date Stepper -->
-                    <details class="dp-sheet-options" open><summary>Division &amp; site options — ⚡ {{ dailyProgressActiveLocationObj ? (dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name) : (getDailyProgressExportFeederName() || 'Feeder select karein') }}</summary><div class="dp-header-top-row">
-                        <div class="dp-division-pills">
-                            <span style="font-size: 0.78rem; font-weight: 800; color: var(--dp-text-muted); text-transform: uppercase; margin-right: 2px;">⚡ Division:</span>
-                            <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'ALL' }" @click="setDailyProgressDivision('ALL')">
-                                <span>🌐 All</span>
-                                <span class="dp-pill-badge">105</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'Gadchiroli' }" @click="setDailyProgressDivision('Gadchiroli')">
-                                <span>Gadchiroli</span>
-                                <span class="dp-pill-badge">39</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'Bramhapuri' }" @click="setDailyProgressDivision('Bramhapuri')">
-                                <span>Bramhapuri</span>
-                                <span class="dp-pill-badge">28</span>
-                            </button>
-                            <button type="button" class="dp-div-pill" :class="{ active: dpDivisionFilter === 'Allapalli' }" @click="setDailyProgressDivision('Allapalli')">
-                                <span>Allapalli</span>
-                                <span class="dp-pill-badge">38</span>
-                            </button>
-                        </div>
-
-                        <!-- Right: Date Stepper & Custom Site Button -->
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <div class="dp-date-stepper-box" title="Work date navigation">
-                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--dp-text-muted); margin-right: 2px;">📅</span>
-                                <button type="button" class="dp-step-btn" @click="navigateDailyProgressDay(-1)" title="Previous Day">◀</button>
-                                <input id="dp-location-date" type="date" class="dp-step-date-input" :value="dailyProgressDate" :disabled="dailyProgressBusy" @change="onDailyProgressDateChange($event.target.value); $event.target.value = dailyProgressDate">
-                                <button type="button" class="dp-step-btn" @click="setDailyProgressDateToday" title="Today">Today</button>
-                                <button type="button" class="dp-step-btn" @click="navigateDailyProgressDay(1)" title="Next Day">▶</button>
-                            </div>
-                            <button type="button" class="dp-custom-toggle-btn" @click="dpShowCustomLocation = !dpShowCustomLocation" title="Unlisted / Custom site add karein">
-                                <span>{{ dpShowCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
-                            </button>
-                        </div>
-                    </div>
+                    <details class="dp-sheet-options" open><summary>Division &amp; site options — ⚡ {{ dailyProgressActiveLocationObj ? (dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name) : (getDailyProgressExportFeederName() || 'Feeder select karein') }}</summary>
 
                     <!-- Active Location Hierarchy Banner -->
                     <div v-if="dailyProgressLocationId" class="dp-hierarchy-banner">

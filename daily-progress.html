@@ -134,43 +134,6 @@
             <main>
                 <!-- MASTER EXECUTIVE LOCATION & DATE HEADER -->
                 <section class="dp-master-header-card" aria-label="Select work location">
-                    <!-- Top Row: Division Pills & Date Quick Controls -->
-                    <div class="dp-header-top-row">
-                        <div class="dp-division-pills">
-                            <span
-                                style="font-size: 0.78rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-right: 2px;">⚡
-                                Division:</span>
-                            <button type="button" class="dp-div-pill" :class="{ active: divisionFilter === 'ALL' }"
-                                @click="setDivision('ALL')">
-                                <span>🌐 All</span>
-                                <span class="dp-pill-badge">105</span>
-                            </button>
-                            <button type="button" class="dp-div-pill"
-                                :class="{ active: divisionFilter === 'Gadchiroli' }" @click="setDivision('Gadchiroli')">
-                                <span>Gadchiroli</span>
-                                <span class="dp-pill-badge">39</span>
-                            </button>
-                            <button type="button" class="dp-div-pill"
-                                :class="{ active: divisionFilter === 'Bramhapuri' }" @click="setDivision('Bramhapuri')">
-                                <span>Bramhapuri</span>
-                                <span class="dp-pill-badge">28</span>
-                            </button>
-                            <button type="button" class="dp-div-pill"
-                                :class="{ active: divisionFilter === 'Allapalli' }" @click="setDivision('Allapalli')">
-                                <span>Allapalli</span>
-                                <span class="dp-pill-badge">38</span>
-                            </button>
-                        </div>
-
-                        <!-- Right: Custom Site Toggle -->
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button v-if="isAdmin" type="button" class="dp-custom-toggle-btn"
-                                @click="showCustomLocation = !showCustomLocation" title="Unlisted site add karein">
-                                <span>{{ showCustomLocation ? '✕ Hide Custom' : '➕ Custom Site' }}</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Second Row: Cascading Filters & Feeder Selection -->
                     <div class="dp-cascading-grid">
                         <div class="header-left">
