@@ -516,7 +516,7 @@
   }
   function startPoll() {
     if (pollTimer) return;
-    pollTimer = setInterval(pullQuiet, 20000);
+    pollTimer = setInterval(function () { if (typeof document === 'undefined' || !document.hidden) pullQuiet(); }, 60000);
   }
 
   // Events (delegation — fast + reliable)

@@ -12,7 +12,11 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     const idleParsed = env.AUTH_IDLE_MINUTES !== undefined ? Number(env.AUTH_IDLE_MINUTES) : 240;
     const IDLE_MS = Math.max(5, isNaN(idleParsed) ? 240 : idleParsed) * 60 * 1000;
     const LOOKUP_CACHE_MS = env.AUTH_LOOKUP_CACHE_MS !== undefined ? Number(env.AUTH_LOOKUP_CACHE_MS) : 60 * 1000;
+    const SESSION_CACHE_MS = env.AUTH_SESSION_CACHE_MS !== undefined ? Number(env.AUTH_SESSION_CACHE_MS) : 15 * 1000;
+    const OWNER_EMAIL_CACHE_MS = 5 * 60 * 1000;
     const lookupCache = new Map();
+    const sessionCache = new Map();
+    let ownerEmailCache = null;
     function setLookupCache(key, val) {
         if (lookupCache.size >= 500) {
             const cur = now();
@@ -23,6 +27,17 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
             }
         }
         lookupCache.set(key, val);
+    }
+    function setSessionCache(key, session) {
+        if (sessionCache.size >= 500) {
+            const cur = now();
+            for (const [k, v] of sessionCache.entries()) {
+                if (cur - (v.cachedAt || 0) > SESSION_CACHE_MS || sessionCache.size >= 500) {
+                    sessionCache.delete(k);
+                }
+            }
+        }
+        sessionCache.set(key, { session: { ...session }, cachedAt: now() });
     }
     const secret = env.AUTH_SESSION_SECRET || env.MONGODB_URI || env.FIREBASE_PRIVATE_KEY || env.FIREBASE_SERVICE_ACCOUNT || crypto.randomBytes(32).toString('hex');
     const encryptionKey = secret && crypto.createHash('sha256').update('billing-auth-v1\0' + secret).digest();
@@ -45,8 +60,16 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         return token && /^[a-f0-9]{64}$/.test(token) ? token : null;
     }
     const sessionKey = token => 'portal_session_' + crypto.createHash('sha256').update(token).digest('hex');
-    const saveSession = session => db.saveDefaultConfig(session.key, session);
-    const patchSession = (session, changes) => db.patchDefaultConfig(session.key, changes);
+    const saveSession = async session => {
+        const res = await db.saveDefaultConfig(session.key, session);
+        setSessionCache(session.key, session);
+        return res;
+    };
+    const patchSession = async (session, changes) => {
+        const res = await db.patchDefaultConfig(session.key, changes);
+        setSessionCache(session.key, { ...session, ...changes });
+        return res;
+    };
     function setCookie(req, res, token, clear = false) {
         res.cookie(COOKIE, token || '', {
             httpOnly: true, sameSite: 'strict', path: '/',
@@ -67,9 +90,13 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         if (!encryptionKey || !config.apiKey) throw error(503, 'Login configuration incomplete');
         const envEmail = String(env.AUTH_REGISTERED_EMAIL || '').trim().toLowerCase();
         if (envEmail && envEmail.includes('@')) return envEmail;
+        if (ownerEmailCache && (now() - ownerEmailCache.cachedAt < OWNER_EMAIL_CACHE_MS)) {
+            return ownerEmailCache.email;
+        }
         const record = await db.getDefaultConfig('portalAuthOwnerV1');
         const email = String(record && record.data && record.data.email || '').trim().toLowerCase();
         if (!email || !email.includes('@')) throw error(503, 'Registered recovery email is not configured');
+        ownerEmailCache = { email, cachedAt: now() };
         return email;
     }
     async function firebase(action, body) {
@@ -91,12 +118,26 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         if (req.authSession) return req.authSession;
         const token = cookieToken(req);
         if (!token) throw error(401, 'Login required');
-        const [record, revoked] = await Promise.all([
-            db.getDefaultConfig(sessionKey(token)), db.getDefaultConfig(sessionKey(token) + '_revoked')
-        ]);
-        if (revoked) throw error(401, 'Session expired. Login again.');
-        const session = record && record.data;
-        if (!session || session.revoked || now() >= session.lastActivityAt + IDLE_MS || now() >= session.maxExpiresAt) throw error(401, 'Session expired. Login again.');
+        const sKey = sessionKey(token);
+        const cachedEntry = SESSION_CACHE_MS > 0 ? sessionCache.get(sKey) : null;
+        let session = null;
+        if (cachedEntry && (now() - cachedEntry.cachedAt < SESSION_CACHE_MS)) {
+            session = { ...cachedEntry.session };
+        } else {
+            const [record, revoked] = await Promise.all([
+                db.getDefaultConfig(sKey), db.getDefaultConfig(sKey + '_revoked')
+            ]);
+            if (revoked) {
+                sessionCache.delete(sKey);
+                throw error(401, 'Session expired. Login again.');
+            }
+            session = record && record.data;
+            if (session && !session.revoked) setSessionCache(sKey, session);
+        }
+        if (!session || session.revoked || now() >= session.lastActivityAt + IDLE_MS || now() >= session.maxExpiresAt) {
+            sessionCache.delete(sKey);
+            throw error(401, 'Session expired. Login again.');
+        }
         const email = await ownerEmail();
         let tokens;
         try { tokens = decrypt(session.tokens); } catch (e) { throw error(401, 'Session expired. Login again.'); }
@@ -209,6 +250,7 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         const token = cookieToken(req);
         if (token) {
             lookupCache.delete(sessionKey(token));
+            sessionCache.delete(sessionKey(token));
             await db.saveDefaultConfig(sessionKey(token) + '_revoked', { revoked: true });
         }
         setCookie(req, res, null, true);
@@ -216,6 +258,8 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     }));
     router.post('/forgot-password', resetLimiter, handler(async (req, res) => {
         lookupCache.clear();
+        sessionCache.clear();
+        ownerEmailCache = null;
         await firebase('sendOobCode', { requestType: 'PASSWORD_RESET', email: await ownerEmail() });
         res.json({ success: true, message: 'Password reset confirmation registered email par bhej diya gaya hai. Inbox/Spam check karein.' });
     }));

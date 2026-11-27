@@ -160,8 +160,8 @@
                 $('date').value = today;
                 message('Pehle work location add ya select karein, phir date ki entry karein.');
             } else { $('workspace').hidden = false; $('date').disabled = false; await open(data.today); }
-            setInterval(() => poll(false), 7000);
-            setInterval(() => { if (Date.now() - lastActivity < 30000) poll(true); }, 30000);
+            setInterval(() => { if (!document.hidden) poll(false); }, 30000);
+            setInterval(() => { if (!document.hidden && Date.now() - lastActivity < 30000) poll(true); }, 30000);
             setInterval(() => { if (dirty && state?.editable && !running) save(false).catch(() => {}); }, 15000);
         } catch (e) { message(e.message, true); }
     }

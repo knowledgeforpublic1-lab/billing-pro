@@ -702,13 +702,17 @@
                 if (typeof this.finishTaskProgress === 'function') this.finishTaskProgress();
             }
             if (!this._dpStatusTimer) this._dpStatusTimer = setInterval(() => {
+                if (typeof document !== 'undefined' && document.hidden) return;
                 if (this.currentView === 'dailyProgress' && !this.dailyProgressBusy) {
                     if (this.dailyProgressServerState?.editable && Date.now() - (this._dpLastInput || 0) < 30000) {
                         this.dailyProgressRequest('heartbeat', { contractorId: this.dailyProgressContractorId, date: this.dailyProgressDate }).catch(() => {});
+                        this.refreshDailyProgressStatus(false);
+                    } else if (!this._dpLastBgPoll || Date.now() - this._dpLastBgPoll >= 60000) {
+                        this._dpLastBgPoll = Date.now();
+                        this.refreshDailyProgressStatus(false);
                     }
-                    this.refreshDailyProgressStatus(false);
                 }
-            }, 20000);
+            }, 30000);
         },
         loadDailyProgressReportForDate(date, signal) {
             this._dpStatusSeq = (this._dpStatusSeq || 0) + 1;
