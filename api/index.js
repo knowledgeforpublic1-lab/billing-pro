@@ -273,8 +273,12 @@ app.get('/api/storage/business', requireApiKey, async (req, res) => {
     try {
         const key = String(req.query.key || '');
         if (!businessKeys.has(key)) return res.status(400).json({ success: false, error: 'Unknown business dataset' });
-        if (!db.storageRouted || !await db.storageRouted('master', key)) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
+        const isMongo = db.getProvider && db.getProvider() === 'mongodb';
+        if (!isMongo && (!db.storageRouted || !await db.storageRouted('master', key))) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
         const record = await db.getDefaultConfig(key);
+        if (isMongo && record) {
+            res.set('x-billing-storage-versions', JSON.stringify({ ['master:' + key]: { v: 1, s: record.updatedAt || null } }));
+        }
         res.set('Cache-Control', 'no-store').json({ success: true, data: record?.data || null });
     } catch (error) { res.status(error.status || 503).json({ success: false, error: error.message }); }
 });
@@ -283,7 +287,8 @@ app.post('/api/storage/business', requireApiKey, auth.requireAdmin, writeLimiter
         const key = String(req.body?.key || ''), data = req.body?.data;
         if (!businessKeys.has(key) || !data || typeof data !== 'object' || Array.isArray(data)) return res.status(400).json({ success: false, error: 'Valid business dataset required' });
         if ((key === 'stockMaster' || key === 'previousRecoMaster') && (!data.byContractorNorm || typeof data.byContractorNorm !== 'object' || Array.isArray(data.byContractorNorm) || !Object.keys(data.byContractorNorm).length)) return res.status(400).json({ success: false, error: 'Empty import rejected; existing cloud dataset retained' });
-        if (!db.storageRouted || !await db.storageRouted('master', key)) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
+        const isMongo = db.getProvider && db.getProvider() === 'mongodb';
+        if (!isMongo && (!db.storageRouted || !await db.storageRouted('master', key))) return res.status(404).json({ success: false, error: 'Business cloud storage disabled' });
         await db.saveDefaultConfig(key, data);
         if (key === 'stockMaster' && dailyProgress && typeof dailyProgress.invalidateStockCache === 'function') {
             dailyProgress.invalidateStockCache();
