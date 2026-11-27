@@ -2,20 +2,6 @@
   "regions": ["fra1"],
   "builds": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "js/data/**",
-          "index.html",
-          "mobile.html",
-          "portal-login.html",
-          "public/daily-progress-template.xlsx",
-          "Reconciliation master/index.html"
-        ]
-      }
-    },
-    {
       "src": "index.html",
       "use": "@vercel/static"
     },
@@ -67,7 +53,7 @@
     },
     {
       "src": "/js/data/(.*)",
-      "dest": "api/index.js"
+      "dest": "https://billing.130.210.67.101.sslip.io/js/data/$1"
     },
     {
       "src": "/daily-progress(\\.html)?",
@@ -87,26 +73,26 @@
     },
     {
       "src": "/(index\\.html)?",
-      "dest": "api/index.js"
+      "dest": "https://billing.130.210.67.101.sslip.io/$1"
     },
     {
-      "src": "/(mobile(\\.html)?|old(/index\\.html)?)",
-      "dest": "api/index.js"
+      "src": "/(mobile(?:\\.html)?|old(?:/index\\.html)?)",
+      "dest": "https://billing.130.210.67.101.sslip.io/$1"
     },
     {
       "src": "/Reconciliation(?: |%20)master/index\\.html",
-      "dest": "api/index.js"
+      "dest": "https://billing.130.210.67.101.sslip.io/Reconciliation%20master/index.html"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/api/(.*)",
-      "dest": "api/index.js"
+      "dest": "https://billing.130.210.67.101.sslip.io/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "api/index.js"
+      "dest": "https://billing.130.210.67.101.sslip.io/$1"
     }
   ],
   "headers": [
