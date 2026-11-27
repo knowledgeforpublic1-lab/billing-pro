@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('node:crypto');
 const rateLimit = require('express-rate-limit');
+const { isAllowedOrigin } = require('./origin-check');
 
 const COOKIE = 'billing_session';
 const MAX_MS = 24 * 60 * 60 * 1000;
@@ -194,10 +195,8 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
     }
     router.use((req, res, next) => {
         res.setHeader('Cache-Control', 'no-store');
-        const origin = req.headers.origin;
-        if (req.method === 'POST' && origin) {
-            try { if (new URL(origin).host !== req.headers.host) return res.status(403).json({ success: false, error: 'Cross-origin authentication request blocked' }); }
-            catch (e) { return res.status(403).json({ success: false, error: 'Invalid origin' }); }
+        if (req.method === 'POST' && req.headers.origin && !isAllowedOrigin(req)) {
+            return res.status(403).json({ success: false, error: 'Cross-origin authentication request blocked' });
         }
         next();
     });
@@ -264,9 +263,8 @@ module.exports = function createAuth({ db, config, env = process.env, fetchImpl 
         res.json({ success: true, message: 'Password reset confirmation registered email par bhej diya gaya hai. Inbox/Spam check karein.' });
     }));
     const middleware = handler(async (req, res, next) => {
-        if (!['GET', 'HEAD'].includes(req.method) && req.headers.origin) {
-            try { if (new URL(req.headers.origin).host !== req.headers.host) throw error(403, 'Cross-origin write blocked'); }
-            catch (e) { throw error(403, 'Cross-origin write blocked'); }
+        if (!['GET', 'HEAD'].includes(req.method) && req.headers.origin && !isAllowedOrigin(req)) {
+            throw error(403, 'Cross-origin write blocked');
         }
         await sessionFor(req);
         next();

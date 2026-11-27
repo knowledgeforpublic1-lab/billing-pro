@@ -199,10 +199,10 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         catch (error) { res.status(error.status || 503).json({ success: false, error: error.status ? error.message : 'Daily Progress service unavailable. Draft safe rakhein aur retry karein.' }); }
     };
     publicRouter.use(rateLimit({ windowMs: 60000, max: 1200, standardHeaders: true, legacyHeaders: false }));
+    const { isAllowedOrigin } = require('./origin-check');
     function sameOrigin(req, res, next) {
-        if (req.headers.origin) {
-            try { if (new URL(req.headers.origin).host !== req.headers.host) return res.status(403).json({ error: 'Cross-origin request blocked' }); }
-            catch { return res.status(403).json({ error: 'Invalid origin' }); }
+        if (req.headers.origin && !isAllowedOrigin(req)) {
+            return res.status(403).json({ error: 'Cross-origin request blocked' });
         }
         next();
     }

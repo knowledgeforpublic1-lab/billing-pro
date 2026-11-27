@@ -34,11 +34,11 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
         catch (e) { res.status(e.status || 503).json({ success: false, error: e.status ? e.message : 'Entry service unavailable. Retry karein.' }); }
     };
 
+    const { isAllowedOrigin } = require('./origin-check');
     router.use((req, res, next) => {
         res.set('Cache-Control', 'no-store');
-        if (req.method !== 'GET' && req.headers.origin) {
-            try { if (new URL(req.headers.origin).host !== req.headers.host) return res.status(403).json({ success: false, error: 'Cross-origin request blocked' }); }
-            catch { return res.status(403).json({ success: false, error: 'Invalid origin' }); }
+        if (req.method !== 'GET' && req.headers.origin && !isAllowedOrigin(req)) {
+            return res.status(403).json({ success: false, error: 'Cross-origin request blocked' });
         }
         next();
     });
@@ -489,7 +489,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
             const existingRecord = await read(key);
             let fallbackReport = existingRecord?.baseReport || null;
             if (!fallbackReport && existingRecord?.fileId && drive && drive.read) {
-                try { fallbackReport = await drive.read(existingRecord.fileId); } catch {}
+                try { fallbackReport = await drive.read(existingRecord.fileId); } catch { }
             }
             if (!fallbackReport) {
                 const legacyShared = await read('shared_report_' + hash(reportKey({ contractorId: cid, date, locationId: lid })));
@@ -504,7 +504,7 @@ module.exports = function createWorkerAuth({ db, auth, now = Date.now, drive }) 
                             fallbackReport = newerReport(fallbackReport, row);
                         }
                     }
-                } catch {}
+                } catch { }
             }
             return db.atomicDailyRecord(key, old => {
                 const r = { ...(old || {}), contractorId: cid, date, locationId: lid, state: 'open' };

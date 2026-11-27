@@ -1032,11 +1032,11 @@ app.get('/api/daily-progress/data', async (req, res) => {
         res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Entry data unavailable. Retry karein.' });
     }
 });
+const { isAllowedOrigin } = require('./origin-check');
 app.post('/api/daily-progress/data', express.json({ limit: '15mb' }), async (req, res) => {
     try {
-        if (req.headers.origin) {
-            try { if (new URL(req.headers.origin).host !== req.headers.host) throw new Error(); }
-            catch { throw Object.assign(new Error('Cross-origin entry save blocked'), { status: 403 }); }
+        if (req.headers.origin && !isAllowedOrigin(req)) {
+            throw Object.assign(new Error('Cross-origin entry save blocked'), { status: 403 });
         }
         const actor = await workers.principal(req);
         const payload = req.body && req.body.data !== undefined ? req.body.data : req.body;
