@@ -504,7 +504,7 @@
                 dailyProgressWorkerSearch: '',
                 dailyProgressWorkerForm: { name: '', username: '', password: '', contractorIds: [], reset: false },
                 dailyProgressEntryHistory: [],
-                dailyProgressVisibleLimit: 80,
+                dailyProgressVisibleLimit: 500,
                 dailyProgressDate: '',
                 dailyProgressHistoryFrom: '',
                 dailyProgressHistoryTo: '',

@@ -765,18 +765,47 @@ window.DailyProgressModule = {
             memo.issues !== issues || memo.issuesLen !== issues.length ||
             memo.reports !== reports || memo.reportsLen !== reports.length ||
             memo.epoch !== epoch || memo.ver !== ver) {
-            const contractorSap = (typeof this.getContractorSapIssues === 'function')
+            const contractorList = Array.isArray(this.dailyProgressContractors) && this.dailyProgressContractors.length
+                ? this.dailyProgressContractors
+                : ((this.dailyProgressData && this.dailyProgressData.contractors) || []);
+            const team = contractorList.find(c => c.id === cid) || null;
+            let contractorSap = (typeof this.getContractorSapIssues === 'function')
                 ? this.getContractorSapIssues.call(new Proxy(this, {
                     get(target, key) {
+                        if (String(key).startsWith('_memoContractorSap')) return undefined;
                         if (key === 'stockAsOnDate') return curDate;
                         if (key === 'selectedContractorId') return cid;
-                        const team = (target.dailyProgressData?.contractors || []).find(c => c.id === cid);
-                        if (key === 'selectedContractorName') return team?.name || '';
-                        if (key === 'invoiceData' || key === 'projectMeta') return { ...(target[key] || {}), workOrderNo: '', contractorName: team?.name || '' };
+                        if (key === 'selectedContractorName') return (team && team.name) || '';
+                        if (key === 'invoiceData' || key === 'projectMeta') {
+                            return { ...(target[key] || {}), workOrderNo: (team && team.workOrderNo) || '', contractorName: (team && team.name) || '' };
+                        }
                         return Reflect.get(target, key);
                     },
                     set(target, key, value) { if (String(key).startsWith('_memoContractorSap')) return true; return Reflect.set(target, key, value); }
                 })) : null;
+            // If BillingStockIdentity returned 'ambiguous' (e.g. multiple work orders or duplicate firm spellings),
+            // merge all matched blocks so every issued material for this contractor is visible in Daily Progress.
+            if (!contractorSap && sapRoot && sapRoot.byContractorNorm && typeof window !== 'undefined' && window.BillingStockIdentity) {
+                const res = window.BillingStockIdentity.resolve(sapRoot, {
+                    id: cid,
+                    name: (team && team.name) || cid,
+                    workOrderNo: (team && team.workOrderNo) || ''
+                }, this.contractorsList || []);
+                if (res && Array.isArray(res.matches) && res.matches.length > 0) {
+                    const mergedMaterials = {};
+                    for (const match of res.matches) {
+                        const mats = (match && match.block && match.block.materials) || {};
+                        for (const [mCode, mat] of Object.entries(mats)) {
+                            if (!mergedMaterials[mCode]) {
+                                mergedMaterials[mCode] = mat;
+                            } else if (Array.isArray(mat.txns) && mat.txns.length > (mergedMaterials[mCode].txns || []).length) {
+                                mergedMaterials[mCode] = mat;
+                            }
+                        }
+                    }
+                    contractorSap = { ...res.matches[0].block, materials: mergedMaterials };
+                }
+            }
             const manualIssuedMap = new Map();
             for (let i = 0; i < issues.length; i++) {
                 const iss = issues[i];
