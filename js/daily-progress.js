@@ -1493,9 +1493,15 @@ window.DailyProgressModule = {
 
     getDailyProgressExportNetIssueTotal() {
         const items = this.getDailyProgressExportPreviewItems();
+        const seen = new Set();
         let total = 0;
         for (let i = 0; i < items.length; i++) {
-            const st = this.getDailyProgressItemStock(items[i]);
+            const it = items[i];
+            const code = String(it && it.code || '').trim();
+            const dedupKey = code ? ('code:' + code) : ('id:' + (it && it.id));
+            if (seen.has(dedupKey)) continue;
+            seen.add(dedupKey);
+            const st = this.getDailyProgressItemStock(it);
             total += Number(st && st.totalIssued) || 0;
         }
         return Math.round(total * 1000) / 1000;

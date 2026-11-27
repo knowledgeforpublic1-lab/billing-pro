@@ -702,7 +702,12 @@ async function getDefaultConfig(key) {
         if (!snap.exists) return null;
         return readFirestoreWithChunking(snap);
     } else {
-        return await MongoDefaultConfig.findOne({ key }).lean();
+        const doc = await MongoDefaultConfig.findOne({ key }).lean();
+        if (doc && doc.data && typeof doc.data.__gzipJson === 'string') {
+            const zlib = require('node:zlib');
+            doc.data = JSON.parse(zlib.gunzipSync(Buffer.from(doc.data.__gzipJson, 'base64')).toString('utf8'));
+        }
+        return doc;
     }
 }
 
@@ -716,9 +721,17 @@ async function saveDefaultConfig(key, data) {
     if (activeProvider === 'firebase') {
         await writeFirestoreWithChunking(firestoreDb.collection('default_configs').doc(key), docData);
     } else {
+        let storeData = data;
+        if (data && typeof data === 'object') {
+            const json = JSON.stringify(data);
+            if (json.length > 4 * 1024 * 1024) {
+                const zlib = require('node:zlib');
+                storeData = { __gzipJson: zlib.gzipSync(Buffer.from(json, 'utf8')).toString('base64') };
+            }
+        }
         await MongoDefaultConfig.findOneAndUpdate(
             { key },
-            { key, data, updatedAt: new Date() },
+            { key, data: storeData, updatedAt: new Date() },
             { upsert: true, new: true }
         );
     }
