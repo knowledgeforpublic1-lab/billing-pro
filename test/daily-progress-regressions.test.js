@@ -143,7 +143,8 @@ test('Excel export handles 28-day Feb, 29-day leap Feb, 30-day, and 31-day month
         assert.equal(ws.getCell('X8').value, null, 'Sample manpower from template is cleared');
         assert.equal(ws.getCell('X6').value.formula, 'SUM(X8:X10)');
         assert.equal(ws.getCell('X6').value.result || 0, 0);
-        assert.equal(ws.getCell('A419').value, `${tc.to}: Done ${tc.to}`);
+        assert.equal(ws.getCell('A18').value, 'Remark Date wise');
+        assert.equal(ws.getCell('A19').value, `${tc.to}: Done ${tc.to}`);
     }
 });
 
