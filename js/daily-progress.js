@@ -968,12 +968,15 @@ window.DailyProgressModule = {
             return;
         }
 
-        const from = this.dailyProgressExportFrom;
-        const to = this.dailyProgressExportTo;
+        const fullRange = this._getDailyProgressFullDateRange(this.dailyProgressContractorId, this.dailyProgressLocationId);
+        const from = (fullRange && fullRange.from) || this.dailyProgressExportFrom;
+        const to = (fullRange && fullRange.to) || this.dailyProgressExportTo;
         if (!from || !to || from > to) {
             this.showToast('Kripya valid From aur To date chunein.', 'Alert');
             return;
         }
+        this.dailyProgressExportFrom = from;
+        this.dailyProgressExportTo = to;
 
         this.dailyProgressBusy = true;
         if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Generating Excel Report', 'Loading template...', 15);
@@ -1275,16 +1278,22 @@ window.DailyProgressModule = {
                 grandAiCell.value = { formula: `SUM(E${effectiveGrandRowNum}:${lastDayColLetter}${effectiveGrandRowNum})`, result: grandRounded };
                 grandAiCell.numFmt = qtyFmt(grandRounded);
 
-                // Remark Date wise section
+                // Remark Date wise section (dd-mm-yyyy format)
                 ws.getCell('A' + effectiveRemarkHdrRow).value = 'Remark Date wise';
                 const remarkRows = chunk
                     .map(d => {
                         const rep = reportsByDate.get(d);
-                        return rep && rep.remarks && String(rep.remarks).trim() ? `${d}: ${String(rep.remarks).trim()}` : '';
+                        return rep && rep.remarks && String(rep.remarks).trim()
+                            ? `${this._formatDailyProgressRemarkDate(d)}: ${String(rep.remarks).trim()}`
+                            : '';
                     })
                     .filter(Boolean);
-                remarkRows.slice(0, 26).forEach((text, idx) => {
-                    ws.getCell('A' + (effectiveRemarkStartRow + idx)).value = text;
+                remarkRows.forEach((text, idx) => {
+                    const targetRow = effectiveRemarkStartRow + idx;
+                    if (idx >= 26) {
+                        try { ws.mergeCells(`A${targetRow}:${totalColLetter}${targetRow}`); } catch (_) { }
+                    }
+                    ws.getCell('A' + targetRow).value = text;
                 });
             }
 
@@ -1297,10 +1306,13 @@ window.DailyProgressModule = {
             const fromParts = String(from || '').split('-');
             const monthLabel = fromParts[1] ? (monthNames[Number(fromParts[1]) - 1] || fromParts[1]) : 'Period';
             const yearLabel = fromParts[0] || '';
+            const rangeSlug = (String(from || '').slice(0, 7) === String(to || '').slice(0, 7))
+                ? `${monthLabel}_${yearLabel}`
+                : `${this._formatDailyProgressRemarkDate(from)}_to_${this._formatDailyProgressRemarkDate(to)}`;
             const safeProj = String(contractor.project || (this.projectMeta && this.projectMeta.projectName) || 'Gadchiroli_T-10').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
             const safeFeeder = String(this.getDailyProgressExportFeederName() || this.dailyProgressLocationName() || 'Feeder').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
             a.href = url;
-            a.download = `Daily_Progress_${safeProj}_${safeFeeder}_${monthLabel}_${yearLabel}.xlsx`;
+            a.download = `Daily_Progress_${safeProj}_${safeFeeder}_${rangeSlug}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1376,6 +1388,61 @@ window.DailyProgressModule = {
         return this._getDailyProgressExportReportMap().get(normD);
     },
 
+    _formatDailyProgressRemarkDate(isoDate) {
+        const parts = String(isoDate || '').trim().split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return String(isoDate || '').trim();
+    },
+
+    _getDailyProgressFullDateRange(cid, locId) {
+        const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
+        if (!reports.length) return null;
+        const locKey = this.dailyProgressLocationKey(locId);
+        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+        const targetNorm = normFn(cid);
+        let minDate = '';
+        let maxDate = '';
+        for (let i = 0; i < reports.length; i++) {
+            const r = reports[i];
+            if (!r || r.deleted) continue;
+            if (cid && r.contractorId !== cid && normFn(r.contractorId) !== targetNorm) continue;
+            if (this.dailyProgressLocationKey(r.locationId) !== locKey) continue;
+            const normD = typeof this.normalizeDailyProgressDate === 'function' ? this.normalizeDailyProgressDate(r.date) : String(r.date || '').trim();
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(normD)) continue;
+            if (!minDate || normD < minDate) minDate = normD;
+            if (!maxDate || normD > maxDate) maxDate = normD;
+        }
+        if (!minDate || !maxDate) return null;
+        const dMin = new Date(minDate + 'T00:00:00Z');
+        const dMax = new Date(maxDate + 'T00:00:00Z');
+        if (Math.round((dMax - dMin) / 86400000) > 365) {
+            const clamped = new Date(dMax);
+            clamped.setUTCDate(clamped.getUTCDate() - 365);
+            minDate = clamped.toISOString().slice(0, 10);
+        }
+        return { from: minDate, to: maxDate };
+    },
+
+    getDailyProgressExportRemarks() {
+        const from = this.dailyProgressExportFrom || '';
+        const to = this.dailyProgressExportTo || '';
+        if (!from || !to || from > to) return [];
+        const reportMap = this._getDailyProgressExportReportMap();
+        const dates = Array.from(reportMap.keys()).filter(d => d >= from && d <= to).sort();
+        const out = [];
+        for (let i = 0; i < dates.length; i++) {
+            const d = dates[i];
+            const rep = reportMap.get(d);
+            const txt = rep && rep.remarks ? String(rep.remarks).trim() : '';
+            if (txt) {
+                out.push({ date: d, displayDate: this._formatDailyProgressRemarkDate(d), text: txt });
+            }
+        }
+        return out;
+    },
+
     openDailyProgressReportFromHistory(rep) {
         if (!rep) return;
         if (rep.contractorId) {
@@ -1386,11 +1453,23 @@ window.DailyProgressModule = {
         }
         const targetLoc = (rep.locationId && rep.locationId !== 'legacy') ? rep.locationId : 'legacy';
         this.dailyProgressLocationId = targetLoc;
-        if (typeof this.syncDailyProgressFiltersFromLocation === 'function') {
+        this.dpFeederSearch = '';
+        this.dpLocationSearchQuery = '';
+        if (targetLoc === 'legacy') {
+            this.dpDivisionFilter = 'ALL';
+            this.dpSubDivisionFilter = 'ALL';
+            this.dpSubstationFilter = 'ALL';
+        } else if (typeof this.syncDailyProgressFiltersFromLocation === 'function') {
             this.syncDailyProgressFiltersFromLocation(targetLoc);
         }
         if (rep.date) {
             this.dailyProgressDate = rep.date;
+        }
+        const fullRange = this._getDailyProgressFullDateRange(this.dailyProgressContractorId, targetLoc);
+        if (fullRange && fullRange.from && fullRange.to) {
+            this.dailyProgressExportFrom = fullRange.from;
+            this.dailyProgressExportTo = fullRange.to;
+        } else if (rep.date) {
             const normD = typeof this.normalizeDailyProgressDate === 'function' ? (this.normalizeDailyProgressDate(rep.date) || rep.date) : rep.date;
             if (/^\d{4}-\d{2}-\d{2}$/.test(normD)) {
                 const y = Number(normD.slice(0, 4));
@@ -1538,7 +1617,13 @@ window.DailyProgressModule = {
     },
 
     openDailyProgressExportTab() {
-        this.setDailyProgressExportRange('current_month');
+        const fullRange = this._getDailyProgressFullDateRange(this.dailyProgressContractorId, this.dailyProgressLocationId);
+        if (fullRange && fullRange.from && fullRange.to) {
+            this.dailyProgressExportFrom = fullRange.from;
+            this.dailyProgressExportTo = fullRange.to;
+        } else {
+            this.setDailyProgressExportRange('current_month');
+        }
         this.dailyProgressTab = 'download';
     },
 

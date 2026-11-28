@@ -2790,6 +2790,12 @@
                                 </tfoot>
                             </table>
                         </div>
+                        <div v-if="getDailyProgressExportRemarks().length" class="dp-export-remarks-box" style="margin-top: 12px; padding: 10px 14px; border: 1px solid var(--border-subtle, rgba(148,163,184,0.25)); border-radius: 8px; background: var(--bg-surface, rgba(15,23,42,0.04));">
+                            <div style="font-size: 0.78rem; font-weight: 800; margin-bottom: 6px; color: var(--dp-accent-blue);">📝 Remark Date wise</div>
+                            <div v-for="rm in getDailyProgressExportRemarks()" :key="'rm-' + rm.date" style="font-size: 0.76rem; line-height: 1.5; padding: 2px 0;">
+                                <strong>{{ rm.displayDate }}:</strong> <span>{{ rm.text }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
