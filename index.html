@@ -2066,7 +2066,7 @@
 
                 </section>
                 <!-- Single-Line Dense Status Strip (~24px high) -->
-                <div v-if="dailyProgressTab !== 'history' && (dailyProgressLocked || dailyProgressDirty || dailyProgressVersion)" class="dp-status-strip no-print">
+                <div v-if="dailyProgressTab === 'entry' && (dailyProgressLocked || dailyProgressDirty || dailyProgressVersion)" class="dp-status-strip no-print">
                     <div class="dp-status-items">
                         <span>📦 <strong>{{ dailyProgressSelectedCount }}</strong> of <strong>{{ dailyProgressIssuedCount }}</strong> items entered</span>
                         <span>👷 <strong>{{ dailyProgressTotalManpower }}</strong> manpower (L:{{ dailyProgressManpower.leader || 0 }} · S:{{ dailyProgressManpower.skilled || 0 }} · U:{{ dailyProgressManpower.unskilled || 0 }})</span>
@@ -2598,19 +2598,19 @@
                             <div class="dp-excel-range-inputs">
                                 <div class="dp-excel-date-field">
                                     <label>From</label>
-                                    <input type="date" v-model="dailyProgressExportFrom" title="Start Date">
+                                    <input type="date" v-model="dailyProgressExportFrom" @change="dailyProgressExportPreset = ''" title="Start Date">
                                 </div>
                                 <div class="dp-excel-date-field">
                                     <label>To</label>
-                                    <input type="date" v-model="dailyProgressExportTo" title="End Date">
+                                    <input type="date" v-model="dailyProgressExportTo" @change="dailyProgressExportPreset = ''" title="End Date">
                                 </div>
                                 <div class="dp-excel-quick-ranges">
-                                    <button type="button" @click="setDailyProgressExportRange('today')" title="Today">Today</button>
-                                    <button type="button" @click="setDailyProgressExportRange('yesterday')" title="Yesterday">Yesterday</button>
-                                    <button type="button" @click="setDailyProgressExportRange('this_week')" title="This Week">This Week</button>
-                                    <button type="button" @click="setDailyProgressExportRange('current_month')" title="This Month">This Month</button>
-                                    <button type="button" @click="setDailyProgressExportRange('prev_month')" title="Last Month">Last Month</button>
-                                    <button type="button" @click="setDailyProgressExportRange('all_time')" title="All Time">All Time</button>
+                                    <button type="button" :class="{ active: dailyProgressExportFrom === (todayDateStr || '') && dailyProgressExportTo === (todayDateStr || '') }" @click="setDailyProgressExportRange('today')" title="Today">Today</button>
+                                    <button type="button" :class="{ active: dailyProgressExportPreset === 'yesterday' }" @click="setDailyProgressExportRange('yesterday')" title="Yesterday">Yesterday</button>
+                                    <button type="button" :class="{ active: dailyProgressExportPreset === 'this_week' }" @click="setDailyProgressExportRange('this_week')" title="This Week">This Week</button>
+                                    <button type="button" :class="{ active: dailyProgressExportPreset === 'current_month' }" @click="setDailyProgressExportRange('current_month')" title="This Month">This Month</button>
+                                    <button type="button" :class="{ active: dailyProgressExportPreset === 'prev_month' }" @click="setDailyProgressExportRange('prev_month')" title="Last Month">Last Month</button>
+                                    <button type="button" :class="{ active: dailyProgressExportPreset === 'all_time' }" @click="setDailyProgressExportRange('all_time')" title="All Time">All Time</button>
                                 </div>
                             </div>
 

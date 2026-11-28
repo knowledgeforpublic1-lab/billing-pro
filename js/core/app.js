@@ -548,6 +548,7 @@
                     const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
                     return `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
                 })(),
+                dailyProgressExportPreset: 'current_month',
                 dailyProgressExportFilter: 'active',
                 dailyProgressExportSearch: '',
                 dailyProgressNewIssue: { date: '', itemId: '15', quantity: '', reference: '' },

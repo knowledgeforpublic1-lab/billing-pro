@@ -1836,6 +1836,7 @@ window.DailyProgressModule = {
     },
 
     setDailyProgressExportRange(rangeType) {
+        this.dailyProgressExportPreset = rangeType;
         const localYmd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const now = new Date();
         const today = this.todayDateStr || localYmd(now);

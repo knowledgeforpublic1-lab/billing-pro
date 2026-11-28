@@ -309,8 +309,10 @@
 :is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet .dp-table td { background: #fdfaf2 !important; color: #3f382c !important; border-color: #e0d7c1 !important; }
 :is(html.soft, html[data-theme="soft"]) #app .dp-dashboard-sheet :is(.dp-filter-select, .dp-search-input, .dp-field-box select, .dp-date-pill, .dp-contractor-pill, .dp-stepper, .searchable-dropdown-trigger, .dp-search-field-wrap, .dp-qty-field input) { background: #fffdf7 !important; color: #3f382c !important; border-color: #d3c8ad !important; }
 .dp-dashboard-sheet .dp-mobile-nav { display:none; }
-.dp-dashboard-sheet .dp-status-strip { margin-top:-24px; align-self:flex-end; padding:0; }
+.dp-dashboard-sheet .dp-status-strip { margin-top:0; align-self:flex-end; padding:0; }
 .dp-dashboard-sheet .dp-status-strip button { min-height:22px; padding:2px 7px!important; font-size:10px!important; }
+.dp-dashboard-sheet .dp-excel-toolbar { position:relative; z-index:2; }
+.dp-dashboard-sheet .dp-excel-quick-ranges button.active { background:#0284c7!important; color:#fff!important; border-color:#0284c7!important; }
 @media(max-width:1250px) { .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:minmax(170px,1.2fr) 140px 1fr 1fr; } .dp-dashboard-sheet .dp-field-box:nth-last-child(2) { grid-column:span 2; } .daily-sheet-area .dp-brand-chip small { display:none; } }
 @media(max-width:800px) { .work.daily-sheet-area { overflow:auto!important; } .daily-sheet-area>.view-section:has(.dp-dashboard-sheet) { flex:none; display:block; } .daily-sheet-area>.apptoolbar { flex-wrap:wrap; } .daily-sheet-area .dp-dashboard-sheet { overflow:visible; } .dp-dashboard-sheet .dp-entry-layout { grid-template-columns:minmax(0,1fr); } .dp-dashboard-sheet .dp-table-wrap { max-height:55vh; min-height:300px; } .dp-dashboard-sheet .dp-sheet-entry>fieldset { display:block; } .dp-dashboard-sheet .dp-side-col { margin-top:6px; } .dp-dashboard-sheet .dp-save-bar { position:sticky; bottom:0; flex-direction:row; } .dp-dashboard-sheet .dp-save-status>div>div { display:none; } .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:1fr 1fr; } .dp-dashboard-sheet .dp-field-box:nth-last-child(2) { grid-column:auto; } }
 @media(max-width:800px) {
