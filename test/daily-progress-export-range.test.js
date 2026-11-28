@@ -202,3 +202,40 @@ test('Backend queryExportData + Frontend Export Sheet + ExcelJS match across all
     assert.equal(downloadedBuffer, null);
     assert.ok(toasts.some(t => /No Data Found/i.test(t.msg)));
 });
+
+test('Contractor spelling variants (parth_enterpeises vs parthenterises) both load on 26th and 27th Nov', async () => {
+    const reports = [
+        { contractorId: 'parthenterises', locationId: 'loc_afcc5d056a742123a79096af', date: '2026-11-26', quantities: { '15': 10 }, remarks: '26 Nov entry', version: 1 },
+        { contractorId: 'parth_enterpeises', locationId: 'loc_afcc5d056a742123a79096af', date: '2026-11-27', quantities: { '15': 5 }, remarks: '27 Nov entry', version: 1 }
+    ];
+    const db = makeDb(reports);
+    const workers = { sharedReports: async () => [], listContractors: async () => [] };
+    const routes = createDailyRoutes({ db, auth: { requireAdmin: (req, res, next) => next() }, workers });
+
+    const res = await routes.queryExportData({
+        startDate: '2026-11-01',
+        endDate: '2026-11-28',
+        contractorId: 'parth_enterpeises',
+        locationId: 'loc_afcc5d056a742123a79096af'
+    });
+    assert.equal(res.count, 2);
+    assert.equal(res.reports.reduce((s, r) => s + r.quantities['15'], 0), 15);
+
+    const { methods } = loadFrontendMethods();
+    const vmState = {
+        ...methods,
+        todayDateStr: '2026-11-28',
+        dailyProgressContractorId: 'parth_enterpeises',
+        dailyProgressLocationId: 'loc_afcc5d056a742123a79096af',
+        dailyProgressExportFrom: '2026-11-01',
+        dailyProgressExportTo: '2026-11-28',
+        dailyProgressData: { contractors: [{ id: 'parth_enterpeises', name: 'M/S PARTH ENTERPRISES' }], reports, issues: [] },
+        normalizeDailyProgressDate: d => String(d || '').slice(0, 10),
+        dailyProgressLocationKey: id => (id === 'legacy' ? '' : String(id || ''))
+    };
+    assert.equal(vmState.getDailyProgressExportQty('15', '2026-11-26'), 10);
+    assert.equal(vmState.getDailyProgressExportQty('15', '2026-11-27'), 5);
+    assert.equal(vmState.getDailyProgressExportItemTotal('15'), 15);
+    vmState.loadDailyProgressReportForDate('2026-11-26');
+    assert.equal(vmState.dailyProgressQuantities['15'], 10);
+});

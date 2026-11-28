@@ -342,7 +342,11 @@ window.DailyProgressModule = {
 
     normContractorId(id) {
         if (!id) return '';
-        return String(id).toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '');
+        return String(id)
+            .toLowerCase()
+            .replace(/^m\/s\.?\s*/i, '')
+            .replace(/[^a-z0-9]/g, '')
+            .replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
     },
 
     syncWithBillingProActiveContractor() {
@@ -789,7 +793,7 @@ window.DailyProgressModule = {
                 }
             }
             const consumedMap = new Map();
-            const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+            const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
             const targetNorm = normFn(cid);
             for (let i = 0; i < reports.length; i++) {
                 const r = reports[i];
@@ -1409,7 +1413,7 @@ window.DailyProgressModule = {
         if (cache && cache.cid === cid && cache.locKey === locKey && cache.reports === reports && cache.len === reports.length && (now - cache.ts) < 250) {
             return cache.map;
         }
-        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
         const targetNorm = normFn(cid);
         const map = new Map();
         for (let i = 0; i < reports.length; i++) {
@@ -1451,7 +1455,7 @@ window.DailyProgressModule = {
         const reports = (this.dailyProgressData && this.dailyProgressData.reports) || [];
         if (!reports.length) return null;
         const locKey = this.dailyProgressLocationKey(locId);
-        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+        const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
         const targetNorm = normFn(cid);
         let minDate = '';
         let maxDate = '';

@@ -1363,7 +1363,7 @@
                 const cid = this.dailyProgressContractorId;
                 if (!list.length) return null;
                 if (!cid) return list[0] || null;
-                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
                 const targetNorm = normFn(cid);
                 return list.find(c => c.id === cid || normFn(c.id) === targetNorm || normFn(c.name) === targetNorm) || list[0] || null;
             },
@@ -1373,13 +1373,13 @@
                     const defMap = new Map();
                     if (Array.isArray(this.contractorsList)) {
                         this.contractorsList.forEach(c => {
-                            const n = String(c.id || c.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                            const n = String(c.id || c.name || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
                             if (n && !defMap.has(n)) defMap.set(n, c);
                         });
                     }
                     const seenNorms = new Set();
                     const list = [];
-                    const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                    const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
                     for (const [key, b] of Object.entries(sapStock.byContractorNorm)) {
                         if (!b || !b.contractorName) continue;
                         const name = String(b.contractorName).trim();
@@ -1462,7 +1462,7 @@
                 const data = this.dailyProgressData;
                 const cid = this.dailyProgressContractorId;
                 if (!data || !data.reports) return [];
-                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
                 const targetNorm = normFn(cid);
                 return data.reports.filter(r => {
                     const matchesC = r.contractorId === cid || normFn(r.contractorId) === targetNorm;
@@ -1479,7 +1479,7 @@
                 const fromDate = String(this.dailyProgressHistoryFrom || '').trim();
                 const toDate = String(this.dailyProgressHistoryTo || '').trim();
                 const search = String(this.dailyProgressHistorySearch || '').trim().toLowerCase();
-                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+                const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/enterp[ei]+ses?|enterises?|eterprises?/g, 'enterprise');
                 const contractorById = new Map();
                 const contractorByNorm = new Map();
                 (this.dailyProgressContractors || []).forEach(c => {
