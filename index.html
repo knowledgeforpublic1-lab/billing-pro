@@ -1892,33 +1892,7 @@
             <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
-
-                    <!-- Active Location Hierarchy Banner -->
-                    <div v-if="dailyProgressLocationId" class="dp-hierarchy-banner">
-                        <div class="dp-hierarchy-badges">
-                            <span style="font-size: 0.82rem; font-weight: 800; color: #1d4ed8; display: inline-flex; align-items: center; gap: 4px;">
-                                <span>📍</span> Active:
-                            </span>
-                            <template v-if="dailyProgressActiveLocationObj">
-                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-badge div">Div: {{ dailyProgressActiveLocationObj.division }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.division" class="dp-h-arrow">›</span>
-                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-badge sub">Sub-Div: {{ dailyProgressActiveLocationObj.subDivision }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.subDivision" class="dp-h-arrow">›</span>
-                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-badge sst">S/S: {{ dailyProgressActiveLocationObj.substation }}</span>
-                                <span v-if="dailyProgressActiveLocationObj.substation" class="dp-h-arrow">›</span>
-                                <span class="dp-h-badge fdr">⚡ {{ dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name }}</span>
-                            </template>
-                            <template v-else>
-                                <span class="dp-h-badge fdr">{{ dailyProgressLocationName() }}</span>
-                            </template>
-                        </div>
-                        <div class="dp-hierarchy-actions">
-                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
-                        </div>
-                    </div>
-                    <p v-else class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
+                    <p v-if="!dailyProgressLocationId" class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
                         ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
                     </p>
 
@@ -2043,16 +2017,10 @@
                             </div>
                         </div>
 
-                        <div class="dp-field-box">
-                            <label for="dp-search-feeder">
-                                <span>🔍 Instant Search</span>
-                                <span v-if="dpFeederSearch" style="color: #ef4444; cursor: pointer;" @click="dpFeederSearch = ''">Clear ✕</span>
-                            </label>
-                            <div class="dp-search-field-wrap">
-                                <span class="dp-search-icon">🔍</span>
-                                <input id="dp-search-feeder" type="text" v-model="dpFeederSearch" placeholder="Feeder / Substation / Gaon..." autocomplete="off">
-                                <button v-if="dpFeederSearch" type="button" class="dp-search-clear" @click="dpFeederSearch = ''" title="Clear">✕</button>
-                            </div>
+                        <div v-if="dailyProgressLocationId" class="dp-hierarchy-actions" style="display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
                         </div>
                     </div>
 
