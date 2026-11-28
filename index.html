@@ -1892,8 +1892,9 @@
             <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
+
                     <p v-if="!dailyProgressLocationId" class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
-                        ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
+                        ⚡ Kisi bhi division ya substation ke feeder ko select karein. Saare 105 official feeders by default available hain.
                     </p>
 
                     <div v-if="dailyProgressLoadError" class="dp-load-error-banner" style="margin: 8px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.45); background: rgba(239,68,68,0.1); color: #fecaca; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
@@ -1956,34 +1957,22 @@
 
 
                         <div class="dp-field-box">
-                            <label for="dp-filter-subdivision">
-                                <span>Sub-Division:</span>
-                                <span v-if="dpSubDivisionFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubDivision('ALL')">Clear ✕</span>
-                            </label>
-                            <select id="dp-filter-subdivision" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
-                                <option value="ALL">-- Select Sub-Division ({{ dpAvailableSubDivisions.length }}) --</option>
+                            <select id="dp-filter-subdivision" aria-label="Sub-Division" title="Sub-Division" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
+                                <option value="ALL">-- Sub-Division ({{ dpAvailableSubDivisions.length }}) --</option>
                                 <option v-for="sub in dpAvailableSubDivisions" :key="sub" :value="sub">{{ sub }}</option>
                             </select>
                         </div>
 
                         <div class="dp-field-box">
-                            <label for="dp-filter-substation">
-                                <span>Substation:</span>
-                                <span v-if="dpSubstationFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubstation('ALL')">Clear ✕</span>
-                            </label>
-                            <select id="dp-filter-substation" :value="dpSubstationFilter" @change="setDailyProgressSubstation($event.target.value)">
-                                <option value="ALL">-- Select Substation ({{ dpAvailableSubstations.length }}) --</option>
+                            <select id="dp-filter-substation" aria-label="Substation" title="Substation" :value="dpSubstationFilter" @change="setDailyProgressSubstation($event.target.value)">
+                                <option value="ALL">-- Substation ({{ dpAvailableSubstations.length }}) --</option>
                                 <option v-for="sst in dpAvailableSubstations" :key="sst" :value="sst">{{ sst }}</option>
                             </select>
                         </div>
 
                         <div class="dp-field-box">
-                            <label>
-                                <span>Feeder:</span>
-                                <span style="font-weight: 400; color: var(--dp-text-muted);">({{ filteredDailyProgressLocations.length }} match)</span>
-                            </label>
-                            <div class="searchable-dropdown">
-                                <button type="button" class="searchable-dropdown-trigger" :disabled="dailyProgressBusy" @click="toggleDpLocationDropdown">
+                            <div class="searchable-dropdown" title="Feeder">
+                                <button type="button" class="searchable-dropdown-trigger" aria-label="Feeder" :disabled="dailyProgressBusy" @click="toggleDpLocationDropdown">
                                     <span class="searchable-dropdown-label" :class="{ placeholder: !dailyProgressLocationId }">
                                         {{ dailyProgressLocationId === 'legacy' ? 'Legacy / Unassigned (Old Entries)' : (dailyProgressActiveLocationObj ? dailyProgressActiveLocationObj.name : 'Feeder select karein…') }}
                                     </span>
@@ -2017,10 +2006,10 @@
                             </div>
                         </div>
 
-                        <div v-if="dailyProgressLocationId" class="dp-hierarchy-actions" style="display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; height: 30px;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
+                        <div v-if="dailyProgressLocationId" class="dp-hierarchy-actions" style="display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
+                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
                         </div>
                     </div>
 

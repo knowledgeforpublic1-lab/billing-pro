@@ -12,7 +12,7 @@
 .daily-sheet-area>.view-section:has(.dp-dashboard-sheet) { flex:1; min-height:0; display:flex; padding:0; animation:none; }
 .daily-sheet-area .dp-dashboard-sheet { padding:0 8px!important; margin:0!important; width:100%; max-width:none; display:flex; flex-direction:column; min-height:0; flex:1; overflow:auto; gap:5px; }
 .dp-dashboard-sheet .dp-master-header-card { flex-shrink:0; position:relative; display:flex; flex-direction:column; gap:4px; padding:6px 0 0; margin:0; border:0; border-radius:0; box-shadow:none; background:transparent; }
-.dp-dashboard-sheet .dp-cascading-grid { order:-1; display:grid; grid-template-columns:minmax(195px,1.25fr) 150px minmax(120px,1fr) minmax(140px,1fr) minmax(160px,1.15fr) auto; align-items:center; gap:7px; }
+.dp-dashboard-sheet .dp-cascading-grid { order:-1; display:grid; grid-template-columns:minmax(185px,1.2fr) 150px minmax(120px,0.9fr) minmax(140px,1fr) minmax(160px,1.15fr) auto; align-items:center; gap:7px; }
 .dp-dashboard-sheet .dp-contractor-pill { min-width:0; padding:3px 5px!important; height:30px; border:1px solid #bdcfe8!important; background:#fff!important; }
 .dp-dashboard-sheet .dp-contractor-pill>.searchable-dropdown { min-width:0!important; max-width:none!important; flex:1; }
 .dp-dashboard-sheet .dp-search-combo-box input { width:100%!important; min-width:0; }
@@ -21,7 +21,8 @@
 .dp-dashboard-sheet .dp-date-pill input { width:100%; min-width:0; font-size:11px!important; }
 .dp-dashboard-sheet .dp-date-pill button { padding:2px 4px!important; }
 .dp-dashboard-sheet .dp-field-box { display:flex; flex-direction:row; align-items:center; gap:5px; min-width:0; }
-.dp-dashboard-sheet .dp-field-box>label { display:none!important; }
+.dp-dashboard-sheet .dp-field-box>label { display:block; flex-shrink:0; margin:0; font-size:10px; text-transform:none; letter-spacing:0; white-space:nowrap; }
+.dp-dashboard-sheet .dp-field-box>label>span:not(:first-child),.dp-dashboard-sheet .dp-field-box:last-child>label { display:none; }
 .dp-dashboard-sheet .dp-field-box select,.dp-dashboard-sheet .searchable-dropdown-trigger,.dp-dashboard-sheet .dp-search-field-wrap { height:30px; min-height:30px; padding:4px 6px; font-size:11px; border:1px solid #bdcfe8; border-radius:5px; background:#fff; }
 .dp-dashboard-sheet .dp-field-box>.searchable-dropdown { flex:1; min-width:0; }
 .dp-dashboard-sheet .dp-search-field-wrap { width:100%; }
@@ -312,7 +313,9 @@
 .dp-dashboard-sheet .dp-status-strip button { min-height:22px; padding:2px 7px!important; font-size:10px!important; }
 .dp-dashboard-sheet .dp-excel-toolbar { position:relative; z-index:2; }
 .dp-dashboard-sheet .dp-excel-quick-ranges button.active { background:#0284c7!important; color:#fff!important; border-color:#0284c7!important; }
-@media(max-width:1250px) { .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:minmax(170px,1.2fr) 140px 1fr 1fr; } .dp-dashboard-sheet .dp-field-box:nth-last-child(2) { grid-column:span 2; } .daily-sheet-area .dp-brand-chip small { display:none; } }
+.dp-dashboard-sheet .dp-hierarchy-actions { display:inline-flex; align-items:center; gap:5px; }
+.dp-dashboard-sheet .dp-hierarchy-actions button { height:30px; min-height:30px; padding:3px 8px!important; font-size:11px!important; border-radius:5px!important; white-space:nowrap; }
+@media(max-width:1250px) { .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:minmax(170px,1.2fr) 140px 1fr 1fr; } .dp-dashboard-sheet .dp-hierarchy-actions { grid-column:span 2; justify-content:flex-start; } .daily-sheet-area .dp-brand-chip small { display:none; } }
 @media(max-width:800px) { .work.daily-sheet-area { overflow:auto!important; } .daily-sheet-area>.view-section:has(.dp-dashboard-sheet) { flex:none; display:block; } .daily-sheet-area>.apptoolbar { flex-wrap:wrap; } .daily-sheet-area .dp-dashboard-sheet { overflow:visible; } .dp-dashboard-sheet .dp-entry-layout { grid-template-columns:minmax(0,1fr); } .dp-dashboard-sheet .dp-table-wrap { max-height:55vh; min-height:300px; } .dp-dashboard-sheet .dp-sheet-entry>fieldset { display:block; } .dp-dashboard-sheet .dp-side-col { margin-top:6px; } .dp-dashboard-sheet .dp-save-bar { position:sticky; bottom:0; flex-direction:row; } .dp-dashboard-sheet .dp-save-status>div>div { display:none; } .dp-dashboard-sheet .dp-cascading-grid { grid-template-columns:1fr 1fr; } .dp-dashboard-sheet .dp-field-box:nth-last-child(2) { grid-column:auto; } }
 @media(max-width:800px) {
  .daily-sheet-area .dp-segmented-tabs { display:inline-flex!important; flex-wrap:wrap; }
