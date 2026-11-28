@@ -1892,7 +1892,6 @@
             <div class="daily-progress-container dp-dashboard-sheet" :inert="dailyProgressBusy">
                 <!-- EXECUTIVE MASTER LOCATION & DATE HEADER -->
                 <section v-if="dailyProgressTab !== 'history'" class="dp-master-header-card" aria-label="Location and work date">
-                    <details v-if="dailyProgressTab === 'entry'" class="dp-sheet-options" open><summary>Division &amp; site options — ⚡ {{ dailyProgressActiveLocationObj ? (dailyProgressActiveLocationObj.feeder || dailyProgressActiveLocationObj.name) : (getDailyProgressExportFeederName() || 'Feeder select karein') }}</summary>
 
                     <!-- Active Location Hierarchy Banner -->
                     <div v-if="dailyProgressLocationId" class="dp-hierarchy-banner">
@@ -1922,7 +1921,6 @@
                     <p v-else class="dp-location-note" style="margin: 0; font-size: 0.78rem; color: var(--dp-text-muted);">
                         ⚡ Kisi bhi division ya substation ke feeder ko select karein ya upar search me feeder ka naam likhein. Saare 105 official feeders by default available hain.
                     </p>
-                    </details>
 
                     <div v-if="dailyProgressLoadError" class="dp-load-error-banner" style="margin: 8px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.45); background: rgba(239,68,68,0.1); color: #fecaca; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
                         <span style="font-size: 0.82rem; font-weight: 600;">⚠️ Contractor data load error: {{ dailyProgressLoadError }}</span>
@@ -1984,7 +1982,11 @@
 
 
                         <div class="dp-field-box">
-                            <select id="dp-filter-subdivision" aria-label="Sub-Division" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
+                            <label for="dp-filter-subdivision">
+                                <span>Sub-Division:</span>
+                                <span v-if="dpSubDivisionFilter !== 'ALL'" style="color: #2563eb; cursor: pointer;" @click="setDailyProgressSubDivision('ALL')">Clear ✕</span>
+                            </label>
+                            <select id="dp-filter-subdivision" :value="dpSubDivisionFilter" @change="setDailyProgressSubDivision($event.target.value)">
                                 <option value="ALL">-- Select Sub-Division ({{ dpAvailableSubDivisions.length }}) --</option>
                                 <option v-for="sub in dpAvailableSubDivisions" :key="sub" :value="sub">{{ sub }}</option>
                             </select>
@@ -2634,6 +2636,19 @@
                                         style="font-size: 0.7rem; padding: 4px 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                                     <span>{{ dailyProgressBusy ? '⏳ Generating...' : (dailyProgressLoading || !dailyProgressStockReady ? '⏳ Loading Stock...' : '📥 Download Excel') }}</span>
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- Sheet Meta Header -->
+                        <div class="dp-excel-meta-bar">
+                            <div>
+                                <strong>RDSS GADCHIROLI (T-10) — DAILY PROGRESS REGISTER</strong>
+                                <span style="opacity: 0.7; margin-left: 8px;">Feeder: {{ getDailyProgressExportFeederName() || 'Unassigned' }} · Team: {{ (dailyProgressActiveContractor && dailyProgressActiveContractor.name) || 'Contractor' }}</span>
+                            </div>
+                            <div>
+                                <span style="color: var(--dp-accent-blue); font-weight: 700;">{{ getDailyProgressExportDays().length }} Days Range</span>
+                                <span style="opacity: 0.6; margin-left: 6px;">({{ formatDisplayDate(dailyProgressExportFrom) }} — {{ formatDisplayDate(dailyProgressExportTo) }})</span>
+                                <span style="margin-left: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(16, 185, 129, 0.14); color: #059669; font-weight: 800; font-size: 0.72rem;">Net Issue Total: {{ getDailyProgressExportNetIssueTotal() }}</span>
                             </div>
                         </div>
 
