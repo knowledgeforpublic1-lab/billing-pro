@@ -961,9 +961,9 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     }
     .dp-excel-sheet-table.dp-fit-month th.st-code,
     .dp-excel-sheet-table.dp-fit-month td.st-code {
-        width: 62px !important;
-        min-width: 62px !important;
-        max-width: 62px !important;
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
         left: 26px !important;
         font-size: 9.5px !important;
         overflow: hidden;
@@ -971,29 +971,29 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     }
     .dp-excel-sheet-table.dp-fit-month th.st-name,
     .dp-excel-sheet-table.dp-fit-month td.st-name {
-        width: 165px !important;
-        min-width: 165px !important;
-        max-width: 165px !important;
-        left: 88px !important;
-        font-size: 10px !important;
+        width: 185px !important;
+        min-width: 185px !important;
+        max-width: 185px !important;
+        left: 84px !important;
+        font-size: 9.5px !important;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .dp-excel-sheet-table.dp-fit-month th.st-unit,
     .dp-excel-sheet-table.dp-fit-month td.st-unit {
-        width: 34px !important;
-        min-width: 34px !important;
-        max-width: 34px !important;
-        left: 253px !important;
-        font-size: 9.5px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        left: 269px !important;
+        font-size: 9px !important;
     }
     .dp-excel-sheet-table.dp-fit-month th.st-issue,
     .dp-excel-sheet-table.dp-fit-month td.st-issue {
-        width: 54px !important;
-        min-width: 54px !important;
-        max-width: 54px !important;
-        left: 287px !important;
-        font-size: 10px !important;
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        left: 301px !important;
+        font-size: 9.5px !important;
     }
     .dp-excel-sheet-table.dp-fit-month .dp-excel-day-hdr,
     .dp-excel-sheet-table.dp-fit-month .dp-excel-day-cell {
@@ -1006,12 +1006,18 @@ html.dark .dp-table tbody tr:nth-child(even) td {
     }
     .dp-excel-sheet-table.dp-fit-month .dp-excel-tot-col,
     .dp-excel-sheet-table.dp-fit-month .dp-excel-bal-col {
-        width: 54px !important;
-        min-width: 54px !important;
-        max-width: 54px !important;
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        white-space: normal !important;
+        line-height: 1.15 !important;
+        font-size: 8.5px !important;
+        text-align: center !important;
+    }
+    .dp-excel-sheet-table.dp-fit-month td.dp-excel-tot-col,
+    .dp-excel-sheet-table.dp-fit-month td.dp-excel-bal-col {
         font-size: 9.5px !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-align: right !important;
     }
     .dp-excel-sheet-table.dp-fit-month .dp-excel-edit-input {
         width: 100% !important;
