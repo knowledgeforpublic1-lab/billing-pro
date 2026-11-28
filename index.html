@@ -106,8 +106,8 @@
 
     <link rel="stylesheet" href="css/style.css?v=20261118_master_toggle5">
 <link rel="stylesheet" href="css/sap-theme.css?v=20261118_master_toggle5">
-<link rel="stylesheet" href="css/daily-progress.css?v=20261123_dark_v1">
-<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261123_dark_v1">
+<link rel="stylesheet" href="css/daily-progress.css?v=20261128_v2">
+<link rel="stylesheet" href="css/daily-progress-dashboard-sheet.css?v=20261128_v2">
 </head>
 
 <body>
@@ -2006,10 +2006,10 @@
                             </div>
                         </div>
 
-                        <div v-if="dailyProgressLocationId" class="dp-hierarchy-actions" style="display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap; justify-content: flex-end;">
-                            <button type="button" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
-                            <button type="button" class="tbtn danger" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
+                        <div class="dp-hierarchy-actions" style="display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" :disabled="!dailyProgressLocationId || dailyProgressBusy" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="reopenDailyProgressEntry" title="Is date ki entry bina data loss ke re-entry/correction ke liye open karein">🔓 Re-open</button>
+                            <button type="button" class="tbtn danger" :disabled="!dailyProgressLocationId || dailyProgressBusy" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete')" title="Is date ka progress reset (clear) karein">↺ Reset day</button>
+                            <button type="button" class="tbtn danger" :disabled="!dailyProgressLocationId || dailyProgressBusy" style="padding: 3px 8px; font-size: 0.72rem; white-space: nowrap;" @click="manageDailyProgressLocation('delete', true)" title="Is location ka saara progress clear karein">Clear all dates</button>
                         </div>
                     </div>
 
