@@ -512,7 +512,112 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
             if (inFlightRead === work) inFlightRead = null;
         }
     }
-    adminRouter.get('/data', handle(async (req, res) => res.json({ success: true, data: await readData() })));
+    function filterDataByQuery(data, query = {}) {
+        const startDate = /^\d{4}-\d{2}-\d{2}$/.test(query.startDate || '') ? query.startDate : '';
+        const endDate = /^\d{4}-\d{2}-\d{2}$/.test(query.endDate || '') ? query.endDate : '';
+        const cid = String(query.contractorId || '').trim();
+        const targetNorm = cid ? normId(cid) : '';
+        const hasLoc = query.locationId !== undefined && query.locationId !== null && String(query.locationId).trim() !== '';
+        const targetLoc = hasLoc ? normalizeLocation(query.locationId) : '';
+        if (!startDate && !endDate && !targetNorm && !hasLoc) return data;
+
+        const matchesContractor = rowCid => !targetNorm || normId(rowCid) === targetNorm;
+        const matchesLocation = rowLoc => !hasLoc || normalizeLocation(rowLoc) === targetLoc;
+        const matchesDate = d => {
+            const ds = String(d || '').slice(0, 10);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) return !startDate && !endDate;
+            if (startDate && ds < startDate) return false;
+            if (endDate && ds > endDate) return false;
+            return true;
+        };
+
+        const filteredReports = (data.reports || []).filter(r =>
+            r && !r.deleted && matchesContractor(r.contractorId) && matchesLocation(r.locationId) && matchesDate(r.date)
+        ).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+        const filteredIssues = (data.issues || []).filter(iss => {
+            if (!iss || !matchesContractor(iss.contractorId)) return false;
+            const d = String(iss.date || '').slice(0, 10);
+            if (endDate && /^\d{4}-\d{2}-\d{2}$/.test(d) && d > endDate) return false;
+            return true;
+        });
+
+        const filteredStates = (data.reportStates || []).filter(s =>
+            s && !s.deleted && matchesContractor(s.contractorId) && matchesLocation(s.locationId) && matchesDate(s.date)
+        );
+
+        return {
+            ...data,
+            reports: filteredReports,
+            issues: filteredIssues,
+            reportStates: filteredStates
+        };
+    }
+
+    async function queryExportData({ startDate = '', endDate = '', contractorId = '', locationId } = {}) {
+        const sDate = /^\d{4}-\d{2}-\d{2}$/.test(startDate || '') ? startDate : '';
+        const eDate = /^\d{4}-\d{2}-\d{2}$/.test(endDate || '') ? endDate : '';
+        if (sDate && eDate && sDate > eDate) {
+            throw Object.assign(new Error('Invalid date range: startDate must be <= endDate'), { status: 400 });
+        }
+        // Bypass 30s cache and query DB directly with date range when available
+        const [legacy, rangeControlRows, sharedReports, auxRecords, stockSlice] = await Promise.all([
+            db.getDefaultConfig('dailyProgressData'),
+            typeof db.listDailyReportsInRange === 'function'
+                ? db.listDailyReportsInRange({ startDate: sDate, endDate: eDate })
+                : db.listDailyRecords('report_'),
+            workers.sharedReports(),
+            db.listDailyRecords('aux_'),
+            contractorId ? buildContractorStockSlice(contractorId).catch(() => null) : Promise.resolve(null)
+        ]);
+        const controlledReports = await Promise.all(
+            rangeControlRows
+                .filter(row => row.value && (row.value.fileId || row.value.baseReport || row.value.deleted))
+                .map(async ({ value: r }) => {
+                    const data = r.fileId ? await drive.read(r.fileId) : r.baseReport || r;
+                    return { ...data, state: r.state, version: r.version, deleted: !!r.deleted, managed: !!r.managed };
+                })
+        );
+        const base = readDailyProgressData(legacy);
+        const reports = new Map((base.reports || []).map(r => [reportKey(r), r]));
+        for (const r of [...sharedReports, ...controlledReports]) {
+            const key = reportKey(r);
+            reports.set(key, r.deleted || r.managed ? r : newerReport(reports.get(key), r));
+        }
+        const issues = new Map((base.issues || []).map(i => [i.id, i]));
+        const auxDocs = await Promise.all(auxRecords.map(async ({ value }) => (value?.fileId ? drive.read(value.fileId) : null)));
+        for (const stored of auxDocs) {
+            if (stored?.kind === 'issue' && stored.value) issues.set(stored.value.id, stored.value);
+        }
+        const filtered = filterDataByQuery(
+            { contractors: base.contractors || [], reports: [...reports.values()].filter(row => !row.deleted), issues: [...issues.values()], reportStates: [] },
+            { startDate: sDate, endDate: eDate, contractorId, locationId }
+        );
+        return {
+            startDate: sDate,
+            endDate: eDate,
+            contractorId: String(contractorId || ''),
+            locationId: locationId !== undefined ? normalizeLocation(locationId) : '',
+            count: filtered.reports.length,
+            reports: filtered.reports,
+            issues: filtered.issues,
+            stock: stockSlice
+        };
+    }
+
+    adminRouter.get('/data', handle(async (req, res) => {
+        const data = await readData(Boolean(req.query.fresh));
+        res.json({ success: true, data: filterDataByQuery(data, req.query) });
+    }));
+    adminRouter.get('/export-data', handle(async (req, res) => {
+        const result = await queryExportData({
+            startDate: req.query.startDate,
+            endDate: req.query.endDate,
+            contractorId: req.query.contractorId,
+            locationId: req.query.locationId
+        });
+        res.json({ success: true, ...result });
+    }));
     adminRouter.get('/stock/:contractorId', auth.requireAdmin, handle(async (req, res) => {
         const query = String(req.params.contractorId || '').trim();
         const slice = await buildContractorStockSlice(query);
@@ -545,5 +650,5 @@ module.exports = function dailyRoutes({ db, auth, drive = createDrive(), seed: p
         invalidateDataCache();
         res.json({ success: true });
     }));
-    return { publicRouter, adminRouter, service, readData, invalidateDataCache, invalidateStockCache };
+    return { publicRouter, adminRouter, service, readData, filterDataByQuery, queryExportData, invalidateDataCache, invalidateStockCache };
 };

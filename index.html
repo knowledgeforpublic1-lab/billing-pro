@@ -2605,10 +2605,12 @@
                                     <input type="date" v-model="dailyProgressExportTo" title="End Date">
                                 </div>
                                 <div class="dp-excel-quick-ranges">
-                                    <button type="button" @click="setDailyProgressExportRange('current_month')" title="Current Month">This Month</button>
-                                    <button type="button" @click="setDailyProgressExportRange('prev_month')" title="Previous Month">Prev Month</button>
-                                    <button type="button" @click="setDailyProgressExportRange('last30')" title="Last 30 Days">Last 30 Days</button>
-                                    <button type="button" @click="setDailyProgressExportRange('sep2026')" title="September 2026">Sep 2026</button>
+                                    <button type="button" @click="setDailyProgressExportRange('today')" title="Today">Today</button>
+                                    <button type="button" @click="setDailyProgressExportRange('yesterday')" title="Yesterday">Yesterday</button>
+                                    <button type="button" @click="setDailyProgressExportRange('this_week')" title="This Week">This Week</button>
+                                    <button type="button" @click="setDailyProgressExportRange('current_month')" title="This Month">This Month</button>
+                                    <button type="button" @click="setDailyProgressExportRange('prev_month')" title="Last Month">Last Month</button>
+                                    <button type="button" @click="setDailyProgressExportRange('all_time')" title="All Time">All Time</button>
                                 </div>
                             </div>
 
@@ -2749,8 +2751,8 @@
                                         <td class="st-name" :title="it.name">{{ it.name }}<small class="dp-excel-mobile-code">{{ it.code || 'ITEM' }} · {{ it.unit }} · Row {{ itIdx + 1 }}</small></td>
                                         <td class="st-unit">{{ it.unit }}</td>
                                         <td class="st-issue">
-                                            <span v-if="getDailyProgressItemStock(it).totalIssued > 0" class="dp-issue-val" style="font-weight: 700;">
-                                                {{ getDailyProgressItemStock(it).totalIssued }}
+                                            <span v-if="getDailyProgressItemStock(it, dailyProgressExportTo).totalIssued > 0" class="dp-issue-val" style="font-weight: 700;">
+                                                {{ getDailyProgressItemStock(it, dailyProgressExportTo).totalIssued }}
                                             </span>
                                             <span v-else style="color: var(--text-muted); opacity: 0.5;">0</span>
                                         </td>
@@ -2765,8 +2767,8 @@
                                             </span>
                                             <span v-else style="color: var(--text-muted); opacity: 0.4;">0</span>
                                         </td>
-                                        <td class="dp-excel-bal-col" :class="getDailyProgressItemStock(it).totalIssued - getDailyProgressExportItemTotal(it.id) < 0 ? 'dp-excel-bal-negative' : 'dp-excel-bal-positive'">
-                                            {{ Math.round((getDailyProgressItemStock(it).totalIssued - getDailyProgressExportItemTotal(it.id)) * 100) / 100 }}
+                                        <td class="dp-excel-bal-col" :class="getDailyProgressItemStock(it, dailyProgressExportTo).totalIssued - getDailyProgressExportItemTotal(it.id) < 0 ? 'dp-excel-bal-negative' : 'dp-excel-bal-positive'">
+                                            {{ Math.round((getDailyProgressItemStock(it, dailyProgressExportTo).totalIssued - getDailyProgressExportItemTotal(it.id)) * 100) / 100 }}
                                         </td>
                                     </tr>
 

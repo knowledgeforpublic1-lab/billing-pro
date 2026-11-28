@@ -820,9 +820,51 @@ async function listDailyRecords(prefix, options = {}) {
     return rows.map(row => ({ key: row._id, value: row.value }));
 }
 
+async function listDailyReportsInRange({ startDate, endDate } = {}) {
+    await connect();
+    const hasStart = /^\d{4}-\d{2}-\d{2}$/.test(startDate || '');
+    const hasEnd = /^\d{4}-\d{2}-\d{2}$/.test(endDate || '');
+    if (activeProvider === 'firebase') {
+        const snap = await firestoreDb.collection('daily_progress_control')
+            .orderBy('__name__').startAt('report_').endAt('report_\uf8ff').get();
+        return snap.docs.map(doc => ({ key: doc.id, value: doc.data().value })).filter(({ key, value }) => {
+            if (!value || value.deleted) return false;
+            const d = (value.baseReport && value.baseReport.date) || (key.split('_')[2] || '');
+            if (hasStart && d < startDate) return false;
+            if (hasEnd && d > endDate) return false;
+            return true;
+        });
+    }
+    const filter = {
+        _id: { $gte: 'report_', $lt: 'report_\uffff' },
+        'value.deleted': { $ne: true }
+    };
+    if (hasStart || hasEnd) {
+        const dateCond = {};
+        if (hasStart) dateCond.$gte = startDate;
+        if (hasEnd) dateCond.$lte = endDate;
+        filter.$or = [
+            { 'value.baseReport.date': dateCond },
+            { 'value.baseReport': { $exists: false } },
+            { 'value.baseReport.date': { $exists: false } }
+        ];
+    }
+    const rows = await mongoose.connection.collection('daily_progress_control')
+        .find(filter).sort({ _id: 1 }).toArray();
+    return rows
+        .map(row => ({ key: row._id, value: row.value }))
+        .filter(({ key, value }) => {
+            if (!value || value.deleted) return false;
+            const d = (value.baseReport && value.baseReport.date) || (key.split('_')[2] || '');
+            if (hasStart && d < startDate) return false;
+            if (hasEnd && d > endDate) return false;
+            return true;
+        });
+}
+
 module.exports = {
     getDailyAuthRecord,
-    atomicDailyRecord, listDailyRecords,
+    atomicDailyRecord, listDailyRecords, listDailyReportsInRange,
     patchDefaultConfig,
     connect,
     getProvider,

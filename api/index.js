@@ -1024,7 +1024,10 @@ app.get('/api/daily-progress/data', async (req, res) => {
     res.set('Cache-Control', 'no-store');
     try {
         const actor = await workers.principal(req);
-        const data = await dailyProgress.readData();
+        let data = await dailyProgress.readData(Boolean(req.query.fresh));
+        if (typeof dailyProgress.filterDataByQuery === 'function') {
+            data = dailyProgress.filterDataByQuery(data, req.query);
+        }
         if (actor.role !== 'admin') {
             const allowed = cid => workers.hasContractorPermission(actor, cid);
             data.contractors = data.contractors.filter(row => allowed(row.id)).map(({ id, name, project, feeder, engineer }) => ({ id, name, project, feeder, engineer }));
@@ -1035,6 +1038,31 @@ app.get('/api/daily-progress/data', async (req, res) => {
         res.json({ success: true, data });
     } catch (e) {
         res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Entry data unavailable. Retry karein.' });
+    }
+});
+app.get('/api/daily-progress/export-data', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const actor = await workers.principal(req);
+        const contractorId = String(req.query.contractorId || '').trim();
+        if (actor.role !== 'admin' && contractorId) {
+            workers.assertContractor(actor, contractorId);
+        }
+        const result = await dailyProgress.queryExportData({
+            startDate: req.query.startDate,
+            endDate: req.query.endDate,
+            contractorId,
+            locationId: req.query.locationId
+        });
+        if (actor.role !== 'admin') {
+            const allowed = cid => workers.hasContractorPermission(actor, cid);
+            result.reports = (result.reports || []).filter(row => allowed(row.contractorId));
+            result.issues = (result.issues || []).filter(row => allowed(row.contractorId));
+            result.count = result.reports.length;
+        }
+        res.json({ success: true, ...result });
+    } catch (e) {
+        res.status(e.status || 500).json({ success: false, error: e.status ? e.message : 'Export data unavailable. Retry karein.' });
     }
 });
 const { isAllowedOrigin } = require('./origin-check');

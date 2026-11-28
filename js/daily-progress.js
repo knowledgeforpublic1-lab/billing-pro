@@ -789,9 +789,14 @@ window.DailyProgressModule = {
                 }
             }
             const consumedMap = new Map();
+            const normFn = str => String(str || '').toLowerCase().replace(/^m\/s\.?\s*/i, '').replace(/[^a-z0-9]/g, '').replace(/eterprise/g, 'enterprise');
+            const targetNorm = normFn(cid);
             for (let i = 0; i < reports.length; i++) {
                 const r = reports[i];
-                if (r && r.contractorId === cid && r.date && r.date <= curDate && r.quantities) {
+                if (!r || r.deleted) continue;
+                if (r.contractorId !== cid && normFn(r.contractorId) !== targetNorm) continue;
+                const rDate = typeof this.normalizeDailyProgressDate === 'function' ? this.normalizeDailyProgressDate(r.date) : String(r.date || '').slice(0, 10);
+                if (rDate && rDate <= curDate && r.quantities) {
                     const qObj = r.quantities;
                     for (const k in qObj) {
                         if (Object.prototype.hasOwnProperty.call(qObj, k)) {
@@ -968,15 +973,12 @@ window.DailyProgressModule = {
             return;
         }
 
-        const fullRange = this._getDailyProgressFullDateRange(this.dailyProgressContractorId, this.dailyProgressLocationId);
-        const from = (fullRange && fullRange.from) || this.dailyProgressExportFrom;
-        const to = (fullRange && fullRange.to) || this.dailyProgressExportTo;
+        const from = this.dailyProgressExportFrom;
+        const to = this.dailyProgressExportTo;
         if (!from || !to || from > to) {
             this.showToast('Kripya valid From aur To date chunein.', 'Alert');
             return;
         }
-        this.dailyProgressExportFrom = from;
-        this.dailyProgressExportTo = to;
 
         this.dailyProgressBusy = true;
         if (typeof this.startTaskProgress === 'function') this.startTaskProgress('Generating Excel Report', 'Loading template...', 15);
@@ -1004,7 +1006,55 @@ window.DailyProgressModule = {
             if (!days.length || days.length > 366) {
                 throw new Error('1 se 366 dino ka date range chunein.');
             }
-            const reportsByDate = new Map(days.map(date => [date, this.getDailyProgressDayReport(date)]));
+            const locKey = typeof this.dailyProgressLocationKey === 'function' ? this.dailyProgressLocationKey(this.dailyProgressLocationId) : String(this.dailyProgressLocationId || '');
+            const reportsByDate = new Map();
+            // Fetch fresh DB-filtered records for exact selected date range & contractor
+            if (typeof fetch === 'function') {
+                try {
+                    const params = new URLSearchParams({
+                        startDate: from,
+                        endDate: to,
+                        contractorId: String(cid || ''),
+                        locationId: locKey
+                    });
+                    const apiRes = await fetch('/api/daily-progress/export-data?' + params.toString(), { cache: 'no-store' });
+                    if (apiRes.ok) {
+                        const apiJson = await apiRes.json();
+                        if (apiJson && apiJson.success && Array.isArray(apiJson.reports)) {
+                            for (const rep of apiJson.reports) {
+                                const nd = typeof this.normalizeDailyProgressDate === 'function' ? this.normalizeDailyProgressDate(rep.date) : String(rep.date || '').slice(0, 10);
+                                if (nd && nd >= from && nd <= to) reportsByDate.set(nd, rep);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[DailyProgress] Export API fetch fallback to local:', e);
+                }
+            }
+            for (const date of days) {
+                if (!reportsByDate.has(date)) {
+                    const localRep = this.getDailyProgressDayReport(date);
+                    if (localRep && !localRep.deleted) reportsByDate.set(date, localRep);
+                }
+            }
+
+            // Check if selected date range has any actual progress data
+            let hasAnyRangeData = false;
+            for (const rep of reportsByDate.values()) {
+                if (!rep || rep.deleted) continue;
+                const hasQty = rep.quantities && Object.values(rep.quantities).some(v => Number(v) > 0);
+                const mp = rep.manpower || {};
+                const hasMp = ['leader', 'skilled', 'unskilled', 'tractor', 'augur', 'room'].some(k => Number(mp[k]) > 0);
+                const hasRem = !!(rep.remarks && String(rep.remarks).trim());
+                if (hasQty || hasMp || hasRem) {
+                    hasAnyRangeData = true;
+                    break;
+                }
+            }
+            if (!hasAnyRangeData) {
+                this.showToast(`No Data Found: ${this._formatDailyProgressRemarkDate(from)} se ${this._formatDailyProgressRemarkDate(to)} ke beech koi progress data nahi mila.`, 'Alert');
+                return;
+            }
 
             // Load template
             let templateBuffer = null;
@@ -1082,8 +1132,9 @@ window.DailyProgressModule = {
                 const projectName = contractor.project || (this.projectMeta && this.projectMeta.projectName) || 'Gadchiroli (T-10)';
                 const feederLabel = this.getDailyProgressExportFeederName() || 'Unassigned';
                 const locLabel = typeof this.dailyProgressLocationName === 'function' ? this.dailyProgressLocationName() : 'Unassigned';
+                const periodLabel = `${this._formatDailyProgressRemarkDate(from)} to ${this._formatDailyProgressRemarkDate(to)}`;
                 ws.getCell('A1').value = 'DAILY PROGRESS REGISTER';
-                ws.getCell('A2').value = 'PROJECT NAME: ' + projectName;
+                ws.getCell('A2').value = `PROJECT NAME: ${projectName} | PERIOD: ${periodLabel}`;
                 ws.getCell('A3').value = 'FEEDER: ' + feederLabel + (locLabel ? ' | LOCATION: ' + locLabel : '');
                 ws.getCell('A4').value = 'NAME OF DEPT. LABOUR TEAM: ' + (contractor.name || '');
                 ws.getCell('A5').value = 'NAME OF ENGINEER/SUPERVISOR: ' + (contractor.engineer || '');
@@ -1214,7 +1265,7 @@ window.DailyProgressModule = {
                         return sum + (Number(rep && rep.quantities && rep.quantities[it.id]) || 0);
                     }, 0);
                     grandTotalMaterials += totalConsumedInChunk;
-                    const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it) : null;
+                    const stock = typeof this.getDailyProgressItemStock === 'function' ? this.getDailyProgressItemStock(it, to) : null;
                     const hasIssued = !!(stock && stock.totalIssued > 0);
                     const isVisible = exportFilter === 'all' ? true : exportFilter === 'issued' ? hasIssued : (hasIssued || totalConsumedInChunk > 0 || !!it.custom);
                     if (isVisible) visibleRowSet.add(targetRow);
@@ -1558,7 +1609,7 @@ window.DailyProgressModule = {
                 if (!matches) return false;
             }
             if (filter === 'all') return true;
-            const stock = this.getDailyProgressItemStock(it);
+            const stock = this.getDailyProgressItemStock(it, to);
             const totalRangeConsumed = totalsMap.get(String(it.id)) || 0;
             if (filter === 'issued') {
                 return (stock && stock.totalIssued > 0);
@@ -1572,6 +1623,7 @@ window.DailyProgressModule = {
 
     getDailyProgressExportNetIssueTotal() {
         const items = this.getDailyProgressExportPreviewItems();
+        const asOf = this.dailyProgressExportTo || this.dailyProgressDate;
         const seen = new Set();
         let total = 0;
         for (let i = 0; i < items.length; i++) {
@@ -1580,7 +1632,7 @@ window.DailyProgressModule = {
             const dedupKey = code ? ('code:' + code) : ('id:' + (it && it.id));
             if (seen.has(dedupKey)) continue;
             seen.add(dedupKey);
-            const st = this.getDailyProgressItemStock(it);
+            const st = this.getDailyProgressItemStock(it, asOf);
             total += Number(st && st.totalIssued) || 0;
         }
         return Math.round(total * 1000) / 1000;
@@ -1780,33 +1832,57 @@ window.DailyProgressModule = {
     },
 
     setDailyProgressExportRange(rangeType) {
+        const localYmd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        if (rangeType === 'current_month' || rangeType === 'this_month') {
-            const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-            this.dailyProgressExportFrom = `${year}-${month}-01`;
-            this.dailyProgressExportTo = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-        } else if (rangeType === 'prev_month') {
-            const prev = new Date(year, now.getMonth() - 1, 1);
+        const today = this.todayDateStr || localYmd(now);
+        const [tYear, tMonth, tDay] = today.split('-').map(Number);
+        const baseDate = new Date(tYear, tMonth - 1, tDay);
+
+        if (rangeType === 'today') {
+            this.dailyProgressExportFrom = today;
+            this.dailyProgressExportTo = today;
+        } else if (rangeType === 'yesterday') {
+            const y = new Date(baseDate);
+            y.setDate(y.getDate() - 1);
+            const yStr = localYmd(y);
+            this.dailyProgressExportFrom = yStr;
+            this.dailyProgressExportTo = yStr;
+        } else if (rangeType === 'this_week') {
+            const dayOfWeek = baseDate.getDay(); // 0=Sun..6=Sat
+            const diffToMonday = dayOfWeek === 0 ? -6 : (1 - dayOfWeek);
+            const monday = new Date(baseDate);
+            monday.setDate(monday.getDate() + diffToMonday);
+            this.dailyProgressExportFrom = localYmd(monday);
+            this.dailyProgressExportTo = today;
+        } else if (rangeType === 'current_month' || rangeType === 'this_month') {
+            this.dailyProgressExportFrom = `${tYear}-${String(tMonth).padStart(2, '0')}-01`;
+            this.dailyProgressExportTo = today;
+        } else if (rangeType === 'prev_month' || rangeType === 'last_month') {
+            const prev = new Date(tYear, tMonth - 2, 1);
             const pYear = prev.getFullYear();
             const pMonth = String(prev.getMonth() + 1).padStart(2, '0');
             const pLastDay = new Date(pYear, prev.getMonth() + 1, 0).getDate();
             this.dailyProgressExportFrom = `${pYear}-${pMonth}-01`;
             this.dailyProgressExportTo = `${pYear}-${pMonth}-${String(pLastDay).padStart(2, '0')}`;
-        } else if (rangeType === 'sep2026') {
-            this.dailyProgressExportFrom = '2026-09-01';
-            this.dailyProgressExportTo = '2026-09-30';
+        } else if (rangeType === 'all_time') {
+            const fullRange = this._getDailyProgressFullDateRange(this.dailyProgressContractorId, this.dailyProgressLocationId);
+            if (fullRange && fullRange.from && fullRange.to) {
+                this.dailyProgressExportFrom = fullRange.from;
+                this.dailyProgressExportTo = fullRange.to;
+            } else {
+                this.dailyProgressExportFrom = today;
+                this.dailyProgressExportTo = today;
+            }
         } else if (rangeType === 'last7') {
-            const d7 = new Date();
+            const d7 = new Date(baseDate);
             d7.setDate(d7.getDate() - 6);
-            this.dailyProgressExportFrom = d7.toISOString().slice(0, 10);
-            this.dailyProgressExportTo = now.toISOString().slice(0, 10);
+            this.dailyProgressExportFrom = localYmd(d7);
+            this.dailyProgressExportTo = today;
         } else if (rangeType === 'last30') {
-            const d30 = new Date();
+            const d30 = new Date(baseDate);
             d30.setDate(d30.getDate() - 29);
-            this.dailyProgressExportFrom = d30.toISOString().slice(0, 10);
-            this.dailyProgressExportTo = now.toISOString().slice(0, 10);
+            this.dailyProgressExportFrom = localYmd(d30);
+            this.dailyProgressExportTo = today;
         }
     },
 
